@@ -272,4 +272,34 @@ contract TokenSwap is ReentrancyGuard {
         sps[i] = sp;
         return sps;
     }
+
+    // for testing, not to be included in deployed contract
+    function stringToSecret(string memory source)
+        public
+        pure
+        returns (bytes32 result)
+    {
+        bytes memory tempEmptyStringTest = bytes(source);
+        if (tempEmptyStringTest.length == 0) {
+            return 0x0;
+        }
+        assembly {
+            result := mload(add(source, 32))
+        }
+    }
+
+    function stringToHashedSecret(string memory source)
+        public
+        pure
+        returns (bytes32 result)
+    {
+        bytes memory tempEmptyStringTest = bytes(source);
+        if (tempEmptyStringTest.length == 0) {
+            return 0x0;
+        }
+        assembly {
+            result := mload(add(source, 32))
+        }
+        // result = sha256(abi.encodePacked(sha256(abi.encodePacked(source))));
+    }
 }
