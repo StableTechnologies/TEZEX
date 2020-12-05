@@ -1,6 +1,6 @@
-import { TezosNodeReader, TezosMessageUtils } from "conseiljs";
-import config from "../../../globalConfig.json";
+import { TezosMessageUtils, TezosNodeReader } from "conseiljs";
 import { JSONPath } from "jsonpath-plus";
+import config from "../../../globalConfig.json";
 
 const getSwap = async (secretHash) => {
   secretHash = secretHash.substring(2);
@@ -9,7 +9,7 @@ const getSwap = async (secretHash) => {
   );
   const jsonData = await TezosNodeReader.getValueForBigMapKey(
     config.tezos.RPC,
-    15534,
+    config.tezos.contract_map,
     packedKey
   );
   if (jsonData === undefined) return jsonData;

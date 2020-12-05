@@ -1,13 +1,12 @@
-import { KeyStoreUtils, SoftSigner } from "conseiljs-softsigner";
-import { TezosMessageUtils } from "conseiljs";
+import { DAppClient, NetworkType } from "@airgap/beacon-sdk";
 
-const setTezAccount = async (key, tezSetup) => {
-  const keyStore = await KeyStoreUtils.restoreIdentityFromSecretKey(key);
-  const signer = await SoftSigner.createSigner(
-    TezosMessageUtils.writeKeyWithHint(key, "edsk"),
-    -1
-  );
-  return { keyStore, signer };
+const setTezAccount = async () => {
+  const client = new DAppClient({ name: "TEZEX" });
+  const resp = await client.requestPermissions({
+    network: { type: NetworkType.DELPHINET },
+  });
+  const account = await client.getActiveAccount();
+  return { client, account: account["address"] };
 };
 
 export default setTezAccount;

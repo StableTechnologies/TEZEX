@@ -1,12 +1,12 @@
 import invokeContract from "./util/invokeContract";
 
-const initWait = async (store, ethAddress, amtMuTez, hashedSecret, time) => {
+const initWait = async (store, ethAddress, amount, hashedSecret, time) => {
   const res = await invokeContract(
     store,
-    amtMuTez,
+    "0",
     "initiateWait",
-    `(Pair ${hashedSecret} (Pair "${time}" "${ethAddress}"))`,
-    10000,
+    `(Pair (Pair ${amount} ${hashedSecret}) (Pair "${time}" "${ethAddress}"))`,
+    15000,
     300
   );
   if (res.status !== "applied") {

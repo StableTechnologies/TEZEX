@@ -3,8 +3,7 @@ import useStyles from "./style";
 const Setup = ({ init }) => {
   const setup = (e) => {
     e.preventDefault();
-    if (e.target.eth.value !== "" && e.target.tez.value !== "")
-      init(e.target.eth.value, e.target.tez.value);
+      init();
   };
   const classes = useStyles();
   return (
@@ -17,21 +16,7 @@ const Setup = ({ init }) => {
           will be lost
         </p>
       </div>
-      <form className={classes.form} onSubmit={setup}>
-        <input
-          className={classes.input}
-          type="password"
-          placeholder="ethereum private key [goerli-testnet]"
-          name="eth"
-        />
-        <input
-          className={classes.input}
-          type="password"
-          placeholder="tezos private key [carthagenet]"
-          name="tez"
-        />
-        <input className={classes.submit} type="submit" value="START" />
-      </form>
+      <button onClick={setup}>Connect to Tezos and Ethereum Wallets</button>
     </div>
   );
 };

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
-import getConversionRate from "../../../../library/common/getConversionRate";
 import getSwaps from "../../../../library/ethereum/operations/getSwaps";
 import { shorten } from "../../../../util";
 import Loader from "../../../loader";
@@ -14,19 +13,19 @@ const GetSwap = ({ genSwap, ethStore, balance }) => {
 
   const history = useHistory();
   const classes = useStyles();
-  const filterSwaps = async (rt) => {
+  const filterSwaps = async () => {
     const data = await getSwaps(ethStore);
     let swps = [];
     data.forEach((swp) => {
       if (
         swp.participant === swp.initiator &&
-        swp.initiator !== ethStore.keyStore.address &&
+        swp.initiator !== ethStore.account &&
         Math.trunc(Date.now() / 1000) < swp.refundTimestamp - 4200
       )
         swps.push({
           ...swp,
-          dispValue: swp.value / Math.pow(10, 18),
-          pay: (swp.value * rt) / Math.pow(10, 18),
+          dispValue: swp.value,
+          pay: swp.value ,
         });
     });
     setSwaps(swps);
@@ -43,8 +42,8 @@ const GetSwap = ({ genSwap, ethStore, balance }) => {
         className={classes.swap}
       >
         <p>Hash : {shorten(15, 15, data.hashedSecret)}</p>
-        <p>ETH Value : {data.dispValue}</p>
-        <p>XTZ to Pay : {data.pay}</p>
+        <p>USDC Value : {data.dispValue}</p>
+        <p>USDTz to Pay : {data.pay}</p>
       </div>
     );
   };
@@ -60,13 +59,9 @@ const GetSwap = ({ genSwap, ethStore, balance }) => {
     }
   };
   useEffect(() => {
-    getConversionRate().then((res) => {
-      filterSwaps(res);
-    });
-    console.log("Rate Updated");
-    const timer = setInterval(async () => {
-      const rt = await getConversionRate();
-      filterSwaps(rt);
+    filterSwaps();
+    const timer = setInterval(() => {
+      filterSwaps();
     }, 600000);
     return () => {
       clearInterval(timer);

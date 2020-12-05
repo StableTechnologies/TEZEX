@@ -37,7 +37,7 @@ const getRedeemedSecret = async (hashedSecret) => {
         {
           field: "destination",
           operation: "eq",
-          set: ["KT1T92mZgyZZtVqRG1XfyeqDsPbGe66tPFyV"],
+          set: [config.tezos.contractAddr],
           inverse: false,
         },
         {

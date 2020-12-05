@@ -1,25 +1,39 @@
-import getSwapTez from "../tezos/operations/getSwap";
 import getSwapEth from "../ethereum/operations/getSwap";
-import initWait from "../tezos/operations/initiateWait";
-import createSecrets from "./createSecrets";
-import addCounterParty from "../tezos/operations/addCounterParty";
 import redeem from "../ethereum/operations/redeem";
+import addCounterParty from "../tezos/operations/addCounterParty";
+import approveToken from "../tezos/operations/approveToken";
+import getSwapTez from "../tezos/operations/getSwap";
+import initWait from "../tezos/operations/initiateWait";
 import refund from "../tezos/operations/refund";
+import createSecrets from "./createSecrets";
 
 const waitCompletion = (secret, tezStore, ethStore, refundTime, update) => {
   const tid = setInterval(async () => {
     if (Math.trunc(Date.now() / 1000) >= refundTime) {
       clearInterval(tid);
-      await refund(tezStore, secret.hashedSecret);
+      const res = await refund(tezStore, secret.hashedSecret);
+      if (!res) {
+        update(secret.hashedSecret, 0);
+        return;
+      }
       update(secret.hashedSecret, 4);
       return;
     }
     const swp = await getSwapEth(ethStore, secret.hashedSecret);
     console.log("WAITING TO COMPLETE SWAP");
-    if (swp.participant !== ethStore.keyStore.address) return;
+    if (swp.participant !== ethStore.account) return;
     clearInterval(tid);
     console.log("\nCOMPLETING SWAP");
-    await redeem(ethStore.web3, ethStore, secret.hashedSecret, secret.secret);
+    const res = await redeem(
+      ethStore.web3,
+      ethStore,
+      secret.hashedSecret,
+      secret.secret
+    );
+    if (!res) {
+      update(secret.hashedSecret, 0);
+      return;
+    }
     update(secret.hashedSecret, 3);
   }, 180000);
 };
@@ -31,10 +45,12 @@ const requestTezos = async (amount, ethStore, tezStore, update) => {
 
   // create new swap with refund time set to 2hrs
   const refundTime = Math.trunc(Date.now() / 1000) + 7200;
+  const approve = await approveToken(tezStore, amount);
+  if (!approve) return undefined;
   const status = await initWait(
     tezStore,
-    ethStore.keyStore.address,
-    amount * 1000000 + "",
+    ethStore.account,
+    amount + "",
     secret.hashedSecret,
     refundTime
   );
@@ -49,7 +65,11 @@ const requestTezos = async (amount, ethStore, tezStore, update) => {
   const tid = setInterval(async () => {
     if (Math.trunc(Date.now() / 1000) >= refundTime) {
       clearInterval(tid);
-      await refund(tezStore, secret.hashedSecret);
+      const res = await refund(tezStore, secret.hashedSecret);
+      if (!res) {
+        update(secret.hashedSecret, 0);
+        return;
+      }
       update(secret.hashedSecret, 4);
       return;
     }
@@ -58,14 +78,23 @@ const requestTezos = async (amount, ethStore, tezStore, update) => {
     if (swp.initiator_tez === "" && swp.refundTimestamp === "0") return;
     clearInterval(tid);
     console.log("\nA SWAP RESPONSE FOUND : \n", swp);
-    await addCounterParty(tezStore, swp.initiator_tez, secret.hashedSecret);
+    const res = await addCounterParty(
+      tezStore,
+      swp.initiator_tez,
+      secret.hashedSecret
+    );
+    if (!res) {
+      update(secret.hashedSecret, 0);
+      return;
+    }
     update(secret.hashedSecret, 2);
     waitCompletion(secret, tezStore, ethStore, refundTime, update);
   }, 180000);
 
   return {
+    type: "tez",
     hashedSecret: secret.hashedSecret,
-    value: amount + " XTZ",
+    value: amount + " USDTz",
     refundTime,
     state: 1,
   };

@@ -5,8 +5,8 @@ import {
   TezosLanguageUtil,
   TezosMessageUtils,
 } from "conseiljs";
-import config from "../../../globalConfig.json";
 import { JSONPath } from "jsonpath-plus";
+import config from "../../../globalConfig.json";
 
 const parseValue = (michelsonData) => {
   const michelineData = TezosLanguageUtil.translateMichelsonToMicheline(
@@ -55,7 +55,7 @@ const getSwaps = async () => {
         {
           field: "big_map_id",
           operation: ConseilOperator.EQ,
-          set: ["15534"],
+          set: [config.tezos.contract_map.toString()],
           inverse: false,
         },
         {

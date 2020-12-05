@@ -1,22 +1,23 @@
-import React, { useEffect } from "react";
-import { useState } from "react";
-import accountBalanceEth from "../../library/ethereum/account/getAccountBalance";
-import accountBalanceTez from "../../library/tezos/account/getAccountBalance";
-import useStyles from "./style";
+import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
+import { accountBalanceEth, tokenBalanceEth } from "../../library/ethereum/account/getAccountBalance";
+import { accountBalanceTez, tokenBalanceTez } from "../../library/tezos/account/getAccountBalance";
 import { shorten, truncate } from "../../util";
+import useStyles from "./style";
 
 const Header = ({ ethStore, tezStore, balUpdate }) => {
   const [balance, setBalance] = useState({ eth: 0, tez: 0 });
   const classes = useStyles();
   const history = useHistory();
   const updateBalance = async () => {
-    let eth = await accountBalanceEth(ethStore.web3, ethStore.keyStore.address);
-    let tez = await accountBalanceTez(tezStore.keyStore.publicKeyHash);
+    let eth = await accountBalanceEth(ethStore.web3, ethStore.account);
+    let tez = await accountBalanceTez(tezStore.account);
+    let tokenEth = await tokenBalanceEth(ethStore.web3, ethStore.account);
+    let tokenTez = await tokenBalanceTez(tezStore.account);
     eth = eth / Math.pow(10, 18);
-    tez = tez / 1000000;
-    balUpdate({ eth, tez });
-    setBalance({ eth, tez });
+    tez =tez / 1000000;
+    balUpdate({ eth, tez, tokenEth, tokenTez });
+    setBalance({ eth, tez,tokenEth, tokenTez });
   };
 
   useEffect(() => {
@@ -27,13 +28,14 @@ const Header = ({ ethStore, tezStore, balUpdate }) => {
     return () => {
       clearInterval(timer);
     };
-  }, [ethStore.keyStore.address, tezStore.keyStore.publicKeyHash]);
+  }, [ethStore.account, tezStore.account]);
 
   return (
     <div className={classes.header}>
       <div className={classes.account}>
-        <p>Ethereum Addr.: {shorten(5, 5, ethStore.keyStore.address)}</p>
+        <p>Ethereum Addr.: {shorten(5, 5, ethStore.account)}</p>
         <p>Balance : {truncate(balance.eth, 4)} ETH</p>
+        <p>Token Balance : {truncate(balance.tokenEth, 4)} USDC</p>
       </div>
       <div className={classes.nav}>
         <h1 className={classes.title}>TrueSwap</h1>
@@ -54,8 +56,9 @@ const Header = ({ ethStore, tezStore, balUpdate }) => {
         </button>
       </div>
       <div className={classes.account}>
-        <p>Tezos Addr.: {shorten(5, 5, tezStore.keyStore.publicKeyHash)}</p>
+        <p>Tezos Addr.: {shorten(5, 5, tezStore.account)}</p>
         <p>Balance : {truncate(balance.tez, 4)} XTZ</p>
+        <p>Token Balance : {truncate(balance.tokenTez, 4)} USDTz</p>
       </div>
     </div>
   );

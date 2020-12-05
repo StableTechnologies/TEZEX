@@ -1,53 +1,35 @@
-import {
-  TezosConseilClient,
-  TezosNodeWriter,
-  TezosParameterFormat,
-} from "conseiljs";
+import { TezosOperationType } from "@airgap/beacon-sdk";
+import { TezosConseilClient, TezosLanguageUtil } from "conseiljs";
 import config from "../../../../globalConfig.json";
-
 const invokeContract = (
   store,
   amtInMuTez,
   entry_point,
   parameters,
   extraGas = 300,
-  extraStorage = 50
+  extraStorage = 50,
+  to = config.tezos.contractAddr
 ) => {
   return new Promise((resolve, reject) => {
-    const fee = 105000,
-      storage_limit = 6000,
-      gas_limit = 1000000;
-    TezosNodeWriter.testContractInvocationOperation(
-      config.tezos.RPC,
-      config.tezos.chain_id,
-      store.keyStore,
-      config.tezos.contractAddr,
-      amtInMuTez,
-      fee,
-      storage_limit,
-      gas_limit,
-      entry_point,
-      parameters,
-      TezosParameterFormat.Michelson
-    )
-      .then(({ gas, storageCost: freight }) => {
-        console.log(gas + extraGas, freight, ~~((gas + extraGas) / 10 + 300));
-        return TezosNodeWriter.sendContractInvocationOperation(
-          config.tezos.RPC,
-          store.signer,
-          store.keyStore,
-          config.tezos.contractAddr,
-          amtInMuTez,
-          200000,
-          freight + extraStorage,
-          gas + extraGas,
-          entry_point,
-          parameters,
-          TezosParameterFormat.Michelson
-        );
+    const operation = {
+      kind: TezosOperationType.TRANSACTION,
+      amount: amtInMuTez,
+      destination: to,
+      source: store.account,
+      parameters: {
+        entrypoint: entry_point,
+        value: JSON.parse(
+          TezosLanguageUtil.translateParameterMichelsonToMicheline(parameters)
+        ),
+      },
+    };
+    store.client
+      .requestOperation({
+        operationDetails: [operation],
       })
       .then((result) => {
-        const groupid = result["operationGroupID"]
+        console.log(result);
+        const groupid = result["transactionHash"]
           .replace(/"/g, "")
           .replace(/\n/, ""); // clean up RPC output
         return TezosConseilClient.awaitOperationConfirmation(

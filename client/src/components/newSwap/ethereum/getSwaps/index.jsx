@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
-import getConversionRate from "../../../../library/common/getConversionRate";
 import getSwaps from "../../../../library/tezos/operations/getSwaps";
 import { shorten } from "../../../../util";
 import Loader from "../../../loader";
@@ -14,7 +13,7 @@ const GetSwap = ({ genSwap, selfAcc, balance }) => {
   const history = useHistory();
   const classes = useStyles();
 
-  const filterSwaps = async (rt) => {
+  const filterSwaps = async () => {
     const data = await getSwaps();
     let swps = [];
     data.forEach((swp) => {
@@ -25,8 +24,8 @@ const GetSwap = ({ genSwap, selfAcc, balance }) => {
       )
         swps.push({
           ...swp,
-          displayValue: swp.value / 1000000,
-          pay: swp.value / (rt * 1000000),
+          displayValue: swp.value,
+          pay: swp.value,
         });
     });
     setSwaps(swps);
@@ -43,8 +42,8 @@ const GetSwap = ({ genSwap, selfAcc, balance }) => {
         className={classes.swap}
       >
         <p>Hash : {shorten(15, 15, data.hashedSecret)}</p>
-        <p>XTZ Value : {data.displayValue}</p>
-        <p>ETH to Pay : {data.pay}</p>
+        <p>USDTz Value : {data.displayValue}</p>
+        <p>USDC to Pay : {data.pay}</p>
       </div>
     );
   };
@@ -60,13 +59,9 @@ const GetSwap = ({ genSwap, selfAcc, balance }) => {
     }
   };
   useEffect(() => {
-    getConversionRate().then((res) => {
-      filterSwaps(res);
-    });
-    console.log("Rate Updated");
+    filterSwaps();
     const timer = setInterval(async () => {
-      const rt = await getConversionRate();
-      filterSwaps(rt);
+      filterSwaps();
     }, 600000);
     return () => {
       clearInterval(timer);
