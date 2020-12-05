@@ -11,7 +11,7 @@ const getSwap = async (secretHash) => {
   );
   const jsonData = await TezosNodeReader.getValueForBigMapKey(
     config.RPC,
-    15534,
+    17196,
     packedKey,
     undefined,
     config.chain_id

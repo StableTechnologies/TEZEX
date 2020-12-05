@@ -1,4 +1,4 @@
-const config = require("../../config/eth-config.json");
+const config = require("../../config/eth-token-swap-config.json");
 const BCInteract = require("./bc-intereraction");
 const initAdminAccount = require("./init");
 

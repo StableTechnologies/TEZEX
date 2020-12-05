@@ -1,7 +1,7 @@
 const invokeContract = require("../util/invokeContract");
 const init = require("../init");
 const conseiljs = require("conseiljs");
-const config = require("../../config/tez-config.json");
+const config = require("../../config/tez-token-swap-config.json");
 
 const state = "True"; // True or False
 

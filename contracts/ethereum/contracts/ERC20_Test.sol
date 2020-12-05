@@ -15,6 +15,7 @@ contract SimpleToken is Context, ERC20 {
      * @dev Constructor that gives _msgSender() all of existing tokens.
      */
     constructor() public ERC20("SimpleToken", "SIM") {
+        _setupDecimals(0);
         _mint(_msgSender(), 10000 * (10**uint256(decimals())));
     }
 }

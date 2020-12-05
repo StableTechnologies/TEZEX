@@ -1,5 +1,5 @@
 const Web3 = require("web3");
-const config = require("../config/eth-config.json");
+const config = require("../config/eth-token-swap-config.json");
 
 //Infura HttpProvider Endpoint
 module.exports = () => {
