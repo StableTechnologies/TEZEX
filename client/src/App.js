@@ -13,10 +13,7 @@ import requestEth from "./library/common/request-eth";
 import requestTezos from "./library/common/request-tezos";
 import respondEth from "./library/common/respond-eth";
 import respondTezos from "./library/common/respond-tezos";
-import setEthAccount from "./library/ethereum/account/setAccount";
-import getSwapsEth from "./library/ethereum/operations/getSwaps";
-import setTezAccount from "./library/tezos/account/setAccount";
-import getSwapsTez from "./library/tezos/operations/getSwaps";
+import { setEthAccount, setTezAccount } from "./util";
 
 const App = () => {
   const [ethStore, ethSetup] = useState(undefined);
@@ -38,8 +35,8 @@ const App = () => {
     try {
       const eth = await setEthAccount();
       const tez = await setTezAccount();
-      const ethSwaps = await getSwapsEth(eth);
-      const tezSwaps = await getSwapsTez();
+      const ethSwaps = await eth.getUserSwaps(eth.account);
+      const tezSwaps = await tez.getUserSwaps(tez.account);
       let swap = {};
       ethSwaps.forEach((swp) => {
         if (swp.initiator === eth.account)
@@ -61,7 +58,7 @@ const App = () => {
             state: 0,
           };
       });
-      updateSwaps(swap);
+      if (Object.keys(swap).length > 0) updateSwaps(swap);
       ethSetup(eth);
       tezSetup(tez);
     } catch (e) {
@@ -146,14 +143,14 @@ const App = () => {
             <Route exact path="/create/eth">
               <Ethereum
                 genSwap={genSwap}
-                selfAcc={tezStore.account}
+                tezStore={tezRef.current}
                 balance={balance.eth}
               />
             </Route>
             <Route exact path="/create/xtz">
               <Tezos
                 genSwap={genSwap}
-                ethStore={ethStore}
+                ethStore={ethRef.current}
                 balance={balance.tez}
               />
             </Route>

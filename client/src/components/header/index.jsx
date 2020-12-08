@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
-import { accountBalanceEth, tokenBalanceEth } from "../../library/ethereum/account/getAccountBalance";
-import { accountBalanceTez, tokenBalanceTez } from "../../library/tezos/account/getAccountBalance";
 import { shorten, truncate } from "../../util";
 import useStyles from "./style";
 
@@ -10,10 +8,10 @@ const Header = ({ ethStore, tezStore, balUpdate }) => {
   const classes = useStyles();
   const history = useHistory();
   const updateBalance = async () => {
-    let eth = await accountBalanceEth(ethStore.web3, ethStore.account);
-    let tez = await accountBalanceTez(tezStore.account);
-    let tokenEth = await tokenBalanceEth(ethStore.web3, ethStore.account);
-    let tokenTez = await tokenBalanceTez(tezStore.account);
+    let eth = await ethStore.balance(ethStore.account);
+    let tez = await tezStore.balance(tezStore.account);
+    let tokenEth = await ethStore.tokenBalance(ethStore.account);
+    let tokenTez = await tezStore.tokenBalance(tezStore.account);
     eth = eth / Math.pow(10, 18);
     tez =tez / 1000000;
     balUpdate({ eth, tez, tokenEth, tokenTez });

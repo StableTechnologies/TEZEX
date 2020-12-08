@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
-import getSwaps from "../../../../library/ethereum/operations/getSwaps";
 import { shorten } from "../../../../util";
 import Loader from "../../../loader";
 import useStyles from "../../style";
@@ -14,20 +13,8 @@ const GetSwap = ({ genSwap, ethStore, balance }) => {
   const history = useHistory();
   const classes = useStyles();
   const filterSwaps = async () => {
-    const data = await getSwaps(ethStore);
-    let swps = [];
-    data.forEach((swp) => {
-      if (
-        swp.participant === swp.initiator &&
-        swp.initiator !== ethStore.account &&
-        Math.trunc(Date.now() / 1000) < swp.refundTimestamp - 4200
-      )
-        swps.push({
-          ...swp,
-          dispValue: swp.value,
-          pay: swp.value ,
-        });
-    });
+    const swps = await ethStore.getWaitingSwaps(4200);
+    console.log(swps)
     setSwaps(swps);
     setLoader(false);
   };
@@ -36,14 +23,14 @@ const GetSwap = ({ genSwap, ethStore, balance }) => {
     return (
       <div
         onClick={() => {
-          generateSwap(data.pay, data);
+          generateSwap(data.value, data);
         }}
         key={data.hashedSecret}
         className={classes.swap}
       >
         <p>Hash : {shorten(15, 15, data.hashedSecret)}</p>
-        <p>USDC Value : {data.dispValue}</p>
-        <p>USDTz to Pay : {data.pay}</p>
+        <p>USDC Value : {data.value}</p>
+        <p>USDTz to Pay : {data.value}</p>
       </div>
     );
   };

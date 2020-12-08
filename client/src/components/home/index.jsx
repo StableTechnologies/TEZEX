@@ -1,7 +1,5 @@
 import React from "react";
 import { useHistory } from "react-router-dom";
-import refundEth from "../../library/ethereum/operations/refund";
-import refundTez from "../../library/tezos/operations/refund";
 import useStyles from "./style";
 
 const Home = ({ swaps, ethStore, tezStore, update }) => {
@@ -11,9 +9,9 @@ const Home = ({ swaps, ethStore, tezStore, update }) => {
   const refundHandler = async (hashedSecret)=>{
     let res = false;
     if(swaps[hashedSecret].type==="eth")
-    res = await refundEth(ethStore.web3, ethStore, hashedSecret);
+    res = await ethStore.refund(hashedSecret);
     else
-    res = await refundTez(tezStore, hashedSecret);
+    res = await tezStore.refund(hashedSecret);
     if(!res) alert("error in refunding, check if the refund time has come")
     else
     update(hashedSecret, 4)

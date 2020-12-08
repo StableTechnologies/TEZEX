@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
-import getSwaps from "../../../../library/tezos/operations/getSwaps";
 import { shorten } from "../../../../util";
 import Loader from "../../../loader";
 import useStyles from "../../style";
 import CreateSwap from "../createSwap";
 
-const GetSwap = ({ genSwap, selfAcc, balance }) => {
+const GetSwap = ({ genSwap, tezStore, balance }) => {
   const [swaps, setSwaps] = useState([]);
   const [loader, setLoader] = useState(true);
   const [fullLoader, setFullLoader] = useState(false);
@@ -14,20 +13,7 @@ const GetSwap = ({ genSwap, selfAcc, balance }) => {
   const classes = useStyles();
 
   const filterSwaps = async () => {
-    const data = await getSwaps();
-    let swps = [];
-    data.forEach((swp) => {
-      if (
-        swp.participant === swp.initiator &&
-        swp.initiator !== selfAcc &&
-        Math.trunc(Date.now() / 1000) < swp.refundTimestamp - 4200
-      )
-        swps.push({
-          ...swp,
-          displayValue: swp.value,
-          pay: swp.value,
-        });
-    });
+    const swps = await tezStore.getWaitingSwaps(4200);
     setSwaps(swps);
     setLoader(false);
   };
@@ -36,14 +22,14 @@ const GetSwap = ({ genSwap, selfAcc, balance }) => {
     return (
       <div
         onClick={() => {
-          generateSwap(data.pay, data);
+          generateSwap(data.value, data);
         }}
         key={data.hashedSecret}
         className={classes.swap}
       >
         <p>Hash : {shorten(15, 15, data.hashedSecret)}</p>
-        <p>USDTz Value : {data.displayValue}</p>
-        <p>USDC to Pay : {data.pay}</p>
+        <p>USDTz Value : {data.value}</p>
+        <p>USDC to Pay : {data.value}</p>
       </div>
     );
   };
