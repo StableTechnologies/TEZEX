@@ -1,19 +1,20 @@
 import { TezosMessageUtils, TezosNodeReader } from "conseiljs";
 import { JSONPath } from "jsonpath-plus";
-import config from "./globalConfig.json";
 import Tezos from "./tezos";
 
 export default class USDTz extends Tezos {
-  constructor(tezos, account) {
-    super(tezos, account);
+  constructor(tezos, account, swapContract, tokenContract, rpc, conseilServer) {
+    super(tezos, account, swapContract, rpc, conseilServer);
+    this.tokenContract = tokenContract;
   }
+
   async tokenBalance(address) {
     const key = TezosMessageUtils.encodeBigMapKey(
       Buffer.from(TezosMessageUtils.writePackedData(address, "address"), "hex")
     );
     const tokenData = await TezosNodeReader.getValueForBigMapKey(
-      config.tezos.RPC,
-      config.tezos.token_map,
+      this.rpc,
+      this.tokenContract.mapID,
       key
     );
     let balance =
@@ -28,8 +29,8 @@ export default class USDTz extends Tezos {
       Buffer.from(TezosMessageUtils.writePackedData(address, "address"), "hex")
     );
     const tokenData = await TezosNodeReader.getValueForBigMapKey(
-      config.tezos.RPC,
-      config.tezos.token_map,
+      this.rpc,
+      this.tokenContract.mapID,
       key
     );
     let allowances =
@@ -40,7 +41,7 @@ export default class USDTz extends Tezos {
       allowances === undefined
         ? []
         : allowances.filter(
-            (allow) => allow.args[0].string === config.tezos.contractAddr
+            (allow) => allow.args[0].string === this.swapContract.address
           );
     return allowance.length === 0 ? "0" : allowance[0].args[1].int;
   }
@@ -52,15 +53,15 @@ export default class USDTz extends Tezos {
       ops.push({
         amtInMuTez: 0,
         entrypoint: "approve",
-        parameters: `(Pair "${config.tezos.contractAddr}" 0)`,
-        to: config.tezos.tokenAddr,
+        parameters: `(Pair "${this.swapContract.address}" 0)`,
+        to: this.tokenContract.address,
       });
     }
     ops.push({
       amtInMuTez: 0,
       entrypoint: "approve",
-      parameters: `(Pair "${config.tezos.contractAddr}" ${amount})`,
-      to: config.tezos.tokenAddr,
+      parameters: `(Pair "${this.swapContract.address}" ${amount})`,
+      to: this.tokenContract.address,
     });
     const res = await this.interact(ops);
     if (res.status !== "applied") {

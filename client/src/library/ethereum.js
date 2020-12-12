@@ -1,8 +1,11 @@
+import { Mutex } from "async-mutex";
+
 export default class Ethereum {
   constructor(web3, account, swapContract) {
     this.web3 = web3;
     this.account = account;
     this.swapContract = swapContract;
+    this.mutex = new Mutex();
   }
   async balance(address) {
     return await this.web3.eth.getBalance(address);
@@ -72,37 +75,50 @@ export default class Ethereum {
     );
   }
 
-  async interact(data, ether, gas, to = undefined) {
-    return new Promise((resolve) => {
-      try {
-        // web3.eth.handleRevert = true;
-        to = to === undefined ? this.swapContract.options.address : to;
-        const tx = {
-          from: this.account,
-          value: this.web3.utils.toHex(this.web3.utils.toWei(ether, "ether")),
-          data,
-          to,
-        };
-        console.log(tx);
-        this.web3.eth
-          .sendTransaction(tx)
-          .on("transactionHash", (transactionHash) => {
-            console.log("ETH TX HASH : ", transactionHash);
-          })
-          .once("receipt", (rc) => {
-            console.log(rc);
-          })
-          .then((contract) => {
-            resolve(true);
-          })
-          .catch((error) => {
-            console.error("ETH TX ERROR : ", error);
-            resolve(false);
-          });
-      } catch (error) {
-        console.error("ETH TX ERROR : ", error);
-        resolve(false);
-      }
+  async getEstimates(data, ether, from, to) {
+    const blockDetails = await this.web3.eth.getBlock("latest", false);
+    const gasLimit = blockDetails.gasLimit;
+    const gasPrice = await this.web3.eth.getGasPrice();
+    const gasEstimate = await this.web3.eth.estimateGas({
+      from,
+      to,
+      data,
+      value: this.web3.utils.toHex(this.web3.utils.toWei(ether, "ether")),
     });
+    return {
+      fee: parseInt(gasPrice) * gasEstimate,
+      gas: gasEstimate,
+      gasLimit,
+      gasPrice,
+    };
+  }
+
+  async interact(data, ether, gas, to = undefined) {
+    await this.mutex.acquire();
+    try {
+      // web3.eth.handleRevert = true;
+      to = to === undefined ? this.swapContract.options.address : to;
+      const tx = {
+        from: this.account,
+        value: this.web3.utils.toHex(this.web3.utils.toWei(ether, "ether")),
+        data,
+        to,
+      };
+      console.log(tx);
+      await this.web3.eth
+        .sendTransaction(tx)
+        .on("transactionHash", (transactionHash) => {
+          console.log("ETH TX HASH : ", transactionHash);
+        })
+        .once("receipt", (rc) => {
+          console.log(rc);
+        });
+      return true;
+    } catch (error) {
+      console.error("ETH TX ERROR : ", error);
+      return false;
+    } finally {
+      this.mutex.release();
+    }
   }
 }

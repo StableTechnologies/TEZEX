@@ -1,4 +1,5 @@
 import { TezosOperationType } from "@airgap/beacon-sdk";
+import { Mutex } from "async-mutex";
 import {
   ConseilDataClient,
   ConseilOperator,
@@ -9,16 +10,19 @@ import {
   TezosNodeReader,
 } from "conseiljs";
 import { JSONPath } from "jsonpath-plus";
-import config from "./globalConfig.json";
 
 export default class Tezos {
-  constructor(tezos, account) {
-    this.tezos = tezos;
+  constructor(tezos, account, swapContract, rpc, conseilServer) {
     this.account = account;
+    this.tezos = tezos;
+    this.rpc = rpc;
+    this.conseilServer = conseilServer;
+    this.swapContract = swapContract;
+    this.mutex = new Mutex();
   }
   async balance(address) {
     return await TezosNodeReader.getSpendableBalanceForAccount(
-      config.tezos.RPC,
+      this.rpc,
       address
     );
   }
@@ -92,9 +96,9 @@ export default class Tezos {
 
   async getRedeemedSecret(hashedSecret) {
     const data = await ConseilDataClient.executeEntityQuery(
-      config.tezos.conseilServer,
+      this.conseilServer,
       "tezos",
-      config.tezos.network,
+      this.conseilServer.network,
       "operations",
       {
         fields: ["timestamp", "source", "parameters_entrypoints", "parameters"],
@@ -120,7 +124,7 @@ export default class Tezos {
           {
             field: "destination",
             operation: "eq",
-            set: [config.tezos.contractAddr],
+            set: [this.swapContract.address],
             inverse: false,
           },
           {
@@ -186,8 +190,8 @@ export default class Tezos {
       )
     );
     const jsonData = await TezosNodeReader.getValueForBigMapKey(
-      config.tezos.RPC,
-      config.tezos.contract_map,
+      this.rpc,
+      this.swapContract.mapID,
       packedKey
     );
     if (jsonData === undefined) return jsonData;
@@ -231,9 +235,9 @@ export default class Tezos {
 
   async getAllSwaps() {
     const data = await ConseilDataClient.executeEntityQuery(
-      config.tezos.conseilServer,
+      this.conseilServer,
       "tezos",
-      config.tezos.network,
+      this.conseilServer.network,
       "big_map_contents",
       {
         fields: [
@@ -247,7 +251,7 @@ export default class Tezos {
           {
             field: "big_map_id",
             operation: ConseilOperator.EQ,
-            set: [config.tezos.contract_map.toString()],
+            set: [this.swapContract.mapID.toString()],
             inverse: false,
           },
           {
@@ -284,11 +288,12 @@ export default class Tezos {
     );
   }
 
-  interact(operations, extraGas = 300, extraStorage = 50) {
-    return new Promise((resolve, reject) => {
+  async interact(operations, extraGas = 300, extraStorage = 50) {
+    await this.mutex.acquire();
+    try {
       let ops = [];
       operations.forEach((op) => {
-        op.to = op.to === undefined ? config.tezos.contractAddr : op.to;
+        op.to = op.to === undefined ? this.swapContract.address : op.to;
         ops.push({
           kind: TezosOperationType.TRANSACTION,
           amount: op.amtInMuTez,
@@ -304,27 +309,25 @@ export default class Tezos {
           },
         });
       });
-      this.tezos
-        .requestOperation({
-          operationDetails: ops,
-        })
-        .then((result) => {
-          console.log(result);
-          const groupid = result["transactionHash"]
-            .replace(/"/g, "")
-            .replace(/\n/, ""); // clean up RPC output
-          return TezosConseilClient.awaitOperationConfirmation(
-            config.tezos.conseilServer,
-            config.tezos.network,
-            groupid,
-            1
-          );
-        })
-        .then(resolve)
-        .catch((err) => {
-          console.log(err);
-          resolve({ status: "error" });
-        });
-    });
+      const result = await this.tezos.requestOperation({
+        operationDetails: ops,
+      });
+      console.log(result);
+      const groupid = result["transactionHash"]
+        .replace(/"/g, "")
+        .replace(/\n/, ""); // clean up RPC output
+      const confirm = await TezosConseilClient.awaitOperationConfirmation(
+        this.conseilServer,
+        this.conseilServer.network,
+        groupid,
+        1
+      );
+      return confirm;
+    } catch (err) {
+      console.error(err);
+      return { status: "error" };
+    } finally {
+      this.mutex.release();
+    }
   }
 }

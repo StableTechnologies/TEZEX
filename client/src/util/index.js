@@ -39,5 +39,12 @@ export const setTezAccount = async () => {
     network: { type: NetworkType.DELPHINET },
   });
   const account = await client.getActiveAccount();
-  return new USDTz(client, account["address"]);
+  return new USDTz(
+    client,
+    account["address"],
+    config.tezos.swapContract,
+    config.tezos.tokenContract,
+    config.tezos.RPC,
+    config.tezos.conseilServer
+  );
 };
