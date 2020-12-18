@@ -1,6 +1,6 @@
 {
   "tezos": {
-    "RPC": "https://delphinet-tezos.giganode.io",
+    "RPC": "https://tezos-dev.cryptonomic-infra.tech:443",
     "tokenContract": {
       "address": "KT1Vur14QTaL4AW2mSy4ENBC32DqFbc221X3",
       "mapID": 17195

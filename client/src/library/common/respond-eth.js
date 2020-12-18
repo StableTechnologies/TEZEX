@@ -5,91 +5,82 @@ const waitCompletion = (
   refundTime,
   update
 ) => {
-  const id = setInterval(async () => {
-    const swp = await tezStore.getSwap(hashedSecret);
-    console.log("WAITING TO COMPLETE SWAP");
-    if (swp !== undefined) {
-      if (Math.trunc(Date.now() / 1000) >= refundTime) {
-        clearInterval(id);
-        const res = await tezStore.refund(hashedSecret);
-        if (!res) {
-          update(hashedSecret, 0);
+  setTimeout(async function run() {
+    try {
+      const swp = await tezStore.getSwap(hashedSecret);
+      console.log("WAITING TO COMPLETE SWAP");
+      if (swp !== undefined) {
+        if (Math.trunc(Date.now() / 1000) >= refundTime) {
+          await tezStore.refund(hashedSecret);
+          update(hashedSecret, 4);
           return;
         }
-        update(hashedSecret, 4);
+        setTimeout(run, 90000);
+        return;
       }
-      return;
-    }
-    clearInterval(id);
-    console.log("\nCOMPLETING SWAP");
-    const secret = await tezStore.getRedeemedSecret(hashedSecret);
-    const res = await ethStore.redeem(hashedSecret, secret);
-    if (!res) {
+      console.log("\nCOMPLETING SWAP");
+      const secret = await tezStore.getRedeemedSecret(hashedSecret);
+      await ethStore.redeem(hashedSecret, secret);
+      update(hashedSecret, 3);
+    } catch (err) {
+      console.error(hashedSecret, err);
       update(hashedSecret, 0);
       return;
     }
-    update(hashedSecret, 3);
-  }, 180000);
+  }, 0);
 };
 
 const respondEth = async (amount, ethStore, tezStore, req_swap, update) => {
   //create new swap response on ethereum
-  const refundTime = req_swap.refundTimestamp - 3600;
-  const approve = await tezStore.approveToken(amount);
-  if (!approve) return undefined;
-  const status = await tezStore.initiateWait(
-    req_swap.hashedSecret,
-    refundTime,
-    ethStore.account,
-    amount + ""
-  );
-
-  if (!status) return undefined;
-
-  console.log("\nSWAP GENERATED | HASH: ", req_swap.hashedSecret);
-
-  // watch swap response
-  const tid = setInterval(async () => {
-    if (Math.trunc(Date.now() / 1000) >= refundTime) {
-      clearInterval(tid);
-      const res = await tezStore.refund(req_swap.hashedSecret);
-      if (!res) {
-        update(req_swap.hashedSecret, 0);
-        return;
-      }
-      update(req_swap.hashedSecret, 4);
-      return;
-    }
-    const swp = await ethStore.getSwap(req_swap.hashedSecret);
-    console.log("CHECKING FOR SWAP RESPONSE");
-    if (swp.participant !== ethStore.account) return;
-    clearInterval(tid);
-    console.log("\nA SWAP RESPONSE FOUND : \n", swp);
-    const res = await tezStore.addCounterParty(
+  try {
+    const refundTime = req_swap.refundTimestamp - 3600;
+    await tezStore.approveToken(amount);
+    await tezStore.initiateWait(
       req_swap.hashedSecret,
-      swp.initiator_tez
-    );
-    if (!res) {
-      update(req_swap.hashedSecret, 0);
-      return;
-    }
-    update(req_swap.hashedSecret, 2);
-    waitCompletion(
-      req_swap.hashedSecret,
-      ethStore,
-      tezStore,
       refundTime,
-      update
+      ethStore.account,
+      amount + ""
     );
-  }, 180000);
 
-  return {
-    type: "tez",
-    hashedSecret: req_swap.hashedSecret,
-    value: amount + " USDTz",
-    refundTime,
-    state: 1,
-  };
+    console.log("\nSWAP GENERATED | HASH: ", req_swap.hashedSecret);
+
+    // watch swap response
+    waitResponse(req_swap.hashedSecret, ethStore, tezStore, refundTime, update);
+    return {
+      type: "tez",
+      hashedSecret: req_swap.hashedSecret,
+      value: amount + " USDTz",
+      refundTime,
+      state: 1,
+    };
+  } catch (err) {
+    console.log("FAILED TO INITIATE SWAP", err);
+  }
 };
 
+const waitResponse = (hashedSecret, ethStore, tezStore, refundTime, update) => {
+  setTimeout(async function run() {
+    try {
+      if (Math.trunc(Date.now() / 1000) >= refundTime) {
+        await tezStore.refund(hashedSecret);
+        update(hashedSecret, 4);
+        return;
+      }
+      const swp = await ethStore.getSwap(hashedSecret);
+      console.log("CHECKING FOR SWAP RESPONSE");
+      if (swp.participant !== ethStore.account) {
+        setTimeout(run, 90000);
+        return;
+      }
+      console.log("\nA SWAP RESPONSE FOUND : \n", swp);
+      await tezStore.addCounterParty(hashedSecret, swp.initiator_tez);
+      update(hashedSecret, 2);
+      waitCompletion(hashedSecret, ethStore, tezStore, refundTime, update);
+    } catch (err) {
+      console.error(hashedSecret, err);
+      update(hashedSecret, 0);
+      return;
+    }
+  }, 0);
+};
 export default respondEth;

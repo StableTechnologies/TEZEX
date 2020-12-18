@@ -5,7 +5,7 @@ import Loader from "../../../loader";
 import useStyles from "../../style";
 import CreateSwap from "../createSwap";
 
-const GetSwap = ({ genSwap, tezStore, balance }) => {
+const GetSwap = ({ genSwap, tezStore }) => {
   const [swaps, setSwaps] = useState([]);
   const [loader, setLoader] = useState(true);
   const [fullLoader, setFullLoader] = useState(false);
@@ -13,9 +13,13 @@ const GetSwap = ({ genSwap, tezStore, balance }) => {
   const classes = useStyles();
 
   const filterSwaps = async () => {
+    try{
     const swps = await tezStore.getWaitingSwaps(4200);
     setSwaps(swps);
     setLoader(false);
+    }catch(err){
+      console.error("Error getting swaps: ",err)
+    }
   };
 
   const SwapItem = (data) => {
@@ -64,7 +68,6 @@ const GetSwap = ({ genSwap, tezStore, balance }) => {
         <CreateSwap
           className={classes.newSwap}
           genSwap={genSwap}
-          balance={balance}
           loader={setFullLoader}
         />
       </div>

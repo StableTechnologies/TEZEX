@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
 import useStyles from "../../style";
 
-const CreateSwap = ({ className, genSwap, loader, balance }) => {
+const CreateSwap = ({ className, genSwap, loader }) => {
   const [input, setInput] = useState(0);
   const history = useHistory();
   const classes = useStyles();

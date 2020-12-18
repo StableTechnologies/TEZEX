@@ -20,20 +20,18 @@ export default class USDC extends Ethereum {
     const data = await this.swapContract.methods
       .initiateWait(secretHash, tezAcc, amount, refundTime)
       .encodeABI();
-    const rc = await this.interact(data, "0", "1000000");
-    return rc;
+    return await this.interact(data, "0", "1000000");
   }
 
   async approveToken(amount) {
     const data = await this.tokenContract.methods
       .approve(this.swapContract.options.address, parseInt(amount))
       .encodeABI();
-    const rc = await this.interact(
+    return await this.interact(
       data,
       "0",
       "1000000",
       this.tokenContract.options.address
     );
-    return rc;
   }
 }

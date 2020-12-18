@@ -65,9 +65,9 @@ export default class USDTz extends Tezos {
     });
     const res = await this.interact(ops);
     if (res.status !== "applied") {
-      return false;
+      throw new Error("TEZOS TX FAILED");
     }
-    return true;
+    return res;
   }
 
   async initiateWait(hashedSecret, refundTime, ethAddress, amount) {
@@ -79,8 +79,8 @@ export default class USDTz extends Tezos {
       },
     ]);
     if (res.status !== "applied") {
-      return false;
+      throw new Error("TEZOS TX FAILED");
     }
-    return true;
+    return res;
   }
 }

@@ -36,9 +36,9 @@ export default class Tezos {
       },
     ]);
     if (res.status !== "applied") {
-      return false;
+      throw new Error("TEZOS TX FAILED");
     }
-    return true;
+    return res;
   }
 
   async addCounterParty(hashedSecret, tezAccount) {
@@ -50,9 +50,9 @@ export default class Tezos {
       },
     ]);
     if (res.status !== "applied") {
-      return false;
+      throw new Error("TEZOS TX FAILED");
     }
-    return true;
+    return res;
   }
 
   async redeem(hashedSecret, secret) {
@@ -64,9 +64,9 @@ export default class Tezos {
       },
     ]);
     if (res.status !== "applied") {
-      return false;
+      throw new Error("TEZOS TX FAILED");
     }
-    return true;
+    return res;
   }
 
   async refund(hashedSecret) {
@@ -78,9 +78,9 @@ export default class Tezos {
       },
     ]);
     if (res.status !== "applied") {
-      return false;
+      throw new Error("TEZOS TX FAILED");
     }
-    return true;
+    return res;
   }
 
   parseRedeemValue(e) {
@@ -325,7 +325,7 @@ export default class Tezos {
       return confirm;
     } catch (err) {
       console.error(err);
-      return { status: "error" };
+      throw err;
     } finally {
       this.mutex.release();
     }

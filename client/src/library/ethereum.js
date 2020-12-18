@@ -15,32 +15,28 @@ export default class Ethereum {
     const data = await this.swapContract.methods
       .initiateWait(hashedSecret, tezAcc, refundTime)
       .encodeABI();
-    const rc = await this.interact(data, amountInEther.toString(), "1000000");
-    return rc;
+    return await this.interact(data, amountInEther.toString(), "1000000");
   }
 
   async addCounterParty(hashedSecret, ethAccount) {
     const data = await this.swapContract.methods
       .addCounterParty(hashedSecret, ethAccount)
       .encodeABI();
-    const rc = await this.interact(data, "0", "1000000");
-    return rc;
+    return await this.interact(data, "0", "1000000");
   }
 
   async redeem(hashedSecret, secret) {
     const data = await this.swapContract.methods
       .redeem(hashedSecret, secret)
       .encodeABI();
-    const rc = await this.interact(data, "0", "1000000");
-    return rc;
+    return await this.interact(data, "0", "1000000");
   }
 
   async refund(hashedSecret) {
     const data = await this.swapContract.methods
       .refund(hashedSecret)
       .encodeABI();
-    const rc = await this.interact(data, "0", "1000000");
-    return rc;
+    return await this.interact(data, "0", "1000000");
   }
 
   async getRedeemedSecret(hashedSecret) {
@@ -116,7 +112,7 @@ export default class Ethereum {
       return true;
     } catch (error) {
       console.error("ETH TX ERROR : ", error);
-      return false;
+      throw error;
     } finally {
       this.mutex.release();
     }
