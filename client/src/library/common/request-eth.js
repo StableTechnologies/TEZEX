@@ -25,7 +25,7 @@ const waitCompletion = (secret, tezStore, ethStore, refundTime, update) => {
   }, 0);
 };
 
-const requestEth = async (amount, ethStore, tezStore, update) => {
+const requestEth = async (amount, minAmt, ethStore, tezStore, update) => {
   // generate swap secret
   try {
     const secret = createSecrets();
@@ -45,7 +45,7 @@ const requestEth = async (amount, ethStore, tezStore, update) => {
     console.log("\nSWAP Generated : ");
     const swap = await ethStore.getSwap(secret.hashedSecret);
     console.log(JSON.stringify(swap));
-    waitResponse(secret, tezStore, ethStore, refundTime, update);
+    waitResponse(secret, minAmt, tezStore, ethStore, refundTime, update);
     return {
       type: "eth",
       hashedSecret: secret.hashedSecret,
@@ -58,7 +58,14 @@ const requestEth = async (amount, ethStore, tezStore, update) => {
   }
 };
 
-const waitResponse = (secret, tezStore, ethStore, refundTime, update) => {
+const waitResponse = (
+  secret,
+  minAmt,
+  tezStore,
+  ethStore,
+  refundTime,
+  update
+) => {
   setTimeout(async function run() {
     try {
       if (Math.trunc(Date.now() / 1000) >= refundTime) {
@@ -73,6 +80,11 @@ const waitResponse = (secret, tezStore, ethStore, refundTime, update) => {
         return;
       }
       console.log("\nA SWAP RESPONSE FOUND : \n", swp);
+      if (swp.value < minAmt) {
+        console.log("swap response doesn't match min amount");
+        setTimeout(run, 90000);
+        return;
+      }
       await ethStore.addCounterParty(secret.hashedSecret, swp.initiator_eth);
       update(secret.hashedSecret, 2);
       waitCompletion(secret, tezStore, ethStore, refundTime, update);

@@ -94,6 +94,19 @@ export default class Tezos {
     };
   }
 
+  async getReward() {
+    const storage = await TezosNodeReader.getContractStorage(
+      this.rpc,
+      this.swapContract.address
+    );
+    return parseInt(
+      JSONPath({
+        path: "$.args[1].args[0].int",
+        json: storage,
+      })[0]
+    );
+  }
+
   async getRedeemedSecret(hashedSecret) {
     const data = await ConseilDataClient.executeEntityQuery(
       this.conseilServer,
@@ -320,7 +333,7 @@ export default class Tezos {
         this.conseilServer,
         this.conseilServer.network,
         groupid,
-        1
+        2
       );
       return confirm;
     } catch (err) {

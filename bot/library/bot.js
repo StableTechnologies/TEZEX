@@ -12,6 +12,7 @@ module.exports = class Bot {
     this.volume = {};
     this.usdcLimit = 5;
     this.usdtzLimit = 5;
+    this.reward = 0;
   }
   async init(ethConfig, tezosConfig, volume) {
     try {
@@ -45,6 +46,7 @@ module.exports = class Bot {
         config.tezos.conseilServer
       );
       await this.usdtz.initConseil();
+      this.reward = await this.usdtz.getReward();
       await Promise.all([
         this.usdc.approveToken(this.volume.usdc),
         this.usdtz.approveToken(this.volume.usdtz),
@@ -57,6 +59,7 @@ module.exports = class Bot {
   }
 
   start() {
+    this.monitorReward();
     this.monitorUSDC();
     this.monitorUSDTz();
     this.monitorRefunds();
@@ -157,13 +160,16 @@ module.exports = class Bot {
             swp.value <= this.volume.usdtz
           ) {
             console.log("FOUND : ", swp.hashedSecret);
+            const valueToPay = Math.round(
+              parseInt(swp.value) * (1 - this.reward / 100)
+            );
             this.usdtzSwaps[swp.hashedSecret] = {
               state: 0,
-              value: swp.value,
+              value: valueToPay,
               hashedSecret: swp.hashedSecret,
               refundTime: swp.refundTimestamp - 3600,
             };
-            //   console.log(this.usdtzSwaps[swp.hashedSecret]);
+            console.log(this.usdtzSwaps, valueToPay);
             this.volume.usdtz -= parseInt(
               this.usdtzSwaps[swp.hashedSecret].value
             );
@@ -204,15 +210,19 @@ module.exports = class Bot {
             swp.value <= this.volume.usdc
           ) {
             console.log("FOUND : ", swp.hashedSecret);
+            const valueToPay = Math.round(
+              parseInt(swp.value) * (1 - this.reward / 100)
+            );
             this.usdcSwaps[swp.hashedSecret] = {
               state: 0,
-              value: swp.value,
+              value: valueToPay,
               hashedSecret: swp.hashedSecret,
               refundTime: swp.refundTimestamp - 3600,
             };
             this.volume.usdc -= parseInt(
               this.usdcSwaps[swp.hashedSecret].value
             );
+            console.log(this.usdcSwaps, valueToPay);
             respondTezos(
               this.usdc,
               this.usdtz,
@@ -228,5 +238,18 @@ module.exports = class Bot {
       setTimeout(run, 120000);
     };
     setTimeout(run, 0);
+  }
+
+  monitorReward() {
+    const run = async () => {
+      console.log("UPDATING REWARD");
+      try {
+        this.reward = await this.usdtz.getReward();
+      } catch (err) {
+        console.error("ERROR while updating reward: ", err);
+      }
+      setTimeout(run, 120000);
+    };
+    setTimeout(run, 120000);
   }
 };

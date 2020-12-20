@@ -105,6 +105,19 @@ module.exports = class Tezos {
     return res;
   }
 
+  async getReward() {
+    const storage = await TezosNodeReader.getContractStorage(
+      this.rpc,
+      this.swapContract.address
+    );
+    return parseInt(
+      JSONPath({
+        path: "$.args[1].args[0].int",
+        json: storage,
+      })[0]
+    );
+  }
+
   parseRedeemValue(e) {
     const splt = e.parameters.split(" ");
     return {

@@ -44,6 +44,7 @@ const App = () => {
             type: "eth",
             hashedSecret: swp.hashedSecret,
             value: swp.value + " USDC",
+            minReturn: "-",
             refundTime: swp.refundTimestamp,
             state: 0,
           };
@@ -54,6 +55,7 @@ const App = () => {
             type: "tez",
             hashedSecret: swp.hashedSecret,
             value: swp.value + " USDTz",
+            minReturn: "-",
             refundTime: swp.refundTimestamp,
             state: 0,
           };
@@ -76,16 +78,18 @@ const App = () => {
     } else console.log("missing hash update request");
   };
 
-  const genSwap = async (type, value, req_swap = undefined) => {
+  const genSwap = async (type, value, minValue, req_swap = undefined) => {
     let swap = {};
     if (type === 2) {
       if (req_swap === undefined) {
         swap = await requestTezos(
           value,
+          minValue,
           ethRef.current,
           tezRef.current,
           update
         );
+        swap["minReturn"] = minValue + " USDC";
       } else {
         swap = await respondTezos(
           value,
@@ -94,10 +98,18 @@ const App = () => {
           req_swap,
           update
         );
+        swap["minReturn"] = minValue + " USDTz";
       }
     } else if (type === 1) {
       if (req_swap === undefined) {
-        swap = await requestEth(value, ethRef.current, tezRef.current, update);
+        swap = await requestEth(
+          value,
+          minValue,
+          ethRef.current,
+          tezRef.current,
+          update
+        );
+        swap["minReturn"] = minValue + " USDTz";
       } else {
         swap = await respondEth(
           value,
@@ -106,6 +118,7 @@ const App = () => {
           req_swap,
           update
         );
+        swap["minReturn"] = minValue + " USDC";
       }
     }
     if (swap === undefined) return false;
@@ -144,7 +157,11 @@ const App = () => {
               <Ethereum genSwap={genSwap} tezStore={tezRef.current} />
             </Route>
             <Route exact path="/create/xtz">
-              <Tezos genSwap={genSwap} ethStore={ethRef.current} />
+              <Tezos
+                genSwap={genSwap}
+                ethStore={ethRef.current}
+                tezStore={tezRef.current}
+              />
             </Route>
             <Route exact path="/create">
               <Swap />

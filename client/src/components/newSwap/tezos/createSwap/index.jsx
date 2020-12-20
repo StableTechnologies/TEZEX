@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
 import useStyles from "../../style";
 
-const CreateSwap = ({ className, genSwap, loader}) => {
+const CreateSwap = ({ className, genSwap, loader, reward }) => {
   const [input, setInput] = useState(0);
   const history = useHistory();
   const classes = useStyles();
@@ -11,16 +11,22 @@ const CreateSwap = ({ className, genSwap, loader}) => {
     e.preventDefault();
     if (e.target.tez.value === "" || e.target.tez.value === 0) return;
     loader(true);
-    try{
-    const res = await genSwap(2, e.target.tez.value);
-    loader(false);
-    console.log(res)
-    if (!res) {
-      alert("Error: Swap Couldn't be created");
-    } else {
-      history.push("/");
+    try {
+      const minValue = Math.round(
+        parseInt(e.target.tez.value) * (1 - reward / 100)
+      );
+      const res = await genSwap(2, e.target.tez.value, minValue);
+      loader(false);
+      console.log(res);
+      if (!res) {
+        alert("Error: Swap Couldn't be created");
+      } else {
+        history.push("/");
+      }
+    } catch (err) {
+      console.log(err);
+      loader(false);
     }
-  }catch(err){console.log(err);loader(false);}
   };
   return (
     <div className={className}>
@@ -38,7 +44,8 @@ const CreateSwap = ({ className, genSwap, loader}) => {
           <input className={classes.create} type="submit" value="CREATE" />
         </form>
         <p className={classes.expectedValue}>
-          Expected USDC Value : {input / 1} USDC
+          Min Expected USDC Value :{" "}
+          {Math.round(parseInt(input) * (1 - reward / 100))} USDC
         </p>
       </div>
     </div>

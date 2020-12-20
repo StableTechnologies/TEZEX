@@ -30,6 +30,7 @@ const Home = ({ swaps, ethStore, tezStore, update }) => {
       <div className={classes.swap} key={data.hashedSecret}>
         <p>Hash : {data.hashedSecret}</p>
         <p>Value : {data.value}</p>
+        <p>Min Expected Return : {data.minReturn}</p>
         <p>Expiry Time : {exp.toLocaleString()}</p>
         {data.state === 0 && (
           <div className={classes.error}>

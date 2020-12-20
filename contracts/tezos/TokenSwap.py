@@ -127,7 +127,7 @@ Swap = sp.TRecord(hashedSecret=sp.TBytes, initiator_eth=sp.TString, initiator=sp
 
 class TokenSwap(sp.Contract):
     def __init__(self, _admin, _usdTZ):
-        self.init(admin=_admin, usdTZ=_usdTZ, active=sp.bool(False),
+        self.init(admin=_admin, reward=5, usdTZ=_usdTZ, active=sp.bool(False),
                   swaps=sp.big_map(tkey=sp.TBytes, tvalue=Swap))
 
     def onlyByAdmin(self):
@@ -160,6 +160,12 @@ class TokenSwap(sp.Contract):
     def toggleContractState(self, params):
         self.onlyByAdmin()
         self.data.active = params._active
+
+    @sp.entry_point
+    def updateReward(self, params):
+        self.onlyByAdmin()
+        sp.verify((params._reward >= 0) & (params._reward <= 100))
+        self.data.reward = params._reward
 
     @sp.entry_point
     def initiateWait(self, params):
@@ -253,6 +259,14 @@ def test():
     scenario += c1.toggleContractState(
         _active=True).run(sender=alice, valid=False)
     scenario += c1.toggleContractState(_active=True).run(sender=admin)
+
+    # update reward only by admin
+    scenario += c1.updateReward(_reward=50).run(sender=alice, valid=False)
+    scenario += c1.updateReward(_reward=50).run(sender=admin)
+
+    # update reward cannot be <0 and >100
+    scenario += c1.updateReward(_reward=-1).run(sender=admin, valid=False)
+    scenario += c1.updateReward(_reward=500).run(sender=admin, valid=False)
 
     # initiate new swap
     scenario += c1.initiateWait(_hashedSecret=hashSecret, initiator_eth=init_eth, _refundTimestamp=sp.timestamp(

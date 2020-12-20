@@ -8,7 +8,7 @@
         "walletPK": ""
     },
     "maxVolume": {
-        "usdc": 10,
-        "usdtz": 10
+        "usdc": 300,
+        "usdtz": 300
     }
 }
