@@ -209,16 +209,6 @@ class TokenSwap(sp.Contract):
         sp.transfer(trasferData, sp.mutez(0), c)
         del self.data.swaps[params._hashedSecret]
 
-    @sp.entry_point
-    def setDelegate(self, params):
-        self.onlyByAdmin()
-        pass
-
-    @sp.entry_point
-    def withdraw(self, params):
-        self.onlyByAdmin()
-        pass
-
 
 @sp.add_test(name="TokenSwap")
 def test():
