@@ -2,13 +2,13 @@ const init = require("../init");
 const invokeContract = require("../util/invokeContract");
 const config = require("../../config/tez-token-swap-config.json");
 
-const amount = 10;
-
+const amount = 1000;
+const to = "tz1TjCVuTLE7mHRJdS8GDYhtmjTu1eAncq8e";
 init().then(() => {
   invokeContract(
     0,
-    "approve",
-    `(Pair "${config.contractAddr}" ${amount})`,
+    "transfer",
+    `(Pair "${config.walletAddr}" (Pair "${to}" ${amount}))`,
     10000,
     300,
     config.tokenAddr

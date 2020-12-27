@@ -2,12 +2,12 @@
   "tezos": {
     "RPC": "https://tezos-dev.cryptonomic-infra.tech:443",
     "tokenContract": {
-      "address": "KT1Vur14QTaL4AW2mSy4ENBC32DqFbc221X3",
-      "mapID": 17195
+      "address": "KT1EB1dRJPiNMGzwux3n16Y4oXqkLN8pLLyj",
+      "mapID": 32417
     },
     "swapContract": {
-      "address": "KT1NDTWZuCCe7Qewi2L2bmRN89jkRZM1r5w5",
-      "mapID": 29347
+      "address": "KT1Pyng1GfEYotegBv3oVhfLKv1KyX6pc9gT",
+      "mapID": 32418
     },
     "chain_id": "NetXm8tYqnMWky1",
     "conseilServer": {
@@ -19,14 +19,14 @@
   "ethereum": {
     "RPC": "https://goerli.infura.io/v3/3f764c2122644024825ab09e9e4d39d2",
     "chain": "goerli",
-    "contractAddr": "0xAe9F045bD0e2d73b5bfb5d6A4eF0E52C87EB046B",
-    "tokenAddr": "0x09430d989f6F0CB8d50554428D88d390436C3e85",
+    "contractAddr": "0xaA91e5b3a4E8452200a8F7101C3795c789177B1B",
+    "tokenAddr": "0x7f138083B34CF3D0f264e1b0E318e0a035930Fdb",
     "abi": [
       {
         "inputs": [
           {
             "internalType": "address",
-            "name": "usdc",
+            "name": "_erc20",
             "type": "address"
           }
         ],
@@ -66,24 +66,6 @@
         "type": "function"
       },
       {
-        "inputs": [
-          {
-            "internalType": "bytes32",
-            "name": "_hashedSecret",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "address payable",
-            "name": "_participant",
-            "type": "address"
-          }
-        ],
-        "name": "addCounterParty",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-      },
-      {
         "inputs": [],
         "name": "count",
         "outputs": [
@@ -91,66 +73,6 @@
             "internalType": "uint256",
             "name": "",
             "type": "uint256"
-          }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-      },
-      {
-        "inputs": [],
-        "name": "getAllSwaps",
-        "outputs": [
-          {
-            "components": [
-              {
-                "internalType": "bytes32",
-                "name": "prevHash",
-                "type": "bytes32"
-              },
-              {
-                "internalType": "bytes32",
-                "name": "nextHash",
-                "type": "bytes32"
-              },
-              {
-                "internalType": "bytes32",
-                "name": "hashedSecret",
-                "type": "bytes32"
-              },
-              {
-                "internalType": "address",
-                "name": "initiator",
-                "type": "address"
-              },
-              {
-                "internalType": "address",
-                "name": "participant",
-                "type": "address"
-              },
-              {
-                "internalType": "uint256",
-                "name": "refundTimestamp",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "value",
-                "type": "uint256"
-              },
-              {
-                "internalType": "enum AtomicSwap.State",
-                "name": "state",
-                "type": "uint8"
-              },
-              {
-                "internalType": "string",
-                "name": "initiator_tez",
-                "type": "string"
-              }
-            ],
-            "internalType": "struct AtomicSwap.Swap[]",
-            "name": "",
-            "type": "tuple[]"
           }
         ],
         "stateMutability": "view",
@@ -173,17 +95,89 @@
         "inputs": [
           {
             "internalType": "bytes32",
+            "name": "",
+            "type": "bytes32"
+          }
+        ],
+        "name": "swaps",
+        "outputs": [
+          {
+            "internalType": "bytes32",
+            "name": "prevHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "nextHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "hashedSecret",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address payable",
+            "name": "initiator",
+            "type": "address"
+          },
+          {
+            "internalType": "address payable",
+            "name": "participant",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "refundTimestamp",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "value",
+            "type": "uint256"
+          },
+          {
+            "internalType": "enum TokenSwap.State",
+            "name": "state",
+            "type": "uint8"
+          },
+          {
+            "internalType": "string",
+            "name": "initiator_tez_addr",
+            "type": "string"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "bool",
+            "name": "_active",
+            "type": "bool"
+          }
+        ],
+        "name": "toggleContractState",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "bytes32",
             "name": "_hashedSecret",
             "type": "bytes32"
           },
           {
             "internalType": "string",
-            "name": "_initiator_tez",
+            "name": "_initiator_tez_addr",
             "type": "string"
           },
           {
             "internalType": "uint256",
-            "name": "amount",
+            "name": "_amount",
             "type": "uint256"
           },
           {
@@ -193,6 +187,24 @@
           }
         ],
         "name": "initiateWait",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "bytes32",
+            "name": "_hashedSecret",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address payable",
+            "name": "_participant",
+            "type": "address"
+          }
+        ],
+        "name": "addCounterParty",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -229,75 +241,63 @@
         "type": "function"
       },
       {
-        "inputs": [
-          {
-            "internalType": "bytes32",
-            "name": "",
-            "type": "bytes32"
-          }
-        ],
-        "name": "swaps",
+        "inputs": [],
+        "name": "getAllSwaps",
         "outputs": [
           {
-            "internalType": "bytes32",
-            "name": "prevHash",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "nextHash",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "hashedSecret",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "address",
-            "name": "initiator",
-            "type": "address"
-          },
-          {
-            "internalType": "address",
-            "name": "participant",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "refundTimestamp",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "value",
-            "type": "uint256"
-          },
-          {
-            "internalType": "enum AtomicSwap.State",
-            "name": "state",
-            "type": "uint8"
-          },
-          {
-            "internalType": "string",
-            "name": "initiator_tez",
-            "type": "string"
+            "components": [
+              {
+                "internalType": "bytes32",
+                "name": "prevHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "nextHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "hashedSecret",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "address payable",
+                "name": "initiator",
+                "type": "address"
+              },
+              {
+                "internalType": "address payable",
+                "name": "participant",
+                "type": "address"
+              },
+              {
+                "internalType": "uint256",
+                "name": "refundTimestamp",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "value",
+                "type": "uint256"
+              },
+              {
+                "internalType": "enum TokenSwap.State",
+                "name": "state",
+                "type": "uint8"
+              },
+              {
+                "internalType": "string",
+                "name": "initiator_tez_addr",
+                "type": "string"
+              }
+            ],
+            "internalType": "struct TokenSwap.Swap[]",
+            "name": "",
+            "type": "tuple[]"
           }
         ],
         "stateMutability": "view",
-        "type": "function"
-      },
-      {
-        "inputs": [
-          {
-            "internalType": "bool",
-            "name": "_active",
-            "type": "bool"
-          }
-        ],
-        "name": "toggleContractState",
-        "outputs": [],
-        "stateMutability": "nonpayable",
         "type": "function"
       }
     ],

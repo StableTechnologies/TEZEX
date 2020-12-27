@@ -8,7 +8,7 @@ const GenParams = async () => {
     const ep = await TezosContractIntrospector.generateEntryPointsFromAddress(
       config.conseilServer,
       config.network,
-      "KT1RxKJyi48W3bZR8HErRiisXZQw19HwLGWj"
+      "KT1Hon9ERAE5quKnieYhFe52cXWVPZqvu11y"
     );
     ep.forEach((p, i) => {
       console.log(

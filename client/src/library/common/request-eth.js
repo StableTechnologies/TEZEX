@@ -85,7 +85,10 @@ const waitResponse = (
         setTimeout(run, 90000);
         return;
       }
-      await ethStore.addCounterParty(secret.hashedSecret, swp.initiator_eth);
+      await ethStore.addCounterParty(
+        secret.hashedSecret,
+        swp.initiator_eth_addr
+      );
       update(secret.hashedSecret, 2);
       waitCompletion(secret, tezStore, ethStore, refundTime, update);
     } catch (err) {

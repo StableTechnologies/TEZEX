@@ -82,7 +82,10 @@ const waitResponse = async (new_swap, ethStore, tezStore, bot) => {
     console.log("CHECKING FOR SWAP RESPONSE");
     if (swp.participant !== ethStore.account) return 1;
     console.log("\nA SWAP RESPONSE FOUND : \n", swp);
-    await tezStore.addCounterParty(new_swap.hashedSecret, swp.initiator_tez);
+    await tezStore.addCounterParty(
+      new_swap.hashedSecret,
+      swp.initiator_tez_addr
+    );
     new_swap.state = 2;
     await bot.updateSwap(1, new_swap);
     return 2;

@@ -76,7 +76,7 @@ const waitResponse = (
       }
       const swp = await ethStore.getSwap(secret.hashedSecret);
       console.log("CHECKING FOR SWAP RESPONSE");
-      if (swp.initiator_tez === "" && swp.refundTimestamp === "0") {
+      if (swp.initiator_tez_addr === "" && swp.refundTimestamp === "0") {
         setTimeout(run, 90000);
         return;
       }
@@ -87,7 +87,10 @@ const waitResponse = (
         return;
       }
 
-      await tezStore.addCounterParty(secret.hashedSecret, swp.initiator_tez);
+      await tezStore.addCounterParty(
+        secret.hashedSecret,
+        swp.initiator_tez_addr
+      );
       update(secret.hashedSecret, 2);
       waitCompletion(secret, tezStore, ethStore, refundTime, update);
     } catch (err) {

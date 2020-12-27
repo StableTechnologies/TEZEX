@@ -203,7 +203,7 @@ module.exports = class Bot {
           if (Object.keys(this.usdcSwaps).length >= this.usdtzLimit) break;
           const existingResponse = await this.usdc.getSwap(swp.hashedSecret);
           if (
-            existingResponse.initiator_tez === "" &&
+            existingResponse.initiator_tez_addr === "" &&
             existingResponse.refundTimestamp === "0" &&
             this.usdcSwaps[swp.hashedSecret] === undefined &&
             swp.value > 0 &&

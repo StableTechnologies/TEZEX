@@ -94,7 +94,7 @@ contract("TokenSwap", (accounts) => {
     );
     expect(swap["initiator"]).to.equal(accounts[1]);
     expect(swap["participant"]).to.equal(accounts[1]);
-    expect(swap["initiator_tez"]).to.equal("tz1xxxxxxxxxx");
+    expect(swap["initiator_tez_addr"]).to.equal("tz1xxxxxxxxxx");
     expect(swap["refundTimestamp"].toNumber()).to.equal(refundTime);
     expect(swap["value"].toNumber()).to.equal(300);
     expect(swap["state"].toNumber()).to.equal(1);
@@ -205,7 +205,7 @@ contract("TokenSwap", (accounts) => {
   it("successfully initiate swap wait+addParticipant (from account[1])", async () => {
     const atomicSwap = await AtomicSwap.deployed();
     const token = await SimpleToken.deployed();
-    const refTime = getTime(2);
+    const refTime = getTime(3);
     await atomicSwap.initiateWait(
       "0x055e1d97b8f4a2d0e8913e6300818ed3c235f886d3b71bdfde7ed5aa05d724fd",
       "tz1xxxxxxxxxx",
@@ -218,7 +218,7 @@ contract("TokenSwap", (accounts) => {
     );
     expect(swap["initiator"]).to.equal(accounts[1]);
     expect(swap["participant"]).to.equal(accounts[1]);
-    expect(swap["initiator_tez"]).to.equal("tz1xxxxxxxxxx");
+    expect(swap["initiator_tez_addr"]).to.equal("tz1xxxxxxxxxx");
     expect(swap["refundTimestamp"].toNumber()).to.equal(refTime);
     expect(swap["value"].toNumber()).to.equal(300);
     expect(swap["state"].toNumber()).to.equal(1);
@@ -242,7 +242,7 @@ contract("TokenSwap", (accounts) => {
     expect(swap["state"].toNumber()).to.equal(2);
     const balance = await token.balanceOf(atomicSwap.address);
     expect(balance.toNumber()).to.equal(300);
-    await sleep(2000);
+    await sleep(3000);
   });
 
   it("cannot redeem after expiry", async () => {

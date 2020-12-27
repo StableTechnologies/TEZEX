@@ -11,7 +11,7 @@ const getSwap = async (secretHash) => {
   );
   const jsonData = await TezosNodeReader.getValueForBigMapKey(
     config.RPC,
-    17196,
+    32418,
     packedKey,
     undefined,
     config.chain_id
@@ -28,7 +28,7 @@ const getSwap = async (secretHash) => {
       path: "$.args[0].args[1].args[0].string",
       json: jsonData,
     })[0],
-    initiator_eth: JSONPath({
+    initiator_eth_addr: JSONPath({
       path: "$.args[0].args[1].args[1].string",
       json: jsonData,
     })[0],

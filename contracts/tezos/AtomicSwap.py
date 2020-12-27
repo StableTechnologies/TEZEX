@@ -1,12 +1,26 @@
 import smartpy as sp
 
+"""
+Possible states of the swap
+"""
+
 
 class State():
-    Waiting = 0
-    Initiated = 1
+    Waiting = 1
+    Initiated = 2
 
 
-Swap = sp.TRecord(hashedSecret=sp.TBytes, initiator_eth=sp.TString, initiator=sp.TAddress,
+"""
+Swap record -
+    hashedSecret(bytes): current swap hash
+    initiator(address): initiators tezos address
+    initiator_eth_addr(string): initiators ethereum address
+    participant(address): counter-party/participant's tezoz address
+    refundTimestamp(timestamp): unix time(sec) after which the swap expires
+    value(nat): value of the swap in mutez
+    state(State): current state of swap
+"""
+Swap = sp.TRecord(hashedSecret=sp.TBytes, initiator_eth_addr=sp.TString, initiator=sp.TAddress,
                   participant=sp.TAddress, refundTimestamp=sp.TTimestamp, value=sp.TMutez, state=sp.TInt)
 
 
@@ -15,77 +29,151 @@ class AtomicSwap(sp.Contract):
         self.init(admin=_admin, active=sp.bool(False),
                   swaps=sp.big_map(tkey=sp.TBytes, tvalue=Swap))
 
+    """
+        ensures only admin can call a function
+    """
+
     def onlyByAdmin(self):
         sp.verify(sp.sender == self.data.admin)
+
+    """
+        ensures only initiator of the swap can call a function
+
+        args:
+            _hashedSecret: hashed secret of the swap
+    """
 
     def onlyByInitiator(self, _hashedSecret):
         sp.verify(sp.sender == self.data.swaps[_hashedSecret].initiator)
 
+    """
+        checks if the contract is active
+    """
+
     def contractIsActive(self):
         sp.verify(self.data.active == sp.bool(True))
 
-    def isInitiatable(self, _hashedSecret, _participant, _refundTimestamp):
+    """
+        checks whether a swap can be initiated
+
+        args:
+            _hashedSecret: hashed secret of the swap
+            _refundTimestamp: unix time(sec) after which the swap expires
+    """
+
+    def isInitiable(self, _hashedSecret, _refundTimestamp):
         sp.verify(~self.data.swaps.contains(_hashedSecret))
         sp.verify(sp.now < _refundTimestamp)
 
+    """
+        ensures the currest swap state matches the required `state`
+
+        args:
+            _hashedSecret: hashed secret of the swap
+            _state: state the current swap is expected to be in
+    """
+
     def checkState(self, _hashedSecret, _state):
         sp.verify(self.data.swaps[_hashedSecret].state == _state)
+
+    """
+        checks whether the swap can be redeemed
+
+        args:
+            _hashedSecret: hashed secret of the swap
+            _secret: secret for the swap which produced the corresponding hashedSecret
+    """
 
     def isRedeemable(self, _hashedSecret, _secret):
         sp.verify(self.data.swaps[_hashedSecret].refundTimestamp > sp.now)
         sp.verify(self.data.swaps[_hashedSecret].hashedSecret == sp.sha256(
             sp.sha256(_secret)))
 
+    """
+        checks whether the swap can bve refunded
+
+        args:
+            _hashedSecret: hashed secret of the swap
+    """
+
     def isRefundable(self, _hashedSecret):
         sp.verify((self.data.swaps[_hashedSecret].state == State.Initiated) | (
             self.data.swaps[_hashedSecret].state == State.Waiting))
         sp.verify(self.data.swaps[_hashedSecret].refundTimestamp <= sp.now)
 
-    @sp.entry_point
-    def toggleContractState(self, params):
-        self.onlyByAdmin()
-        self.data.active = params._active
+    """
+        Toggle contract active state
+
+        args:
+            _active: boolean value [tru:active, false:inactive] representing contract state
+    """
 
     @sp.entry_point
-    def initiateWait(self, params):
+    def toggleContractState(self, _active):
+        self.onlyByAdmin()
+        self.data.active = _active
+
+    """
+        Initiate new swap without counterParty details
+
+        args:
+            _hashedSecret: hash of the current swap secret
+            _initiator_eth_addr: tezos address of the current swap initiator
+            _amount: amount of fa1.2 tokens exchanged in the swap
+            _refundTimestamp: unix time(sec) after which the swap expires
+    """
+
+    @sp.entry_point
+    def initiateWait(self, _hashedSecret, _refundTimestamp, initiator_eth_addr):
         self.contractIsActive()
-        self.isInitiatable(params._hashedSecret,
-                           params._participant, params._refundTimestamp)
-        self.data.swaps[params._hashedSecret] = sp.record(hashedSecret=params._hashedSecret, initiator_eth=params.initiator_eth, initiator=sp.sender,
-                                                          participant=sp.sender, refundTimestamp=params._refundTimestamp, value=sp.amount, state=State.Waiting)
+        self.isInitiable(_hashedSecret, _refundTimestamp)
+        self.data.swaps[_hashedSecret] = sp.record(hashedSecret=_hashedSecret, initiator_eth_addr=initiator_eth_addr, initiator=sp.sender,
+                                                   participant=sp.sender, refundTimestamp=_refundTimestamp, value=sp.amount, state=State.Waiting)
+
+    """
+        Add counter-party details to an existing(initiated) swap
+
+        args:
+            _hashedSecret: hashed secret of the swap being updated
+            _participant: participant/counter-party tezos address
+    """
 
     @sp.entry_point
-    def addCounterParty(self, params):
+    def addCounterParty(self, _hashedSecret, _participant):
         self.contractIsActive()
-        self.checkState(params._hashedSecret, State.Waiting)
-        self.onlyByInitiator(params._hashedSecret)
-        self.data.swaps[params._hashedSecret].state = State.Initiated
-        self.data.swaps[params._hashedSecret].participant = params._participant
+        self.checkState(_hashedSecret, State.Waiting)
+        self.onlyByInitiator(_hashedSecret)
+        self.data.swaps[_hashedSecret].state = State.Initiated
+        self.data.swaps[_hashedSecret].participant = _participant
+
+    """
+        Redeem the swap if possible
+
+        args:
+            _hashedSecret: hashed secret of the swap being redeemed
+            _secret: secret for the swap which produced the corresponding hashedSecret
+    """
+    @sp.entry_point
+    def redeem(self, _hashedSecret, _secret):
+        self.checkState(_hashedSecret, State.Initiated)
+        self.isRedeemable(_hashedSecret, _secret)
+        sp.send(self.data.swaps[_hashedSecret].participant,
+                self.data.swaps[_hashedSecret].value)
+        del self.data.swaps[_hashedSecret]
+
+    """
+        Refund the swap if possible
+
+        args:
+            _hashedSecret: hashed secret of the swap being refunded
+    """
 
     @sp.entry_point
-    def redeem(self, params):
-        self.checkState(params._hashedSecret, State.Initiated)
-        self.isRedeemable(params._hashedSecret, params._secret)
-        sp.send(self.data.swaps[params._hashedSecret].participant,
-                self.data.swaps[params._hashedSecret].value)
-        del self.data.swaps[params._hashedSecret]
-
-    @sp.entry_point
-    def refund(self, params):
-        self.isRefundable(params._hashedSecret)
-        sp.send(self.data.swaps[params._hashedSecret].initiator,
-                self.data.swaps[params._hashedSecret].value)
-        del self.data.swaps[params._hashedSecret]
-
-    @sp.entry_point
-    def setDelegate(self, params):
-        self.onlyByAdmin()
-        pass
-
-    @sp.entry_point
-    def withdraw(self, params):
-        self.onlyByAdmin()
-        pass
+    def refund(self, _hashedSecret):
+        self.isRefundable(_hashedSecret)
+        sp.send(self.data.swaps[_hashedSecret].initiator,
+                self.data.swaps[_hashedSecret].value)
+        del self.data.swaps[_hashedSecret]
 
 
 @sp.add_test(name="AtomicSwap")
@@ -105,16 +193,15 @@ def test():
     scenario.h2("Swap[Wait] Testing")
 
     # no operations work without contract being active
-    scenario += c1.initiateWait(_hashedSecret=hashSecret, initiator_eth=init_eth, _refundTimestamp=sp.timestamp(
+    scenario += c1.initiateWait(_hashedSecret=hashSecret, initiator_eth_addr=init_eth, _refundTimestamp=sp.timestamp(
         159682500)).run(sender=alice, amount=sp.tez(2), now=sp.timestamp(159682400), valid=False)
 
     # activate only by admin
-    scenario += c1.toggleContractState(
-        _active=True).run(sender=alice, valid=False)
-    scenario += c1.toggleContractState(_active=True).run(sender=bob)
+    scenario += c1.toggleContractState(True).run(sender=alice, valid=False)
+    scenario += c1.toggleContractState(True).run(sender=bob)
 
     # initiate new swap
-    scenario += c1.initiateWait(_hashedSecret=hashSecret, initiator_eth=init_eth, _refundTimestamp=sp.timestamp(
+    scenario += c1.initiateWait(_hashedSecret=hashSecret, initiator_eth_addr=init_eth, _refundTimestamp=sp.timestamp(
         159682500)).run(sender=alice, amount=sp.tez(2), now=sp.timestamp(159682400))
 
     # balance check
@@ -124,11 +211,11 @@ def test():
     scenario += c1.redeem(_hashedSecret=hashSecret, _secret=sp.bytes(
         "0x68656c6c6f666473667364666c64736a666c73646a6664736a6673646a6b666a")).run(sender=bob, now=sp.timestamp(159682450), valid=False)
 
-    # succesful add participant only by initiator
+    # successful add participant only by initiator
     scenario += c1.addCounterParty(_hashedSecret=hashSecret,
                                    _participant=bob.address).run(sender=bob, valid=False)
 
-    # succesful add participant only by initiator
+    # successful add participant only by initiator
     scenario += c1.addCounterParty(_hashedSecret=hashSecret,
                                    _participant=bob.address).run(sender=alice)
 
@@ -141,36 +228,36 @@ def test():
         "0x68656c6c6f666473667364666c64736a666c73646a6664736a6673646a6b666a")).run(sender=bob, now=sp.timestamp(159682550), valid=False)
 
     # new swap with the same hash cannot be added unless the previous one is redeemed/refunded
-    scenario += c1.initiateWait(_hashedSecret=hashSecret, initiator_eth=init_eth, _refundTimestamp=sp.timestamp(
+    scenario += c1.initiateWait(_hashedSecret=hashSecret, initiator_eth_addr=init_eth, _refundTimestamp=sp.timestamp(
         159682500)).run(sender=alice, amount=sp.tez(2), now=sp.timestamp(159682400), valid=False)
 
-    # succesful redeem can be initiated by anyone but funds transfered to participant
+    # successful redeem can be initiated by anyone but funds transfered to participant
     scenario += c1.redeem(_hashedSecret=hashSecret,
                           _secret=sp.bytes("0x68656c6c6f666473667364666c64736a666c73646a6664736a6673646a6b666a")).run(sender=bob, now=sp.timestamp(159682450))
 
     # balance check
     scenario.verify(c1.balance == sp.tez(0))
 
-    # succesful swap creation with same hash after redeem
-    scenario += c1.initiateWait(_hashedSecret=hashSecret, initiator_eth=init_eth, _refundTimestamp=sp.timestamp(
+    # successful swap creation with same hash after redeem
+    scenario += c1.initiateWait(_hashedSecret=hashSecret, initiator_eth_addr=init_eth, _refundTimestamp=sp.timestamp(
         159682500)).run(sender=alice, amount=sp.tez(2), now=sp.timestamp(159682400))
 
     # balance check
     scenario.verify(c1.balance == sp.tez(2))
 
     # cannot be refunded before the refundtime
-    scenario += c1.refund(_hashedSecret=hashSecret).run(sender=bob,
-                                                        now=sp.timestamp(159682450), valid=False)
-    scenario += c1.refund(_hashedSecret=hashSecret).run(sender=alice,
-                                                        now=sp.timestamp(159682450), valid=False)
+    scenario += c1.refund(hashSecret).run(sender=bob,
+                                          now=sp.timestamp(159682450), valid=False)
+    scenario += c1.refund(hashSecret).run(sender=alice,
+                                          now=sp.timestamp(159682450), valid=False)
 
     # can be refunded in any initated or waiting state if refund time has come, can be done by anyone but funds transfered only to initiator
-    scenario += c1.refund(_hashedSecret=hashSecret).run(sender=bob,
-                                                        now=sp.timestamp(159682550))
+    scenario += c1.refund(hashSecret).run(sender=bob,
+                                          now=sp.timestamp(159682550))
 
     # cannot be refunded again once it has been refunded
-    scenario += c1.refund(_hashedSecret=hashSecret).run(sender=alice,
-                                                        now=sp.timestamp(159682550), valid=False)
+    scenario += c1.refund(hashSecret).run(sender=alice,
+                                          now=sp.timestamp(159682550), valid=False)
 
     # balance check
     scenario.verify(c1.balance == sp.tez(0))

@@ -112,7 +112,7 @@ module.exports = class Tezos {
     );
     return parseInt(
       JSONPath({
-        path: "$.args[1].args[0].int",
+        path: "$.args[1].args[1].args[0].int",
         json: storage,
       })[0]
     );
@@ -197,7 +197,7 @@ module.exports = class Tezos {
       initiator: TezosMessageUtils.readAddress(
         JSONPath({ path: "$.args[0].args[1].args[0].bytes", json: jsonData })[0]
       ),
-      initiator_eth: JSONPath({
+      initiator_eth_addr: JSONPath({
         path: "$.args[0].args[1].args[1].string",
         json: jsonData,
       })[0],
@@ -241,7 +241,7 @@ module.exports = class Tezos {
         path: "$.args[0].args[1].args[0].string",
         json: jsonData,
       })[0],
-      initiator_eth: JSONPath({
+      initiator_eth_addr: JSONPath({
         path: "$.args[0].args[1].args[1].string",
         json: jsonData,
       })[0],

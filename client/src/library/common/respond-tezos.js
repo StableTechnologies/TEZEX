@@ -9,7 +9,7 @@ const waitCompletion = (
     try {
       const swp = await ethStore.getSwap(hashedSecret);
       console.log("WAITING TO COMPLETE SWAP");
-      if (swp.initiator_tez !== "" && swp.refundTimestamp !== "0") {
+      if (swp.initiator_tez_addr !== "" && swp.refundTimestamp !== "0") {
         if (Math.trunc(Date.now() / 1000) >= refundTime) {
           await ethStore.refund(hashedSecret);
           update(hashedSecret, 4);
@@ -72,7 +72,7 @@ const waitResponse = (hashedSecret, ethStore, tezStore, refundTime, update) => {
         return;
       }
       console.log("\nA SWAP RESPONSE FOUND : \n", swp);
-      await ethStore.addCounterParty(hashedSecret, swp.initiator_eth);
+      await ethStore.addCounterParty(hashedSecret, swp.initiator_eth_addr);
       update(hashedSecret, 2);
       waitCompletion(hashedSecret, ethStore, tezStore, refundTime, update);
     } catch (err) {
