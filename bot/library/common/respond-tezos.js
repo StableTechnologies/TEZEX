@@ -25,6 +25,15 @@ const waitCompletion = async (new_swap, ethStore, tezStore, bot) => {
   }
 };
 
+/**
+ * Respond to a ethereum swap
+ *
+ * @param ethStore ERC20 or Ethereum object instance
+ * @param tezStore FA12 or Tezos object instance
+ * @param new_swap swap details used to create a new response swap
+ * @param bot Bot instance
+ * @param state current state of the swap
+ */
 module.exports = async (ethStore, tezStore, new_swap, bot, state) => {
   setTimeout(async function run() {
     switch (state) {
