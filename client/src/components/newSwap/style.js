@@ -69,7 +69,7 @@ const useStyles = makeStyles((theme) => ({
   },
   msg: {
     margin: "1.4vw 1vw",
-    fontSize: "1.7vw",
+    fontSize: "2.1vw",
   },
   swapScreen: {
     display: "flex",

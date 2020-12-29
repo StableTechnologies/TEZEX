@@ -58,15 +58,15 @@ const GetSwap = ({ genSwap, tezStore }) => {
   };
   useEffect(() => {
     updateReward();
-    filterSwaps();
-    const timer = setInterval(() => {
-      filterSwaps();
-    }, 600000);
+    // filterSwaps();
+    // const timer = setInterval(() => {
+    //   filterSwaps();
+    // }, 600000);
     const timer1 = setInterval(() => {
       updateReward();
     }, 120000);
     return () => {
-      clearInterval(timer);
+      // clearInterval(timer);
       clearInterval(timer1);
     };
   }, []);
@@ -84,16 +84,6 @@ const GetSwap = ({ genSwap, tezStore }) => {
           loader={setFullLoader}
           reward={reward}
         />
-      </div>
-      <div className={classes.or}>
-        <p>Or</p>
-      </div>
-      <div className={classes.container}>
-        <h3 className={classes.msg}>Select From Available SWAPS</h3>
-        <div className={classes.swaps}>
-          {loader && <Loader message="..Loading Swaps.." />}
-          {!loader && data}
-        </div>
       </div>
     </div>
   );
