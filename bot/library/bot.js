@@ -24,7 +24,11 @@ module.exports = class Bot {
    */
   async init(ethConfig, tezosConfig, volume) {
     try {
-      this.volume = volume;
+      console.log("\nInitializing Bot...");
+      this.volume = {
+        usdc: parseInt(volume.usdc),
+        usdtz: parseInt(volume.usdtz),
+      };
       const web3 = new Web3(
         new Web3.providers.HttpProvider(config.ethereum.RPC)
       );

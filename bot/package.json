@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Soumya Ghosh Dastidar",
@@ -16,6 +17,7 @@
     "jsonpath-plus": "^4.0.0",
     "loglevel": "^1.6.8",
     "node-fetch": "^2.6.0",
+    "readline-sync": "^1.4.10",
     "web3": "^1.2.11"
   },
   "devDependencies": {
