@@ -138,10 +138,19 @@ Swap record -
 Swap = sp.TRecord(hashedSecret=sp.TBytes, initiator_eth_addr=sp.TString, initiator=sp.TAddress,
                   participant=sp.TAddress, refundTimestamp=sp.TTimestamp, value=sp.TNat, state=sp.TInt)
 
+"""
+Contract Storage -
+    admin(address): tezos address of the admin
+    reward(nat): reward in basis points for swap response
+    fa12(address): fa1.2 contract address
+    active(bool): contract state [true:active, false:inactive]
+    swaps(big_map(bytes,Swap)): map of hashed secrets and swap details
+"""
+
 
 class TokenSwap(sp.Contract):
     def __init__(self, _admin, _fa12):
-        self.init(admin=_admin, reward=5, fa12=_fa12, active=sp.bool(False),
+        self.init(admin=_admin, reward=sp.as_nat(15), fa12=_fa12, active=sp.bool(False),
                   swaps=sp.big_map(tkey=sp.TBytes, tvalue=Swap))
 
     """
@@ -232,13 +241,12 @@ class TokenSwap(sp.Contract):
         Update reward for swaps responses
 
         args:
-            _reward: a value in [0,100] representing the reward percentage
+            _reward: a value representing the reward basis points
     """
 
     @sp.entry_point
     def updateReward(self, _reward):
         self.onlyByAdmin()
-        sp.verify((_reward >= 0) & (_reward <= 100))
         self.data.reward = _reward
 
     """

@@ -24,7 +24,7 @@ const GetSwap = ({ genSwap, ethStore, tezStore }) => {
     }
   };
   const updateReward = async () => {
-    const reward = await tezStore.getReward();
+    const reward = await tezStore.getReward(); // basis points
     setReward(reward);
   };
   const SwapItem = (data) => {

@@ -1,4 +1,4 @@
-import createSecrets from "./createSecrets";
+import { createSecrets } from "./util";
 
 const waitCompletion = (secret, tezStore, ethStore, refundTime, update) => {
   setTimeout(async function run() {

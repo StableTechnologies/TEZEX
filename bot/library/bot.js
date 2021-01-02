@@ -4,6 +4,7 @@ const FA12 = require("./fa12");
 const respondEth = require("./common/respond-eth");
 const Web3 = require("web3");
 const respondTezos = require("./common/respond-tezos");
+const { calcSwapReturn } = require("./common/util");
 
 module.exports = class Bot {
   constructor() {
@@ -189,9 +190,7 @@ module.exports = class Bot {
             swp.value <= this.volume.usdtz
           ) {
             console.log("FOUND : ", swp.hashedSecret);
-            const valueToPay = Math.round(
-              parseInt(swp.value) * (1 - this.reward / 100)
-            );
+            const valueToPay = calcSwapReturn(swp.value, this.reward);
             this.usdtzSwaps[swp.hashedSecret] = {
               state: 0,
               value: valueToPay,
@@ -242,9 +241,7 @@ module.exports = class Bot {
             swp.value <= this.volume.usdc
           ) {
             console.log("FOUND : ", swp.hashedSecret);
-            const valueToPay = Math.round(
-              parseInt(swp.value) * (1 - this.reward / 100)
-            );
+            const valueToPay = calcSwapReturn(swp.value, this.reward);
             this.usdcSwaps[swp.hashedSecret] = {
               state: 0,
               value: valueToPay,
@@ -273,7 +270,7 @@ module.exports = class Bot {
   }
 
   /**
-   * Monitors and updates the reward value
+   * Monitors and updates the reward (basis points) value
    */
   monitorReward() {
     const run = async () => {

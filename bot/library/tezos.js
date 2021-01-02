@@ -139,7 +139,7 @@ module.exports = class Tezos {
   }
 
   /**
-   * Get reward percentage for responding to swaps
+   * Get reward basis points for responding to swaps
    */
   async getReward() {
     const storage = await TezosNodeReader.getContractStorage(

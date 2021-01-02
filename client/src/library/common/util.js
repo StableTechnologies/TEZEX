@@ -1,6 +1,6 @@
 import crypto from "crypto";
 
-const createSecrets = () => {
+export const createSecrets = () => {
   const rand = crypto.randomBytes(32);
   let hash = crypto.createHash("sha256").update(rand).digest();
   hash = crypto.createHash("sha256").update(hash).digest("hex");
@@ -10,4 +10,7 @@ const createSecrets = () => {
   };
 };
 
-export default createSecrets;
+export const calcSwapReturn = (swapValue, reward) => {
+  console.log("Here");
+  return Math.floor(parseInt(swapValue) * (1 - parseInt(reward) / 10000));
+};

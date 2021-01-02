@@ -24,9 +24,7 @@ const GetSwap = ({ genSwap, tezStore }) => {
   };
 
   const updateReward = async () => {
-    console.log("heree", 11);
-    const rewrd = await tezStore.getReward();
-    console.log("heree", rewrd);
+    const rewrd = await tezStore.getReward(); // basis points);
     setReward(rewrd);
   };
 
