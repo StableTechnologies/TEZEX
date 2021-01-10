@@ -446,6 +446,7 @@ module.exports = class Tezos {
         const groupid = result["operationGroupID"]
           .replace(/"/g, "")
           .replace(/\n/, ""); // clean up RPC output
+        console.log("TEZOS TX HASH: ", groupid);
         const opRes = await TezosConseilClient.awaitOperationConfirmation(
           this.conseilServer,
           this.conseilServer.network,

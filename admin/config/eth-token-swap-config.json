@@ -1,7 +1,7 @@
 {
   "walletAddress": "",
   "walletPK": "",
-  "RPC": "https://goerli.infura.io/v3/3f764c2122644024825ab09e9e4d39d2",
+  "RPC": "https://goerli.infura.io/v3/<api-key>",
   "chain": "goerli",
   "contractAddr": "0xaA91e5b3a4E8452200a8F7101C3795c789177B1B",
   "tokenAddr": "0x7f138083B34CF3D0f264e1b0E318e0a035930Fdb",

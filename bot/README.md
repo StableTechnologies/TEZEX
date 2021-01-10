@@ -75,3 +75,7 @@ Are the above details correct? (y/n): y
 
 Initializing Bot...
 ```
+
+## WARNING
+
+If the bot fails to encrypt the user-config make sure to remove your sensitive data like private keys from that file.

@@ -208,7 +208,11 @@ module.exports = class Ethereum {
       const tx = new Transaction(rawTx, { chain: this.chain });
       tx.sign(privateKey);
       const serializedTx = "0x" + tx.serialize().toString("hex");
-      await this.web3.eth.sendSignedTransaction(serializedTx.toString("hex"));
+      await this.web3.eth
+        .sendSignedTransaction(serializedTx.toString("hex"))
+        .on("transactionHash", (transactionHash) => {
+          console.log("ETH TX HASH : ", transactionHash);
+        });
       return true;
     } catch (err) {
       console.error("ETH TX ERROR : ", err);
