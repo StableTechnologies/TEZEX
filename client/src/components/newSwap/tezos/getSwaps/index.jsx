@@ -7,7 +7,7 @@ import CreateSwap from "../createSwap";
 
 const GetSwap = ({ genSwap, ethStore, tezStore }) => {
   const [swaps, setSwaps] = useState([]);
-  const [reward, setReward] = useState(0);
+  const [rewardInBIPS, setReward] = useState(0);
   const [loader, setLoader] = useState(true);
   const [fullLoader, setFullLoader] = useState(false);
 
@@ -78,7 +78,7 @@ const GetSwap = ({ genSwap, ethStore, tezStore }) => {
           className={classes.newSwap}
           genSwap={genSwap}
           loader={setFullLoader}
-          reward={reward}
+          rewardInBIPS={rewardInBIPS}
         />
       </div>
     </div>

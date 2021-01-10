@@ -60,6 +60,7 @@ const init = () => {
     }
   } catch (error) {
     console.log(`\nError while encrypting/decrypting config! Try Again`);
+    return;
   }
   const bot = new Bot();
   bot
