@@ -79,7 +79,8 @@ const App = () => {
   };
 
   const genSwap = async (type, value, minValue, req_swap = undefined) => {
-    let swap = {};
+    let swap = {},
+      symbol = " USDC";
     if (type === 2) {
       if (req_swap === undefined) {
         swap = await requestTezos(
@@ -89,7 +90,6 @@ const App = () => {
           tezRef.current,
           update
         );
-        swap["minReturn"] = minValue + " USDC";
       } else {
         swap = await respondTezos(
           value,
@@ -98,7 +98,7 @@ const App = () => {
           req_swap,
           update
         );
-        swap["minReturn"] = minValue + " USDTz";
+        symbol = " USDTz";
       }
     } else if (type === 1) {
       if (req_swap === undefined) {
@@ -109,7 +109,7 @@ const App = () => {
           tezRef.current,
           update
         );
-        swap["minReturn"] = minValue + " USDTz";
+        symbol = " USDTz";
       } else {
         swap = await respondEth(
           value,
@@ -118,7 +118,6 @@ const App = () => {
           req_swap,
           update
         );
-        swap["minReturn"] = minValue + " USDC";
       }
     }
     if (swap === undefined) return false;
@@ -126,6 +125,7 @@ const App = () => {
     if (newSwaps === undefined) {
       newSwaps = {};
     }
+    swap["minReturn"] = minValue + symbol;
     newSwaps[swap.hashedSecret] = swap;
     updateSwaps(newSwaps);
     return true;

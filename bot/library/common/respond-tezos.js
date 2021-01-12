@@ -2,7 +2,7 @@ const waitCompletion = async (new_swap, ethStore, tezStore, bot) => {
   try {
     const swp = await ethStore.getSwap(new_swap.hashedSecret);
     console.log("WAITING TO COMPLETE SWAP");
-    if (swp.initiator_tez !== "" && swp.refundTimestamp !== "0") {
+    if (swp.initiator_tez_addr !== "" && swp.refundTimestamp !== "0") {
       if (Math.trunc(Date.now() / 1000) >= new_swap.refundTime) {
         await ethStore.refund(new_swap.hashedSecret);
         new_swap.state = 3;
@@ -25,6 +25,15 @@ const waitCompletion = async (new_swap, ethStore, tezStore, bot) => {
   }
 };
 
+/**
+ * Respond to a ethereum swap
+ *
+ * @param ethStore ERC20 or Ethereum object instance
+ * @param tezStore FA12 or Tezos object instance
+ * @param new_swap swap details used to create a new response swap
+ * @param bot Bot instance
+ * @param state current state of the swap
+ */
 module.exports = async (ethStore, tezStore, new_swap, bot, state) => {
   setTimeout(async function run() {
     switch (state) {
@@ -80,7 +89,10 @@ const waitResponse = async (new_swap, ethStore, tezStore, bot) => {
     console.log("CHECKING FOR SWAP RESPONSE");
     if (swp.participant !== tezStore.account) return 1;
     console.log("\nA SWAP RESPONSE FOUND : \n", swp);
-    await ethStore.addCounterParty(new_swap.hashedSecret, swp.initiator_eth);
+    await ethStore.addCounterParty(
+      new_swap.hashedSecret,
+      swp.initiator_eth_addr
+    );
     new_swap.state = 2;
     await bot.updateSwap(2, new_swap);
     return 2;

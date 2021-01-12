@@ -73,7 +73,7 @@ const waitResponse = (hashedSecret, ethStore, tezStore, refundTime, update) => {
         return;
       }
       console.log("\nA SWAP RESPONSE FOUND : \n", swp);
-      await tezStore.addCounterParty(hashedSecret, swp.initiator_tez);
+      await tezStore.addCounterParty(hashedSecret, swp.initiator_tez_addr);
       update(hashedSecret, 2);
       waitCompletion(hashedSecret, ethStore, tezStore, refundTime, update);
     } catch (err) {

@@ -1,8 +1,8 @@
 import { DAppClient, NetworkType } from "@airgap/beacon-sdk";
 import Web3 from "web3";
+import ERC20 from "../library/erc20";
+import FA12 from "../library/fa12";
 import config from "../library/globalConfig.json";
-import USDC from "../library/usdc";
-import USDTz from "../library/usdtz";
 
 export const shorten = (first, last, str) => {
   return str.substring(0, first) + "..." + str.substring(str.length - last);
@@ -25,7 +25,7 @@ export const setEthAccount = async () => {
       config.ethereum.tokenAddr
     );
     const account = await web3.eth.getAccounts();
-    return new USDC(web3, account[0], swapContract, tokenContract);
+    return new ERC20(web3, account[0], swapContract, tokenContract);
   }
   alert(
     "Please install an Ethereum-compatible browser or extension like MetaMask to use this dApp!"
@@ -44,7 +44,7 @@ export const setTezAccount = async () => {
     network: { type: NetworkType.DELPHINET },
   });
   const account = await client.getActiveAccount();
-  return new USDTz(
+  return new FA12(
     client,
     account["address"],
     config.tezos.swapContract,

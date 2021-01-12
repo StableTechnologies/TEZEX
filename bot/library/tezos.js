@@ -19,15 +19,18 @@ const fetch = require("node-fetch");
 
 module.exports = class Tezos {
   constructor(account, privateKey, swapContract, chainID, rpc, conseilServer) {
-    this.account = account;
-    this.privateKey = privateKey;
-    this.rpc = rpc;
-    this.conseilServer = conseilServer;
-    this.swapContract = swapContract;
-    this.chainID = chainID;
+    this.account = account; // tezos wallet address
+    this.privateKey = privateKey; // tezos private key
+    this.rpc = rpc; // rpc server address for network interaction
+    this.conseilServer = conseilServer; // conseil server setting
+    this.swapContract = swapContract; // tezos swap contract details {address:string, mapID:nat}
+    this.chainID = chainID; // chain id being used
     this.mutex = new Mutex();
   }
 
+  /**
+   * Initiate conseil keystore and signer
+   */
   async initConseil() {
     const logger = log.getLogger("conseiljs");
     logger.setLevel("error", false);
@@ -42,6 +45,11 @@ module.exports = class Tezos {
     );
   }
 
+  /**
+   * Get the tezos balance for an account
+   *
+   * @param address tezos address for the account
+   */
   async balance(address) {
     return await TezosNodeReader.getSpendableBalanceForAccount(
       this.rpc,
@@ -49,6 +57,14 @@ module.exports = class Tezos {
     );
   }
 
+  /**
+   * Initiate a swap on the tezos chain
+   *
+   * @param hashedSecret hashed secret for the swap
+   * @param refundTime  unix time(sec) after which the swap expires
+   * @param ethAddress initiators tezos account address
+   * @param amtInMuTez value of the swap in mutez
+   */
   async initiateWait(hashedSecret, refundTime, ethAddress, amtInMuTez) {
     const res = await this.interact([
       {
@@ -63,6 +79,12 @@ module.exports = class Tezos {
     return res;
   }
 
+  /**
+   * Add counter-party details to an existing(initiated) swap
+   *
+   * @param hashedSecret hashed secret of the swap being updated
+   * @param tezAccount participant/counter-party tezos address
+   */
   async addCounterParty(hashedSecret, tezAccount) {
     const res = await this.interact([
       {
@@ -77,6 +99,12 @@ module.exports = class Tezos {
     return res;
   }
 
+  /**
+   * Redeem the swap if possible
+   *
+   * @param hashedSecret hashed secret of the swap being redeemed
+   * @param secret secret for the swap which produced the corresponding hashedSecret
+   */
   async redeem(hashedSecret, secret) {
     const res = await this.interact([
       {
@@ -91,6 +119,11 @@ module.exports = class Tezos {
     return res;
   }
 
+  /**
+   * Refund the swap if possible
+   *
+   * @param hashedSecret hashed secret of the swap being refunded
+   */
   async refund(hashedSecret) {
     const res = await this.interact([
       {
@@ -105,6 +138,9 @@ module.exports = class Tezos {
     return res;
   }
 
+  /**
+   * Get reward basis points for responding to swaps
+   */
   async getReward() {
     const storage = await TezosNodeReader.getContractStorage(
       this.rpc,
@@ -112,7 +148,7 @@ module.exports = class Tezos {
     );
     return parseInt(
       JSONPath({
-        path: "$.args[1].args[0].int",
+        path: "$.args[1].args[1].args[0].int",
         json: storage,
       })[0]
     );
@@ -129,6 +165,13 @@ module.exports = class Tezos {
     };
   }
 
+  /**
+   * Get the secret for a swap that has already been redeemed
+   *
+   * @param hashedSecret hashed secret of the redeemed swap
+   *
+   * @return the secret for the swap if available
+   */
   async getRedeemedSecret(hashedSecret) {
     const data = await ConseilDataClient.executeEntityQuery(
       this.conseilServer,
@@ -197,7 +240,7 @@ module.exports = class Tezos {
       initiator: TezosMessageUtils.readAddress(
         JSONPath({ path: "$.args[0].args[1].args[0].bytes", json: jsonData })[0]
       ),
-      initiator_eth: JSONPath({
+      initiator_eth_addr: JSONPath({
         path: "$.args[0].args[1].args[1].string",
         json: jsonData,
       })[0],
@@ -216,6 +259,13 @@ module.exports = class Tezos {
     };
   }
 
+  /**
+   * Get details of a particular swap
+   *
+   * @param hashedSecret hashed secret of the swap requested
+   *
+   * @return the swap details if available
+   */
   async getSwap(hashedSecret) {
     hashedSecret = hashedSecret.substring(2);
     const packedKey = TezosMessageUtils.encodeBigMapKey(
@@ -241,7 +291,7 @@ module.exports = class Tezos {
         path: "$.args[0].args[1].args[0].string",
         json: jsonData,
       })[0],
-      initiator_eth: JSONPath({
+      initiator_eth_addr: JSONPath({
         path: "$.args[0].args[1].args[1].string",
         json: jsonData,
       })[0],
@@ -268,6 +318,11 @@ module.exports = class Tezos {
     };
   }
 
+  /**
+   * Get the list of all active swaps
+   *
+   * @return a list of all active swaps with their details
+   */
   async getAllSwaps() {
     const data = await ConseilDataClient.executeEntityQuery(
       this.conseilServer,
@@ -308,11 +363,25 @@ module.exports = class Tezos {
     return swaps;
   }
 
+  /**
+   * Get the list of all active swaps initiated by a specific user
+   *
+   * @param account tezos address of the user whose swaps are to be retrieved
+   *
+   * @return a list of all active swaps initiated by a specific user
+   */
   async getUserSwaps(account) {
     const swaps = await this.getAllSwaps();
     return swaps.filter((swp) => swp.initiator === account);
   }
 
+  /**
+   * Get all swaps waiting for a response matching the min expire time requested
+   *
+   * @param minTimeToExpire minimum time left for swap to expire in seconds
+   *
+   * @return a list of waiting swaps with details
+   */
   async getWaitingSwaps(minTimeToExpire) {
     const swaps = await this.getAllSwaps();
     return swaps.filter(
@@ -323,6 +392,15 @@ module.exports = class Tezos {
     );
   }
 
+  /**
+   * Send a tx to the blockchain
+   *
+   * @param operations List of operations needed to be sent to the chain
+   * @param extraGas extra gas to add for the tx (user choice)
+   * @param extraStorage extra storage to add for the tx (user choice)
+   *
+   * @return operation result
+   */
   async interact(operations, extraGas = 500, extraStorage = 50) {
     await this.mutex.acquire();
     try {
@@ -368,6 +446,7 @@ module.exports = class Tezos {
         const groupid = result["operationGroupID"]
           .replace(/"/g, "")
           .replace(/\n/, ""); // clean up RPC output
+        console.log("TEZOS TX HASH: ", groupid);
         const opRes = await TezosConseilClient.awaitOperationConfirmation(
           this.conseilServer,
           this.conseilServer.network,

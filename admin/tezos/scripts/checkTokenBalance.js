@@ -20,7 +20,7 @@ const getBalanceAllowance = async (owner, delegate) => {
   );
   const delegateData = await TezosNodeReader.getValueForBigMapKey(
     config.RPC,
-    17195,
+    32417,
     delegateKey,
     undefined,
     config.chain_id

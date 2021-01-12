@@ -5,9 +5,14 @@ import Tezos from "./tezos";
 export default class USDTz extends Tezos {
   constructor(tezos, account, swapContract, tokenContract, rpc, conseilServer) {
     super(tezos, account, swapContract, rpc, conseilServer);
-    this.tokenContract = tokenContract;
+    this.tokenContract = tokenContract; // tezos fa1.2 token contract details {address:string, mapID:nat}
   }
 
+  /**
+   * Get the tezos fa1.2 token balance for an account
+   *
+   * @param address tezos address for the account
+   */
   async tokenBalance(address) {
     const key = TezosMessageUtils.encodeBigMapKey(
       Buffer.from(TezosMessageUtils.writePackedData(address, "address"), "hex")
@@ -24,6 +29,11 @@ export default class USDTz extends Tezos {
     return balance;
   }
 
+  /**
+   * Get the tezos fa1.2 token allowance for swap contract by an account
+   *
+   * @param address tezos address for the account
+   */
   async tokenAllowance(address) {
     const key = TezosMessageUtils.encodeBigMapKey(
       Buffer.from(TezosMessageUtils.writePackedData(address, "address"), "hex")
@@ -46,6 +56,11 @@ export default class USDTz extends Tezos {
     return allowance.length === 0 ? "0" : allowance[0].args[1].int;
   }
 
+  /**
+   * Approve tokens for the swap contract
+   *
+   * @param amount the quantity of fa1.2 tokens to be approved
+   */
   async approveToken(amount) {
     const allow = await this.tokenAllowance(this.account);
     let ops = [];
@@ -70,6 +85,14 @@ export default class USDTz extends Tezos {
     return res;
   }
 
+  /**
+   * Initiate a swap on the tezos chain
+   *
+   * @param hashedSecret hashed secret for the swap
+   * @param refundTime  unix time(sec) after which the swap expires
+   * @param ethAddress initiators tezos account address
+   * @param amount value of the swap in fa1.2 tokens
+   */
   async initiateWait(hashedSecret, refundTime, ethAddress, amount) {
     const res = await this.interact([
       {

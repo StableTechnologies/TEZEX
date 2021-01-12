@@ -8,7 +8,7 @@ import CreateSwap from "../createSwap";
 const GetSwap = ({ genSwap, tezStore }) => {
   const [swaps, setSwaps] = useState([]);
   const [loader, setLoader] = useState(true);
-  const [reward, setReward] = useState(0);
+  const [rewardInBIPS, setReward] = useState(0);
   const [fullLoader, setFullLoader] = useState(false);
   const history = useHistory();
   const classes = useStyles();
@@ -24,9 +24,7 @@ const GetSwap = ({ genSwap, tezStore }) => {
   };
 
   const updateReward = async () => {
-    console.log("heree", 11);
-    const rewrd = await tezStore.getReward();
-    console.log("heree", rewrd);
+    const rewrd = await tezStore.getReward(); // basis points);
     setReward(rewrd);
   };
 
@@ -58,15 +56,15 @@ const GetSwap = ({ genSwap, tezStore }) => {
   };
   useEffect(() => {
     updateReward();
-    filterSwaps();
-    const timer = setInterval(() => {
-      filterSwaps();
-    }, 600000);
+    // filterSwaps();
+    // const timer = setInterval(() => {
+    //   filterSwaps();
+    // }, 600000);
     const timer1 = setInterval(() => {
       updateReward();
     }, 120000);
     return () => {
-      clearInterval(timer);
+      // clearInterval(timer);
       clearInterval(timer1);
     };
   }, []);
@@ -82,18 +80,8 @@ const GetSwap = ({ genSwap, tezStore }) => {
           className={classes.newSwap}
           genSwap={genSwap}
           loader={setFullLoader}
-          reward={reward}
+          rewardInBIPS={rewardInBIPS}
         />
-      </div>
-      <div className={classes.or}>
-        <p>Or</p>
-      </div>
-      <div className={classes.container}>
-        <h3 className={classes.msg}>Select From Available SWAPS</h3>
-        <div className={classes.swaps}>
-          {loader && <Loader message="..Loading Swaps.." />}
-          {!loader && data}
-        </div>
       </div>
     </div>
   );

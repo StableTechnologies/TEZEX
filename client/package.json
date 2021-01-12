@@ -1,8 +1,6 @@
 {
   "name": "client",
   "version": "0.1.0",
-  "private": true,
-  "homepage": "https://gdsoumya.github.io/AtomicSwap",
   "dependencies": {
     "@airgap/beacon-sdk": "^1.2.0",
     "@material-ui/core": "^4.11.0",

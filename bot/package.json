@@ -4,18 +4,22 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js",
+    "test": "mocha"
   },
   "author": "Soumya Ghosh Dastidar",
   "license": "ISC",
   "dependencies": {
     "async-mutex": "^0.2.6",
+    "chai": "^4.2.0",
     "conseiljs": "^5.0.4",
     "conseiljs-softsigner": "^5.0.3",
     "ethereumjs-tx": "^2.1.2",
     "jsonpath-plus": "^4.0.0",
     "loglevel": "^1.6.8",
+    "mocha": "^8.2.1",
     "node-fetch": "^2.6.0",
+    "readline-sync": "^1.4.10",
     "web3": "^1.2.11"
   },
   "devDependencies": {

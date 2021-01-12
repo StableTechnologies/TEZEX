@@ -1,22 +1,35 @@
-const USDC = require("./usdc");
+const ERC20 = require("./erc20");
 const config = require("./network-config.json");
-const USDTz = require("./usdtz");
+const FA12 = require("./fa12");
 const respondEth = require("./common/respond-eth");
 const Web3 = require("web3");
 const respondTezos = require("./common/respond-tezos");
+const { calcSwapReturn } = require("./common/util");
 
 module.exports = class Bot {
   constructor() {
-    this.usdcSwaps = {};
-    this.usdtzSwaps = {};
-    this.volume = {};
-    this.usdcLimit = 5;
-    this.usdtzLimit = 5;
-    this.reward = 0;
+    this.usdcSwaps = {}; // list of all usdc swaps being handled
+    this.usdtzSwaps = {}; // list of all usdtz swaps being handled
+    this.volume = {}; // max volume of token to be traded {usdc:nat, usdtz:nat}
+    this.usdcLimit = 5; // max no. of concurrent usdc swaps to undertake
+    this.usdtzLimit = 5; // max no. of concurrent usdtz swaps to undertake
+    this.reward = 0; // reward for responding to user swaps, taken from tezos contract
   }
+
+  /**
+   * Initiate the tezex bot, configure ethereum and tezos clients and signers
+   *
+   * @param ethConfig user config for ethereum {walletAddress:string, walletPK:string}
+   * @param tezosConfig user config for tezos {walletAddress:string, walletPK:string}
+   * @param volume max volume of token to be traded {usdc:nat, usdtz:nat}
+   */
   async init(ethConfig, tezosConfig, volume) {
     try {
-      this.volume = volume;
+      console.log("\nInitializing Bot...");
+      this.volume = {
+        usdc: parseInt(volume.usdc),
+        usdtz: parseInt(volume.usdtz),
+      };
       const web3 = new Web3(
         new Web3.providers.HttpProvider(config.ethereum.RPC)
       );
@@ -28,7 +41,7 @@ module.exports = class Bot {
         config.ethereum.tokenABI,
         config.ethereum.tokenAddr
       );
-      this.usdc = new USDC(
+      this.usdc = new ERC20(
         web3,
         ethConfig.walletAddress,
         ethConfig.walletPK,
@@ -36,7 +49,7 @@ module.exports = class Bot {
         swapContract,
         tokenContract
       );
-      this.usdtz = new USDTz(
+      this.usdtz = new FA12(
         tezosConfig.walletAddress,
         tezosConfig.walletPK,
         config.tezos.swapContract,
@@ -58,6 +71,11 @@ module.exports = class Bot {
     }
   }
 
+  /**
+   * Starts the bot and launches concurrent threads for monitoring swaps on both
+   * ethereum and tezos networks as well as threads for refunding swaps and
+   * updating reward
+   */
   start() {
     this.monitorReward();
     this.monitorUSDC();
@@ -66,6 +84,12 @@ module.exports = class Bot {
     console.log("BOT MONITORING");
   }
 
+  /**
+   * Updates the state of the swap and deletes the swap if it has been cancelled
+   *
+   * @param type specifies whether it is a ethereum(2) or tezos(1) swap
+   * @param swap the swap object
+   */
   async updateSwap(type, swap) {
     switch (swap.state) {
       case 0: {
@@ -103,6 +127,9 @@ module.exports = class Bot {
     console.log("details", this.usdcSwaps, this.usdtzSwaps, this.volume);
   }
 
+  /**
+   * Monitors and refunds all cancelled/error swaps
+   */
   monitorRefunds() {
     const run = async () => {
       console.log("CHECKING REFUNDABLE SWAPS");
@@ -141,6 +168,9 @@ module.exports = class Bot {
     setTimeout(run, 0);
   }
 
+  /**
+   * Monitors swaps on the usdc/ethereum network and responds to suitable swaps
+   */
   monitorUSDC() {
     const run = async () => {
       try {
@@ -160,9 +190,7 @@ module.exports = class Bot {
             swp.value <= this.volume.usdtz
           ) {
             console.log("FOUND : ", swp.hashedSecret);
-            const valueToPay = Math.round(
-              parseInt(swp.value) * (1 - this.reward / 100)
-            );
+            const valueToPay = calcSwapReturn(swp.value, this.reward);
             this.usdtzSwaps[swp.hashedSecret] = {
               state: 0,
               value: valueToPay,
@@ -190,6 +218,9 @@ module.exports = class Bot {
     setTimeout(run, 0);
   }
 
+  /**
+   * Monitors swaps on the usdtz/tezos network and responds to suitable swaps
+   */
   monitorUSDTz() {
     const run = async () => {
       try {
@@ -203,16 +234,14 @@ module.exports = class Bot {
           if (Object.keys(this.usdcSwaps).length >= this.usdtzLimit) break;
           const existingResponse = await this.usdc.getSwap(swp.hashedSecret);
           if (
-            existingResponse.initiator_tez === "" &&
+            existingResponse.initiator_tez_addr === "" &&
             existingResponse.refundTimestamp === "0" &&
             this.usdcSwaps[swp.hashedSecret] === undefined &&
             swp.value > 0 &&
             swp.value <= this.volume.usdc
           ) {
             console.log("FOUND : ", swp.hashedSecret);
-            const valueToPay = Math.round(
-              parseInt(swp.value) * (1 - this.reward / 100)
-            );
+            const valueToPay = calcSwapReturn(swp.value, this.reward);
             this.usdcSwaps[swp.hashedSecret] = {
               state: 0,
               value: valueToPay,
@@ -240,6 +269,9 @@ module.exports = class Bot {
     setTimeout(run, 0);
   }
 
+  /**
+   * Monitors and updates the reward (basis points) value
+   */
   monitorReward() {
     const run = async () => {
       console.log("UPDATING REWARD");

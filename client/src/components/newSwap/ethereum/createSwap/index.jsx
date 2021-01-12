@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
+import { calcSwapReturn } from "../../../../library/common/util";
 import useStyles from "../../style";
 
-const CreateSwap = ({ className, genSwap, loader, reward }) => {
+const CreateSwap = ({ className, genSwap, loader, rewardInBIPS }) => {
   const [input, setInput] = useState(0);
   const history = useHistory();
   const classes = useStyles();
@@ -11,9 +12,7 @@ const CreateSwap = ({ className, genSwap, loader, reward }) => {
     e.preventDefault();
     if (e.target.eth.value === "" || e.target.eth.value === 0) return;
     loader(true);
-    const minValue = Math.round(
-      parseInt(e.target.eth.value) * (1 - reward / 100)
-    );
+    const minValue = calcSwapReturn(e.target.eth.value, rewardInBIPS);
     const res = await genSwap(1, e.target.eth.value, minValue);
     loader(false);
     if (!res) {
@@ -33,14 +32,13 @@ const CreateSwap = ({ className, genSwap, loader, reward }) => {
             name="eth"
             step=".0001"
             min="0"
-            onInput={(e) => setInput(e.target.value)}
+            onInput={(e) => setInput(e.target.value || 0)}
             className={classes.valueInput}
           />
           <input className={classes.create} type="submit" value="CREATE" />
         </form>
         <p className={classes.expectedValue}>
-          Min Expected Value :{" "}
-          {Math.round(parseInt(input) * (1 - reward / 100))} USDTz
+          Min Expected Value : {calcSwapReturn(input, rewardInBIPS)} USDTz
         </p>
       </div>
     </div>

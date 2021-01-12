@@ -2,51 +2,28 @@
 pragma experimental ABIEncoderV2;
 pragma solidity ^0.6.0;
 
-// File: openzeppelin-contracts/contracts/math/SafeMath.sol
-library SafeMath {
-    function add(uint256 a, uint256 b) internal pure returns (uint256 c) {
-        c = a + b;
-        require(c >= a, "SafeMath add wrong value");
-        return c;
-    }
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-    function sub(uint256 a, uint256 b) internal pure returns (uint256) {
-        require(b <= a, "SafeMath sub wrong value");
-        return a - b;
-    }
-}
-
-// File: openzeppelin-contracts/contracts/utils/ReentrancyGuard.sol
-contract ReentrancyGuard {
-    bool private _notEntered;
-
-    constructor() public {
-        _notEntered = true;
-    }
-
-    modifier nonReentrant() {
-        require(_notEntered, "ReentrancyGuard: reentrant call");
-        _notEntered = false;
-        _;
-        _notEntered = true;
-    }
-}
+/**
+@title Cross Chain Atomic Swap contract
+@author Soumya Ghosh Dastidar
+*/
 
 contract AtomicSwap is ReentrancyGuard {
-    using SafeMath for uint256;
-
+    // possible states of a swap
     enum State {Empty, Waiting, Initiated}
 
+    // swap structure with extra metadata to form a doubly LinkedList
     struct Swap {
-        bytes32 prevHash;
-        bytes32 nextHash;
-        bytes32 hashedSecret;
-        address payable initiator;
-        address payable participant;
-        uint256 refundTimestamp;
-        uint256 value;
-        State state;
-        string initiator_tez;
+        bytes32 prevHash; // previous swap hash for LL
+        bytes32 nextHash; // next swap hash for LL
+        bytes32 hashedSecret; // current swap hash
+        address payable initiator; // initiator of this swap
+        address payable participant; // counter-party for this swap
+        uint256 refundTimestamp; // unix time(sec) after which the swap expires
+        uint256 value; // value of the swap in eth(wei)
+        State state; // current state of swap
+        string initiator_tez_addr; // initiator's tezos address
     }
 
     // first swap in the swap list
@@ -58,9 +35,10 @@ contract AtomicSwap is ReentrancyGuard {
     // contract active state
     bool public active;
 
-    // swaps
+    // map of all swaps
     mapping(bytes32 => Swap) public swaps;
 
+    // even triggered when swap is redeemed
     event Redeemed(bytes32 indexed _hashedSecret, bytes32 _secret);
 
     constructor() public {
@@ -70,6 +48,7 @@ contract AtomicSwap is ReentrancyGuard {
         admin = msg.sender;
     }
 
+    // ensures only initiator can call a function
     modifier onlyByInitiator(bytes32 _hashedSecret) {
         require(
             msg.sender == swaps[_hashedSecret].initiator,
@@ -78,12 +57,14 @@ contract AtomicSwap is ReentrancyGuard {
         _;
     }
 
+    // ensures only admin can call a function
     modifier onlyByAdmin() {
         require(msg.sender == admin, "sender is not the admin");
         _;
     }
 
-    modifier isInitiatable(
+    // checks whether a swap can be initiated
+    modifier isInitiable(
         bytes32 _hashedSecret,
         address _participant,
         uint256 _refundTimestamp
@@ -100,11 +81,13 @@ contract AtomicSwap is ReentrancyGuard {
         _;
     }
 
+    // ensures the currest swap state matches the required `state`
     modifier checkState(bytes32 _hashedSecret, State state) {
         require(swaps[_hashedSecret].state == state, "state mismatch");
         _;
     }
 
+    // checks whether the swap can be redeemed
     modifier isRedeemable(bytes32 _hashedSecret, bytes32 _secret) {
         require(
             block.timestamp < swaps[_hashedSecret].refundTimestamp,
@@ -118,6 +101,7 @@ contract AtomicSwap is ReentrancyGuard {
         _;
     }
 
+    // checks whether the swap can bve refunded
     modifier isRefundable(bytes32 _hashedSecret) {
         require(
             swaps[_hashedSecret].state == State.Waiting ||
@@ -131,31 +115,40 @@ contract AtomicSwap is ReentrancyGuard {
         _;
     }
 
+    // checks if the contract is active
     modifier contractIsActive() {
         require(active == true, "contract is deactivated");
         _;
     }
 
+    // toggle current contract state [activate:true/deactivate:false]
     function toggleContractState(bool _active) public onlyByAdmin {
         active = _active;
     }
 
+    /**
+        @notice Initiate new swap without counterParty details
+
+        @param _hashedSecret hash of the current swap secret
+        @param _initiator_tez_addr tezos address of the current swap initiator
+        @param _refundTimestamp unix time(sec) after which the swap expires
+     */
     function initiateWait(
         bytes32 _hashedSecret,
-        string memory _initiator_tez,
+        string memory _initiator_tez_addr,
         uint256 _refundTimestamp
     )
         public
         payable
         nonReentrant
         contractIsActive
-        isInitiatable(_hashedSecret, msg.sender, _refundTimestamp)
+        isInitiable(_hashedSecret, msg.sender, _refundTimestamp)
     {
         swaps[_hashedSecret].value = msg.value;
         swaps[_hashedSecret].hashedSecret = _hashedSecret;
         swaps[_hashedSecret].participant = msg.sender;
         swaps[_hashedSecret].initiator = msg.sender;
-        swaps[_hashedSecret].initiator_tez = _initiator_tez;
+        swaps[_hashedSecret].initiator_tez_addr = _initiator_tez_addr;
         swaps[_hashedSecret].refundTimestamp = _refundTimestamp;
         swaps[_hashedSecret].state = State.Waiting;
         swaps[_hashedSecret].prevHash = bytes32(0);
@@ -171,6 +164,12 @@ contract AtomicSwap is ReentrancyGuard {
         count += 1;
     }
 
+    /**
+        @notice Add counter-party details to an existing(initiated) swap
+
+        @param _hashedSecret hashed secret of the swap being updated
+        @param _participant participant/counter-party ethereum address
+     */
     function addCounterParty(
         bytes32 _hashedSecret,
         address payable _participant
@@ -184,6 +183,12 @@ contract AtomicSwap is ReentrancyGuard {
         swaps[_hashedSecret].state = State.Initiated;
     }
 
+    /**
+        @notice Redeem the swap if possible
+
+        @param _hashedSecret hashed secret of the swap being redeemed
+        @param _secret secret for the swap which produced the corresponding hashedSecret
+     */
     function redeem(bytes32 _hashedSecret, bytes32 _secret)
         public
         nonReentrant
@@ -214,7 +219,16 @@ contract AtomicSwap is ReentrancyGuard {
         emit Redeemed(_hashedSecret, _secret);
     }
 
-    function refund(bytes32 _hashedSecret) public isRefundable(_hashedSecret) {
+    /**
+        @notice Refund the swap if possible
+
+        @param _hashedSecret hashed secret of the swap being refunded
+     */
+    function refund(bytes32 _hashedSecret)
+        public
+        nonReentrant
+        isRefundable(_hashedSecret)
+    {
         swaps[_hashedSecret].initiator.transfer(swaps[_hashedSecret].value);
 
         if (
@@ -238,6 +252,11 @@ contract AtomicSwap is ReentrancyGuard {
         count -= 1;
     }
 
+    /**
+        @notice Return a list of all current Swaps
+
+        @return array/list of all swaps present in the contract storage
+     */
     function getAllSwaps() public view returns (Swap[] memory) {
         Swap[] memory sps = new Swap[](count);
         if (head == bytes32(0)) return sps;
@@ -250,35 +269,5 @@ contract AtomicSwap is ReentrancyGuard {
         }
         sps[i] = sp;
         return sps;
-    }
-
-    // for testing, not to be included in deployed contract
-    function stringToSecret(string memory source)
-        public
-        pure
-        returns (bytes32 result)
-    {
-        bytes memory tempEmptyStringTest = bytes(source);
-        if (tempEmptyStringTest.length == 0) {
-            return 0x0;
-        }
-        assembly {
-            result := mload(add(source, 32))
-        }
-    }
-
-    function stringToHashedSecret(string memory source)
-        public
-        pure
-        returns (bytes32 result)
-    {
-        bytes memory tempEmptyStringTest = bytes(source);
-        if (tempEmptyStringTest.length == 0) {
-            return 0x0;
-        }
-        assembly {
-            result := mload(add(source, 32))
-        }
-        // result = sha256(abi.encodePacked(sha256(abi.encodePacked(source))));
     }
 }

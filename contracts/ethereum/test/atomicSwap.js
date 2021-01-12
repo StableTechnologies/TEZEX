@@ -60,7 +60,7 @@ contract("AtomicSwap", (accounts) => {
     );
     expect(swap["initiator"]).to.equal(accounts[1]);
     expect(swap["participant"]).to.equal(accounts[1]);
-    expect(swap["initiator_tez"]).to.equal("tz1xxxxxxxxxx");
+    expect(swap["initiator_tez_addr"]).to.equal("tz1xxxxxxxxxx");
     expect(swap["refundTimestamp"].toNumber()).to.equal(refundTime);
     expect(swap["value"].toNumber()).to.equal(121);
     expect(swap["state"].toNumber()).to.equal(1);
@@ -174,7 +174,7 @@ contract("AtomicSwap", (accounts) => {
     );
     expect(swap["initiator"]).to.equal(accounts[1]);
     expect(swap["participant"]).to.equal(accounts[1]);
-    expect(swap["initiator_tez"]).to.equal("tz1xxxxxxxxxx");
+    expect(swap["initiator_tez_addr"]).to.equal("tz1xxxxxxxxxx");
     expect(swap["refundTimestamp"].toNumber()).to.equal(refTime);
     expect(swap["value"].toNumber()).to.equal(121);
     expect(swap["state"].toNumber()).to.equal(1);
@@ -196,7 +196,7 @@ contract("AtomicSwap", (accounts) => {
     expect(swap["initiator"]).to.equal(accounts[1]);
     expect(swap["participant"]).to.equal(accounts[2]);
     expect(swap["state"].toNumber()).to.equal(2);
-    await sleep(2000);
+    await sleep(3000);
   });
 
   it("cannot redeem after expiry", async () => {
