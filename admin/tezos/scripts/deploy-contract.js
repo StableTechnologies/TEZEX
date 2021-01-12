@@ -1,5 +1,5 @@
 const conseiljs = require("conseiljs");
-const config = require("../../config/tez-config.json");
+const config = require("../../config/tez-token-swap-config.json");
 const convertJSON = require("../util/convertJSON");
 const parseStorage = require("../util/parseStorage");
 const init = require("../init");
@@ -18,7 +18,33 @@ const Deploy = async () => {
       )[0]["high"]
     );
     console.log(fee);
-    const result = await conseiljs.TezosNodeWriter.sendContractOriginationOperation(
+    let result = await conseiljs.TezosNodeWriter.sendContractOriginationOperation(
+      config.tezosNode,
+      store.signer,
+      store.keyStore,
+      0,
+      undefined,
+      fee,
+      60000,
+      100000,
+      convertJSON(config["token-contract"]),
+      parseStorage(config["token-storage"]),
+      conseiljs.TezosParameterFormat.Micheline
+    );
+    let groupid = result["operationGroupID"]
+      .replace(/"/g, "")
+      .replace(/\n/, ""); // clean up RPC output
+    console.log(`Injected operation group id ${groupid}`);
+    let conseilResult = await conseiljs.TezosConseilClient.awaitOperationConfirmation(
+      config.conseilServer,
+      config.network,
+      groupid,
+      2
+    );
+    console.log(
+      `Originated token contract at ${conseilResult["originated_contracts"]}`
+    );
+    result = await conseiljs.TezosNodeWriter.sendContractOriginationOperation(
       config.tezosNode,
       store.signer,
       store.keyStore,
@@ -28,22 +54,20 @@ const Deploy = async () => {
       60000,
       100000,
       convertJSON(config.contract),
-      parseStorage(),
+      parseStorage(config.storage, conseilResult["originated_contracts"]),
       conseiljs.TezosParameterFormat.Micheline
     );
-    const groupid = result["operationGroupID"]
-      .replace(/"/g, "")
-      .replace(/\n/, ""); // clean up RPC output
-    console.log(
-      `Injected operation group id ${groupid} ${result["operationGroupID"]}`
-    );
-    const conseilResult = await conseiljs.TezosConseilClient.awaitOperationConfirmation(
+    groupid = result["operationGroupID"].replace(/"/g, "").replace(/\n/, ""); // clean up RPC output
+    console.log(`Injected operation group id ${groupid}`);
+    conseilResult = await conseiljs.TezosConseilClient.awaitOperationConfirmation(
       config.conseilServer,
       config.network,
       groupid,
       2
     );
-    console.log(`Originated contract at ${conseilResult.originated_contracts}`);
+    console.log(
+      `Originated swap contract at ${conseilResult["originated_contracts"]}`
+    );
   } catch (err) {
     console.error(err);
   }

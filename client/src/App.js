@@ -13,8 +13,7 @@ import requestEth from "./library/common/request-eth";
 import requestTezos from "./library/common/request-tezos";
 import respondEth from "./library/common/respond-eth";
 import respondTezos from "./library/common/respond-tezos";
-import setEthAccount from "./library/ethereum/account/setAccount";
-import setTezAccount from "./library/tezos/account/setAccount";
+import { setEthAccount, setTezAccount } from "./util";
 
 const App = () => {
   const [ethStore, ethSetup] = useState(undefined);
@@ -32,14 +31,39 @@ const App = () => {
 
   const forceUpdate = React.useCallback(() => updateState({}), []);
 
-  const initialize = async (ethKey, tezKey) => {
+  const initialize = async () => {
     try {
-      const eth = setEthAccount(ethKey);
-      const tez = await setTezAccount(tezKey);
+      const eth = await setEthAccount();
+      const tez = await setTezAccount();
+      const ethSwaps = await eth.getUserSwaps(eth.account);
+      const tezSwaps = await tez.getUserSwaps(tez.account);
+      let swap = {};
+      ethSwaps.forEach((swp) => {
+        if (swp.initiator === eth.account)
+          swap[swp.hashedSecret] = {
+            type: "eth",
+            hashedSecret: swp.hashedSecret,
+            value: swp.value + " USDC",
+            refundTime: swp.refundTimestamp,
+            state: 0,
+          };
+      });
+      tezSwaps.forEach((swp) => {
+        if (swp.initiator === tez.account)
+          swap[swp.hashedSecret] = {
+            type: "tez",
+            hashedSecret: swp.hashedSecret,
+            value: swp.value + " USDTz",
+            refundTime: swp.refundTimestamp,
+            state: 0,
+          };
+      });
+      if (Object.keys(swap).length > 0) updateSwaps(swap);
       ethSetup(eth);
       tezSetup(tez);
-    } catch {
-      alert("Wrong keys");
+    } catch (e) {
+      console.log("error", e);
+      alert(e.message);
     }
   };
 
@@ -109,21 +133,18 @@ const App = () => {
         {balance !== undefined && (
           <Switch>
             <Route exact path="/">
-              <Home swaps={swaps} />
+              <Home
+                swaps={swaps}
+                ethStore={ethRef.current}
+                tezStore={tezRef.current}
+                update={update}
+              />
             </Route>
             <Route exact path="/create/eth">
-              <Ethereum
-                genSwap={genSwap}
-                selfAcc={tezStore.keyStore.publicKeyHash}
-                balance={balance.eth}
-              />
+              <Ethereum genSwap={genSwap} tezStore={tezRef.current} />
             </Route>
             <Route exact path="/create/xtz">
-              <Tezos
-                genSwap={genSwap}
-                ethStore={ethStore}
-                balance={balance.tez}
-              />
+              <Tezos genSwap={genSwap} ethStore={ethRef.current} />
             </Route>
             <Route exact path="/create">
               <Swap />

@@ -1,5 +1,5 @@
 const { TezosNodeReader } = require("conseiljs");
-const config = require("../config/tez-config.json");
+const config = require("../config/tez-token-swap-config.json");
 const init = require("../tezos/init");
 const { JSONPath } = require("jsonpath-plus");
 

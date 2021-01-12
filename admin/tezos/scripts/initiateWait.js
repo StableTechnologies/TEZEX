@@ -2,17 +2,17 @@ const init = require("../init");
 const invokeContract = require("../util/invokeContract");
 
 const ethAddress = "0x91f79893E7B923410Ef1aEba6a67c6fab07D800C",
-  amtMuTez = 5000000,
+  amount = 100,
   secretBytes =
     "0xecb99bf78f9a21af53b860e5f4dd007555a55f590a93222b58230fc43751c4ea",
   time = Math.trunc(Date.now() / 1000) + 300;
 
 init().then(() => {
   invokeContract(
-    amtMuTez,
+    "0",
     "initiateWait",
-    `(Pair ${secretBytes} (Pair "${time}" "${ethAddress}"))`,
-    10000,
+    `(Pair (Pair ${amount} ${secretBytes}) (Pair "${time}" "${ethAddress}"))`,
+    15000,
     300
   )
     .then((res) => {

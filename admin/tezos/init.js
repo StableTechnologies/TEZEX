@@ -1,7 +1,7 @@
 const conseiljs = require("conseiljs");
 const log = require("loglevel");
 const conSign = require("conseiljs-softsigner");
-const config = require("../config/tez-config.json");
+const config = require("../config/tez-token-swap-config.json");
 const fetch = require("node-fetch");
 const store = require("./store");
 
