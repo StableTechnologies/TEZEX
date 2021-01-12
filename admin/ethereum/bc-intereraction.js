@@ -1,9 +1,10 @@
-const config = require("../config/eth-config.json");
+const config = require("../config/eth-token-swap-config.json");
 const Tx = require("ethereumjs-tx").Transaction;
 
 module.exports = async (web3, data, ether, gas, to, chain) => {
   return new Promise((resolve) => {
     try {
+      web3.eth.handleRevert = true;
       web3.eth.getBlock("latest", false, (error, result) => {
         var _gasLimit = result.gasLimit;
         try {

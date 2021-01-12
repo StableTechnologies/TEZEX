@@ -8,7 +8,7 @@ const {
 const { JSONPath } = require("jsonpath-plus");
 const init = require("../init");
 
-const network = "carthagenet";
+const network = "delphinet";
 
 const conseilServer = {
   url: "https://conseil-dev.cryptonomic-infra.tech:443",
@@ -63,7 +63,7 @@ const getSwaps = async () => {
         {
           field: "big_map_id",
           operation: ConseilOperator.EQ,
-          set: ["15534"],
+          set: ["17196"],
           inverse: false,
         },
         {

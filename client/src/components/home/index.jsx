@@ -2,12 +2,25 @@ import React from "react";
 import { useHistory } from "react-router-dom";
 import useStyles from "./style";
 
-const Home = ({ swaps }) => {
+const Home = ({ swaps, ethStore, tezStore, update }) => {
   const history = useHistory();
   const classes = useStyles();
+
+  const refundHandler = async (hashedSecret) => {
+    try {
+      let res = false;
+      if (swaps[hashedSecret].type === "eth")
+        res = await ethStore.refund(hashedSecret);
+      else res = await tezStore.refund(hashedSecret);
+      update(hashedSecret, 4);
+    } catch (err) {
+      alert("error in refunding, check if the refund time has come");
+    }
+  };
   const SwapItem = (data) => {
     const exp = new Date(data.refundTime * 1000);
     const state = {
+      0: "Error in Swap",
       1: "Swap Initiated",
       2: "Swap Response Found",
       3: "Completed",
@@ -18,7 +31,18 @@ const Home = ({ swaps }) => {
         <p>Hash : {data.hashedSecret}</p>
         <p>Value : {data.value}</p>
         <p>Expiry Time : {exp.toLocaleString()}</p>
-        <p>State : {state[data.state]}</p>
+        {data.state === 0 && (
+          <div className={classes.error}>
+            <p>{state[data.state]}</p>
+            <button
+              className={classes.errorBtn}
+              onClick={() => refundHandler(data.hashedSecret)}
+            >
+              refund!
+            </button>
+          </div>
+        )}
+        {data.state !== 0 && <p>State : {state[data.state]}</p>}
       </div>
     );
   };

@@ -1,5 +1,5 @@
 const { TezosContractIntrospector } = require("conseiljs");
-const config = require("../../config/tez-config.json");
+const config = require("../../config/tez-token-swap-config.json");
 const init = require("../init");
 
 const GenParams = async () => {
@@ -8,7 +8,7 @@ const GenParams = async () => {
     const ep = await TezosContractIntrospector.generateEntryPointsFromAddress(
       config.conseilServer,
       config.network,
-      config.contractAddr
+      "KT1RxKJyi48W3bZR8HErRiisXZQw19HwLGWj"
     );
     ep.forEach((p, i) => {
       console.log(

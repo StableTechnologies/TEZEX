@@ -1,5 +1,5 @@
 const conseiljs = require("conseiljs");
-const config = require("../../config/tez-config.json");
+const config = require("../../config/tez-token-swap-config.json");
 const store = require("../store");
 
 module.exports = (
@@ -7,7 +7,8 @@ module.exports = (
   entry_point,
   parameters,
   extraGas = 300,
-  extraStorage = 50
+  extraStorage = 50,
+  contractAddress = config.contractAddr
 ) => {
   return new Promise((resolve, reject) => {
     const fee = 105000,
@@ -17,7 +18,7 @@ module.exports = (
       config.RPC,
       config.chain_id,
       store.keyStore,
-      config.contractAddr,
+      contractAddress,
       amtInMuTez,
       fee,
       storage_limit,
@@ -32,7 +33,7 @@ module.exports = (
           config.RPC,
           store.signer,
           store.keyStore,
-          config.contractAddr,
+          contractAddress,
           amtInMuTez,
           200000,
           freight + extraStorage,
