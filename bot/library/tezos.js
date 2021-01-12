@@ -1,25 +1,47 @@
-import { TezosOperationType } from "@airgap/beacon-sdk";
-import { Mutex } from "async-mutex";
-import {
+const { Mutex } = require("async-mutex");
+const {
   ConseilDataClient,
   ConseilOperator,
   ConseilSortDirection,
+  registerFetch,
+  registerLogger,
   TezosConseilClient,
   TezosLanguageUtil,
   TezosMessageUtils,
   TezosNodeReader,
-} from "conseiljs";
-import { JSONPath } from "jsonpath-plus";
+  TezosNodeWriter,
+  TezosParameterFormat,
+} = require("conseiljs");
+const { KeyStoreUtils, SoftSigner } = require("conseiljs-softsigner");
+const { JSONPath } = require("jsonpath-plus");
+const log = require("loglevel");
+const fetch = require("node-fetch");
 
-export default class Tezos {
-  constructor(tezos, account, swapContract, rpc, conseilServer) {
+module.exports = class Tezos {
+  constructor(account, privateKey, swapContract, chainID, rpc, conseilServer) {
     this.account = account;
-    this.tezos = tezos;
+    this.privateKey = privateKey;
     this.rpc = rpc;
     this.conseilServer = conseilServer;
     this.swapContract = swapContract;
+    this.chainID = chainID;
     this.mutex = new Mutex();
   }
+
+  async initConseil() {
+    const logger = log.getLogger("conseiljs");
+    logger.setLevel("error", false);
+    registerLogger(logger);
+    registerFetch(fetch);
+    this.keyStore = await KeyStoreUtils.restoreIdentityFromSecretKey(
+      this.privateKey
+    );
+    this.signer = await SoftSigner.createSigner(
+      TezosMessageUtils.writeKeyWithHint(this.keyStore.secretKey, "edsk"),
+      -1
+    );
+  }
+
   async balance(address) {
     return await TezosNodeReader.getSpendableBalanceForAccount(
       this.rpc,
@@ -83,17 +105,6 @@ export default class Tezos {
     return res;
   }
 
-  parseRedeemValue(e) {
-    const splt = e.parameters.split(" ");
-    return {
-      ...e,
-      parameters: {
-        hashedSecret: splt[1],
-        secret: splt[2],
-      },
-    };
-  }
-
   async getReward() {
     const storage = await TezosNodeReader.getContractStorage(
       this.rpc,
@@ -105,6 +116,17 @@ export default class Tezos {
         json: storage,
       })[0]
     );
+  }
+
+  parseRedeemValue(e) {
+    const splt = e.parameters.split(" ");
+    return {
+      ...e,
+      parameters: {
+        hashedSecret: splt[1],
+        secret: splt[2],
+      },
+    };
   }
 
   async getRedeemedSecret(hashedSecret) {
@@ -301,46 +323,67 @@ export default class Tezos {
     );
   }
 
-  async interact(operations, extraGas = 300, extraStorage = 50) {
+  async interact(operations, extraGas = 500, extraStorage = 50) {
     await this.mutex.acquire();
     try {
-      let ops = [];
-      operations.forEach((op) => {
-        op.to = op.to === undefined ? this.swapContract.address : op.to;
-        ops.push({
-          kind: TezosOperationType.TRANSACTION,
-          amount: op.amtInMuTez,
-          destination: op.to,
-          source: this.account,
-          parameters: {
-            entrypoint: op.entrypoint,
-            value: JSON.parse(
-              TezosLanguageUtil.translateParameterMichelsonToMicheline(
-                op.parameters
-              )
-            ),
-          },
-        });
-      });
-      const result = await this.tezos.requestOperation({
-        operationDetails: ops,
-      });
-      console.log(result);
-      const groupid = result["transactionHash"]
-        .replace(/"/g, "")
-        .replace(/\n/, ""); // clean up RPC output
-      const confirm = await TezosConseilClient.awaitOperationConfirmation(
-        this.conseilServer,
-        this.conseilServer.network,
-        groupid,
-        2
-      );
-      return confirm;
+      for (let i = 0; i < operations.length; i++) {
+        const fee = 105000,
+          storageLimit = 6000,
+          gasLimit = 1000000;
+        operations[i].to =
+          operations[i].to === undefined
+            ? this.swapContract.address
+            : operations[i].to;
+        let {
+          gas,
+          storageCost: freight,
+        } = await TezosNodeWriter.testContractInvocationOperation(
+          this.rpc,
+          this.chainID,
+          this.keyStore,
+          operations[i].to,
+          operations[i].amtInMuTez,
+          fee,
+          storageLimit,
+          gasLimit,
+          operations[i].entrypoint,
+          operations[i].parameters,
+          TezosParameterFormat.Michelson
+        );
+        const fees = ~~((gas + extraGas) / 10 + 500);
+        freight = freight == 0 ? 0 : freight + extraStorage;
+        const result = await TezosNodeWriter.sendContractInvocationOperation(
+          this.rpc,
+          this.signer,
+          this.keyStore,
+          operations[i].to,
+          operations[i].amtInMuTez,
+          fees,
+          freight,
+          gas + extraGas,
+          operations[i].entrypoint,
+          operations[i].parameters,
+          TezosParameterFormat.Michelson
+        );
+        const groupid = result["operationGroupID"]
+          .replace(/"/g, "")
+          .replace(/\n/, ""); // clean up RPC output
+        const opRes = await TezosConseilClient.awaitOperationConfirmation(
+          this.conseilServer,
+          this.conseilServer.network,
+          groupid,
+          2
+        );
+        if (opRes.status != "applied") {
+          return opRes;
+        }
+      }
+      return { status: "applied" };
     } catch (err) {
-      console.error(err);
+      console.error("TEZOS TX ERROR : ", err);
       throw err;
     } finally {
       this.mutex.release();
     }
   }
-}
+};

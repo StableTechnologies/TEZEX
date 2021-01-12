@@ -25,7 +25,7 @@ const waitCompletion = (secret, tezStore, ethStore, refundTime, update) => {
   }, 0);
 };
 
-const requestTezos = async (amount, ethStore, tezStore, update) => {
+const requestTezos = async (amount, minAmt, ethStore, tezStore, update) => {
   // generate swap secret
   try {
     const secret = createSecrets();
@@ -47,7 +47,7 @@ const requestTezos = async (amount, ethStore, tezStore, update) => {
 
     // watch swap response
 
-    waitResponse(secret, tezStore, ethStore, refundTime, update);
+    waitResponse(secret, minAmt, tezStore, ethStore, refundTime, update);
     return {
       type: "tez",
       hashedSecret: secret.hashedSecret,
@@ -59,7 +59,14 @@ const requestTezos = async (amount, ethStore, tezStore, update) => {
     console.log("FAILED TO INITIATE SWAP", err);
   }
 };
-const waitResponse = (secret, tezStore, ethStore, refundTime, update) => {
+const waitResponse = (
+  secret,
+  minAmt,
+  tezStore,
+  ethStore,
+  refundTime,
+  update
+) => {
   setTimeout(async function run() {
     try {
       if (Math.trunc(Date.now() / 1000) >= refundTime) {
@@ -74,6 +81,12 @@ const waitResponse = (secret, tezStore, ethStore, refundTime, update) => {
         return;
       }
       console.log("\nA SWAP RESPONSE FOUND : \n", swp);
+      if (swp.value < minAmt) {
+        console.log("swap response doesn't match min amount");
+        setTimeout(run, 90000);
+        return;
+      }
+
       await tezStore.addCounterParty(secret.hashedSecret, swp.initiator_tez);
       update(secret.hashedSecret, 2);
       waitCompletion(secret, tezStore, ethStore, refundTime, update);

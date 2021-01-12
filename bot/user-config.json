@@ -1,0 +1,14 @@
+{
+    "tezos": {
+        "walletAddress": "",
+        "walletPK": ""
+    },
+    "ethereum": {
+        "walletAddress": "",
+        "walletPK": ""
+    },
+    "maxVolume": {
+        "usdc": 300,
+        "usdtz": 300
+    }
+}
