@@ -50,7 +50,7 @@ const Home = ({ swaps, ethStore, tezStore, update }) => {
   let data = (
     <div className={classes.noSwap}>
       <p>
-        No Swaps Created Yet! Learn more about <b>TrueSwap</b> and how to create
+        No Swaps Created Yet! Learn more about <b>TEZEX</b> and how to create
         your own Atomic Swap
       </p>
       <button className={classes.button} onClick={() => history.push("/about")}>

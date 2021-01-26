@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
+import logo from "../../tezexbridge.png";
 import { shorten, truncate } from "../../util";
 import useStyles from "./style";
-
 const Header = ({ ethStore, tezStore, balUpdate }) => {
   const [balance, setBalance] = useState({ eth: 0, tez: 0 });
   const classes = useStyles();
@@ -13,9 +13,9 @@ const Header = ({ ethStore, tezStore, balUpdate }) => {
     let tokenEth = await ethStore.tokenBalance(ethStore.account);
     let tokenTez = await tezStore.tokenBalance(tezStore.account);
     eth = eth / Math.pow(10, 18);
-    tez =tez / 1000000;
+    tez = tez / 1000000;
     balUpdate({ eth, tez, tokenEth, tokenTez });
-    setBalance({ eth, tez,tokenEth, tokenTez });
+    setBalance({ eth, tez, tokenEth, tokenTez });
   };
 
   useEffect(() => {
@@ -36,7 +36,7 @@ const Header = ({ ethStore, tezStore, balUpdate }) => {
         <p>Token Balance : {truncate(balance.tokenEth, 4)} USDC</p>
       </div>
       <div className={classes.nav}>
-        <h1 className={classes.title}>TrueSwap</h1>
+        <img className={classes.logo} src={logo} alt="Logo" />
         <button className={classes.button} onClick={() => history.push("/")}>
           Home
         </button>

@@ -33,11 +33,11 @@ const useStyles = makeStyles((theme) => ({
       color: "black",
     },
   },
-  title: {
-    fontFamily: "'Pacifico', cursive",
-    fontSize: "5vw",
-    margin: "0",
-    lineHeight: "6vw",
+  logo: {
+    width: "36vw",
+    display: "block",
+    margin: "1vw auto",
+    padding: "0 4vw",
   },
   nav: {},
 }));
