@@ -51,7 +51,7 @@ const requestTezos = async (amount, minAmt, ethStore, tezStore, update) => {
     return {
       type: "tez",
       hashedSecret: secret.hashedSecret,
-      value: amount + " USDTz",
+      value: amount,
       refundTime,
       state: 1,
     };

@@ -43,7 +43,7 @@ const App = () => {
           swap[swp.hashedSecret] = {
             type: "eth",
             hashedSecret: swp.hashedSecret,
-            value: swp.value + " USDC",
+            value: swp.value / 1000000 + " USDC",
             minReturn: "-",
             refundTime: swp.refundTimestamp,
             state: 0,
@@ -54,7 +54,7 @@ const App = () => {
           swap[swp.hashedSecret] = {
             type: "tez",
             hashedSecret: swp.hashedSecret,
-            value: swp.value + " USDTz",
+            value: swp.value / 1000000 + " USDTz",
             minReturn: "-",
             refundTime: swp.refundTimestamp,
             state: 0,
@@ -65,7 +65,7 @@ const App = () => {
       tezSetup(tez);
     } catch (e) {
       console.log("error", e);
-      alert(e.message);
+      alert("Error Connecting to Wallet", e);
     }
   };
 
@@ -125,7 +125,11 @@ const App = () => {
     if (newSwaps === undefined) {
       newSwaps = {};
     }
-    swap["minReturn"] = minValue + symbol;
+    swap["value"] =
+      symbol === " USDC"
+        ? swap["value"] / 1000000 + " USDTz"
+        : swap["value"] / 1000000 + " USDC";
+    swap["minReturn"] = minValue / 1000000 + symbol;
     newSwaps[swap.hashedSecret] = swap;
     updateSwaps(newSwaps);
     return true;

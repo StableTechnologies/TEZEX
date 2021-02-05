@@ -18,6 +18,10 @@ const init = () => {
         }
       );
       config = decryptUserConfig("./user-config.json", password);
+      config.maxVolume = {
+        usdc: Math.floor(config.maxVolume.usdc * 1000000) / 1000000,
+        usdtz: Math.floor(config.maxVolume.usdtz * 1000000) / 1000000,
+      };
       console.log(
         `\nPlease Confirm Details:\n - Eth Address: ${
           config.ethereum.walletAddress
@@ -63,6 +67,10 @@ const init = () => {
     return;
   }
   const bot = new Bot();
+  config.maxVolume = {
+    usdc: Math.floor(config.maxVolume.usdc * 1000000),
+    usdtz: Math.floor(config.maxVolume.usdtz * 1000000),
+  };
   bot
     .init(config.ethereum, config.tezos, config.maxVolume)
     .then(() => bot.start())

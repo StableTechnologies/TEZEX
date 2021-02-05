@@ -14,6 +14,15 @@ contract("TokenSwap", (accounts) => {
     expect(balance.toNumber()).to.equal(1000);
   });
 
+  it("deactivating contract", async () => {
+    const atomicSwap = await AtomicSwap.deployed();
+    let state = await atomicSwap.active();
+    expect(state).to.equal(true);
+    await atomicSwap.toggleContractState(false, { from: accounts[0] });
+    state = await atomicSwap.active();
+    expect(state).to.equal(false);
+  });
+
   it("should throw inactive error", async () => {
     const atomicSwap = await AtomicSwap.deployed();
     await truffleAssert.reverts(

@@ -13,10 +13,12 @@ const CreateSwap = ({ className, genSwap, loader, rewardInBIPS }) => {
     if (e.target.tez.value === "" || e.target.tez.value === 0) return;
     loader(true);
     try {
-      const minValue = calcSwapReturn(e.target.tez.value, rewardInBIPS);
-      const res = await genSwap(2, e.target.tez.value, minValue);
+      const minValue = calcSwapReturn(
+        e.target.tez.value * 1000000,
+        rewardInBIPS
+      );
+      const res = await genSwap(2, e.target.tez.value * 1000000, minValue);
       loader(false);
-      console.log(res);
       if (!res) {
         alert("Error: Swap Couldn't be created");
       } else {
@@ -35,7 +37,7 @@ const CreateSwap = ({ className, genSwap, loader, rewardInBIPS }) => {
             type="number"
             placeholder="Amount in USDTz"
             name="tez"
-            step=".0001"
+            step=".000001"
             min="0"
             onInput={(e) => setInput(e.target.value || 0)}
             className={classes.valueInput}
@@ -43,7 +45,8 @@ const CreateSwap = ({ className, genSwap, loader, rewardInBIPS }) => {
           <input className={classes.create} type="submit" value="CREATE" />
         </form>
         <p className={classes.expectedValue}>
-          Min Expected USDC Value : {calcSwapReturn(input, rewardInBIPS)} USDC
+          Min Expected USDC Value :{" "}
+          {calcSwapReturn(input * 1000000, rewardInBIPS) / 1000000} USDC
         </p>
       </div>
     </div>

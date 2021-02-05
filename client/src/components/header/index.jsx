@@ -14,6 +14,8 @@ const Header = ({ ethStore, tezStore, balUpdate }) => {
     let tokenTez = await tezStore.tokenBalance(tezStore.account);
     eth = eth / Math.pow(10, 18);
     tez = tez / 1000000;
+    tokenEth /= 1000000;
+    tokenTez /= 1000000;
     balUpdate({ eth, tez, tokenEth, tokenTez });
     setBalance({ eth, tez, tokenEth, tokenTez });
   };
@@ -55,8 +57,8 @@ const Header = ({ ethStore, tezStore, balUpdate }) => {
       </div>
       <div className={classes.account}>
         <p>Tezos Addr.: {shorten(5, 5, tezStore.account)}</p>
-        <p>Balance : {truncate(balance.tez, 4)} XTZ</p>
-        <p>Token Balance : {truncate(balance.tokenTez, 4)} USDTz</p>
+        <p>Balance : {balance.tez} XTZ</p>
+        <p>Token Balance : {balance.tokenTez} USDTz</p>
       </div>
     </div>
   );

@@ -2,7 +2,7 @@ const init = require("../init");
 const invokeContract = require("../util/invokeContract");
 const config = require("../../config/tez-token-swap-config.json");
 
-const amount = 10000;
+const amount = 10000 * Math.pow(10, 6);
 
 init().then(() => {
   invokeContract(

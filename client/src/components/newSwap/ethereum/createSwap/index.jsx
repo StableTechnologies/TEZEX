@@ -12,8 +12,8 @@ const CreateSwap = ({ className, genSwap, loader, rewardInBIPS }) => {
     e.preventDefault();
     if (e.target.eth.value === "" || e.target.eth.value === 0) return;
     loader(true);
-    const minValue = calcSwapReturn(e.target.eth.value, rewardInBIPS);
-    const res = await genSwap(1, e.target.eth.value, minValue);
+    const minValue = calcSwapReturn(e.target.eth.value * 1000000, rewardInBIPS);
+    const res = await genSwap(1, e.target.eth.value * 1000000, minValue);
     loader(false);
     if (!res) {
       alert("Error: Swap Couldn't be created");
@@ -30,7 +30,7 @@ const CreateSwap = ({ className, genSwap, loader, rewardInBIPS }) => {
             type="number"
             placeholder="Amount in USDC"
             name="eth"
-            step=".0001"
+            step=".000001"
             min="0"
             onInput={(e) => setInput(e.target.value || 0)}
             className={classes.valueInput}
@@ -38,7 +38,8 @@ const CreateSwap = ({ className, genSwap, loader, rewardInBIPS }) => {
           <input className={classes.create} type="submit" value="CREATE" />
         </form>
         <p className={classes.expectedValue}>
-          Min Expected Value : {calcSwapReturn(input, rewardInBIPS)} USDTz
+          Min Expected Value :{" "}
+          {calcSwapReturn(input * 1000000, rewardInBIPS) / 1000000} USDTz
         </p>
       </div>
     </div>

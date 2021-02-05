@@ -49,7 +49,7 @@ const requestEth = async (amount, minAmt, ethStore, tezStore, update) => {
     return {
       type: "eth",
       hashedSecret: secret.hashedSecret,
-      value: amount + " USDC",
+      value: amount,
       refundTime,
       state: 1,
     };

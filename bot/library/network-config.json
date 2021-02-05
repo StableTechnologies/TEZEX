@@ -6,8 +6,8 @@
       "mapID": 32417
     },
     "swapContract": {
-      "address": "KT1Pyng1GfEYotegBv3oVhfLKv1KyX6pc9gT",
-      "mapID": 32418
+      "address": "KT1EyApp4xsWR7YJEuT7fFYrqMNJ5V6XaeaF",
+      "mapID": 59597
     },
     "chain_id": "NetXm8tYqnMWky1",
     "conseilServer": {
@@ -19,8 +19,8 @@
   "ethereum": {
     "RPC": "https://goerli.infura.io/v3/3f764c2122644024825ab09e9e4d39d2",
     "chain": "goerli",
-    "contractAddr": "0xaA91e5b3a4E8452200a8F7101C3795c789177B1B",
-    "tokenAddr": "0x7f138083B34CF3D0f264e1b0E318e0a035930Fdb",
+    "contractAddr": "0xc65f71472B87eca51cA9f2B6F4225601fD176157",
+    "tokenAddr": "0x14E0A01D5C0E883861562468A69921aef60a2F5f",
     "abi": [
       {
         "inputs": [
