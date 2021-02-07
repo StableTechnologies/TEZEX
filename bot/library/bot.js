@@ -43,14 +43,12 @@ module.exports = class Bot {
       );
       this.usdc = new ERC20(
         web3,
-        ethConfig.walletAddress,
         ethConfig.walletPK,
         config.ethereum.chain,
         swapContract,
         tokenContract
       );
       this.usdtz = new FA12(
-        tezosConfig.walletAddress,
         tezosConfig.walletPK,
         config.tezos.swapContract,
         config.tezos.tokenContract,
@@ -59,12 +57,22 @@ module.exports = class Bot {
         config.tezos.conseilServer
       );
       await this.usdtz.initConseil();
-      this.reward = await this.usdtz.getReward();
-      await Promise.all([
-        this.usdc.approveToken(this.volume.usdc),
-        this.usdtz.approveToken(this.volume.usdtz),
-      ]);
-      console.log("BOT INITIALIZED");
+      const ethBalance = await this.usdc.balance(this.usdc.account);
+      const usdcBalance = await this.usdc.tokenBalance(this.usdc.account);
+      const tezBalance = await this.usdtz.balance(this.usdtz.account);
+      const usdtzBalance = await this.usdtz.tokenBalance(this.usdtz.account);
+      return {
+        eth: {
+          account: this.usdc.account,
+          balance: this.usdc.web3.utils.fromWei(ethBalance),
+          usdc: usdcBalance / 1000000,
+        },
+        tez: {
+          account: this.usdtz.account,
+          balance: tezBalance / 1000000,
+          usdtz: usdtzBalance / 1000000,
+        },
+      };
     } catch (err) {
       console.error("Bot Init failed | ", err);
       throw err;
@@ -76,12 +84,26 @@ module.exports = class Bot {
    * ethereum and tezos networks as well as threads for refunding swaps and
    * updating reward
    */
-  start() {
+  async start() {
+    this.reward = await this.usdtz.getReward();
+    await Promise.all([
+      this.usdc.approveToken(this.volume.usdc),
+      this.usdtz.approveToken(this.volume.usdtz),
+    ]);
+    console.log("\n[!] BOT INITIALIZED");
+    console.log(
+      `\n\n[*]CURRENT STATUS :\n  [!] ACTIVE SWAP COUNT : ${
+        Object.keys(this.usdcSwaps).length + Object.keys(this.usdtzSwaps).length
+      }\n  [!] SWAP REWARD RATE : ${
+        this.reward
+      } BPS\n  [!] REMAINING VOLUME : USDC - ${
+        this.volume.usdc / 1000000
+      } | USDTz - ${this.volume.usdtz / 1000000}\n\n`
+    );
     this.monitorReward();
     this.monitorUSDC();
     this.monitorUSDTz();
     this.monitorRefunds();
-    console.log("BOT MONITORING");
   }
 
   /**
@@ -115,7 +137,7 @@ module.exports = class Bot {
               await this.usdtz.approveToken(this.volume.usdtz);
           }
         } catch (err) {
-          console.error("FAILED TO RE-APPROVE FUNDS");
+          console.error("[x] FAILED TO RE-APPROVE FUNDS");
         }
         break;
       }
@@ -124,7 +146,6 @@ module.exports = class Bot {
         else this.usdtzSwaps[swap.hashedSecret] = swap;
       }
     }
-    console.log("details", this.usdcSwaps, this.usdtzSwaps, this.volume);
   }
 
   /**
@@ -132,7 +153,7 @@ module.exports = class Bot {
    */
   monitorRefunds() {
     const run = async () => {
-      console.log("CHECKING REFUNDABLE SWAPS");
+      console.log("[*] CHECKING REFUNDABLE SWAPS");
       for (const key in this.usdcSwaps) {
         if (
           this.usdcSwaps[key].state === 4 &&
@@ -142,9 +163,9 @@ module.exports = class Bot {
             await this.usdc.refund(key);
             this.usdcSwaps[key].state = 3;
             await this.updateSwap(2, this.usdcSwaps[key]);
-            console.log("REFUNDED SWAP(USDC): ", key);
+            console.log("[!] REFUNDED SWAP(USDC): ", key);
           } catch (err) {
-            console.error("FAILED TO REFUND SWAP(USDC): ", key);
+            console.error("[x] FAILED TO REFUND SWAP(USDC): ", key);
           }
         }
       }
@@ -157,9 +178,9 @@ module.exports = class Bot {
             await this.usdtz.refund(key);
             this.usdtzSwaps[key].state = 3;
             await this.updateSwap(1, this.usdtzSwaps[key]);
-            console.log("REFUNDED SWAP(USDTz): ", key);
+            console.log("[!] REFUNDED SWAP(USDTz): ", key);
           } catch (err) {
-            console.error("FAILED TO REFUND SWAP(USDTz): ", key);
+            console.error("[x] FAILED TO REFUND SWAP(USDTz): ", key);
           }
         }
       }
@@ -174,13 +195,11 @@ module.exports = class Bot {
   monitorUSDC() {
     const run = async () => {
       try {
-        console.log("CHECKING USDC SWAPS");
+        console.log("[*] CHECKING USDC SWAPS");
         if (this.volume.usdtz === 0) return;
         const waitingSwaps = await this.usdc.getWaitingSwaps(4200);
-        console.log(waitingSwaps);
         for (const i in waitingSwaps) {
           const swp = waitingSwaps[i];
-          console.log("usdc", Object.keys(this.usdtzSwaps).length);
           if (Object.keys(this.usdtzSwaps).length >= this.usdcLimit) break;
           const existingResponse = await this.usdtz.getSwap(swp.hashedSecret);
           if (
@@ -189,7 +208,7 @@ module.exports = class Bot {
             swp.value > 0 &&
             swp.value <= this.volume.usdtz
           ) {
-            console.log("FOUND : ", swp.hashedSecret);
+            console.log("[!] FOUND : ", swp.hashedSecret);
             const valueToPay = calcSwapReturn(swp.value, this.reward);
             this.usdtzSwaps[swp.hashedSecret] = {
               state: 0,
@@ -211,7 +230,7 @@ module.exports = class Bot {
           }
         }
       } catch (err) {
-        console.error("FAILED TO MONITOR USDC SWAPS | ", err);
+        console.error("[x] FAILED TO MONITOR USDC SWAPS | ", err);
       }
       setTimeout(run, 120000);
     };
@@ -224,13 +243,11 @@ module.exports = class Bot {
   monitorUSDTz() {
     const run = async () => {
       try {
-        console.log("CHECKING USDTz SWAPS");
+        console.log("[*] CHECKING USDTz SWAPS");
         if (this.volume.usdc === 0) return;
         const waitingSwaps = await this.usdtz.getWaitingSwaps(4200);
-        console.log(waitingSwaps);
         for (const i in waitingSwaps) {
           const swp = waitingSwaps[i];
-          console.log("usdtz", Object.keys(this.usdcSwaps).length);
           if (Object.keys(this.usdcSwaps).length >= this.usdtzLimit) break;
           const existingResponse = await this.usdc.getSwap(swp.hashedSecret);
           if (
@@ -240,7 +257,7 @@ module.exports = class Bot {
             swp.value > 0 &&
             swp.value <= this.volume.usdc
           ) {
-            console.log("FOUND : ", swp.hashedSecret);
+            console.log("[!] FOUND : ", swp.hashedSecret);
             const valueToPay = calcSwapReturn(swp.value, this.reward);
             this.usdcSwaps[swp.hashedSecret] = {
               state: 0,
@@ -262,7 +279,7 @@ module.exports = class Bot {
           }
         }
       } catch (err) {
-        console.error("FAILED TO MONITOR USDTz SWAPS | ", err);
+        console.error("[x] FAILED TO MONITOR USDTz SWAPS | ", err);
       }
       setTimeout(run, 120000);
     };
@@ -274,12 +291,22 @@ module.exports = class Bot {
    */
   monitorReward() {
     const run = async () => {
-      console.log("UPDATING REWARD");
+      console.log("[*] UPDATING REWARD");
       try {
         this.reward = await this.usdtz.getReward();
       } catch (err) {
-        console.error("ERROR while updating reward: ", err);
+        console.error("[x] ERROR while updating reward: ", err);
       }
+      console.log(
+        `\n\n[*]CURRENT STATUS :\n  [!] ACTIVE SWAP COUNT : ${
+          Object.keys(this.usdcSwaps).length +
+          Object.keys(this.usdtzSwaps).length
+        }\n  [!] SWAP REWARD RATE : ${
+          this.reward
+        } BPS\n  [!] REMAINING VOLUME : USDC - ${
+          this.volume.usdc / 1000000
+        } | USDTz - ${this.volume.usdtz / 1000000}\n\n`
+      );
       setTimeout(run, 120000);
     };
     setTimeout(run, 120000);

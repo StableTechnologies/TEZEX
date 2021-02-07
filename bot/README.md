@@ -24,11 +24,9 @@ tezex@bot:~/TEZEX/bot$ npm i
 ```json
 {
   "tezos": {
-    "walletAddress": "",
     "walletPK": ""
   },
   "ethereum": {
-    "walletAddress": "",
     "walletPK": ""
   },
   "maxVolume": {

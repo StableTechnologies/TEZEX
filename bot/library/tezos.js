@@ -18,8 +18,8 @@ const log = require("loglevel");
 const fetch = require("node-fetch");
 
 module.exports = class Tezos {
-  constructor(account, privateKey, swapContract, chainID, rpc, conseilServer) {
-    this.account = account; // tezos wallet address
+  constructor(privateKey, swapContract, chainID, rpc, conseilServer) {
+    this.account = ""; // tezos wallet address
     this.privateKey = privateKey; // tezos private key
     this.rpc = rpc; // rpc server address for network interaction
     this.conseilServer = conseilServer; // conseil server setting
@@ -39,6 +39,7 @@ module.exports = class Tezos {
     this.keyStore = await KeyStoreUtils.restoreIdentityFromSecretKey(
       this.privateKey
     );
+    this.account = this.keyStore.publicKeyHash;
     this.signer = await SoftSigner.createSigner(
       TezosMessageUtils.writeKeyWithHint(this.keyStore.secretKey, "edsk"),
       -1
