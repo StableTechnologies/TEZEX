@@ -5,6 +5,7 @@ const respondEth = require("./common/respond-eth");
 const Web3 = require("web3");
 const respondTezos = require("./common/respond-tezos");
 const { calcSwapReturn } = require("./common/util");
+const { constants } = require("./common/util");
 
 module.exports = class Bot {
   constructor() {
@@ -14,6 +15,8 @@ module.exports = class Bot {
     this.usdcLimit = 5; // max no. of concurrent usdc swaps to undertake
     this.usdtzLimit = 5; // max no. of concurrent usdtz swaps to undertake
     this.reward = 0; // reward for responding to user swaps, taken from tezos contract
+    this.usdcTxFee = 0; // tx fee expected for a usdc swap
+    this.usdcTxFee = 0; // tx fee expected for a usdtz swap
   }
 
   /**
@@ -51,6 +54,8 @@ module.exports = class Bot {
       this.usdtz = new FA12(
         tezosConfig.walletPK,
         config.tezos.swapContract,
+        config.tezos.priceOracle,
+        config.tezos.feeContract,
         config.tezos.tokenContract,
         config.tezos.chain_id,
         config.tezos.RPC,
@@ -65,12 +70,12 @@ module.exports = class Bot {
         eth: {
           account: this.usdc.account,
           balance: this.usdc.web3.utils.fromWei(ethBalance),
-          usdc: usdcBalance / 1000000,
+          usdc: usdcBalance / constants.decimals10_6,
         },
         tez: {
           account: this.usdtz.account,
-          balance: tezBalance / 1000000,
-          usdtz: usdtzBalance / 1000000,
+          balance: tezBalance / constants.decimals10_6,
+          usdtz: usdtzBalance / constants.decimals10_6,
         },
       };
     } catch (err) {
@@ -85,21 +90,13 @@ module.exports = class Bot {
    * updating reward
    */
   async start() {
-    this.reward = await this.usdtz.getReward();
+    console.log("\n\n[!] INITIALIZING BOT! PLEASE WAIT...\n");
     await Promise.all([
       this.usdc.approveToken(this.volume.usdc),
       this.usdtz.approveToken(this.volume.usdtz),
     ]);
     console.log("\n[!] BOT INITIALIZED");
-    console.log(
-      `\n\n[*]CURRENT STATUS :\n  [!] ACTIVE SWAP COUNT : ${
-        Object.keys(this.usdcSwaps).length + Object.keys(this.usdtzSwaps).length
-      }\n  [!] SWAP REWARD RATE : ${
-        this.reward
-      } BPS\n  [!] REMAINING VOLUME : USDC - ${
-        this.volume.usdc / 1000000
-      } | USDTz - ${this.volume.usdtz / 1000000}\n\n`
-    );
+    await this.monitorReward(true);
     this.monitorReward();
     this.monitorUSDC();
     this.monitorUSDTz();
@@ -209,7 +206,12 @@ module.exports = class Bot {
             swp.value <= this.volume.usdtz
           ) {
             console.log("[!] FOUND : ", swp.hashedSecret);
-            const valueToPay = calcSwapReturn(swp.value, this.reward);
+            let valueToPay = calcSwapReturn(swp.value, this.reward);
+            if (valueToPay < this.usdtzTxFee) {
+              console.log("[x] SWAP NOT PROFITABLE : ", swp.hashedSecret);
+              continue;
+            }
+            valueToPay -= this.usdtzTxFee;
             this.usdtzSwaps[swp.hashedSecret] = {
               state: 0,
               value: valueToPay,
@@ -258,7 +260,12 @@ module.exports = class Bot {
             swp.value <= this.volume.usdc
           ) {
             console.log("[!] FOUND : ", swp.hashedSecret);
-            const valueToPay = calcSwapReturn(swp.value, this.reward);
+            let valueToPay = calcSwapReturn(swp.value, this.reward);
+            if (valueToPay < this.usdcTxFee) {
+              console.log("[x] SWAP NOT PROFITABLE : ", swp.hashedSecret);
+              continue;
+            }
+            valueToPay -= this.usdcTxFee;
             this.usdcSwaps[swp.hashedSecret] = {
               state: 0,
               value: valueToPay,
@@ -289,11 +296,37 @@ module.exports = class Bot {
   /**
    * Monitors and updates the reward (basis points) value
    */
-  monitorReward() {
+  async monitorReward(runOnce = false) {
     const run = async () => {
-      console.log("[*] UPDATING REWARD");
+      console.log("[*] UPDATING REWARDS");
       try {
-        this.reward = await this.usdtz.getReward();
+        const data = await Promise.all([
+          this.usdtz.getFees(),
+          this.usdtz.getPrice("ETH-USD"),
+          this.usdtz.getPrice("XTZ-USD"),
+          this.usdtz.getReward(),
+          this.usdc.web3.eth.getGasPrice(),
+        ]);
+        this.reward = data[3];
+        const usdtzFeeData = data[0]["USDTZ"];
+        const usdcFeeData = data[0]["USDC"];
+        const ethereumGasPrice = parseFloat(
+          this.usdc.web3.utils.fromWei(data[4], "ether")
+        );
+        this.usdtzTxFee = Math.ceil(
+          (((usdtzFeeData["initiateWait"] + usdtzFeeData["addCounterParty"]) *
+            data[2]) /
+            constants.decimals10_6 +
+            usdcFeeData["redeem"] * ethereumGasPrice * data[1]) *
+            constants.usdtzFeePad
+        );
+        this.usdcTxFee = Math.ceil(
+          ((usdcFeeData["initiateWait"] + usdcFeeData["addCounterParty"]) *
+            ethereumGasPrice *
+            data[1] +
+            (usdtzFeeData["redeem"] * data[2]) / constants.decimals10_6) *
+            constants.usdcFeePad
+        );
       } catch (err) {
         console.error("[x] ERROR while updating reward: ", err);
       }
@@ -303,12 +336,19 @@ module.exports = class Bot {
           Object.keys(this.usdtzSwaps).length
         }\n  [!] SWAP REWARD RATE : ${
           this.reward
-        } BPS\n  [!] REMAINING VOLUME : USDC - ${
-          this.volume.usdc / 1000000
-        } | USDTz - ${this.volume.usdtz / 1000000}\n\n`
+        } BPS\n  [!] EXPECTED TX FEE REWARD :\n    - USDC SWAP : ${
+          this.usdcTxFee / constants.decimals10_6
+        } usdc\n    - USDTz SWAP : ${
+          this.usdtzTxFee / constants.decimals10_6
+        } usdtz\n  [!] REMAINING VOLUME :\n    - USDC : ${
+          this.volume.usdc / constants.decimals10_6
+        } usdc\n    - USDTz : ${
+          this.volume.usdtz / constants.decimals10_6
+        } usdtz\n\n`
       );
-      setTimeout(run, 120000);
+      if (!runOnce) setTimeout(run, 60000);
     };
-    setTimeout(run, 120000);
+    if (!runOnce) setTimeout(run, 60000);
+    else await run();
   }
 };

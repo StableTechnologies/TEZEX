@@ -13,6 +13,7 @@ import requestEth from "./library/common/request-eth";
 import requestTezos from "./library/common/request-tezos";
 import respondEth from "./library/common/respond-eth";
 import respondTezos from "./library/common/respond-tezos";
+import { constants } from "./library/common/util";
 import { setEthAccount, setTezAccount } from "./util";
 
 const App = () => {
@@ -43,8 +44,9 @@ const App = () => {
           swap[swp.hashedSecret] = {
             type: "eth",
             hashedSecret: swp.hashedSecret,
-            value: swp.value / 1000000 + " USDC",
-            minReturn: "-",
+            value: swp.value / constants.decimals10_6 + " USDC",
+            minReturn: "nil",
+            exact: "nil",
             refundTime: swp.refundTimestamp,
             state: 0,
           };
@@ -54,8 +56,9 @@ const App = () => {
           swap[swp.hashedSecret] = {
             type: "tez",
             hashedSecret: swp.hashedSecret,
-            value: swp.value / 1000000 + " USDTz",
-            minReturn: "-",
+            value: swp.value / constants.decimals10_6 + " USDTz",
+            minReturn: "nil",
+            exact: "nil",
             refundTime: swp.refundTimestamp,
             state: 0,
           };
@@ -69,10 +72,11 @@ const App = () => {
     }
   };
 
-  const update = (hash, state) => {
+  const update = (hash, state, exact = undefined) => {
     let newSwap = swapRef.current;
     if (newSwap[hash] !== undefined) {
       newSwap[hash].state = state;
+      if (exact !== undefined) newSwap[hash].exact = exact;
       updateSwaps(newSwap);
       forceUpdate();
     } else console.log("missing hash update request");
@@ -127,9 +131,9 @@ const App = () => {
     }
     swap["value"] =
       symbol === " USDC"
-        ? swap["value"] / 1000000 + " USDTz"
-        : swap["value"] / 1000000 + " USDC";
-    swap["minReturn"] = minValue / 1000000 + symbol;
+        ? swap["value"] / constants.decimals10_6 + " USDTz"
+        : swap["value"] / constants.decimals10_6 + " USDC";
+    swap["minReturn"] = minValue / constants.decimals10_6 + symbol;
     newSwaps[swap.hashedSecret] = swap;
     updateSwaps(newSwaps);
     return true;
@@ -158,7 +162,11 @@ const App = () => {
               />
             </Route>
             <Route exact path="/create/eth">
-              <Ethereum genSwap={genSwap} tezStore={tezRef.current} />
+              <Ethereum
+                genSwap={genSwap}
+                tezStore={tezRef.current}
+                ethStore={ethRef.current}
+              />
             </Route>
             <Route exact path="/create/xtz">
               <Tezos

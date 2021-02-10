@@ -43,6 +43,8 @@ export const setTezAccount = async () => {
     client,
     account["address"],
     config.tezos.swapContract,
+    config.tezos.priceOracle,
+    config.tezos.feeContract,
     config.tezos.tokenContract,
     config.tezos.RPC,
     config.tezos.conseilServer

@@ -12,12 +12,22 @@ import {
 import { JSONPath } from "jsonpath-plus";
 
 export default class Tezos {
-  constructor(tezos, account, swapContract, rpc, conseilServer) {
+  constructor(
+    tezos,
+    account,
+    swapContract,
+    priceContract,
+    feeContract,
+    rpc,
+    conseilServer
+  ) {
     this.account = account; // tezos wallet address
     this.tezos = tezos; //tezos beacon-sdk instance
     this.rpc = rpc; // rpc server address for network interaction
     this.conseilServer = conseilServer; // conseil server setting
     this.swapContract = swapContract; // tezos swap contract details {address:string, mapID:nat}
+    this.priceContract = priceContract; // tezos harbinger oracle contract details {address:string, mapID:nat}
+    this.feeContract = feeContract; // tezos tx fee contract details {address:string, mapID:nat}
     this.mutex = new Mutex();
   }
 
@@ -141,6 +151,81 @@ export default class Tezos {
     );
   }
 
+  /**
+   * Get Tx Fee details/Gas consumption for each tx of the swap
+   */
+  async getFees() {
+    const storage = await TezosNodeReader.getContractStorage(
+      this.rpc,
+      this.feeContract.address
+    );
+    const feeDetails = JSONPath({
+      path: "$.args[1]",
+      json: storage,
+    })[0];
+    const res = {};
+    feeDetails.forEach((fee) => {
+      const name = JSONPath({
+        path: "$.args[0].string",
+        json: fee,
+      })[0];
+      res[name] = {
+        addCounterParty: parseInt(
+          JSONPath({
+            path: "$.args[1].args[0].args[0].int",
+            json: fee,
+          })[0]
+        ),
+        approve: parseInt(
+          JSONPath({
+            path: "$.args[1].args[0].args[1].int",
+            json: fee,
+          })[0]
+        ),
+        initiateWait: parseInt(
+          JSONPath({
+            path: "$.args[1].args[1].args[0].int",
+            json: fee,
+          })[0]
+        ),
+        redeem: parseInt(
+          JSONPath({
+            path: "$.args[1].args[1].args[1].args[0].int",
+            json: fee,
+          })[0]
+        ),
+        updateTime: new Date(
+          JSONPath({
+            path: "$.args[1].args[1].args[1].args[1].string",
+            json: fee,
+          })[0]
+        ).getTime(),
+      };
+    });
+    return res;
+  }
+
+  /**
+   * Get the current asset pair price from the harbinger oracle
+   *
+   * @param asset asset pair eg. ETH-USD as supported by harbinger
+   */
+  async getPrice(asset) {
+    const packedKey = TezosMessageUtils.encodeBigMapKey(
+      Buffer.from(TezosMessageUtils.writePackedData(asset, "string"), "hex")
+    );
+    const jsonData = await TezosNodeReader.getValueForBigMapKey(
+      this.rpc,
+      this.priceContract.mapID,
+      packedKey
+    );
+    return parseInt(
+      JSONPath({
+        path: "$.args[0].args[0].int",
+        json: jsonData,
+      })[0]
+    );
+  }
   /**
    * Get the secret for a swap that has already been redeemed
    *

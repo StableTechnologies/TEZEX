@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
+import { constants } from "../../library/common/util";
 import logo from "../../tezexbridge.png";
 import { shorten, truncate } from "../../util";
 import useStyles from "./style";
@@ -13,9 +14,9 @@ const Header = ({ ethStore, tezStore, balUpdate }) => {
     let tokenEth = await ethStore.tokenBalance(ethStore.account);
     let tokenTez = await tezStore.tokenBalance(tezStore.account);
     eth = eth / Math.pow(10, 18);
-    tez = tez / 1000000;
-    tokenEth /= 1000000;
-    tokenTez /= 1000000;
+    tez = tez / constants.decimals10_6;
+    tokenEth /= constants.decimals10_6;
+    tokenTez /= constants.decimals10_6;
     balUpdate({ eth, tez, tokenEth, tokenTez });
     setBalance({ eth, tez, tokenEth, tokenTez });
   };
@@ -35,7 +36,7 @@ const Header = ({ ethStore, tezStore, balUpdate }) => {
       <div className={classes.account}>
         <p>Ethereum Addr.: {shorten(5, 5, ethStore.account)}</p>
         <p>Balance : {truncate(balance.eth, 4)} ETH</p>
-        <p>Token Balance : {truncate(balance.tokenEth, 4)} USDC</p>
+        <p>Token Balance : {balance.tokenEth} USDC</p>
       </div>
       <div className={classes.nav}>
         <img className={classes.logo} src={logo} alt="Logo" />

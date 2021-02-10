@@ -3,8 +3,25 @@ import { JSONPath } from "jsonpath-plus";
 import Tezos from "./tezos";
 
 export default class USDTz extends Tezos {
-  constructor(tezos, account, swapContract, tokenContract, rpc, conseilServer) {
-    super(tezos, account, swapContract, rpc, conseilServer);
+  constructor(
+    tezos,
+    account,
+    swapContract,
+    priceContract,
+    feeContract,
+    tokenContract,
+    rpc,
+    conseilServer
+  ) {
+    super(
+      tezos,
+      account,
+      swapContract,
+      priceContract,
+      feeContract,
+      rpc,
+      conseilServer
+    );
     this.tokenContract = tokenContract; // tezos fa1.2 token contract details {address:string, mapID:nat}
   }
 

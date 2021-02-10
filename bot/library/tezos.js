@@ -11,6 +11,7 @@ const {
   TezosNodeReader,
   TezosNodeWriter,
   TezosParameterFormat,
+  TezosConstants,
 } = require("conseiljs");
 const { KeyStoreUtils, SoftSigner } = require("conseiljs-softsigner");
 const { JSONPath } = require("jsonpath-plus");
@@ -18,12 +19,22 @@ const log = require("loglevel");
 const fetch = require("node-fetch");
 
 module.exports = class Tezos {
-  constructor(privateKey, swapContract, chainID, rpc, conseilServer) {
+  constructor(
+    privateKey,
+    swapContract,
+    priceContract,
+    feeContract,
+    chainID,
+    rpc,
+    conseilServer
+  ) {
     this.account = ""; // tezos wallet address
     this.privateKey = privateKey; // tezos private key
     this.rpc = rpc; // rpc server address for network interaction
     this.conseilServer = conseilServer; // conseil server setting
     this.swapContract = swapContract; // tezos swap contract details {address:string, mapID:nat}
+    this.priceContract = priceContract; // tezos harbinger oracle contract details {address:string, mapID:nat}
+    this.feeContract = feeContract; // tezos tx fee contract details {address:string, mapID:nat}
     this.chainID = chainID; // chain id being used
     this.mutex = new Mutex();
   }
@@ -151,6 +162,82 @@ module.exports = class Tezos {
       JSONPath({
         path: "$.args[1].args[1].args[0].int",
         json: storage,
+      })[0]
+    );
+  }
+
+  /**
+   * Get Tx Fee details/Gas consumption for each tx of the swap
+   */
+  async getFees() {
+    const storage = await TezosNodeReader.getContractStorage(
+      this.rpc,
+      this.feeContract.address
+    );
+    const feeDetails = JSONPath({
+      path: "$.args[1]",
+      json: storage,
+    })[0];
+    const res = {};
+    feeDetails.forEach((fee) => {
+      const name = JSONPath({
+        path: "$.args[0].string",
+        json: fee,
+      })[0];
+      res[name] = {
+        addCounterParty: parseInt(
+          JSONPath({
+            path: "$.args[1].args[0].args[0].int",
+            json: fee,
+          })[0]
+        ),
+        approve: parseInt(
+          JSONPath({
+            path: "$.args[1].args[0].args[1].int",
+            json: fee,
+          })[0]
+        ),
+        initiateWait: parseInt(
+          JSONPath({
+            path: "$.args[1].args[1].args[0].int",
+            json: fee,
+          })[0]
+        ),
+        redeem: parseInt(
+          JSONPath({
+            path: "$.args[1].args[1].args[1].args[0].int",
+            json: fee,
+          })[0]
+        ),
+        updateTime: new Date(
+          JSONPath({
+            path: "$.args[1].args[1].args[1].args[1].string",
+            json: fee,
+          })[0]
+        ).getTime(),
+      };
+    });
+    return res;
+  }
+
+  /**
+   * Get the current asset pair price from the harbinger oracle
+   *
+   * @param asset asset pair eg. ETH-USD as supported by harbinger
+   */
+  async getPrice(asset) {
+    const packedKey = TezosMessageUtils.encodeBigMapKey(
+      Buffer.from(TezosMessageUtils.writePackedData(asset, "string"), "hex")
+    );
+    const jsonData = await TezosNodeReader.getValueForBigMapKey(
+      this.rpc,
+      this.priceContract.mapID,
+      packedKey
+    );
+    return parseInt(
+      JSONPath({
+        path: "$.args[0].args[0].int",
+        json: jsonData,
       })[0]
     );
   }
@@ -413,36 +500,20 @@ module.exports = class Tezos {
           operations[i].to === undefined
             ? this.swapContract.address
             : operations[i].to;
-        let {
-          gas,
-          storageCost: freight,
-        } = await TezosNodeWriter.testContractInvocationOperation(
-          this.rpc,
-          this.chainID,
-          this.keyStore,
-          operations[i].to,
-          operations[i].amtInMuTez,
-          fee,
-          storageLimit,
-          gasLimit,
-          operations[i].entrypoint,
-          operations[i].parameters,
-          TezosParameterFormat.Michelson
-        );
-        const fees = ~~((gas + extraGas) / 10 + 500);
-        freight = freight == 0 ? 0 : freight + extraStorage;
         const result = await TezosNodeWriter.sendContractInvocationOperation(
           this.rpc,
           this.signer,
           this.keyStore,
           operations[i].to,
           operations[i].amtInMuTez,
-          fees,
-          freight,
-          gas + extraGas,
+          fee,
+          storageLimit + extraStorage,
+          gasLimit + extraGas,
           operations[i].entrypoint,
           operations[i].parameters,
-          TezosParameterFormat.Michelson
+          TezosParameterFormat.Michelson,
+          TezosConstants.HeadBranchOffset,
+          true
         );
         const groupid = result["operationGroupID"]
           .replace(/"/g, "")

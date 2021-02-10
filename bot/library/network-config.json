@@ -9,6 +9,14 @@
       "address": "KT1EyApp4xsWR7YJEuT7fFYrqMNJ5V6XaeaF",
       "mapID": 59597
     },
+    "feeContract": {
+      "address": "KT1JowHsoDhETkLz22DmBgXqaU9nFKTigcJU",
+      "mapID": ""
+    },
+    "priceOracle": {
+      "address": "KT1LWDzd6mFhjjnb65a1PjHDNZtFKBieTQKH",
+      "mapID": 79
+    },
     "chain_id": "NetXm8tYqnMWky1",
     "conseilServer": {
       "url": "https://conseil-dev.cryptonomic-infra.tech:443",

@@ -1,4 +1,4 @@
-import { createSecrets } from "./util";
+import { constants, createSecrets } from "./util";
 
 const waitCompletion = (secret, tezStore, ethStore, refundTime, update) => {
   setTimeout(async function run() {
@@ -50,6 +50,7 @@ const requestEth = async (amount, minAmt, ethStore, tezStore, update) => {
       type: "eth",
       hashedSecret: secret.hashedSecret,
       value: amount,
+      exact: "nil",
       refundTime,
       state: 1,
     };
@@ -89,7 +90,11 @@ const waitResponse = (
         secret.hashedSecret,
         swp.initiator_eth_addr
       );
-      update(secret.hashedSecret, 2);
+      update(
+        secret.hashedSecret,
+        2,
+        (swp.value / constants.decimals10_6).toString() + " USDTz"
+      );
       waitCompletion(secret, tezStore, ethStore, refundTime, update);
     } catch (err) {
       console.error(secret.hashedSecret, err);

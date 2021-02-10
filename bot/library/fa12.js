@@ -6,12 +6,22 @@ module.exports = class FA12 extends Tezos {
   constructor(
     privateKey,
     swapContract,
+    priceContract,
+    feeContract,
     tokenContract,
     chainID,
     rpc,
     conseilServer
   ) {
-    super(privateKey, swapContract, chainID, rpc, conseilServer);
+    super(
+      privateKey,
+      swapContract,
+      priceContract,
+      feeContract,
+      chainID,
+      rpc,
+      conseilServer
+    );
     this.tokenContract = tokenContract; // tezos fa1.2 token contract details {address:string, mapID:nat}
   }
 
