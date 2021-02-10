@@ -11,14 +11,14 @@ const Header = ({ ethStore, tezStore, balUpdate }) => {
   const updateBalance = async () => {
     let eth = await ethStore.balance(ethStore.account);
     let tez = await tezStore.balance(tezStore.account);
-    let tokenEth = await ethStore.tokenBalance(ethStore.account);
-    let tokenTez = await tezStore.tokenBalance(tezStore.account);
+    let usdc = await ethStore.tokenBalance(ethStore.account);
+    let usdtz = await tezStore.tokenBalance(tezStore.account);
     eth = eth / Math.pow(10, 18);
     tez = tez / constants.decimals10_6;
-    tokenEth /= constants.decimals10_6;
-    tokenTez /= constants.decimals10_6;
-    balUpdate({ eth, tez, tokenEth, tokenTez });
-    setBalance({ eth, tez, tokenEth, tokenTez });
+    usdc /= constants.decimals10_6;
+    usdtz /= constants.decimals10_6;
+    balUpdate({ eth, tez, usdc, usdtz });
+    setBalance({ eth, tez, usdc, usdtz });
   };
 
   useEffect(() => {
@@ -36,7 +36,7 @@ const Header = ({ ethStore, tezStore, balUpdate }) => {
       <div className={classes.account}>
         <p>Ethereum Addr.: {shorten(5, 5, ethStore.account)}</p>
         <p>Balance : {truncate(balance.eth, 4)} ETH</p>
-        <p>Token Balance : {balance.tokenEth} USDC</p>
+        <p>Token Balance : {balance.usdc} USDC</p>
       </div>
       <div className={classes.nav}>
         <img className={classes.logo} src={logo} alt="Logo" />
@@ -59,7 +59,7 @@ const Header = ({ ethStore, tezStore, balUpdate }) => {
       <div className={classes.account}>
         <p>Tezos Addr.: {shorten(5, 5, tezStore.account)}</p>
         <p>Balance : {balance.tez} XTZ</p>
-        <p>Token Balance : {balance.tokenTez} USDTz</p>
+        <p>Token Balance : {balance.usdtz} USDTz</p>
       </div>
     </div>
   );
