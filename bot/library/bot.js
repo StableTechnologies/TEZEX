@@ -91,10 +91,16 @@ module.exports = class Bot {
    */
   async start() {
     console.log("\n\n[!] INITIALIZING BOT! PLEASE WAIT...\n");
-    await Promise.all([
-      this.usdc.approveToken(this.volume.usdc),
-      this.usdtz.approveToken(this.volume.usdtz),
+    const allowances = await Promise.all([
+      this.usdtz.tokenAllowance(this.usdtz.account),
+      this.usdc.tokenAllowance(this.usdc.account),
     ]);
+    let ops = [];
+    if (allowances[0] != this.volume.usdtz)
+      ops.push(this.usdtz.approveToken(this.volume.usdtz));
+    if (allowances[1] != this.volume.usdc)
+      ops.push(this.usdc.approveToken(this.volume.usdc));
+    await Promise.all(ops);
     console.log("\n[!] BOT INITIALIZED");
     await this.monitorReward(true);
     this.monitorReward();
