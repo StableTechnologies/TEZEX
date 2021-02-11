@@ -67,7 +67,7 @@ const App = () => {
           swap[swp.hashedSecret] = {
             type: "tez",
             hashedSecret: swp.hashedSecret,
-            value: swp.value / constants.decimals10_6 + " USDTz",
+            value: swp.value / constants.decimals10_6 + " USDtz",
             minReturn: "nil",
             exact: "nil",
             refundTime: swp.refundTimestamp,
@@ -113,7 +113,7 @@ const App = () => {
           req_swap,
           update
         );
-        symbol = " USDTz";
+        symbol = " USDtz";
       }
     } else if (type === 1) {
       if (req_swap === undefined) {
@@ -124,7 +124,7 @@ const App = () => {
           tezRef.current,
           update
         );
-        symbol = " USDTz";
+        symbol = " USDtz";
       } else {
         swap = await respondEth(
           value,
@@ -142,7 +142,7 @@ const App = () => {
     }
     swap["value"] =
       symbol === " USDC"
-        ? swap["value"] / constants.decimals10_6 + " USDTz"
+        ? swap["value"] / constants.decimals10_6 + " USDtz"
         : swap["value"] / constants.decimals10_6 + " USDC";
     swap["minReturn"] = minValue / constants.decimals10_6 + symbol;
     newSwaps[swap.hashedSecret] = swap;

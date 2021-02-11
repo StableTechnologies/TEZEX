@@ -59,7 +59,7 @@ const Header = ({ ethStore, tezStore, balUpdate }) => {
       <div className={classes.account}>
         <p>Tezos Addr.: {shorten(5, 5, tezStore.account)}</p>
         <p>Balance : {balance.tez} XTZ</p>
-        <p>Token Balance : {balance.usdtz} USDTz</p>
+        <p>Token Balance : {balance.usdtz} USDtz</p>
       </div>
     </div>
   );

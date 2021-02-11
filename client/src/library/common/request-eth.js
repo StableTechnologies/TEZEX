@@ -29,7 +29,7 @@ const requestEth = async (amount, minAmt, ethStore, tezStore, update) => {
   // generate swap secret
   try {
     const secret = createSecrets();
-    console.log("Your SWAP Secret (USDC->USDTz): ", secret);
+    console.log("Your SWAP Secret (USDC->USDtz): ", secret);
 
     // create new swap with refund time set to 2hrs
     const refundTime = Math.trunc(Date.now() / 1000) + 7200;
@@ -93,7 +93,7 @@ const waitResponse = (
       update(
         secret.hashedSecret,
         2,
-        (swp.value / constants.decimals10_6).toString() + " USDTz"
+        (swp.value / constants.decimals10_6).toString() + " USDtz"
       );
       waitCompletion(secret, tezStore, ethStore, refundTime, update);
     } catch (err) {

@@ -69,7 +69,7 @@ const GetSwap = ({ genSwap, tezStore, ethStore }) => {
         className={classes.swap}
       >
         <p>Hash : {shorten(15, 15, data.hashedSecret)}</p>
-        <p>USDTz Value : {data.value}</p>
+        <p>USDtz Value : {data.value}</p>
         <p>USDC to Pay : {data.value}</p>
       </div>
     );

@@ -59,11 +59,11 @@ const CreateSwap = ({ className, genSwap, loader, feeDetails }) => {
               ) -
                 feeDetails.botFee) /
               constants.decimals10_6}{" "}
-          USDTz
+          USDtz
         </p>
         <p className={classes.expectedValue}>
           Max Network Fee :{" "}
-          {input === 0 ? 0 : feeDetails.botFee / constants.decimals10_6} USDTz
+          {input === 0 ? 0 : feeDetails.botFee / constants.decimals10_6} USDtz
         </p>
         <p className={classes.expectedValue}>
           Swap Fee :{" "}
@@ -77,7 +77,7 @@ const CreateSwap = ({ className, genSwap, loader, feeDetails }) => {
                 ) /
                   constants.decimals10_6
               ).toFixed(6)}{" "}
-          USDTz
+          USDtz
         </p>
       </div>
     </div>

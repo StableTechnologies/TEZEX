@@ -68,7 +68,7 @@ const GetSwap = ({ genSwap, ethStore, tezStore }) => {
       >
         <p>Hash : {shorten(15, 15, data.hashedSecret)}</p>
         <p>USDC Value : {data.value}</p>
-        <p>USDTz to Pay : {data.value}</p>
+        <p>USDtz to Pay : {data.value}</p>
       </div>
     );
   };

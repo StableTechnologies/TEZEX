@@ -44,7 +44,7 @@ const CreateSwap = ({ className, genSwap, loader, feeDetails }) => {
         <form onSubmit={generateSwap}>
           <input
             type="number"
-            placeholder="Amount in USDTz"
+            placeholder="Amount in USDtz"
             name="tez"
             step=".000001"
             min="0"
