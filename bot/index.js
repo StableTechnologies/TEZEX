@@ -72,6 +72,12 @@ const init = () => {
           config.maxVolume.usdtz / constants.decimals10_6
         } usdtz\n`
       );
+      if (data.eth.usdc < config.maxVolume.usdc) {
+        throw new Error("Not enough USDC balance");
+      }
+      if (data.tez.usdtz < config.maxVolume.usdtz) {
+        throw new Error("Not enough USDtz balance");
+      }
       const answer = readlineSync.question(
         "Are the above details correct? (y/n): "
       );
