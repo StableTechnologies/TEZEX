@@ -5,5 +5,14 @@
  * @param rewardInBIPS reward taken by the swap responder in basis points
  */
 module.exports.calcSwapReturn = (swapValue, rewardInBIPS) => {
-  return Math.floor(parseInt(swapValue) * (1 - parseInt(rewardInBIPS) / 10000));
+  return Math.floor(
+    parseInt(swapValue) *
+      (1 - parseInt(rewardInBIPS) / this.constants.decimals10_6)
+  );
+};
+
+module.exports.constants = {
+  decimals10_6: 1000000,
+  usdcFeePad: 1.7,
+  usdtzFeePad: 1.5,
 };

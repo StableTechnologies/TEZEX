@@ -31,8 +31,8 @@ const About = () => {
         Tezos, to start a swap follow these steps :
         <p className={classes.list}>
           1. Visit the <b>New Swap</b> option from the navigation. <br />
-          2. Select which crypto-currency you want to swap(USDC-{">"}USDTz or
-          USDTz-
+          2. Select which crypto-currency you want to swap(USDC-{">"}USDtz or
+          USDtz-
           {">"}USDC). <br />
           3. In the following screen you can create an new swap by entering the
           amount you want to exchange. <br />

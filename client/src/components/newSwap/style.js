@@ -27,7 +27,6 @@ const useStyles = makeStyles((theme) => ({
   },
   expectedValue: {
     display: "block",
-    marginTop: "2vw",
   },
   create: {
     backgroundColor: "black",
@@ -42,6 +41,7 @@ const useStyles = makeStyles((theme) => ({
       backgroundColor: "white",
       color: "black",
     },
+    marginBottom: "1vw",
   },
   valueInput: {
     padding: "0.7vw",

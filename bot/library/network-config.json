@@ -9,6 +9,14 @@
       "address": "KT1EyApp4xsWR7YJEuT7fFYrqMNJ5V6XaeaF",
       "mapID": 59597
     },
+    "feeContract": {
+      "address": "KT1JowHsoDhETkLz22DmBgXqaU9nFKTigcJU",
+      "mapID": ""
+    },
+    "priceOracle": {
+      "address": "KT1LWDzd6mFhjjnb65a1PjHDNZtFKBieTQKH",
+      "mapID": 79
+    },
     "chain_id": "NetXm8tYqnMWky1",
     "conseilServer": {
       "url": "https://conseil-dev.cryptonomic-infra.tech:443",
@@ -19,8 +27,8 @@
   "ethereum": {
     "RPC": "https://goerli.infura.io/v3/3f764c2122644024825ab09e9e4d39d2",
     "chain": "goerli",
-    "contractAddr": "0xc65f71472B87eca51cA9f2B6F4225601fD176157",
-    "tokenAddr": "0x14E0A01D5C0E883861562468A69921aef60a2F5f",
+    "contractAddr": "0x30d00cCAbe5e269f75dD02Ca6C3A522e56252204",
+    "tokenAddr": "0xCe8D4A6DE326C4A8b021dA892408f30238689377",
     "abi": [
       {
         "inputs": [

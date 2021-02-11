@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
-import { calcSwapReturn } from "../../../../library/common/util";
+import { calcSwapReturn, constants } from "../../../../library/common/util";
 import useStyles from "../../style";
 
-const CreateSwap = ({ className, genSwap, loader, rewardInBIPS }) => {
+const CreateSwap = ({ className, genSwap, loader, feeDetails }) => {
   const [input, setInput] = useState(0);
   const history = useHistory();
   const classes = useStyles();
@@ -11,13 +11,22 @@ const CreateSwap = ({ className, genSwap, loader, rewardInBIPS }) => {
   const generateSwap = async (e) => {
     e.preventDefault();
     if (e.target.tez.value === "" || e.target.tez.value === 0) return;
-    loader(true);
     try {
-      const minValue = calcSwapReturn(
-        e.target.tez.value * 1000000,
-        rewardInBIPS
+      const minValue =
+        calcSwapReturn(
+          e.target.tez.value * constants.decimals10_6,
+          feeDetails.reward
+        ) - feeDetails.botFee;
+      if (minValue <= 0) {
+        alert("Minimum expected return in less than zero!");
+        return;
+      }
+      loader(true);
+      const res = await genSwap(
+        2,
+        e.target.tez.value * constants.decimals10_6,
+        minValue
       );
-      const res = await genSwap(2, e.target.tez.value * 1000000, minValue);
       loader(false);
       if (!res) {
         alert("Error: Swap Couldn't be created");
@@ -35,7 +44,7 @@ const CreateSwap = ({ className, genSwap, loader, rewardInBIPS }) => {
         <form onSubmit={generateSwap}>
           <input
             type="number"
-            placeholder="Amount in USDTz"
+            placeholder="Amount in USDtz"
             name="tez"
             step=".000001"
             min="0"
@@ -46,7 +55,33 @@ const CreateSwap = ({ className, genSwap, loader, rewardInBIPS }) => {
         </form>
         <p className={classes.expectedValue}>
           Min Expected USDC Value :{" "}
-          {calcSwapReturn(input * 1000000, rewardInBIPS) / 1000000} USDC
+          {input === 0
+            ? 0
+            : (calcSwapReturn(
+                input * constants.decimals10_6,
+                feeDetails.reward
+              ) -
+                feeDetails.botFee) /
+              constants.decimals10_6}{" "}
+          USDC
+        </p>
+        <p className={classes.expectedValue}>
+          Max Network Fee :{" "}
+          {input === 0 ? 0 : feeDetails.botFee / constants.decimals10_6} USDC
+        </p>
+        <p className={classes.expectedValue}>
+          Swap Fee :{" "}
+          {input === 0
+            ? 0
+            : (
+                input -
+                calcSwapReturn(
+                  input * constants.decimals10_6,
+                  feeDetails.reward
+                ) /
+                  constants.decimals10_6
+              ).toFixed(6)}{" "}
+          USDC
         </p>
       </div>
     </div>

@@ -6,8 +6,12 @@ const Home = ({ swaps, ethStore, tezStore, update }) => {
   const history = useHistory();
   const classes = useStyles();
 
-  const refundHandler = async (hashedSecret) => {
+  const refundHandler = async (hashedSecret, refundTime) => {
     try {
+      if (Math.trunc(Date.now() / 1000) < refundTime) {
+        alert("Wait till expiry!");
+        return;
+      }
       let res = false;
       if (swaps[hashedSecret].type === "eth")
         res = await ethStore.refund(hashedSecret);
@@ -31,13 +35,14 @@ const Home = ({ swaps, ethStore, tezStore, update }) => {
         <p>Hash : {data.hashedSecret}</p>
         <p>Value : {data.value}</p>
         <p>Min Expected Return : {data.minReturn}</p>
+        {data.exact !== "nil" && <p>Exact Return : {data.exact}</p>}
         <p>Expiry Time : {exp.toLocaleString()}</p>
         {data.state === 0 && (
           <div className={classes.error}>
             <p>{state[data.state]}</p>
             <button
               className={classes.errorBtn}
-              onClick={() => refundHandler(data.hashedSecret)}
+              onClick={() => refundHandler(data.hashedSecret, data.refundTime)}
             >
               refund!
             </button>

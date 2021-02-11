@@ -36,9 +36,9 @@ const estimateFees = async (store, web3) => {
       store.keyStore,
       0,
       undefined,
-      10000000,
-      60000,
       100000,
+      10000,
+      20000,
       trim(tezConfig),
       conseiljs.TezosLanguageUtil.translateMichelsonToMicheline(
         `(Pair (Pair True "${store.keyStore.publicKeyHash}") (Pair "${config.tezos.tokenContract.address}" (Pair 15 {})))`
@@ -83,9 +83,9 @@ const deploy = async (store, web3) => {
       store.keyStore,
       0,
       undefined,
-      1000000,
-      60000,
       100000,
+      10000,
+      20000,
       trim(tezConfig),
       conseiljs.TezosLanguageUtil.translateMichelsonToMicheline(
         `(Pair (Pair True "${store.keyStore.publicKeyHash}") (Pair "${config.tezos.tokenContract.address}" (Pair 15 {})))`

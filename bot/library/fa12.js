@@ -2,19 +2,26 @@ const { TezosMessageUtils, TezosNodeReader } = require("conseiljs");
 const { JSONPath } = require("jsonpath-plus");
 const Tezos = require("./tezos");
 
-module.exports = class FA12 extends (
-  Tezos
-) {
+module.exports = class FA12 extends Tezos {
   constructor(
-    account,
     privateKey,
     swapContract,
+    priceContract,
+    feeContract,
     tokenContract,
     chainID,
     rpc,
     conseilServer
   ) {
-    super(account, privateKey, swapContract, chainID, rpc, conseilServer);
+    super(
+      privateKey,
+      swapContract,
+      priceContract,
+      feeContract,
+      chainID,
+      rpc,
+      conseilServer
+    );
     this.tokenContract = tokenContract; // tezos fa1.2 token contract details {address:string, mapID:nat}
   }
 

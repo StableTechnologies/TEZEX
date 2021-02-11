@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
+import { constants } from "../../../../library/common/util";
 import { shorten } from "../../../../util";
 import Loader from "../../../loader";
 import useStyles from "../../style";
@@ -7,7 +8,7 @@ import CreateSwap from "../createSwap";
 
 const GetSwap = ({ genSwap, ethStore, tezStore }) => {
   const [swaps, setSwaps] = useState([]);
-  const [rewardInBIPS, setReward] = useState(0);
+  const [feeDetails, setFee] = useState({});
   const [loader, setLoader] = useState(true);
   const [fullLoader, setFullLoader] = useState(false);
 
@@ -24,8 +25,37 @@ const GetSwap = ({ genSwap, ethStore, tezStore }) => {
     }
   };
   const updateReward = async () => {
-    const reward = await tezStore.getReward(); // basis points
-    setReward(reward);
+    const data = await Promise.all([
+      tezStore.getFees(),
+      tezStore.getPrice("ETH-USD"),
+      tezStore.getPrice("XTZ-USD"),
+      tezStore.getReward(),
+      ethStore.web3.eth.getGasPrice(),
+    ]);
+    const reward = data[3];
+    const usdtzFeeData = data[0]["USDTZ"];
+    const usdcFeeData = data[0]["USDC"];
+    const ethereumGasPrice = parseFloat(
+      ethStore.web3.utils.fromWei(data[4], "ether")
+    );
+    const botFee =
+      Math.ceil(
+        (usdcFeeData["initiateWait"] + usdcFeeData["addCounterParty"]) *
+          ethereumGasPrice *
+          data[1] +
+          (usdtzFeeData["redeem"] * data[2]) / constants.decimals10_6
+      ) * constants.usdcFeePad;
+    const txFee = {
+      eth: (usdcFeeData["redeem"] * ethereumGasPrice).toFixed(6),
+      tez:
+        (usdtzFeeData["initiateWait"] + usdtzFeeData["addCounterParty"]) /
+        constants.decimals10_6,
+    };
+    setFee({
+      reward,
+      botFee,
+      txFee,
+    });
   };
   const SwapItem = (data) => {
     return (
@@ -38,7 +68,7 @@ const GetSwap = ({ genSwap, ethStore, tezStore }) => {
       >
         <p>Hash : {shorten(15, 15, data.hashedSecret)}</p>
         <p>USDC Value : {data.value}</p>
-        <p>USDTz to Pay : {data.value}</p>
+        <p>USDtz to Pay : {data.value}</p>
       </div>
     );
   };
@@ -61,7 +91,7 @@ const GetSwap = ({ genSwap, ethStore, tezStore }) => {
     // }, 600000);
     const timer1 = setInterval(() => {
       updateReward();
-    }, 120000);
+    }, 60000);
     return () => {
       // clearInterval(timer);
       clearInterval(timer1);
@@ -78,7 +108,7 @@ const GetSwap = ({ genSwap, ethStore, tezStore }) => {
           className={classes.newSwap}
           genSwap={genSwap}
           loader={setFullLoader}
-          rewardInBIPS={rewardInBIPS}
+          feeDetails={feeDetails}
         />
       </div>
     </div>
