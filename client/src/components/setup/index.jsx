@@ -74,7 +74,7 @@ const Setup = ({ init }) => {
         <p>
           Truly Decentralized Cross-Chain Atomic Swaps for Ethereum and Tezos
         </p>
-        <p>Network : Testnet [Goerli, Delphinet]</p>
+        <p>Network : Mainnet </p>
       </div>
       <button onClick={setup}>Connect to Tezos and Ethereum Wallets</button>
     </div>
