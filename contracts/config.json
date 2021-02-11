@@ -1,0 +1,21 @@
+{
+  "tezos": {
+    "privateKey": "",
+    "RPC": "https://tezos-dev.cryptonomic-infra.tech:443",
+    "tokenContract": {
+      "address": "KT1EB1dRJPiNMGzwux3n16Y4oXqkLN8pLLyj"
+    },
+    "chain_id": "NetXm8tYqnMWky1",
+    "conseilServer": {
+      "url": "https://conseil-dev.cryptonomic-infra.tech:443",
+      "apiKey": "4bb2f288-c36a-49ea-a50e-e7cbdc495e0e",
+      "network": "delphinet"
+    }
+  },
+  "ethereum": {
+    "privateKey": "",
+    "RPC": "https://goerli.infura.io/v3/3f764c2122644024825ab09e9e4d39d2",
+    "chain": "goerli",
+    "tokenAddr": "0xCe8D4A6DE326C4A8b021dA892408f30238689377"
+  }
+}

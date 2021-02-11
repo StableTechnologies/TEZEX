@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import "./App.css";
 import About from "./components/about";
@@ -13,6 +13,7 @@ import requestEth from "./library/common/request-eth";
 import requestTezos from "./library/common/request-tezos";
 import respondEth from "./library/common/respond-eth";
 import respondTezos from "./library/common/respond-tezos";
+import { constants } from "./library/common/util";
 import { setEthAccount, setTezAccount } from "./util";
 
 const App = () => {
@@ -31,6 +32,17 @@ const App = () => {
 
   const forceUpdate = React.useCallback(() => updateState({}), []);
 
+  useEffect(() => {
+    window.addEventListener("beforeunload", alertUser);
+    return () => {
+      window.removeEventListener("beforeunload", alertUser);
+    };
+  }, []);
+  const alertUser = (e) => {
+    e.preventDefault();
+    e.returnValue = "";
+  };
+
   const initialize = async () => {
     try {
       const eth = await setEthAccount();
@@ -43,8 +55,9 @@ const App = () => {
           swap[swp.hashedSecret] = {
             type: "eth",
             hashedSecret: swp.hashedSecret,
-            value: swp.value + " USDC",
-            minReturn: "-",
+            value: swp.value / constants.decimals10_6 + " USDC",
+            minReturn: "nil",
+            exact: "nil",
             refundTime: swp.refundTimestamp,
             state: 0,
           };
@@ -54,8 +67,9 @@ const App = () => {
           swap[swp.hashedSecret] = {
             type: "tez",
             hashedSecret: swp.hashedSecret,
-            value: swp.value + " USDTz",
-            minReturn: "-",
+            value: swp.value / constants.decimals10_6 + " USDtz",
+            minReturn: "nil",
+            exact: "nil",
             refundTime: swp.refundTimestamp,
             state: 0,
           };
@@ -65,14 +79,15 @@ const App = () => {
       tezSetup(tez);
     } catch (e) {
       console.log("error", e);
-      alert(e.message);
+      alert("Error Connecting to Wallet", e);
     }
   };
 
-  const update = (hash, state) => {
+  const update = (hash, state, exact = undefined) => {
     let newSwap = swapRef.current;
     if (newSwap[hash] !== undefined) {
       newSwap[hash].state = state;
+      if (exact !== undefined) newSwap[hash].exact = exact;
       updateSwaps(newSwap);
       forceUpdate();
     } else console.log("missing hash update request");
@@ -98,7 +113,7 @@ const App = () => {
           req_swap,
           update
         );
-        symbol = " USDTz";
+        symbol = " USDtz";
       }
     } else if (type === 1) {
       if (req_swap === undefined) {
@@ -109,7 +124,7 @@ const App = () => {
           tezRef.current,
           update
         );
-        symbol = " USDTz";
+        symbol = " USDtz";
       } else {
         swap = await respondEth(
           value,
@@ -125,7 +140,11 @@ const App = () => {
     if (newSwaps === undefined) {
       newSwaps = {};
     }
-    swap["minReturn"] = minValue + symbol;
+    swap["value"] =
+      symbol === " USDC"
+        ? swap["value"] / constants.decimals10_6 + " USDtz"
+        : swap["value"] / constants.decimals10_6 + " USDC";
+    swap["minReturn"] = minValue / constants.decimals10_6 + symbol;
     newSwaps[swap.hashedSecret] = swap;
     updateSwaps(newSwaps);
     return true;
@@ -154,7 +173,11 @@ const App = () => {
               />
             </Route>
             <Route exact path="/create/eth">
-              <Ethereum genSwap={genSwap} tezStore={tezRef.current} />
+              <Ethereum
+                genSwap={genSwap}
+                tezStore={tezRef.current}
+                ethStore={ethRef.current}
+              />
             </Route>
             <Route exact path="/create/xtz">
               <Tezos

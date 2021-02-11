@@ -34,11 +34,6 @@ export const setEthAccount = async () => {
 };
 
 export const setTezAccount = async () => {
-  // const network = {
-  //   type: NetworkType.CUSTOM,
-  //   name: "Cryptonomic Delphi",
-  //   rpcUrl: "https://tezos-dev.cryptonomic-infra.tech:443",
-  // };
   const client = new DAppClient({ name: "TEZEX" });
   const resp = await client.requestPermissions({
     network: { type: NetworkType.DELPHINET },
@@ -48,6 +43,8 @@ export const setTezAccount = async () => {
     client,
     account["address"],
     config.tezos.swapContract,
+    config.tezos.priceOracle,
+    config.tezos.feeContract,
     config.tezos.tokenContract,
     config.tezos.RPC,
     config.tezos.conseilServer

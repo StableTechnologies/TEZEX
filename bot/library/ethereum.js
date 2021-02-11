@@ -2,11 +2,12 @@ const { Mutex } = require("async-mutex");
 const { Transaction } = require("ethereumjs-tx");
 
 module.exports = class Ethereum {
-  constructor(web3, account, privateKey, chain, swapContract) {
+  constructor(web3, privateKey, chain, swapContract) {
+    const ethAccount = web3.eth.accounts.privateKeyToAccount(privateKey);
     this.web3 = web3; // web3 instance
-    this.web3.eth.defaultAccount = account; // ethereum wallet address
+    this.web3.eth.defaultAccount = ethAccount.address; // ethereum wallet address
     this.web3.eth.handleRevert = true;
-    this.account = account; // ethereum wallet address
+    this.account = ethAccount.address; // ethereum wallet address
     this.swapContract = swapContract; // web3.eth.Contract instance for the ethereum swap contract
     this.privateKey = privateKey; // ethereum private key
     this.chain = chain; // ethereum chain id being used

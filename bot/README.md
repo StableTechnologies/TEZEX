@@ -24,11 +24,9 @@ tezex@bot:~/TEZEX/bot$ npm i
 ```json
 {
   "tezos": {
-    "walletAddress": "",
     "walletPK": ""
   },
   "ethereum": {
-    "walletAddress": "",
     "walletPK": ""
   },
   "maxVolume": {
@@ -68,9 +66,19 @@ Encrypted User Config Found!
 Please enter your password to start the bot: *****
 
 Please Confirm Details:
- - Eth Address: 0x00000000000...
- - Tezos Address: tz1zzzz.......
- - Trade Volume : {"usdc":300,"usdtz":300}
+
+- Etherum Details:
+--- Account: 0x000....
+--- Eth Balance: 1 eth
+--- USDC Balance: 1000 usdc
+--- Bot trade Volume: 300 usdc
+
+- Tezos Details:
+--- Account: tz1.......
+--- Tez Balance: 200 xtz
+--- USDTz Balance: 1000 usdtz
+--- Bot trade Volume: 3000 usdtz
+
 Are the above details correct? (y/n): y
 
 Initializing Bot...

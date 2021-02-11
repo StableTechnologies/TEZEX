@@ -35,10 +35,11 @@ const useStyles = makeStyles((theme) => ({
     margin: "5vw",
     fontSize: "1.5vw",
   },
-  title: {
-    fontFamily: "'Pacifico', cursive",
-    fontSize: "5vw",
-    margin: "0",
+  logo: {
+    width: "36vw",
+    display: "block",
+    margin: "5vw auto",
+    padding: "0 4vw",
   },
 }));
 

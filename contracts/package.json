@@ -1,0 +1,20 @@
+{
+  "name": "contracts",
+  "version": "1.0.0",
+  "description": "## Compile contracts",
+  "main": "deploy.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Soumya Ghosh Dastidar",
+  "license": "MIT",
+  "dependencies": {
+    "conseiljs": "^5.0.7-beta.3",
+    "conseiljs-softsigner": "^5.0.3",
+    "ethereumjs-tx": "^2.1.2",
+    "jsonpath-plus": "^4.0.0",
+    "loglevel": "^1.6.8",
+    "node-fetch": "^2.6.0",
+    "web3": "^1.2.11"
+  }
+}

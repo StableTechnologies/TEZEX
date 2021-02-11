@@ -5,6 +5,7 @@ const {
   encryptUserConfig,
 } = require("./library/encryption");
 const userConfig = require("./user-config.json");
+const { constants } = require("./library/common/util");
 
 const init = () => {
   let config = {};
@@ -18,20 +19,6 @@ const init = () => {
         }
       );
       config = decryptUserConfig("./user-config.json", password);
-      console.log(
-        `\nPlease Confirm Details:\n - Eth Address: ${
-          config.ethereum.walletAddress
-        }\n - Tezos Address: ${
-          config.tezos.walletAddress
-        }\n - Trade Volume : ${JSON.stringify(config.maxVolume)}`
-      );
-      const answer = readlineSync.question(
-        "Are the above details correct? (y/n): "
-      );
-      if (answer.toLowerCase() !== "y") {
-        console.log("Exiting");
-        return;
-      }
     } else {
       console.log(
         "XX Encrypted User Config Not Found! \n\nPlease make sure you have created the `user-config.json` file with the required details as mentioned in the documentation"
@@ -63,10 +50,37 @@ const init = () => {
     return;
   }
   const bot = new Bot();
+  config.maxVolume = {
+    usdc: Math.floor(config.maxVolume.usdc * constants.decimals10_6),
+    usdtz: Math.floor(config.maxVolume.usdtz * constants.decimals10_6),
+  };
   bot
     .init(config.ethereum, config.tezos, config.maxVolume)
-    .then(() => bot.start())
-    .catch(console.error);
+    .then((data) => {
+      console.log(
+        `\nPlease Confirm Details:\n\n- Etherum Details:\n--- Account: ${
+          data.eth.account
+        }\n--- Eth Balance: ${data.eth.balance} eth\n--- USDC Balance: ${
+          data.eth.usdc
+        } usdc\n--- Bot trade Volume: ${
+          config.maxVolume.usdc / constants.decimals10_6
+        } usdc\n\n- Tezos Details:\n--- Account: ${
+          data.tez.account
+        }\n--- Tez Balance: ${data.tez.balance} xtz\n--- USDTz Balance: ${
+          data.tez.usdtz
+        } usdtz\n--- Bot trade Volume: ${
+          config.maxVolume.usdtz / constants.decimals10_6
+        } usdtz\n`
+      );
+      const answer = readlineSync.question(
+        "Are the above details correct? (y/n): "
+      );
+      if (answer.toLowerCase() !== "y") {
+        throw new Error("[x] Exiting..");
+      }
+      bot.start();
+    })
+    .catch(console.log);
 };
 
 init();

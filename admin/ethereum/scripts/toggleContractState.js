@@ -13,7 +13,7 @@ const toggleContractState = async (state) => {
     data,
     "0",
     "1000000",
-    config.contractAddr,
+    "0x051aa11d0da7fae4395b837e60238d9fd5b80ba5",
     config.chain
   );
   if (rc) {

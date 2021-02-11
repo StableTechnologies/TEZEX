@@ -22,3 +22,9 @@ export const createSecrets = () => {
 export const calcSwapReturn = (swapValue, rewardInBIPS) => {
   return Math.floor(parseInt(swapValue) * (1 - parseInt(rewardInBIPS) / 10000));
 };
+
+export const constants = {
+  decimals10_6: 1000000,
+  usdcFeePad: 2,
+  usdtzFeePad: 2,
+};

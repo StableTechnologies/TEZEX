@@ -44,7 +44,7 @@ contract AtomicSwap is ReentrancyGuard {
     constructor() public {
         head = bytes32(0);
         count = 0;
-        active = false;
+        active = true;
         admin = msg.sender;
     }
 

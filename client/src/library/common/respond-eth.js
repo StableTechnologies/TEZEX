@@ -49,7 +49,7 @@ const respondEth = async (amount, ethStore, tezStore, req_swap, update) => {
     return {
       type: "tez",
       hashedSecret: req_swap.hashedSecret,
-      value: amount + " USDTz",
+      value: amount + " USDtz",
       refundTime,
       state: 1,
     };

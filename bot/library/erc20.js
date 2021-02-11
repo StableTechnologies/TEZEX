@@ -1,10 +1,8 @@
 const Ethereum = require("./ethereum");
 
-module.exports = class ERC20 extends (
-  Ethereum
-) {
-  constructor(web3, account, privateKey, chain, swapContract, tokenContract) {
-    super(web3, account, privateKey, chain, swapContract);
+module.exports = class ERC20 extends Ethereum {
+  constructor(web3, privateKey, chain, swapContract, tokenContract) {
+    super(web3, privateKey, chain, swapContract);
     this.tokenContract = tokenContract; // web3.eth.Contract instance for the ethereum erc20 token contract
   }
 

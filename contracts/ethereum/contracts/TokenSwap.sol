@@ -48,7 +48,7 @@ contract TokenSwap is ReentrancyGuard {
         token = IERC20(_erc20);
         head = bytes32(0);
         count = 0;
-        active = false;
+        active = true;
         admin = msg.sender;
     }
 

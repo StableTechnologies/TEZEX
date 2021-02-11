@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
-import { calcSwapReturn } from "../../../../library/common/util";
+import { calcSwapReturn, constants } from "../../../../library/common/util";
 import useStyles from "../../style";
 
-const CreateSwap = ({ className, genSwap, loader, rewardInBIPS }) => {
+const CreateSwap = ({ className, genSwap, loader, feeDetails }) => {
   const [input, setInput] = useState(0);
   const history = useHistory();
   const classes = useStyles();
@@ -11,12 +11,23 @@ const CreateSwap = ({ className, genSwap, loader, rewardInBIPS }) => {
   const generateSwap = async (e) => {
     e.preventDefault();
     if (e.target.tez.value === "" || e.target.tez.value === 0) return;
-    loader(true);
     try {
-      const minValue = calcSwapReturn(e.target.tez.value, rewardInBIPS);
-      const res = await genSwap(2, e.target.tez.value, minValue);
+      const minValue =
+        calcSwapReturn(
+          e.target.tez.value * constants.decimals10_6,
+          feeDetails.reward
+        ) - feeDetails.botFee;
+      if (minValue <= 0) {
+        alert("Minimum expected return in less than zero!");
+        return;
+      }
+      loader(true);
+      const res = await genSwap(
+        2,
+        e.target.tez.value * constants.decimals10_6,
+        minValue
+      );
       loader(false);
-      console.log(res);
       if (!res) {
         alert("Error: Swap Couldn't be created");
       } else {
@@ -33,9 +44,9 @@ const CreateSwap = ({ className, genSwap, loader, rewardInBIPS }) => {
         <form onSubmit={generateSwap}>
           <input
             type="number"
-            placeholder="Amount in USDTz"
+            placeholder="Amount in USDtz"
             name="tez"
-            step=".0001"
+            step=".000001"
             min="0"
             onInput={(e) => setInput(e.target.value || 0)}
             className={classes.valueInput}
@@ -43,7 +54,34 @@ const CreateSwap = ({ className, genSwap, loader, rewardInBIPS }) => {
           <input className={classes.create} type="submit" value="CREATE" />
         </form>
         <p className={classes.expectedValue}>
-          Min Expected USDC Value : {calcSwapReturn(input, rewardInBIPS)} USDC
+          Min Expected USDC Value :{" "}
+          {input === 0
+            ? 0
+            : (calcSwapReturn(
+                input * constants.decimals10_6,
+                feeDetails.reward
+              ) -
+                feeDetails.botFee) /
+              constants.decimals10_6}{" "}
+          USDC
+        </p>
+        <p className={classes.expectedValue}>
+          Max Network Fee :{" "}
+          {input === 0 ? 0 : feeDetails.botFee / constants.decimals10_6} USDC
+        </p>
+        <p className={classes.expectedValue}>
+          Swap Fee :{" "}
+          {input === 0
+            ? 0
+            : (
+                input -
+                calcSwapReturn(
+                  input * constants.decimals10_6,
+                  feeDetails.reward
+                ) /
+                  constants.decimals10_6
+              ).toFixed(6)}{" "}
+          USDC
         </p>
       </div>
     </div>
