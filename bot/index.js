@@ -66,7 +66,7 @@ const init = () => {
           config.maxVolume.usdc / constants.decimals10_6
         } usdc\n\n- Tezos Details:\n--- Account: ${
           data.tez.account
-        }\n--- Tez Balance: ${data.tez.balance} xtz\n--- USDTz Balance: ${
+        }\n--- Tez Balance: ${data.tez.balance} xtz\n--- USDtz Balance: ${
           data.tez.usdtz
         } usdtz\n--- Bot trade Volume: ${
           config.maxVolume.usdtz / constants.decimals10_6
