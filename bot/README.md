@@ -94,3 +94,5 @@ Initializing Bot...
 
    b. Make sure you have enough balance [eth and xtz] before starting the bot, this balance is needed to pay for tx fees. The bot checks your balance with a total estimated tx fee having a considerable margin, if it finds the current balance below the estimated fees it will show a warning. You can make a choice to run the bot or refill first and then start the bot. The estimated fees are in no way exact or accurate, the estimation is made on the maximum no. of swaps possible with the given volume of assets the bot is configured with.
    If your balance drops below the tx fees at any point your bot will fail to operate which can also lead to asset loss in some cases!
+
+   c. Do not use the same accounts in more than **1 bot** at the same time. The bot accounts should not be used at all (manually or automatic) while the bot is running. It is advised to create separate dedicated accounts for the bot. Running the the same accounts on more than 1 bot or directly making txs with the accounts while the bot is active can cause tx failures and in turn asset loss.
