@@ -62,11 +62,20 @@ module.exports = class Bot {
         config.tezos.conseilServer
       );
       await this.usdtz.initConseil();
-      const ethBalance = await this.usdc.balance(this.usdc.account);
-      const usdcBalance = await this.usdc.tokenBalance(this.usdc.account);
-      const tezBalance = await this.usdtz.balance(this.usdtz.account);
-      const usdtzBalance = await this.usdtz.tokenBalance(this.usdtz.account);
+      const [
+        ethBalance,
+        usdcBalance,
+        tezBalance,
+        usdtzBalance,
+      ] = await Promise.all([
+        this.usdc.balance(this.usdc.account),
+        this.usdc.tokenBalance(this.usdc.account),
+        this.usdtz.balance(this.usdtz.account),
+        this.usdtz.tokenBalance(this.usdtz.account),
+      ]);
+      const fee = await this.getBotFees();
       return {
+        fee,
         eth: {
           account: this.usdc.account,
           balance: this.usdc.web3.utils.fromWei(ethBalance),
@@ -307,18 +316,12 @@ module.exports = class Bot {
       console.log("[*] UPDATING REWARDS");
       try {
         const data = await Promise.all([
-          this.usdtz.getFees(),
+          this.getBotFees(),
           this.usdtz.getPrice("ETH-USD"),
           this.usdtz.getPrice("XTZ-USD"),
-          this.usdtz.getReward(),
-          this.usdc.web3.eth.getGasPrice(),
         ]);
-        this.reward = data[3];
-        const usdtzFeeData = data[0]["USDTZ"];
-        const usdcFeeData = data[0]["USDC"];
-        const ethereumGasPrice = parseFloat(
-          this.usdc.web3.utils.fromWei(data[4], "ether")
-        );
+        const { usdtzFeeData, usdcFeeData, ethereumGasPrice, reward } = data[0];
+        this.reward = reward;
         this.usdtzTxFee = Math.ceil(
           (((usdtzFeeData["initiateWait"] + usdtzFeeData["addCounterParty"]) *
             data[2]) /
@@ -356,5 +359,23 @@ module.exports = class Bot {
     };
     if (!runOnce) setTimeout(run, 60000);
     else await run();
+  }
+  async getBotFees() {
+    const data = await Promise.all([
+      this.usdtz.getFees(),
+      this.usdtz.getReward(),
+      this.usdc.web3.eth.getGasPrice(),
+    ]);
+    const usdtzFeeData = data[0]["USDTZ"];
+    const usdcFeeData = data[0]["USDC"];
+    const ethereumGasPrice = parseFloat(
+      this.usdc.web3.utils.fromWei(data[2], "ether")
+    );
+    return {
+      usdtzFeeData,
+      usdcFeeData,
+      ethereumGasPrice,
+      reward: data[1],
+    };
   }
 };

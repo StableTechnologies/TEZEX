@@ -10,17 +10,17 @@
   "author": "Soumya Ghosh Dastidar",
   "license": "ISC",
   "dependencies": {
-    "async-mutex": "^0.2.6",
+    "async-mutex": "0.2.6",
     "chai": "^4.2.0",
-    "conseiljs": "^5.0.7",
-    "conseiljs-softsigner": "^5.0.4-1",
-    "web3": "^1.3.4",
-    "ethereumjs-tx": "^2.1.2",
-    "jsonpath-plus": "^4.0.0",
-    "loglevel": "^1.6.8",
+    "conseiljs": "5.0.7",
+    "conseiljs-softsigner": "5.0.4-1",
+    "web3": "1.3.4",
+    "ethereumjs-tx": "2.1.2",
+    "jsonpath-plus": "4.0.0",
+    "loglevel": "1.6.8",
     "mocha": "^8.2.1",
-    "node-fetch": "^2.6.0",
-    "readline-sync": "^1.4.10"
+    "node-fetch": "2.6.0",
+    "readline-sync": "1.4.10"
   },
   "devDependencies": {
     "eslint": "^7.5.0"

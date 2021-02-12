@@ -15,4 +15,6 @@ module.exports.constants = {
   decimals10_6: 1000000,
   usdcFeePad: 1.7,
   usdtzFeePad: 1.5,
+  minUSDCVolume: 10000000,
+  minUSDtzVolume: 10000000,
 };

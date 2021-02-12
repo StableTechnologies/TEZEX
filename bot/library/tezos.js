@@ -52,8 +52,7 @@ module.exports = class Tezos {
     );
     this.account = this.keyStore.publicKeyHash;
     this.signer = await SoftSigner.createSigner(
-      TezosMessageUtils.writeKeyWithHint(this.keyStore.secretKey, "edsk"),
-      -1
+      TezosMessageUtils.writeKeyWithHint(this.keyStore.secretKey, "edsk")
     );
   }
 
