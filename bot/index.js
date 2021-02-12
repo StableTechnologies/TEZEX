@@ -61,22 +61,26 @@ const init = () => {
         `\nPlease Confirm Details:\n\n- Etherum Details:\n--- Account: ${
           data.eth.account
         }\n--- Eth Balance: ${data.eth.balance} eth\n--- USDC Balance: ${
-          data.eth.usdc
+          data.eth.usdc / constants.decimals10_6
         } usdc\n--- Bot trade Volume: ${
           config.maxVolume.usdc / constants.decimals10_6
         } usdc\n\n- Tezos Details:\n--- Account: ${
           data.tez.account
         }\n--- Tez Balance: ${data.tez.balance} xtz\n--- USDtz Balance: ${
-          data.tez.usdtz
+          data.tez.usdtz / constants.decimals10_6
         } usdtz\n--- Bot trade Volume: ${
           config.maxVolume.usdtz / constants.decimals10_6
         } usdtz\n`
       );
       if (data.eth.usdc < config.maxVolume.usdc) {
-        throw new Error("Not enough USDC balance");
+        throw new Error(
+          `Not enough USDC balance ${data.eth.usdc}<${config.maxVolume.usdc}`
+        );
       }
       if (data.tez.usdtz < config.maxVolume.usdtz) {
-        throw new Error("Not enough USDtz balance");
+        throw new Error(
+          `Not enough USDtz balance ${data.tez.usdtz}<${config.maxVolume.usdtz}`
+        );
       }
       const answer = readlineSync.question(
         "Are the above details correct? (y/n): "

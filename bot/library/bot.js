@@ -70,12 +70,12 @@ module.exports = class Bot {
         eth: {
           account: this.usdc.account,
           balance: this.usdc.web3.utils.fromWei(ethBalance),
-          usdc: usdcBalance / constants.decimals10_6,
+          usdc: usdcBalance,
         },
         tez: {
           account: this.usdtz.account,
           balance: tezBalance / constants.decimals10_6,
-          usdtz: usdtzBalance / constants.decimals10_6,
+          usdtz: usdtzBalance,
         },
       };
     } catch (err) {
