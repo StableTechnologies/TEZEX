@@ -1,15 +1,18 @@
 const express = require("express");
 const Ethereum = require("./library/ethereum");
 const Tezos = require("./library/tezos");
+const cors = require("cors");
+
 const app = express();
 const port = process.env.PORT || 8000;
-
 const bots = {};
-const maxInactiveTime = 30000; // time in milliseconds
+const maxInactiveTime = 180000; // time in milliseconds
 
 const ethClient = Ethereum.newClient();
 const tezClient = Tezos.newClient("error");
+
 app.use(express.json());
+app.use(cors());
 
 app.post("/bot/ping", async (req, res) => {
   try {
@@ -25,6 +28,9 @@ app.post("/bot/ping", async (req, res) => {
       ethClient.tokenAllowance(ethAddr),
       tezClient.tokenAllowance(tezAddr),
     ]);
+    if (BigInt(ethAllowance) === 0n && BigInt(tezAllowance) === 0n) {
+      return res.status(400).json({ error: "No allowance found" });
+    }
     bots[id] = {
       ethAddr,
       tezAddr,

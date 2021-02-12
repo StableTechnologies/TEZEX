@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import config from "../globalConfig.json";
 
 /**
  * Creates a random secret and corresponding hashed secret for a swap
@@ -27,4 +28,15 @@ export const constants = {
   decimals10_6: 1000000,
   usdcFeePad: 2,
   usdtzFeePad: 2,
+};
+
+export const updateBotStats = async () => {
+  try {
+    const res = await fetch(config.tezex.server + config.tezex.route);
+    if (!res.ok) throw new Error("Failed to ping server\n");
+    return await res.json();
+  } catch (err) {
+    console.log(`\n[x] ERROR : ${err.toString()}`);
+    return undefined;
+  }
 };

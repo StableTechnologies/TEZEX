@@ -7,7 +7,7 @@ const CreateSwap = ({ className, genSwap, loader, feeDetails }) => {
   const [input, setInput] = useState(0);
   const history = useHistory();
   const classes = useStyles();
-
+  const msg = `Max Swap Limit : `;
   const generateSwap = async (e) => {
     e.preventDefault();
     if (e.target.eth.value === "" || e.target.eth.value === 0) return;
@@ -38,6 +38,15 @@ const CreateSwap = ({ className, genSwap, loader, feeDetails }) => {
     <div className={className}>
       <div className={classes.createWrap}>
         <form onSubmit={generateSwap}>
+          <strong>
+            {feeDetails.stats === undefined
+              ? msg + "Couldn't connect to server"
+              : msg +
+                (
+                  feeDetails.stats.maxUSDtz / constants.decimals10_6
+                ).toString() +
+                " USDC"}
+          </strong>
           <input
             type="number"
             placeholder="Amount in USDC"

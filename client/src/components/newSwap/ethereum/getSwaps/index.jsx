@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
-import { constants } from "../../../../library/common/util";
+import { constants, updateBotStats } from "../../../../library/common/util";
 import { shorten } from "../../../../util";
 import Loader from "../../../loader";
 import useStyles from "../../style";
 import CreateSwap from "../createSwap";
-
 const GetSwap = ({ genSwap, tezStore, ethStore }) => {
   const [swaps, setSwaps] = useState([]);
   const [loader, setLoader] = useState(true);
@@ -31,6 +30,7 @@ const GetSwap = ({ genSwap, tezStore, ethStore }) => {
       tezStore.getPrice("XTZ-USD"),
       tezStore.getReward(),
       ethStore.web3.eth.getGasPrice(),
+      updateBotStats(),
     ]);
     const reward = data[3];
     const usdtzFeeData = data[0]["USDTZ"];
@@ -56,6 +56,7 @@ const GetSwap = ({ genSwap, tezStore, ethStore }) => {
       reward,
       botFee,
       txFee,
+      stats: data[5],
     });
   };
 

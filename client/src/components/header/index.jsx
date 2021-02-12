@@ -51,6 +51,12 @@ const Header = ({ ethStore, tezStore, balUpdate }) => {
         </button>
         <button
           className={classes.button}
+          onClick={() => history.push("/stats")}
+        >
+          Live Stats
+        </button>
+        <button
+          className={classes.button}
           onClick={() => history.push("/create")}
         >
           New Swap

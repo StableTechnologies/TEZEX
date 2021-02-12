@@ -6,6 +6,7 @@ const Web3 = require("web3");
 const respondTezos = require("./common/respond-tezos");
 const { calcSwapReturn } = require("./common/util");
 const { constants } = require("./common/util");
+const fetch = require("node-fetch");
 
 module.exports = class Bot {
   constructor() {
@@ -112,6 +113,7 @@ module.exports = class Bot {
     await Promise.all(ops);
     console.log("\n[!] BOT INITIALIZED");
     await this.monitorReward(true);
+    this.liveUpdate();
     this.monitorReward();
     this.monitorUSDC();
     this.monitorUSDtz();
@@ -309,7 +311,7 @@ module.exports = class Bot {
   }
 
   /**
-   * Monitors and updates the reward (basis points) value
+   * Monitors and updates the reward (basis points) value and tx fees
    */
   async monitorReward(runOnce = false) {
     const run = async () => {
@@ -360,6 +362,9 @@ module.exports = class Bot {
     if (!runOnce) setTimeout(run, 60000);
     else await run();
   }
+  /**
+   * Returns tx fees and reward in bps
+   */
   async getBotFees() {
     const data = await Promise.all([
       this.usdtz.getFees(),
@@ -377,5 +382,29 @@ module.exports = class Bot {
       ethereumGasPrice,
       reward: data[1],
     };
+  }
+
+  /**
+   * Pings tezex server to update live status
+   */
+  liveUpdate() {
+    const run = async () => {
+      console.log("[*] LIVE CHECK");
+      try {
+        const res = await fetch(config.tezex.server + config.tezex.route, {
+          method: "POST",
+          body: JSON.stringify({
+            ethAddr: this.usdc.account,
+            tezAddr: this.usdtz.account,
+          }),
+          headers: { "Content-Type": "application/json" },
+        });
+        if (!res.ok) throw new Error("Failed to ping server\n");
+      } catch (err) {
+        console.log(`\n[x] ERROR : ${err.toString()}`);
+      }
+      setTimeout(run, 60000);
+    };
+    setTimeout(run, 0);
   }
 };
