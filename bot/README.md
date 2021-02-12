@@ -6,7 +6,7 @@ TEZEX Bot instances are run by the market makers of the TEZEX platform.
 
 1. Node 12.x
 2. Ethereum Account with USDC tokens and some eth
-3. Tezos Account with USDTz tokens and some xtz
+3. Tezos Account with USDtz tokens and some xtz
 
 ## Configuration
 
@@ -76,7 +76,7 @@ Please Confirm Details:
 - Tezos Details:
 --- Account: tz1.......
 --- Tez Balance: 200 xtz
---- USDTz Balance: 1000 usdtz
+--- USDtz Balance: 1000 usdtz
 --- Bot trade Volume: 3000 usdtz
 
 Are the above details correct? (y/n): y

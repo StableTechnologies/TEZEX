@@ -39,7 +39,7 @@ module.exports = async (ethStore, tezStore, new_swap, bot, state) => {
     switch (state) {
       case 0: {
         try {
-          console.log("RESPONDING TO USDTz: ", new_swap.hashedSecret);
+          console.log("RESPONDING TO USDtz: ", new_swap.hashedSecret);
           // const approveTokens = await ethStore.approveToken(parseInt(amount));
           // if (!approveTokens) return undefined;
           await ethStore.initiateWait(
@@ -53,7 +53,7 @@ module.exports = async (ethStore, tezStore, new_swap, bot, state) => {
           state = 1;
           console.log("\nSWAP GENERATED | HASH: ", new_swap.hashedSecret);
         } catch (err) {
-          console.error("FAILED TO RESPOND TO USDTz: ", new_swap.hashedSecret);
+          console.error("FAILED TO RESPOND TO USDtz: ", new_swap.hashedSecret);
           new_swap.state = 3;
           await bot.updateSwap(2, new_swap);
           return;
@@ -97,7 +97,7 @@ const waitResponse = async (new_swap, ethStore, tezStore, bot) => {
     await bot.updateSwap(2, new_swap);
     return 2;
   } catch (err) {
-    console.error("FAILED TO RESPOND TO USDTz: ", new_swap.hashedSecret, err);
+    console.error("FAILED TO RESPOND TO USDtz: ", new_swap.hashedSecret, err);
     new_swap.state = 4;
     await bot.updateSwap(2, new_swap);
     return 4;

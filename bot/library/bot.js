@@ -91,15 +91,21 @@ module.exports = class Bot {
    */
   async start() {
     console.log("\n\n[!] INITIALIZING BOT! PLEASE WAIT...\n");
-    await Promise.all([
-      this.usdc.approveToken(this.volume.usdc),
-      this.usdtz.approveToken(this.volume.usdtz),
+    const allowances = await Promise.all([
+      this.usdtz.tokenAllowance(this.usdtz.account),
+      this.usdc.tokenAllowance(this.usdc.account),
     ]);
+    let ops = [];
+    if (allowances[0] != this.volume.usdtz)
+      ops.push(this.usdtz.approveToken(this.volume.usdtz));
+    if (allowances[1] != this.volume.usdc)
+      ops.push(this.usdc.approveToken(this.volume.usdc));
+    await Promise.all(ops);
     console.log("\n[!] BOT INITIALIZED");
     await this.monitorReward(true);
     this.monitorReward();
     this.monitorUSDC();
-    this.monitorUSDTz();
+    this.monitorUSDtz();
     this.monitorRefunds();
   }
 
@@ -175,9 +181,9 @@ module.exports = class Bot {
             await this.usdtz.refund(key);
             this.usdtzSwaps[key].state = 3;
             await this.updateSwap(1, this.usdtzSwaps[key]);
-            console.log("[!] REFUNDED SWAP(USDTz): ", key);
+            console.log("[!] REFUNDED SWAP(USDtz): ", key);
           } catch (err) {
-            console.error("[x] FAILED TO REFUND SWAP(USDTz): ", key);
+            console.error("[x] FAILED TO REFUND SWAP(USDtz): ", key);
           }
         }
       }
@@ -242,10 +248,10 @@ module.exports = class Bot {
   /**
    * Monitors swaps on the usdtz/tezos network and responds to suitable swaps
    */
-  monitorUSDTz() {
+  monitorUSDtz() {
     const run = async () => {
       try {
-        console.log("[*] CHECKING USDTz SWAPS");
+        console.log("[*] CHECKING USDtz SWAPS");
         if (this.volume.usdc === 0) return;
         const waitingSwaps = await this.usdtz.getWaitingSwaps(4200);
         for (const i in waitingSwaps) {
@@ -286,7 +292,7 @@ module.exports = class Bot {
           }
         }
       } catch (err) {
-        console.error("[x] FAILED TO MONITOR USDTz SWAPS | ", err);
+        console.error("[x] FAILED TO MONITOR USDtz SWAPS | ", err);
       }
       setTimeout(run, 120000);
     };
@@ -338,11 +344,11 @@ module.exports = class Bot {
           this.reward
         } BPS\n  [!] EXPECTED TX FEE REWARD :\n    - USDC SWAP : ${
           this.usdcTxFee / constants.decimals10_6
-        } usdc\n    - USDTz SWAP : ${
+        } usdc\n    - USDtz SWAP : ${
           this.usdtzTxFee / constants.decimals10_6
         } usdtz\n  [!] REMAINING VOLUME :\n    - USDC : ${
           this.volume.usdc / constants.decimals10_6
-        } usdc\n    - USDTz : ${
+        } usdc\n    - USDtz : ${
           this.volume.usdtz / constants.decimals10_6
         } usdtz\n\n`
       );

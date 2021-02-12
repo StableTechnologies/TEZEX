@@ -1,34 +1,34 @@
 {
   "tezos": {
-    "RPC": "https://tezos-dev.cryptonomic-infra.tech:443",
+    "RPC": "https://tezos-prod.cryptonomic-infra.tech:443",
     "tokenContract": {
-      "address": "KT1EB1dRJPiNMGzwux3n16Y4oXqkLN8pLLyj",
-      "mapID": 32417
+      "address": "KT1LN4LPSqTMS7Sd2CJw4bbDGRkMv2t68Fy9",
+      "mapID": 36
     },
     "swapContract": {
-      "address": "KT1EyApp4xsWR7YJEuT7fFYrqMNJ5V6XaeaF",
-      "mapID": 59597
+      "address": "KT1FMSwqX2W2p1CCJeJNy2rvYEYEYjRiUza3",
+      "mapID": 394
     },
     "feeContract": {
-      "address": "KT1JowHsoDhETkLz22DmBgXqaU9nFKTigcJU",
+      "address": "KT1SHfrdJjpZNexZdrM8YvDjaVas2i8p8xbZ",
       "mapID": ""
     },
     "priceOracle": {
-      "address": "KT1LWDzd6mFhjjnb65a1PjHDNZtFKBieTQKH",
-      "mapID": 79
+      "address": "KT1AdbYiPYb5hDuEuVrfxmFehtnBCXv4Np7r",
+      "mapID": 101
     },
-    "chain_id": "NetXm8tYqnMWky1",
+    "chain_id": "NetXdQprcVkpaWU",
     "conseilServer": {
-      "url": "https://conseil-dev.cryptonomic-infra.tech:443",
-      "apiKey": "4bb2f288-c36a-49ea-a50e-e7cbdc495e0e",
-      "network": "delphinet"
+      "url": "https://conseil-prod.cryptonomic-infra.tech:443",
+      "apiKey": "4660121e-1bab-4740-8d57-083681e3441d",
+      "network": "mainnet"
     }
   },
   "ethereum": {
-    "RPC": "https://goerli.infura.io/v3/3f764c2122644024825ab09e9e4d39d2",
-    "chain": "goerli",
-    "contractAddr": "0x30d00cCAbe5e269f75dD02Ca6C3A522e56252204",
-    "tokenAddr": "0xCe8D4A6DE326C4A8b021dA892408f30238689377",
+    "RPC": "https://mainnet.infura.io/v3/3f764c2122644024825ab09e9e4d39d2",
+    "chain": "mainnet",
+    "contractAddr": "0x0BF1766F9E94D152B2A33596DdC4FAf93b2B84aD",
+    "tokenAddr": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
     "abi": [
       {
         "inputs": [
