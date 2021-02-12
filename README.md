@@ -1,3 +1,3 @@
 # TEZEX Bridge
 
-TEZEX Bridge Tezos Exchange
+TEZEX Bridge Tezos Exchange!
