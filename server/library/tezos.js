@@ -53,7 +53,7 @@ module.exports = class Tezos {
     let balance =
       tokenData === undefined
         ? "0"
-        : JSONPath({ path: "$.args[1].int", json: tokenData })[0];
+        : JSONPath({ path: "$.args[0].int", json: tokenData })[0];
     return balance;
   }
 
@@ -74,7 +74,7 @@ module.exports = class Tezos {
     let allowances =
       tokenData === undefined
         ? undefined
-        : JSONPath({ path: "$.args[0]", json: tokenData })[0];
+        : JSONPath({ path: "$.args[1]", json: tokenData })[0];
     const allowance =
       allowances === undefined
         ? []
