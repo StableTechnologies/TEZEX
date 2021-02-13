@@ -1,16 +1,14 @@
-const crypto = require("crypto");
-const fs = require("fs");
+const crypto = require('crypto');
+const fs = require('fs');
 
-//algorith used for the encryption
-const algorithm = "aes-256-ctr";
+// algorith used for the encryption
+const algorithm = 'aes-256-ctr';
 
 /**
  * Returns the hash of password provided, this is used as the secret key in encryption
  * @param password is the password used for encryption
  */
-const getCipherKey = (password) => {
-  return crypto.createHash("sha256").update(password).digest();
-};
+const getCipherKey = (password) => crypto.createHash('sha256').update(password).digest();
 
 /**
  * Encrypts the data with the password provided and algorithm mentioned
@@ -19,16 +17,16 @@ const getCipherKey = (password) => {
  * @param  password is the password used for encryption
  */
 module.exports.encrypt = (text, password) => {
-  const secretKey = getCipherKey(password);
-  const iv = crypto.randomBytes(16);
-  const cipher = crypto.createCipheriv(algorithm, secretKey, iv);
+    const secretKey = getCipherKey(password);
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipheriv(algorithm, secretKey, iv);
 
-  const encrypted = Buffer.concat([cipher.update(text), cipher.final()]);
+    const encrypted = Buffer.concat([cipher.update(text), cipher.final()]);
 
-  return {
-    iv: iv.toString("hex"),
-    content: encrypted.toString("hex"),
-  };
+    return {
+        iv: iv.toString('hex'),
+        content: encrypted.toString('hex')
+    };
 };
 
 /**
@@ -38,19 +36,19 @@ module.exports.encrypt = (text, password) => {
  * @param  password the password used to create the encrypted hash
  */
 module.exports.decrypt = (hash, password) => {
-  const secretKey = getCipherKey(password);
-  const decipher = crypto.createDecipheriv(
-    algorithm,
-    secretKey,
-    Buffer.from(hash.iv, "hex")
-  );
+    const secretKey = getCipherKey(password);
+    const decipher = crypto.createDecipheriv(
+        algorithm,
+        secretKey,
+        Buffer.from(hash.iv, 'hex')
+    );
 
-  const decrpyted = Buffer.concat([
-    decipher.update(Buffer.from(hash.content, "hex")),
-    decipher.final(),
-  ]);
+    const decrpyted = Buffer.concat([
+        decipher.update(Buffer.from(hash.content, 'hex')),
+        decipher.final()
+    ]);
 
-  return decrpyted.toString();
+    return decrpyted.toString();
 };
 
 /**
@@ -60,13 +58,13 @@ module.exports.decrypt = (hash, password) => {
  * @param  password password used for encryption
  */
 module.exports.encryptUserConfig = (configFile, password) => {
-  let rawdata = fs.readFileSync(configFile);
-  const config = JSON.parse(rawdata);
-  fs.writeFileSync(
-    configFile,
-    JSON.stringify(this.encrypt(JSON.stringify(config), password))
-  );
-  return config;
+    const rawdata = fs.readFileSync(configFile);
+    const config = JSON.parse(rawdata);
+    fs.writeFileSync(
+        configFile,
+        JSON.stringify(this.encrypt(JSON.stringify(config), password))
+    );
+    return config;
 };
 
 /**
@@ -76,7 +74,7 @@ module.exports.encryptUserConfig = (configFile, password) => {
  * @param  password password used for encryption
  */
 module.exports.decryptUserConfig = (configFile, password) => {
-  let rawdata = fs.readFileSync(configFile);
-  const config = JSON.parse(rawdata);
-  return JSON.parse(this.decrypt(config, password));
+    const rawdata = fs.readFileSync(configFile);
+    const config = JSON.parse(rawdata);
+    return JSON.parse(this.decrypt(config, password));
 };
