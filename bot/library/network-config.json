@@ -1,38 +1,38 @@
 {
   "tezex": {
-    "server": "http://localhost:8000",
+    "server": "https://tezex-server.onrender.com",
     "route": "/bot/ping"
   },
   "tezos": {
-    "RPC": "https://tezos-prod.cryptonomic-infra.tech:443",
-    "chain_id": "NetXdQprcVkpaWU",
+    "RPC": "https://tezos-edo.cryptonomic-infra.tech:443",
+    "chain_id": "NetXSp4gfdanies",
     "conseilServer": {
-      "url": "https://conseil-prod.cryptonomic-infra.tech:443",
-      "apiKey": "4660121e-1bab-4740-8d57-083681e3441d",
-      "network": "mainnet"
+      "url": "https://conseil-edo.cryptonomic-infra.tech:443",
+      "apiKey": "4bb2f288-c36a-49ea-a50e-e7cbdc495e0e",
+      "network": "edonet"
     },
     "tokenContract": {
-      "address": "KT1LN4LPSqTMS7Sd2CJw4bbDGRkMv2t68Fy9",
-      "mapID": 36
+      "address": "KT1Dcuu1rDkESpGF5J1xm5mPsmitSTr4rSSU",
+      "mapID": 8495
     },
     "swapContract": {
-      "address": "KT1FMSwqX2W2p1CCJeJNy2rvYEYEYjRiUza3",
-      "mapID": 394
+      "address": "KT1VJGCP91SaMWvfR1MonSzYwWGiaksZv4CB",
+      "mapID": 8497
     },
     "feeContract": {
-      "address": "KT1SHfrdJjpZNexZdrM8YvDjaVas2i8p8xbZ",
+      "address": "KT1RYQenyVrkBirovSCfki7CsiStp3E9R82J",
       "mapID": ""
     },
     "priceOracle": {
-      "address": "KT1AdbYiPYb5hDuEuVrfxmFehtnBCXv4Np7r",
-      "mapID": 101
+      "address": "KT19vJ8urPQJimLgenb8XuuHUwiMR13soZno",
+      "mapID": 8500
     }
   },
   "ethereum": {
-    "RPC": "https://mainnet.infura.io/v3/3f764c2122644024825ab09e9e4d39d2",
-    "chain": "mainnet",
-    "contractAddr": "0x0BF1766F9E94D152B2A33596DdC4FAf93b2B84aD",
-    "tokenAddr": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+    "RPC": "https://goerli.infura.io/v3/3f764c2122644024825ab09e9e4d39d2",
+    "chain": "goerli",
+    "contractAddr": "0x30d00cCAbe5e269f75dD02Ca6C3A522e56252204",
+    "tokenAddr": "0xCe8D4A6DE326C4A8b021dA892408f30238689377",
     "abi": [
       {
         "inputs": [

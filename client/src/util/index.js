@@ -36,7 +36,7 @@ export const setEthAccount = async () => {
 export const setTezAccount = async () => {
   const client = new DAppClient({ name: "TEZEX" });
   const resp = await client.requestPermissions({
-    network: { type: NetworkType.MAINNET },
+    network: { type: NetworkType.EDONET },
   });
   const account = await client.getActiveAccount();
   return new FA12(
