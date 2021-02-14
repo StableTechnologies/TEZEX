@@ -73,8 +73,8 @@ async function mintMinimumBalance(store, contractAddress) {
 
 const deploy = async () => {
   const store = await init();
-  //   const contract = await deployTokenContract(store);
-  await mintMinimumBalance(store, "KT1Dcuu1rDkESpGF5J1xm5mPsmitSTr4rSSU");
+  const contract = await deployTokenContract(store);
+  await mintMinimumBalance(store, contract);
 };
 
 deploy();
