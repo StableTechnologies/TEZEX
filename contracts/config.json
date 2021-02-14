@@ -1,5 +1,6 @@
 {
   "tezos": {
+    "privateKey": "",
     "RPC": "https://tezos-edo.cryptonomic-infra.tech:443",
     "chain_id": "NetXSp4gfdanies",
     "conseilServer": {
@@ -12,6 +13,7 @@
     }
   },
   "ethereum": {
+    "privateKey": "",
     "RPC": "https://goerli.infura.io/v3/3f764c2122644024825ab09e9e4d39d2",
     "chain": "goerli",
     "tokenAddr": "0xCe8D4A6DE326C4A8b021dA892408f30238689377"
