@@ -1,6 +1,5 @@
 {
   "tezos": {
-    "privateKey": "",
     "RPC": "https://tezos-prod.cryptonomic-infra.tech:443",
     "tokenContract": {
       "address": "KT1LN4LPSqTMS7Sd2CJw4bbDGRkMv2t68Fy9"

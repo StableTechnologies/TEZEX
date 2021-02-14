@@ -9,12 +9,12 @@
   "author": "Soumya Ghosh Dastidar",
   "license": "MIT",
   "dependencies": {
-    "conseiljs": "^5.0.7-beta.3",
-    "conseiljs-softsigner": "^5.0.3",
+    "conseiljs": "5.0.7",
+    "conseiljs-softsigner": "5.0.4-1",
+    "web3": "1.3.4",
     "ethereumjs-tx": "^2.1.2",
     "jsonpath-plus": "^4.0.0",
     "loglevel": "^1.6.8",
-    "node-fetch": "^2.6.0",
-    "web3": "^1.2.11"
+    "node-fetch": "^2.6.0"
   }
 }
