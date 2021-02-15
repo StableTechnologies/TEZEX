@@ -21,6 +21,13 @@ const CreateSwap = ({ className, genSwap, loader, feeDetails }) => {
         alert("Minimum expected return in less than zero!");
         return;
       }
+      if (
+        feeDetails.stats !== undefined &&
+        minValue > feeDetails.stats.maxUSDC
+      ) {
+        alert("Swap size exceeds current swap limit!");
+        return;
+      }
       loader(true);
       const res = await genSwap(
         2,
