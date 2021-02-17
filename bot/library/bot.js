@@ -6,6 +6,7 @@ const Web3 = require("web3");
 const respondTezos = require("./common/respond-tezos");
 const { calcSwapReturn } = require("./common/util");
 const { constants } = require("./common/util");
+const fetch = require("node-fetch");
 
 module.exports = class Bot {
   constructor() {
@@ -62,11 +63,20 @@ module.exports = class Bot {
         config.tezos.conseilServer
       );
       await this.usdtz.initConseil();
-      const ethBalance = await this.usdc.balance(this.usdc.account);
-      const usdcBalance = await this.usdc.tokenBalance(this.usdc.account);
-      const tezBalance = await this.usdtz.balance(this.usdtz.account);
-      const usdtzBalance = await this.usdtz.tokenBalance(this.usdtz.account);
+      const [
+        ethBalance,
+        usdcBalance,
+        tezBalance,
+        usdtzBalance,
+      ] = await Promise.all([
+        this.usdc.balance(this.usdc.account),
+        this.usdc.tokenBalance(this.usdc.account),
+        this.usdtz.balance(this.usdtz.account),
+        this.usdtz.tokenBalance(this.usdtz.account),
+      ]);
+      const fee = await this.getBotFees();
       return {
+        fee,
         eth: {
           account: this.usdc.account,
           balance: this.usdc.web3.utils.fromWei(ethBalance),
@@ -103,6 +113,7 @@ module.exports = class Bot {
     await Promise.all(ops);
     console.log("\n[!] BOT INITIALIZED");
     await this.monitorReward(true);
+    this.liveUpdate();
     this.monitorReward();
     this.monitorUSDC();
     this.monitorUSDtz();
@@ -300,25 +311,19 @@ module.exports = class Bot {
   }
 
   /**
-   * Monitors and updates the reward (basis points) value
+   * Monitors and updates the reward (basis points) value and tx fees
    */
   async monitorReward(runOnce = false) {
     const run = async () => {
       console.log("[*] UPDATING REWARDS");
       try {
         const data = await Promise.all([
-          this.usdtz.getFees(),
+          this.getBotFees(),
           this.usdtz.getPrice("ETH-USD"),
           this.usdtz.getPrice("XTZ-USD"),
-          this.usdtz.getReward(),
-          this.usdc.web3.eth.getGasPrice(),
         ]);
-        this.reward = data[3];
-        const usdtzFeeData = data[0]["USDTZ"];
-        const usdcFeeData = data[0]["USDC"];
-        const ethereumGasPrice = parseFloat(
-          this.usdc.web3.utils.fromWei(data[4], "ether")
-        );
+        const { usdtzFeeData, usdcFeeData, ethereumGasPrice, reward } = data[0];
+        this.reward = reward;
         this.usdtzTxFee = Math.ceil(
           (((usdtzFeeData["initiateWait"] + usdtzFeeData["addCounterParty"]) *
             data[2]) /
@@ -356,5 +361,50 @@ module.exports = class Bot {
     };
     if (!runOnce) setTimeout(run, 60000);
     else await run();
+  }
+  /**
+   * Returns tx fees and reward in bps
+   */
+  async getBotFees() {
+    const data = await Promise.all([
+      this.usdtz.getFees(),
+      this.usdtz.getReward(),
+      this.usdc.web3.eth.getGasPrice(),
+    ]);
+    const usdtzFeeData = data[0]["USDTZ"];
+    const usdcFeeData = data[0]["USDC"];
+    const ethereumGasPrice = parseFloat(
+      this.usdc.web3.utils.fromWei(data[2], "ether")
+    );
+    return {
+      usdtzFeeData,
+      usdcFeeData,
+      ethereumGasPrice,
+      reward: data[1],
+    };
+  }
+
+  /**
+   * Pings tezex server to update live status
+   */
+  liveUpdate() {
+    const run = async () => {
+      console.log("[*] LIVE CHECK");
+      try {
+        const res = await fetch(config.tezex.server + config.tezex.route, {
+          method: "POST",
+          body: JSON.stringify({
+            ethAddr: this.usdc.account,
+            tezAddr: this.usdtz.account,
+          }),
+          headers: { "Content-Type": "application/json" },
+        });
+        if (!res.ok) throw new Error("Failed to ping server\n");
+      } catch (err) {
+        console.log(`\n[x] ERROR : ${err.toString()}`);
+      }
+      setTimeout(run, 60000);
+    };
+    setTimeout(run, 0);
   }
 };

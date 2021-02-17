@@ -1,6 +1,16 @@
 {
+  "tezex": {
+    "server": "https://tezex-server-prod.onrender.com",
+    "route": "/bot/ping"
+  },
   "tezos": {
     "RPC": "https://tezos-prod.cryptonomic-infra.tech:443",
+    "chain_id": "NetXdQprcVkpaWU",
+    "conseilServer": {
+      "url": "https://conseil-prod.cryptonomic-infra.tech:443",
+      "apiKey": "4660121e-1bab-4740-8d57-083681e3441d",
+      "network": "mainnet"
+    },
     "tokenContract": {
       "address": "KT1LN4LPSqTMS7Sd2CJw4bbDGRkMv2t68Fy9",
       "mapID": 36
@@ -16,12 +26,6 @@
     "priceOracle": {
       "address": "KT1AdbYiPYb5hDuEuVrfxmFehtnBCXv4Np7r",
       "mapID": 101
-    },
-    "chain_id": "NetXdQprcVkpaWU",
-    "conseilServer": {
-      "url": "https://conseil-prod.cryptonomic-infra.tech:443",
-      "apiKey": "4660121e-1bab-4740-8d57-083681e3441d",
-      "network": "mainnet"
     }
   },
   "ethereum": {

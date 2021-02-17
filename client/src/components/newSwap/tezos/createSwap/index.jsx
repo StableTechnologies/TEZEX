@@ -7,7 +7,7 @@ const CreateSwap = ({ className, genSwap, loader, feeDetails }) => {
   const [input, setInput] = useState(0);
   const history = useHistory();
   const classes = useStyles();
-
+  const msg = `Max Swap Limit : `;
   const generateSwap = async (e) => {
     e.preventDefault();
     if (e.target.tez.value === "" || e.target.tez.value === 0) return;
@@ -19,6 +19,13 @@ const CreateSwap = ({ className, genSwap, loader, feeDetails }) => {
         ) - feeDetails.botFee;
       if (minValue <= 0) {
         alert("Minimum expected return in less than zero!");
+        return;
+      }
+      if (
+        feeDetails.stats !== undefined &&
+        minValue > feeDetails.stats.maxUSDC
+      ) {
+        alert("Swap size exceeds current swap limit!");
         return;
       }
       loader(true);
@@ -42,6 +49,13 @@ const CreateSwap = ({ className, genSwap, loader, feeDetails }) => {
     <div className={className}>
       <div className={classes.createWrap}>
         <form onSubmit={generateSwap}>
+          <strong>
+            {feeDetails.stats === undefined
+              ? msg + "Couldn't connect to server"
+              : msg +
+                (feeDetails.stats.maxUSDC / constants.decimals10_6).toString() +
+                " USDtz"}
+          </strong>
           <input
             type="number"
             placeholder="Amount in USDtz"

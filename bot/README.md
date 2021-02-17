@@ -1,12 +1,12 @@
 # TEZEX BOT
 
-TEZEX Bot instances are run by the market makers of the TEZEX platform.
+TEZEX Bot instances are run by the market makers of the TEZEX platform. Do read the [warning](#warning) section at the end before running the bot.
 
 ## Requirements
 
 1. Node 12.x
-2. Ethereum Account with USDC tokens and some eth
-3. Tezos Account with USDtz tokens and some xtz
+2. Ethereum Account with USDC tokens and sufficient eth
+3. Tezos Account with USDtz tokens and sufficient xtz
 
 ## Configuration
 
@@ -84,6 +84,15 @@ Are the above details correct? (y/n): y
 Initializing Bot...
 ```
 
-## WARNING
+# WARNING!
 
-If the bot fails to encrypt the user-config make sure to remove your sensitive data like private keys from that file.
+1. If the Bot fails to encrypt the user-config make sure to remove your sensitive data like private keys from that file.
+
+2. The Bots are secure and autonomous, but there are possible instances where running the bot with improper configuration can cause asset loss. Here are a few things that needs to be made sure before running the bot:
+
+   a. The bot needs to be always connected to the network and should not be closed while it is engaged in an active swap. In most cases the bot swaps can be refunded but in some the swap assets will be lost forever.
+
+   b. Make sure you have enough balance [eth and xtz] before starting the bot, this balance is needed to pay for tx fees. The bot checks your balance with a total estimated tx fee having a considerable margin, if it finds the current balance below the estimated fees it will show a warning. You can make a choice to run the bot or refill first and then start the bot. The estimated fees are in no way exact or accurate, the estimation is made on the maximum no. of swaps possible with the given volume of assets the bot is configured with.
+   If your balance drops below the tx fees at any point your bot will fail to operate which can also lead to asset loss in some cases!
+
+   c. Do not use the same accounts in more than **1 bot** at the same time. The bot accounts should not be used at all (manually or automatic) while the bot is running. It is advised to create separate dedicated accounts for the bot. Running the the same accounts on more than 1 bot or directly making txs with the accounts while the bot is active can cause tx failures and in turn asset loss.

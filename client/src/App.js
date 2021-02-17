@@ -9,6 +9,7 @@ import Swap from "./components/newSwap";
 import Ethereum from "./components/newSwap/ethereum/index.jsx";
 import Tezos from "./components/newSwap/tezos";
 import Setup from "./components/setup";
+import Stat from "./components/stats";
 import requestEth from "./library/common/request-eth";
 import requestTezos from "./library/common/request-tezos";
 import respondEth from "./library/common/respond-eth";
@@ -191,6 +192,9 @@ const App = () => {
             </Route>
             <Route exact path="/about">
               <About />
+            </Route>
+            <Route exact path="/stats">
+              <Stat />
             </Route>
           </Switch>
         )}

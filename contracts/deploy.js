@@ -19,8 +19,7 @@ const init = async () => {
     conseiljs.TezosMessageUtils.writeKeyWithHint(
       store.keyStore.secretKey,
       "edsk"
-    ),
-    -1
+    )
   );
   //   console.log(store.keyStore);
   conseiljs.registerFetch(fetch);
