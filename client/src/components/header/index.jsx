@@ -13,12 +13,13 @@ const Header = ({ ethStore, tezStore, balUpdate }) => {
     let tez = await tezStore.balance(tezStore.account);
     let usdc = await ethStore.tokenBalance(ethStore.account);
     let usdtz = await tezStore.tokenBalance(tezStore.account);
-    eth = eth / Math.pow(10, 18);
-    tez = tez / constants.decimals10_6;
-    usdc /= constants.decimals10_6;
-    usdtz /= constants.decimals10_6;
     balUpdate({ eth, tez, usdc, usdtz });
-    setBalance({ eth, tez, usdc, usdtz });
+    setBalance({
+      eth: eth / Math.pow(10, 18),
+      tez: tez / constants.decimals10_6,
+      usdc: usdc / constants.decimals10_6,
+      usdtz: usdtz / constants.decimals10_6,
+    });
   };
 
   useEffect(() => {

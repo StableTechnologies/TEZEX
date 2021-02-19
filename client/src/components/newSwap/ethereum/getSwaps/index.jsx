@@ -5,7 +5,7 @@ import { shorten } from "../../../../util";
 import Loader from "../../../loader";
 import useStyles from "../../style";
 import CreateSwap from "../createSwap";
-const GetSwap = ({ genSwap, tezStore, ethStore }) => {
+const GetSwap = ({ genSwap, tezStore, ethStore, balance }) => {
   const [swaps, setSwaps] = useState([]);
   const [loader, setLoader] = useState(true);
   const [feeDetails, setFee] = useState({});
@@ -104,6 +104,8 @@ const GetSwap = ({ genSwap, tezStore, ethStore }) => {
   let data = "No Swaps Found. Create One!";
   if (swaps.length > 0) data = swaps.map((swp) => SwapItem(swp));
   if (fullLoader) return <Loader message="..Creating Your Swap.." />;
+  if (feeDetails.stats === undefined)
+    return <Loader message="..Loading details.." />;
   return (
     <div className={classes.swapScreen}>
       <div className={classes.container}>
@@ -113,6 +115,7 @@ const GetSwap = ({ genSwap, tezStore, ethStore }) => {
           genSwap={genSwap}
           loader={setFullLoader}
           feeDetails={feeDetails}
+          balance={balance}
         />
       </div>
     </div>

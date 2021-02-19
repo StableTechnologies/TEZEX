@@ -44,12 +44,11 @@ const useStyles = makeStyles((theme) => ({
     marginBottom: "1vw",
   },
   valueInput: {
+    width: "100%",
     padding: "0.7vw",
-    margin: "1vw auto",
-    display: "block",
-    width: "17vw",
-    height: "1.4vw",
-    fontSize: "1vw",
+    boxSizing: "border-box",
+    lineHeight: "1",
+    margin: "0 auto",
   },
   swap: {
     color: "white",
@@ -110,6 +109,22 @@ const useStyles = makeStyles((theme) => ({
     maxHeight: "100%",
     display: "flex",
     flexDirection: "column",
+  },
+  swapValue: { position: "relative", width: "19vw", margin: "1vw auto" },
+  maxButton: {
+    border: "0.2vw black solid",
+    cursor: "pointer",
+    right: "0",
+    bottom: "0",
+    zIndex: "2",
+    position: "absolute",
+    padding: "0.54vw 0.4vw",
+    background: "black",
+    color: "white",
+    "&:hover": {
+      backgroundColor: "white",
+      color: "black",
+    },
   },
 }));
 
