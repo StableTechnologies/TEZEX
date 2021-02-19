@@ -24,7 +24,7 @@ const CreateSwap = ({ className, genSwap, loader, feeDetails, balance }) => {
       if (
         (feeDetails.stats !== undefined &&
           minValue > feeDetails.stats.maxUSDC) ||
-        minValue > balance.usdc
+        minValue > balance.usdtz
       ) {
         alert("Swap size exceeds current swap limit/balance!");
         return;
@@ -48,7 +48,7 @@ const CreateSwap = ({ className, genSwap, loader, feeDetails, balance }) => {
   };
   const getMaxValue = (set = false) => {
     let max = feeDetails.stats.maxUSDC;
-    if (balance.usdc < feeDetails.stats.maxUSDC) max = balance.usdc;
+    if (balance.usdtz < feeDetails.stats.maxUSDC) max = balance.usdtz;
     if (set) setInput((max / constants.decimals10_6).toString());
     return max;
   };
