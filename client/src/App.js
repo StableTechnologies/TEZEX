@@ -178,6 +178,7 @@ const App = () => {
                 genSwap={genSwap}
                 tezStore={tezRef.current}
                 ethStore={ethRef.current}
+                balance={balance}
               />
             </Route>
             <Route exact path="/create/xtz">
@@ -185,6 +186,7 @@ const App = () => {
                 genSwap={genSwap}
                 ethStore={ethRef.current}
                 tezStore={tezRef.current}
+                balance={balance}
               />
             </Route>
             <Route exact path="/create">

@@ -3,7 +3,7 @@ import { useHistory } from "react-router-dom";
 import { calcSwapReturn, constants } from "../../../../library/common/util";
 import useStyles from "../../style";
 
-const CreateSwap = ({ className, genSwap, loader, feeDetails }) => {
+const CreateSwap = ({ className, genSwap, loader, feeDetails, balance }) => {
   const [input, setInput] = useState(0);
   const history = useHistory();
   const classes = useStyles();
@@ -21,10 +21,11 @@ const CreateSwap = ({ className, genSwap, loader, feeDetails }) => {
       return;
     }
     if (
-      feeDetails.stats !== undefined &&
-      minValue > feeDetails.stats.maxUSDtz
+      (feeDetails.stats !== undefined &&
+        minValue > feeDetails.stats.maxUSDtz) ||
+      minValue > balance.usdtz
     ) {
-      alert("Swap size exceeds current swap limit!");
+      alert("Swap size exceeds current swap limit/balance!");
       return;
     }
     loader(true);
@@ -41,6 +42,13 @@ const CreateSwap = ({ className, genSwap, loader, feeDetails }) => {
     }
   };
 
+  const getMaxValue = (set = false) => {
+    let max = feeDetails.stats.maxUSDtz;
+    if (balance.usdtz < feeDetails.stats.maxUSDtz) max = balance.usdtz;
+    if (set) setInput((max / constants.decimals10_6).toString());
+    return max;
+  };
+
   return (
     <div className={className}>
       <div className={classes.createWrap}>
@@ -54,15 +62,27 @@ const CreateSwap = ({ className, genSwap, loader, feeDetails }) => {
                 ).toString() +
                 " USDC"}
           </strong>
-          <input
-            type="number"
-            placeholder="Amount in USDC"
-            name="eth"
-            step=".000001"
-            min="0"
-            onInput={(e) => setInput(e.target.value || 0)}
-            className={classes.valueInput}
-          />
+          <div className={classes.swapValue}>
+            <input
+              type="number"
+              placeholder="Amount in USDC"
+              name="eth"
+              step=".000001"
+              min="0"
+              max={getMaxValue() / constants.decimals10_6}
+              onInput={(e) => setInput(e.target.value || 0)}
+              className={classes.valueInput}
+              value={input === 0 ? "" : input}
+            />
+            <div
+              className={classes.maxButton}
+              onClick={() => {
+                getMaxValue(true);
+              }}
+            >
+              max
+            </div>
+          </div>
           <input className={classes.create} type="submit" value="CREATE" />
         </form>
         <p className={classes.expectedValue}>

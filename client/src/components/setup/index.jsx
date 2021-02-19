@@ -6,6 +6,7 @@ import DialogContentText from "@material-ui/core/DialogContentText";
 import DialogTitle from "@material-ui/core/DialogTitle";
 import React from "react";
 import logo from "../../tezexbridge.png";
+import MiniStat from "../min-stat";
 import useStyles from "./style";
 
 const Setup = ({ init }) => {
@@ -71,12 +72,15 @@ const Setup = ({ init }) => {
           </DialogActions>
         </Dialog>
         <img className={classes.logo} src={logo} alt="Logo" />
+        <MiniStat />
         <p>
           Truly Decentralized Cross-Chain Atomic Swaps for Ethereum and Tezos
         </p>
         <p>Network : Testnet [Goerli, Edonet] </p>
       </div>
-      <button onClick={setup}>Connect to Tezos and Ethereum Wallets</button>
+      <button className={classes.button} onClick={setup}>
+        Connect Your Wallets
+      </button>
     </div>
   );
 };
