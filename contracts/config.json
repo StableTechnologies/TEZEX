@@ -2,14 +2,14 @@
   "tezos": {
     "privateKey": "",
     "RPC": "https://tezos-edo.cryptonomic-infra.tech:443",
-    "chain_id": "NetXSp4gfdanies",
+    "chain_id": "NetXSgo1ZT2DRUG",
     "conseilServer": {
       "url": "https://conseil-edo.cryptonomic-infra.tech:443",
       "apiKey": "4bb2f288-c36a-49ea-a50e-e7cbdc495e0e",
       "network": "edonet"
     },
     "tokenContract": {
-      "address": "KT1Dcuu1rDkESpGF5J1xm5mPsmitSTr4rSSU"
+      "address": "KT1D7B76g6hEELcVHqTxs1Ac4rRa2caVziqR"
     }
   },
   "ethereum": {

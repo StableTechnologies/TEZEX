@@ -1,4 +1,4 @@
-import { DAppClient, NetworkType } from "@airgap/beacon-sdk";
+import { DAppClient } from "@airgap/beacon-sdk";
 import Web3 from "web3";
 import ERC20 from "../library/erc20";
 import FA12 from "../library/fa12";
@@ -36,7 +36,7 @@ export const setEthAccount = async () => {
 export const setTezAccount = async () => {
   const client = new DAppClient({ name: "TEZEX" });
   const resp = await client.requestPermissions({
-    network: { type: NetworkType.EDONET },
+    network: { type: "edo2net" },
   });
   const account = await client.getActiveAccount();
   return new FA12(

@@ -5,27 +5,27 @@
   },
   "tezos": {
     "RPC": "https://tezos-edo.cryptonomic-infra.tech:443",
-    "chain_id": "NetXSp4gfdanies",
+    "chain_id": "NetXSgo1ZT2DRUG",
     "conseilServer": {
       "url": "https://conseil-edo.cryptonomic-infra.tech:443",
       "apiKey": "4bb2f288-c36a-49ea-a50e-e7cbdc495e0e",
       "network": "edonet"
     },
     "tokenContract": {
-      "address": "KT1Dcuu1rDkESpGF5J1xm5mPsmitSTr4rSSU",
-      "mapID": 8495
+      "address": "KT1D7B76g6hEELcVHqTxs1Ac4rRa2caVziqR",
+      "mapID": 5599
     },
     "swapContract": {
-      "address": "KT1VJGCP91SaMWvfR1MonSzYwWGiaksZv4CB",
-      "mapID": 8497
+      "address": "KT1CDziBn5r91ymcF1aVkoaa695ZToG4L8TN",
+      "mapID": 5604
     },
     "feeContract": {
-      "address": "KT1RYQenyVrkBirovSCfki7CsiStp3E9R82J",
+      "address": "KT1RRsiQsTZSxsWdRdv6DCyRGiR8XfALRCdn",
       "mapID": ""
     },
     "priceOracle": {
-      "address": "KT19vJ8urPQJimLgenb8XuuHUwiMR13soZno",
-      "mapID": 8500
+      "address": "KT1RCNpUEDjZAYhabjzgz1ZfxQijCDVMEaTZ",
+      "mapID": 1542
     }
   },
   "ethereum": {
