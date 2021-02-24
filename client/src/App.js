@@ -1,3 +1,4 @@
+import { BigNumber } from "bignumber.js";
 import React, { useEffect, useRef, useState } from "react";
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import "./App.css";
@@ -16,7 +17,6 @@ import respondEth from "./library/common/respond-eth";
 import respondTezos from "./library/common/respond-tezos";
 import { constants } from "./library/common/util";
 import { setEthAccount, setTezAccount } from "./util";
-
 const App = () => {
   const [ethStore, ethSetup] = useState(undefined);
   const [tezStore, tezSetup] = useState(undefined);
@@ -56,7 +56,9 @@ const App = () => {
           swap[swp.hashedSecret] = {
             type: "eth",
             hashedSecret: swp.hashedSecret,
-            value: swp.value / constants.decimals10_6 + " USDC",
+            value:
+              new BigNumber(swp.value).div(constants.decimals10_6).toString() +
+              " USDC",
             minReturn: "nil",
             exact: "nil",
             refundTime: swp.refundTimestamp,
@@ -68,7 +70,9 @@ const App = () => {
           swap[swp.hashedSecret] = {
             type: "tez",
             hashedSecret: swp.hashedSecret,
-            value: swp.value / constants.decimals10_6 + " USDtz",
+            value:
+              new BigNumber(swp.value).div(constants.decimals10_6).toString() +
+              " USDtz",
             minReturn: "nil",
             exact: "nil",
             refundTime: swp.refundTimestamp,
@@ -143,9 +147,12 @@ const App = () => {
     }
     swap["value"] =
       symbol === " USDC"
-        ? swap["value"] / constants.decimals10_6 + " USDtz"
-        : swap["value"] / constants.decimals10_6 + " USDC";
-    swap["minReturn"] = minValue / constants.decimals10_6 + symbol;
+        ? new BigNumber(swap["value"]).div(constants.decimals10_6).toString() +
+          " USDtz"
+        : new BigNumber(swap["value"]).div(constants.decimals10_6).toString() +
+          " USDC";
+    swap["minReturn"] =
+      new BigNumber(minValue).div(constants.decimals10_6).toString() + symbol;
     newSwaps[swap.hashedSecret] = swap;
     updateSwaps(newSwaps);
     return true;

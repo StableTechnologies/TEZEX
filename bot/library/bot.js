@@ -7,6 +7,7 @@ const respondTezos = require("./common/respond-tezos");
 const { calcSwapReturn } = require("./common/util");
 const { constants } = require("./common/util");
 const fetch = require("node-fetch");
+const { BigNumber } = require("bignumber.js");
 
 module.exports = class Bot {
   constructor() {
@@ -17,7 +18,7 @@ module.exports = class Bot {
     this.usdtzLimit = 5; // max no. of concurrent usdtz swaps to undertake
     this.reward = 0; // reward for responding to user swaps, taken from tezos contract
     this.usdcTxFee = 0; // tx fee expected for a usdc swap
-    this.usdcTxFee = 0; // tx fee expected for a usdtz swap
+    this.usdtzTxFee = 0; // tx fee expected for a usdtz swap
   }
 
   /**
@@ -31,33 +32,33 @@ module.exports = class Bot {
     try {
       console.log("\nInitializing Bot...");
       this.volume = {
-        usdc: parseInt(volume.usdc),
-        usdtz: parseInt(volume.usdtz),
+        usdc: new BigNumber(volume.usdc),
+        usdtz: new BigNumber(volume.usdtz),
       };
       const web3 = new Web3(
         new Web3.providers.HttpProvider(config.ethereum.RPC)
       );
-      const swapContract = new web3.eth.Contract(
-        config.ethereum.abi,
-        config.ethereum.contractAddr
+      const usdcSwapContract = new web3.eth.Contract(
+        config.pairs["usdc/usdtz"].usdc.swapContract.abi,
+        config.pairs["usdc/usdtz"].usdc.swapContract.address
       );
-      const tokenContract = new web3.eth.Contract(
-        config.ethereum.tokenABI,
-        config.ethereum.tokenAddr
+      const usdcTokenContract = new web3.eth.Contract(
+        config.pairs["usdc/usdtz"].usdc.tokenContract.abi,
+        config.pairs["usdc/usdtz"].usdc.tokenContract.address
       );
       this.usdc = new ERC20(
         web3,
         ethConfig.walletPK,
         config.ethereum.chain,
-        swapContract,
-        tokenContract
+        usdcSwapContract,
+        usdcTokenContract
       );
       this.usdtz = new FA12(
         tezosConfig.walletPK,
-        config.tezos.swapContract,
+        config.pairs["usdc/usdtz"].usdtz.swapContract,
         config.tezos.priceOracle,
         config.tezos.feeContract,
-        config.tezos.tokenContract,
+        config.pairs["usdc/usdtz"].usdtz.tokenContract,
         config.tezos.chain_id,
         config.tezos.RPC,
         config.tezos.conseilServer
@@ -84,7 +85,9 @@ module.exports = class Bot {
         },
         tez: {
           account: this.usdtz.account,
-          balance: tezBalance / constants.decimals10_6,
+          balance: new BigNumber(tezBalance)
+            .div(constants.decimals10_6)
+            .toString(),
           usdtz: usdtzBalance,
         },
       };
@@ -106,10 +109,10 @@ module.exports = class Bot {
       this.usdc.tokenAllowance(this.usdc.account),
     ]);
     let ops = [];
-    if (allowances[0] != this.volume.usdtz)
-      ops.push(this.usdtz.approveToken(this.volume.usdtz));
-    if (allowances[1] != this.volume.usdc)
-      ops.push(this.usdc.approveToken(this.volume.usdc));
+    if (!new BigNumber(allowances[0]).eq(this.volume.usdtz))
+      ops.push(this.usdtz.approveToken(this.volume.usdtz.toString()));
+    if (!new BigNumber(allowances[1]).eq(this.volume.usdc))
+      ops.push(this.usdc.approveToken(this.volume.usdc.toString()));
     await Promise.all(ops);
     console.log("\n[!] BOT INITIALIZED");
     await this.monitorReward(true);
@@ -137,18 +140,18 @@ module.exports = class Bot {
         try {
           if (type === 2) {
             delete this.usdcSwaps[swap.hashedSecret];
-            this.volume.usdc += parseInt(swap.value);
+            this.volume.usdc = this.volume.usdc.plus(swap.value);
             const allowance = await this.usdc.tokenAllowance(this.usdc.account);
-            if (parseInt(allowance) != this.volume.usdc)
-              await this.usdc.approveToken(this.volume.usdc);
+            if (!new BigNumber(allowance).eq(this.volume.usdc))
+              await this.usdc.approveToken(this.volume.usdc.toString());
           } else {
             delete this.usdtzSwaps[swap.hashedSecret];
             this.volume.usdtz += parseInt(swap.value);
             const allowance = await this.usdtz.tokenAllowance(
               this.usdtz.account
             );
-            if (parseInt(allowance) != this.volume.usdtz)
-              await this.usdtz.approveToken(this.volume.usdtz);
+            if (!new BigNumber(allowance).eq(this.volume.usdtz))
+              await this.usdtz.approveToken(this.volume.usdtz.toString());
           }
         } catch (err) {
           console.error("[x] FAILED TO RE-APPROVE FUNDS");
@@ -210,7 +213,7 @@ module.exports = class Bot {
     const run = async () => {
       try {
         console.log("[*] CHECKING USDC SWAPS");
-        if (this.volume.usdtz === 0) return;
+        if (this.volume.usdtz.eq(0)) return;
         const waitingSwaps = await this.usdc.getWaitingSwaps(4200);
         for (const i in waitingSwaps) {
           const swp = waitingSwaps[i];
@@ -219,26 +222,26 @@ module.exports = class Bot {
           if (
             existingResponse === undefined &&
             this.usdtzSwaps[swp.hashedSecret] === undefined &&
-            swp.value > 0 &&
-            swp.value <= this.volume.usdtz
+            new BigNumber(swp.value).gt(0) &&
+            new BigNumber(swp.value).lte(this.volume.usdtz)
           ) {
             console.log("[!] FOUND : ", swp.hashedSecret);
-            let valueToPay = calcSwapReturn(swp.value, this.reward);
-            if (valueToPay < this.usdtzTxFee) {
+            let valueToPay = new BigNumber(
+              calcSwapReturn(swp.value, this.reward)
+            );
+            if (valueToPay.lt(this.usdtzTxFee)) {
               console.log("[x] SWAP NOT PROFITABLE : ", swp.hashedSecret);
               continue;
             }
-            valueToPay -= this.usdtzTxFee;
+            valueToPay = valueToPay.minus(this.usdtzTxFee);
             this.usdtzSwaps[swp.hashedSecret] = {
               state: 0,
-              value: valueToPay,
+              value: valueToPay.toString(),
               hashedSecret: swp.hashedSecret,
               refundTime: swp.refundTimestamp - 3600,
             };
-            console.log(this.usdtzSwaps, valueToPay);
-            this.volume.usdtz -= parseInt(
-              this.usdtzSwaps[swp.hashedSecret].value
-            );
+            console.log(this.usdtzSwaps, valueToPay.toString());
+            this.volume.usdtz = this.volume.usdtz.minus(valueToPay);
             respondEth(
               this.usdc,
               this.usdtz,
@@ -263,7 +266,7 @@ module.exports = class Bot {
     const run = async () => {
       try {
         console.log("[*] CHECKING USDtz SWAPS");
-        if (this.volume.usdc === 0) return;
+        if (this.volume.usdc.eq(0)) return;
         const waitingSwaps = await this.usdtz.getWaitingSwaps(4200);
         for (const i in waitingSwaps) {
           const swp = waitingSwaps[i];
@@ -273,26 +276,26 @@ module.exports = class Bot {
             existingResponse.initiator_tez_addr === "" &&
             existingResponse.refundTimestamp === "0" &&
             this.usdcSwaps[swp.hashedSecret] === undefined &&
-            swp.value > 0 &&
-            swp.value <= this.volume.usdc
+            new BigNumber(swp.value).gt(0) &&
+            new BigNumber(swp.value).lte(this.volume.usdc)
           ) {
             console.log("[!] FOUND : ", swp.hashedSecret);
-            let valueToPay = calcSwapReturn(swp.value, this.reward);
-            if (valueToPay < this.usdcTxFee) {
+            let valueToPay = new BigNumber(
+              calcSwapReturn(swp.value, this.reward)
+            );
+            if (valueToPay.lt(this.usdcTxFee)) {
               console.log("[x] SWAP NOT PROFITABLE : ", swp.hashedSecret);
               continue;
             }
-            valueToPay -= this.usdcTxFee;
+            valueToPay = valueToPay.minus(this.usdcTxFee);
             this.usdcSwaps[swp.hashedSecret] = {
               state: 0,
-              value: valueToPay,
+              value: valueToPay.toString(),
               hashedSecret: swp.hashedSecret,
               refundTime: swp.refundTimestamp - 3600,
             };
-            this.volume.usdc -= parseInt(
-              this.usdcSwaps[swp.hashedSecret].value
-            );
-            console.log(this.usdcSwaps, valueToPay);
+            this.volume.usdc = this.volume.usdc.minus(valueToPay);
+            console.log(this.usdcSwaps, valueToPay.toString());
             respondTezos(
               this.usdc,
               this.usdtz,
@@ -324,20 +327,30 @@ module.exports = class Bot {
         ]);
         const { usdtzFeeData, usdcFeeData, ethereumGasPrice, reward } = data[0];
         this.reward = reward;
-        this.usdtzTxFee = Math.ceil(
-          (((usdtzFeeData["initiateWait"] + usdtzFeeData["addCounterParty"]) *
-            data[2]) /
-            constants.decimals10_6 +
-            usdcFeeData["redeem"] * ethereumGasPrice * data[1]) *
-            constants.usdtzFeePad
-        );
-        this.usdcTxFee = Math.ceil(
-          ((usdcFeeData["initiateWait"] + usdcFeeData["addCounterParty"]) *
-            ethereumGasPrice *
-            data[1] +
-            (usdtzFeeData["redeem"] * data[2]) / constants.decimals10_6) *
-            constants.usdcFeePad
-        );
+        this.usdtzTxFee = new BigNumber(
+          usdtzFeeData["initiateWait"] + usdtzFeeData["addCounterParty"]
+        )
+          .multipliedBy(data[2])
+          .div(constants.decimals10_6)
+          .plus(
+            new BigNumber(usdcFeeData["redeem"])
+              .multipliedBy(ethereumGasPrice)
+              .multipliedBy(data[1])
+          )
+          .multipliedBy(constants.usdtzFeePad)
+          .toFixed(0, 2);
+        this.usdcTxFee = new BigNumber(
+          usdcFeeData["initiateWait"] + usdcFeeData["addCounterParty"]
+        )
+          .multipliedBy(ethereumGasPrice)
+          .multipliedBy(data[1])
+          .plus(
+            new BigNumber(usdtzFeeData["redeem"])
+              .multipliedBy(data[2])
+              .div(constants.decimals10_6)
+          )
+          .multipliedBy(constants.usdcFeePad)
+          .toFixed(0, 2);
       } catch (err) {
         console.error("[x] ERROR while updating reward: ", err);
       }
@@ -347,15 +360,17 @@ module.exports = class Bot {
           Object.keys(this.usdtzSwaps).length
         }\n  [!] SWAP REWARD RATE : ${
           this.reward
-        } BPS\n  [!] EXPECTED TX FEE REWARD :\n    - USDC SWAP : ${
-          this.usdcTxFee / constants.decimals10_6
-        } usdc\n    - USDtz SWAP : ${
-          this.usdtzTxFee / constants.decimals10_6
-        } usdtz\n  [!] REMAINING VOLUME :\n    - USDC : ${
-          this.volume.usdc / constants.decimals10_6
-        } usdc\n    - USDtz : ${
-          this.volume.usdtz / constants.decimals10_6
-        } usdtz\n\n`
+        } BPS\n  [!] EXPECTED TX FEE REWARD :\n    - USDC SWAP : ${new BigNumber(
+          this.usdcTxFee
+        )
+          .div(constants.decimals10_6)
+          .toString()} usdc\n    - USDtz SWAP : ${new BigNumber(this.usdtzTxFee)
+          .div(constants.decimals10_6)
+          .toString()} usdtz\n  [!] REMAINING VOLUME :\n    - USDC : ${this.volume.usdc
+          .div(constants.decimals10_6)
+          .toString()} usdc\n    - USDtz : ${this.volume.usdtz
+          .div(constants.decimals10_6)
+          .toString()} usdtz\n\n`
       );
       if (!runOnce) setTimeout(run, 60000);
     };
@@ -373,7 +388,7 @@ module.exports = class Bot {
     ]);
     const usdtzFeeData = data[0]["USDTZ"];
     const usdcFeeData = data[0]["USDC"];
-    const ethereumGasPrice = parseFloat(
+    const ethereumGasPrice = new BigNumber(
       this.usdc.web3.utils.fromWei(data[2], "ether")
     );
     return {

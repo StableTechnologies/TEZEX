@@ -13,12 +13,12 @@ module.exports = class Ethereum {
   static newClient() {
     const web3 = new Web3(new Web3.providers.HttpProvider(config.ethereum.RPC));
     const swapContract = new web3.eth.Contract(
-      config.ethereum.abi,
-      config.ethereum.contractAddr
+      config.pairs["usdc/usdtz"].usdc.swapContract.abi,
+      config.pairs["usdc/usdtz"].usdc.swapContract.address
     );
     const tokenContract = new web3.eth.Contract(
-      config.ethereum.tokenABI,
-      config.ethereum.tokenAddr
+      config.pairs["usdc/usdtz"].usdc.tokenContract.abi,
+      config.pairs["usdc/usdtz"].usdc.tokenContract.address
     );
     return new Ethereum(web3, swapContract, tokenContract);
   }

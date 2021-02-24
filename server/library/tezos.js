@@ -28,8 +28,8 @@ module.exports = class Tezos {
     registerLogger(logger);
     registerFetch(fetch);
     return new Tezos(
-      config.tezos.swapContract,
-      config.tezos.tokenContract,
+      config.pairs["usdc/usdtz"].usdtz.swapContract,
+      config.pairs["usdc/usdtz"].usdtz.tokenContract,
       config.tezos.chain_id,
       config.tezos.RPC,
       config.tezos.conseilServer

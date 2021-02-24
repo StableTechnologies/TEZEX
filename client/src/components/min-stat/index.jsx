@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { constants, updateBotStats } from "../../library/common/util";
+import {
+  convertBigIntToFloat,
+  updateBotStats,
+} from "../../library/common/util";
 import useStyles from "./style";
 const MiniStat = () => {
   const classes = useStyles();
@@ -26,9 +29,8 @@ const MiniStat = () => {
         <div className={classes.stat}>
           <div>
             <p>
-              Total Liquidity :{" "}
-              {(stats.totalUSDtz / constants.decimals10_6).toFixed(6)} USDtz /{" "}
-              {(stats.totalUSDC / constants.decimals10_6).toFixed(6)} USDC
+              Total Liquidity : {convertBigIntToFloat(stats.totalUSDtz, 6, 6)}{" "}
+              USDtz / {convertBigIntToFloat(stats.totalUSDC, 6, 6)} USDC
             </p>
           </div>
         </div>
