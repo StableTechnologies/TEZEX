@@ -1,3 +1,4 @@
+const { BigNumber } = require("bignumber.js");
 /**
  * Returns the minimum expected value by an initiator after deducting reward for swap responder
  *
@@ -5,10 +6,11 @@
  * @param rewardInBIPS reward taken by the swap responder in basis points
  */
 module.exports.calcSwapReturn = (swapValue, rewardInBIPS) => {
-  return Math.floor(
-    parseInt(swapValue) *
-      (1 - parseInt(rewardInBIPS) / this.constants.decimals10_6)
-  );
+  return new BigNumber(swapValue)
+    .multipliedBy(
+      new BigNumber(1).minus(new BigNumber(rewardInBIPS).div(10000))
+    )
+    .toFixed(0, 3);
 };
 
 /**
@@ -25,4 +27,16 @@ module.exports.constants = {
   usdtzFeePad: 1.5,
   minUSDCVolume: 50000000,
   minUSDtzVolume: 50000000,
+};
+
+/**
+ * Takes a whole no. with the original decimal count and required precision (rounded up)
+ * @param number BigNumber compatible value
+ * @param decimals original decimal count
+ * @param precision required decimal places
+ */
+module.exports.convertBigIntToFloat = (number, decimals, precision) => {
+  return new BigNumber(number)
+    .div(new BigNumber(10).pow(decimals))
+    .toFixed(precision);
 };

@@ -1,3 +1,4 @@
+import { BigNumber } from "bignumber.js";
 import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
 import { constants, updateBotStats } from "../../../../library/common/util";
@@ -35,22 +36,28 @@ const GetSwap = ({ genSwap, tezStore, ethStore, balance }) => {
     const reward = data[3];
     const usdtzFeeData = data[0]["USDTZ"];
     const usdcFeeData = data[0]["USDC"];
-    const ethereumGasPrice = parseFloat(
+    const ethereumGasPrice = new BigNumber(
       ethStore.web3.utils.fromWei(data[4], "ether")
     );
-    const botFee =
-      Math.ceil(
-        ((usdtzFeeData["initiateWait"] + usdtzFeeData["addCounterParty"]) *
-          data[2]) /
-          constants.decimals10_6 +
-          usdcFeeData["redeem"] * ethereumGasPrice * data[1]
-      ) * constants.usdtzFeePad;
+    const botFee = new BigNumber(
+      usdtzFeeData["initiateWait"] + usdtzFeeData["addCounterParty"]
+    )
+      .multipliedBy(data[2])
+      .div(constants.decimals10_6)
+      .plus(
+        new BigNumber(usdcFeeData["redeem"])
+          .multipliedBy(ethereumGasPrice)
+          .multipliedBy(data[1])
+      )
+      .multipliedBy(constants.usdtzFeePad)
+      .toFixed(0, 2);
     const txFee = {
-      eth: (
-        (usdcFeeData["initiateWait"] + usdcFeeData["addCounterParty"]) *
-        ethereumGasPrice
-      ).toFixed(6),
-      tez: usdtzFeeData["redeem"] / constants.decimals10_6,
+      eth: new BigNumber(
+        usdcFeeData["initiateWait"] + usdcFeeData["addCounterParty"]
+      )
+        .multipliedBy(ethereumGasPrice)
+        .toFixed(6),
+      tez: new BigNumber(usdtzFeeData["redeem"]).div(constants.decimals10_6),
     };
     setFee({
       reward,

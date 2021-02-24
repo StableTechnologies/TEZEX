@@ -1,6 +1,7 @@
+import bigInt from "big-integer";
 import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
-import { constants } from "../../library/common/util";
+import { convertBigIntToFloat } from "../../library/common/util";
 import logo from "../../tezexbridge.png";
 import { shorten, truncate } from "../../util";
 import useStyles from "./style";
@@ -9,16 +10,24 @@ const Header = ({ ethStore, tezStore, balUpdate }) => {
   const classes = useStyles();
   const history = useHistory();
   const updateBalance = async () => {
-    let eth = await ethStore.balance(ethStore.account);
-    let tez = await tezStore.balance(tezStore.account);
-    let usdc = await ethStore.tokenBalance(ethStore.account);
-    let usdtz = await tezStore.tokenBalance(tezStore.account);
+    let eth = await ethStore
+      .balance(ethStore.account)
+      .then((val) => bigInt(val));
+    let tez = await tezStore
+      .balance(tezStore.account)
+      .then((val) => bigInt(val));
+    let usdc = await ethStore
+      .tokenBalance(ethStore.account)
+      .then((val) => bigInt(val));
+    let usdtz = await tezStore
+      .tokenBalance(tezStore.account)
+      .then((val) => bigInt(val));
     balUpdate({ eth, tez, usdc, usdtz });
     setBalance({
-      eth: eth / Math.pow(10, 18),
-      tez: tez / constants.decimals10_6,
-      usdc: usdc / constants.decimals10_6,
-      usdtz: usdtz / constants.decimals10_6,
+      eth: convertBigIntToFloat(eth, 18, 6),
+      tez: convertBigIntToFloat(tez, 6, 6),
+      usdc: convertBigIntToFloat(usdc, 6, 6),
+      usdtz: convertBigIntToFloat(usdtz, 6, 6),
     });
   };
 

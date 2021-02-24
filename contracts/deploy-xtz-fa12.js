@@ -1,8 +1,8 @@
 const conseiljs = require("conseiljs");
 const config = require("./config.json");
 const ethConfig = require("./ethereum/build/contracts/TokenSwap.json");
-const tezConfig = require("./tezos/build/TokenSwap_compiled.json");
-const feeStore = require("./tezos/build/FeeStore_compiled.json");
+const fa12Config = require("./tezos/build/TokenSwap_compiled.json");
+const xtzConfig = require("./tezos/build/AtomicSwap_compiled.json");
 const log = require("loglevel");
 const conSign = require("conseiljs-softsigner");
 const fetch = require("node-fetch");
@@ -30,7 +30,7 @@ const init = async () => {
 
 const estimateFees = async (store, web3) => {
   try {
-    const tezosEstimate = await conseiljs.TezosNodeWriter.testContractDeployOperation(
+    const fa12Estimate = await conseiljs.TezosNodeWriter.testContractDeployOperation(
       config.tezos.RPC,
       config.tezos.chain_id,
       store.keyStore,
@@ -39,14 +39,14 @@ const estimateFees = async (store, web3) => {
       100000,
       10000,
       20000,
-      trim(tezConfig),
+      trim(fa12Config),
       conseiljs.TezosLanguageUtil.translateMichelsonToMicheline(
         `(Pair (Pair True "${store.keyStore.publicKeyHash}") (Pair "${config.tezos.tokenContract.address}" (Pair 15 {})))`
       ),
       conseiljs.TezosParameterFormat.Micheline
     );
 
-    const feeStoreEstimate = await conseiljs.TezosNodeWriter.testContractDeployOperation(
+    const xtzEstimate = await conseiljs.TezosNodeWriter.testContractDeployOperation(
       config.tezos.RPC,
       config.tezos.chain_id,
       store.keyStore,
@@ -55,31 +55,21 @@ const estimateFees = async (store, web3) => {
       100000,
       10000,
       20000,
-      trim(feeStore),
+      trim(xtzConfig),
       conseiljs.TezosLanguageUtil.translateMichelsonToMicheline(
-        `(Pair "${store.keyStore.publicKeyHash}" {})`
+        `(Pair True (Pair "${store.keyStore.publicKeyHash}" {}))`
       ),
       conseiljs.TezosParameterFormat.Micheline
     );
 
-    const ethContract = new web3.eth.Contract(ethConfig.abi);
-
-    const ethContractTx = ethContract.deploy({
-      data: ethConfig.bytecode,
-      arguments: [config.ethereum.tokenAddr],
-    });
-    const ethereumFees = (await ethContractTx.estimateGas()) * 2;
-    const gasPrice = await web3.eth.getGasPrice();
     console.log(
       `\nFee Estimates:\n\n- Tesoz Fee Required : ${
-        (tezosEstimate["estimatedFee"] +
-          tezosEstimate["estimatedStorageBurn"] +
-          feeStoreEstimate["estimatedFee"] +
-          feeStoreEstimate["estimatedStorageBurn"]) /
+        (xtzEstimate["estimatedFee"] +
+          xtzEstimate["estimatedStorageBurn"] +
+          fa12Estimate["estimatedFee"] +
+          fa12Estimate["estimatedStorageBurn"]) /
         1000000
-      } xtz\n- Ethereum Fee Required: ${web3.utils.fromWei(
-        (ethereumFees * gasPrice).toString()
-      )} eth`
+      }`
     );
   } catch (err) {
     console.log("[x] Failed to estimate deploy fees : ", err);
@@ -162,24 +152,18 @@ const deployEthereumContract = async (ethConfig, argument, web3) => {
 const deploy = async (store, web3) => {
   try {
     console.log("\nContract Addresses :");
-    const tezosSwapContract = await deployTezosContract(
-      tezConfig,
+    const fa12SwapContract = await deployTezosContract(
+      fa12Config,
       `(Pair (Pair True "${store.keyStore.publicKeyHash}") (Pair "${config.tezos.tokenContract.address}" (Pair 15 {})))`,
       store
     );
-    console.log(`- Tezos Swap contract at ${tezosSwapContract}`);
-    // const tezosFeeContract = await deployTezosContract(
-    //   feeStore,
-    //   `(Pair "${store.keyStore.publicKeyHash}" {})`,
-    //   store
-    // );
-    // console.log(`- Tezos Fee contract at ${tezosFeeContract}`);
-    // const ethereumSwapContract = await deployEthereumContract(
-    //   ethConfig,
-    //   [config.ethereum.tokenAddr],
-    //   web3
-    // );
-    // console.log(`- Ethereum Swap contract at ${ethereumSwapContract}`);
+    console.log(`- FA12 Swap contract at ${fa12SwapContract}`);
+    const xtzSwapContract = await deployTezosContract(
+      xtzConfig,
+      `(Pair True (Pair "${store.keyStore.publicKeyHash}" {}))`,
+      store
+    );
+    console.log(`- XTZ Swap contract at ${xtzSwapContract}`);
   } catch (err) {
     console.log("[x] Failed to deploy contracts : ", err);
   }

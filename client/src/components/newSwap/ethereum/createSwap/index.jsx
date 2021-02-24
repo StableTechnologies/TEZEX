@@ -1,8 +1,8 @@
+import { BigNumber } from "bignumber.js";
 import React, { useState } from "react";
 import { useHistory } from "react-router-dom";
 import { calcSwapReturn, constants } from "../../../../library/common/util";
 import useStyles from "../../style";
-
 const CreateSwap = ({ className, genSwap, loader, feeDetails, balance }) => {
   const [input, setInput] = useState(0);
   const history = useHistory();
@@ -11,19 +11,20 @@ const CreateSwap = ({ className, genSwap, loader, feeDetails, balance }) => {
   const generateSwap = async (e) => {
     e.preventDefault();
     if (e.target.eth.value === "" || e.target.eth.value === 0) return;
-    const minValue =
+    const minValue = new BigNumber(
       calcSwapReturn(
-        e.target.eth.value * constants.decimals10_6,
+        new BigNumber(e.target.eth.value).multipliedBy(constants.decimals10_6),
         feeDetails.reward
-      ) - feeDetails.botFee;
-    if (minValue <= 0) {
+      )
+    ).minus(feeDetails.botFee);
+    if (minValue.lte(0)) {
       alert("Minimum expected return in less than zero!");
       return;
     }
     if (
       (feeDetails.stats !== undefined &&
-        minValue > feeDetails.stats.maxUSDtz) ||
-      minValue > balance.usdc
+        minValue.gt(feeDetails.stats.maxUSDtz)) ||
+      minValue.gt(balance.usdc)
     ) {
       alert("Swap size exceeds current swap limit/balance!");
       return;
@@ -31,8 +32,10 @@ const CreateSwap = ({ className, genSwap, loader, feeDetails, balance }) => {
     loader(true);
     const res = await genSwap(
       1,
-      e.target.eth.value * constants.decimals10_6,
-      minValue
+      new BigNumber(e.target.eth.value)
+        .multipliedBy(constants.decimals10_6)
+        .toString(),
+      minValue.toString()
     );
     loader(false);
     if (!res) {
@@ -43,9 +46,10 @@ const CreateSwap = ({ className, genSwap, loader, feeDetails, balance }) => {
   };
 
   const getMaxValue = (set = false) => {
-    let max = feeDetails.stats.maxUSDtz;
-    if (balance.usdc < feeDetails.stats.maxUSDtz) max = balance.usdc;
-    if (set) setInput((max / constants.decimals10_6).toString());
+    let max = new BigNumber(feeDetails.stats.maxUSDtz);
+    if (new BigNumber(balance.usdc).lt(feeDetails.stats.maxUSDtz))
+      max = new BigNumber(balance.usdc);
+    if (set) setInput(max.div(constants.decimals10_6).toString());
     return max;
   };
 
@@ -57,9 +61,9 @@ const CreateSwap = ({ className, genSwap, loader, feeDetails, balance }) => {
             {feeDetails.stats === undefined
               ? msg + "Couldn't connect to server"
               : msg +
-                (
-                  feeDetails.stats.maxUSDtz / constants.decimals10_6
-                ).toString() +
+                new BigNumber(feeDetails.stats.maxUSDtz)
+                  .div(constants.decimals10_6)
+                  .toString() +
                 " USDC"}
           </strong>
           <div className={classes.swapValue}>
@@ -69,7 +73,7 @@ const CreateSwap = ({ className, genSwap, loader, feeDetails, balance }) => {
               name="eth"
               step=".000001"
               min="0"
-              max={getMaxValue() / constants.decimals10_6}
+              max={getMaxValue().div(constants.decimals10_6).toString()}
               onInput={(e) => setInput(e.target.value || 0)}
               className={classes.valueInput}
               value={input === 0 ? "" : input}
@@ -89,30 +93,40 @@ const CreateSwap = ({ className, genSwap, loader, feeDetails, balance }) => {
           Min Expected Value :{" "}
           {input === 0
             ? 0
-            : (calcSwapReturn(
-                input * constants.decimals10_6,
-                feeDetails.reward
-              ) -
-                feeDetails.botFee) /
-              constants.decimals10_6}{" "}
+            : new BigNumber(
+                calcSwapReturn(
+                  new BigNumber(input).multipliedBy(constants.decimals10_6),
+                  feeDetails.reward
+                )
+              )
+                .minus(feeDetails.botFee)
+                .div(constants.decimals10_6)
+                .toString()}{" "}
           USDtz
         </p>
         <p className={classes.expectedValue}>
           Max Network Fee :{" "}
-          {input === 0 ? 0 : feeDetails.botFee / constants.decimals10_6} USDtz
+          {input === 0
+            ? 0
+            : new BigNumber(feeDetails.botFee)
+                .div(constants.decimals10_6)
+                .toString()}{" "}
+          USDtz
         </p>
         <p className={classes.expectedValue}>
           Swap Fee :{" "}
           {input === 0
             ? 0
-            : (
-                input -
-                calcSwapReturn(
-                  input * constants.decimals10_6,
-                  feeDetails.reward
-                ) /
-                  constants.decimals10_6
-              ).toFixed(6)}{" "}
+            : new BigNumber(input)
+                .minus(
+                  new BigNumber(
+                    calcSwapReturn(
+                      new BigNumber(input).multipliedBy(constants.decimals10_6),
+                      feeDetails.reward
+                    )
+                  ).div(constants.decimals10_6)
+                )
+                .toFixed(6)}{" "}
           USDtz
         </p>
       </div>

@@ -6,7 +6,7 @@ const {
 } = require("./library/encryption");
 const userConfig = require("./user-config.json");
 const { constants } = require("./library/common/util");
-
+const { BigNumber } = require("bignumber.js");
 const init = () => {
   let config = {};
   try {
@@ -60,17 +60,25 @@ const init = () => {
       console.log(
         `\nPlease Confirm Details:\n\n- Etherum Details:\n--- Account: ${
           data.eth.account
-        }\n--- Eth Balance: ${data.eth.balance} eth\n--- USDC Balance: ${
-          data.eth.usdc / constants.decimals10_6
-        } usdc\n--- Bot trade Volume: ${
-          config.maxVolume.usdc / constants.decimals10_6
-        } usdc\n\n- Tezos Details:\n--- Account: ${
+        }\n--- Eth Balance: ${
+          data.eth.balance
+        } eth\n--- USDC Balance: ${new BigNumber(data.eth.usdc)
+          .div(constants.decimals10_6)
+          .toString()} usdc\n--- Bot trade Volume: ${new BigNumber(
+          config.maxVolume.usdc
+        )
+          .div(constants.decimals10_6)
+          .toString()} usdc\n\n- Tezos Details:\n--- Account: ${
           data.tez.account
-        }\n--- Tez Balance: ${data.tez.balance} xtz\n--- USDtz Balance: ${
-          data.tez.usdtz / constants.decimals10_6
-        } usdtz\n--- Bot trade Volume: ${
-          config.maxVolume.usdtz / constants.decimals10_6
-        } usdtz\n`
+        }\n--- Tez Balance: ${
+          data.tez.balance
+        } xtz\n--- USDtz Balance: ${new BigNumber(data.tez.usdtz)
+          .div(constants.decimals10_6)
+          .toString()} usdtz\n--- Bot trade Volume: ${new BigNumber(
+          config.maxVolume.usdtz
+        )
+          .div(constants.decimals10_6)
+          .toString()} usdtz\n`
       );
       validateBalance(data, config);
       bot.start();
@@ -79,42 +87,56 @@ const init = () => {
 };
 
 const validateBalance = (data, config) => {
-  if (data.eth.usdc < config.maxVolume.usdc) {
+  if (new BigNumber(data.eth.usdc).lt(config.maxVolume.usdc)) {
     throw new Error(
       `Not enough USDC balance ${data.eth.usdc}<${config.maxVolume.usdc}\n`
     );
   }
-  if (data.tez.usdtz < config.maxVolume.usdtz) {
+  if (new BigNumber(data.tez.usdtz).lt(config.maxVolume.usdtz)) {
     throw new Error(
       `Not enough USDtz balance ${data.tez.usdtz}<${config.maxVolume.usdtz}\n`
     );
   }
-  const usdcSwapsCount = config.maxVolume.usdc / constants.minUSDCVolume;
-  const usdtzSwapsCount = config.maxVolume.usdtz / constants.minUSDCVolume;
-  const minTezFee = (
-    ((data.fee.usdtzFeeData["initiateWait"] +
-      data.fee.usdtzFeeData["addCounterParty"]) /
-      constants.decimals10_6) *
-      constants.usdtzFeePad *
-      usdtzSwapsCount +
-    (data.fee.usdtzFeeData["redeem"] / constants.decimals10_6) *
-      constants.usdcFeePad *
-      usdcSwapsCount
-  ).toFixed(6);
-  const minEthFee = (
-    data.fee.usdcFeeData["redeem"] *
-      data.fee.ethereumGasPrice *
-      constants.usdtzFeePad *
-      usdtzSwapsCount +
-    (data.fee.usdcFeeData["initiateWait"] +
-      data.fee.usdcFeeData["addCounterParty"]) *
-      data.fee.ethereumGasPrice *
-      constants.usdcFeePad *
-      usdcSwapsCount
-  ).toFixed(6);
+  const usdcSwapsCount = new BigNumber(config.maxVolume.usdc).div(
+    constants.minUSDCVolume
+  );
+  const usdtzSwapsCount = new BigNumber(config.maxVolume.usdtz).div(
+    constants.minUSDtzVolume
+  );
+  const minTezFee = new BigNumber(
+    data.fee.usdtzFeeData["initiateWait"] +
+      data.fee.usdtzFeeData["addCounterParty"]
+  )
+    .div(constants.decimals10_6)
+    .multipliedBy(constants.usdtzFeePad)
+    .multipliedBy(usdtzSwapsCount)
+    .plus(
+      new BigNumber(data.fee.usdtzFeeData["redeem"])
+        .div(constants.decimals10_6)
+        .multipliedBy(constants.usdcFeePad)
+        .multipliedBy(usdcSwapsCount)
+    )
+    .toFixed(6);
+  const minEthFee = new BigNumber(data.fee.usdcFeeData["redeem"])
+    .multipliedBy(data.fee.ethereumGasPrice)
+    .multipliedBy(constants.usdtzFeePad)
+    .multipliedBy(usdtzSwapsCount)
+    .plus(
+      new BigNumber(
+        data.fee.usdcFeeData["initiateWait"] +
+          data.fee.usdcFeeData["addCounterParty"]
+      )
+        .multipliedBy(data.fee.ethereumGasPrice)
+        .multipliedBy(constants.usdcFeePad)
+        .multipliedBy(usdcSwapsCount)
+    )
+    .toFixed(6);
 
   let question = "Are the above details correct? (y/n): ";
-  if (data.tez.balance < minTezFee || data.eth.balance < minEthFee)
+  if (
+    new BigNumber(data.tez.balance).lt(minTezFee) ||
+    new BigNumber(data.eth.balance).lt(minEthFee)
+  )
     question = `\n[x] The estimated amount of balance required is :\n   [*] Ethereum : ${minEthFee} eth\n   [*] Tezos : ${minTezFee} xtz\n\n[!] If your balance drops below the tx fees at any point your bot will fail to operate\n[*] These balances are estimated values with a considerable safety margins\n\nDo you want to continue with current settings? (y/n)`;
   const answer = readlineSync.question(question);
 
