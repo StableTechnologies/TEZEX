@@ -30,8 +30,14 @@ tezex@bot:~/TEZEX/bot$ npm i
     "walletPK": ""
   },
   "maxVolume": {
-    "usdc": 300,
-    "usdtz": 300
+    "usdc/usdtz": {
+      "usdc": 300,
+      "usdtz": 300
+    },
+    "eth/ethtz": {
+      "eth": 0.1,
+      "ethtz": 0.1
+    }
   }
 }
 ```

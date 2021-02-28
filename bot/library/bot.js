@@ -1,24 +1,21 @@
-const ERC20 = require("./erc20");
 const config = require("./network-config.json");
-const FA12 = require("./fa12");
-const respondEth = require("./common/respond-eth");
 const Web3 = require("web3");
-const respondTezos = require("./common/respond-tezos");
-const { calcSwapReturn } = require("./common/util");
-const { constants } = require("./common/util");
+const respondToSwap = require("./respond-to-swap");
+const { calcSwapReturn, getAssets, getCounterPair } = require("./util");
+const { constants } = require("./util");
 const fetch = require("node-fetch");
 const { BigNumber } = require("bignumber.js");
+const { Mutex } = require("async-mutex");
+const Ethereum = require("./ethereum");
+const Tezos = require("./tezos");
 
 module.exports = class Bot {
   constructor() {
-    this.usdcSwaps = {}; // list of all usdc swaps being handled
-    this.usdtzSwaps = {}; // list of all usdtz swaps being handled
-    this.volume = {}; // max volume of token to be traded {usdc:nat, usdtz:nat}
-    this.usdcLimit = 5; // max no. of concurrent usdc swaps to undertake
-    this.usdtzLimit = 5; // max no. of concurrent usdtz swaps to undertake
     this.reward = 0; // reward for responding to user swaps, taken from tezos contract
-    this.usdcTxFee = 0; // tx fee expected for a usdc swap
-    this.usdtzTxFee = 0; // tx fee expected for a usdtz swap
+    this.maxEthSwaps = 5; // max swaps than can be ran in parallel on eth network
+    this.maxTezSwaps = 5; // max swaps than can be ran in parallel on tezos network
+    this.swapPairs = {}; // arranged pair wise (eg. "usdc/usdtz") and contains contract details, fee details and volume stats for the swap pair
+    this.swaps = {}; // list of all swaps from any pair, each swap besides it's common attributes will have a `pair` and a `side` param to identify which pair and side the swap belongs to
   }
 
   /**
@@ -31,95 +28,177 @@ module.exports = class Bot {
   async init(ethConfig, tezosConfig, volume) {
     try {
       console.log("\nInitializing Bot...");
-      this.volume = {
-        usdc: new BigNumber(volume.usdc),
-        usdtz: new BigNumber(volume.usdtz),
-      };
+      const ethMutex = new Mutex();
+      const tezMutex = new Mutex();
+      const pairs = Object.keys(config.pairs);
       const web3 = new Web3(
         new Web3.providers.HttpProvider(config.ethereum.RPC)
       );
-      const usdcSwapContract = new web3.eth.Contract(
-        config.pairs["usdc/usdtz"].usdc.swapContract.abi,
-        config.pairs["usdc/usdtz"].usdc.swapContract.address
-      );
-      const usdcTokenContract = new web3.eth.Contract(
-        config.pairs["usdc/usdtz"].usdc.tokenContract.abi,
-        config.pairs["usdc/usdtz"].usdc.tokenContract.address
-      );
-      this.usdc = new ERC20(
-        web3,
-        ethConfig.walletPK,
-        config.ethereum.chain,
-        usdcSwapContract,
-        usdcTokenContract
-      );
-      this.usdtz = new FA12(
-        tezosConfig.walletPK,
-        config.pairs["usdc/usdtz"].usdtz.swapContract,
-        config.tezos.priceOracle,
-        config.tezos.feeContract,
-        config.pairs["usdc/usdtz"].usdtz.tokenContract,
-        config.tezos.chain_id,
-        config.tezos.RPC,
-        config.tezos.conseilServer
-      );
-      await this.usdtz.initConseil();
-      const [
-        ethBalance,
-        usdcBalance,
-        tezBalance,
-        usdtzBalance,
-      ] = await Promise.all([
-        this.usdc.balance(this.usdc.account),
-        this.usdc.tokenBalance(this.usdc.account),
-        this.usdtz.balance(this.usdtz.account),
-        this.usdtz.tokenBalance(this.usdtz.account),
-      ]);
-      const fee = await this.getBotFees();
-      return {
-        fee,
+      let balanceRequirements = {
         eth: {
-          account: this.usdc.account,
-          balance: this.usdc.web3.utils.fromWei(ethBalance),
-          usdc: usdcBalance,
+          network: "ethereum",
+          symbol: "ETH",
+          decimals: 18,
+          contract: undefined,
+          need: new BigNumber(0),
         },
-        tez: {
-          account: this.usdtz.account,
-          balance: new BigNumber(tezBalance)
-            .div(constants.decimals10_6)
-            .toString(),
-          usdtz: usdtzBalance,
+        xtz: {
+          network: "tezos",
+          symbol: "XTZ",
+          decimals: 6,
+          contract: undefined,
+          need: new BigNumber(0),
         },
       };
+      pairs.forEach((pair) => {
+        const assets = getAssets(pair);
+        if (Object.prototype.hasOwnProperty.call(volume, pair))
+          for (const asset of assets) {
+            let swapContract = config.pairs[pair][asset].swapContract,
+              tokenContract = config.pairs[pair][asset].tokenContract;
+            if (config.pairs[pair][asset].network === "ethereum") {
+              swapContract = new web3.eth.Contract(
+                config.pairs[pair][asset].swapContract.abi,
+                config.pairs[pair][asset].swapContract.address
+              );
+              tokenContract =
+                asset !== "eth"
+                  ? new web3.eth.Contract(
+                      config.pairs[pair][asset].tokenContract.abi,
+                      config.pairs[pair][asset].tokenContract.address
+                    )
+                  : undefined;
+            }
+            volume[pair][asset] = new BigNumber(
+              new BigNumber(volume[pair][asset])
+                .multipliedBy(10 ** config.pairs[pair][asset].decimals)
+                .toFixed(0, 3)
+            );
+            if (
+              !Object.prototype.hasOwnProperty.call(balanceRequirements, asset)
+            )
+              balanceRequirements[asset] = {
+                symbol: config.pairs[pair][asset].symbol,
+                decimals: config.pairs[pair][asset].decimals,
+                network: config.pairs[pair][asset].network,
+                contract: tokenContract,
+                need: volume[pair][asset],
+              };
+            else
+              balanceRequirements[asset].need = balanceRequirements[
+                asset
+              ].need.plus(volume[pair][asset]);
+            this.swapPairs[pair] = {
+              ...this.swapPairs[pair],
+              [asset]: {
+                network: config.pairs[pair][asset].network,
+                swapContract: swapContract,
+                tokenContract: tokenContract,
+                remainingVolume: volume[pair][asset],
+                decimals: config.pairs[pair][asset].decimals,
+                symbol: config.pairs[pair][asset].symbol,
+              },
+            };
+          }
+      });
+      this.clients = {
+        ethereum: new Ethereum(
+          web3,
+          ethConfig.walletPK,
+          config.ethereum.chain,
+          ethMutex
+        ),
+        tezos: new Tezos(
+          tezosConfig.walletPK,
+          config.tezos.priceOracle,
+          config.tezos.feeContract,
+          config.tezos.chain_id,
+          config.tezos.RPC,
+          config.tezos.conseilServer,
+          tezMutex
+        ),
+      };
+      await this.clients["tezos"].initConseil();
+      const data = await Promise.all([
+        this.getBalances(balanceRequirements),
+        this.getWorstCaseNetworkFees(),
+      ]);
+      return {
+        ethAccount: this.clients["ethereum"].account,
+        tezosAccount: this.clients["tezos"].account,
+        balanceRequirements: data[0],
+        networkFees: data[1],
+      };
     } catch (err) {
-      console.error("Bot Init failed | ", err);
+      console.error("Bot Init failed | \n" + err);
       throw err;
     }
   }
 
   /**
-   * Starts the bot and launches concurrent threads for monitoring swaps on both
+   * Starts the bot and launches concurrent threads[*] for monitoring swaps on both
    * ethereum and tezos networks as well as threads for refunding swaps and
    * updating reward
    */
   async start() {
     console.log("\n\n[!] INITIALIZING BOT! PLEASE WAIT...\n");
-    const allowances = await Promise.all([
-      this.usdtz.tokenAllowance(this.usdtz.account),
-      this.usdc.tokenAllowance(this.usdc.account),
-    ]);
-    let ops = [];
-    if (!new BigNumber(allowances[0]).eq(this.volume.usdtz))
-      ops.push(this.usdtz.approveToken(this.volume.usdtz.toString()));
-    if (!new BigNumber(allowances[1]).eq(this.volume.usdc))
-      ops.push(this.usdc.approveToken(this.volume.usdc.toString()));
-    await Promise.all(ops);
+    let allowanceCheck = [];
+    const pairs = Object.keys(this.swapPairs);
+    for (const pair of pairs) {
+      const assets = pair.split("/");
+      for (const asset of assets) {
+        const network = this.swapPairs[pair][asset].network;
+        if (asset !== "eth" && asset !== "xtz")
+          allowanceCheck.push(
+            this.clients[network].tokenAllowance(
+              this.swapPairs[pair][asset].tokenContract,
+              this.swapPairs[pair][asset].swapContract,
+              this.clients[network].account
+            )
+          );
+      }
+    }
+    const allowances = await Promise.all(allowanceCheck);
+    let approveOps = [],
+      i = 0;
+    for (const pair of pairs) {
+      const assets = pair.split("/");
+      for (const asset of assets) {
+        const network = this.swapPairs[pair][asset].network;
+        if (asset !== "eth" && asset !== "xtz") {
+          if (
+            !new BigNumber(allowances[i]).eq(
+              this.swapPairs[pair][asset].remainingVolume
+            )
+          ) {
+            console.log(
+              `Mismatch for ${asset} : ${allowances[i]} ${this.swapPairs[pair][
+                asset
+              ].remainingVolume.toString()}`
+            );
+            approveOps.push(
+              this.clients[network].approveToken(
+                this.swapPairs[pair][asset].tokenContract,
+                this.swapPairs[pair][asset].swapContract,
+                this.swapPairs[pair][asset].remainingVolume.toString()
+              )
+            );
+          }
+          i++;
+        }
+      }
+    }
+    await Promise.all(approveOps);
     console.log("\n[!] BOT INITIALIZED");
     await this.monitorReward(true);
     this.liveUpdate();
     this.monitorReward();
-    this.monitorUSDC();
-    this.monitorUSDtz();
+    for (const pair of pairs) {
+      const assets = pair.split("/");
+      for (const asset of assets) {
+        this.monitorSwaps(pair, asset);
+      }
+    }
     this.monitorRefunds();
   }
 
@@ -129,38 +208,37 @@ module.exports = class Bot {
    * @param type specifies whether it is a ethereum(2) or tezos(1) swap
    * @param swap the swap object
    */
-  async updateSwap(type, swap) {
+  async updateSwap(swap) {
     switch (swap.state) {
       case 0: {
-        if (type === 2) delete this.usdcSwaps[swap.hashedSecret];
-        else delete this.usdtzSwaps[swap.hashedSecret];
+        delete this.swaps[swap.hashedSecret];
         break;
       }
       case 3: {
         try {
-          if (type === 2) {
-            delete this.usdcSwaps[swap.hashedSecret];
-            this.volume.usdc = this.volume.usdc.plus(swap.value);
-            const allowance = await this.usdc.tokenAllowance(this.usdc.account);
-            if (!new BigNumber(allowance).eq(this.volume.usdc))
-              await this.usdc.approveToken(this.volume.usdc.toString());
-          } else {
-            delete this.usdtzSwaps[swap.hashedSecret];
-            this.volume.usdtz += parseInt(swap.value);
-            const allowance = await this.usdtz.tokenAllowance(
-              this.usdtz.account
+          delete this.swaps[swap.hashedSecret];
+          const tempVal = this.swapPairs[swap.pair][
+            swap.asset
+          ].remainingVolume.plus(swap.value);
+          const allowance = await this.clients[swap.network].tokenAllowance(
+            this.swapPairs[swap.pair][swap.asset].tokenContract,
+            this.swapPairs[swap.pair][swap.asset].swapContract,
+            this.clients[swap.network].account
+          );
+          if (!new BigNumber(allowance).eq(tempVal))
+            await this.clients[swap.network].approveToken(
+              this.swapPairs[swap.pair][swap.asset].tokenContract,
+              this.swapPairs[swap.pair][swap.asset].swapContract,
+              tempVal.toString()
             );
-            if (!new BigNumber(allowance).eq(this.volume.usdtz))
-              await this.usdtz.approveToken(this.volume.usdtz.toString());
-          }
+          this.swapPairs[swap.pair][swap.asset].remainingVolume = tempVal;
         } catch (err) {
-          console.error("[x] FAILED TO RE-APPROVE FUNDS");
+          console.error("[x] FAILED TO RE-APPROVE FUNDS" + "\n" + err);
         }
         break;
       }
       default: {
-        if (type === 2) this.usdcSwaps[swap.hashedSecret] = swap;
-        else this.usdtzSwaps[swap.hashedSecret] = swap;
+        this.swaps[swap.hashedSecret] = swap;
       }
     }
   }
@@ -171,33 +249,27 @@ module.exports = class Bot {
   monitorRefunds() {
     const run = async () => {
       console.log("[*] CHECKING REFUNDABLE SWAPS");
-      for (const key in this.usdcSwaps) {
+      const keys = Object.keys(this.swaps);
+      for (const key of keys) {
         if (
-          this.usdcSwaps[key].state === 4 &&
-          this.usdcSwaps[key].refundTime <= Date.now() / 1000
+          this.swaps[key].state === 4 &&
+          this.swaps[key].refundTime <= Date.now() / 1000
         ) {
           try {
-            await this.usdc.refund(key);
-            this.usdcSwaps[key].state = 3;
-            await this.updateSwap(2, this.usdcSwaps[key]);
-            console.log("[!] REFUNDED SWAP(USDC): ", key);
+            console.log(`[!] REFUNDING SWAP(${this.swaps[key].asset}): ${key}`);
+            await this.clients[this.swaps[key].network].refund(
+              this.swapPairs[this.swaps[key].pair][this.swaps[key].asset]
+                .swapContract,
+              key
+            );
+            this.swaps[key].state = 3;
+            await this.updateSwap(this.swaps[key]);
+            console.log(`[!] REFUNDED SWAP(${this.swaps[key].asset}): ${key}`);
           } catch (err) {
-            console.error("[x] FAILED TO REFUND SWAP(USDC): ", key);
-          }
-        }
-      }
-      for (const key in this.usdtzSwaps) {
-        if (
-          this.usdtzSwaps[key].state === 4 &&
-          this.usdtzSwaps[key].refundTime <= Date.now() / 1000
-        ) {
-          try {
-            await this.usdtz.refund(key);
-            this.usdtzSwaps[key].state = 3;
-            await this.updateSwap(1, this.usdtzSwaps[key]);
-            console.log("[!] REFUNDED SWAP(USDtz): ", key);
-          } catch (err) {
-            console.error("[x] FAILED TO REFUND SWAP(USDtz): ", key);
+            console.error(
+              `[x] FAILED TO REFUND SWAP(${this.swaps[key].asset}): ${key}\n` +
+                err
+            );
           }
         }
       }
@@ -207,106 +279,86 @@ module.exports = class Bot {
   }
 
   /**
-   * Monitors swaps on the usdc/ethereum network and responds to suitable swaps
+   * Monitors swap requests and responds to suitable swaps for the particular pair & asset combo
+   *
+   * @param pair valid swap pair eg. "usdc/usdtz"
+   * @param counterAsset valid asset from the swap pair eg. usdc from "usdc/usdtz" pair, which wil be monitored
    */
-  monitorUSDC() {
+  monitorSwaps(pair, counterAsset) {
+    const counterNetwork = this.swapPairs[pair][counterAsset].network;
+    const network = counterNetwork === "ethereum" ? "tezos" : "ethereum";
+    const asset = getCounterPair(pair, counterAsset);
     const run = async () => {
       try {
-        console.log("[*] CHECKING USDC SWAPS");
-        if (this.volume.usdtz.eq(0)) return;
-        const waitingSwaps = await this.usdc.getWaitingSwaps(4200);
-        for (const i in waitingSwaps) {
+        if (this.swapPairs[pair][asset].remainingVolume.eq(0)) return;
+        console.log(
+          `[*] CHECKING ${this.swapPairs[pair][counterAsset].symbol} SWAPS`
+        );
+        const waitingSwaps = await this.clients[counterNetwork].getWaitingSwaps(
+          this.swapPairs[pair][counterAsset].swapContract,
+          4200
+        );
+        const keys = Object.keys(waitingSwaps);
+        for (const i of keys) {
           const swp = waitingSwaps[i];
-          if (Object.keys(this.usdtzSwaps).length >= this.usdcLimit) break;
-          const existingResponse = await this.usdtz.getSwap(swp.hashedSecret);
+          if (!this.swapPossible(network)) break;
+          const existingResponse = await this.clients[network].getSwap(
+            this.swapPairs[pair][asset].swapContract,
+            swp.hashedSecret
+          );
           if (
-            existingResponse === undefined &&
-            this.usdtzSwaps[swp.hashedSecret] === undefined &&
+            ((network === "tezos" && existingResponse === undefined) ||
+              (network === "ethereum" &&
+                existingResponse.initiator_tez_addr === "" &&
+                existingResponse.refundTimestamp === "0")) &&
+            this.swaps[swp.hashedSecret] === undefined &&
             new BigNumber(swp.value).gt(0) &&
-            new BigNumber(swp.value).lte(this.volume.usdtz)
+            new BigNumber(swp.value).lte(
+              this.swapPairs[pair][asset].remainingVolume
+            )
           ) {
-            console.log("[!] FOUND : ", swp.hashedSecret);
+            console.log(
+              `[!] FOUND ${this.swapPairs[pair][counterAsset].symbol} SWAP: `,
+              swp.hashedSecret
+            );
             let valueToPay = new BigNumber(
               calcSwapReturn(swp.value, this.reward)
             );
-            if (valueToPay.lt(this.usdtzTxFee)) {
+            valueToPay = this.assetConverter[pair][asset](valueToPay);
+            if (valueToPay.lt(this.swapPairs[pair][asset].networkFee)) {
               console.log("[x] SWAP NOT PROFITABLE : ", swp.hashedSecret);
               continue;
             }
-            valueToPay = valueToPay.minus(this.usdtzTxFee);
-            this.usdtzSwaps[swp.hashedSecret] = {
+            valueToPay = valueToPay.minus(
+              this.swapPairs[pair][asset].networkFee
+            );
+            this.swaps[swp.hashedSecret] = {
               state: 0,
               value: valueToPay.toString(),
               hashedSecret: swp.hashedSecret,
               refundTime: swp.refundTimestamp - 3600,
+              network: network,
+              pair: pair,
+              asset: asset,
             };
-            console.log(this.usdtzSwaps, valueToPay.toString());
-            this.volume.usdtz = this.volume.usdtz.minus(valueToPay);
-            respondEth(
-              this.usdc,
-              this.usdtz,
-              this.usdtzSwaps[swp.hashedSecret],
+            console.log(this.swaps, valueToPay.toString());
+            this.swapPairs[pair][asset].remainingVolume = this.swapPairs[pair][
+              asset
+            ].remainingVolume.minus(valueToPay);
+            respondToSwap(
+              this.swaps[swp.hashedSecret],
+              counterNetwork,
+              counterAsset,
               this,
               0
             );
           }
         }
       } catch (err) {
-        console.error("[x] FAILED TO MONITOR USDC SWAPS | ", err);
-      }
-      setTimeout(run, 120000);
-    };
-    setTimeout(run, 0);
-  }
-
-  /**
-   * Monitors swaps on the usdtz/tezos network and responds to suitable swaps
-   */
-  monitorUSDtz() {
-    const run = async () => {
-      try {
-        console.log("[*] CHECKING USDtz SWAPS");
-        if (this.volume.usdc.eq(0)) return;
-        const waitingSwaps = await this.usdtz.getWaitingSwaps(4200);
-        for (const i in waitingSwaps) {
-          const swp = waitingSwaps[i];
-          if (Object.keys(this.usdcSwaps).length >= this.usdtzLimit) break;
-          const existingResponse = await this.usdc.getSwap(swp.hashedSecret);
-          if (
-            existingResponse.initiator_tez_addr === "" &&
-            existingResponse.refundTimestamp === "0" &&
-            this.usdcSwaps[swp.hashedSecret] === undefined &&
-            new BigNumber(swp.value).gt(0) &&
-            new BigNumber(swp.value).lte(this.volume.usdc)
-          ) {
-            console.log("[!] FOUND : ", swp.hashedSecret);
-            let valueToPay = new BigNumber(
-              calcSwapReturn(swp.value, this.reward)
-            );
-            if (valueToPay.lt(this.usdcTxFee)) {
-              console.log("[x] SWAP NOT PROFITABLE : ", swp.hashedSecret);
-              continue;
-            }
-            valueToPay = valueToPay.minus(this.usdcTxFee);
-            this.usdcSwaps[swp.hashedSecret] = {
-              state: 0,
-              value: valueToPay.toString(),
-              hashedSecret: swp.hashedSecret,
-              refundTime: swp.refundTimestamp - 3600,
-            };
-            this.volume.usdc = this.volume.usdc.minus(valueToPay);
-            console.log(this.usdcSwaps, valueToPay.toString());
-            respondTezos(
-              this.usdc,
-              this.usdtz,
-              this.usdcSwaps[swp.hashedSecret],
-              this,
-              0
-            );
-          }
-        }
-      } catch (err) {
-        console.error("[x] FAILED TO MONITOR USDtz SWAPS | ", err);
+        console.error(
+          `[x] FAILED TO MONITOR ${this.swapPairs[pair][asset].symbol} SWAPS\n`,
+          err
+        );
       }
       setTimeout(run, 120000);
     };
@@ -322,55 +374,51 @@ module.exports = class Bot {
       try {
         const data = await Promise.all([
           this.getBotFees(),
-          this.usdtz.getPrice("ETH-USD"),
-          this.usdtz.getPrice("XTZ-USD"),
+          this.getConverter(),
         ]);
-        const { usdtzFeeData, usdcFeeData, ethereumGasPrice, reward } = data[0];
-        this.reward = reward;
-        this.usdtzTxFee = new BigNumber(
-          usdtzFeeData["initiateWait"] + usdtzFeeData["addCounterParty"]
-        )
-          .multipliedBy(data[2])
-          .div(constants.decimals10_6)
-          .plus(
-            new BigNumber(usdcFeeData["redeem"])
-              .multipliedBy(ethereumGasPrice)
-              .multipliedBy(data[1])
-          )
-          .multipliedBy(constants.usdtzFeePad)
-          .toFixed(0, 2);
-        this.usdcTxFee = new BigNumber(
-          usdcFeeData["initiateWait"] + usdcFeeData["addCounterParty"]
-        )
-          .multipliedBy(ethereumGasPrice)
-          .multipliedBy(data[1])
-          .plus(
-            new BigNumber(usdtzFeeData["redeem"])
-              .multipliedBy(data[2])
-              .div(constants.decimals10_6)
-          )
-          .multipliedBy(constants.usdcFeePad)
-          .toFixed(0, 2);
+        const pureFees = this.getPureSwapFee(data[0]);
+        const pairs = Object.keys(this.swapPairs);
+        for (const pair of pairs) {
+          const assets = pair.split("/");
+          this.swapPairs[pair][assets[0]]["networkFee"] = data[1].feeConverter[
+            assets[0]
+          ](pureFees[pair][assets[0]]);
+          this.swapPairs[pair][assets[1]]["networkFee"] = data[1].feeConverter[
+            assets[1]
+          ](pureFees[pair][assets[1]]);
+        }
+        this.assetConverter = data[1].assetConverter;
+        this.reward = new BigNumber(data[0].reward);
       } catch (err) {
         console.error("[x] ERROR while updating reward: ", err);
       }
+      let swapStats = "";
+      const pairs = Object.keys(this.swapPairs);
+      for (const pair of pairs) {
+        const assets = pair.split("/");
+        swapStats += `    [-] ${this.swapPairs[pair][assets[0]].symbol}/${
+          this.swapPairs[pair][assets[1]].symbol
+        }\n`;
+        for (const asset of assets) {
+          const networkFee =
+            this.swapPairs[pair][asset].networkFee
+              .div(10 ** this.swapPairs[pair][asset].decimals)
+              .toString() +
+            " " +
+            asset;
+          const vol =
+            this.swapPairs[pair][asset].remainingVolume
+              .div(10 ** this.swapPairs[pair][asset].decimals)
+              .toString() +
+            " " +
+            asset;
+          swapStats += `      [*] ${this.swapPairs[pair][asset].symbol} :\n       - Network Fee : ${networkFee}\n       - Remaining Volume : ${vol}\n`;
+        }
+      }
       console.log(
         `\n\n[*]CURRENT STATUS :\n  [!] ACTIVE SWAP COUNT : ${
-          Object.keys(this.usdcSwaps).length +
-          Object.keys(this.usdtzSwaps).length
-        }\n  [!] SWAP REWARD RATE : ${
-          this.reward
-        } BPS\n  [!] EXPECTED TX FEE REWARD :\n    - USDC SWAP : ${new BigNumber(
-          this.usdcTxFee
-        )
-          .div(constants.decimals10_6)
-          .toString()} usdc\n    - USDtz SWAP : ${new BigNumber(this.usdtzTxFee)
-          .div(constants.decimals10_6)
-          .toString()} usdtz\n  [!] REMAINING VOLUME :\n    - USDC : ${this.volume.usdc
-          .div(constants.decimals10_6)
-          .toString()} usdc\n    - USDtz : ${this.volume.usdtz
-          .div(constants.decimals10_6)
-          .toString()} usdtz\n\n`
+          Object.keys(this.swaps).length
+        }\n  [!] SWAP REWARD RATE : ${this.reward.toString()} BPS\n  [!] SWAP STATS :\n${swapStats}`
       );
       if (!runOnce) setTimeout(run, 60000);
     };
@@ -382,23 +430,116 @@ module.exports = class Bot {
    */
   async getBotFees() {
     const data = await Promise.all([
-      this.usdtz.getFees(),
-      this.usdtz.getReward(),
-      this.usdc.web3.eth.getGasPrice(),
+      this.clients["tezos"].getFees(),
+      this.clients["tezos"].getReward(
+        this.swapPairs["usdc/usdtz"]["usdtz"].swapContract
+      ),
+      this.clients["ethereum"].web3.eth.getGasPrice(),
     ]);
-    const usdtzFeeData = data[0]["USDTZ"];
-    const usdcFeeData = data[0]["USDC"];
-    const ethereumGasPrice = new BigNumber(
-      this.usdc.web3.utils.fromWei(data[2], "ether")
-    );
+    const ethereumGasPrice = new BigNumber(data[2]);
     return {
-      usdtzFeeData,
-      usdcFeeData,
+      txFees: data[0],
       ethereumGasPrice,
       reward: data[1],
     };
   }
 
+  getPureSwapFee({ txFees, ethereumGasPrice }) {
+    const pairs = Object.keys(this.swapPairs);
+    const pureSwapFees = {};
+    for (const pair of pairs) {
+      const assets = pair.split("/");
+      const initialTxs = {
+        [assets[0]]: new BigNumber(
+          new BigNumber(txFees[assets[0].toUpperCase()]["initiateWait"])
+            .plus(txFees[assets[0].toUpperCase()]["addCounterParty"])
+            .multipliedBy(constants.feePad[pair][assets[0]])
+            .toFixed(0, 2)
+        ),
+        [assets[1]]: new BigNumber(
+          new BigNumber(txFees[assets[1].toUpperCase()]["initiateWait"])
+            .plus(txFees[assets[1].toUpperCase()]["addCounterParty"])
+            .multipliedBy(constants.feePad[pair][assets[1]])
+            .toFixed(0, 2)
+        ),
+      };
+      const redeemTxs = {
+        [assets[0]]: new BigNumber(
+          new BigNumber(txFees[assets[1].toUpperCase()]["redeem"])
+            .multipliedBy(constants.feePad[pair][assets[0]])
+            .toFixed(0, 2)
+        ),
+        [assets[1]]: new BigNumber(
+          new BigNumber(txFees[assets[0].toUpperCase()]["redeem"])
+            .multipliedBy(constants.feePad[pair][assets[1]])
+            .toFixed(0, 2)
+        ),
+      };
+      pureSwapFees[pair] = {};
+      if (this.swapPairs[pair][assets[0]].network === "ethereum") {
+        pureSwapFees[pair][assets[0]] = {
+          eth: initialTxs[assets[0]].multipliedBy(ethereumGasPrice),
+          xtz: new BigNumber(0),
+        };
+        pureSwapFees[pair][assets[1]] = {
+          eth: redeemTxs[assets[1]].multipliedBy(ethereumGasPrice),
+          xtz: new BigNumber(0),
+        };
+      } else {
+        pureSwapFees[pair][assets[0]] = {
+          xtz: initialTxs[assets[0]],
+          eth: new BigNumber(0),
+        };
+        pureSwapFees[pair][assets[1]] = {
+          xtz: redeemTxs[assets[1]],
+          eth: new BigNumber(0),
+        };
+      }
+      if (this.swapPairs[pair][assets[1]].network === "ethereum") {
+        pureSwapFees[pair][assets[1]] = {
+          eth: pureSwapFees[pair][assets[1]].eth.plus(
+            initialTxs[assets[1]].multipliedBy(ethereumGasPrice)
+          ),
+          xtz: pureSwapFees[pair][assets[1]].xtz,
+        };
+        pureSwapFees[pair][assets[0]] = {
+          eth: pureSwapFees[pair][assets[0]].eth.plus(
+            redeemTxs[assets[0]].multipliedBy(ethereumGasPrice)
+          ),
+          xtz: pureSwapFees[pair][assets[0]].xtz,
+        };
+      } else {
+        pureSwapFees[pair][assets[1]] = {
+          xtz: pureSwapFees[pair][assets[1]].xtz.plus(initialTxs[assets[1]]),
+          eth: pureSwapFees[pair][assets[1]].eth,
+        };
+        pureSwapFees[pair][assets[0]] = {
+          xtz: pureSwapFees[pair][assets[0]].xtz.plus(redeemTxs[assets[0]]),
+          eth: pureSwapFees[pair][assets[0]].eth,
+        };
+      }
+    }
+    return pureSwapFees;
+  }
+
+  async getWorstCaseNetworkFees() {
+    const fee = await this.getBotFees();
+    const pureFees = this.getPureSwapFee(fee);
+    let eth = new BigNumber(0),
+      xtz = new BigNumber(0);
+    const pairs = Object.keys(this.swapPairs);
+    for (const pair of pairs) {
+      const assets = pair.split("/");
+      for (const asset of assets) {
+        const count = this.swapPairs[pair][asset].remainingVolume
+          .div(constants.minTradeVolume[pair][asset])
+          .toFixed(0, 2);
+        eth = eth.plus(pureFees[pair][asset].eth.multipliedBy(count));
+        xtz = xtz.plus(pureFees[pair][asset].xtz.multipliedBy(count));
+      }
+    }
+    return { eth, xtz };
+  }
   /**
    * Pings tezex server to update live status
    */
@@ -409,8 +550,8 @@ module.exports = class Bot {
         const res = await fetch(config.tezex.server + config.tezex.route, {
           method: "POST",
           body: JSON.stringify({
-            ethAddr: this.usdc.account,
-            tezAddr: this.usdtz.account,
+            ethAddr: this.clients["ethereum"].account,
+            tezAddr: this.clients["tezos"].account,
           }),
           headers: { "Content-Type": "application/json" },
         });
@@ -421,5 +562,127 @@ module.exports = class Bot {
       setTimeout(run, 60000);
     };
     setTimeout(run, 0);
+  }
+
+  /**
+   * Checks if a new swap on a particular network can be taken up or not
+   *
+   * @param type specifies the type of the swap, 1 if bot creates a eth swap 2 for tez swap
+   */
+  swapPossible(type) {
+    const keys = Object.keys(this.swaps);
+    let ethSwaps = 0,
+      tezSwaps = 0;
+    for (const key of keys)
+      if (this.swaps[key].state !== 4) {
+        if (this.swaps[key].network === "ethereum") ethSwaps++;
+        else tezSwaps++;
+      }
+    if (type === "ethereum") return ethSwaps < this.maxEthSwaps;
+    return tezSwaps < this.maxTezSwaps;
+  }
+
+  async getBalances(balanceRequirements) {
+    const ops = [];
+    const tokens = Object.keys(balanceRequirements);
+    for (const token of tokens) {
+      if (token !== "eth" && token !== "xtz")
+        ops.push(
+          this.clients[balanceRequirements[token].network].tokenBalance(
+            balanceRequirements[token].contract,
+            this.clients[balanceRequirements[token].network].account
+          )
+        );
+    }
+    ops.push(
+      this.clients["ethereum"].balance(this.clients["ethereum"].account),
+      this.clients["tezos"].balance(this.clients["tezos"].account)
+    );
+    const resp = await Promise.all(ops);
+    let i = 0;
+    for (const token of tokens) {
+      if (token !== "eth" && token !== "xtz") {
+        balanceRequirements[token] = {
+          ...balanceRequirements[token],
+          balance: new BigNumber(resp[i++]),
+        };
+      }
+    }
+    balanceRequirements["eth"] = {
+      ...balanceRequirements["eth"],
+      balance: new BigNumber(resp[i++]),
+    };
+    balanceRequirements["xtz"] = {
+      ...balanceRequirements["xtz"],
+      balance: new BigNumber(resp[i++]),
+    };
+    return balanceRequirements;
+  }
+
+  async getConverter() {
+    const exchangeRates = await Promise.all([
+      this.clients["tezos"].getPrice("ETH-USD"),
+      this.clients["tezos"].getPrice("XTZ-USD"),
+    ]);
+    const feeConverter = {
+      usdc: ({ eth, xtz }) =>
+        new BigNumber(
+          eth
+            .div(10 ** 18)
+            .multipliedBy(new BigNumber(exchangeRates[0]))
+            .plus(
+              xtz.div(10 ** 6).multipliedBy(new BigNumber(exchangeRates[1]))
+            )
+            .toFixed(0, 2)
+        ),
+      usdtz: ({ eth, xtz }) =>
+        new BigNumber(
+          eth
+            .div(10 ** 18)
+            .multipliedBy(new BigNumber(exchangeRates[0]))
+            .plus(
+              xtz.div(10 ** 6).multipliedBy(new BigNumber(exchangeRates[1]))
+            )
+            .toFixed(0, 2)
+        ),
+      ethtz: ({ eth, xtz }) =>
+        new BigNumber(
+          eth
+            .plus(
+              xtz
+                .div(10 ** 6)
+                .multipliedBy(new BigNumber(exchangeRates[1]))
+                .div(new BigNumber(exchangeRates[0]))
+                .multipliedBy(10 ** 18)
+            )
+            .toFixed(0, 2)
+        ),
+      eth: ({ eth, xtz }) =>
+        new BigNumber(
+          eth
+            .plus(
+              xtz
+                .div(10 ** 6)
+                .multipliedBy(new BigNumber(exchangeRates[1]))
+                .div(new BigNumber(exchangeRates[0]))
+                .multipliedBy(10 ** 18)
+            )
+            .toFixed(0, 2)
+        ),
+    };
+    const assetConverter = {
+      "usdc/usdtz": {
+        usdc: (amt) => amt,
+        usdtz: (amt) => amt,
+      },
+      "eth/ethtz": {
+        eth: (amt) => amt,
+        ethtz: (amt) => amt,
+      },
+    };
+    return {
+      feeConverter,
+      assetConverter,
+    };
   }
 };
