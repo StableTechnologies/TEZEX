@@ -1,8 +1,9 @@
 import { DAppClient } from "@airgap/beacon-sdk";
+import { BigNumber } from "bignumber.js";
 import Web3 from "web3";
-import ERC20 from "../library/erc20";
-import FA12 from "../library/fa12";
+import Ethereum from "../library/ethereum";
 import config from "../library/globalConfig.json";
+import Tezos from "../library/tezos";
 
 export const shorten = (first, last, str) => {
   return str.substring(0, first) + "..." + str.substring(str.length - last);
@@ -12,20 +13,13 @@ export const truncate = (number, digits) => {
   return Math.trunc(number * Math.pow(10, digits)) / Math.pow(10, digits);
 };
 
-export const setEthAccount = async () => {
+const setEthAccount = async () => {
   if (window.ethereum) {
     const web3 = new Web3(window.ethereum);
     await window.ethereum.enable();
-    const swapContract = new web3.eth.Contract(
-      config.pairs["usdc/usdtz"].usdc.swapContract.abi,
-      config.pairs["usdc/usdtz"].usdc.swapContract.address
-    );
-    const tokenContract = new web3.eth.Contract(
-      config.pairs["usdc/usdtz"].usdc.tokenContract.abi,
-      config.pairs["usdc/usdtz"].usdc.tokenContract.address
-    );
     const account = await web3.eth.getAccounts();
-    return new ERC20(web3, account[0], swapContract, tokenContract);
+    return { web3, account: account[0] };
+    // return new ERC20(web3, account[0], swapContract, tokenContract);
   }
   alert(
     "Please install an Ethereum-compatible browser or extension like MetaMask to use this dApp!"
@@ -33,20 +27,104 @@ export const setEthAccount = async () => {
   return undefined;
 };
 
-export const setTezAccount = async () => {
+const setTezAccount = async () => {
   const client = new DAppClient({ name: "TEZEX" });
   const resp = await client.requestPermissions({
     network: { type: "edo2net" },
   });
   const account = await client.getActiveAccount();
-  return new FA12(
-    client,
-    account["address"],
-    config.pairs["usdc/usdtz"].usdtz.swapContract,
-    config.tezos.priceOracle,
-    config.tezos.feeContract,
-    config.pairs["usdc/usdtz"].usdtz.tokenContract,
-    config.tezos.RPC,
-    config.tezos.conseilServer
-  );
+  return { client, account: account["address"] };
+  // return new FA12(
+  //   client,
+  //   account["address"],
+  //   config.pairs["usdc/usdtz"].usdtz.swapContract,
+  //   config.tezos.priceOracle,
+  //   config.tezos.feeContract,
+  //   config.pairs["usdc/usdtz"].usdtz.tokenContract,
+  //   config.tezos.RPC,
+  //   config.tezos.conseilServer
+  // );
+};
+
+export const setupClient = async () => {
+  const { web3, account: ethAccount } = await setEthAccount();
+  const { client, account: tezAccount } = await setTezAccount();
+  const pairs = Object.keys(config.pairs);
+  const swapPairs = {};
+  pairs.forEach((pair) => {
+    const assets = pair.split("/");
+    for (const asset of assets) {
+      let swapContract = config.pairs[pair][asset].swapContract,
+        tokenContract = config.pairs[pair][asset].tokenContract;
+      if (config.pairs[pair][asset].network === "ethereum") {
+        swapContract = new web3.eth.Contract(
+          config.pairs[pair][asset].swapContract.abi,
+          config.pairs[pair][asset].swapContract.address
+        );
+        tokenContract =
+          asset !== "eth"
+            ? new web3.eth.Contract(
+                config.pairs[pair][asset].tokenContract.abi,
+                config.pairs[pair][asset].tokenContract.address
+              )
+            : undefined;
+      }
+      swapPairs[pair] = {
+        ...swapPairs[pair],
+        [asset]: {
+          network: config.pairs[pair][asset].network,
+          swapContract: swapContract,
+          tokenContract: tokenContract,
+          decimals: config.pairs[pair][asset].decimals,
+          symbol: config.pairs[pair][asset].symbol,
+        },
+      };
+    }
+  });
+  const clients = {
+    ethereum: new Ethereum(web3, ethAccount),
+    tezos: new Tezos(
+      client,
+      tezAccount,
+      config.tezos.priceOracle,
+      config.tezos.feeContract,
+      config.tezos.RPC,
+      config.tezos.conseilServer
+    ),
+  };
+  return { swapPairs, clients };
+};
+
+export const getOldSwaps = async (clients, swapPairs) => {
+  const swaps = {};
+  const pairs = Object.keys(swapPairs);
+  for (const pair of pairs) {
+    const assets = pair.split("/");
+    for (const asset of assets) {
+      const network = swapPairs[pair][asset].network;
+      const allSwaps = await clients[network].getUserSwaps(
+        swapPairs[pair][asset].swapContract,
+        clients[network].account
+      );
+      allSwaps.forEach((swp) => {
+        swaps[swp.hashedSecret] = {
+          network: network,
+          pair: pair,
+          asset: asset,
+          hashedSecret: swp.hashedSecret,
+          value:
+            new BigNumber(swp.value)
+              .div(10 ** swapPairs[pair][asset].decimals)
+              .toString() +
+            " " +
+            swapPairs[pair][asset].symbol,
+          minReturn: "nil",
+          exact: "nil",
+          refundTime: swp.refundTimestamp,
+          state: 0,
+        };
+      });
+    }
+  }
+  return swaps;
 };

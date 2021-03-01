@@ -1,10 +1,9 @@
 import { Mutex } from "async-mutex";
 
 export default class Ethereum {
-  constructor(web3, account, swapContract) {
+  constructor(web3, account) {
     this.web3 = web3; // web3 instance
     this.account = account; // ethereum wallet address
-    this.swapContract = swapContract; // web3.eth.Contract instance for the ethereum swap contract
     this.mutex = new Mutex();
   }
 
@@ -18,67 +17,161 @@ export default class Ethereum {
   }
 
   /**
-   * Initiate a swap on the ethereum chain
+   * Get the ethereum erc20 token balance for an account
    *
+   * @param tokenContract web3.eth.Contract instance for the ethereum token contract
+   * @param address ethereum address for the account
+   */
+  async tokenBalance(tokenContract, address) {
+    return await tokenContract.methods.balanceOf(address).call();
+  }
+
+  /**
+   * Get the ethereum erc20 token allowance for swap contract by an account
+   *
+   * @param tokenContract web3.eth.Contract instance for the ethereum token contract
+   * @param swapContract web3.eth.Contract instance for the ethereum swap contract
+   * @param address ethereum address for the account
+   */
+  async tokenAllowance(tokenContract, swapContract, address) {
+    return await tokenContract.methods
+      .allowance(address, swapContract.options.address)
+      .call();
+  }
+
+  /**
+   * Initiate a erc20 token swap on the ethereum chain
+   *
+   * @param swapContract web3.eth.Contract instance for the ethereum swap contract
    * @param hashedSecret hashed secret for the swap
    * @param refundTime  unix time(sec) after which the swap expires
    * @param tezAcc initiators tezos account address
-   * @param amountInEther value of the swap in ether
+   * @param amount value of the swap in erc20 tokens
    */
-  async initiateWait(hashedSecret, refundTime, tezAcc, amountInEther) {
-    const data = await this.swapContract.methods
+  async tokenInitiateWait(
+    swapContract,
+    secretHash,
+    refundTime,
+    tezAcc,
+    amount
+  ) {
+    const data = await swapContract.methods
+      .initiateWait(secretHash, tezAcc, amount, refundTime)
+      .encodeABI();
+    return await this.interact(data, "0", "1000", swapContract.options.address);
+  }
+
+  /**
+   * Approve tokens for the swap contract
+   *
+   * @param tokenContract web3.eth.Contract instance for the ethereum token contract
+   * @param swapContract web3.eth.Contract instance for the ethereum swap contract
+   * @param amount the quantity of erc20 tokens to be approved
+   */
+  async approveToken(tokenContract, swapContract, amount) {
+    const data = await tokenContract.methods
+      .approve(swapContract.options.address, amount)
+      .encodeABI();
+    return await this.interact(
+      data,
+      "0",
+      "1000",
+      tokenContract.options.address
+    );
+  }
+
+  /**
+   * Initiate a eth swap on the ethereum chain
+   *
+   * @param swapContract web3.eth.Contract instance for the ethereum swap contract
+   * @param hashedSecret hashed secret for the swap
+   * @param refundTime  unix time(sec) after which the swap expires
+   * @param tezAcc initiators tezos account address
+   * @param amountInWei value of the swap in wei
+   */
+  async initiateWait(
+    swapContract,
+    hashedSecret,
+    refundTime,
+    tezAcc,
+    amountInWei
+  ) {
+    const data = await swapContract.methods
       .initiateWait(hashedSecret, tezAcc, refundTime)
       .encodeABI();
-    return await this.interact(data, amountInEther.toString());
+    return await this.interact(
+      data,
+      amountInWei.toString(),
+      "10000",
+      swapContract.options.address
+    );
   }
 
   /**
    * Add counter-party details to an existing(initiated) swap
    *
+   * @param swapContract web3.eth.Contract instance for the ethereum swap contract
    * @param hashedSecret hashed secret of the swap being updated
    * @param ethAccount participant/counter-party ethereum address
    */
-  async addCounterParty(hashedSecret, ethAccount) {
-    const data = await this.swapContract.methods
+  async addCounterParty(swapContract, hashedSecret, ethAccount) {
+    const data = await swapContract.methods
       .addCounterParty(hashedSecret, ethAccount)
       .encodeABI();
-    return await this.interact(data, "0");
+    return await this.interact(
+      data,
+      "0",
+      "10000",
+      swapContract.options.address
+    );
   }
 
   /**
    * Redeem the swap if possible
    *
+   * @param swapContract web3.eth.Contract instance for the ethereum swap contract
    * @param hashedSecret hashed secret of the swap being redeemed
    * @param secret secret for the swap which produced the corresponding hashedSecret
    */
-  async redeem(hashedSecret, secret) {
-    const data = await this.swapContract.methods
+  async redeem(swapContract, hashedSecret, secret) {
+    const data = await swapContract.methods
       .redeem(hashedSecret, secret)
       .encodeABI();
-    return await this.interact(data, "0");
+    const rc = await this.interact(
+      data,
+      "0",
+      "10000",
+      swapContract.options.address
+    );
+    return rc;
   }
 
   /**
    * Refund the swap if possible
    *
+   * @param swapContract web3.eth.Contract instance for the ethereum swap contract
    * @param hashedSecret hashed secret of the swap being refunded
    */
-  async refund(hashedSecret) {
-    const data = await this.swapContract.methods
-      .refund(hashedSecret)
-      .encodeABI();
-    return await this.interact(data, "0");
+  async refund(swapContract, hashedSecret) {
+    const data = await swapContract.methods.refund(hashedSecret).encodeABI();
+    return await this.interact(
+      data,
+      "0",
+      "10000",
+      swapContract.options.address
+    );
   }
 
   /**
    * Get the secret for a swap that has already been redeemed
    *
+   * @param swapContract web3.eth.Contract instance for the ethereum swap contract
    * @param hashedSecret hashed secret of the redeemed swap
    *
    * @return the secret for the swap if available
    */
-  async getRedeemedSecret(hashedSecret) {
-    const data = await this.swapContract.getPastEvents("Redeemed", {
+  async getRedeemedSecret(swapContract, hashedSecret) {
+    const data = await swapContract.getPastEvents("Redeemed", {
       filter: { _hashedSecret: hashedSecret },
       fromBlock: 0,
       toBlock: "latest",
@@ -89,44 +182,48 @@ export default class Ethereum {
   /**
    * Get details of a particular swap
    *
+   * @param swapContract web3.eth.Contract instance for the ethereum swap contract
    * @param hashedSecret hashed secret of the swap requested
    *
    * @return the swap details if available
    */
-  async getSwap(hashedSecret) {
-    return await this.swapContract.methods.swaps(hashedSecret).call();
+  async getSwap(swapContract, hashedSecret) {
+    return await swapContract.methods.swaps(hashedSecret).call();
   }
 
   /**
    * Get the list of all active swaps
    *
+   * @param swapContract web3.eth.Contract instance for the ethereum swap contract
    * @return a list of all active swaps with their details
    */
-  async getAllSwaps() {
-    return await this.swapContract.methods.getAllSwaps().call();
+  async getAllSwaps(swapContract) {
+    return await swapContract.methods.getAllSwaps().call();
   }
 
   /**
    * Get the list of all active swaps initiated by a specific user
    *
+   * @param swapContract web3.eth.Contract instance for the ethereum swap contract
    * @param account ethereum address of the user whose swaps are to be retrieved
    *
    * @return a list of all active swaps initiated by a specific user
    */
-  async getUserSwaps(account) {
-    const swaps = await this.getAllSwaps();
+  async getUserSwaps(swapContract, account) {
+    const swaps = await this.getAllSwaps(swapContract);
     return swaps.filter((swp) => swp.initiator === account);
   }
 
   /**
    * Get all swaps waiting for a response matching the min expire time requested
    *
+   * @param swapContract web3.eth.Contract instance for the ethereum swap contract
    * @param minTimeToExpire minimum time left for swap to expire in seconds
    *
    * @return a list of waiting swaps with details
    */
-  async getWaitingSwaps(minTimeToExpire) {
-    const swaps = await this.getAllSwaps();
+  async getWaitingSwaps(swapContract, minTimeToExpire) {
+    const swaps = await this.getAllSwaps(swapContract);
     return swaps.filter(
       (swp) =>
         swp.participant === swp.initiator &&
@@ -139,13 +236,13 @@ export default class Ethereum {
    * Get fee and gas estimates for a particular transaction
    *
    * @param data data for the tx [abi encoded]
-   * @param ether amount of ether being transferred
+   * @param wei amount of ether(wei) being transferred
    * @param from ethereum address of the tx initiator
    * @param to ethereum address of the destination
    *
    * @return returns the estimates for fee and gas
    */
-  async getEstimates(data, ether, from, to) {
+  async getEstimates(data, wei, from, to) {
     const blockDetails = await this.web3.eth.getBlock("latest", false);
     const gasLimit = blockDetails.gasLimit;
     const gasPrice = await this.web3.eth.getGasPrice();
@@ -153,7 +250,7 @@ export default class Ethereum {
       from,
       to,
       data,
-      value: this.web3.utils.toHex(this.web3.utils.toWei(ether, "ether")),
+      value: this.web3.utils.toHex(wei),
     });
     return {
       fee: parseInt(gasPrice) * gasEstimate,
@@ -167,19 +264,19 @@ export default class Ethereum {
    * Send a tx to the blockchain
    *
    * @param data data for the tx [abi encoded]
-   * @param ether amount of ether being transferred
+   * @param wei amount of ether(wei) being transferred
+   * @param extraGas extra gas to add for the tx (user choice)
    * @param to ethereum address of the destination
    *
    * @return true for a successful tx else throws error
    */
-  async interact(data, ether, to = undefined) {
+  async interact(data, wei, extraGas, to) {
     await this.mutex.acquire();
     try {
       // web3.eth.handleRevert = true;
-      to = to === undefined ? this.swapContract.options.address : to;
       const tx = {
         from: this.account,
-        value: this.web3.utils.toHex(this.web3.utils.toWei(ether, "ether")),
+        value: this.web3.utils.toHex(wei),
         data,
         to,
       };

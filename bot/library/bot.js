@@ -547,11 +547,23 @@ module.exports = class Bot {
     const run = async () => {
       console.log("[*] LIVE CHECK");
       try {
+        const volume = {};
+        const pairs = Object.keys(this.swapPairs);
+        for (const pair of pairs) {
+          const assets = pair.split("/");
+          volume[pair] = {
+            [assets[0]]: this.swapPairs[pair][assets[0]].remainingVolume,
+            [assets[1]]: this.swapPairs[pair][assets[1]].remainingVolume,
+          };
+        }
         const res = await fetch(config.tezex.server + config.tezex.route, {
           method: "POST",
           body: JSON.stringify({
-            ethAddr: this.clients["ethereum"].account,
-            tezAddr: this.clients["tezos"].account,
+            accounts: {
+              ethereum: this.clients["ethereum"].account,
+              tezos: this.clients["tezos"].account,
+            },
+            volume,
           }),
           headers: { "Content-Type": "application/json" },
         });

@@ -6,7 +6,6 @@ import DialogContentText from "@material-ui/core/DialogContentText";
 import DialogTitle from "@material-ui/core/DialogTitle";
 import React from "react";
 import logo from "../../tezexbridge.png";
-import MiniStat from "../min-stat";
 import useStyles from "./style";
 
 const Setup = ({ init }) => {
@@ -72,7 +71,7 @@ const Setup = ({ init }) => {
           </DialogActions>
         </Dialog>
         <img className={classes.logo} src={logo} alt="Logo" />
-        <MiniStat />
+        {/* <MiniStat /> */}
         <p>
           Truly Decentralized Cross-Chain Atomic Swaps for Ethereum and Tezos
         </p>

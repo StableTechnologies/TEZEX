@@ -1,10 +1,8 @@
 const Web3 = require("web3");
 const config = require("./network-config.json");
 module.exports = class Ethereum {
-  constructor(web3, swapContract, tokenContract) {
+  constructor(web3) {
     this.web3 = web3; // Web3 instance
-    this.swapContract = swapContract; // web3.eth.Contract instance for the ethereum swap contract
-    this.tokenContract = tokenContract; // web3.eth.Contract instance for the ethereum erc20 token contract
   }
 
   /**
@@ -12,34 +10,38 @@ module.exports = class Ethereum {
    */
   static newClient() {
     const web3 = new Web3(new Web3.providers.HttpProvider(config.ethereum.RPC));
-    const swapContract = new web3.eth.Contract(
-      config.pairs["usdc/usdtz"].usdc.swapContract.abi,
-      config.pairs["usdc/usdtz"].usdc.swapContract.address
-    );
-    const tokenContract = new web3.eth.Contract(
-      config.pairs["usdc/usdtz"].usdc.tokenContract.abi,
-      config.pairs["usdc/usdtz"].usdc.tokenContract.address
-    );
-    return new Ethereum(web3, swapContract, tokenContract);
+    return new Ethereum(web3);
+  }
+
+  /**
+   * Get the ethereum balance for an account
+   *
+   * @param address ethereum address for the account
+   */
+  async balance(address) {
+    return await this.web3.eth.getBalance(address);
   }
 
   /**
    * Get the ethereum erc20 token balance for an account
    *
+   * @param tokenContract web3.eth.Contract instance for the ethereum token contract
    * @param address ethereum address for the account
    */
-  async tokenBalance(address) {
-    return await this.tokenContract.methods.balanceOf(address).call();
+  async tokenBalance(tokenContract, address) {
+    return await tokenContract.methods.balanceOf(address).call();
   }
 
   /**
    * Get the ethereum erc20 token allowance for swap contract by an account
    *
+   * @param tokenContract web3.eth.Contract instance for the ethereum token contract
+   * @param swapContract web3.eth.Contract instance for the ethereum swap contract
    * @param address ethereum address for the account
    */
-  async tokenAllowance(address) {
-    return await this.tokenContract.methods
-      .allowance(address, this.swapContract.options.address)
+  async tokenAllowance(tokenContract, swapContract, address) {
+    return await tokenContract.methods
+      .allowance(address, swapContract.options.address)
       .call();
   }
 };

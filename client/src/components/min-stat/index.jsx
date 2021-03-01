@@ -1,8 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  convertBigIntToFloat,
-  updateBotStats,
-} from "../../library/common/util";
+import { convertBigIntToFloat, updateBotStats } from "../../library/util";
 import useStyles from "./style";
 const MiniStat = () => {
   const classes = useStyles();

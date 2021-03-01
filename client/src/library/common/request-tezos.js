@@ -1,5 +1,5 @@
 import { BigNumber } from "bignumber.js";
-import { constants, createSecrets } from "./util";
+import { constants, createSecrets } from "../util";
 const waitCompletion = (secret, tezStore, ethStore, refundTime, update) => {
   setTimeout(async function run() {
     try {

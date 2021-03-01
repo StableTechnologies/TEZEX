@@ -1,10 +1,7 @@
 import React, { useEffect, useState } from "react";
-import {
-  convertBigIntToFloat,
-  updateBotStats,
-} from "../../library/common/util";
+import { updateBotStats } from "../../library/util";
 import useStyles from "./style";
-const Stat = () => {
+const Stat = ({ swapPairs }) => {
   const classes = useStyles();
   const [stats, setStats] = useState(undefined);
   const updateStats = async () => {
@@ -20,6 +17,26 @@ const Stat = () => {
       clearInterval(timer1);
     };
   }, []);
+  const showStat = () => {
+    const data = [];
+    const pairs = Object.keys(stats.max);
+    for (const pair of pairs) {
+      const assets = pair.split("/");
+      data.push(
+        <div>
+          * {swapPairs[pair][assets[0]].symbol} &hArr;{" "}
+          {swapPairs[pair][assets[1]].symbol} Swaps :
+          <div className={classes.indented}>
+            - Total Liquidity : {stats.total[pair][assets[0]]} {assets[0]}/
+            {stats.total[pair][assets[1]]} {assets[1]}
+            <br />- Max Swap Size : {stats.max[pair][assets[0]]} {assets[0]}/
+            {stats.max[pair][assets[1]]} {assets[1]}
+          </div>
+        </div>
+      );
+    }
+    return data;
+  };
   return (
     <div className={classes.container}>
       <h2>TEZEX STATS</h2>
@@ -28,20 +45,8 @@ const Stat = () => {
       )}
       {stats !== undefined && (
         <div className={classes.stat}>
-          <div>
-            <p>Max USDtz Swap Size</p>
-            <p>Max USDC Swap Size</p>
-            <p>Total USDtz Liquidity</p>
-            <p>Total USDC Liquidity</p>
-            <p>Live Liquidity Providers </p>
-          </div>
-          <div>
-            <p>: {convertBigIntToFloat(stats.maxUSDC, 6, 6)} usdtz</p>
-            <p>: {convertBigIntToFloat(stats.maxUSDtz, 6, 6)} usdc</p>
-            <p>: {convertBigIntToFloat(stats.totalUSDtz, 6, 6)} usdtz</p>
-            <p>: {convertBigIntToFloat(stats.totalUSDC, 6, 6)} usdc</p>
-            <p>: {stats.activeBots}</p>
-          </div>
+          {showStat()}
+          <div>* Active Bot Count : {stats.activeBots}</div>
         </div>
       )}
     </div>

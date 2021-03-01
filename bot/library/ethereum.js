@@ -275,7 +275,7 @@ module.exports = class Ethereum {
    *
    * @return true for a successful tx else throws error
    */
-  async interact(data, wei, extraGas, to = undefined) {
+  async interact(data, wei, extraGas, to) {
     await this.mutex.acquire();
     console.log("going", to);
     try {

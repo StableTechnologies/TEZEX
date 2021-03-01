@@ -100,7 +100,7 @@ const useStyles = makeStyles((theme) => ({
   },
   createWrap: {
     width: "28vw",
-    padding: "2vw",
+    padding: "2vw 2vw 0.7vw 2vw",
     border: "0.3vw solid black",
     borderRadius: "1vw",
   },
@@ -125,6 +125,46 @@ const useStyles = makeStyles((theme) => ({
       backgroundColor: "white",
       color: "black",
     },
+  },
+  select: {
+    textAlign: "center",
+    "& ul": {
+      backgroundColor: "black",
+      textAlign: "center",
+    },
+    "& li": {
+      fontSize: "1vw",
+      fontWeight: "bold",
+      backgroundColor: "black",
+      color: "white",
+      textAlign: "center",
+    },
+  },
+  dropdown: {
+    color: "white",
+    background: "black",
+    padding: "0.7vw 1vw",
+    borderRadius: "0.3vw",
+    fontWeight: "bold",
+    width: "fit-content",
+    textAlign: "center",
+    "&:focus": {
+      background: "black",
+      borderRadius: "0.3vw",
+      width: "7vw",
+      textAlign: "center",
+    },
+  },
+  balances: {
+    border: "0.3vw solid black",
+    margin: "1vw",
+    padding: "1vw",
+    borderRadius: "1vw",
+    fontWeight: "bold",
+  },
+  dropdownIcon: {
+    color: "white",
+    padding: "0 0.2vw",
   },
 }));
 

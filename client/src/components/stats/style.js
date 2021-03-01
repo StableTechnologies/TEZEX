@@ -14,11 +14,12 @@ const useStyles = makeStyles((theme) => ({
     border: "0.3vw solid black",
     padding: "2vw",
     borderRadius: "1vw",
-    width: "42%",
+    width: "fit-content",
     margin: "4vw auto",
-    display: "flex",
-    justifyContent: "space-around",
     textAlign: "left",
+  },
+  indented: {
+    paddingLeft: "2vw",
   },
 }));
 

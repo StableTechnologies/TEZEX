@@ -6,30 +6,25 @@ import About from "./components/about";
 import Header from "./components/header";
 import Home from "./components/home";
 import Loader from "./components/loader";
-import Swap from "./components/newSwap";
-import Ethereum from "./components/newSwap/ethereum/index.jsx";
-import Tezos from "./components/newSwap/tezos";
+import CreateSwap from "./components/newSwap";
 import Setup from "./components/setup";
 import Stat from "./components/stats";
-import requestEth from "./library/common/request-eth";
-import requestTezos from "./library/common/request-tezos";
-import respondEth from "./library/common/respond-eth";
-import respondTezos from "./library/common/respond-tezos";
-import { constants } from "./library/common/util";
-import { setEthAccount, setTezAccount } from "./util";
+import requestSwap from "./library/request-swap";
+import { getCounterPair } from "./library/util";
+import { getOldSwaps, setupClient } from "./util";
 const App = () => {
-  const [ethStore, ethSetup] = useState(undefined);
-  const [tezStore, tezSetup] = useState(undefined);
+  const [clients, setClients] = useState(undefined);
+  const [swapPairs, setSwapPairs] = useState(undefined);
   const [swaps, updateSwaps] = useState(undefined);
   const [balance, balUpdate] = useState(undefined);
   const [, updateState] = React.useState();
 
   const swapRef = useRef();
   swapRef.current = swaps;
-  const ethRef = useRef();
-  ethRef.current = ethStore;
-  const tezRef = useRef();
-  tezRef.current = tezStore;
+  const clientRef = useRef();
+  clientRef.current = clients;
+  const swapPairsRef = useRef();
+  swapPairsRef.current = swapPairs;
 
   const forceUpdate = React.useCallback(() => updateState({}), []);
 
@@ -46,42 +41,11 @@ const App = () => {
 
   const initialize = async () => {
     try {
-      const eth = await setEthAccount();
-      const tez = await setTezAccount();
-      const ethSwaps = await eth.getUserSwaps(eth.account);
-      const tezSwaps = await tez.getUserSwaps(tez.account);
-      let swap = {};
-      ethSwaps.forEach((swp) => {
-        if (swp.initiator === eth.account)
-          swap[swp.hashedSecret] = {
-            type: "eth",
-            hashedSecret: swp.hashedSecret,
-            value:
-              new BigNumber(swp.value).div(constants.decimals10_6).toString() +
-              " USDC",
-            minReturn: "nil",
-            exact: "nil",
-            refundTime: swp.refundTimestamp,
-            state: 0,
-          };
-      });
-      tezSwaps.forEach((swp) => {
-        if (swp.initiator === tez.account)
-          swap[swp.hashedSecret] = {
-            type: "tez",
-            hashedSecret: swp.hashedSecret,
-            value:
-              new BigNumber(swp.value).div(constants.decimals10_6).toString() +
-              " USDtz",
-            minReturn: "nil",
-            exact: "nil",
-            refundTime: swp.refundTimestamp,
-            state: 0,
-          };
-      });
+      const { swapPairs, clients } = await setupClient();
+      let swap = await getOldSwaps(clients, swapPairs);
       if (Object.keys(swap).length > 0) updateSwaps(swap);
-      ethSetup(eth);
-      tezSetup(tez);
+      setClients(clients);
+      setSwapPairs(swapPairs);
     } catch (e) {
       console.log("error", e);
       alert("Error Connecting to Wallet", e);
@@ -98,67 +62,38 @@ const App = () => {
     } else console.log("missing hash update request");
   };
 
-  const genSwap = async (type, value, minValue, req_swap = undefined) => {
-    let swap = {},
-      symbol = " USDC";
-    if (type === 2) {
-      if (req_swap === undefined) {
-        swap = await requestTezos(
-          value,
-          minValue,
-          ethRef.current,
-          tezRef.current,
-          update
-        );
-      } else {
-        swap = await respondTezos(
-          value,
-          ethRef.current,
-          tezRef.current,
-          req_swap,
-          update
-        );
-        symbol = " USDtz";
-      }
-    } else if (type === 1) {
-      if (req_swap === undefined) {
-        swap = await requestEth(
-          value,
-          minValue,
-          ethRef.current,
-          tezRef.current,
-          update
-        );
-        symbol = " USDtz";
-      } else {
-        swap = await respondEth(
-          value,
-          ethRef.current,
-          tezRef.current,
-          req_swap,
-          update
-        );
-      }
-    }
-    if (swap === undefined) return false;
-    let newSwaps = swaps;
+  const genSwap = async (swap, req_swap = undefined) => {
+    const generatedSwap = await requestSwap(swap, clients, swapPairs, update);
+    if (generatedSwap === undefined) return false;
+    let newSwaps = swapRef.current;
     if (newSwaps === undefined) {
       newSwaps = {};
     }
-    swap["value"] =
-      symbol === " USDC"
-        ? new BigNumber(swap["value"]).div(constants.decimals10_6).toString() +
-          " USDtz"
-        : new BigNumber(swap["value"]).div(constants.decimals10_6).toString() +
-          " USDC";
-    swap["minReturn"] =
-      new BigNumber(minValue).div(constants.decimals10_6).toString() + symbol;
-    newSwaps[swap.hashedSecret] = swap;
+    const counterAsset = getCounterPair(
+      generatedSwap.pair,
+      generatedSwap.asset
+    );
+
+    generatedSwap["value"] =
+      new BigNumber(generatedSwap.value)
+        .div(10 ** swapPairs[generatedSwap.pair][generatedSwap.asset].decimals)
+        .toString() +
+      " " +
+      swapPairs[generatedSwap.pair][generatedSwap.asset].symbol;
+    generatedSwap["minReturn"] =
+      new BigNumber(generatedSwap.minValue)
+        .div(10 ** swapPairs[generatedSwap.pair][counterAsset].decimals)
+        .toString() +
+      " " +
+      swapPairs[generatedSwap.pair][counterAsset].symbol;
+    newSwaps[generatedSwap.hashedSecret] = generatedSwap;
+    console.log(newSwaps);
     updateSwaps(newSwaps);
+    forceUpdate();
     return true;
   };
 
-  if (ethStore === undefined || tezStore === undefined)
+  if (clients === undefined || swapPairs === undefined)
     return (
       <div className="App">
         <Setup init={initialize} />
@@ -168,42 +103,35 @@ const App = () => {
   return (
     <Router basename={process.env.PUBLIC_URL}>
       <div className="App">
-        <Header ethStore={ethStore} tezStore={tezStore} balUpdate={balUpdate} />
+        <Header
+          clients={clientRef.current}
+          swapPairs={swapPairsRef.current}
+          balUpdate={balUpdate}
+        />
         {balance === undefined && <Loader message="Loading Account" />}
         {balance !== undefined && (
           <Switch>
             <Route exact path="/">
               <Home
                 swaps={swaps}
-                ethStore={ethRef.current}
-                tezStore={tezRef.current}
+                clients={clientRef.current}
+                swapPairs={swapPairsRef.current}
                 update={update}
               />
             </Route>
-            <Route exact path="/create/eth">
-              <Ethereum
+            <Route exact path="/swap">
+              <CreateSwap
                 genSwap={genSwap}
-                tezStore={tezRef.current}
-                ethStore={ethRef.current}
+                clients={clientRef.current}
+                swapPairs={swapPairsRef.current}
                 balance={balance}
               />
-            </Route>
-            <Route exact path="/create/xtz">
-              <Tezos
-                genSwap={genSwap}
-                ethStore={ethRef.current}
-                tezStore={tezRef.current}
-                balance={balance}
-              />
-            </Route>
-            <Route exact path="/create">
-              <Swap />
             </Route>
             <Route exact path="/about">
               <About />
             </Route>
             <Route exact path="/stats">
-              <Stat />
+              <Stat swapPairs={swapPairsRef.current} />
             </Route>
           </Switch>
         )}

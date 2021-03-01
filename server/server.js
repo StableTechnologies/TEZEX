@@ -1,6 +1,6 @@
 const express = require("express");
 const Ethereum = require("./library/ethereum");
-const Tezos = require("./library/tezos");
+const { init, getAllowances, log } = require("./library/util.js");
 const cors = require("cors");
 
 const app = express();
@@ -8,36 +8,40 @@ const port = process.env.PORT || 8000;
 const bots = {};
 const maxInactiveTime = 180000; // time in milliseconds
 
-const ethClient = Ethereum.newClient();
-const tezClient = Tezos.newClient("error");
+let clients = {},
+  swapPairs = {};
 
 app.use(express.json());
 app.use(cors());
 
 app.post("/bot/ping", async (req, res) => {
   try {
-    const { ethAddr, tezAddr } = req.body;
-    if (ethAddr === undefined || ethAddr === "") {
-      return res.status(400).json({ error: "Invalid Ethereum Address" });
+    const { accounts, volume } = req.body;
+    const { allowances, foundNonZero } = await getAllowances(
+      { accounts, volume },
+      clients,
+      swapPairs
+    );
+    if (allowances === undefined || foundNonZero === undefined) {
+      return res.status(400).json({ error: "Malformed Request" });
     }
-    if (tezAddr === undefined || tezAddr === "") {
-      return res.status(400).json({ error: "Invalid Tezos Address" });
-    }
-    const id = ethAddr + tezAddr;
-    const [ethAllowance, tezAllowance] = await Promise.all([
-      ethClient.tokenAllowance(ethAddr),
-      tezClient.tokenAllowance(tezAddr),
-    ]);
-    if (BigInt(ethAllowance) === 0n && BigInt(tezAllowance) === 0n) {
+    if (foundNonZero === false) {
       return res.status(400).json({ error: "No allowance found" });
     }
+    const id = accounts["ethereum"] + accounts["tezos"];
+
     bots[id] = {
-      ethAddr,
-      tezAddr,
-      ethAllowance: BigInt(ethAllowance),
-      tezAllowance: BigInt(tezAllowance),
+      accounts,
+      allowances,
       lastSeen: new Date().getTime(),
     };
+    log([
+      "PING FROM : ",
+      accounts,
+      "\n",
+      "WITH ALLOWANCES : ",
+      JSON.stringify(allowances, null, 4),
+    ]);
     return res.status(200).json({ success: "ok" });
   } catch (err) {
     console.log(`[x] ERROR : ${err.toString()}`);
@@ -48,34 +52,51 @@ app.post("/bot/ping", async (req, res) => {
 app.get("/client/status", (req, res, next) => {
   try {
     const botData = Object.values(bots);
-    let maxUSDtz = 0n,
-      maxUSDC = 0n,
-      totalUSDC = 0n,
-      totalUSDtz = 0n,
+    let max = {},
+      total = {},
       count = 0;
     const currentTime = new Date().getTime();
+    const pairs = Object.keys(swapPairs);
     botData.forEach((data) => {
       if (data.lastSeen + maxInactiveTime <= currentTime) {
         return;
       }
       count++;
-      if (data.ethAllowance > maxUSDC) maxUSDC = data.ethAllowance;
-      if (data.tezAllowance > maxUSDtz) maxUSDtz = data.tezAllowance;
-      totalUSDC += data.ethAllowance;
-      totalUSDtz += data.tezAllowance;
+      if (count === 1) {
+        max = { ...data.allowances };
+        total = { ...data.allowances };
+        return;
+      }
+      for (const pair of pairs) {
+        const assets = pair.split("/");
+        if (max[pair][assets[0]].lt(data.allowances[pair][assets[0]]))
+          max[pair][assets[0]] = data.allowances[pair][assets[0]];
+        if (max[pair][assets[1]].lt(data.allowances[pair][assets[1]]))
+          max[pair][assets[1]] = data.allowances[pair][assets[1]];
+        total[pair][assets[0]] = total[pair][assets[0]].plus(
+          data.allowances[pair][assets[0]]
+        );
+        total[pair][assets[1]] = total[pair][assets[1]].plus(
+          data.allowances[pair][assets[1]]
+        );
+      }
     });
-    res.status(200).json({
-      maxUSDC: maxUSDC.toString(),
-      maxUSDtz: maxUSDtz.toString(),
-      totalUSDC: totalUSDC.toString(),
-      totalUSDtz: totalUSDtz.toString(),
-      activeBots: count,
-    });
+    res.status(200).send(
+      JSON.stringify({
+        max,
+        total,
+        activeBots: count,
+      })
+    );
   } catch (err) {
     next(err);
   }
 });
 
-app.listen(port, () => {
-  console.log(`Tezex Server listening on port ${port}!`);
+init().then((data) => {
+  clients = data.clients;
+  swapPairs = data.swapPairs;
+  app.listen(port, () => {
+    console.log(`Tezex Server listening on port ${port}!`);
+  });
 });

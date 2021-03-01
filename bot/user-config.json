@@ -6,7 +6,13 @@
         "walletPK": ""
     },
     "maxVolume": {
-        "usdc": 300,
-        "usdtz": 300
+        "usdc/usdtz": {
+            "usdc": 300,
+            "usdtz": 300
+        },
+        "eth/ethtz": {
+            "eth": 1,
+            "ethtz": 1
+        }
     }
 }

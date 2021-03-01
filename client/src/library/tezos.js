@@ -12,20 +12,11 @@ import {
 import { JSONPath } from "jsonpath-plus";
 
 export default class Tezos {
-  constructor(
-    tezos,
-    account,
-    swapContract,
-    priceContract,
-    feeContract,
-    rpc,
-    conseilServer
-  ) {
+  constructor(tezos, account, priceContract, feeContract, rpc, conseilServer) {
     this.account = account; // tezos wallet address
     this.tezos = tezos; //tezos beacon-sdk instance
     this.rpc = rpc; // rpc server address for network interaction
     this.conseilServer = conseilServer; // conseil server setting
-    this.swapContract = swapContract; // tezos swap contract details {address:string, mapID:nat}
     this.priceContract = priceContract; // tezos harbinger oracle contract details {address:string, mapID:nat}
     this.feeContract = feeContract; // tezos tx fee contract details {address:string, mapID:nat}
     this.mutex = new Mutex();
@@ -44,16 +35,140 @@ export default class Tezos {
   }
 
   /**
-   * Initiate a swap on the tezos chain
+   * Get the tezos fa1.2 token balance for an account
    *
+   * @param tokenContract tezos fa1.2 token contract details {address:string, mapID:nat}
+   * @param address tezos address for the account
+   */
+  async tokenBalance(tokenContract, address) {
+    const key = TezosMessageUtils.encodeBigMapKey(
+      Buffer.from(TezosMessageUtils.writePackedData(address, "address"), "hex")
+    );
+    const tokenData = await TezosNodeReader.getValueForBigMapKey(
+      this.rpc,
+      tokenContract.mapID,
+      key
+    );
+    let balance =
+      tokenData === undefined
+        ? "0"
+        : JSONPath({ path: "$.args[0].int", json: tokenData })[0];
+    return balance;
+  }
+
+  /**
+   * Get the tezos fa1.2 token allowance for swap contract by an account
+   *
+   * @param tokenContract tezos fa1.2 token contract details {address:string, mapID:nat}
+   * @param swapContract tezos swap contract details {address:string, mapID:nat}
+   * @param address tezos address for the account
+   */
+  async tokenAllowance(tokenContract, swapContract, address) {
+    const key = TezosMessageUtils.encodeBigMapKey(
+      Buffer.from(TezosMessageUtils.writePackedData(address, "address"), "hex")
+    );
+    const tokenData = await TezosNodeReader.getValueForBigMapKey(
+      this.rpc,
+      tokenContract.mapID,
+      key
+    );
+    let allowances =
+      tokenData === undefined
+        ? undefined
+        : JSONPath({ path: "$.args[1]", json: tokenData })[0];
+    const allowance =
+      allowances === undefined
+        ? []
+        : allowances.filter(
+            (allow) => allow.args[0].string === swapContract.address
+          );
+    return allowance.length === 0 ? "0" : allowance[0].args[1].int;
+  }
+
+  /**
+   * Approve tokens for the swap contract
+   *
+   * @param tokenContract tezos fa1.2 token contract details {address:string, mapID:nat}
+   * @param swapContract tezos swap contract details {address:string, mapID:nat}
+   * @param amount the quantity of fa1.2 tokens to be approved
+   */
+  async approveToken(tokenContract, swapContract, amount) {
+    const allow = await this.tokenAllowance(
+      tokenContract,
+      swapContract,
+      this.account
+    );
+    let ops = [];
+    if (parseInt(allow) > 0) {
+      ops.push({
+        amtInMuTez: 0,
+        entrypoint: "approve",
+        parameters: `(Pair "${swapContract.address}" 0)`,
+        to: tokenContract.address,
+      });
+    }
+    ops.push({
+      amtInMuTez: 0,
+      entrypoint: "approve",
+      parameters: `(Pair "${swapContract.address}" ${amount})`,
+      to: tokenContract.address,
+    });
+    const res = await this.interact(ops);
+    if (res.status !== "applied") {
+      throw new Error("TEZOS TX FAILED");
+    }
+    return res;
+  }
+
+  /**
+   * Initiate a token swap on the tezos chain
+   *
+   * @param swapContract tezos swap contract details {address:string, mapID:nat}
+   * @param hashedSecret hashed secret for the swap
+   * @param refundTime  unix time(sec) after which the swap expires
+   * @param ethAddress initiators tezos account address
+   * @param amount value of the swap in fa1.2 tokens
+   */
+  async tokenInitiateWait(
+    swapContract,
+    hashedSecret,
+    refundTime,
+    ethAddress,
+    amount
+  ) {
+    const res = await this.interact([
+      {
+        to: swapContract.address,
+        amtInMuTez: 0,
+        entrypoint: "initiateWait",
+        parameters: `(Pair (Pair ${amount} ${hashedSecret}) (Pair "${refundTime}" "${ethAddress}"))`,
+      },
+    ]);
+    if (res.status !== "applied") {
+      throw new Error("TEZOS TX FAILED");
+    }
+    return res;
+  }
+
+  /**
+   * Initiate a xtz swap on the tezos chain
+   *
+   * @param swapContract tezos swap contract details {address:string, mapID:nat}
    * @param hashedSecret hashed secret for the swap
    * @param refundTime  unix time(sec) after which the swap expires
    * @param ethAddress initiators tezos account address
    * @param amtInMuTez value of the swap in mutez
    */
-  async initiateWait(hashedSecret, refundTime, ethAddress, amtInMuTez) {
+  async initiateWait(
+    swapContract,
+    hashedSecret,
+    refundTime,
+    ethAddress,
+    amtInMuTez
+  ) {
     const res = await this.interact([
       {
+        to: swapContract.address,
         amtInMuTez,
         entrypoint: "initiateWait",
         parameters: `(Pair ${hashedSecret} (Pair "${refundTime}" "${ethAddress}"))`,
@@ -68,12 +183,14 @@ export default class Tezos {
   /**
    * Add counter-party details to an existing(initiated) swap
    *
+   * @param swapContract tezos swap contract details {address:string, mapID:nat}
    * @param hashedSecret hashed secret of the swap being updated
    * @param tezAccount participant/counter-party tezos address
    */
-  async addCounterParty(hashedSecret, tezAccount) {
+  async addCounterParty(swapContract, hashedSecret, tezAccount) {
     const res = await this.interact([
       {
+        to: swapContract.address,
         amtInMuTez: 0,
         entrypoint: "addCounterParty",
         parameters: `(Pair ${hashedSecret} "${tezAccount}")`,
@@ -88,12 +205,14 @@ export default class Tezos {
   /**
    * Redeem the swap if possible
    *
+   * @param swapContract tezos swap contract details {address:string, mapID:nat}
    * @param hashedSecret hashed secret of the swap being redeemed
    * @param secret secret for the swap which produced the corresponding hashedSecret
    */
-  async redeem(hashedSecret, secret) {
+  async redeem(swapContract, hashedSecret, secret) {
     const res = await this.interact([
       {
+        to: swapContract.address,
         amtInMuTez: 0,
         entrypoint: "redeem",
         parameters: `(Pair ${hashedSecret} ${secret})`,
@@ -108,11 +227,13 @@ export default class Tezos {
   /**
    * Refund the swap if possible
    *
+   * @param swapContract tezos swap contract details {address:string, mapID:nat}
    * @param hashedSecret hashed secret of the swap being refunded
    */
-  async refund(hashedSecret) {
+  async refund(swapContract, hashedSecret) {
     const res = await this.interact([
       {
+        to: swapContract.address,
         amtInMuTez: 0,
         entrypoint: "refund",
         parameters: `${hashedSecret}`,
@@ -126,11 +247,13 @@ export default class Tezos {
 
   /**
    * Get reward basis points for responding to swaps
+   *
+   * @param swapContract tezos swap contract details {address:string, mapID:nat}
    */
-  async getReward() {
+  async getReward(swapContract) {
     const storage = await TezosNodeReader.getContractStorage(
       this.rpc,
-      this.swapContract.address
+      swapContract.address
     );
     return parseInt(
       JSONPath({
@@ -230,11 +353,12 @@ export default class Tezos {
   /**
    * Get the secret for a swap that has already been redeemed
    *
+   * @param swapContract tezos swap contract details {address:string, mapID:nat}
    * @param hashedSecret hashed secret of the redeemed swap
    *
    * @return the secret for the swap if available
    */
-  async getRedeemedSecret(hashedSecret) {
+  async getRedeemedSecret(swapContract, hashedSecret) {
     const data = await ConseilDataClient.executeEntityQuery(
       this.conseilServer,
       "tezos",
@@ -264,7 +388,7 @@ export default class Tezos {
           {
             field: "destination",
             operation: "eq",
-            set: [this.swapContract.address],
+            set: [swapContract.address],
             inverse: false,
           },
           {
@@ -320,11 +444,12 @@ export default class Tezos {
   /**
    * Get details of a particular swap
    *
+   * @param swapContract tezos swap contract details {address:string, mapID:nat}
    * @param hashedSecret hashed secret of the swap requested
    *
    * @return the swap details if available
    */
-  async getSwap(hashedSecret) {
+  async getSwap(swapContract, hashedSecret) {
     hashedSecret = hashedSecret.substring(2);
     const packedKey = TezosMessageUtils.encodeBigMapKey(
       Buffer.from(
@@ -334,7 +459,7 @@ export default class Tezos {
     );
     const jsonData = await TezosNodeReader.getValueForBigMapKey(
       this.rpc,
-      this.swapContract.mapID,
+      swapContract.mapID,
       packedKey
     );
     if (jsonData === undefined) return jsonData;
@@ -371,12 +496,14 @@ export default class Tezos {
       value: JSONPath({ path: "$.args[3].int", json: jsonData })[0],
     };
   }
+
   /**
    * Get the list of all active swaps
    *
+   * @param swapContract tezos swap contract details {address:string, mapID:nat}
    * @return a list of all active swaps with their details
    */
-  async getAllSwaps() {
+  async getAllSwaps(swapContract) {
     const data = await ConseilDataClient.executeEntityQuery(
       this.conseilServer,
       "tezos",
@@ -394,7 +521,7 @@ export default class Tezos {
           {
             field: "big_map_id",
             operation: ConseilOperator.EQ,
-            set: [this.swapContract.mapID.toString()],
+            set: [swapContract.mapID.toString()],
             inverse: false,
           },
           {
@@ -419,24 +546,26 @@ export default class Tezos {
   /**
    * Get the list of all active swaps initiated by a specific user
    *
+   * @param swapContract tezos swap contract details {address:string, mapID:nat}
    * @param account tezos address of the user whose swaps are to be retrieved
    *
    * @return a list of all active swaps initiated by a specific user
    */
-  async getUserSwaps(account) {
-    const swaps = await this.getAllSwaps();
+  async getUserSwaps(swapContract, account) {
+    const swaps = await this.getAllSwaps(swapContract);
     return swaps.filter((swp) => swp.initiator === account);
   }
 
   /**
    * Get all swaps waiting for a response matching the min expire time requested
    *
+   * @param swapContract tezos swap contract details {address:string, mapID:nat}
    * @param minTimeToExpire minimum time left for swap to expire in seconds
    *
    * @return a list of waiting swaps with details
    */
-  async getWaitingSwaps(minTimeToExpire) {
-    const swaps = await this.getAllSwaps();
+  async getWaitingSwaps(swapContract, minTimeToExpire) {
+    const swaps = await this.getAllSwaps(swapContract);
     return swaps.filter(
       (swp) =>
         swp.participant === swp.initiator &&
@@ -454,12 +583,11 @@ export default class Tezos {
    *
    * @return operation result
    */
-  async interact(operations, extraGas = 300, extraStorage = 50) {
+  async interact(operations, extraGas = 500, extraStorage = 50) {
     await this.mutex.acquire();
     try {
       let ops = [];
       operations.forEach((op) => {
-        op.to = op.to === undefined ? this.swapContract.address : op.to;
         ops.push({
           kind: TezosOperationType.TRANSACTION,
           amount: op.amtInMuTez,

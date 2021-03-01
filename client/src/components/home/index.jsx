@@ -1,24 +1,23 @@
 import React from "react";
 import { useHistory } from "react-router-dom";
-import MiniStat from "../min-stat";
 import useStyles from "./style";
 
-const Home = ({ swaps, ethStore, tezStore, update }) => {
+const Home = ({ swaps, clients, swapPairs, update }) => {
   const history = useHistory();
   const classes = useStyles();
-
-  const refundHandler = async (hashedSecret, refundTime) => {
+  const refundHandler = async (swap) => {
     try {
-      if (Math.trunc(Date.now() / 1000) < refundTime) {
+      if (Math.trunc(Date.now() / 1000) < swap.refundTime) {
         alert("Wait till expiry!");
         return;
       }
-      let res = false;
-      if (swaps[hashedSecret].type === "eth")
-        res = await ethStore.refund(hashedSecret);
-      else res = await tezStore.refund(hashedSecret);
-      update(hashedSecret, 4);
+      await clients[swap.network].refund(
+        swapPairs[swap.pair][swap.asset].swapContract,
+        swap.hashedSecret
+      );
+      update(swap.hashedSecret, 4);
     } catch (err) {
+      console.error(err);
       alert("error in refunding, check if the refund time has come");
     }
   };
@@ -45,7 +44,7 @@ const Home = ({ swaps, ethStore, tezStore, update }) => {
             <p>{state[data.state]}</p>
             <button
               className={classes.errorBtn}
-              onClick={() => refundHandler(data.hashedSecret, data.refundTime)}
+              onClick={() => refundHandler(data)}
             >
               refund!
             </button>
@@ -65,10 +64,7 @@ const Home = ({ swaps, ethStore, tezStore, update }) => {
         Learn More
       </button>
       <p>or create a Swap now!</p>
-      <button
-        className={classes.button}
-        onClick={() => history.push("/create")}
-      >
+      <button className={classes.button} onClick={() => history.push("/swap")}>
         Start New Swap
       </button>
     </div>
@@ -77,7 +73,7 @@ const Home = ({ swaps, ethStore, tezStore, update }) => {
     data = Object.keys(swaps).map((key) => SwapItem(swaps[key]));
   return (
     <div>
-      <MiniStat />
+      {/* <MiniStat /> */}
       <div className={classes.swaps}>
         <h3>Your Swaps</h3>
         {data}
