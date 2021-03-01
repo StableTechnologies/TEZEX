@@ -78,6 +78,8 @@ const waitCompletion = async (new_swap, counterNetwork, counterAsset, bot) => {
  * Respond to a swap
  *
  * @param new_swap swap details used to create a new response swap
+ * @param counterNetwork network name for the counter pair eg. `ethereum` or `tezos`
+ * @param counterAsset name of the counter asset eg. `usdc`
  * @param bot Bot instance
  * @param state current state of the swap
  */

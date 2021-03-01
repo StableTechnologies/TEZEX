@@ -21,9 +21,9 @@ module.exports = class Bot {
   /**
    * Initiate the tezex bot, configure ethereum and tezos clients and signers
    *
-   * @param ethConfig user config for ethereum {walletAddress:string, walletPK:string}
-   * @param tezosConfig user config for tezos {walletAddress:string, walletPK:string}
-   * @param volume max volume of token to be traded {usdc:nat, usdtz:nat}
+   * @param ethConfig user config for ethereum {walletPK:string}
+   * @param tezosConfig user config for tezos {walletPK:string}
+   * @param volume max volume of assets to be traded for each pair
    */
   async init(ethConfig, tezosConfig, volume) {
     try {
@@ -205,7 +205,6 @@ module.exports = class Bot {
   /**
    * Updates the state of the swap and deletes the swap if it has been cancelled
    *
-   * @param type specifies whether it is a ethereum(2) or tezos(1) swap
    * @param swap the swap object
    */
   async updateSwap(swap) {
@@ -366,7 +365,8 @@ module.exports = class Bot {
   }
 
   /**
-   * Monitors and updates the reward (basis points) value and tx fees
+   * Monitors and updates the reward (basis points) value
+   * and tx fees for each swap pair
    */
   async monitorReward(runOnce = false) {
     const run = async () => {
@@ -425,8 +425,9 @@ module.exports = class Bot {
     if (!runOnce) setTimeout(run, 60000);
     else await run();
   }
+
   /**
-   * Returns tx fees and reward in bps
+   * Returns tx fees and reward in bps from fee contract
    */
   async getBotFees() {
     const data = await Promise.all([
@@ -444,6 +445,10 @@ module.exports = class Bot {
     };
   }
 
+  /**
+   * Returns the ethereum and tezos required for swaps of each asset in each pair
+   * @param param0 the txFees and ethereum gas price received from `getBotFees()`
+   */
   getPureSwapFee({ txFees, ethereumGasPrice }) {
     const pairs = Object.keys(this.swapPairs);
     const pureSwapFees = {};
@@ -522,6 +527,10 @@ module.exports = class Bot {
     return pureSwapFees;
   }
 
+  /**
+   * Calculates the worst case network fees required
+   * to swap the complete volume of assets provide to the bot
+   */
   async getWorstCaseNetworkFees() {
     const fee = await this.getBotFees();
     const pureFees = this.getPureSwapFee(fee);
@@ -579,7 +588,7 @@ module.exports = class Bot {
   /**
    * Checks if a new swap on a particular network can be taken up or not
    *
-   * @param type specifies the type of the swap, 1 if bot creates a eth swap 2 for tez swap
+   * @param type specifies the network of the swap,eg. `ethereum` or `tezos`
    */
   swapPossible(type) {
     const keys = Object.keys(this.swaps);
@@ -594,6 +603,11 @@ module.exports = class Bot {
     return tezSwaps < this.maxTezSwaps;
   }
 
+  /**
+   * Returns the balances of all the assets specified in the balance requirements for the current bot account
+   *
+   * @param balanceRequirements contains all the assets and their volume details
+   */
   async getBalances(balanceRequirements) {
     const ops = [];
     const tokens = Object.keys(balanceRequirements);
@@ -631,6 +645,11 @@ module.exports = class Bot {
     return balanceRequirements;
   }
 
+  /**
+   * returns the asset fee converter and swap pair asset converter.
+   * `feeConverter` converts xtz/eth to the particular asset while
+   * `assetConverter` converts one asset in a swap pair to the other
+   */
   async getConverter() {
     const exchangeRates = await Promise.all([
       this.clients["tezos"].getPrice("ETH-USD"),

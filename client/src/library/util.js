@@ -31,10 +31,7 @@ export const calcSwapReturn = (swapValue, rewardInBIPS) => {
 /**
  * constants for calculations
  * decimals10_6 : 10^6 value used to convert usdc/usdtz/xtz to whole no.s
- * usdcFeePad : adds padding to the bot usdc swap tx fee [Y*txFee]
- * usdtzFeePad : adds padding to the bot usdtz swap tx fee [Y*txFee]
- * minUSDCVolume : minimum volume of swaps expected, helps calculate estimated eth balance req. (no. of swaps = maxVolume/minUSDCVolume)*feePerTx*feePad
- * minUSDtzVolume : minimum volume of swaps expected, helps calculate estimated tez balance req. (no. of swaps = maxVolume/minUSDtzVolume)*feePerTx*feePad
+ * feePad : padding to be added to the network fees for each swap pair and asset [Y*txFee]
  */
 export const constants = {
   decimals10_6: 1000000,

@@ -176,6 +176,14 @@ const getConverter = async (clients, pair) => {
   };
 };
 
+/**
+ * Returns the user asset balances, network fees, reward and
+ * assetConverter for the particular swap pair
+ *
+ * @param clients ethereum and tezos network clients
+ * @param swapPairs details of all the swap pairs
+ * @param pair pair whose stats are required
+ */
 export const getSwapStat = async (clients, swapPairs, pair) => {
   const resp = await Promise.all([
     getBalance(clients, swapPairs, pair),

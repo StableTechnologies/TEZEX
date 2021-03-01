@@ -19,7 +19,6 @@ const setEthAccount = async () => {
     await window.ethereum.enable();
     const account = await web3.eth.getAccounts();
     return { web3, account: account[0] };
-    // return new ERC20(web3, account[0], swapContract, tokenContract);
   }
   alert(
     "Please install an Ethereum-compatible browser or extension like MetaMask to use this dApp!"
@@ -34,18 +33,11 @@ const setTezAccount = async () => {
   });
   const account = await client.getActiveAccount();
   return { client, account: account["address"] };
-  // return new FA12(
-  //   client,
-  //   account["address"],
-  //   config.pairs["usdc/usdtz"].usdtz.swapContract,
-  //   config.tezos.priceOracle,
-  //   config.tezos.feeContract,
-  //   config.pairs["usdc/usdtz"].usdtz.tokenContract,
-  //   config.tezos.RPC,
-  //   config.tezos.conseilServer
-  // );
 };
 
+/**
+ * Creates the ethereum and tezos clients and initializes the swap pair details
+ */
 export const setupClient = async () => {
   const { web3, account: ethAccount } = await setEthAccount();
   const { client, account: tezAccount } = await setTezAccount();
@@ -95,6 +87,12 @@ export const setupClient = async () => {
   return { swapPairs, clients };
 };
 
+/**
+ * Fetch all the old swaps for all swap pairs for the current user
+ *
+ * @param clients ethereum and tezos network clients
+ * @param swapPairs details of each swap pair
+ */
 export const getOldSwaps = async (clients, swapPairs) => {
   const swaps = {};
   const pairs = Object.keys(swapPairs);

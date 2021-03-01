@@ -44,6 +44,14 @@ const waitCompletion = (
   }, 0);
 };
 
+/**
+ * Creates and completes a swap request for any asset and swap pair combo
+ *
+ * @param swap swap object to be created
+ * @param clients ethereum and tezos network client
+ * @param swapPairs data of all the swap pairs
+ * @param update update callback to reflect state change in UI
+ */
 const requestSwap = async (swap, clients, swapPairs, update) => {
   const network = swapPairs[swap.pair][swap.asset].network;
   const counterNetwork = network === "ethereum" ? "tezos" : "ethereum";
