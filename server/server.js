@@ -81,6 +81,14 @@ app.get("/client/status", (req, res, next) => {
         );
       }
     });
+    if (count === 0) {
+      for (const pair of pairs) {
+        max[pair] = {};
+        const assets = pair.split("/");
+        max[pair] = { [assets[0]]: "0", [assets[1]]: "0" };
+        total[pair] = { [assets[0]]: "0", [assets[1]]: "0" };
+      }
+    }
     res.status(200).send(
       JSON.stringify({
         max,
