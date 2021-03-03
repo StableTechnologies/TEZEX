@@ -1,3 +1,5 @@
+const { STATE } = require("./util");
+
 const waitCompletion = async (new_swap, counterNetwork, counterAsset, bot) => {
   try {
     const swp = await bot.clients[new_swap.network].getSwap(
@@ -26,21 +28,21 @@ const waitCompletion = async (new_swap, counterNetwork, counterAsset, bot) => {
             bot.swapPairs[new_swap.pair][new_swap.asset].swapContract,
             new_swap.hashedSecret
           );
-          new_swap.state = 3;
+          new_swap.state = STATE.REFUNDED;
           await bot.updateSwap(new_swap);
-          return 3;
+          return STATE.REFUNDED;
         } catch (err) {
           console.error(
             `FAILED TO REFUND ${
               bot.swapPairs[new_swap.pair][counterAsset].symbol
             } SWAP : ${new_swap.hashedSecret}\n` + err
           );
-          new_swap.state = 4;
+          new_swap.state = STATE.ERROR;
           await bot.updateSwap(new_swap);
-          return 4;
+          return STATE.ERROR;
         }
       }
-      return 2;
+      return STATE.RESPONSE_FOUND;
     }
     console.log(
       `\nCOMPLETING ${
@@ -56,21 +58,21 @@ const waitCompletion = async (new_swap, counterNetwork, counterAsset, bot) => {
       new_swap.hashedSecret,
       secret
     );
-    new_swap.state = 0;
+    new_swap.state = STATE.DONE;
     await bot.updateSwap(new_swap);
     console.log(
       `\nCOMPLETED ${
         bot.swapPairs[new_swap.pair][counterAsset].symbol
       } SWAP : ${new_swap.hashedSecret}\n`
     );
-    return 0;
+    return STATE.DONE;
   } catch (err) {
     console.error(
       `FAILED TO REDEEM ${
         bot.swapPairs[new_swap.pair][counterAsset].symbol
       } SWAP : ${new_swap.hashedSecret}\n` + err
     );
-    return 2; // keep retrying to redeem
+    return STATE.RESPONSE_FOUND; // keep retrying to redeem
   }
 };
 
@@ -86,15 +88,13 @@ const waitCompletion = async (new_swap, counterNetwork, counterAsset, bot) => {
 module.exports = async (new_swap, counterNetwork, counterAsset, bot, state) => {
   setTimeout(async function run() {
     switch (state) {
-      case 0: {
+      case STATE.START: {
         try {
           console.log(
             `RESPONDING TO ${
               bot.swapPairs[new_swap.pair][counterAsset].symbol
             }: ${new_swap.hashedSecret}`
           );
-          // const approveTokens = await ethStore.approveToken(parseInt(amount));
-          // if (!approveTokens) return undefined;
           if (new_swap.asset !== "eth" && new_swap.asset !== "xtz")
             await bot.clients[new_swap.network].tokenInitiateWait(
               bot.swapPairs[new_swap.pair][new_swap.asset].swapContract,
@@ -111,9 +111,9 @@ module.exports = async (new_swap, counterNetwork, counterAsset, bot, state) => {
               bot.clients[counterNetwork].account,
               new_swap.value.toString()
             );
-          new_swap.state = 1;
+          new_swap.state = STATE.INITIATED;
           await bot.updateSwap(new_swap);
-          state = 1;
+          state = STATE.INITIATED;
           console.log(
             `\nSWAP GENERATED ${
               bot.swapPairs[new_swap.pair][new_swap.asset].symbol
@@ -125,25 +125,35 @@ module.exports = async (new_swap, counterNetwork, counterAsset, bot, state) => {
               bot.swapPairs[new_swap.pair][new_swap.asset].symbol
             } SWAP : ${new_swap.hashedSecret}\n` + err
           );
-          new_swap.state = 3;
+          new_swap.state = STATE.REFUNDED;
           await bot.updateSwap(new_swap);
           return;
         }
         break;
       }
-      case 1: {
+      case STATE.INITIATED: {
         state = await waitResponse(new_swap, counterNetwork, counterAsset, bot);
-        if (state === 4 || state === 3 || state == 0) return;
+        if (
+          state === STATE.ERROR ||
+          state === STATE.REFUNDED ||
+          state == STATE.DONE
+        )
+          return;
         break;
       }
-      case 2: {
+      case STATE.RESPONSE_FOUND: {
         state = await waitCompletion(
           new_swap,
           counterNetwork,
           counterAsset,
           bot
         );
-        if (state === 4 || state === 3 || state == 0) return;
+        if (
+          state === STATE.ERROR ||
+          state === STATE.REFUNDED ||
+          state == STATE.DONE
+        )
+          return;
         break;
       }
     }
@@ -165,16 +175,18 @@ const waitResponse = async (new_swap, counterNetwork, counterAsset, bot) => {
         bot.swapPairs[new_swap.pair][new_swap.asset].swapContract,
         new_swap.hashedSecret
       );
-      new_swap.state = 3;
+      new_swap.state = STATE.REFUNDED;
       await bot.updateSwap(new_swap);
-      return 3;
+      return STATE.REFUNDED;
     }
     const swp = await bot.clients[counterNetwork].getSwap(
       bot.swapPairs[new_swap.pair][counterAsset].swapContract,
       new_swap.hashedSecret
     );
     console.log("CHECKING FOR SWAP RESPONSE");
-    if (swp.participant !== bot.clients[counterNetwork].account) return 1;
+    if (swp.participant !== bot.clients[counterNetwork].account)
+      return STATE.INITIATED;
+
     console.log("\nA SWAP RESPONSE FOUND : \n", swp);
     const addressKey = `initiator_${new_swap.network.substring(0, 3)}_addr`;
     await bot.clients[new_swap.network].addCounterParty(
@@ -182,17 +194,17 @@ const waitResponse = async (new_swap, counterNetwork, counterAsset, bot) => {
       new_swap.hashedSecret,
       swp[addressKey]
     );
-    new_swap.state = 2;
+    new_swap.state = STATE.RESPONSE_FOUND;
     await bot.updateSwap(new_swap);
-    return 2;
+    return STATE.RESPONSE_FOUND;
   } catch (err) {
     console.error(
       `FAILED TO ADD COUNTER-PARTY TO ${
         bot.swapPairs[new_swap.pair][new_swap.asset].symbol
       } SWAP : ${new_swap.hashedSecret}\n` + err
     );
-    new_swap.state = 4;
+    new_swap.state = STATE.ERROR;
     await bot.updateSwap(new_swap);
-    return 4;
+    return STATE.ERROR;
   }
 };

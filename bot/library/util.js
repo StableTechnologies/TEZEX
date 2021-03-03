@@ -1,4 +1,5 @@
 const { BigNumber } = require("bignumber.js");
+const config = require("./network-config.json");
 /**
  * Returns the minimum expected value by an initiator after deducting reward for swap responder
  *
@@ -21,26 +22,42 @@ module.exports.calcSwapReturn = (swapValue, rewardInBIPS) => {
 module.exports.constants = {
   feePad: {
     "usdc/usdtz": {
-      usdc: new BigNumber(1.7),
-      usdtz: new BigNumber(1.5),
+      usdc: new BigNumber(config.pairs["usdc/usdtz"]["usdc"].feePad),
+      usdtz: new BigNumber(config.pairs["usdc/usdtz"]["usdtz"].feePad),
     },
     "eth/ethtz": {
-      eth: new BigNumber(1.7),
-      ethtz: new BigNumber(1.5),
+      eth: new BigNumber(config.pairs["eth/ethtz"]["eth"].feePad),
+      ethtz: new BigNumber(config.pairs["eth/ethtz"]["ethtz"].feePad),
     },
   },
   minTradeVolume: {
     "usdc/usdtz": {
-      usdc: new BigNumber(50).multipliedBy(10 ** 6),
-      usdtz: new BigNumber(50).multipliedBy(10 ** 6),
+      usdc: new BigNumber(
+        config.pairs["usdc/usdtz"]["usdc"].minTradeVolume
+      ).multipliedBy(10 ** 6),
+      usdtz: new BigNumber(
+        config.pairs["usdc/usdtz"]["usdtz"].minTradeVolume
+      ).multipliedBy(10 ** 6),
     },
     "eth/ethtz": {
-      eth: new BigNumber(0.001).multipliedBy(10 ** 18),
-      ethtz: new BigNumber(0.001).multipliedBy(10 ** 18),
+      eth: new BigNumber(
+        config.pairs["eth/ethtz"]["eth"].minTradeVolume
+      ).multipliedBy(10 ** 18),
+      ethtz: new BigNumber(
+        config.pairs["eth/ethtz"]["ethtz"].minTradeVolume
+      ).multipliedBy(10 ** 18),
     },
   },
 };
 
+module.exports.STATE = {
+  START: 0,
+  DONE: 0,
+  INITIATED: 1,
+  RESPONSE_FOUND: 2,
+  REFUNDED: 3,
+  ERROR: 4,
+};
 /**
  * Takes a whole no. with the original decimal count and required precision (rounded up)
  * @param number BigNumber compatible value

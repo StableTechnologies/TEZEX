@@ -68,7 +68,7 @@ const CreateSwap = ({ clients, swapPairs, genSwap }) => {
   const assets = currentSwap.pair.split("/");
   if (!Object.prototype.hasOwnProperty.call(swapStat.balances, assets[0]))
     return <Loader message="...Loading..." />;
-
+  console.log(swapStat.botStats);
   if (swapStat.botStats === undefined)
     return <Loader message="...Error Fetching Swap Stats..." />;
 

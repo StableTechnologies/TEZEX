@@ -1,5 +1,7 @@
 import { BigNumber } from "bignumber.js";
+import config from "./globalConfig.json";
 import { createSecrets, getCounterPair } from "./util";
+
 const waitCompletion = (
   secret,
   swap,
@@ -67,7 +69,8 @@ const requestSwap = async (swap, clients, swapPairs, update) => {
     );
 
     // create new swap with refund time set to 2hrs
-    const refundTime = Math.trunc(Date.now() / 1000) + 7200;
+    const refundTime =
+      Math.trunc(Date.now() / 1000) + config.swapConstants.refundPeriod;
     if (swap.asset !== "eth" && swap.asset !== "xtz") {
       await clients[network].approveToken(
         swapPairs[swap.pair][swap.asset].tokenContract,
@@ -146,9 +149,9 @@ const waitResponse = (
       console.log("CHECKING FOR SWAP RESPONSE");
       if (
         (counterNetwork === "ethereum" &&
-          swp.initiator_tez_addr == "" &&
-          swp.refundTimestamp == "0") ||
-        (counterNetwork === "tezos" && swp == undefined)
+          swp.initiator_tez_addr === "" &&
+          swp.refundTimestamp === "0") ||
+        (counterNetwork === "tezos" && swp === undefined)
       ) {
         setTimeout(run, 90000);
         return;

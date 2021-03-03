@@ -1,7 +1,7 @@
 const config = require("./network-config.json");
 const Web3 = require("web3");
 const respondToSwap = require("./respond-to-swap");
-const { calcSwapReturn, getAssets, getCounterPair } = require("./util");
+const { calcSwapReturn, getAssets, getCounterPair, STATE } = require("./util");
 const { constants } = require("./util");
 const fetch = require("node-fetch");
 const { BigNumber } = require("bignumber.js");
@@ -209,11 +209,11 @@ module.exports = class Bot {
    */
   async updateSwap(swap) {
     switch (swap.state) {
-      case 0: {
+      case STATE.DONE: {
         delete this.swaps[swap.hashedSecret];
         break;
       }
-      case 3: {
+      case STATE.REFUNDED: {
         try {
           delete this.swaps[swap.hashedSecret];
           const tempVal = this.swapPairs[swap.pair][
@@ -251,7 +251,7 @@ module.exports = class Bot {
       const keys = Object.keys(this.swaps);
       for (const key of keys) {
         if (
-          this.swaps[key].state === 4 &&
+          this.swaps[key].state === STATE.ERROR &&
           this.swaps[key].refundTime <= Date.now() / 1000
         ) {
           try {
@@ -261,7 +261,7 @@ module.exports = class Bot {
                 .swapContract,
               key
             );
-            this.swaps[key].state = 3;
+            this.swaps[key].state = STATE.REFUNDED;
             await this.updateSwap(this.swaps[key]);
             console.log(`[!] REFUNDED SWAP(${this.swaps[key].asset}): ${key}`);
           } catch (err) {
@@ -274,7 +274,7 @@ module.exports = class Bot {
       }
       setTimeout(run, 120000);
     };
-    setTimeout(run, 0);
+    run();
   }
 
   /**
@@ -285,8 +285,8 @@ module.exports = class Bot {
    */
   monitorSwaps(pair, counterAsset) {
     const counterNetwork = this.swapPairs[pair][counterAsset].network;
-    const network = counterNetwork === "ethereum" ? "tezos" : "ethereum";
     const asset = getCounterPair(pair, counterAsset);
+    const network = this.swapPairs[pair][asset].network;
     const run = async () => {
       try {
         if (this.swapPairs[pair][asset].remainingVolume.eq(0)) return;
@@ -332,10 +332,13 @@ module.exports = class Bot {
               this.swapPairs[pair][asset].networkFee
             );
             this.swaps[swp.hashedSecret] = {
-              state: 0,
+              state: STATE.START,
               value: valueToPay.toString(),
               hashedSecret: swp.hashedSecret,
-              refundTime: swp.refundTimestamp - 3600,
+              refundTime:
+                swp.refundTimestamp -
+                config.swapConstants.refundPeriod /
+                  config.swapConstants.refundFactor,
               network: network,
               pair: pair,
               asset: asset,
@@ -349,7 +352,7 @@ module.exports = class Bot {
               counterNetwork,
               counterAsset,
               this,
-              0
+              STATE.START
             );
           }
         }
@@ -361,7 +364,7 @@ module.exports = class Bot {
       }
       setTimeout(run, 120000);
     };
-    setTimeout(run, 0);
+    run();
   }
 
   /**
@@ -582,7 +585,7 @@ module.exports = class Bot {
       }
       setTimeout(run, 60000);
     };
-    setTimeout(run, 0);
+    run();
   }
 
   /**
@@ -595,7 +598,7 @@ module.exports = class Bot {
     let ethSwaps = 0,
       tezSwaps = 0;
     for (const key of keys)
-      if (this.swaps[key].state !== 4) {
+      if (this.swaps[key].state !== STATE.REFUNDED) {
         if (this.swaps[key].network === "ethereum") ethSwaps++;
         else tezSwaps++;
       }
@@ -651,7 +654,7 @@ module.exports = class Bot {
    * `assetConverter` converts one asset in a swap pair to the other
    */
   async getConverter() {
-    const exchangeRates = await Promise.all([
+    const [eth_usd, xtz_usd] = await Promise.all([
       this.clients["tezos"].getPrice("ETH-USD"),
       this.clients["tezos"].getPrice("XTZ-USD"),
     ]);
@@ -660,20 +663,16 @@ module.exports = class Bot {
         new BigNumber(
           eth
             .div(10 ** 18)
-            .multipliedBy(new BigNumber(exchangeRates[0]))
-            .plus(
-              xtz.div(10 ** 6).multipliedBy(new BigNumber(exchangeRates[1]))
-            )
+            .multipliedBy(new BigNumber(eth_usd))
+            .plus(xtz.div(10 ** 6).multipliedBy(new BigNumber(xtz_usd)))
             .toFixed(0, 2)
         ),
       usdtz: ({ eth, xtz }) =>
         new BigNumber(
           eth
             .div(10 ** 18)
-            .multipliedBy(new BigNumber(exchangeRates[0]))
-            .plus(
-              xtz.div(10 ** 6).multipliedBy(new BigNumber(exchangeRates[1]))
-            )
+            .multipliedBy(new BigNumber(eth_usd))
+            .plus(xtz.div(10 ** 6).multipliedBy(new BigNumber(xtz_usd)))
             .toFixed(0, 2)
         ),
       ethtz: ({ eth, xtz }) =>
@@ -682,8 +681,8 @@ module.exports = class Bot {
             .plus(
               xtz
                 .div(10 ** 6)
-                .multipliedBy(new BigNumber(exchangeRates[1]))
-                .div(new BigNumber(exchangeRates[0]))
+                .multipliedBy(new BigNumber(xtz_usd))
+                .div(new BigNumber(eth_usd))
                 .multipliedBy(10 ** 18)
             )
             .toFixed(0, 2)
@@ -694,8 +693,8 @@ module.exports = class Bot {
             .plus(
               xtz
                 .div(10 ** 6)
-                .multipliedBy(new BigNumber(exchangeRates[1]))
-                .div(new BigNumber(exchangeRates[0]))
+                .multipliedBy(new BigNumber(xtz_usd))
+                .div(new BigNumber(eth_usd))
                 .multipliedBy(10 ** 18)
             )
             .toFixed(0, 2)

@@ -3,6 +3,10 @@
     "server": "https://tezex-server.onrender.com",
     "route": "/client/status"
   },
+  "swapConstants": {
+    "refundPeriod": 7200,
+    "refundFactor": 2
+  },
   "tezos": {
     "RPC": "https://tezos-edo.cryptonomic-infra.tech:443",
     "chain_id": "NetXSgo1ZT2DRUG",
@@ -37,7 +41,9 @@
         "swapContract": {
           "address": "KT1CDziBn5r91ymcF1aVkoaa695ZToG4L8TN",
           "mapID": 5604
-        }
+        },
+        "feePad": 1.5,
+        "minTradeVolume": 50
       },
       "usdc": {
         "decimals": 6,
@@ -605,7 +611,9 @@
               "type": "function"
             }
           ]
-        }
+        },
+        "feePad": 1.7,
+        "minTradeVolume": 50
       }
     },
     "eth/ethtz": {
@@ -884,7 +892,9 @@
               "type": "function"
             }
           ]
-        }
+        },
+        "feePad": 1.7,
+        "minTradeVolume": 0.03
       },
       "ethtz": {
         "decimals": 18,
@@ -897,7 +907,9 @@
         "swapContract": {
           "address": "KT1QUnQmGVi5ttQhtVDCdishZE8KAfirKauh",
           "mapID": 8751
-        }
+        },
+        "feePad": 1.5,
+        "minTradeVolume": 0.03
       }
     }
   }

@@ -1,18 +1,1 @@
-{
-    "tezos": {
-        "walletPK": ""
-    },
-    "ethereum": {
-        "walletPK": ""
-    },
-    "maxVolume": {
-        "usdc/usdtz": {
-            "usdc": 300,
-            "usdtz": 300
-        },
-        "eth/ethtz": {
-            "eth": 1,
-            "ethtz": 1
-        }
-    }
-}
+{"iv":"493bca3f73a042b556e165c05d29c59c","content":"fea1f5e64a0875060ac77d373301032291470a782205c6c91e800fc1aafcf42bcb2821ac1715417575719933c26f5703109b16f8e0aa7fb1e3009c3eabe4b796a4cf0063466ac9c888a05b3ea09095fdc9147d305155109af4c47fa83af50ef0400f68ea20028326af17a9280b9bc66beece50a234dc475567e75bba49d08b77b64537659b1347c74dbbd7309a7e4a07ac7af687b69ffe8071db55f500fa01419074b233beefb74f370939e5b4dbc1b7ee4997f23efc75070cc0d9a2770d3f3118dacb698937eb17008e872d727f9b0a2e5406ddb6120b6a5520c9918656ae4bd8bfaf8cd719e87cd2a84fd70e8af60ea5b3ec7c52f6b095866a36c0bcceccab1c963fa3b3812e8d8f8744a6e59ac1e29885d45a8a33ac4997faa97f28dc6de1099574884444e2463460"}
