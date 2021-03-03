@@ -1,5 +1,6 @@
 import React from "react";
 import { useHistory } from "react-router-dom";
+import MiniStat from "../min-stat";
 import useStyles from "./style";
 
 const Home = ({ swaps, ethStore, tezStore, update }) => {
@@ -76,6 +77,7 @@ const Home = ({ swaps, ethStore, tezStore, update }) => {
     data = Object.keys(swaps).map((key) => SwapItem(swaps[key]));
   return (
     <div>
+      <MiniStat />
       <div className={classes.swaps}>
         <h3>Your Swaps</h3>
         {data}

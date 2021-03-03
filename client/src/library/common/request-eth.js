@@ -1,5 +1,5 @@
+import { BigNumber } from "bignumber.js";
 import { constants, createSecrets } from "./util";
-
 const waitCompletion = (secret, tezStore, ethStore, refundTime, update) => {
   setTimeout(async function run() {
     try {
@@ -33,7 +33,7 @@ const requestEth = async (amount, minAmt, ethStore, tezStore, update) => {
 
     // create new swap with refund time set to 2hrs
     const refundTime = Math.trunc(Date.now() / 1000) + 7200;
-    await ethStore.approveToken(parseInt(amount));
+    await ethStore.approveToken(amount);
 
     await ethStore.initiateWait(
       secret.hashedSecret,
@@ -81,7 +81,7 @@ const waitResponse = (
         return;
       }
       console.log("\nA SWAP RESPONSE FOUND : \n", swp);
-      if (swp.value < minAmt) {
+      if (new BigNumber(swp.value).lt(minAmt)) {
         console.log("swap response doesn't match min amount");
         setTimeout(run, 90000);
         return;
@@ -93,7 +93,8 @@ const waitResponse = (
       update(
         secret.hashedSecret,
         2,
-        (swp.value / constants.decimals10_6).toString() + " USDtz"
+        new BigNumber(swp.value).div(constants.decimals10_6).toString() +
+          " USDtz"
       );
       waitCompletion(secret, tezStore, ethStore, refundTime, update);
     } catch (err) {

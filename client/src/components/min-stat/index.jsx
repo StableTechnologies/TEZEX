@@ -4,7 +4,7 @@ import {
   updateBotStats,
 } from "../../library/common/util";
 import useStyles from "./style";
-const Stat = () => {
+const MiniStat = () => {
   const classes = useStyles();
   const [stats, setStats] = useState(undefined);
   const updateStats = async () => {
@@ -22,25 +22,16 @@ const Stat = () => {
   }, []);
   return (
     <div className={classes.container}>
-      <h2>TEZEX STATS</h2>
       {stats === undefined && (
         <div className={classes.stat}>Couldn't Connect to Server</div>
       )}
       {stats !== undefined && (
         <div className={classes.stat}>
           <div>
-            <p>Max USDtz Swap Size</p>
-            <p>Max USDC Swap Size</p>
-            <p>Total USDtz Liquidity</p>
-            <p>Total USDC Liquidity</p>
-            <p>Live Liquidity Providers </p>
-          </div>
-          <div>
-            <p>: {convertBigIntToFloat(stats.maxUSDC, 6, 6)} usdtz</p>
-            <p>: {convertBigIntToFloat(stats.maxUSDtz, 6, 6)} usdc</p>
-            <p>: {convertBigIntToFloat(stats.totalUSDtz, 6, 6)} usdtz</p>
-            <p>: {convertBigIntToFloat(stats.totalUSDC, 6, 6)} usdc</p>
-            <p>: {stats.activeBots}</p>
+            <p>
+              Total Liquidity : {convertBigIntToFloat(stats.totalUSDtz, 6, 6)}{" "}
+              USDtz / {convertBigIntToFloat(stats.totalUSDC, 6, 6)} USDC
+            </p>
           </div>
         </div>
       )}
@@ -48,4 +39,4 @@ const Stat = () => {
   );
 };
 
-export default Stat;
+export default MiniStat;

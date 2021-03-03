@@ -1,6 +1,6 @@
+import { BigNumber } from "bignumber.js";
 import crypto from "crypto";
 import config from "../globalConfig.json";
-
 /**
  * Creates a random secret and corresponding hashed secret for a swap
  */
@@ -21,7 +21,11 @@ export const createSecrets = () => {
  * @param rewardInBIPS reward taken by the swap responder in basis points
  */
 export const calcSwapReturn = (swapValue, rewardInBIPS) => {
-  return Math.floor(parseInt(swapValue) * (1 - parseInt(rewardInBIPS) / 10000));
+  return new BigNumber(swapValue)
+    .multipliedBy(
+      new BigNumber(1).minus(new BigNumber(rewardInBIPS).div(10000))
+    )
+    .toFixed(0, 3);
 };
 
 export const constants = {
@@ -39,4 +43,10 @@ export const updateBotStats = async () => {
     console.log(`\n[x] ERROR : ${err.toString()}`);
     return undefined;
   }
+};
+
+export const convertBigIntToFloat = (number, decimals, precision) => {
+  return new BigNumber(number)
+    .div(new BigNumber(10).pow(decimals))
+    .toFixed(precision);
 };

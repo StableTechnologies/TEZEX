@@ -3,6 +3,7 @@ const config = require("./config.json");
 const log = require("loglevel");
 const conSign = require("conseiljs-softsigner");
 const fetch = require("node-fetch");
+const bigInt = require("big-integer");
 
 const init = async () => {
   const logger = log.getLogger("conseiljs");
@@ -54,7 +55,9 @@ async function mintMinimumBalance(store, contractAddress) {
     contractAddress,
     20_000,
     store.keyStore.publicKeyHash,
-    500000000000,
+    bigInt(500000)
+      .multiply(10 ** 18)
+      .toString(),
     120_000,
     100
   );

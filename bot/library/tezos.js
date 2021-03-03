@@ -338,7 +338,7 @@ module.exports = class Tezos {
         JSONPath({ path: "$.args[1].int", json: jsonData[1] })[0]
       ),
       state: Number(jsonData[2].int),
-      value: Number(jsonData[3].int),
+      value: jsonData[3].int,
     };
   }
 
@@ -393,7 +393,7 @@ module.exports = class Tezos {
         )
       ),
       state: Number(JSONPath({ path: "$.args[2].int", json: jsonData })[0]),
-      value: Number(JSONPath({ path: "$.args[3].int", json: jsonData })[0]),
+      value: JSONPath({ path: "$.args[3].int", json: jsonData })[0],
     };
   }
 

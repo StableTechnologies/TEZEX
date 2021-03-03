@@ -1,3 +1,4 @@
+import { BigNumber } from "bignumber.js";
 import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
 import { constants, updateBotStats } from "../../../../library/common/util";
@@ -5,7 +6,7 @@ import { shorten } from "../../../../util";
 import Loader from "../../../loader";
 import useStyles from "../../style";
 import CreateSwap from "../createSwap";
-const GetSwap = ({ genSwap, tezStore, ethStore }) => {
+const GetSwap = ({ genSwap, tezStore, ethStore, balance }) => {
   const [swaps, setSwaps] = useState([]);
   const [loader, setLoader] = useState(true);
   const [feeDetails, setFee] = useState({});
@@ -35,22 +36,28 @@ const GetSwap = ({ genSwap, tezStore, ethStore }) => {
     const reward = data[3];
     const usdtzFeeData = data[0]["USDTZ"];
     const usdcFeeData = data[0]["USDC"];
-    const ethereumGasPrice = parseFloat(
+    const ethereumGasPrice = new BigNumber(
       ethStore.web3.utils.fromWei(data[4], "ether")
     );
-    const botFee =
-      Math.ceil(
-        ((usdtzFeeData["initiateWait"] + usdtzFeeData["addCounterParty"]) *
-          data[2]) /
-          constants.decimals10_6 +
-          usdcFeeData["redeem"] * ethereumGasPrice * data[1]
-      ) * constants.usdtzFeePad;
+    const botFee = new BigNumber(
+      usdtzFeeData["initiateWait"] + usdtzFeeData["addCounterParty"]
+    )
+      .multipliedBy(data[2])
+      .div(constants.decimals10_6)
+      .plus(
+        new BigNumber(usdcFeeData["redeem"])
+          .multipliedBy(ethereumGasPrice)
+          .multipliedBy(data[1])
+      )
+      .multipliedBy(constants.usdtzFeePad)
+      .toFixed(0, 2);
     const txFee = {
-      eth: (
-        (usdcFeeData["initiateWait"] + usdcFeeData["addCounterParty"]) *
-        ethereumGasPrice
-      ).toFixed(6),
-      tez: usdtzFeeData["redeem"] / constants.decimals10_6,
+      eth: new BigNumber(
+        usdcFeeData["initiateWait"] + usdcFeeData["addCounterParty"]
+      )
+        .multipliedBy(ethereumGasPrice)
+        .toFixed(6),
+      tez: new BigNumber(usdtzFeeData["redeem"]).div(constants.decimals10_6),
     };
     setFee({
       reward,
@@ -104,6 +111,8 @@ const GetSwap = ({ genSwap, tezStore, ethStore }) => {
   let data = "No Swaps Found. Create One!";
   if (swaps.length > 0) data = swaps.map((swp) => SwapItem(swp));
   if (fullLoader) return <Loader message="..Creating Your Swap.." />;
+  if (feeDetails.stats === undefined)
+    return <Loader message="..Loading details.." />;
   return (
     <div className={classes.swapScreen}>
       <div className={classes.container}>
@@ -113,6 +122,7 @@ const GetSwap = ({ genSwap, tezStore, ethStore }) => {
           genSwap={genSwap}
           loader={setFullLoader}
           feeDetails={feeDetails}
+          balance={balance}
         />
       </div>
     </div>

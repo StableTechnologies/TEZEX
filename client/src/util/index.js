@@ -17,12 +17,12 @@ export const setEthAccount = async () => {
     const web3 = new Web3(window.ethereum);
     await window.ethereum.enable();
     const swapContract = new web3.eth.Contract(
-      config.ethereum.abi,
-      config.ethereum.contractAddr
+      config.pairs["usdc/usdtz"].usdc.swapContract.abi,
+      config.pairs["usdc/usdtz"].usdc.swapContract.address
     );
     const tokenContract = new web3.eth.Contract(
-      config.ethereum.tokenABI,
-      config.ethereum.tokenAddr
+      config.pairs["usdc/usdtz"].usdc.tokenContract.abi,
+      config.pairs["usdc/usdtz"].usdc.tokenContract.address
     );
     const account = await web3.eth.getAccounts();
     return new ERC20(web3, account[0], swapContract, tokenContract);
@@ -42,10 +42,10 @@ export const setTezAccount = async () => {
   return new FA12(
     client,
     account["address"],
-    config.tezos.swapContract,
+    config.pairs["usdc/usdtz"].usdtz.swapContract,
     config.tezos.priceOracle,
     config.tezos.feeContract,
-    config.tezos.tokenContract,
+    config.pairs["usdc/usdtz"].usdtz.tokenContract,
     config.tezos.RPC,
     config.tezos.conseilServer
   );

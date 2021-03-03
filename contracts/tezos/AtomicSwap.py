@@ -15,7 +15,7 @@ Swap record -
     hashedSecret(bytes): current swap hash
     initiator(address): initiators tezos address
     initiator_eth_addr(string): initiators ethereum address
-    participant(address): counter-party/participant's tezoz address
+    participant(address): counter-party/participant's tezos address
     refundTimestamp(timestamp): unix time(sec) after which the swap expires
     value(nat): value of the swap in mutez
     state(State): current state of swap

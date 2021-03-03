@@ -4,6 +4,21 @@ const useStyles = makeStyles((theme) => ({
   container: {
     width: "100%",
   },
+  button: {
+    color: "white",
+    cursor: "pointer",
+    padding: "0.4vw",
+    background: "black",
+    fontWeight: "bold",
+    borderRadius: "0.4vw",
+    fontSize: "1.2vw",
+    outline: "none",
+    border: "0.2vw black solid",
+    "&:hover": {
+      backgroundColor: "white",
+      color: "black",
+    },
+  },
   form: {
     display: "flex",
     flexDirection: "column",
@@ -32,7 +47,7 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   intro: {
-    margin: "5vw",
+    margin: "3vw 0",
     fontSize: "1.5vw",
   },
   logo: {
