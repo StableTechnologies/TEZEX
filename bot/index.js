@@ -5,6 +5,23 @@ const {
   encryptUserConfig,
 } = require("./library/encryption");
 const userConfig = require("./user-config.json");
+const winston = require("winston");
+
+const logger = winston.createLogger({
+  level: "warn",
+  format: winston.format.json(),
+  defaultMeta: { service: "tezex-bot" },
+  transports: [
+    new winston.transports.File({
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.json()
+      ),
+      filename: `logs/bot-${new Date().getTime()}.log`,
+      timestamp: true,
+    }),
+  ],
+});
 
 const init = () => {
   let config = {};
@@ -46,9 +63,10 @@ const init = () => {
     }
   } catch (error) {
     console.log(`\nError while encrypting/decrypting config! Try Again`);
+    logger.error("error while encrypting/decrypting config", error);
     return;
   }
-  const bot = new Bot();
+  const bot = new Bot(logger);
   bot
     .init(config.ethereum, config.tezos, config.maxVolume)
     .then((data) => {
@@ -63,34 +81,45 @@ const validateBalance = ({
   balanceRequirements: balances,
   networkFees: fees,
 }) => {
-  const assets = Object.keys(balances);
-  for (let asset of assets) {
-    if (balances[asset].balance.lt(balances[asset].need)) {
-      throw new Error(
-        `Not enough ${balances[asset].symbol} balance ${balances[asset].balance
-          .div(10 ** balances[asset].decimals)
-          .toString()} eth < ${balances[asset].need
-          .div(10 ** balances[asset].decimals)
-          .toString()} eth\n`
-      );
+  try {
+    const assets = Object.keys(balances);
+    for (let asset of assets) {
+      if (balances[asset].balance.lt(balances[asset].need)) {
+        throw new Error(
+          `Not enough ${balances[asset].symbol} balance ${balances[
+            asset
+          ].balance
+            .div(10 ** balances[asset].decimals)
+            .toString()} eth < ${balances[asset].need
+            .div(10 ** balances[asset].decimals)
+            .toString()} eth\n`
+        );
+      }
     }
-  }
-  let question = "Are the above details correct? (y/n): ";
-  if (
-    balances["eth"].balance.minus(balances["eth"].need).lt(fees["eth"]) ||
-    balances["xtz"].balance.minus(balances["xtz"].need).lt(fees["xtz"])
-  )
-    question = `\n[x] Estimated amount of balance required for fees excluding trade volume :\n   [*] Ethereum : ${fees[
-      "eth"
-    ].div(10 ** balances["eth"].decimals)} eth\n   [*] Tezos : ${fees[
-      "xtz"
-    ].div(
-      10 ** balances["xtz"].decimals
-    )} xtz\n\n[!] If your balance drops below the tx fees at any point your bot will fail to operate.\n[*] These balances are estimated values with a considerable safety margins\n\nDo you want to continue with current settings? (y/n)`;
-  const answer = readlineSync.question(question);
+    let question = "Are the above details correct? (y/n): ";
+    if (
+      balances["eth"].balance.minus(balances["eth"].need).lt(fees["eth"]) ||
+      balances["xtz"].balance.minus(balances["xtz"].need).lt(fees["xtz"])
+    ) {
+      logger.warn("balance less than fees", {
+        eth: { need: balances["eth"].need, fees: fees["eth"] },
+        xtz: { need: balances["xtz"].need, fees: fees["xtz"] },
+      });
+      question = `\n[x] Estimated amount of balance required for fees excluding trade volume :\n   [*] Ethereum : ${fees[
+        "eth"
+      ].div(10 ** balances["eth"].decimals)} eth\n   [*] Tezos : ${fees[
+        "xtz"
+      ].div(
+        10 ** balances["xtz"].decimals
+      )} xtz\n\n[!] If your balance drops below the tx fees at any point your bot will fail to operate.\n[*] These balances are estimated values with a considerable safety margins\n\nDo you want to continue with current settings? (y/n)`;
+    }
+    const answer = readlineSync.question(question);
 
-  if (answer.toLowerCase() !== "y") {
-    throw new Error("[x] Exiting..\n");
+    if (answer.toLowerCase() !== "y") {
+      throw new Error("[x] Exiting..\n");
+    }
+  } catch (err) {
+    logger.error("balance validation failed", err);
   }
 };
 

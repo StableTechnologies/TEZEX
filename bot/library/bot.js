@@ -10,12 +10,13 @@ const Ethereum = require("./ethereum");
 const Tezos = require("./tezos");
 
 module.exports = class Bot {
-  constructor() {
+  constructor(logger) {
     this.reward = 0; // reward for responding to user swaps, taken from tezos contract
     this.maxEthSwaps = 5; // max swaps than can be ran in parallel on eth network
     this.maxTezSwaps = 5; // max swaps than can be ran in parallel on tezos network
     this.swapPairs = {}; // arranged pair wise (eg. "usdc/usdtz") and contains contract details, fee details and volume stats for the swap pair
     this.swaps = {}; // list of all swaps from any pair, each swap besides it's common attributes will have a `pair` and a `side` param to identify which pair and side the swap belongs to
+    this.logger = logger;
   }
 
   /**
@@ -28,6 +29,7 @@ module.exports = class Bot {
   async init(ethConfig, tezosConfig, volume) {
     try {
       console.log("\nInitializing Bot...");
+      this.logger.warn("Setting Up Bot");
       const ethMutex = new Mutex();
       const tezMutex = new Mutex();
       const pairs = Object.keys(config.pairs);
@@ -123,6 +125,7 @@ module.exports = class Bot {
         this.getBalances(balanceRequirements),
         this.getWorstCaseNetworkFees(),
       ]);
+      this.logger.warn("start volume", volume);
       return {
         ethAccount: this.clients["ethereum"].account,
         tezosAccount: this.clients["tezos"].account,
@@ -130,7 +133,8 @@ module.exports = class Bot {
         networkFees: data[1],
       };
     } catch (err) {
-      console.error("Bot Init failed | \n" + err);
+      console.error("Bot Init failed | \n");
+      this.logger.error("bot setup failed", err);
       throw err;
     }
   }
@@ -141,65 +145,70 @@ module.exports = class Bot {
    * updating reward
    */
   async start() {
-    console.log("\n\n[!] INITIALIZING BOT! PLEASE WAIT...\n");
-    let allowanceCheck = [];
-    const pairs = Object.keys(this.swapPairs);
-    for (const pair of pairs) {
-      const assets = pair.split("/");
-      for (const asset of assets) {
-        const network = this.swapPairs[pair][asset].network;
-        if (asset !== "eth" && asset !== "xtz")
-          allowanceCheck.push(
-            this.clients[network].tokenAllowance(
-              this.swapPairs[pair][asset].tokenContract,
-              this.swapPairs[pair][asset].swapContract,
-              this.clients[network].account
-            )
-          );
-      }
-    }
-    const allowances = await Promise.all(allowanceCheck);
-    let approveOps = [],
-      i = 0;
-    for (const pair of pairs) {
-      const assets = pair.split("/");
-      for (const asset of assets) {
-        const network = this.swapPairs[pair][asset].network;
-        if (asset !== "eth" && asset !== "xtz") {
-          if (
-            !new BigNumber(allowances[i]).eq(
-              this.swapPairs[pair][asset].remainingVolume
-            )
-          ) {
-            console.log(
-              `Mismatch for ${asset} : ${allowances[i]} ${this.swapPairs[pair][
-                asset
-              ].remainingVolume.toString()}`
-            );
-            approveOps.push(
-              this.clients[network].approveToken(
+    try {
+      console.log("\n\n[!] INITIALIZING BOT! PLEASE WAIT...\n");
+      let allowanceCheck = [];
+      const pairs = Object.keys(this.swapPairs);
+      for (const pair of pairs) {
+        const assets = pair.split("/");
+        for (const asset of assets) {
+          const network = this.swapPairs[pair][asset].network;
+          if (asset !== "eth" && asset !== "xtz")
+            allowanceCheck.push(
+              this.clients[network].tokenAllowance(
                 this.swapPairs[pair][asset].tokenContract,
                 this.swapPairs[pair][asset].swapContract,
-                this.swapPairs[pair][asset].remainingVolume.toString()
+                this.clients[network].account
               )
             );
-          }
-          i++;
         }
       }
-    }
-    await Promise.all(approveOps);
-    console.log("\n[!] BOT INITIALIZED");
-    await this.monitorReward(true);
-    this.liveUpdate();
-    this.monitorReward();
-    for (const pair of pairs) {
-      const assets = pair.split("/");
-      for (const asset of assets) {
-        this.monitorSwaps(pair, asset);
+      const allowances = await Promise.all(allowanceCheck);
+      let approveOps = [],
+        i = 0;
+      for (const pair of pairs) {
+        const assets = pair.split("/");
+        for (const asset of assets) {
+          const network = this.swapPairs[pair][asset].network;
+          if (asset !== "eth" && asset !== "xtz") {
+            if (
+              !new BigNumber(allowances[i]).eq(
+                this.swapPairs[pair][asset].remainingVolume
+              )
+            ) {
+              this.logger.warn(
+                `mismatch for ${asset} : ${allowances[i]} ${this.swapPairs[
+                  pair
+                ][asset].remainingVolume.toString()}`
+              );
+              approveOps.push(
+                this.clients[network].approveToken(
+                  this.swapPairs[pair][asset].tokenContract,
+                  this.swapPairs[pair][asset].swapContract,
+                  this.swapPairs[pair][asset].remainingVolume.toString()
+                )
+              );
+            }
+            i++;
+          }
+        }
       }
+      await Promise.all(approveOps);
+      console.log("\n[!] BOT INITIALIZED");
+      await this.monitorReward(true);
+      this.liveUpdate();
+      this.monitorReward();
+      for (const pair of pairs) {
+        const assets = pair.split("/");
+        for (const asset of assets) {
+          this.monitorSwaps(pair, asset);
+        }
+      }
+      this.monitorRefunds();
+    } catch (err) {
+      this.logger.error("bot start failed", err);
+      throw err;
     }
-    this.monitorRefunds();
   }
 
   /**
@@ -208,37 +217,45 @@ module.exports = class Bot {
    * @param swap the swap object
    */
   async updateSwap(swap) {
-    switch (swap.state) {
-      case STATE.DONE: {
-        delete this.swaps[swap.hashedSecret];
-        break;
-      }
-      case STATE.REFUNDED: {
-        try {
+    try {
+      switch (swap.state) {
+        case STATE.DONE: {
           delete this.swaps[swap.hashedSecret];
-          const tempVal = this.swapPairs[swap.pair][
-            swap.asset
-          ].remainingVolume.plus(swap.value);
-          const allowance = await this.clients[swap.network].tokenAllowance(
-            this.swapPairs[swap.pair][swap.asset].tokenContract,
-            this.swapPairs[swap.pair][swap.asset].swapContract,
-            this.clients[swap.network].account
-          );
-          if (!new BigNumber(allowance).eq(tempVal))
-            await this.clients[swap.network].approveToken(
+          break;
+        }
+        case STATE.REFUNDED: {
+          try {
+            delete this.swaps[swap.hashedSecret];
+            const tempVal = this.swapPairs[swap.pair][
+              swap.asset
+            ].remainingVolume.plus(swap.value);
+            const allowance = await this.clients[swap.network].tokenAllowance(
               this.swapPairs[swap.pair][swap.asset].tokenContract,
               this.swapPairs[swap.pair][swap.asset].swapContract,
-              tempVal.toString()
+              this.clients[swap.network].account
             );
-          this.swapPairs[swap.pair][swap.asset].remainingVolume = tempVal;
-        } catch (err) {
-          console.error("[x] FAILED TO RE-APPROVE FUNDS" + "\n" + err);
+            if (!new BigNumber(allowance).eq(tempVal))
+              await this.clients[swap.network].approveToken(
+                this.swapPairs[swap.pair][swap.asset].tokenContract,
+                this.swapPairs[swap.pair][swap.asset].swapContract,
+                tempVal.toString()
+              );
+            this.swapPairs[swap.pair][swap.asset].remainingVolume = tempVal;
+          } catch (err) {
+            console.error("[x] FAILED TO RE-APPROVE FUNDS" + "\n" + err);
+            this.logger.error(`re-approval failed : ${swap.hashedSecret}`, err);
+          }
+          break;
         }
-        break;
+        default: {
+          this.swaps[swap.hashedSecret] = swap;
+        }
       }
-      default: {
-        this.swaps[swap.hashedSecret] = swap;
-      }
+    } catch (err) {
+      this.logger.error(`swap state update failed : ${swap.hashedSecret}`, err);
+      console.log(err);
+    } finally {
+      this.logger.warn(`current swaps`, { swap: this.swaps });
     }
   }
 
@@ -248,6 +265,7 @@ module.exports = class Bot {
   monitorRefunds() {
     const run = async () => {
       console.log("[*] CHECKING REFUNDABLE SWAPS");
+      this.logger.info("checking refundable swaps");
       const keys = Object.keys(this.swaps);
       for (const key of keys) {
         if (
@@ -256,6 +274,7 @@ module.exports = class Bot {
         ) {
           try {
             console.log(`[!] REFUNDING SWAP(${this.swaps[key].asset}): ${key}`);
+            this.logger.warn("refunding swap", { swap });
             await this.clients[this.swaps[key].network].refund(
               this.swapPairs[this.swaps[key].pair][this.swaps[key].asset]
                 .swapContract,
@@ -269,6 +288,7 @@ module.exports = class Bot {
               `[x] FAILED TO REFUND SWAP(${this.swaps[key].asset}): ${key}\n` +
                 err
             );
+            this.logger.error(`failed to refund swap: ${key}`, err);
           }
         }
       }
@@ -292,6 +312,9 @@ module.exports = class Bot {
         if (this.swapPairs[pair][asset].remainingVolume.eq(0)) return;
         console.log(
           `[*] CHECKING ${this.swapPairs[pair][counterAsset].symbol} SWAPS`
+        );
+        this.logger.info(
+          `checking ${this.swapPairs[pair][counterAsset].symbol} swaps`
         );
         const waitingSwaps = await this.clients[counterNetwork].getWaitingSwaps(
           this.swapPairs[pair][counterAsset].swapContract,
@@ -320,12 +343,20 @@ module.exports = class Bot {
               `[!] FOUND ${this.swapPairs[pair][counterAsset].symbol} SWAP: `,
               swp.hashedSecret
             );
+            this.logger.warn(
+              `found ${this.swapPairs[pair][counterAsset].symbol} swap`,
+              { swap: swp }
+            );
             let valueToPay = new BigNumber(
               calcSwapReturn(swp.value, this.reward)
             );
             valueToPay = this.assetConverter[pair][asset](valueToPay);
             if (valueToPay.lt(this.swapPairs[pair][asset].networkFee)) {
               console.log("[x] SWAP NOT PROFITABLE : ", swp.hashedSecret);
+              this.logger.warn(
+                `${this.swapPairs[pair][counterAsset].symbol} swap not profitable`,
+                { swap: swp }
+              );
               continue;
             }
             valueToPay = valueToPay.minus(
@@ -333,6 +364,7 @@ module.exports = class Bot {
             );
             this.swaps[swp.hashedSecret] = {
               state: STATE.START,
+              originalValue: swp.value,
               value: valueToPay.toString(),
               hashedSecret: swp.hashedSecret,
               refundTime:
@@ -343,7 +375,6 @@ module.exports = class Bot {
               pair: pair,
               asset: asset,
             };
-            console.log(this.swaps, valueToPay.toString());
             this.swapPairs[pair][asset].remainingVolume = this.swapPairs[pair][
               asset
             ].remainingVolume.minus(valueToPay);
@@ -361,6 +392,10 @@ module.exports = class Bot {
           `[x] FAILED TO MONITOR ${this.swapPairs[pair][asset].symbol} SWAPS\n`,
           err
         );
+        this.logger.error(
+          `failed to monitor ${this.swapPairs[pair][asset].symbol} swaps`,
+          err
+        );
       }
       setTimeout(run, 120000);
     };
@@ -374,6 +409,7 @@ module.exports = class Bot {
   async monitorReward(runOnce = false) {
     const run = async () => {
       console.log("[*] UPDATING REWARDS");
+      this.logger.info(`updating rewards`);
       try {
         const data = await Promise.all([
           this.getBotFees(),
@@ -392,37 +428,46 @@ module.exports = class Bot {
         }
         this.assetConverter = data[1].assetConverter;
         this.reward = new BigNumber(data[0].reward);
+
+        let swapStats = "";
+        const currentSwapStats = {};
+        for (const pair of pairs) {
+          const assets = pair.split("/");
+          swapStats += `    [-] ${this.swapPairs[pair][assets[0]].symbol}/${
+            this.swapPairs[pair][assets[1]].symbol
+          }\n`;
+          currentSwapStats[pair] = {};
+          for (const asset of assets) {
+            const networkFee =
+              this.swapPairs[pair][asset].networkFee
+                .div(10 ** this.swapPairs[pair][asset].decimals)
+                .toString() +
+              " " +
+              asset;
+            const vol =
+              this.swapPairs[pair][asset].remainingVolume
+                .div(10 ** this.swapPairs[pair][asset].decimals)
+                .toString() +
+              " " +
+              asset;
+            swapStats += `      [*] ${this.swapPairs[pair][asset].symbol} :\n       - Network Fee : ${networkFee}\n       - Remaining Volume : ${vol}\n`;
+            currentSwapStats[pair][asset] = { networkFee, remainingVol: vol };
+          }
+        }
+        this.logger.warn("current rewards", {
+          fees: pureFees,
+          conversionData: data[1].conversionData,
+          currentSwapStats,
+        });
+        console.log(
+          `\n\n[*]CURRENT STATUS :\n  [!] ACTIVE SWAP COUNT : ${
+            Object.keys(this.swaps).length
+          }\n  [!] SWAP REWARD RATE : ${this.reward.toString()} BPS\n  [!] SWAP STATS :\n${swapStats}`
+        );
       } catch (err) {
         console.error("[x] ERROR while updating reward: ", err);
+        this.logger.error(`error updating rewards`, err);
       }
-      let swapStats = "";
-      const pairs = Object.keys(this.swapPairs);
-      for (const pair of pairs) {
-        const assets = pair.split("/");
-        swapStats += `    [-] ${this.swapPairs[pair][assets[0]].symbol}/${
-          this.swapPairs[pair][assets[1]].symbol
-        }\n`;
-        for (const asset of assets) {
-          const networkFee =
-            this.swapPairs[pair][asset].networkFee
-              .div(10 ** this.swapPairs[pair][asset].decimals)
-              .toString() +
-            " " +
-            asset;
-          const vol =
-            this.swapPairs[pair][asset].remainingVolume
-              .div(10 ** this.swapPairs[pair][asset].decimals)
-              .toString() +
-            " " +
-            asset;
-          swapStats += `      [*] ${this.swapPairs[pair][asset].symbol} :\n       - Network Fee : ${networkFee}\n       - Remaining Volume : ${vol}\n`;
-        }
-      }
-      console.log(
-        `\n\n[*]CURRENT STATUS :\n  [!] ACTIVE SWAP COUNT : ${
-          Object.keys(this.swaps).length
-        }\n  [!] SWAP REWARD RATE : ${this.reward.toString()} BPS\n  [!] SWAP STATS :\n${swapStats}`
-      );
       if (!runOnce) setTimeout(run, 60000);
     };
     if (!runOnce) setTimeout(run, 60000);
@@ -558,6 +603,7 @@ module.exports = class Bot {
   liveUpdate() {
     const run = async () => {
       console.log("[*] LIVE CHECK");
+      this.logger.info("ping server");
       try {
         const volume = {};
         const pairs = Object.keys(this.swapPairs);
@@ -581,7 +627,8 @@ module.exports = class Bot {
         });
         if (!res.ok) throw new Error("Failed to ping server\n");
       } catch (err) {
-        console.log(`\n[x] ERROR : ${err.toString()}`);
+        console.log(`\n[x] LIVE CHECK ERROR : ${err.toString()}`);
+        this.logger.error(`error pinging server`, err);
       }
       setTimeout(run, 60000);
     };
@@ -711,6 +758,7 @@ module.exports = class Bot {
       },
     };
     return {
+      conversionData: { eth_usd, xtz_usd },
       feeConverter,
       assetConverter,
     };
