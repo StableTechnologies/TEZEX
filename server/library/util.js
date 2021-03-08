@@ -1,7 +1,7 @@
 const Ethereum = require("./ethereum");
 const Tezos = require("./tezos");
 const config = require(`./${
-  process.env.NODE_ENV || "prod"
+  process.env.SERVER_ENV || "prod"
 }-network-config.json`);
 const { BigNumber } = require("bignumber.js");
 

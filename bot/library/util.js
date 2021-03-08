@@ -1,6 +1,6 @@
 const { BigNumber } = require("bignumber.js");
 const config = require(`./${
-  process.env.NODE_ENV || "prod"
+  process.env.BOT_ENV || "prod"
 }-network-config.json`);
 
 /**

@@ -8,7 +8,7 @@ const { JSONPath } = require("jsonpath-plus");
 const log = require("loglevel");
 const fetch = require("node-fetch");
 const config = require(`./${
-  process.env.NODE_ENV || "prod"
+  process.env.SERVER_ENV || "prod"
 }-network-config.json`);
 module.exports = class Tezos {
   constructor(chainID, rpc, conseilServer) {

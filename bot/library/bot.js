@@ -1,5 +1,5 @@
 const config = require(`./${
-  process.env.NODE_ENV || "prod"
+  process.env.BOT_ENV || "prod"
 }-network-config.json`);
 const Web3 = require("web3");
 const respondToSwap = require("./respond-to-swap");

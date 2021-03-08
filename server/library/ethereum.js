@@ -1,6 +1,6 @@
 const Web3 = require("web3");
 const config = require(`./${
-  process.env.NODE_ENV || "prod"
+  process.env.SERVER_ENV || "prod"
 }-network-config.json`);
 module.exports = class Ethereum {
   constructor(web3) {
