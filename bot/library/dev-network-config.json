@@ -1,7 +1,7 @@
 {
   "tezex": {
-    "server": "https://tezex-server.onrender.com",
-    "route": "/client/status"
+    "server": "http://localhost:8000",
+    "route": "/bot/ping"
   },
   "swapConstants": {
     "refundPeriod": 7200,

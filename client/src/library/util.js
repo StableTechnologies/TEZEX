@@ -1,6 +1,8 @@
 import { BigNumber } from "bignumber.js";
 import crypto from "crypto";
-import config from "./globalConfig.json";
+const config = require(`./${
+  process.env.REACT_APP_ENV || "prod"
+}-network-config.json`);
 /**
  * Creates a random secret and corresponding hashed secret for a swap
  */

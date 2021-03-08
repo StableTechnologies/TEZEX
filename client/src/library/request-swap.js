@@ -1,6 +1,8 @@
 import { BigNumber } from "bignumber.js";
-import config from "./globalConfig.json";
 import { createSecrets, getCounterPair } from "./util";
+const config = require(`./${
+  process.env.REACT_APP_ENV || "prod"
+}-network-config.json`);
 
 const waitCompletion = (
   secret,

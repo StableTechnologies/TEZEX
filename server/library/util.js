@@ -1,6 +1,8 @@
 const Ethereum = require("./ethereum");
 const Tezos = require("./tezos");
-const config = require("./network-config.json");
+const config = require(`./${
+  process.env.NODE_ENV || "prod"
+}-network-config.json`);
 const { BigNumber } = require("bignumber.js");
 
 module.exports.init = async () => {

@@ -1,12 +1,4 @@
 {
-  "tezex": {
-    "server": "https://tezex-server.onrender.com",
-    "route": "/bot/ping"
-  },
-  "swapConstants": {
-    "refundPeriod": 7200,
-    "refundFactor": 2
-  },
   "tezos": {
     "RPC": "https://tezos-edo.cryptonomic-infra.tech:443",
     "chain_id": "NetXSgo1ZT2DRUG",

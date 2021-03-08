@@ -1,5 +1,8 @@
 const { BigNumber } = require("bignumber.js");
-const config = require("./network-config.json");
+const config = require(`./${
+  process.env.NODE_ENV || "prod"
+}-network-config.json`);
+
 /**
  * Returns the minimum expected value by an initiator after deducting reward for swap responder
  *

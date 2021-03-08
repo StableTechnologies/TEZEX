@@ -1,5 +1,7 @@
 const Web3 = require("web3");
-const config = require("./network-config.json");
+const config = require(`./${
+  process.env.NODE_ENV || "prod"
+}-network-config.json`);
 module.exports = class Ethereum {
   constructor(web3) {
     this.web3 = web3; // Web3 instance

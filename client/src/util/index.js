@@ -2,8 +2,10 @@ import { DAppClient } from "@airgap/beacon-sdk";
 import { BigNumber } from "bignumber.js";
 import Web3 from "web3";
 import Ethereum from "../library/ethereum";
-import config from "../library/globalConfig.json";
 import Tezos from "../library/tezos";
+const config = require(`../library/${
+  process.env.REACT_APP_ENV || "prod"
+}-network-config.json`);
 
 export const shorten = (first, last, str) => {
   return str.substring(0, first) + "..." + str.substring(str.length - last);

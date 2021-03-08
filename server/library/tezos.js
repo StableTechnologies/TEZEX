@@ -7,7 +7,9 @@ const {
 const { JSONPath } = require("jsonpath-plus");
 const log = require("loglevel");
 const fetch = require("node-fetch");
-const config = require("./network-config.json");
+const config = require(`./${
+  process.env.NODE_ENV || "prod"
+}-network-config.json`);
 module.exports = class Tezos {
   constructor(chainID, rpc, conseilServer) {
     this.rpc = rpc; // rpc server address for network interaction
