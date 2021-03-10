@@ -120,6 +120,7 @@ const validateBalance = ({
     }
   } catch (err) {
     logger.error("balance validation failed", err);
+    throw err;
   }
 };
 
