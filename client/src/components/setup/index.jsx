@@ -75,7 +75,10 @@ const Setup = ({ init }) => {
         <p>
           Truly Decentralized Cross-Chain Atomic Swaps for Ethereum and Tezos
         </p>
-        <p>Network : Testnet [Goerli, Edo2net] </p>
+        {process.env.REACT_APP_ENV === "dev" && (
+          <p>Network : Testnet [Goerli, Edo2net] </p>
+        )}
+        {process.env.REACT_APP_ENV !== "dev" && <p>Network : Mainnet </p>}
       </div>
       <button className={classes.button} onClick={setup}>
         Connect Your Wallets

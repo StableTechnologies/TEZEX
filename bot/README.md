@@ -24,10 +24,10 @@ tezex@bot:~/TEZEX/bot$ npm i
 ```json
 {
   "tezos": {
-    "walletPK": ""
+    "walletPK": "your-tezos-private-key"
   },
   "ethereum": {
-    "walletPK": ""
+    "walletPK": "your-ethereum-private-key"
   },
   "maxVolume": {
     "usdc/usdtz": {

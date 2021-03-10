@@ -105,6 +105,10 @@ init().then((data) => {
   clients = data.clients;
   swapPairs = data.swapPairs;
   app.listen(port, () => {
-    console.log(`Tezex Server listening on port ${port}!`);
+    console.log(
+      `Tezex Server listening on port ${port}! for ${
+        process.env.SERVER_ENV || "prod"
+      }`
+    );
   });
 });
