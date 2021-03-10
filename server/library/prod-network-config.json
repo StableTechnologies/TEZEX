@@ -614,7 +614,7 @@
                 "symbol": "ETH",
                 "network": "ethereum",
                 "swapContract": {
-                    "address": "0x7710b1C9C993616995C32418BF2eFEB49FBe33B6",
+                    "address": "0x6Df3425f18D579D75Af699eFB0f93287e367594a",
                     "abi": [
                         {
                             "inputs": [],
@@ -893,12 +893,12 @@
                 "symbol": "ETHtz",
                 "network": "tezos",
                 "tokenContract": {
-                    "address": "KT19sJYta4vZsJY6pcWqE86wqsck6kmivzFX",
-                    "mapID": 8745
+                    "address": "KT19at7rQUvyjxnZ2fBv7D9zc8rkyG7gAoU8",
+                    "mapID": 199
                 },
                 "swapContract": {
-                    "address": "KT1QUnQmGVi5ttQhtVDCdishZE8KAfirKauh",
-                    "mapID": 8751
+                    "address": "KT1VcAVYGg2gvZ1NxnZwAzUaPf7i8iGjoAtv",
+                    "mapID": 673
                 },
                 "feePad": 1.5,
                 "minTradeVolume": 0.03
