@@ -6,7 +6,7 @@ TEZEX Bot instances are run by the market makers of the TEZEX platform. Do read 
 
 1. Node 12.x
 2. Ethereum Account with USDC tokens and sufficient eth
-3. Tezos Account with USDtz tokens and sufficient xtz
+3. Tezos Account with USDtz, ETHtz tokens and sufficient xtz
 
 ## Configuration
 
@@ -42,7 +42,7 @@ tezex@bot:~/TEZEX/bot$ npm i
 }
 ```
 
-4. You will have to update the config file with your own ethereum and tezos `walletAddress` and `walletPK` (private keys). The `maxVolume` config let's you tune the amount of tokens you want to trade in a single run of the bot instance, you should specify the exact amount that you want your bot to trade.
+4. You will have to update the config file with your own ethereum and tezos `walletPK` (private keys). The `maxVolume` config let's you tune the amount of tokens you want to trade in a single run of the bot instance, you should specify the exact amount that you want your bot to trade.
 
 5. Once you have setup the config file you can go ahead and start the bot. When the bot will run for the first time it will ask for a password and encrypt your config file after which you won't be able to directly change it. To update the config you will have to remove the encrypted file and re-create the `user-config.json` file with the above details.
 
@@ -73,17 +73,26 @@ Please enter your password to start the bot: *****
 
 Please Confirm Details:
 
-- Etherum Details:
---- Account: 0x000....
---- Eth Balance: 1 eth
---- USDC Balance: 1000 usdc
---- Bot trade Volume: 300 usdc
+- Ethereum Details:
+--- Account: 0x......
+--- Asset Balance: 
+  -- ETH : 0 eth
+  -- USDC : 0 usdc
+--- Bot trade Volume: 
+  -- ETH : 0.1 eth
+  -- USDC : 300 usdc
+
 
 - Tezos Details:
---- Account: tz1.......
---- Tez Balance: 200 xtz
---- USDtz Balance: 1000 usdtz
---- Bot trade Volume: 3000 usdtz
+--- Account: tz1......
+--- Asset Balance: 
+  -- XTZ : 0.122895 xtz
+  -- USDtz : 10.845897 usdtz
+  -- ETHtz : 0 ethtz
+--- Bot trade Volume: 
+  -- XTZ : 0 xtz
+  -- USDtz : 300 usdtz
+  -- ETHtz : 0.1 ethtz
 
 Are the above details correct? (y/n): y
 
