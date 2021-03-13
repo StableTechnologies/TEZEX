@@ -29,8 +29,8 @@ const Stat = ({ swapPairs }) => {
           <div className={classes.indented}>
             - Total Liquidity : {stats.total[pair][assets[0]]} {assets[0]}/
             {stats.total[pair][assets[1]]} {assets[1]}
-            <br />- Max Swap Size : {stats.max[pair][assets[0]]} {assets[0]}/
-            {stats.max[pair][assets[1]]} {assets[1]}
+            <br />- Max Swap Size : {stats.max[pair][assets[1]]} {assets[0]}/
+            {stats.max[pair][assets[0]]} {assets[1]}
           </div>
         </div>
       );
