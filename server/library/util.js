@@ -104,7 +104,7 @@ module.exports.getAllowances = async (
     } else {
       allowances[pair] = {
         [assets[0]]: new BigNumber("0"),
-        [assets[0]]: new BigNumber("0"),
+        [assets[1]]: new BigNumber("0"),
       };
     }
   }
@@ -139,4 +139,22 @@ module.exports.getAllowances = async (
 
 module.exports.log = (msg) => {
   console.log(`\n[${(new Date().getTime() / 1000).toFixed()}] `, ...msg);
+};
+
+module.exports.deepCopy = (allowances) => {
+  const pairs = Object.keys(allowances);
+  const max = {},
+    total = {};
+  for (const pair of pairs) {
+    const assets = pair.split("/");
+    max[pair] = {
+      [assets[0]]: allowances[pair][assets[0]],
+      [assets[1]]: allowances[pair][assets[1]],
+    };
+    total[pair] = {
+      [assets[0]]: allowances[pair][assets[0]],
+      [assets[1]]: allowances[pair][assets[1]],
+    };
+  }
+  return { max, total };
 };

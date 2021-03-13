@@ -1,6 +1,5 @@
 const express = require("express");
-const Ethereum = require("./library/ethereum");
-const { init, getAllowances, log } = require("./library/util.js");
+const { init, getAllowances, log, deepCopy } = require("./library/util.js");
 const cors = require("cors");
 
 const app = express();
@@ -63,8 +62,9 @@ app.get("/client/status", (req, res, next) => {
       }
       count++;
       if (count === 1) {
-        max = { ...data.allowances };
-        total = { ...data.allowances };
+        const temp = deepCopy(data.allowances);
+        max = temp.max;
+        total = temp.total;
         return;
       }
       for (const pair of pairs) {
