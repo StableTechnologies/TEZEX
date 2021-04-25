@@ -1,0 +1,56 @@
+{
+  "tezex": {
+    "server": "http://localhost:8000",
+    "route": "/bot/ping/tezos"
+  },
+  "swapConstants": {
+    "refundPeriod": 7200,
+    "refundFactor": 2
+  },
+  "tezos": {
+    "RPC": "https://tezos-edo.cryptonomic-infra.tech:443",
+    "chain_id": "NetXSgo1ZT2DRUG",
+    "conseilServer": {
+      "url": "https://conseil-edo.cryptonomic-infra.tech:443",
+      "apiKey": "4bb2f288-c36a-49ea-a50e-e7cbdc495e0e",
+      "network": "edonet"
+    },
+    "priceOracle": {
+      "address": "KT1RCNpUEDjZAYhabjzgz1ZfxQijCDVMEaTZ",
+      "mapID": 1542
+    },
+    "swapContract": {
+      "address": "KT18hsNZzdjkA8CDhqCWLW1RvRimnyrZCtAN",
+      "mapID": 56174
+    }
+  },
+  "assets": {
+    "usdtz": {
+      "decimals": 6,
+      "symbol": "USDtz",
+      "tokenContract": {
+        "address": "KT1D7B76g6hEELcVHqTxs1Ac4rRa2caVziqR",
+        "mapID": 5599
+      },
+      "feePad": 1.5,
+      "minTradeVolume": 25
+    },
+    "ethtz": {
+      "decimals": 18,
+      "symbol": "ETHtz",
+      "tokenContract": {
+        "address": "KT19sJYta4vZsJY6pcWqE86wqsck6kmivzFX",
+        "mapID": 8745
+      },
+      "feePad": 1.5,
+      "minTradeVolume": 0.01
+    },
+    "xtz": {
+      "decimals": 6,
+      "symbol": "XTZ",
+      "feePad": 1.5,
+      "minTradeVolume": 5
+    }
+  },
+  "pairs": ["ethtz/usdtz", "xtz/usdtz", "xtz/ethtz"]
+}
