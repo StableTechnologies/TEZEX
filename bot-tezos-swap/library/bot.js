@@ -70,7 +70,7 @@ module.exports = class Bot {
                 remainingVolume: volume[pair][asset],
                 decimals: config.assets[asset].decimals,
                 symbol: config.assets[asset].symbol,
-                tollerance: volume[pair].tollerance,
+                tolerance: volume[pair].tolerance,
               },
             };
           }
@@ -224,7 +224,7 @@ module.exports = class Bot {
                 if (
                   diffPercent.gt(
                     new BigNumber(
-                      this.swapPairs[swp.pair][counterAsset].tollerance
+                      this.swapPairs[swp.pair][counterAsset].tolerance
                     )
                   )
                 ) {

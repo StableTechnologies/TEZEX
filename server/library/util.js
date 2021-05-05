@@ -106,7 +106,7 @@ module.exports.getAllowances = async (
           const vol = new BigNumber(
             new BigNumber(volume[pair][asset]).toFixed(0, 3)
           );
-          if (vol.isPositive() && !vol.isNaN())
+          if (!vol.isNaN() && vol.isPositive())
             ops.push(
               verifyBalance(
                 clients,
@@ -202,7 +202,7 @@ module.exports.getAllowancesTezos = async (
         const vol = new BigNumber(
           new BigNumber(volume[pair][asset]).toFixed(0, 3)
         );
-        if (vol.isPositive() && !vol.isNaN()) {
+        if (!vol.isNaN() && vol.isPositive()) {
           allowances[pair] = {
             ...allowances[pair],
             [asset]: vol,
