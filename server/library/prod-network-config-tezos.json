@@ -1,0 +1,50 @@
+{
+  "tezos": {
+    "RPC": "https://tezos-prod.cryptonomic-infra.tech:443",
+    "chain_id": "NetXdQprcVkpaWU",
+    "conseilServer": {
+      "url": "https://conseil-prod.cryptonomic-infra.tech:443",
+      "apiKey": "4660121e-1bab-4740-8d57-083681e3441d",
+      "network": "mainnet"
+    },
+    "priceOracle": {
+      "address": "KT1AdbYiPYb5hDuEuVrfxmFehtnBCXv4Np7r",
+      "mapID": 101
+    },
+    "swapContract": {
+      "address": "KT18hsNZzdjkA8CDhqCWLW1RvRimnyrZCtAN",
+      "mapID": 56174
+    }
+  },
+  "assets": {
+    "usdtz": {
+      "decimals": 6,
+      "symbol": "USDtz",
+      "network": "tezos",
+      "tokenContract": {
+        "address": "KT1LN4LPSqTMS7Sd2CJw4bbDGRkMv2t68Fy9",
+        "mapID": 36
+      },
+      "feePad": 1.5,
+      "minTradeVolume": 25
+    },
+    "ethtz": {
+      "decimals": 18,
+      "symbol": "ETHtz",
+      "network": "tezos",
+      "tokenContract": {
+        "address": "KT19at7rQUvyjxnZ2fBv7D9zc8rkyG7gAoU8",
+        "mapID": 199
+      },
+      "feePad": 1.5,
+      "minTradeVolume": 0.01
+    },
+    "xtz": {
+      "decimals": 6,
+      "symbol": "XTZ",
+      "feePad": 1.5,
+      "minTradeVolume": 5
+    }
+  },
+  "pairs": ["ethtz/usdtz", "xtz/usdtz", "xtz/ethtz"]
+}
