@@ -37,12 +37,13 @@ const deployTokenContract = async (store) => {
     5_000
   );
   console.log(`Injected operation group id ${groupid}`);
-  const conseilResult = await conseiljs.TezosConseilClient.awaitOperationConfirmation(
-    config.tezos.conseilServer,
-    config.tezos.conseilServer.network,
-    groupid,
-    2
-  );
+  const conseilResult =
+    await conseiljs.TezosConseilClient.awaitOperationConfirmation(
+      config.tezos.conseilServer,
+      config.tezos.conseilServer.network,
+      groupid,
+      2
+    );
   console.log("Token contract ADDR : ", conseilResult["originated_contracts"]);
   return conseilResult["originated_contracts"];
 };
@@ -56,7 +57,7 @@ async function mintMinimumBalance(store, contractAddress) {
     20_000,
     store.keyStore.publicKeyHash,
     bigInt(500000)
-      .multiply(10 ** 18)
+      .multiply(10 ** 6)
       .toString(),
     120_000,
     100

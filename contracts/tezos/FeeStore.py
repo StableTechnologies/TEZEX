@@ -47,3 +47,5 @@ if "templates" not in __name__:
         scenario += c1.update_admin(sp.address("tz1-new-admin")
                                     ).run(sender=admin)
         scenario.verify(c1.data.admin == sp.address("tz1-new-admin"))
+
+sp.add_compilation_target("FeeStore", FeeStore(sp.address("tz1Y8UNsMSCXyDgma8Ya51eLx8Qu4AoLm8vt")), storage=None)

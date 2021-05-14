@@ -2,7 +2,7 @@ import smartpy as sp
 
 # Contract for fa1.2 and xtz swaps
 
-FA12 = sp.import_template("FA1.2.py")
+FA12 = sp.io.import_script_from_url("file:Fa12.py", name="FA12")
 
 """
 Swap record -
@@ -112,7 +112,7 @@ class Swap(sp.Contract):
     """
 
     @sp.entry_point
-    def default(self, unit):
+    def default(self):
         pass
        
     """
@@ -200,8 +200,8 @@ class Swap(sp.Contract):
     @sp.entry_point
     def transferFees(self, _to):
         self.onlyByAdmin()
-        sp.verify((sp.balance-sp.mutez(self.data.userXTZDeposit))>sp.mutez(0))
-        sp.send(_to, (sp.balance-sp.mutez(self.data.userXTZDeposit)))
+        sp.verify((sp.balance-sp.utils.nat_to_mutez(self.data.userXTZDeposit))>sp.utils.nat_to_mutez(0))
+        sp.send(_to, (sp.balance-sp.utils.nat_to_mutez(self.data.userXTZDeposit)))
 
     """
         Initiate new swap
@@ -219,14 +219,14 @@ class Swap(sp.Contract):
     def offer(self, _swapHash, _value, _expected, _refundTimestamp, _pair, _asset):
         self.isInitiable(_swapHash, _refundTimestamp, _pair, _asset)
         sp.if _asset=="xtz":
-            sp.verify(sp.amount==sp.mutez(_value+self.data.commission),"AMOUNT_MISMATCH")
+            sp.verify(sp.amount==sp.utils.nat_to_mutez(_value+self.data.commission),"AMOUNT_MISMATCH")
             self.data.userXTZDeposit+= _value+self.data.commission
         sp.else:
-            sp.verify(sp.amount==sp.mutez(self.data.commission), "AMOUNT_MISMATCH")
+            sp.verify(sp.amount==sp.utils.nat_to_mutez(self.data.commission), "AMOUNT_MISMATCH")
             self.data.userXTZDeposit+= self.data.commission
             c = sp.contract(TTransfer, self.data.pairs[_pair][_asset].contract, entry_point="transfer").open_some()
             transferData = sp.record(from_=sp.sender, to_=sp.self_address, value=_value)
-            sp.transfer(transferData, sp.mutez(0), c)
+            sp.transfer(transferData, sp.utils.nat_to_mutez(0), c)
 
         self.data.swaps[_swapHash] = sp.record(swapHash=_swapHash, initiator=sp.sender, refundTimestamp=_refundTimestamp, value=_value, expected=_expected, asset=_asset,pair=_pair, commission=self.data.commission)
 
@@ -244,21 +244,21 @@ class Swap(sp.Contract):
     def take(self, _swapHash, _value, _pair, _asset):
         self.isRedeemable(_swapHash, _value, _pair, _asset)
         sp.if _asset=="xtz":
-            sp.verify(sp.amount==sp.mutez(_value), "AMOUNT_MISMATCH")
+            sp.verify(sp.amount==sp.utils.nat_to_mutez(_value), "AMOUNT_MISMATCH")
             sp.send(self.data.swaps[_swapHash].initiator, sp.amount)
         sp.else:
             c = sp.contract(TTransfer, self.data.pairs[_pair][_asset].contract, entry_point="transfer").open_some()
             transferData = sp.record(from_=sp.sender, to_=self.data.swaps[_swapHash].initiator, value=_value)
-            sp.transfer(transferData, sp.mutez(0), c)
+            sp.transfer(transferData, sp.utils.nat_to_mutez(0), c)
 
         sp.if self.data.swaps[_swapHash].asset=="xtz":
-            sp.send(sp.sender, sp.mutez(self.data.swaps[_swapHash].value))
+            sp.send(sp.sender, sp.utils.nat_to_mutez(self.data.swaps[_swapHash].value))
             self.data.userXTZDeposit = sp.as_nat(self.data.userXTZDeposit-(self.data.swaps[_swapHash].value+self.data.swaps[_swapHash].commission))
         sp.else:
             self.data.userXTZDeposit = sp.as_nat(self.data.userXTZDeposit-self.data.swaps[_swapHash].commission)
             c = sp.contract(TTransfer, self.data.pairs[_pair][self.data.swaps[_swapHash].asset].contract, entry_point="transfer").open_some()
             transferData = sp.record(from_=sp.self_address, to_=sp.sender, value=self.data.swaps[_swapHash].value)
-            sp.transfer(transferData, sp.mutez(0), c)
+            sp.transfer(transferData, sp.utils.nat_to_mutez(0), c)
 
         del self.data.swaps[_swapHash]
 
@@ -274,18 +274,18 @@ class Swap(sp.Contract):
         self.isRefundable(_swapHash)
 
         sp.if self.data.swaps[_swapHash].asset=="xtz":
-            sp.send(self.data.swaps[_swapHash].initiator, sp.mutez(self.data.swaps[_swapHash].value+self.data.swaps[_swapHash].commission))
+            sp.send(self.data.swaps[_swapHash].initiator, sp.utils.nat_to_mutez(self.data.swaps[_swapHash].value+self.data.swaps[_swapHash].commission))
             self.data.userXTZDeposit = sp.as_nat(self.data.userXTZDeposit-(self.data.swaps[_swapHash].value+self.data.swaps[_swapHash].commission))
         sp.else:
             self.data.userXTZDeposit = sp.as_nat(self.data.userXTZDeposit-self.data.swaps[_swapHash].commission)
-            sp.send(self.data.swaps[_swapHash].initiator, sp.mutez(self.data.swaps[_swapHash].commission))
+            sp.send(self.data.swaps[_swapHash].initiator, sp.utils.nat_to_mutez(self.data.swaps[_swapHash].commission))
             c = sp.contract(TTransfer, self.data.pairs[self.data.swaps[_swapHash].pair][self.data.swaps[_swapHash].asset].contract, entry_point="transfer").open_some()
             transferData = sp.record(from_=sp.self_address, to_=self.data.swaps[_swapHash].initiator, value=self.data.swaps[_swapHash].value)
-            sp.transfer(transferData, sp.mutez(0), c)
+            sp.transfer(transferData, sp.utils.nat_to_mutez(0), c)
 
         del self.data.swaps[_swapHash]
 
-@sp.add_test(name="Swap")
+@sp.add_test(name="Tezos Swap")
 def test():
     alice = sp.test_account("Alice")
     bob = sp.test_account("Bob")
@@ -293,7 +293,20 @@ def test():
     swapHash = sp.bytes("0x68656c6c6f666473667364666c64736a666c73646a6664736a6673646a6b666a")
 
     swapContract = Swap(_admin=admin.address, _swapFee=15, _commission=1000000)
-    tokenContract = FA12.FA12(admin.address)
+    token_metadata = {
+            "decimals"    : "18",               # Mandatory by the spec
+            "name"        : "My Great Token",   # Recommended
+            "symbol"      : "MGT",              # Recommended
+            # Extra fields
+            "icon"        : 'https://smartpy.io/static/img/logo-only.svg'
+        }
+    contract_metadata = {
+        "" : "ipfs://QmaiAUj1FFNGYTu8rLBjc3eeN9cSKwaF8EGMBNDmhzPNFd",
+    }
+    tokenContract = FA12.FA12(admin.address,
+            config              = FA12.FA12_config(support_upgradable_metadata = True),
+            token_metadata      = token_metadata,
+            contract_metadata   = contract_metadata)
 
     scenario = sp.test_scenario()
     scenario.table_of_contents()
@@ -371,10 +384,10 @@ def test():
     scenario += swapContract.offer(_swapHash=swapHash, _value=2000000, _expected=1900000, _refundTimestamp=sp.timestamp(159682500), _pair="xtz/usdtz", _asset="usdtz").run(sender=bob, amount=sp.tez(1), now=sp.timestamp(159682400), valid=False)
 
     scenario.h3("Bob offers a new swap with updated commission, reusing a hash")
-    scenario += swapContract.offer(_swapHash=swapHash, _value=2000000, _expected=1900000, _refundTimestamp=sp.timestamp(159682500), _pair="xtz/usdtz", _asset="usdtz").run(sender=bob, amount=sp.mutez(1500000), now=sp.timestamp(159682400))
+    scenario += swapContract.offer(_swapHash=swapHash, _value=2000000, _expected=1900000, _refundTimestamp=sp.timestamp(159682500), _pair="xtz/usdtz", _asset="usdtz").run(sender=bob, amount=sp.utils.nat_to_mutez(1500000), now=sp.timestamp(159682400))
 
     # balance check
-    scenario.verify(swapContract.balance == sp.mutez(2500000))
+    scenario.verify(swapContract.balance == sp.utils.nat_to_mutez(2500000))
 
     # # cannot be refunded before the refund time
     scenario += swapContract.refund(swapHash).run(sender=bob, now=sp.timestamp(159682450), valid=False)
@@ -398,15 +411,18 @@ def test():
     scenario += swapContract.removeSwapPair(["xtz/usdtz"]).run(sender=admin)
 
     # only swap pairs available can be used 
-    scenario += swapContract.offer(_swapHash=swapHash, _value=2000000, _expected=1900000, _refundTimestamp=sp.timestamp(159682500), _pair="xtz/usdtz", _asset="xtz").run(sender=bob, amount=sp.mutez(3500000), now=sp.timestamp(159682400), valid=False)
+    scenario += swapContract.offer(_swapHash=swapHash, _value=2000000, _expected=1900000, _refundTimestamp=sp.timestamp(159682500), _pair="xtz/usdtz", _asset="xtz").run(sender=bob, amount=sp.utils.nat_to_mutez(3500000), now=sp.timestamp(159682400), valid=False)
 
     scenario.h3("Alice fails to set a delegate")
+    voting_powers = {
+        sp.key_hash("tz1YB12JHVHw9GbN66wyfakGYgdTBvokmXQk"): 0,
+    }
     # only admin can set baker
-    scenario += swapContract.setBaker(sp.some(bob.public_key_hash)).run(sender=alice, valid=False)
+    scenario += swapContract.setBaker(sp.some(sp.key_hash("tz1YB12JHVHw9GbN66wyfakGYgdTBvokmXQk"))).run(sender=alice,voting_powers = voting_powers, valid=False)
 
     scenario.h3("Admin sets a delegate")
-    scenario += swapContract.setBaker(sp.some(bob.public_key_hash)).run(sender=admin)
-    scenario.verify(swapContract.baker==sp.some(bob.public_key_hash))
+    scenario += swapContract.setBaker(sp.some(sp.key_hash("tz1YB12JHVHw9GbN66wyfakGYgdTBvokmXQk"))).run(sender=admin,voting_powers = voting_powers)
+    scenario.verify(swapContract.baker==sp.some(sp.key_hash("tz1YB12JHVHw9GbN66wyfakGYgdTBvokmXQk")))
 
     scenario.h3("Alice fails to withdraw commission fees")
     # only admin can transfer service fees
@@ -418,3 +434,5 @@ def test():
 
     scenario.h3("Transfer rights from Admin to Bob")
     scenario += swapContract.updateAdmin(bob.address).run(sender=admin)
+
+sp.add_compilation_target("TezosSwap", Swap(_admin=sp.address("tz1Y8UNsMSCXyDgma8Ya51eLx8Qu4AoLm8vt"), _swapFee=15, _commission=0), storage=None)

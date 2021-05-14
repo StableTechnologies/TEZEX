@@ -1,15 +1,15 @@
 {
   "tezos": {
     "privateKey": "",
-    "RPC": "https://tezos-edo.cryptonomic-infra.tech:443",
-    "chain_id": "NetXSgo1ZT2DRUG",
+    "RPC": "https://tezos-florence.cryptonomic-infra.tech:443",
+    "chain_id": "NetXxkAx4woPLyu",
     "conseilServer": {
-      "url": "https://conseil-edo.cryptonomic-infra.tech:443",
+      "url": "https://conseil-florence.cryptonomic-infra.tech:443",
       "apiKey": "4bb2f288-c36a-49ea-a50e-e7cbdc495e0e",
-      "network": "edonet"
+      "network": "florencenet"
     },
     "tokenContract": {
-      "address": "KT1D7B76g6hEELcVHqTxs1Ac4rRa2caVziqR"
+      "address": "KT1NbLrkSiofxD1BtxGJ5ppPjghAGrbZzGfc"
     }
   },
   "ethereum": {

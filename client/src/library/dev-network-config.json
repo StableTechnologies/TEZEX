@@ -8,24 +8,24 @@
     "refundFactor": 2
   },
   "tezos": {
-    "RPC": "https://tezos-edo.cryptonomic-infra.tech:443",
-    "chain_id": "NetXSgo1ZT2DRUG",
+    "RPC": "https://tezos-florence.cryptonomic-infra.tech:443",
+    "chain_id": "NetXxkAx4woPLyu",
     "conseilServer": {
-      "url": "https://conseil-edo.cryptonomic-infra.tech:443",
+      "url": "https://conseil-florence.cryptonomic-infra.tech:443",
       "apiKey": "4bb2f288-c36a-49ea-a50e-e7cbdc495e0e",
-      "network": "edonet"
+      "network": "florencenet"
     },
     "feeContract": {
-      "address": "KT1RRsiQsTZSxsWdRdv6DCyRGiR8XfALRCdn",
+      "address": "KT1W6MgKzfFVUZwH1F5hSu7MRQsSjGHMeN2Y",
       "mapID": ""
     },
     "priceOracle": {
-      "address": "KT1RCNpUEDjZAYhabjzgz1ZfxQijCDVMEaTZ",
-      "mapID": 1542
+      "address": "KT1SUP27JhX24Kvr11oUdWswk7FnCW78ZyUn",
+      "mapID": 8472
     }
   },
   "ethereum": {
-    "RPC": "https://goerli.infura.io/v3/3f764c2122644024825ab09e9e4d39d2",
+    "RPC": "https://goerli.infura.io/v3/580bfda0a4b746ed84501d247802ee25",
     "chain": "goerli"
   },
   "pairs": {
@@ -35,12 +35,12 @@
         "symbol": "USDtz",
         "network": "tezos",
         "tokenContract": {
-          "address": "KT1D7B76g6hEELcVHqTxs1Ac4rRa2caVziqR",
-          "mapID": 5599
+          "address": "KT1TDkzGHBFAS9NiGLWpcB8BhBULXpvbfzPt",
+          "mapID": 45261
         },
         "swapContract": {
-          "address": "KT1CDziBn5r91ymcF1aVkoaa695ZToG4L8TN",
-          "mapID": 5604
+          "address": "KT1Bt9hJV4Agzhp48bsfAMBX9u11HpLSAViu",
+          "mapID": 45262
         },
         "feePad": 1.5,
         "minTradeVolume": 50
@@ -50,7 +50,7 @@
         "symbol": "USDC",
         "network": "ethereum",
         "swapContract": {
-          "address": "0x30d00cCAbe5e269f75dD02Ca6C3A522e56252204",
+          "address": "0xe7B935665961A41bE7Ea4058141372d18b464984",
           "abi": [
             {
               "inputs": [
@@ -622,7 +622,7 @@
         "symbol": "ETH",
         "network": "ethereum",
         "swapContract": {
-          "address": "0x7710b1C9C993616995C32418BF2eFEB49FBe33B6",
+          "address": "0xc7c0820f000aE0B0DdA19e1bDC59D7e36c76d3D8",
           "abi": [
             {
               "inputs": [],
@@ -901,12 +901,12 @@
         "symbol": "ETHtz",
         "network": "tezos",
         "tokenContract": {
-          "address": "KT19sJYta4vZsJY6pcWqE86wqsck6kmivzFX",
-          "mapID": 8745
+          "address": "KT1NbLrkSiofxD1BtxGJ5ppPjghAGrbZzGfc",
+          "mapID": 45260
         },
         "swapContract": {
-          "address": "KT1QUnQmGVi5ttQhtVDCdishZE8KAfirKauh",
-          "mapID": 8751
+          "address": "KT1CJRVae61ycESay1SSQKpdw1dFryeUGKNk",
+          "mapID": 45269
         },
         "feePad": 1.5,
         "minTradeVolume": 0.03

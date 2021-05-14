@@ -276,9 +276,8 @@ module.exports = class Tezos {
   }
 
   parseSwapValue(michelsonData) {
-    const michelineData = TezosLanguageUtil.translateMichelsonToMicheline(
-      michelsonData
-    );
+    const michelineData =
+      TezosLanguageUtil.translateMichelsonToMicheline(michelsonData);
     const jsonData = JSON.parse(michelineData);
     return {
       swapHash:

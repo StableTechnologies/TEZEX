@@ -49,8 +49,8 @@ cd tezos
 #install smartpy cli
 sh <(curl -s https://smartpy.io/cli/install.sh)
 
-~/smartpy-cli/SmartPy.sh compile TokenSwap.py "TokenSwap(sp.address('tz1abc'), sp.address('tz1abc'))" build/
-~/smartpy-cli/SmartPy.sh compile FeeStore.py "FeeStore(sp.address('tz1abc'))" build/
+~/smartpy-cli/SmartPy.sh compile TokenSwap.py build/
+~/smartpy-cli/SmartPy.sh compile FeeStore.py build/
 ```
 
 ## Deplopy
