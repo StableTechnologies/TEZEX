@@ -1,6 +1,40 @@
 import { makeStyles } from "@material-ui/core/styles";
 
 const useStyles = makeStyles((theme) => ({
+  root: {
+    maxWidth: "30vw", 
+  },
+  title: {
+    "&.Element": {
+    fontFamily: "Inter",
+    fontSize: "1.1em",
+    fontStyle: "normal",
+    fontWeight: "500",
+    lineHeight: "29px",
+    letterSpacing: "0em",
+    textAlign: "left",
+  }
+  },
+  tokeninput: {
+    border: "0",
+  },
+  tokencontainer: {
+    backgroundColor: "#F8F8F8",
+    marginBottom: "1vh"
+  },
+  bodycontainer: {
+    maxHeight: "90vh"
+  },
+  sidelogocontainer: {
+    maxHeight: "100%"
+  },
+  sidelogo: {
+    maxHeight: "90vh"
+  },
+  swapcontainer: {
+    marginTop: "4vh"
+  },
+
   button: {
     color: "white",
     cursor: "pointer",
@@ -54,6 +88,25 @@ const useStyles = makeStyles((theme) => ({
     borderStyle: "none",
     fontSize: "1vw",
   },
+  connectwalletbutton: {
+    "&.Element": {
+    color: "white",
+    backgroundColor: "black",
+    border: "1px solid black",
+  width: "100%"}
+  },
+  tokentext: {
+    "&.Element": {
+      color: "#000",
+      fontSize: "1em",
+      textTransform: "capitalize",
+},
+},
+  feepaper: {
+    "&.Element": {
+    marginTop: "4vh"
+  },
+},
 }));
 
 export default useStyles;
