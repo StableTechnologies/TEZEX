@@ -13,6 +13,7 @@ import Stat from "./components/stats";
 import requestSwap from "./library/request-swap";
 import { getCounterPair } from "./library/util";
 import { getOldSwaps, setupClient } from "./util";
+import useStyles from "./style";
 const App = () => {
   const [clients, setClients] = useState(undefined);
   const [swapPairs, setSwapPairs] = useState(undefined);
@@ -20,6 +21,8 @@ const App = () => {
   const [balance, balUpdate] = useState(undefined);
   const [, updateState] = React.useState();
 
+  const classes = useStyles();
+  
   const swapRef = useRef();
   swapRef.current = swaps;
   const clientRef = useRef();
@@ -94,12 +97,12 @@ const App = () => {
     return true;
   };
 
-  if (clients === undefined || swapPairs === undefined)
-    return (
-      <div className="App">
-        <Setup init={initialize} />
-      </div>
-    );
+  // if (clients === undefined || swapPairs === undefined)
+  //   return (
+  //     <div className="App">
+  //       <Setup init={initialize} />
+  //     </div>
+  //   );
 
   return (
     <Router basename={process.env.PUBLIC_URL}>
@@ -109,8 +112,8 @@ const App = () => {
           swapPairs={swapPairsRef.current}
           balUpdate={balUpdate}
         />
-        {balance === undefined && <Loader message="Loading Account" />}
-        {balance !== undefined && (
+        {/* {balance === undefined && <Loader message="Loading Account" />} */}
+        {/* {balance !== undefined && ( */}
           <Switch>
             <Route exact path="/">
               <Home
@@ -135,7 +138,7 @@ const App = () => {
               <Stat swapPairs={swapPairsRef.current} />
             </Route>
           </Switch>
-        )}
+        {/* )} */}
       </div>
     </Router>
   );
