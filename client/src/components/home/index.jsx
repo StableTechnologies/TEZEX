@@ -72,6 +72,8 @@ const Home = ({ swaps, clients, swapPairs, update }) => {
   const [outputTokenModalOpen, setOutputTokenModalOpen] = React.useState(false);
   const [inputToken, setInputToken] = React.useState('');
   const [outputToken, setOutputToken] = React.useState('');
+  const [inputTokenAmount, setInputTokenAmount] = React.useState(0);
+  const [outputTokenAmount, setOutputTokenAmount] = React.useState(0);
 
   const openInputTokenModal = () => { setInputTokenModalOpen(true); };
   const openOutputTokenModal = () => { setOutputTokenModalOpen(true); };
@@ -181,12 +183,12 @@ const Home = ({ swaps, clients, swapPairs, update }) => {
                       onClose={setToken}
                       side='input'
                     />
-                    <input type={'number'} className={classes.tokeninput}></input>
+                    <input type={'number'} className={classes.tokeninput} value={inputTokenAmount} onInput={(e) => setInputTokenAmount(e.target.value || 0)}></input>
                   </div>
                   <ImportExportIcon />
                   <div className={classes.tokencontainer}>
                     <Typography color="textSecondary" variant="subtitle2">To</Typography>
-                    <Typography  color="textSecondary">Balance</Typography>
+                    <Typography color="textSecondary">Balance</Typography>
                     <Button color="primary" onClick={openOutputTokenModal}>
                       <Typography className = {classes.tokentext + " Element"} variant="subtitle1">
                       {" "}
@@ -201,7 +203,7 @@ const Home = ({ swaps, clients, swapPairs, update }) => {
                       onClose={setToken}
                       side='output'
                     />
-                    <input type={'number'} className={classes.tokeninput}></input>
+                    <input type={'number'} className={classes.tokeninput} value={outputTokenAmount} onInput={(e) => setOutputTokenAmount(e.target.value || 0)}></input>
                   </div>
                 </form>
               </CardContent>
