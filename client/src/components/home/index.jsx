@@ -24,26 +24,23 @@ import Paper from '@material-ui/core/Paper';
 import tzlogo from "../../assets/tzlogo.svg";
 import ethlogo from "../../assets/ethlogo.svg";
 import sidelogo from "../../assets/sidelogo.svg";
+
 const tokens = { XTZ: tzlogo, ETH: ethlogo };
-function SimpleDialog(props) {
+
+function TokenSelectionDialog(props) {
   const classes = useStyles();
-  const { onClose, selectedValue, open } = props;
+  const { onClose, selectedValue, open, side } = props;
 
-  const handleClose = () => {
-    onClose(selectedValue);
-  };
+  const handleClose = () => { onClose(selectedValue, side); };
 
-  const handleListItemClick = (value) => {
-    onClose(value);
-  };
+  const handleListItemClick = (value) => { onClose(value, side); };
 
   return (
-    <Dialog
-      onClose={handleClose}
-      aria-labelledby="simple-dialog-title"
-      open={open}
-    >
-      <DialogTitle id="simple-dialog-title">Set backup account</DialogTitle>
+    <Dialog onClose={handleClose} aria-labelledby="simple-dialog-title" open={open}>
+      <DialogTitle id="simple-dialog-title">
+          {(side === 'input') && ('Select Input Token')}
+          {(side === 'output') && ('Select Output Token')}
+      </DialogTitle>
       <List>
         {Object.entries(tokens).map(([key, value]) => (
           <ListItem button onClick={() => handleListItemClick(key)} key={key}>
@@ -60,23 +57,31 @@ function SimpleDialog(props) {
   );
 }
 
-SimpleDialog.propTypes = {
+TokenSelectionDialog.propTypes = {
   onClose: PropTypes.func.isRequired,
   open: PropTypes.bool.isRequired,
   selectedValue: PropTypes.string.isRequired,
+  side: PropTypes.string.isRequired
 };
+
 const Home = ({ swaps, clients, swapPairs, update }) => {
   const history = useHistory();
   const classes = useStyles();
-  const [open, setOpen] = React.useState(false);
-  const [selectedValue, setSelectedValue] = React.useState(tokens[1]);
-  const handleClickOpen = () => {
-    setOpen(true);
-  };
 
-  const handleClose = (value) => {
-    setOpen(false);
-    setSelectedValue(value);
+  const [inputTokenModalOpen, setInputTokenModalOpen] = React.useState(false);
+  const [outputTokenModalOpen, setOutputTokenModalOpen] = React.useState(false);
+  const [inputToken, setInputToken] = React.useState('');
+  const [outputToken, setOutputToken] = React.useState('');
+
+  const openInputTokenModal = () => { setInputTokenModalOpen(true); };
+  const openOutputTokenModal = () => { setOutputTokenModalOpen(true); };
+
+  const setToken = (value, side) => {
+    setInputTokenModalOpen(false);
+    setOutputTokenModalOpen(false);
+    
+    if (side === 'input') { setInputToken(value); }
+    if (side === 'output') { setOutputToken(value); }
   };
 
   const refundHandler = async (swap) => {
@@ -154,68 +159,49 @@ const Home = ({ swaps, clients, swapPairs, update }) => {
       </Grid>
       <Grid container item xs={10} justify = "center">
         <div className = {classes.swapcontainer}>
-          {/* <MiniStat /> */}
           <div className={classes.swaps}>
             <Card className={classes.root} variant="outlined">
               <CardContent>
-                <Typography className={classes.title + " Element"}>
-                  Swap Tokens
-                </Typography>
+                <Typography className={classes.title + " Element"}>Swap Tokens</Typography>
                 <form>
                   <div className={classes.tokencontainer}>
-                    <Typography color="textSecondary" variant="subtitle2">
-                      From
-                    </Typography>
-                    {/* <Typography  color="textSecondary">
-          Balance       
-        </Typography> */}
-                    <Button color="primary" onClick={handleClickOpen}>
+                    <Typography color="textSecondary" variant="subtitle2">From</Typography>
+                    <Typography  color="textSecondary">Balance</Typography>
+                    <Button color="primary" onClick={openInputTokenModal}>
                       <Typography className = {classes.tokentext + " Element"} variant="subtitle1">
                         {" "}
-                        {
-                          <img
-                            className={classes.logo}
-                            src={tokens[selectedValue]}
-                          />
-                        }
-                        {selectedValue|| "Select Token"}
+                        <img className={classes.logo} src={tokens[inputToken]} />
+                        {inputToken|| "Select Token"}
                       </Typography>{" "}
                       <ArrowDropDownIcon style={{ color: "#000" }} />
                     </Button>
-                    <SimpleDialog
-                      selectedValue={selectedValue}
-                      open={open}
-                      onClose={handleClose}
+                    <TokenSelectionDialog
+                      selectedValue={inputToken}
+                      open={inputTokenModalOpen}
+                      onClose={setToken}
+                      side='input'
                     />
-                    <input className={classes.tokeninput}></input>
+                    <input type={'number'} className={classes.tokeninput}></input>
                   </div>
                   <ImportExportIcon />
                   <div className={classes.tokencontainer}>
-                    <Typography color="textSecondary" variant="subtitle2">
-                      From
-                    </Typography>
-                    {/* <Typography  color="textSecondary">
-          Balance       
-        </Typography> */}
-                    <Button color="primary" onClick={handleClickOpen}>
+                    <Typography color="textSecondary" variant="subtitle2">To</Typography>
+                    <Typography  color="textSecondary">Balance</Typography>
+                    <Button color="primary" onClick={openOutputTokenModal}>
                       <Typography className = {classes.tokentext + " Element"} variant="subtitle1">
                       {" "}
-                        {
-                          <img
-                            className={classes.logo}
-                            src={tokens[selectedValue]}
-                          />
-                        }
-                        {selectedValue|| "Select Token"}
+                        <img className={classes.logo} src={tokens[outputToken]} />
+                        {outputToken|| "Select Token"}
                       </Typography>{" "}
                       <ArrowDropDownIcon style={{ color: "#000" }} />
                     </Button>
-                    <SimpleDialog
-                      selectedValue={selectedValue}
-                      open={open}
-                      onClose={handleClose}
+                    <TokenSelectionDialog
+                      selectedValue={outputToken}
+                      open={outputTokenModalOpen}
+                      onClose={setToken}
+                      side='output'
                     />
-                    <input className={classes.tokeninput}></input>
+                    <input type={'number'} className={classes.tokeninput}></input>
                   </div>
                 </form>
               </CardContent>

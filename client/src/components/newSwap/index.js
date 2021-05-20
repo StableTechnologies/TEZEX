@@ -18,7 +18,6 @@ const CreateSwap = ({ clients, swapPairs, genSwap }) => {
   const msg = `Max Swap Limit : `;
 
   useEffect(() => {
-    // console.log("here");
     const pairs = Object.keys(swapPairs);
     const assets = pairs[0].split("/");
     setPairs(pairs);
@@ -27,7 +26,6 @@ const CreateSwap = ({ clients, swapPairs, genSwap }) => {
 
   useEffect(() => {
     setLoader("...Loading...");
-    // console.log("in");
     if (currentSwap === undefined) return;
 
     getSwapStat(clients, swapPairs, currentSwap.pair)
@@ -39,7 +37,6 @@ const CreateSwap = ({ clients, swapPairs, genSwap }) => {
       );
     }, 60000);
     return () => {
-      // console.log("out");
       clearInterval(timer);
     };
   }, [currentSwap]);
@@ -66,14 +63,16 @@ const CreateSwap = ({ clients, swapPairs, genSwap }) => {
 
   if (loader !== "") return <Loader message={loader} />;
   const assets = currentSwap.pair.split("/");
-  if (!Object.prototype.hasOwnProperty.call(swapStat.balances, assets[0]))
+  if (!Object.prototype.hasOwnProperty.call(swapStat.balances, assets[0])) {
     return <Loader message="...Loading..." />;
-  console.log(swapStat.botStats);
-  if (swapStat.botStats === undefined)
+  }
+    
+
+  if (swapStat.botStats === undefined) {
     return <Loader message="...Error Fetching Swap Stats..." />;
+  }
 
   const counterAsset = getCounterPair(currentSwap.pair, currentSwap.asset);
-  console.log(currentSwap, swapStat, counterAsset);
 
   const getMaxValue = (set = false) => {
     let max = swapStat.assetConverter[currentSwap.asset](
