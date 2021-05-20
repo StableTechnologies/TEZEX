@@ -3,6 +3,9 @@ const Tezos = require("./tezos");
 const config = require(`./${
   process.env.SERVER_ENV || "prod"
 }-network-config.json`);
+const configTezos = require(`./${
+  process.env.SERVER_ENV || "prod"
+}-network-config-tezos.json`);
 const { BigNumber } = require("bignumber.js");
 
 module.exports.init = async () => {
@@ -10,7 +13,7 @@ module.exports.init = async () => {
     ethereum: Ethereum.newClient(),
     tezos: Tezos.newClient("error"),
   };
-  const swapPairs = {};
+  const swapPairsCrossChain = {};
   const pairs = Object.keys(config.pairs);
   pairs.forEach((pair) => {
     const assets = pair.split("/");
@@ -30,8 +33,8 @@ module.exports.init = async () => {
               )
             : undefined;
       }
-      swapPairs[pair] = {
-        ...swapPairs[pair],
+      swapPairsCrossChain[pair] = {
+        ...swapPairsCrossChain[pair],
         [asset]: {
           network: config.pairs[pair][asset].network,
           swapContract: swapContract,
@@ -42,7 +45,22 @@ module.exports.init = async () => {
       };
     }
   });
-  return { clients, swapPairs };
+  const swapPairsTezos = {};
+  const pairsTezos = configTezos.pairs;
+  pairsTezos.forEach((pair) => {
+    const assets = pair.split("/");
+    for (const asset of assets) {
+      swapPairsTezos[pair] = {
+        ...swapPairsTezos[pair],
+        [asset]: {
+          tokenContract: configTezos.assets[asset].tokenContract,
+          decimals: configTezos.assets[asset].decimals,
+          symbol: configTezos.assets[asset].symbol,
+        },
+      };
+    }
+  });
+  return { clients, swapPairsCrossChain, swapPairsTezos };
 };
 
 const verifyBalance = async (clients, network, accounts, givenBalance) => {
@@ -70,12 +88,11 @@ module.exports.getAllowances = async (
   const pairs = Object.keys(swapPairs);
   for (const pair of pairs) {
     const assets = pair.split("/");
-    if (Object.prototype.hasOwnProperty.call(volume, pair)) {
-      if (
-        !Object.prototype.hasOwnProperty.call(volume[pair], assets[0]) ||
-        !Object.prototype.hasOwnProperty.call(volume[pair], assets[1])
-      )
-        continue;
+    if (
+      Object.prototype.hasOwnProperty.call(volume, pair) &&
+      Object.prototype.hasOwnProperty.call(volume[pair], assets[0]) &&
+      Object.prototype.hasOwnProperty.call(volume[pair], assets[1])
+    ) {
       for (const asset of assets) {
         if (asset !== "eth" && asset !== "xtz") {
           ops.push(
@@ -89,7 +106,7 @@ module.exports.getAllowances = async (
           const vol = new BigNumber(
             new BigNumber(volume[pair][asset]).toFixed(0, 3)
           );
-          if (vol.isPositive() && !vol.isNaN())
+          if (!vol.isNaN() && vol.isPositive())
             ops.push(
               verifyBalance(
                 clients,
@@ -157,4 +174,52 @@ module.exports.deepCopy = (allowances) => {
     };
   }
   return { max, total };
+};
+
+module.exports.getAllowancesTezos = async (
+  { accounts, volume },
+  clients,
+  swapPairs
+) => {
+  if (
+    accounts === undefined ||
+    volume === undefined ||
+    accounts["tezos"] === undefined
+  ) {
+    return { allowances: undefined, foundNonZero: undefined };
+  }
+  let foundNonZero = false;
+  const allowances = {};
+  const pairs = Object.keys(swapPairs);
+  for (const pair of pairs) {
+    const assets = pair.split("/");
+    if (
+      Object.prototype.hasOwnProperty.call(volume, pair) &&
+      Object.prototype.hasOwnProperty.call(volume[pair], assets[0]) &&
+      Object.prototype.hasOwnProperty.call(volume[pair], assets[1])
+    ) {
+      for (const asset of assets) {
+        const vol = new BigNumber(
+          new BigNumber(volume[pair][asset]).toFixed(0, 3)
+        );
+        if (!vol.isNaN() && vol.isPositive()) {
+          allowances[pair] = {
+            ...allowances[pair],
+            [asset]: vol,
+          };
+          foundNonZero = true;
+        } else
+          allowances[pair] = {
+            ...allowances[pair],
+            [asset]: new BigNumber("0"),
+          };
+      }
+    } else {
+      allowances[pair] = {
+        [assets[0]]: new BigNumber("0"),
+        [assets[1]]: new BigNumber("0"),
+      };
+    }
+  }
+  return { allowances, foundNonZero };
 };
