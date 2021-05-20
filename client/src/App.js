@@ -14,6 +14,7 @@ import requestSwap from "./library/request-swap";
 import { getCounterPair } from "./library/util";
 import { getOldSwaps, setupClient } from "./util";
 import useStyles from "./style";
+
 const App = () => {
   const [clients, setClients] = useState(undefined);
   const [swapPairs, setSwapPairs] = useState(undefined);
@@ -96,13 +97,6 @@ const App = () => {
     forceUpdate();
     return true;
   };
-
-  // if (clients === undefined || swapPairs === undefined)
-  //   return (
-  //     <div className="App">
-  //       <Setup init={initialize} />
-  //     </div>
-  //   );
 
   return (
     <Router basename={process.env.PUBLIC_URL}>
