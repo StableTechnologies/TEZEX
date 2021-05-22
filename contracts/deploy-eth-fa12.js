@@ -1,8 +1,8 @@
 const conseiljs = require("conseiljs");
 const config = require("./config.json");
 const ethConfig = require("./ethereum/build/contracts/AtomicSwap.json");
-const tezConfig = require("./tezos/build/TokenSwap_compiled.json");
-const feeStore = require("./tezos/build/FeeStore_compiled.json");
+const tezConfig = require("./tezos/build/TokenSwap/step_000_cont_1_contract.json");
+const feeStore = require("./tezos/build/FeeStore/step_000_cont_0_contract.json");
 const log = require("loglevel");
 const conSign = require("conseiljs-softsigner");
 const fetch = require("node-fetch");
@@ -30,21 +30,22 @@ const init = async () => {
 
 const estimateFees = async (store, web3) => {
   try {
-    const tezosEstimate = await conseiljs.TezosNodeWriter.testContractDeployOperation(
-      config.tezos.RPC,
-      config.tezos.chain_id,
-      store.keyStore,
-      0,
-      undefined,
-      100000,
-      10000,
-      20000,
-      trim(tezConfig),
-      conseiljs.TezosLanguageUtil.translateMichelsonToMicheline(
-        `(Pair (Pair True "${store.keyStore.publicKeyHash}") (Pair "${config.tezos.tokenContract.address}" (Pair 15 {})))`
-      ),
-      conseiljs.TezosParameterFormat.Micheline
-    );
+    const tezosEstimate =
+      await conseiljs.TezosNodeWriter.testContractDeployOperation(
+        config.tezos.RPC,
+        config.tezos.chain_id,
+        store.keyStore,
+        0,
+        undefined,
+        100000,
+        10000,
+        20000,
+        trim(tezConfig),
+        conseiljs.TezosLanguageUtil.translateMichelsonToMicheline(
+          `(Pair (Pair True "${store.keyStore.publicKeyHash}") (Pair "${config.tezos.tokenContract.address}" (Pair 15 {})))`
+        ),
+        conseiljs.TezosParameterFormat.Micheline
+      );
 
     const ethContract = new web3.eth.Contract(ethConfig.abi);
 
@@ -90,31 +91,33 @@ const deployTezosContract = async (code, storage, store) => {
     conseiljs.TezosLanguageUtil.translateMichelsonToMicheline(storage),
     conseiljs.TezosParameterFormat.Micheline
   );
-  const result = await conseiljs.TezosNodeWriter.sendContractOriginationOperation(
-    config.tezos.RPC,
-    store.signer,
-    store.keyStore,
-    0,
-    undefined,
-    fee["estimatedFee"],
-    fee["storageCost"],
-    fee["gas"],
-    trim(code),
-    conseiljs.TezosLanguageUtil.translateMichelsonToMicheline(storage),
-    conseiljs.TezosParameterFormat.Micheline,
-    conseiljs.TezosConstants.HeadBranchOffset,
-    true
-  );
+  const result =
+    await conseiljs.TezosNodeWriter.sendContractOriginationOperation(
+      config.tezos.RPC,
+      store.signer,
+      store.keyStore,
+      0,
+      undefined,
+      fee["estimatedFee"],
+      fee["storageCost"],
+      fee["gas"],
+      trim(code),
+      conseiljs.TezosLanguageUtil.translateMichelsonToMicheline(storage),
+      conseiljs.TezosParameterFormat.Micheline,
+      conseiljs.TezosConstants.HeadBranchOffset,
+      true
+    );
   const groupid = result["operationGroupID"]
     .replace(/"/g, "")
     .replace(/\n/, ""); // clean up RPC output
   console.log(`Injected operation group id ${groupid}`);
-  const conseilResult = await conseiljs.TezosConseilClient.awaitOperationConfirmation(
-    config.tezos.conseilServer,
-    config.tezos.conseilServer.network,
-    groupid,
-    2
-  );
+  const conseilResult =
+    await conseiljs.TezosConseilClient.awaitOperationConfirmation(
+      config.tezos.conseilServer,
+      config.tezos.conseilServer.network,
+      groupid,
+      2
+    );
   return conseilResult["originated_contracts"];
 };
 

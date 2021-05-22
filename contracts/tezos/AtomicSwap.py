@@ -176,7 +176,7 @@ class AtomicSwap(sp.Contract):
         del self.data.swaps[_hashedSecret]
 
 
-@sp.add_test(name="AtomicSwap")
+@sp.add_test(name="AtomicSwapTest")
 def test():
     alice = sp.test_account("Alice")
     bob = sp.test_account("Bob")
@@ -261,3 +261,5 @@ def test():
 
     # balance check
     scenario.verify(c1.balance == sp.tez(0))
+
+sp.add_compilation_target("AtomicSwap", AtomicSwap(sp.address("tz1Y8UNsMSCXyDgma8Ya51eLx8Qu4AoLm8vt")), storage=None)

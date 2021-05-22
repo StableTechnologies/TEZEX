@@ -31,7 +31,9 @@ const setEthAccount = async () => {
 const setTezAccount = async () => {
   const client = new DAppClient({ name: "TEZEX" });
   const network =
-    config.tezos.conseilServer.network === "mainnet" ? "mainnet" : "edo2net";
+    config.tezos.conseilServer.network === "mainnet"
+      ? "mainnet"
+      : "florencenet";
   const resp = await client.requestPermissions({
     network: { type: network },
   });

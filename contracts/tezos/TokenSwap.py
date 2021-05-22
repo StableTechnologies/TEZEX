@@ -1,6 +1,6 @@
 import smartpy as sp
 
-FA12 = sp.import_script_from_url("file:Fa12.py", name="FA12")
+FA12 = sp.io.import_script_from_url("file:Fa12.py", name="FA12")
 
 """
 Possible states of the swap
@@ -211,7 +211,7 @@ class TokenSwap(sp.Contract):
         del self.data.swaps[_hashedSecret]
 
 
-@sp.add_test(name="TokenSwap")
+@sp.add_test(name="Token Swap")
 def test():
     admin = sp.test_account("Administrator")
     alice = sp.test_account("Alice")
@@ -220,7 +220,20 @@ def test():
     hashSecret = sp.sha256(sp.sha256(sp.bytes(
         "0x68656c6c6f666473667364666c64736a666c73646a6664736a6673646a6b666a")))
 
-    c2 = FA12.FA12(admin.address)
+    token_metadata = {
+            "decimals"    : "18",               # Mandatory by the spec
+            "name"        : "My Great Token",   # Recommended
+            "symbol"      : "MGT",              # Recommended
+            # Extra fields
+            "icon"        : 'https://smartpy.io/static/img/logo-only.svg'
+        }
+    contract_metadata = {
+        "" : "ipfs://QmaiAUj1FFNGYTu8rLBjc3eeN9cSKwaF8EGMBNDmhzPNFd",
+    }
+    c2 = FA12.FA12(admin.address,
+            config              = FA12.FA12_config(support_upgradable_metadata = True),
+            token_metadata      = token_metadata,
+            contract_metadata   = contract_metadata)
     c1 = TokenSwap(_admin=admin.address, _fa12=c2.address)
     scenario = sp.test_scenario()
     scenario.table_of_contents()
@@ -319,3 +332,5 @@ def test():
     # balance check
     scenario.verify(c2.data.balances[c1.address].balance == sp.nat(0))
     scenario.verify(c2.data.balances[alice.address].balance == sp.nat(13))
+
+sp.add_compilation_target("TokenSwap", TokenSwap(_admin=sp.address("tz1Y8UNsMSCXyDgma8Ya51eLx8Qu4AoLm8vt"), _fa12=sp.address("KT1Y8UNsMSCXyDgma8Ya51eLx8Qu4AoLm8vt")), storage=None)
