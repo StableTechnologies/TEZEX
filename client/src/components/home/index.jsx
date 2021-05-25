@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import { useHistory } from "react-router-dom";
 import useStyles from "./style";
 import Card from "@material-ui/core/Card";
@@ -21,14 +21,18 @@ import { blue } from "@material-ui/core/colors";
 import PropTypes from "prop-types";
 import Grid from "@material-ui/core/Grid";
 import Paper from '@material-ui/core/Paper';
+
 import tzlogo from "../../assets/tzlogo.svg";
 import ethlogo from "../../assets/ethlogo.svg";
 import sidelogo from "../../assets/sidelogo.svg";
+
+import { TezexContext } from '../context/TezexContext';
 
 const tokens = { XTZ: tzlogo, ETH: ethlogo };
 
 function TokenSelectionDialog(props) {
   const classes = useStyles();
+
   const { onClose, selectedValue, open, side } = props;
 
   const handleClose = () => { onClose(selectedValue, side); };
@@ -67,6 +71,7 @@ TokenSelectionDialog.propTypes = {
 const Home = ({ swaps, clients, swapPairs, update }) => {
   const history = useHistory();
   const classes = useStyles();
+  const globalContext = useContext(TezexContext);
 
   const [inputTokenModalOpen, setInputTokenModalOpen] = React.useState(false);
   const [outputTokenModalOpen, setOutputTokenModalOpen] = React.useState(false);
@@ -208,7 +213,18 @@ const Home = ({ swaps, clients, swapPairs, update }) => {
                 </form>
               </CardContent>
               <CardActions>
-                <Button size="large" className = {classes.connectwalletbutton + " Element"}>Connect Wallet</Button>
+                  {globalContext.ethereumClient.account && globalContext.tezosClient.account && (
+                      <Button size="large" className = {classes.connectwalletbutton + " Element"}>Swap</Button>
+                  )}
+                  {globalContext.ethereumClient.account && (
+                      <Button size="large" className = {classes.connectwalletbutton + " Element"}>Connect Tezos Wallet</Button>
+                  )}
+                  {globalContext.tezosClient.account && (
+                      <Button size="large" className = {classes.connectwalletbutton + " Element"}>Connect Ethereum Wallet</Button>
+                  )}
+                  {!globalContext.ethereumClient.account && !globalContext.tezosClient.account && (
+                      <Button size="large" className = {classes.connectwalletbutton + " Element"}>Connect Wallets</Button>
+                  )}
               </CardActions>
             </Card>
             <Paper className = {classes.feepaper + " Element"}>

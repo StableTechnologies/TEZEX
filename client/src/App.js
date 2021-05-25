@@ -1,7 +1,9 @@
 import { BigNumber } from "bignumber.js";
 import React, { useEffect, useRef, useState } from "react";
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
+
 import "./App.css";
+import TezexContext from './components/context/TezexContext';
 import About from "./components/about";
 import Header from "./components/header";
 import Home from "./components/home";
@@ -98,6 +100,7 @@ const App = () => {
   };
 
   return (
+    <TezexContext>
     <Router basename={process.env.PUBLIC_URL}>
       <div className="App">
         <Header
@@ -134,6 +137,7 @@ const App = () => {
         {/* )} */}
       </div>
     </Router>
+    </TezexContext>
   );
 };
 
