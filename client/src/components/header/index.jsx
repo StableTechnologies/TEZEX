@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
 import BigNumber from "bignumber.js";
 import Grid from '@material-ui/core/Grid';
@@ -9,11 +9,13 @@ import logo from "../../assets/TezexLogo.svg";
 import tzwalletlogo from "../../assets/tzwalletlogo.svg";
 import ethwalletlogo from "../../assets/ethwalletlogo.svg";
 import { shorten, connectEthAccount, connectTezAccount } from "../../util";
+import { TezexContext } from '../context/TezexContext';
 import useStyles from "./style";
 
 const Header = ({ clients, swapPairs, balUpdate }) => {
     const classes = useStyles();
     const history = useHistory();
+    const globalContext = useContext(TezexContext);
 
     const [ethBalance, setEthBalance] = useState(0);
     const [xtzBalance, setXtzBalance] = useState(0);
@@ -24,12 +26,14 @@ const Header = ({ clients, swapPairs, balUpdate }) => {
         e.preventDefault();
         const r = await connectEthAccount();
         setEthAccount(r.account);
+        globalContext.changeEthereumClient(r);
     };
 
     const setupXtzAccount = async (e) => {
         e.preventDefault();
         const r = await connectTezAccount();
         setXtzAccount(r.account);
+        globalContext.changeTezosClient(r);
     };
 
     const updateBalance = async () => {
