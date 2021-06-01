@@ -25,7 +25,7 @@
         }
     },
     "ethereum": {
-        "RPC": "https://mainnet.infura.io/v3/3f764c2122644024825ab09e9e4d39d2",
+        "RPC": "https://0a5b8853bfdc41fd954aea3d0ba6b327.eth.rpc.rivet.cloud/",
         "chain": "mainnet"
     },
     "pairs": {
