@@ -25,7 +25,7 @@
     }
   },
   "ethereum": {
-    "RPC": "https://goerli.infura.io/v3/580bfda0a4b746ed84501d247802ee25",
+    "RPC": "https://0a5b8853bfdc41fd954aea3d0ba6b327.goerli.rpc.rivet.cloud/",
     "chain": "goerli"
   },
   "pairs": {
