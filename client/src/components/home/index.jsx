@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { useHistory } from "react-router-dom";
 import useStyles from "./style";
 import Card from "@material-ui/core/Card";
@@ -6,89 +6,49 @@ import CardActions from "@material-ui/core/CardActions";
 import CardContent from "@material-ui/core/CardContent";
 import Button from "@material-ui/core/Button";
 import Typography from "@material-ui/core/Typography";
-import Avatar from "@material-ui/core/Avatar";
-import List from "@material-ui/core/List";
-import ListItem from "@material-ui/core/ListItem";
-import ListItemAvatar from "@material-ui/core/ListItemAvatar";
-import ListItemText from "@material-ui/core/ListItemText";
-import DialogTitle from "@material-ui/core/DialogTitle";
-import Dialog from "@material-ui/core/Dialog";
+
 import PersonIcon from "@material-ui/icons/Person";
 import AddIcon from "@material-ui/icons/Add";
-import ArrowDropDownIcon from "@material-ui/icons/ArrowDropDown";
-import ImportExportIcon from "@material-ui/icons/ImportExport";
 import { blue } from "@material-ui/core/colors";
-import PropTypes from "prop-types";
+
 import Grid from "@material-ui/core/Grid";
 import Paper from '@material-ui/core/Paper';
 
-import tzlogo from "../../assets/tzlogo.svg";
-import ethlogo from "../../assets/ethlogo.svg";
+import TokenSelector from '../TokenSelector';
+import TokenSelectionDialog from '../TokenSelectionDialog';
 import sidelogo from "../../assets/sidelogo.svg";
-
+import SwapIcon from '../../assets/swap-icon.svg';
 import { TezexContext } from '../context/TezexContext';
 
-const tokens = { XTZ: tzlogo, ETH: ethlogo };
 
-function TokenSelectionDialog(props) {
-  const classes = useStyles();
-
-  const { onClose, selectedValue, open, side } = props;
-
-  const handleClose = () => { onClose(selectedValue, side); };
-
-  const handleListItemClick = (value) => { onClose(value, side); };
-
-  return (
-    <Dialog onClose={handleClose} aria-labelledby="simple-dialog-title" open={open}>
-      <DialogTitle id="simple-dialog-title">
-          {(side === 'input') && ('Select Input Token')}
-          {(side === 'output') && ('Select Output Token')}
-      </DialogTitle>
-      <List>
-        {Object.entries(tokens).map(([key, value]) => (
-          <ListItem button onClick={() => handleListItemClick(key)} key={key}>
-            <ListItemAvatar>
-              <Avatar className={classes.avatar}>
-                <img className={classes.logo} src={value} alt="Logo" />
-              </Avatar>
-            </ListItemAvatar>
-            <ListItemText primary={key} />
-          </ListItem>
-        ))}
-      </List>
-    </Dialog>
-  );
-}
-
-TokenSelectionDialog.propTypes = {
-  onClose: PropTypes.func.isRequired,
-  open: PropTypes.bool.isRequired,
-  selectedValue: PropTypes.string.isRequired,
-  side: PropTypes.string.isRequired
-};
 
 const Home = ({ swaps, clients, swapPairs, update }) => {
   const history = useHistory();
   const classes = useStyles();
   const globalContext = useContext(TezexContext);
 
-  const [inputTokenModalOpen, setInputTokenModalOpen] = React.useState(false);
-  const [outputTokenModalOpen, setOutputTokenModalOpen] = React.useState(false);
-  const [inputToken, setInputToken] = React.useState('');
-  const [outputToken, setOutputToken] = React.useState('');
-  const [inputTokenAmount, setInputTokenAmount] = React.useState(0);
-  const [outputTokenAmount, setOutputTokenAmount] = React.useState(0);
+  const [isOpenModal, setIsOpenModal] = useState(false);
+  const [inputToken, setInputToken] = useState({});
+  const [outputToken, setOutputToken] = useState({});
+  const [inputTokenAmount, setInputTokenAmount] = useState(0);
+  const [outputTokenAmount, setOutputTokenAmount] = useState(0);
+  const [selectedModal, setSelectModal] = useState('')
 
-  const openInputTokenModal = () => { setInputTokenModalOpen(true); };
-  const openOutputTokenModal = () => { setOutputTokenModalOpen(true); };
+  const openTokenModal = (side) => {
+    setSelectModal(side);
+    setIsOpenModal(true);
+  }
 
-  const setToken = (value, side) => {
-    setInputTokenModalOpen(false);
-    setOutputTokenModalOpen(false);
-    
-    if (side === 'input') { setInputToken(value); }
-    if (side === 'output') { setOutputToken(value); }
+  // const openInputTokenModal = () => { setInputTokenModalOpen(true); };
+  // const openOutputTokenModal = () => { setOutputTokenModalOpen(true); };
+
+  const setToken = (value, side) => {   
+    if (side === 'Input') {
+      setInputToken(value);
+    } else {
+      setOutputToken(value);
+    }
+    setIsOpenModal(false);
   };
 
   const refundHandler = async (swap) => {
@@ -107,6 +67,8 @@ const Home = ({ swaps, clients, swapPairs, update }) => {
       alert("error in refunding, check if the refund time has come");
     }
   };
+
+  const modalSelectedValue = selectedModal === 'Input' ? inputToken : outputToken;
   // const SwapItem = (data) => {
   //   const exp = new Date(data.refundTime * 1000);
   //   const state = {
@@ -171,48 +133,22 @@ const Home = ({ swaps, clients, swapPairs, update }) => {
               <CardContent>
                 <Typography className={classes.title + " Element"}>Swap Tokens</Typography>
                 <form>
-                  <div className={classes.tokencontainer}>
-                    <Typography color="textSecondary" variant="subtitle2">From</Typography>
-                    <Typography  color="textSecondary">Balance</Typography>
-                    <Button color="primary" onClick={openInputTokenModal}>
-                      <Typography className = {classes.tokentext + " Element"} variant="subtitle1">
-                        {" "}
-                        <img className={classes.logo} src={tokens[inputToken]} />
-                        {inputToken|| "Select Token"}
-                      </Typography>{" "}
-                      <ArrowDropDownIcon style={{ color: "#000" }} />
-                    </Button>
-                    <TokenSelectionDialog
-                      selectedValue={inputToken}
-                      open={inputTokenModalOpen}
-                      onClose={setToken}
-                      side='input'
-                    />
-                    <input type={'number'} className={classes.tokeninput} value={inputTokenAmount} onInput={(e) => setInputTokenAmount(e.target.value || 0)}></input>
-                  </div>
-                  <ImportExportIcon />
-                  <div className={classes.tokencontainer}>
-                    <Typography color="textSecondary" variant="subtitle2">To</Typography>
-                    <Typography color="textSecondary">Balance</Typography>
-                    <Button color="primary" onClick={openOutputTokenModal}>
-                      <Typography className = {classes.tokentext + " Element"} variant="subtitle1">
-                      {" "}
-                        <img className={classes.logo} src={tokens[outputToken]} />
-                        {outputToken|| "Select Token"}
-                      </Typography>{" "}
-                      <ArrowDropDownIcon style={{ color: "#000" }} />
-                    </Button>
-                    <TokenSelectionDialog
-                      selectedValue={outputToken}
-                      open={outputTokenModalOpen}
-                      onClose={setToken}
-                      side='output'
-                    />
-                    <input type={'number'} className={classes.tokeninput} value={outputTokenAmount} onInput={(e) => setOutputTokenAmount(e.target.value || 0)}></input>
-                  </div>
+                  <TokenSelector
+                    label='From'
+                    token={inputToken}
+                    openModal={() => openTokenModal('Input')}
+                  />
+                  <Button className={classes.changeBtn}>
+                    <img src={SwapIcon} />
+                  </Button>
+                  <TokenSelector
+                    label='To'
+                    token={outputToken}
+                    openModal={() => openTokenModal('Output')}
+                  />
                 </form>
               </CardContent>
-              <CardActions>
+              <CardActions className={classes.btnContainer}>
                   {globalContext.ethereumClient.account && globalContext.tezosClient.account && (
                       <Button size="large" className = {classes.connectwalletbutton + " Element"}>Swap</Button>
                   )}
@@ -228,11 +164,26 @@ const Home = ({ swaps, clients, swapPairs, update }) => {
               </CardActions>
             </Card>
             <Paper className = {classes.feepaper + " Element"}>
-              <div>Swap fee        0.00</div>
-              <div>Max network fee     0.00XTZ</div>
-              <div>Minimum Received    0.00XTZ</div>
+              <div className={classes.feeItem}>
+                <span className={classes.feeItemLabel}>Swap fee</span>
+                <span className={classes.feeItemValue}>0.15%</span>
+              </div>
+              <div className={classes.feeItem}>
+                <span className={classes.feeItemLabel}>Max network fee</span>
+                <span className={classes.feeItemValue}>0.00XTZ</span>
+              </div>
+              <div className={classes.feeItem}>
+                <span className={classes.feeItemLabel}>Minimum Received</span>
+                <span className={classes.feeItemValue}>0.00XTZ</span>
+              </div>
             </Paper>
-            {/* {data} */}
+            <TokenSelectionDialog
+              selectedValue={modalSelectedValue}
+              open={isOpenModal}
+              onClose={() => setIsOpenModal(false)}
+              onSelect={setToken}
+              side={selectedModal}
+            />
           </div>
         </div>
       </Grid>
