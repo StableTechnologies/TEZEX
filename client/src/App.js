@@ -7,6 +7,7 @@ import Header from "./components/header";
 import Home from "./components/home";
 import Loader from "./components/loader";
 import CreateSwap from "./components/newSwap";
+import Notice from "./components/notice";
 import Setup from "./components/setup";
 import Stat from "./components/stats";
 import requestSwap from "./library/request-swap";
@@ -120,12 +121,13 @@ const App = () => {
               />
             </Route>
             <Route exact path="/swap">
-              <CreateSwap
+              {/* <CreateSwap
                 genSwap={genSwap}
                 clients={clientRef.current}
                 swapPairs={swapPairsRef.current}
                 balance={balance}
-              />
+              /> */}
+              <Notice />
             </Route>
             <Route exact path="/about">
               <About />
