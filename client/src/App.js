@@ -121,13 +121,12 @@ const App = () => {
               />
             </Route>
             <Route exact path="/swap">
-              {/* <CreateSwap
+              <CreateSwap
                 genSwap={genSwap}
                 clients={clientRef.current}
                 swapPairs={swapPairsRef.current}
                 balance={balance}
-              /> */}
-              <Notice />
+              />
             </Route>
             <Route exact path="/about">
               <About />
