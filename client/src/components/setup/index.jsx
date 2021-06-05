@@ -60,6 +60,10 @@ const Setup = ({ init }) => {
               conducted at this time. <br />
               We <strong>STRONGLY</strong> urge caution to anyone who chooses to
               engage with these contracts and platform.
+              <br />
+              <br />
+              <strong>Recommended Browsers</strong><br />
+              We recommend that you use TEZEX with Firefox or Brave, there have been reports of wallet issues on Chrome.
             </DialogContentText>
           </DialogContent>
           <DialogActions
