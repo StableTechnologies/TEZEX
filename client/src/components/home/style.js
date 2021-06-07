@@ -2,25 +2,71 @@ import { makeStyles } from "@material-ui/core/styles";
 
 const useStyles = makeStyles((theme) => ({
   root: {
-    maxWidth: "30vw", 
+    // maxWidth: "30vw",
+    boxSizing: 'border-box',
+    "& .MuiPaper-root": {
+      borderRadius: "1.5rem",
+    }
   },
+  '& .MuiCardContent-root': {
+    padding: '24px 31px 31px 31px',
+    textAlign: 'left'
+  },
+
+  card: {
+    background:' #FFFFFF',
+    border: '1px solid #E1E1E1',
+    borderRadius : (24),
+
+  },
+
   title: {
     "&.Element": {
-    fontFamily: "Inter",
-    fontSize: "1.1em",
-    fontStyle: "normal",
-    fontWeight: "500",
-    lineHeight: "29px",
-    letterSpacing: "0em",
-    textAlign: "left",
+      marginTop: '1rem',
+      padding: '0 2rem',
+      fontSize: "1.5rem",
+      fontStyle: "normal",
+      fontWeight: "600",
+      lineHeight: "29px",
+      letterSpacing: "0em",
+      textAlign: "left",
+      color: '#000',
   }
   },
   tokeninput: {
     border: "0",
+    textAlign: "right",
+    fontSize: "18px",
   },
-  tokencontainer: {
+  tokenButton: {
+    minWidth: "auto",
+    textTransform: "none",
+    fontSize: "18px",
+    fontWeight: "500",
+    lineHeight: "21.78px",
+    padding: "0",
+  },
+  tokenContainer: {
     backgroundColor: "#F8F8F8",
-    marginBottom: "1vh"
+    borderRadius: "8px",
+    textAlign: "left",
+    marginBottom: "1vh",
+    padding:  ".5rem 1rem",
+  },
+  tokenDetails: {
+    display: "flex",
+    justifyContent: "space-between",
+  },
+  tokenValue: {
+    textAlign: "right",
+  },
+  swapIcon: {
+    background: "#fff",
+    width: "fit-content",
+    margin: '1.5rem 1rem',
+    padding: (2),
+    borderRadius: ".5rem",
+    border: '0.5px solid #E5E5E5'
   },
   bodycontainer: {
     maxHeight: "90vh"
@@ -31,10 +77,17 @@ const useStyles = makeStyles((theme) => ({
   sidelogo: {
     maxHeight: "90vh"
   },
-  swapcontainer: {
-    marginTop: "4vh"
+  logo: {
+    marginRight: "8px",
+    maxWidth: "24px",
   },
-
+  img: {
+    width: "24px",
+  },
+  swapcontainer: {
+    marginTop: "4vh",
+    textAlign: "left"
+  },
   button: {
     color: "white",
     cursor: "pointer",
@@ -51,7 +104,10 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   swaps: {
+    background: "linear-gradient(180deg, rgba(224, 224, 224, 0.7) -26.98%, rgba(255, 255, 255, 0) 176.46%)",
+    minWidth: "30vw",
     margin: "1.4vw",
+    borderRadius: "24px",
     "& h3": {
       fontSize: "2.1vw",
     },
@@ -90,10 +146,20 @@ const useStyles = makeStyles((theme) => ({
   },
   connectwalletbutton: {
     "&.Element": {
-    color: "white",
-    backgroundColor: "black",
-    border: "1px solid black",
-  width: "100%"}
+      width: "100%",
+      height: "56px",
+      backgroundColor: "#000",
+      margin: "1.5rem 1rem",
+      color: "white",
+      border: "1px solid black",
+      borderRadius: "8px",
+      fontWeight: "500",
+      fontSize: "1.5rem",
+      lineHeight: "29px",
+      letterSpacing: "0.01em",
+      textTransform: 'none',
+
+  }
   },
   tokentext: {
     "&.Element": {
@@ -102,10 +168,38 @@ const useStyles = makeStyles((theme) => ({
       textTransform: "capitalize",
 },
 },
-  feepaper: {
-    "&.Element": {
-    marginTop: "4vh"
+
+feepaper: {
+  "&.Element": {
+    background: 'transparent',
+    padding: "1.2rem",
+    color: "#4f4f4f",
+    border: "1px solid transparent",
   },
+},
+feeDetails: {
+  display: "flex",
+  justifyContent: "space-between",
+  // margin: "8px",
+  fontStyle: "normal",
+  fontWeight: "500",
+  fontSize: ".9rem",
+  lineHeight: "19px",
+},
+close: {
+  position: 'absolute',
+  right: theme.spacing(1),
+  top: theme.spacing(1)
+},
+dialogCon: {
+  borderRadius: "1.5rem",
+  padding: "1rem",
+},
+list: {
+  border: "1px solid #e5e5e5",
+  margin: "8px 0",
+  width: "100%",
+  borderRadius: "8px",
 },
 }));
 
