@@ -53,6 +53,10 @@ const useStyles = makeStyles((theme) => ({
     marginBottom: "1vh",
     padding:  ".5rem 1rem",
   },
+  balContainer: {
+    display: "flex",
+    justifyContent: "space-between",
+  },
   tokenDetails: {
     display: "flex",
     justifyContent: "space-between",
@@ -158,9 +162,14 @@ const useStyles = makeStyles((theme) => ({
       lineHeight: "29px",
       letterSpacing: "0.01em",
       textTransform: 'none',
-
-  }
   },
+},
+disabled: {
+  "&.Element": {
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    border: "0",
+  }
+},
   tokentext: {
     "&.Element": {
       color: "#000",
@@ -201,6 +210,19 @@ list: {
   width: "100%",
   borderRadius: "8px",
 },
+loaderContainer: {
+  display: "flex",
+  justifyContent: "start",
+  alignItems: "center",
+  flexDirection: "row",
+  background: "#E0EFFF",
+  borderRadius: "8px",
+  padding: '0 1rem',
+},
+loader: {
+  width: "32px",
+  height: "32px",
+}
 }));
 
 export default useStyles;

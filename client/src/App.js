@@ -6,6 +6,7 @@ import "./App.css";
 import TezexContext from './components/context/TezexContext';
 import About from "./components/about";
 import Header from "./components/header";
+import Footer from "./components/footer";
 import Home from "./components/home";
 import Loader from "./components/loader";
 import CreateSwap from "./components/newSwap";
@@ -25,7 +26,7 @@ const App = () => {
   const [, updateState] = React.useState();
 
   const classes = useStyles();
-  
+
   const swapRef = useRef();
   swapRef.current = swaps;
   const clientRef = useRef();
@@ -135,6 +136,7 @@ const App = () => {
               <Stat swapPairs={swapPairsRef.current} />
             </Route>
           </Switch>
+          <Footer />
         {/* )} */}
       </div>
     </Router>

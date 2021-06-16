@@ -42,9 +42,33 @@ const useStyles = makeStyles((theme) => ({
   },
   walletbutton: {
     "&.Element": {
-    backgroundColor: "white",
-    border: "1px solid black"}
+    background: "white",
+    border: "1px solid black",
+    textTransform: "none",
   }
+  },
+  ethButton: {
+    "&.Element": {
+      background:"linear-gradient(92.7deg, rgba(206, 143, 255, 0.4) 4.54%, #F9FEFF 98.49%)",
+      // background:"linear-gradient(#CE8FFF 4%, #F9FEFF 100%)",
+    }
+  },
+  tezButton: {
+    "&.Element": {
+      background: "linear-gradient(92.04deg, rgba(171, 240, 255, 0.4) 4.41%, #F9FEFF 84.62%)",
+      // background:"linear-gradient(#ABF0FF 4%, #F9FEFF 100%)",
+    }
+  },
+  tezStyle: {
+    "&.Element": {
+      position: "absolute",
+      height:" 135px",
+      width: "284px",
+      borderRadius: "4px",
+      right: "2.8%",
+      top: "7%",
+    },
+  },
 }));
 
 export default useStyles;

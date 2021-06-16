@@ -26,6 +26,11 @@ const theme = createMuiTheme({
       root: {
         padding: ".5rem 1.5rem",
       },
+    },
+    MuiCircularProgress: {
+      colorPrimary: {
+        color: "#000",
+      }
     }
   },
 })

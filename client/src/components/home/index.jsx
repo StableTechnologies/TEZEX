@@ -1,6 +1,8 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { useHistory } from "react-router-dom";
 import useStyles from "./style";
+
+
 import Card from "@material-ui/core/Card";
 import CardActions from "@material-ui/core/CardActions";
 import CardHeader from '@material-ui/core/CardHeader';
@@ -8,49 +10,91 @@ import CardContent from "@material-ui/core/CardContent";
 import Button from "@material-ui/core/Button";
 import TextField from '@material-ui/core/TextField';
 import Typography from "@material-ui/core/Typography";
-
 import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
 import ImportExportIcon from "@material-ui/icons/ImportExport";
-
 import Grid from "@material-ui/core/Grid";
 import Paper from '@material-ui/core/Paper';
 
-
+import Loader from "../loader";
 import sidelogo from "../../assets/sidelogo.svg";
+import tzlogo from "../../assets/tzlogo.svg";
+
 
 import { TezexContext } from '../context/TezexContext';
 import TokenSelectionDialog from '../dialog/TokenSelectionDialog';
 
 import  {content, tokens, tokenWallets}  from '../constants/index';
+import { shorten, connectEthAccount, connectTezAccount } from "../../util";
 
 const Home = ({ swaps, clients, swapPairs, update }) => {
   const history = useHistory();
   const classes = useStyles();
   const globalContext = useContext(TezexContext);
 
-  const [inputTokenModalOpen, setInputTokenModalOpen] = React.useState(false);
-  const [outputTokenModalOpen, setOutputTokenModalOpen] = React.useState(false);
-  const [walletModalOpen, setWalletModalOpen] = React.useState(false);
-  const [inputToken, setInputToken] = React.useState('');
-  const [outputToken, setOutputToken] = React.useState('');
-  const [wallet, setWallet] = React.useState('');
-  const [inputTokenAmount, setInputTokenAmount] = React.useState(0);
-  const [outputTokenAmount, setOutputTokenAmount] = React.useState(0);
+  const [inputTokenModalOpen, setInputTokenModalOpen] = useState(false);
+  const [outputTokenModalOpen, setOutputTokenModalOpen] = useState(false);
+  const [walletModalOpen, setWalletModalOpen] = useState(false);
+  const [errModalOpen, setErrModalOpen] = useState(false);
+  const [inputToken, setInputToken] = useState([("XTZ":tzlogo)]);
+  // const [inputToken, setInputToken] = useState('');
+  const [outputToken, setOutputToken] = useState('');
+  const [wallet, setWallet] = useState('');
+  const [err, setErr] = useState('');
+  const [inputTokenAmount, setInputTokenAmount] = useState(0);
+  const [outputTokenAmount, setOutputTokenAmount] = useState(0);
+  const [ethAccount, setEthAccount] = useState('');
+  const [xtzAccount, setXtzAccount] = useState('');
 
   const openInputTokenModal = () => { setInputTokenModalOpen(true); };
   const openOutputTokenModal = () => { setOutputTokenModalOpen(true); };
   const openWalletModal = () => { setWalletModalOpen(true); };
+  const openErrModal = () => { setErrModalOpen(true); };
+
+
 
   const setToken = (value, side) => {
     setInputTokenModalOpen(false);
     setOutputTokenModalOpen(false);
     setWalletModalOpen(false);
+    setErrModalOpen(false);
 
     if (side === 'input') { setInputToken(value); }
     if (side === 'output') { setOutputToken(value); }
     if (side === 'wallet') { setWallet(value); }
+    if (side === 'err') { setErr(value); }
   };
+  const setupEthAccount = async () => {
+    try {
+      const r = await connectEthAccount();
+      setEthAccount(r.account);
+      globalContext.changeEthereumClient(r);
+    }
+    catch(error) {
+      return (
+        openErrModal()
+      )
+    }
+};
+const setupXtzAccount = async () => {
+  try {
+    const r = await connectTezAccount();
+    setXtzAccount(r.account);
+    globalContext.changeTezosClient(r);
+  }
+  catch(error) {}
+};
 
+  const setupAccount = async (value) => {
+    if(value === "Metamask") {
+      setupEthAccount();
+  }
+  else {
+    setupXtzAccount()
+  }
+  //   if(value === "Temple Wallet") {
+  //     // setupEthAccount();
+  // }
+  }
 
   const refundHandler = async (swap) => {
     try {
@@ -139,7 +183,10 @@ const Home = ({ swaps, clients, swapPairs, update }) => {
               <CardContent>
                 <form>
                   <div className={classes.tokenContainer + " Element"}>
-                    <Typography color="textSecondary" variant="subtitle2">From</Typography>
+                    <div className={classes.balContainer}>
+                      <Typography color="textSecondary" variant="subtitle2">From</Typography>
+                      <Typography color="textSecondary" variant="subtitle2">Balance: 200 XTZ</Typography>
+                    </div>
                     <div className={classes.tokenDetails} >
                       <Button
                         endIcon={ <KeyboardArrowDownIcon style={{ color: "#000" }} />}
@@ -175,7 +222,6 @@ const Home = ({ swaps, clients, swapPairs, update }) => {
                   </div>
 
                   <div className={classes.swapIcon}> <ImportExportIcon /></div>
-
 
                   <div className={classes.tokenContainer}>
                     <Typography color="textSecondary" variant="subtitle2">To</Typography>
@@ -213,14 +259,14 @@ const Home = ({ swaps, clients, swapPairs, update }) => {
                 </form>
               </CardContent>
               <CardActions>
-                  {globalContext.ethereumClient.account && globalContext.tezosClient.account && (
+                  {/* {globalContext.ethereumClient.account && globalContext.tezosClient.account && (
                       <Button size="large" className = {classes.connectwalletbutton + " Element"}>Swap</Button>
-                  )}
-                  {globalContext.ethereumClient.account && (
+                  )} */}
+                  {/* {globalContext.ethereumClient.account && (
                       <Button size="large" className = {classes.connectwalletbutton + " Element"}>Connect Tezos Wallet</Button>
-                  )}
-                  {globalContext.tezosClient.account && (
-                      <Button size="large" className = {classes.connectwalletbutton + " Element"}>Connect Ethereum Wallet</Button>
+                  )} */}
+                  {(globalContext.tezosClient.account || globalContext.ethereumClient.account) && (
+                      <Button size="large" className = {`${classes.connectwalletbutton + " Element"} ${classes.disabled + " Element"}` } disabled>Select Token</Button>
                   )}
                   {!globalContext.ethereumClient.account && !globalContext.tezosClient.account && (
                     <>
@@ -232,6 +278,22 @@ const Home = ({ swaps, clients, swapPairs, update }) => {
                         side='wallet'
                         lists={tokenWallets}
                         content = {content.connectWallet}
+                        handleClick={setupAccount}
+                        closeBtn
+                      />
+                      <TokenSelectionDialog
+                        selectedValue={err}
+                        open={errModalOpen}
+                        side='err'
+                        onClose={setToken}
+                        content={content.errorMessage}
+                        content1 = {
+                          <Loader
+                            message= "Waiting for connection confirmation..."
+                            loaderContainer = {classes.loaderContainer}
+                            loader = {classes.loader}
+                            size = {32}
+                          />}
                         closeBtn
                       />
                     </>
