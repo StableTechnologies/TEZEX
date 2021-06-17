@@ -8,5 +8,5 @@ export const content = {
   errorMessage: "Please confirm the connection request in your MetaMask wallet. If you don’t see a request pop-up, open the wallet extension. "
 
 }
-export const tokens = { "XTZ": tzlogo, "ETH": ethlogo, "yTZ": tzlogo, "fTH": ethlogo, "yTZ": tzlogo, "uTZ": tzlogo, "yrTZ": tzlogo,  };
+export const tokens = { "XTZ": tzlogo, "ETH": ethlogo, };
 export const tokenWallets =   { "Metamask": metamaskLogo, "Wallet Connect": walletconnectLogo };

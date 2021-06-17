@@ -79,7 +79,7 @@ const useStyles = makeStyles((theme) => ({
     maxHeight: "100%"
   },
   sidelogo: {
-    maxHeight: "90vh"
+    maxHeight: "85vh"
   },
   logo: {
     marginRight: "8px",
