@@ -1,31 +1,35 @@
 import { useContext, useState } from "react";
-import { connectEthAccount } from "../../util";
+import { connectEthAccount, connectTezAccount } from "../../util";
 import { TezexContext } from "../context/TezexContext";
 
-export const useSetUpAccount = async (type, client, modal) => {
-  const [isAccount, setIsAccount] = useState('');
-  const globalContext = useContext(TezexContext);
-  client = client();
-
-  try {
-    const r = await type();
-    setIsAccount(r.account);
-    globalContext.client(r);
-  }
-  catch(err) {
-    return modal()
-  }
-}
 export const useSetupEthAccount = async () => {
+// export function useSetupEthAccount() {
   const [ethAccount, setEthAccount] = useState('');
+  const [errModalOpen, setErrModalOpen] = useState(false);
   const globalContext = useContext(TezexContext);
   // e.preventDefault();
   try {
+    setErrModalOpen(false);
       const r = await connectEthAccount();
+      // const r =  connectEthAccount();
       setEthAccount(r.account);
       globalContext.changeEthereumClient(r);
+      setErrModalOpen(true);
   }
   catch(err) {
     // return modal()
   }
+  return [ethAccount, errModalOpen];
+};
+
+export const useSetupXtzAccount = async () => {
+  const [xtzAccount, setXtzAccount] = useState('');
+  const globalContext = useContext(TezexContext);
+  // e.preventDefault();
+  try{
+      const r = await connectTezAccount();
+      setXtzAccount(r.account);
+      globalContext.changeTezosClient(r);
+  }
+  catch(error) {}
 };

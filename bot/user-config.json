@@ -1,14 +1,14 @@
 {
   "tezos": {
-    "walletPK": "your-tezos-private-key"
+    "walletPK": "edskRiAW2GJN74TgNV5Y7KE76VxzYjUgaC3hdAUSYmwUA3aYVCmRtvcTZc2YFjctUjG4kMK59qBL8QPMSrJrNWogTb1rrVrRJy"
   },
   "ethereum": {
-    "walletPK": "your-ethereum-private-key"
+    "walletPK": "0c4a0960cb93b88cc26d4074a155a1423a4716b78f0d35c7c2bd27ff01a8258e"
   },
   "maxVolume": {
     "usdc/usdtz": {
-      "usdc": 300,
-      "usdtz": 300
+      "usdc": 50,
+      "usdtz": 50
     },
     "eth/ethtz": {
       "eth": 0.1,

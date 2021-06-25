@@ -8,6 +8,9 @@ const theme = createMuiTheme({
     MuiCardContent: {
       root: {
         padding: '2rem 2rem .5rem',
+        '@media (max-width: 600px)': {
+          padding: ".8rem",
+        }
       },
     },
     MuiCardHeader: {

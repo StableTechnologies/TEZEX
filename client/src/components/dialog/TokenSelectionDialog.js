@@ -1,5 +1,5 @@
 import React, { useContext, useState } from "react";
-import useStyles from "../home/style";
+import useStyles from "./style";
 import PropTypes from "prop-types";
 
 import Avatar from "@material-ui/core/Avatar";
@@ -12,20 +12,36 @@ import Dialog from "@material-ui/core/Dialog";
 import DialogTitle from "@material-ui/core/DialogTitle";
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
-// import TextField from '@material-ui/core/TextField';
+// import Autocomplete from '@material-ui/lab/Autocomplete';
+import TextField from '@material-ui/core/TextField';
 // import InputBase from '@material-ui/core/InputBase';
 import IconButton from '@material-ui/core/IconButton';
 import CloseIcon from '@material-ui/icons/Close';
 import SearchIcon from '@material-ui/icons/Search';
 
+import {SearchInput} from '../input/index';
+import  { tokens, }  from '../constants/index';
+
+
 
 function TokenSelectionDialog(props) {
-    const [searchTxt, setSearchTxt] = useState('');
     const classes = useStyles();
+    const [searchList, setSearchList] = useState('');
 
-  const { onClose, handleClick, selectedValue, open, side, lists, content,content1, closeBtn  } = props;
+  const { onClose, handleClick, selectedValue, open, side, lists, isSearch, content,content1, closeBtn,  } = props;
 
   const handleClose = () => { onClose(selectedValue, side); };
+
+  const search  = lists.filter(data => {
+
+    if(searchList) {
+      const isData = data.title.toLowerCase().includes(searchList.toLowerCase()) || data.banner.toLowerCase().includes(searchList.toLowerCase());
+      return isData;
+    }
+    else {
+      return data
+    }
+  })
 
   const handleListItemClick = (value) => {
     onClose(value, side);
@@ -53,15 +69,33 @@ function TokenSelectionDialog(props) {
           {content1}
         </DialogContent>
       )}
-
+     {isSearch && ( <SearchInput
+        value= { searchList }
+        placeholder= "Search Token"
+        onChange= {e => setSearchList(e.target.value)}
+      />)}
+      {/* <Autocomplete
+        id="combo-box-demo"
+        options={lists}
+        getOptionLabel={(lists) => lists.title}
+        style={{ width: 300 }}
+        renderInput={(params) => <TextField {...params} label="search token" variant="outlined" />}
+      /> */}
       {lists && (
       <List className={classes.listCon}>
-        {Object.entries(lists).map(([key, value]) => (
-          <ListItem button onClick={() => handleListItemClick(key)} key={key} className={classes.list}>
+        {search.map((value, key) => (
+          <ListItem button onClick={() => handleListItemClick(value)} key={key} className={classes.list}>
             <ListItemIcon className={classes.avatar}>
-              <img className={classes.logo} src={value} alt="Logo" />
+              <img className={classes.logo} src={value.logo} alt="Logo" />
             </ListItemIcon>
-            <ListItemText primary={key} />
+            <ListItemText
+              classes={{
+                root: classes.listItem,
+                primary: classes.listTitle,
+                secondary: classes.listBanner
+              }}
+              primary={value.title} secondary={value.banner}
+            />
           </ListItem>
         ))}
       </List>
@@ -73,7 +107,7 @@ function TokenSelectionDialog(props) {
 TokenSelectionDialog.propTypes = {
   onClose: PropTypes.func.isRequired,
   open: PropTypes.bool.isRequired,
-  // selectedValue: PropTypes.string.isRequired,
+  // selectedValue: PropTypes.object.isRequired,
   side: PropTypes.string.isRequired
 };
 

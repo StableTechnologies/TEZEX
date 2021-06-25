@@ -65,21 +65,26 @@ const useStyles = makeStyles((theme) => ({
     textAlign: "right",
   },
   swapIcon: {
-    background: "#fff",
-    width: "fit-content",
     margin: '1.5rem 1rem',
-    padding: (2),
+    padding: (1),
+    minWidth: "0",
+    width: "40px",
+    height: "40px",
     borderRadius: ".5rem",
-    border: '0.5px solid #E5E5E5'
+    border: '0.5px solid #E5E5E5',
+    cursor: "pointer",
   },
   bodycontainer: {
-    maxHeight: "90vh"
   },
   sidelogocontainer: {
     maxHeight: "100%"
   },
   sidelogo: {
-    maxHeight: "85vh"
+    maxHeight: "85vh",
+    // visibility: "visible",
+    '@media (max-width: 600px)': {
+      visibility: "hidden"
+    }
   },
   logo: {
     marginRight: "8px",
@@ -89,7 +94,7 @@ const useStyles = makeStyles((theme) => ({
     width: "24px",
   },
   swapcontainer: {
-    marginTop: "4vh",
+    marginTop: "3vh",
     textAlign: "left"
   },
   button: {
@@ -162,6 +167,9 @@ const useStyles = makeStyles((theme) => ({
       lineHeight: "29px",
       letterSpacing: "0.01em",
       textTransform: 'none',
+    '@media (max-width: 600px)': {
+      margin: "1rem .2rem",
+    }
   },
 },
 disabled: {
@@ -189,27 +197,12 @@ feepaper: {
 feeDetails: {
   display: "flex",
   justifyContent: "space-between",
-  // margin: "8px",
   fontStyle: "normal",
   fontWeight: "500",
   fontSize: ".9rem",
   lineHeight: "19px",
 },
-close: {
-  position: 'absolute',
-  right: theme.spacing(1),
-  top: theme.spacing(1)
-},
-dialogCon: {
-  borderRadius: "1.5rem",
-  padding: "1rem",
-},
-list: {
-  border: "1px solid #e5e5e5",
-  margin: "8px 0",
-  width: "100%",
-  borderRadius: "8px",
-},
+
 loaderContainer: {
   display: "flex",
   justifyContent: "start",

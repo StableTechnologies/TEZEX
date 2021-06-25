@@ -1,13 +1,14 @@
 import React from 'react';
+import Grid from '@material-ui/core/Grid';
 import { Typography } from '@material-ui/core';
-import CopyrightIcon from '@material-ui/icons/Copyright';
 
 const Footer = () => {
   return (
-    <div>
-      {/* <CopyrightIcon /> */}
-      <Typography>© 2021 Tezos Stable Technologies, Ltd.</Typography>
-    </div>
+    <Grid container justify = "center" xs={12}>
+      <Grid item >
+        <Typography>© 2021 Tezos Stable Technologies, Ltd.</Typography>
+      </Grid>
+    </Grid>
   )
 }
 

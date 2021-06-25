@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
 import useStyles from "./style";
 
@@ -11,12 +11,12 @@ import Button from "@material-ui/core/Button";
 import TextField from '@material-ui/core/TextField';
 import Typography from "@material-ui/core/Typography";
 import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
-import ImportExportIcon from "@material-ui/icons/ImportExport";
 import Grid from "@material-ui/core/Grid";
 import Paper from '@material-ui/core/Paper';
 
 import Loader from "../loader";
 import sidelogo from "../../assets/sidelogo.svg";
+import swapIcon from "../../assets/swapIcon.svg";
 import tzlogo from "../../assets/tzlogo.svg";
 
 
@@ -25,32 +25,38 @@ import TokenSelectionDialog from '../dialog/TokenSelectionDialog';
 
 import  {content, tokens, tokenWallets}  from '../constants/index';
 import { shorten, connectEthAccount, connectTezAccount } from "../../util";
+import CreateSwap from "../newSwap/index";
+import { selectToken } from "../tokenPairs/index";
+// import { useSetupEthAccount, useSetupXtzAccount } from '../setUpAccount/index';
 
 const Home = ({ swaps, clients, swapPairs, update }) => {
   const history = useHistory();
   const classes = useStyles();
   const globalContext = useContext(TezexContext);
+  // const [testEth] = useSetupEthAccount();
+  // const [testTez] = useSetupXtzAccount();
 
   const [inputTokenModalOpen, setInputTokenModalOpen] = useState(false);
   const [outputTokenModalOpen, setOutputTokenModalOpen] = useState(false);
   const [walletModalOpen, setWalletModalOpen] = useState(false);
   const [errModalOpen, setErrModalOpen] = useState(false);
-  const [inputToken, setInputToken] = useState([("XTZ":tzlogo)]);
-  // const [inputToken, setInputToken] = useState('');
+  const [inputToken, setInputToken] = useState(tokens[4]);
   const [outputToken, setOutputToken] = useState('');
   const [wallet, setWallet] = useState('');
   const [err, setErr] = useState('');
-  const [inputTokenAmount, setInputTokenAmount] = useState(0);
-  const [outputTokenAmount, setOutputTokenAmount] = useState(0);
+  const [inputTokenAmount, setInputTokenAmount] = useState();
+  const [outputTokenAmount, setOutputTokenAmount] = useState();
   const [ethAccount, setEthAccount] = useState('');
   const [xtzAccount, setXtzAccount] = useState('');
+  // const [tokenPair, setTokenPair] = useState(tokens);
 
   const openInputTokenModal = () => { setInputTokenModalOpen(true); };
   const openOutputTokenModal = () => { setOutputTokenModalOpen(true); };
   const openWalletModal = () => { setWalletModalOpen(true); };
-  const openErrModal = () => { setErrModalOpen(true); };
-
-
+  const openErrModal = () => {
+    setErrModalOpen(true);
+    setWalletModalOpen(false);
+  };
 
   const setToken = (value, side) => {
     setInputTokenModalOpen(false);
@@ -63,6 +69,8 @@ const Home = ({ swaps, clients, swapPairs, update }) => {
     if (side === 'wallet') { setWallet(value); }
     if (side === 'err') { setErr(value); }
   };
+
+
   const setupEthAccount = async () => {
     try {
       const r = await connectEthAccount();
@@ -85,16 +93,47 @@ const setupXtzAccount = async () => {
 };
 
   const setupAccount = async (value) => {
-    if(value === "Metamask") {
+    const str = inputToken.title.toLowerCase();
+    if(str.includes('tz')) {
+       setupXtzAccount()
+    }
+    else {
+      openWalletModal();
+    }
+    if(value.title === "Metamask") {
       setupEthAccount();
-  }
-  else {
-    setupXtzAccount()
-  }
-  //   if(value === "Temple Wallet") {
-  //     // setupEthAccount();
-  // }
-  }
+    }
+}
+
+const tokenPair = selectToken(inputToken.title);
+const tokenPair1 = selectToken(outputToken.title);
+
+const toggleTokens = () => {
+  console.log(inputToken, '1');
+  // tokenPair1.map(x =>{
+  //   if(inputToken.title === x.title) {
+  //     console.log(x.title, 'xx');
+  //     console.log(inputToken.title, 'ii');
+  //     setInputToken(outputToken);
+  //     setOutputToken(inputToken);
+
+  //  console.log(!outputToken.title);
+  //   }
+  //   else {
+  // setInputToken(outputToken);
+  // setOutputToken(!outputToken.title);
+  //   }
+  // }) //stops here
+  setInputToken(outputToken);
+  setOutputToken(inputToken);
+}
+// useEffect(() => {
+//   tokenPair.map(x =>{
+//     if(outputToken.title !== x.title) {
+//     setOutputToken(!outputToken.title);
+//     }
+//   })
+// }, [outputToken]);
 
   const refundHandler = async (swap) => {
     try {
@@ -167,7 +206,7 @@ const setupXtzAccount = async () => {
     <Grid container className = {classes.bodycontainer}>
       <Grid item className = {classes.sidelogoconainer} xs={1}>
         {" "}
-        <img className = {classes.sidelogo} src={sidelogo} />
+          <img className = {classes.sidelogo} src={sidelogo} />
       </Grid>
       <Grid container item xs={10} justify = "center">
         <div className = {classes.swapcontainer}>
@@ -185,7 +224,7 @@ const setupXtzAccount = async () => {
                   <div className={classes.tokenContainer + " Element"}>
                     <div className={classes.balContainer}>
                       <Typography color="textSecondary" variant="subtitle2">From</Typography>
-                      <Typography color="textSecondary" variant="subtitle2">Balance: 200 XTZ</Typography>
+                      {/* <Typography color="textSecondary" variant="subtitle2">Balance: 200 XTZ</Typography> */}
                     </div>
                     <div className={classes.tokenDetails} >
                       <Button
@@ -195,9 +234,9 @@ const setupXtzAccount = async () => {
                         className={classes.tokenButton}
                       >
                         {inputToken && (
-                          <img className={classes.logo} src={tokens[inputToken]} />
+                          <img className={classes.logo} src={inputToken.logo} alt="logo"/>
                         )}
-                        {inputToken || "Select Token"}
+                        {inputToken.title || "Select Token"}
                       </Button>
                       <TextField
                         autoFocus
@@ -206,6 +245,7 @@ const setupXtzAccount = async () => {
                         type="text"
                         placeholder="0.00"
                         onInput={(e) => setInputTokenAmount(e.target.value)}
+                        value={inputTokenAmount}
                         className={classes.tokenValue }
                         inputProps={{style: { textAlign: 'right' }}}
                         InputProps={{ disableUnderline: true}}
@@ -217,11 +257,14 @@ const setupXtzAccount = async () => {
                         open={inputTokenModalOpen}
                         onClose={setToken}
                         side='input'
+                        isSearch
                         lists={tokens}
                     />
                   </div>
 
-                  <div className={classes.swapIcon}> <ImportExportIcon /></div>
+                  <Button className={classes.swapIcon} onClick={toggleTokens}>
+                      <img src={swapIcon} alt="swap-Icon" />
+                  </Button>
 
                   <div className={classes.tokenContainer}>
                     <Typography color="textSecondary" variant="subtitle2">To</Typography>
@@ -233,9 +276,9 @@ const setupXtzAccount = async () => {
                         className={classes.tokenButton}
                       >
                         {outputToken && (
-                          <img className={classes.logo} src={tokens[outputToken]} />
+                          <img className={classes.logo} src={outputToken.logo} alt="logo" />
                         )}
-                        {outputToken || "Select Token"}
+                        {outputToken.title || "Select Token"}
                       </Button>
                       <TextField
                         autoFocus
@@ -243,24 +286,26 @@ const setupXtzAccount = async () => {
                         id="outputTokenValue"
                         type="text"
                         placeholder="0.00"
-                        onInput={(e) => setOutputTokenAmount(e.target.value )}
+                        onInput={(e) => setOutputTokenAmount(e.target.value.replace(/[^0-9]/, '') )}
+                        value={outputTokenAmount}
                         inputProps={{className: classes.tokenValue, pattern: "^[0-9]*[.,]?[0-9]*$", inputMode:"decimal"}}
                         InputProps={{ disableUnderline: true}}
                       />
                     </div>
                     <TokenSelectionDialog
-                        selectedValue={outputToken}
+                        selectedValue={outputToken }
                         open={outputTokenModalOpen}
                         onClose={setToken}
                         side='output'
-                        lists={tokens}
+                        isSearch
+                        lists={tokenPair}
                     />
                   </div>
                 </form>
               </CardContent>
               <CardActions>
                   {/* {globalContext.ethereumClient.account && globalContext.tezosClient.account && (
-                      <Button size="large" className = {classes.connectwalletbutton + " Element"}>Swap</Button>
+                      <Button size="large" className = {classes.connectwalletbutton + " Element"}>Swap Token</Button>
                   )} */}
                   {/* {globalContext.ethereumClient.account && (
                       <Button size="large" className = {classes.connectwalletbutton + " Element"}>Connect Tezos Wallet</Button>
@@ -270,7 +315,8 @@ const setupXtzAccount = async () => {
                   )}
                   {!globalContext.ethereumClient.account && !globalContext.tezosClient.account && (
                     <>
-                      <Button size="large" className = {classes.connectwalletbutton + " Element"} onClick={openWalletModal} >Connect Wallet</Button>
+                      {/* <Button size="large" className = {classes.connectwalletbutton + " Element"} onClick={openWalletModal} >Connect Wallet</Button> */}
+                      <Button size="large" className = {classes.connectwalletbutton + " Element"} onClick={setupAccount} >Connect Wallet</Button>
                        <TokenSelectionDialog
                         selectedValue={wallet}
                         open={walletModalOpen}
@@ -287,6 +333,7 @@ const setupXtzAccount = async () => {
                         side='err'
                         onClose={setToken}
                         content={content.errorMessage}
+                        lists ={ []}
                         content1 = {
                           <Loader
                             message= "Waiting for connection confirmation..."
@@ -304,6 +351,8 @@ const setupXtzAccount = async () => {
               <div className= {classes.feeDetails}>
                 <Typography>Swap Fee</Typography>
                 <Typography>0.15 %</Typography>
+                {/* <Typography>{swapFee}</Typography> */}
+          {/* {swapPairs[currentSwap.pair][counterAsset].symbol} */}
               </div>
               <div className= {classes.feeDetails}>
                 <Typography>Max Network Fee</Typography>
