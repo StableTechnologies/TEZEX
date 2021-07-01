@@ -2,6 +2,9 @@ import { BigNumber } from "bignumber.js";
 import React, { useEffect, useRef, useState } from "react";
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 
+import AOS from 'aos';
+import "aos/dist/aos.css";
+
 import "./App.css";
 import TezexContext from './components/context/TezexContext';
 import About from "./components/about";
@@ -29,8 +32,10 @@ const App = () => {
 
   const swapRef = useRef();
   swapRef.current = swaps;
+
   const clientRef = useRef();
   clientRef.current = clients;
+
   const swapPairsRef = useRef();
   swapPairsRef.current = swapPairs;
 
@@ -46,6 +51,14 @@ const App = () => {
     e.preventDefault();
     e.returnValue = "";
   };
+
+  useEffect(() => {
+    // Initialize AOS animation
+    AOS.init({
+      duration : 2000
+    });
+    // initialize();
+  }, []);
 
   const initialize = async () => {
     try {

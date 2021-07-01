@@ -77,14 +77,13 @@ const useStyles = makeStyles((theme) => ({
   bodycontainer: {
   },
   sidelogocontainer: {
-    maxHeight: "100%"
+    maxHeight: "100%",
+    '@media (max-width: 600px)': {
+      display: "none"
+    }
   },
   sidelogo: {
     maxHeight: "85vh",
-    // visibility: "visible",
-    '@media (max-width: 600px)': {
-      visibility: "hidden"
-    }
   },
   logo: {
     marginRight: "8px",

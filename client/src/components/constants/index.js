@@ -11,12 +11,19 @@ export const content = {
   errorMessage: "Please confirm the connection request in your MetaMask wallet. If you don’t see a request pop-up, open the wallet extension. "
 
 }
+// export const tokens = [
+//     {title: 'USDtz', logo: usdtzLogo, banner: 'USD Tez'}
+//     {title: 'USDC', logo: usdcLogo, banner: 'USD Coin'}
+//     {title: 'ETHtz', logo: ethtzLogo, banner: 'ETH Tez'}
+//     {title: 'ETH', logo: ethlogo, banner: 'Ether'}
+//     {title: 'XTZ', logo: tzlogo, banner: 'Tez'}
+// ];
 export const tokens = [
-    {title: 'USDtz', logo: usdtzLogo, banner: 'USD Tez'},
-    {title: 'USDC', logo: usdcLogo, banner: 'USD Coin'},
-    {title: 'ETHtz', logo: ethtzLogo, banner: 'ETH Tez'},
-    {title: 'ETH', logo: ethlogo, banner: 'Ether'},
-    {title: 'XTZ', logo: tzlogo, banner: 'Tez'},
+    {title: 'USDtz', logo: usdtzLogo, banner: 'USD Tez', pairs:['USDC','ETHtz','XTZ']},
+    {title: 'USDC', logo: usdcLogo, banner: 'USD Coin', pairs:['USDtz']},
+    {title: 'ETHtz', logo: ethtzLogo, banner: 'ETH Tez', pairs:[ 'USDtz','ETH','XTZ']},
+    {title: 'ETH', logo: ethlogo, banner: 'Ether', pairs:['ETHtz']},
+    {title: 'XTZ', logo: tzlogo, banner: 'Tez', pairs:[ 'USDtz','ETHtz']},
 ];
 export const tokenWallets =  [
   { title: 'Metamask', logo: metamaskLogo, },

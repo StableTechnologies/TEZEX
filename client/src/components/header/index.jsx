@@ -5,6 +5,7 @@ import Grid from '@material-ui/core/Grid';
 import Button from '@material-ui/core/Button';
 
 import { convertBigIntToFloat } from "../../library/util";
+
 import ExpandWalletView from "../expandWalletView/index";
 import SwipeableDrawer from '@material-ui/core/SwipeableDrawer';
 
@@ -12,8 +13,10 @@ import SwipeableDrawer from '@material-ui/core/SwipeableDrawer';
 import logo from "../../assets/TezexLogo.svg";
 import tzwalletlogo from "../../assets/tzwalletlogo.svg";
 import ethwalletlogo from "../../assets/ethwalletlogo.svg";
+
 import { shorten, connectEthAccount, connectTezAccount } from "../../util";
 import { TezexContext } from '../context/TezexContext';
+
 import useStyles from "./style";
 
 const Header = ({ clients, swapPairs, balUpdate }) => {
@@ -30,6 +33,9 @@ const Header = ({ clients, swapPairs, balUpdate }) => {
     const [xtzBalance, setXtzBalance] = useState(0);
     const [ethAccount, setEthAccount] = useState('');
     const [xtzAccount, setXtzAccount] = useState('');
+
+    const [ethClient, setEthClient] = useState(globalContext.ethereumClient);
+    const [xtzClient, setXtzClient] = useState(globalContext.tezosClient);
 
 
   const toggleDrawer = (anchor, open) => (event) => {
@@ -61,9 +67,11 @@ const Header = ({ clients, swapPairs, balUpdate }) => {
             const r = await connectTezAccount();
             setXtzAccount(r.account);
             globalContext.changeTezosClient(r);
+            console.log(r);
         }
         catch(error) {}
     };
+
     const updateBalance = async () => {
         let eth = 0;
         let xtz = 0;
@@ -73,6 +81,7 @@ const Header = ({ clients, swapPairs, balUpdate }) => {
             .balance(clients["ethereum"].account)
             .then((val) => new BigNumber(val));
         }
+
 
         if (clients && clients['tezos']) {
             xtz = await clients["tezos"]
@@ -86,11 +95,19 @@ const Header = ({ clients, swapPairs, balUpdate }) => {
         setXtzBalance(convertBigIntToFloat(xtz, 6, 6));
     };
 
+    console.log(ethClient, xtzClient);
+
     useEffect(() => {
         updateBalance();
         const timer = setInterval(async () => { await updateBalance(); }, 60000);
         return () => { clearInterval(timer); };
     }, [ethAccount, xtzAccount]);
+
+    // console.log(ethBalance, xtzBalance);
+    // console.log(ethAccount, xtzAccount);
+    // console.log(isEthAccount, isTezAccount);
+    // console.log(globalContext);
+
     return (
         <div className={classes.header}>
             <div className={classes.nav}>
@@ -139,7 +156,7 @@ const Header = ({ clients, swapPairs, balUpdate }) => {
 													<Grid container item alignContent="center" justify="space-evenly">
 														<img src={tzwalletlogo} />
 														{(!isTezAccount || isTezAccount.length === 0) && ('Connect Wallet')}
-														{(isTezAccount && isTezAccount.length > 0) && (shorten(6, 6, isTezAccount))}
+														{(isTezAccount && isTezAccount.length > 0) && (shorten(5, 5, isTezAccount))}
 													</Grid>
 												</Button>
 												<SwipeableDrawer anchor={anchor} open={expandTezWallet[anchor]} onClose={toggleDrawer(anchor, false)} className={classes.root}>
