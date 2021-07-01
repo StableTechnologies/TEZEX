@@ -27,7 +27,6 @@ import  {content, tokens, tokenWallets}  from '../constants/index';
 import { shorten, connectEthAccount, connectTezAccount } from "../../util";
 import CreateSwap from "../newSwap/index";
 import { selectToken } from "../tokenPairs/index";
-import { getPairings } from "../tokenPairs/t1";
 
 const Home = ({ swaps, clients, swapPairs, update }) => {
   const history = useHistory();
