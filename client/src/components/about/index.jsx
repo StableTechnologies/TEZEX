@@ -57,7 +57,7 @@ const About = () => {
         </div>
 
         <div data-aos="fade-up" className={classes.txtCon}>
-          <Typography variant="h4"> The swap can can be in the following states : </Typography>
+          <Typography variant="h4"> The swap can be in the following states : </Typography>
           <List>
             <ListItem> 1. Swap Initiated : Swap Request initiated, waiting for response Swaps. </ListItem>
             <ListItem> 2. Swap Response Found : Swap response has been found and can proceed to completion. </ListItem>

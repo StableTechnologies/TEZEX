@@ -223,7 +223,7 @@ useEffect(() => {
           <img className = {classes.sidelogo} src={sidelogo} />
       </Grid>
       <Grid data-aos="zoom-in-up" item xs={11} justify = "center" className = {classes.swapcontainer}>
-        <Grid container justify = "space-evenly" >
+        <Grid container justify = "space-evenly" className={classes.con}>
           <Grid item xs={0} md ={2} lg={2}></Grid>
           <Grid item xs={12} sm={7} md={5} lg={4}>
             <div className={classes.swaps}>
@@ -260,10 +260,12 @@ useEffect(() => {
                           id="inputTokenValue"
                           type="text"
                           placeholder="0.00"
-                          onInput={(e) => setInputTokenAmount(e.target.value)}
+                          onInput={(e) => setInputTokenAmount(e.target.value.replace(/"^[0-9]*[.,]?[0-9]*$/, ''))}
                           value={inputTokenAmount}
                           className={classes.tokenValue }
-                          inputProps={{style: { textAlign: 'right' }}}
+                          inputProps={{className: classes.tokenValue, pattern: "^\d+(\.\d{1,4})?$", inputMode:"decimal"}}
+                          // inputProps={{className: classes.tokenValue, pattern: "^[+-]?((\[0-9]+(\.\[0-9]*)?)|(\.\[0-9]+))$", inputMode:"decimal"}}
+                          // inputProps={{className: classes.tokenValue, pattern: "^[0-9]*[.,]?[0-9]*$", inputMode:"decimal"}}
                           InputProps={{ disableUnderline: true}}
                         />
                       </div>
@@ -391,11 +393,11 @@ useEffect(() => {
                 </div>
                 <div className= {classes.feeDetails}>
                   <Typography>Max Network Fee</Typography>
-                  <Typography>0.00 XTZ</Typography>
+                  <Typography>0.00 {outputToken.title || "XTZ"}</Typography>
                 </div>
                 <div className= {classes.feeDetails}>
                   <Typography>Minimum Received</Typography>
-                  <Typography>0.00 XTZ</Typography>
+                  <Typography>0.00 {outputToken.title || "XTZ"}</Typography>
                 </div>
               </Paper>
               {/* {data} */}

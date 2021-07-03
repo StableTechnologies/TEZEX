@@ -44,7 +44,7 @@ const getStepContent = (step) => {
 const SwapProgress = (props) => {
   const classes = useStyles();
 
-  const [activeStep, setActiveStep] = useState(2);
+  const [activeStep, setActiveStep] = useState(1);
   const { open, onClose, } = props;
   const steps = getSteps();
 

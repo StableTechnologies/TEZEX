@@ -57,7 +57,7 @@ const App = () => {
     AOS.init({
       duration : 2000
     });
-    // initialize();
+    initialize();
   }, []);
 
   const initialize = async () => {

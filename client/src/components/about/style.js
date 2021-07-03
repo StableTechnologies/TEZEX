@@ -37,7 +37,7 @@ const useStyles = makeStyles((theme) => ({
     width: "70%",
     padding: "1rem",
     margin: "1rem 1rem 5rem",
-    textAlign: "left"
+    textAlign: "justify"
   },
   txtCon: {
     padding: ".5rem"
@@ -46,7 +46,12 @@ const useStyles = makeStyles((theme) => ({
     container: {
       width: "80%",
     }
-  }
+  },
+  '@media (max-width: 501px)': {
+    container: {
+      width: "85%",
+    }
+  },
 }));
 
 export default useStyles;

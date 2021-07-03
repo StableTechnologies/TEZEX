@@ -112,7 +112,7 @@ const Header = ({ clients, swapPairs, balUpdate }) => {
         <div className={classes.header}>
             <div className={classes.nav}>
                 <Grid container>
-                    <Grid container item xs={6} sm={3} md={2} alignContent = "center" justify = "center">
+                    <Grid data-aos="flip-left" container item xs={6} sm={3} md={2} alignContent = "center" justify = "center">
                         <img className={classes.logo} src={logo} alt="Logo" />
                     </Grid>
                     <Grid container item alignContent = "center" justify = "center" xs={6} sm={5} md={6} lg={7} >

@@ -6,13 +6,18 @@ const useStyles = makeStyles((theme) => ({
     boxSizing: 'border-box',
     "& .MuiPaper-root": {
       borderRadius: "1.5rem",
-    }
+    },
   },
   '& .MuiCardContent-root': {
     padding: '24px 31px 31px 31px',
     textAlign: 'left'
   },
 
+  '@media(max-width: 501px)': {
+    con: {
+      flexDirection: "column-reverse",
+    }
+  },
   card: {
     background:' #FFFFFF',
     border: '1px solid #E1E1E1',
