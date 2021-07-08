@@ -14,18 +14,17 @@ import logo from "../../assets/TezexLogo.svg";
 import tzwalletlogo from "../../assets/tzwalletlogo.svg";
 import ethwalletlogo from "../../assets/ethwalletlogo.svg";
 
-import { shorten, connectEthAccount, connectTezAccount } from "../../util";
+import { shorten, connectEthAccount, connectTezAccount, setupEthClient, setupTezClient } from "../../util";
 import { TezexContext } from '../context/TezexContext';
 
 import useStyles from "./style";
 
-const Header = ({ clients, swapPairs, balUpdate }) => {
+const Header = ({ clients, swapPairs, balUpdate, setupEth, setupTez, }) => {
     const classes = useStyles();
     const history = useHistory();
     const globalContext = useContext(TezexContext);
 
-    const isEthAccount = globalContext.ethereumClient.account;
-    const isTezAccount = globalContext.tezosClient.account;
+
 
     const [expandEthWallet, setExpandEthWallet] = useState({right: false,});
     const [expandTezWallet, setExpandTezWallet] = useState({right: false,});
@@ -37,76 +36,90 @@ const Header = ({ clients, swapPairs, balUpdate }) => {
     const [ethClient, setEthClient] = useState(globalContext.ethereumClient);
     const [xtzClient, setXtzClient] = useState(globalContext.tezosClient);
 
+    const isEthAccount = globalContext.ethereumClient.account;
+    const isTezAccount = globalContext.tezosClient.account;
 
-  const toggleDrawer = (anchor, open) => (event) => {
+  const toggleTezDrawer = (anchor, open) => (event) => {
     if (event && event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
       return;
     }
       setExpandTezWallet({ ...expandTezWallet, [anchor]: open })
   };
-  const toggleTezDrawer = (anchor, open) => (event) => {
+  const toggleEthDrawer = (anchor, open) => (event) => {
     if (event && event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
       return;
     }
       setExpandEthWallet({ ...expandEthWallet, [anchor]: open })
   };
 
-    const setupEthAccount = async (e) => {
-        e.preventDefault();
-        try {
-            const r = await connectEthAccount();
-            setEthAccount(r.account);
-            globalContext.changeEthereumClient(r);
-        }
-        catch(err) {}
-    };
+  const setupEthAccount = async (e) => {
+    e.preventDefault();
+    try {
+      setupEth();
+    } catch (error) { console.log(e);}
+  }
 
-    const setupXtzAccount = async (e) => {
-        e.preventDefault();
-        try{
-            const r = await connectTezAccount();
-            setXtzAccount(r.account);
-            globalContext.changeTezosClient(r);
-            console.log(r);
-        }
-        catch(error) {}
-    };
+  const setupXtzAccount = async (e) => {
+    e.preventDefault();
+    try{
+      setupTez();
+    }
+    catch(error) {}
+  };
 
+console.log(clients, 'clients@header');
+console.log(swapPairs, 'swapPairs@header');
+console.log(isEthAccount, 'isEthAccount');
+console.log(ethAccount, 'ethAccount');
+console.log(isTezAccount, 'isTezAccount');
     const updateBalance = async () => {
-        let eth = 0;
-        let xtz = 0;
 
-        if (clients && clients['ethereum']) {
-            eth = await clients["ethereum"]
-            .balance(clients["ethereum"].account)
-            .then((val) => new BigNumber(val));
-        }
+      let eth = 0;
+      let xtz = 0;
+      if (clients && clients['ethereum']) {
+        eth = await clients["ethereum"]
+        .balance(clients["ethereum"].account)
+        .then((val) => new BigNumber(val));
+      }
 
+      if (clients && clients['tezos']) {
+        xtz = await clients["tezos"]
+        .balance(clients["tezos"].account)
+        .then((val) => new BigNumber(val));
+      }
 
-        if (clients && clients['tezos']) {
-            xtz = await clients["tezos"]
-            .balance(clients["tezos"].account)
-            .then((val) => new BigNumber(val));
-        }
+      balUpdate({ eth, xtz });
 
-        balUpdate({ eth, xtz });
+      setEthBalance({ eth: convertBigIntToFloat(eth, 18, 6),});
+      setXtzBalance({ xtz: convertBigIntToFloat(xtz, 6, 6)});
 
-        setEthBalance(convertBigIntToFloat(eth, 18, 6))
-        setXtzBalance(convertBigIntToFloat(xtz, 6, 6));
     };
 
-    console.log(ethClient, xtzClient);
+    // useEffect(() => {
+    //   setEthClient(globalContext.ethereumClient.account);
+    //   return () => {
+    //     cleanup
+    //   }
+    // }, [input])
+
+    useEffect(() => {
+      if(clients && clients['ethereum']) {
+        globalContext.changeEthereumClient(clients.ethereum);
+      }
+      if(clients && clients['tezos']) {
+        globalContext.changeTezosClient(clients.tezos);
+      }
+    }, [clients,])
 
     useEffect(() => {
         updateBalance();
         const timer = setInterval(async () => { await updateBalance(); }, 60000);
         return () => { clearInterval(timer); };
-    }, [ethAccount, xtzAccount]);
-
-    // console.log(ethBalance, xtzBalance);
-    // console.log(ethAccount, xtzAccount);
-    // console.log(isEthAccount, isTezAccount);
-    // console.log(globalContext);
+    }, [isEthAccount, isTezAccount]);
+console.log(ethAccount, 'ethAccounttet');
+console.log(ethBalance.eth, 'ethBalance.eth');
+console.log(xtzBalance.xtz, 'xtzBalance.xtz');
+// console.log(xtzBalance.tez, 'xtzBalance.tez');
 
     return (
         <div className={classes.header}>
@@ -127,19 +140,20 @@ const Header = ({ clients, swapPairs, balUpdate }) => {
 											{['right'].map((anchor) => (
 												<>
                         <Button key={anchor} variant="outlined" size="small" disableElevation
-													onClick={!isEthAccount ? setupEthAccount :  toggleTezDrawer(anchor, true)}
+													onClick={!isEthAccount ? setupEthAccount :  toggleEthDrawer(anchor, true)}
 													className={`${classes.walletbutton + " Element"} ${ isEthAccount ? classes.ethButton + " Element" : '' }`}
                         >
 													<Grid container item alignContent="center" justify="space-evenly">
 															<img src={ethwalletlogo} />
 															{/* {(!ethAccount || ethAccount.length === 0) && ('Connect Wallet')} */}
-															{(!isEthAccount ) && ('Connect Wallet')}
+															{(!isEthAccount || isEthAccount.length === 0) && ('Connect Wallet')}
 															{/* {(ethAccount && ethAccount.length > 0) && (shorten(5, 5, ethAccount))} */}
-															{isEthAccount &&(shorten(5, 5, isEthAccount))}
+															{(isEthAccount && isEthAccount.length > 0) &&(shorten(5, 5, isEthAccount))}
 													</Grid>
                         </Button>
-												<SwipeableDrawer anchor={anchor} open={expandEthWallet[anchor]} onClose={toggleTezDrawer(anchor, false)} className={classes.root}>
+												<SwipeableDrawer anchor={anchor} open={expandEthWallet[anchor]} onClose={toggleEthDrawer(anchor, false)} className={classes.root}>
 													<ExpandWalletView
+														// address= {ethAccount &&(shorten(10, 7, ethAccount))}
 														address= {isEthAccount &&(shorten(10, 7, isEthAccount))}
                             walletType= {"Metamask"}
 														className= {classes.ethStyle + " Element"}
@@ -150,7 +164,7 @@ const Header = ({ clients, swapPairs, balUpdate }) => {
 											{['right'].map((anchor) => (
 												<>
 												<Button key={anchor} variant="outlined" size="small" disableElevation
-													onClick={!isTezAccount ? setupXtzAccount : toggleDrawer(anchor, true)}
+													onClick={!isTezAccount ? setupXtzAccount : toggleTezDrawer(anchor, true)}
 													className={`${classes.walletbutton + " Element"} ${ isTezAccount ? classes.tezButton + " Element" : '' }`}
 												>
 													<Grid container item alignContent="center" justify="space-evenly">
@@ -159,7 +173,7 @@ const Header = ({ clients, swapPairs, balUpdate }) => {
 														{(isTezAccount && isTezAccount.length > 0) && (shorten(5, 5, isTezAccount))}
 													</Grid>
 												</Button>
-												<SwipeableDrawer anchor={anchor} open={expandTezWallet[anchor]} onClose={toggleDrawer(anchor, false)} className={classes.root}>
+												<SwipeableDrawer anchor={anchor} open={expandTezWallet[anchor]} onClose={toggleTezDrawer(anchor, false)} className={classes.root}>
 													<ExpandWalletView
 														address= {isTezAccount &&(shorten(10, 7, isTezAccount))}
                             walletType= {"Temple"}

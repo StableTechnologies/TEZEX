@@ -1,5 +1,5 @@
 import { BigNumber } from "bignumber.js";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 
 import AOS from 'aos';
@@ -18,15 +18,17 @@ import Setup from "./components/setup";
 import Stat from "./components/stats";
 import requestSwap from "./library/request-swap";
 import { getCounterPair } from "./library/util";
-import { getOldSwaps, setupClient } from "./util";
+import { getOldSwaps, setupClient, setupEthClient, setupTezClient } from "./util";
 import useStyles from "./style";
 
 const App = () => {
-  const [clients, setClients] = useState(undefined);
+  const [clients, setClients] = useState({ethereum: null, tezos: null});
   const [swapPairs, setSwapPairs] = useState(undefined);
   const [swaps, updateSwaps] = useState(undefined);
   const [balance, balUpdate] = useState(undefined);
   const [, updateState] = React.useState();
+
+  const globalContext = useContext(TezexContext);
 
   const classes = useStyles();
 
@@ -57,21 +59,35 @@ const App = () => {
     AOS.init({
       duration : 2000
     });
-    initialize();
   }, []);
 
-  const initialize = async () => {
+  const setupXtzAccount = async () => {
     try {
-      const { swapPairs, clients } = await setupClient();
-      let swap = await getOldSwaps(clients, swapPairs);
-      if (Object.keys(swap).length > 0) updateSwaps(swap);
-      setClients(clients);
+      const { swapPairs, clients } = await setupTezClient();
+      // let swap = await getOldSwaps(clients, swapPairs);
+      // if (Object.keys(swap).length > 0) updateSwaps(swap);
+      setClients(prevState => ({...prevState, ...clients}));
       setSwapPairs(swapPairs);
     } catch (e) {
       console.log("error", e);
-      alert("Error Connecting to Wallet", e);
+      alert("Error Connecting to TezWallet", e);
     }
   };
+  const setupEthAccount = async () => {
+    try {
+        const { swapPairs, clients } = await setupEthClient();
+        // let swap = await getOldSwaps(clients, swapPairs);
+        // if (Object.keys(swap).length > 0) updateSwaps(swap);
+        setClients(prevState => ({...prevState, ...clients}));
+        setSwapPairs(swapPairs);
+    }
+    catch(err) {}
+};
+
+  console.log(swapPairs, 'ieth');
+  console.log(clients, 'ccieth');
+  console.log(swapPairs, 'iTez');
+  console.log(clients, 'cciTez');
 
   const update = (hash, state, exact = undefined) => {
     let newSwap = swapRef.current;
@@ -122,6 +138,8 @@ const App = () => {
           clients={clientRef.current}
           swapPairs={swapPairsRef.current}
           balUpdate={balUpdate}
+          setupEth = {setupEthAccount}
+          setupTez = {setupXtzAccount}
         />
         {/* {balance === undefined && <Loader message="Loading Account" />} */}
         {/* {balance !== undefined && ( */}
@@ -132,6 +150,8 @@ const App = () => {
                 clients={clientRef.current}
                 swapPairs={swapPairsRef.current}
                 update={update}
+                setupEth = {setupEthAccount}
+                setupTez = {setupXtzAccount}
               />
             </Route>
             <Route exact path="/swap">

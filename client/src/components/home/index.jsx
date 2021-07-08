@@ -24,11 +24,12 @@ import TokenSelectionDialog from '../dialog/TokenSelectionDialog';
 import SwapProgress from '../swapProgress';
 import CurrentSwaps from '../currentSwaps'
 import  {content, tokens, tokenWallets}  from '../constants/index';
-import { shorten, connectEthAccount, connectTezAccount } from "../../util";
+import { shorten, connectEthAccount, connectTezAccount, setupEthClient } from "../../util";
 import CreateSwap from "../newSwap/index";
 import { selectToken } from "../tokenPairs/index";
+import config from "../../library/dev-network-config.json";
 
-const Home = ({ swaps, clients, swapPairs, update }) => {
+const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez }) => {
   const history = useHistory();
   const classes = useStyles();
   const globalContext = useContext(TezexContext);
@@ -76,10 +77,8 @@ const Home = ({ swaps, clients, swapPairs, update }) => {
 
   const setupEthAccount = async () => {
     try {
-      const r = await connectEthAccount();
-      setEthAccount(r.account);
-      globalContext.changeEthereumClient(r);
-    }
+      setupEth();
+  }
     catch(error) {
       return (
         openErrModal()
@@ -88,12 +87,18 @@ const Home = ({ swaps, clients, swapPairs, update }) => {
   };
   const setupXtzAccount = async () => {
     try {
-      const r = await connectTezAccount();
-      setXtzAccount(r.account);
-      globalContext.changeTezosClient(r);
+      setupTez();
     }
     catch(error) {}
   };
+  useEffect(() => {
+    if(clients && clients['ethereum']) {
+      globalContext.changeEthereumClient(clients.ethereum);
+    }
+    if(clients && clients['tezos']) {
+      globalContext.changeTezosClient(clients.tezos);
+    }
+  }, [clients,])
 
   const setWalletType = async (value) => {
     const str = inputToken.title.toLowerCase();
@@ -114,14 +119,10 @@ const Home = ({ swaps, clients, swapPairs, update }) => {
 const tokenPair = selectToken(inputToken.title);
 // const tokenPair1 = selectToken(outputToken.title);
 // const tokenPair2 = getPairings(inputToken.title);
-// console.log(tokenPair2, 'tokenPair2')
 
 const toggleTokens = () => {
-  console.log(inputToken, '1');
   // tokenPair1.map(x =>{
   //   if(inputToken.title === x.title) {
-  //     console.log(x.title, 'xx');
-  //     console.log(inputToken.title, 'ii');
   //     setInputToken(outputToken);
   //     setOutputToken(inputToken);
 
@@ -139,10 +140,10 @@ useEffect(() => {
   tokenPair.map(x =>{
     if(outputToken.title !== x.title) {
     // setOutputToken(!outputToken.title);
-    console.log(!outputToken.title, 'nott');
     }
   })
 }, [inputToken, outputToken]);
+
 
   const refundHandler = async (swap) => {
     try {
