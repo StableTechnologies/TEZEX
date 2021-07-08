@@ -172,7 +172,7 @@ module.exports = class Bot {
           err
         );
       }
-      setTimeout(run, 30000);
+      setTimeout(run, 120000);
     };
     run();
   }
