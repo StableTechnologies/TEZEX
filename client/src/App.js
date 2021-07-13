@@ -18,7 +18,7 @@ import Setup from "./components/setup";
 import Stat from "./components/stats";
 import requestSwap from "./library/request-swap";
 import { getCounterPair } from "./library/util";
-import { getOldSwaps, setupClient, setupEthClient, setupTezClient } from "./util";
+import { getOldSwaps, initSwapDetails, setupEthClient, setupTezClient } from "./util";
 import useStyles from "./style";
 
 const App = () => {
@@ -28,7 +28,6 @@ const App = () => {
   const [balance, balUpdate] = useState(undefined);
   const [, updateState] = React.useState();
 
-  const globalContext = useContext(TezexContext);
 
   const classes = useStyles();
 
@@ -54,40 +53,51 @@ const App = () => {
     e.returnValue = "";
   };
 
+
   useEffect(() => {
     // Initialize AOS animation
     AOS.init({
       duration : 2000
     });
+
+    initialize();
+
   }, []);
 
-  const setupXtzAccount = async () => {
+  const setupEthAccount = async () => {
     try {
-      const { swapPairs, clients } = await setupTezClient();
+      const {clients } = await setupEthClient();
       // let swap = await getOldSwaps(clients, swapPairs);
       // if (Object.keys(swap).length > 0) updateSwaps(swap);
       setClients(prevState => ({...prevState, ...clients}));
-      setSwapPairs(swapPairs);
+    }
+    catch(err) {
+      alert("Error Connecting to EthWallet", err);
+
+    }
+  };
+  const setupXtzAccount = async () => {
+    try {
+      const { clients } = await setupTezClient();
+      // let swap = await getOldSwaps(clients, swapPairs);
+      // if (Object.keys(swap).length > 0) updateSwaps(swap);
+      setClients(prevState => ({...prevState, ...clients}));
     } catch (e) {
-      console.log("error", e);
       alert("Error Connecting to TezWallet", e);
     }
   };
-  const setupEthAccount = async () => {
-    try {
-        const { swapPairs, clients } = await setupEthClient();
-        // let swap = await getOldSwaps(clients, swapPairs);
-        // if (Object.keys(swap).length > 0) updateSwaps(swap);
-        setClients(prevState => ({...prevState, ...clients}));
-        setSwapPairs(swapPairs);
-    }
-    catch(err) {}
+const initialize = async () => {
+  try {
+    const { swapPairs } = await initSwapDetails();
+    // let swap = await getOldSwaps(clients, swapPairs);
+    // if (Object.keys(swap).length > 0) updateSwaps(swap);
+    // setClients(clients);
+    setSwapPairs(swapPairs);
+  } catch (e) {
+    console.log("error", e);
+    alert("Error initializing swap", e);
+  }
 };
-
-  console.log(swapPairs, 'ieth');
-  console.log(clients, 'ccieth');
-  console.log(swapPairs, 'iTez');
-  console.log(clients, 'cciTez');
 
   const update = (hash, state, exact = undefined) => {
     let newSwap = swapRef.current;
@@ -152,6 +162,7 @@ const App = () => {
                 update={update}
                 setupEth = {setupEthAccount}
                 setupTez = {setupXtzAccount}
+                genSwap={genSwap}
               />
             </Route>
             <Route exact path="/swap">

@@ -28,8 +28,11 @@ import { shorten, connectEthAccount, connectTezAccount, setupEthClient } from ".
 import CreateSwap from "../newSwap/index";
 import { selectToken } from "../tokenPairs/index";
 import config from "../../library/dev-network-config.json";
+import { getSwapStat } from "../newSwap/util";
+import { calcSwapReturn, getCounterPair } from "../../library/util";
+import BigNumber from "bignumber.js";
 
-const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez }) => {
+const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }) => {
   const history = useHistory();
   const classes = useStyles();
   const globalContext = useContext(TezexContext);
@@ -54,6 +57,109 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez }) => {
   const [ethAccount, setEthAccount] = useState('');
   const [xtzAccount, setXtzAccount] = useState('');
   // const [tokenPair, setTokenPair] = useState(tokens);
+
+  const [currentSwap1, setCurrentSwap1] = useState(false);
+  const [pairs, setPairs] = useState([]);
+  const [swapStat, setSwapStat] = useState(undefined);
+
+  useEffect(() => {
+    if (inputToken && outputToken) {
+      let pair = [inputToken.title.toLowerCase(), outputToken.title.toLowerCase()]
+      let reversePair = [outputToken.title.toLowerCase(), inputToken.title.toLowerCase()]
+      let asset = inputToken.title.toLowerCase();
+
+          pair = pair.join('/')
+          reversePair = reversePair.join('/')
+
+         const pairs = Object.keys(swapPairs);
+
+         pairs.map((x) => {
+            if(pair === x) {
+              setCurrentSwap1({ pair: pair, asset: asset });
+            }
+            if(reversePair === x) {
+              setCurrentSwap1({ pair: reversePair, asset: asset });
+            }
+         })
+    }
+  }, [inputToken, outputToken]);
+
+  useEffect(() => {
+    if (currentSwap1 === undefined) return;
+
+    // if (currentSwap1 &&  clients) {
+  if (currentSwap1 && (clients["ethereum"] && clients["tezos"])) {
+    getSwapStat(clients, swapPairs, currentSwap1.pair)
+      .then((data) => setSwapStat(data))
+
+    const timer = setInterval(async () => {
+      await getSwapStat(clients, swapPairs, currentSwap1.pair).then((data) =>
+        setSwapStat(data)
+      );
+    }, 60000);
+
+    return () => {
+      clearInterval(timer);
+    };
+  }
+  }, [currentSwap1, clients]);
+
+  let counterAsset, swapReturn, swapFee, minExpectedReturn, networkFees, minReceived, bal;
+  if((currentSwap1 && inputTokenAmount) && (clients["ethereum"] && clients["tezos"])) {
+    counterAsset = getCounterPair(currentSwap1.pair, currentSwap1.asset);
+    swapReturn = new BigNumber(
+      calcSwapReturn(
+        new BigNumber(inputTokenAmount).multipliedBy(
+          10 ** swapPairs[currentSwap1.pair][currentSwap1.asset].decimals
+        ),
+        swapStat.reward
+      )
+    );
+    swapFee = swapStat.assetConverter[counterAsset](
+      new BigNumber(inputTokenAmount)
+        .multipliedBy(
+          10 ** swapPairs[currentSwap1.pair][currentSwap1.asset].decimals
+        )
+        .minus(swapReturn)
+    )
+      .div(10 ** swapPairs[currentSwap1.pair][counterAsset].decimals)
+      .toFixed(6);
+    minExpectedReturn = swapStat.assetConverter[counterAsset](
+      swapReturn
+    ).minus(swapStat.networkFees[counterAsset]);
+    networkFees = swapStat.networkFees[counterAsset]
+      .div(10 ** swapPairs[currentSwap1.pair][counterAsset].decimals)
+      .toFixed(6)
+    minReceived = minExpectedReturn
+      .div(10 ** swapPairs[currentSwap1.pair][counterAsset].decimals)
+      .toFixed(6)
+    bal = swapStat.balances[currentSwap1.asset]
+      .div(10 ** swapPairs[currentSwap1.pair][currentSwap1.asset].decimals)
+      .toFixed(6)
+    }
+
+    const generateSwap = async (e) => {
+      e.preventDefault();
+      const swap = {
+        pair: currentSwap1.pair,
+        asset: currentSwap1.asset,
+        network: swapPairs[currentSwap1.pair][currentSwap1.asset].network,
+        value: new BigNumber(inputTokenAmount)
+          .multipliedBy(
+            10 ** swapPairs[currentSwap1.pair][currentSwap1.asset].decimals
+          )
+          .toString(),
+        minValue: minExpectedReturn.toString(),
+      };
+      // setLoader("...Creating Swap...");
+      const res = await genSwap(swap);
+      // setLoader("");
+      if (!res) {
+        alert("Error: Swap Couldn't be created");
+      } else {
+        history.push("/");
+      }
+    };
 
   const openInputTokenModal = () => { setInputTokenModalOpen(true); }
   const openOutputTokenModal = () => { setOutputTokenModalOpen(true); }
@@ -117,33 +223,12 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez }) => {
 }
 
 const tokenPair = selectToken(inputToken.title);
-// const tokenPair1 = selectToken(outputToken.title);
-// const tokenPair2 = getPairings(inputToken.title);
 
 const toggleTokens = () => {
-  // tokenPair1.map(x =>{
-  //   if(inputToken.title === x.title) {
-  //     setInputToken(outputToken);
-  //     setOutputToken(inputToken);
 
-  //  console.log(!outputToken.title);
-  //   }
-  //   else {
-  // setInputToken(outputToken);
-  // setOutputToken(!outputToken.title);
-  //   }
-  // }) //stops here
   setInputToken(outputToken);
   setOutputToken(inputToken);
 }
-useEffect(() => {
-  tokenPair.map(x =>{
-    if(outputToken.title !== x.title) {
-    // setOutputToken(!outputToken.title);
-    }
-  })
-}, [inputToken, outputToken]);
-
 
   const refundHandler = async (swap) => {
     try {
@@ -162,9 +247,6 @@ useEffect(() => {
       alert("error in refunding, check if the refund time has come");
     }
   };
-
-
-
 
   // const SwapItem = (data) => {
   //   const exp = new Date(data.refundTime * 1000);
@@ -241,7 +323,9 @@ useEffect(() => {
                     <div className={classes.tokenContainer + " Element"}>
                       <div className={classes.balContainer}>
                         <Typography color="textSecondary" variant="subtitle2">From</Typography>
-                        {/* <Typography color="textSecondary" variant="subtitle2">Balance: 200 XTZ</Typography> */}
+                        {bal &&
+                          <Typography color="textSecondary" variant="subtitle2">Balance: {bal}</Typography>
+                        }
                       </div>
                       <div className={classes.tokenDetails} >
                         <Button
@@ -262,7 +346,7 @@ useEffect(() => {
                           type="text"
                           placeholder="0.00"
                           onInput={(e) => setInputTokenAmount(e.target.value.replace(/"^[0-9]*[.,]?[0-9]*$/, ''))}
-                          value={inputTokenAmount}
+                          value={ inputTokenAmount}
                           className={classes.tokenValue }
                           inputProps={{className: classes.tokenValue, pattern: "^\d+(\.\d{1,4})?$", inputMode:"decimal"}}
                           // inputProps={{className: classes.tokenValue, pattern: "^[+-]?((\[0-9]+(\.\[0-9]*)?)|(\.\[0-9]+))$", inputMode:"decimal"}}
@@ -305,10 +389,12 @@ useEffect(() => {
                           id="outputTokenValue"
                           type="text"
                           placeholder="0.00"
-                          onInput={(e) => setOutputTokenAmount(e.target.value.replace(/[^0-9]/, '') )}
-                          value={outputTokenAmount}
+                          // onInput={(e) => setOutputTokenAmount(e.target.value.replace(/[^0-9]/, '') )}
+                          // value={minReceived}
+                          value={minReceived}
                           inputProps={{className: classes.tokenValue, pattern: "^[0-9]*[.,]?[0-9]*$", inputMode:"decimal"}}
                           InputProps={{ disableUnderline: true}}
+                          disabled
                         />
                       </div>
                       <TokenSelectionDialog
@@ -332,10 +418,11 @@ useEffect(() => {
                           (
                             <>
                             {
-                              (inputTokenAmount && outputTokenAmount) ?
+                              (inputTokenAmount) ?
                               (
                             <>
                               <Button size="large" className = {classes.connectwalletbutton + " Element"} onClick={openSwapProgress} >swap tokens</Button>
+                              {/* <Button size="large" className = {classes.connectwalletbutton + " Element"} onClick={generateSwap} >swap tokens</Button> */}
                               <SwapProgress open={swapProgress} onClose={minimize} />
                             </>
                               ) :
@@ -388,17 +475,19 @@ useEffect(() => {
               <Paper  variant="outlined" className = {classes.feepaper + " Element"} square>
                 <div className= {classes.feeDetails}>
                   <Typography>Swap Fee</Typography>
-                  <Typography>0.15 %</Typography>
-                  {/* <Typography>{swapFee}</Typography> */}
-            {/* {swapPairs[currentSwap.pair][counterAsset].symbol} */}
+                  {/* <Typography>0.15 %</Typography> */}
+                  <Typography>{swapFee || 0.00} {""} {outputToken.title} </Typography>
                 </div>
                 <div className= {classes.feeDetails}>
                   <Typography>Max Network Fee</Typography>
-                  <Typography>0.00 {outputToken.title || "XTZ"}</Typography>
+                  {/* <Typography>0.00 {outputToken.title || "XTZ"}</Typography> */}
+                  <Typography> {networkFees || 0.00} {""} {outputToken.title}</Typography>
+
                 </div>
                 <div className= {classes.feeDetails}>
                   <Typography>Minimum Received</Typography>
-                  <Typography>0.00 {outputToken.title || "XTZ"}</Typography>
+                  {/* <Typography>0.00 {outputToken.title || "XTZ"}</Typography> */}
+                  <Typography> {minReceived || 0.00} {""} {outputToken.title} </Typography>
                 </div>
               </Paper>
               {/* {data} */}

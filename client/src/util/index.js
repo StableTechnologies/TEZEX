@@ -51,74 +51,22 @@ export const connectTezAccount = async () => {
 };
 
 /**
- * Creates the ethereum clients and initializes the swap pair details
+ * Creates the ethereum clients
  */
  export const setupEthClient = async () => {
   const { web3, account: ethAccount } = await connectEthAccount();
-  const pairs = Object.keys(config.pairs);
-  const swapPairs = {};
-  pairs.forEach((pair) => {
-    const assets = pair.split("/");
-    for (const asset of assets) {
-      let swapContract = config.pairs[pair][asset].swapContract,
-      tokenContract = config.pairs[pair][asset].tokenContract;
-      if (config.pairs[pair][asset].network === "ethereum") {
-        swapContract = new web3.eth.Contract(
-          config.pairs[pair][asset].swapContract.abi,
-          config.pairs[pair][asset].swapContract.address
-        );
-        tokenContract =
-          asset !== "eth"
-            ? new web3.eth.Contract(
-                config.pairs[pair][asset].tokenContract.abi,
-                config.pairs[pair][asset].tokenContract.address
-              )
-            : undefined;
-      }
 
-          swapPairs[pair] = {
-      ...swapPairs[pair],
-      [asset]: {
-        network: config.pairs[pair][asset].network,
-        swapContract: swapContract,
-        tokenContract: tokenContract,
-        decimals: config.pairs[pair][asset].decimals,
-        symbol: config.pairs[pair][asset].symbol,
-      },
-    };
-    }
-  });
   const clients ={
     ethereum: new Ethereum(web3, ethAccount),
   }
-  return { swapPairs, clients };
-  //  return  new Ethereum( web3, ethAccount);
+  return { clients };
  }
 /**
- * Creates the tezos clients and initializes the swap pair details
+ * Creates the tezos clients
  */
  export const setupTezClient = async () => {
   const { client, account: tezAccount } = await connectTezAccount();
-  const pairs = Object.keys(config.pairs);
-  const swapPairs = {};
-  pairs.forEach((pair) => {
-    const assets = pair.split("/");
-    for (const asset of assets) {
-      let swapContract = config.pairs[pair][asset].swapContract,
-        tokenContract = config.pairs[pair][asset].tokenContract;
 
-      swapPairs[pair] = {
-        ...swapPairs[pair],
-        [asset]: {
-          network: config.pairs[pair][asset].network,
-          swapContract: swapContract,
-          tokenContract: tokenContract,
-          decimals: config.pairs[pair][asset].decimals,
-          symbol: config.pairs[pair][asset].symbol,
-        },
-      };
-    }
-  });
   const clients = {
     tezos: new Tezos(
       client,
@@ -129,25 +77,17 @@ export const connectTezAccount = async () => {
       config.tezos.conseilServer
     ),
   }
-  return { swapPairs, clients };
-
-  //  return new Tezos(
-  //   client,
-  //   tezAccount,
-  //   config.tezos.priceOracle,
-  //   config.tezos.feeContract,
-  //   config.tezos.RPC,
-  //   config.tezos.conseilServer
-  // );
+  return { clients };
  };
 
 
 /**
- * Creates the ethereum and tezos clients and initializes the swap pair details
+ * Initializes the swap pair details
  */
-export const setupClient = async () => {
-  const { web3, account: ethAccount } = await connectEthAccount();
-  const { client, account: tezAccount } = await connectTezAccount();
+export const initSwapDetails = async () => {
+
+  const web3 = new Web3(window.ethereum);
+
   const pairs = Object.keys(config.pairs);
   const swapPairs = {};
   pairs.forEach((pair) => {
@@ -180,18 +120,8 @@ export const setupClient = async () => {
       };
     }
   });
-  const clients = {
-    ethereum: new Ethereum(web3, ethAccount),
-    tezos: new Tezos(
-      client,
-      tezAccount,
-      config.tezos.priceOracle,
-      config.tezos.feeContract,
-      config.tezos.RPC,
-      config.tezos.conseilServer
-    ),
-  };
-  return { swapPairs, clients };
+
+  return { swapPairs };
 };
 
 /**

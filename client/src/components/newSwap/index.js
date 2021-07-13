@@ -40,6 +40,8 @@ const CreateSwap = ({ clients, swapPairs, genSwap }) => {
       clearInterval(timer);
     };
   }, [currentSwap]);
+  console.log(swapStat);
+
 
   const handleChange = (e) => {
     e.preventDefault();
@@ -66,7 +68,7 @@ const CreateSwap = ({ clients, swapPairs, genSwap }) => {
   if (!Object.prototype.hasOwnProperty.call(swapStat.balances, assets[0])) {
     return <Loader message="...Loading..." />;
   }
-    
+
 
   if (swapStat.botStats === undefined) {
     return <Loader message="...Error Fetching Swap Stats..." />;
