@@ -3,70 +3,25 @@ import { useHistory } from "react-router-dom";
 import useStyles from "./style";
 import Card from "@material-ui/core/Card";
 import CardActions from "@material-ui/core/CardActions";
+import CardHeader from '@material-ui/core/CardHeader';
 import CardContent from "@material-ui/core/CardContent";
 import Button from "@material-ui/core/Button";
+import TextField from '@material-ui/core/TextField';
 import Typography from "@material-ui/core/Typography";
-import Avatar from "@material-ui/core/Avatar";
-import List from "@material-ui/core/List";
-import ListItem from "@material-ui/core/ListItem";
-import ListItemAvatar from "@material-ui/core/ListItemAvatar";
-import ListItemText from "@material-ui/core/ListItemText";
-import DialogTitle from "@material-ui/core/DialogTitle";
-import Dialog from "@material-ui/core/Dialog";
-import PersonIcon from "@material-ui/icons/Person";
-import AddIcon from "@material-ui/icons/Add";
-import ArrowDropDownIcon from "@material-ui/icons/ArrowDropDown";
+
+import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
 import ImportExportIcon from "@material-ui/icons/ImportExport";
-import { blue } from "@material-ui/core/colors";
-import PropTypes from "prop-types";
+
 import Grid from "@material-ui/core/Grid";
 import Paper from '@material-ui/core/Paper';
 
-import tzlogo from "../../assets/tzlogo.svg";
-import ethlogo from "../../assets/ethlogo.svg";
+
 import sidelogo from "../../assets/sidelogo.svg";
 
 import { TezexContext } from '../context/TezexContext';
+import TokenSelectionDialog from '../dialog/TokenSelectionDialog';
 
-const tokens = { XTZ: tzlogo, ETH: ethlogo };
-
-function TokenSelectionDialog(props) {
-  const classes = useStyles();
-
-  const { onClose, selectedValue, open, side } = props;
-
-  const handleClose = () => { onClose(selectedValue, side); };
-
-  const handleListItemClick = (value) => { onClose(value, side); };
-
-  return (
-    <Dialog onClose={handleClose} aria-labelledby="simple-dialog-title" open={open}>
-      <DialogTitle id="simple-dialog-title">
-          {(side === 'input') && ('Select Input Token')}
-          {(side === 'output') && ('Select Output Token')}
-      </DialogTitle>
-      <List>
-        {Object.entries(tokens).map(([key, value]) => (
-          <ListItem button onClick={() => handleListItemClick(key)} key={key}>
-            <ListItemAvatar>
-              <Avatar className={classes.avatar}>
-                <img className={classes.logo} src={value} alt="Logo" />
-              </Avatar>
-            </ListItemAvatar>
-            <ListItemText primary={key} />
-          </ListItem>
-        ))}
-      </List>
-    </Dialog>
-  );
-}
-
-TokenSelectionDialog.propTypes = {
-  onClose: PropTypes.func.isRequired,
-  open: PropTypes.bool.isRequired,
-  selectedValue: PropTypes.string.isRequired,
-  side: PropTypes.string.isRequired
-};
+import  {content, tokens, tokenWallets}  from '../constants/index';
 
 const Home = ({ swaps, clients, swapPairs, update }) => {
   const history = useHistory();
@@ -75,21 +30,27 @@ const Home = ({ swaps, clients, swapPairs, update }) => {
 
   const [inputTokenModalOpen, setInputTokenModalOpen] = React.useState(false);
   const [outputTokenModalOpen, setOutputTokenModalOpen] = React.useState(false);
+  const [walletModalOpen, setWalletModalOpen] = React.useState(false);
   const [inputToken, setInputToken] = React.useState('');
   const [outputToken, setOutputToken] = React.useState('');
+  const [wallet, setWallet] = React.useState('');
   const [inputTokenAmount, setInputTokenAmount] = React.useState(0);
   const [outputTokenAmount, setOutputTokenAmount] = React.useState(0);
 
   const openInputTokenModal = () => { setInputTokenModalOpen(true); };
   const openOutputTokenModal = () => { setOutputTokenModalOpen(true); };
+  const openWalletModal = () => { setWalletModalOpen(true); };
 
   const setToken = (value, side) => {
     setInputTokenModalOpen(false);
     setOutputTokenModalOpen(false);
-    
+    setWalletModalOpen(false);
+
     if (side === 'input') { setInputToken(value); }
     if (side === 'output') { setOutputToken(value); }
+    if (side === 'wallet') { setWallet(value); }
   };
+
 
   const refundHandler = async (swap) => {
     try {
@@ -167,48 +128,87 @@ const Home = ({ swaps, clients, swapPairs, update }) => {
       <Grid container item xs={10} justify = "center">
         <div className = {classes.swapcontainer}>
           <div className={classes.swaps}>
-            <Card className={classes.root} variant="outlined">
+            <Card className={classes.card} square>
+              <CardHeader
+                title={
+                  <Typography variant="h1" className={classes.title + " Element"}>
+                   Swap Tokens
+                  </Typography>
+                  }
+              />
               <CardContent>
-                <Typography className={classes.title + " Element"}>Swap Tokens</Typography>
                 <form>
-                  <div className={classes.tokencontainer}>
+                  <div className={classes.tokenContainer + " Element"}>
                     <Typography color="textSecondary" variant="subtitle2">From</Typography>
-                    <Typography  color="textSecondary">Balance</Typography>
-                    <Button color="primary" onClick={openInputTokenModal}>
-                      <Typography className = {classes.tokentext + " Element"} variant="subtitle1">
-                        {" "}
-                        <img className={classes.logo} src={tokens[inputToken]} />
-                        {inputToken|| "Select Token"}
-                      </Typography>{" "}
-                      <ArrowDropDownIcon style={{ color: "#000" }} />
-                    </Button>
+                    <div className={classes.tokenDetails} >
+                      <Button
+                        endIcon={ <KeyboardArrowDownIcon style={{ color: "#000" }} />}
+                        size="small"
+                        onClick={openInputTokenModal}
+                        className={classes.tokenButton}
+                      >
+                        {inputToken && (
+                          <img className={classes.logo} src={tokens[inputToken]} />
+                        )}
+                        {inputToken || "Select Token"}
+                      </Button>
+                      <TextField
+                        autoFocus
+                        margin="dense"
+                        id="inputTokenValue"
+                        type="text"
+                        placeholder="0.00"
+                        onInput={(e) => setInputTokenAmount(e.target.value)}
+                        className={classes.tokenValue }
+                        inputProps={{style: { textAlign: 'right' }}}
+                        InputProps={{ disableUnderline: true}}
+                      />
+                    </div>
+
                     <TokenSelectionDialog
-                      selectedValue={inputToken}
-                      open={inputTokenModalOpen}
-                      onClose={setToken}
-                      side='input'
+                        selectedValue={inputToken}
+                        open={inputTokenModalOpen}
+                        onClose={setToken}
+                        side='input'
+                        lists={tokens}
                     />
-                    <input type={'number'} className={classes.tokeninput} value={inputTokenAmount} onInput={(e) => setInputTokenAmount(e.target.value || 0)}></input>
                   </div>
-                  <ImportExportIcon />
-                  <div className={classes.tokencontainer}>
+
+                  <div className={classes.swapIcon}> <ImportExportIcon /></div>
+
+
+                  <div className={classes.tokenContainer}>
                     <Typography color="textSecondary" variant="subtitle2">To</Typography>
-                    <Typography color="textSecondary">Balance</Typography>
-                    <Button color="primary" onClick={openOutputTokenModal}>
-                      <Typography className = {classes.tokentext + " Element"} variant="subtitle1">
-                      {" "}
-                        <img className={classes.logo} src={tokens[outputToken]} />
-                        {outputToken|| "Select Token"}
-                      </Typography>{" "}
-                      <ArrowDropDownIcon style={{ color: "#000" }} />
-                    </Button>
+                    <div className={classes.tokenDetails} >
+                      <Button
+                        endIcon={ <KeyboardArrowDownIcon style={{ color: "#000" }} />}
+                        size="small"
+                        onClick={openOutputTokenModal}
+                        className={classes.tokenButton}
+                      >
+                        {outputToken && (
+                          <img className={classes.logo} src={tokens[outputToken]} />
+                        )}
+                        {outputToken || "Select Token"}
+                      </Button>
+                      <TextField
+                        autoFocus
+                        margin="dense"
+                        id="outputTokenValue"
+                        type="text"
+                        placeholder="0.00"
+                        onInput={(e) => setOutputTokenAmount(e.target.value )}
+                        inputProps={{className: classes.tokenValue, pattern: "^[0-9]*[.,]?[0-9]*$", inputMode:"decimal"}}
+                        InputProps={{ disableUnderline: true}}
+                      />
+                    </div>
                     <TokenSelectionDialog
-                      selectedValue={outputToken}
-                      open={outputTokenModalOpen}
-                      onClose={setToken}
-                      side='output'
+                        selectedValue={outputToken}
+                        open={outputTokenModalOpen}
+                        onClose={setToken}
+                        side='output'
+                        lists={tokens}
                     />
-                    <input type={'number'} className={classes.tokeninput} value={outputTokenAmount} onInput={(e) => setOutputTokenAmount(e.target.value || 0)}></input>
                   </div>
                 </form>
               </CardContent>
@@ -223,14 +223,34 @@ const Home = ({ swaps, clients, swapPairs, update }) => {
                       <Button size="large" className = {classes.connectwalletbutton + " Element"}>Connect Ethereum Wallet</Button>
                   )}
                   {!globalContext.ethereumClient.account && !globalContext.tezosClient.account && (
-                      <Button size="large" className = {classes.connectwalletbutton + " Element"}>Connect Wallets</Button>
+                    <>
+                      <Button size="large" className = {classes.connectwalletbutton + " Element"} onClick={openWalletModal} >Connect Wallet</Button>
+                       <TokenSelectionDialog
+                        selectedValue={wallet}
+                        open={walletModalOpen}
+                        onClose={setToken}
+                        side='wallet'
+                        lists={tokenWallets}
+                        content = {content.connectWallet}
+                        closeBtn
+                      />
+                    </>
                   )}
               </CardActions>
             </Card>
-            <Paper className = {classes.feepaper + " Element"}>
-              <div>Swap fee        0.00</div>
-              <div>Max network fee     0.00XTZ</div>
-              <div>Minimum Received    0.00XTZ</div>
+            <Paper  variant="outlined" className = {classes.feepaper + " Element"} square>
+              <div className= {classes.feeDetails}>
+                <Typography>Swap Fee</Typography>
+                <Typography>0.15 %</Typography>
+              </div>
+              <div className= {classes.feeDetails}>
+                <Typography>Max Network Fee</Typography>
+                <Typography>0.00 XTZ</Typography>
+              </div>
+              <div className= {classes.feeDetails}>
+                <Typography>Minimum Received</Typography>
+                <Typography>0.00 XTZ</Typography>
+              </div>
             </Paper>
             {/* {data} */}
           </div>
