@@ -12,6 +12,18 @@ const useStyles = makeStyles((theme) => ({
       padding: '0 24px 32px 24px'
     }
   },
+  '& .MuiCardContent-root': {
+    padding: '24px 31px 31px 31px',
+    textAlign: 'left'
+  },
+
+  card: {
+    background:' #FFFFFF',
+    border: '1px solid #E1E1E1',
+    borderRadius : (24),
+
+  },
+
   title: {
     "&.Element": {
       fontFamily: "Inter",
@@ -30,6 +42,41 @@ const useStyles = makeStyles((theme) => ({
     padding: 8,
     minWidth: 0,
     borderRadius: 8,
+       border: '0.5px solid #E5E5E5'
+  },
+  tokeninput: {
+    border: "0",
+    textAlign: "right",
+    fontSize: "18px",
+  },
+  tokenButton: {
+    minWidth: "auto",
+    textTransform: "none",
+    fontSize: "18px",
+    fontWeight: "500",
+    lineHeight: "21.78px",
+    padding: "0",
+  },
+  tokenContainer: {
+    backgroundColor: "#F8F8F8",
+    borderRadius: "8px",
+    textAlign: "left",
+    marginBottom: "1vh",
+    padding:  ".5rem 1rem",
+  },
+  tokenDetails: {
+    display: "flex",
+    justifyContent: "space-between",
+  },
+  tokenValue: {
+    textAlign: "right",
+  },
+  swapIcon: {
+    background: "#fff",
+    width: "fit-content",
+    margin: '1.5rem 1rem',
+    padding: (2),
+    borderRadius: ".5rem",
     border: '0.5px solid #E5E5E5'
   },
   bodycontainer: {
@@ -41,10 +88,17 @@ const useStyles = makeStyles((theme) => ({
   sidelogo: {
     maxHeight: "90vh"
   },
-  swapcontainer: {
-    marginTop: "4vh"
+  logo: {
+    marginRight: "8px",
+    maxWidth: "24px",
   },
-
+  img: {
+    width: "24px",
+  },
+  swapcontainer: {
+    marginTop: "4vh",
+    textAlign: "left"
+  },
   button: {
     color: "white",
     cursor: "pointer",
@@ -61,6 +115,8 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   swaps: {
+    background: "linear-gradient(180deg, rgba(224, 224, 224, 0.7) -26.98%, rgba(255, 255, 255, 0) 176.46%)",
+    minWidth: "30vw",
     margin: "1.4vw",
     background: 'linear-gradient(180deg, rgba(224, 224, 224, 0.7) -26.98%, rgba(255, 255, 255, 0) 176.46%)',
     borderRadius: 24,
@@ -145,6 +201,30 @@ const useStyles = makeStyles((theme) => ({
   feeItemValue: {
     fontWeight: 300,
   }
+feeDetails: {
+  display: "flex",
+  justifyContent: "space-between",
+  // margin: "8px",
+  fontStyle: "normal",
+  fontWeight: "500",
+  fontSize: ".9rem",
+  lineHeight: "19px",
+},
+close: {
+  position: 'absolute',
+  right: theme.spacing(1),
+  top: theme.spacing(1)
+},
+dialogCon: {
+  borderRadius: "1.5rem",
+  padding: "1rem",
+},
+list: {
+  border: "1px solid #e5e5e5",
+  margin: "8px 0",
+  width: "100%",
+  borderRadius: "8px",
+},
 }));
 
 export default useStyles;
