@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {useStyles, } from "./style";
 import PropTypes from "prop-types";
 
@@ -44,9 +44,25 @@ const getStepContent = (step) => {
 const SwapProgress = (props) => {
   const classes = useStyles();
 
-  const [activeStep, setActiveStep] = useState(1);
-  const { open, onClose, } = props;
+  const [activeStep, setActiveStep] = useState(0);
+  const [refundTime, setRefundTime] = useState(0);
+  const { open, onClose, swaps} = props;
   const steps = getSteps();
+
+  const handleStepChange = (step) => {
+    Object.keys(step).map((key) => {
+      setRefundTime(new Date(step[key].refundTime * 1000).toLocaleString())
+      setActiveStep(step[key].state)
+    });
+  };
+
+useEffect(() => {
+      if(swaps) {
+      try {
+        handleStepChange(swaps);
+      } catch (e) {}
+    }
+    }, [handleStepChange, ])
 
   return(
     <Dialog aria-labelledby="simple-dialog-title" open={open} className={classes.root}>
@@ -86,7 +102,7 @@ const SwapProgress = (props) => {
       </DialogActions>
       <DialogContent>
         <DialogContentText>
-          Swap will timeout in: 1 hour 56 minutes <img src={question_circle} alt="question_circle" className={classes.textImg}/>
+          Swap will timeout in: {" "} {refundTime || " "} <img src={question_circle} alt="question_circle" className={classes.textImg}/>
         </DialogContentText>
         <DialogContentText>
           Don’t leave me <img src={pleading_face} alt="pleading_face" className={classes.textImg}/>

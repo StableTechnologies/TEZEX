@@ -114,6 +114,8 @@ const getPureSwapFee = ({ txFees, ethereumGasPrice }, swapPairs, pair) => {
 };
 
 const getConverter = async (clients, pair) => {
+  try {
+
   const exchangeRates = await Promise.all([
     clients["tezos"].getPrice("ETH-USD"),
     clients["tezos"].getPrice("XTZ-USD"),
@@ -174,6 +176,9 @@ const getConverter = async (clients, pair) => {
     feeConverter,
     assetConverter: assetConverter[pair],
   };
+  } catch (e) {
+      console.log(e);
+  }
 };
 
 /**
@@ -185,24 +190,27 @@ const getConverter = async (clients, pair) => {
  * @param pair pair whose stats are required
  */
 export const getSwapStat = async (clients, swapPairs, pair) => {
-  const resp = await Promise.all([
-    getBalance(clients, swapPairs, pair),
-    getBotFees(clients, swapPairs),
-    updateBotStats(),
-    getConverter(clients, pair),
-  ]);
-  const pureFees = getPureSwapFee(resp[1], swapPairs, pair);
-  const { feeConverter, assetConverter } = resp[3];
-  const assets = pair.split("/");
-  const networkFees = {};
-  for (const asset of assets) {
-    networkFees[asset] = feeConverter[asset](pureFees[pair][asset]);
-  }
-  return {
-    balances: resp[0],
-    reward: resp[1].reward,
-    botStats: resp[2],
-    networkFees,
-    assetConverter,
-  };
+  try {
+    const resp = await Promise.all([
+      getBalance(clients, swapPairs, pair),
+      getBotFees(clients, swapPairs),
+      updateBotStats(),
+      getConverter(clients, pair),
+    ]);
+    const pureFees = getPureSwapFee(resp[1], swapPairs, pair);
+    const { feeConverter, assetConverter } = resp[3];
+    const assets = pair.split("/");
+    const networkFees = {};
+    for (const asset of assets) {
+      networkFees[asset] = feeConverter[asset](pureFees[pair][asset]);
+    }
+    return {
+      balances: resp[0],
+      reward: resp[1].reward,
+      botStats: resp[2],
+      networkFees,
+      assetConverter,
+    };
+
+  } catch (e) {console.log(e); }
 };

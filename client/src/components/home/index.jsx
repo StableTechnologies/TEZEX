@@ -89,57 +89,62 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
 
     // if (currentSwap1 &&  clients) {
   if (currentSwap1 && (clients["ethereum"] && clients["tezos"])) {
-    getSwapStat(clients, swapPairs, currentSwap1.pair)
-      .then((data) => setSwapStat(data))
+    try {
+      getSwapStat(clients, swapPairs, currentSwap1.pair)
+        .then((data) => setSwapStat(data))
 
-    const timer = setInterval(async () => {
-      await getSwapStat(clients, swapPairs, currentSwap1.pair).then((data) =>
-        setSwapStat(data)
-      );
-    }, 60000);
+      const timer = setInterval(async () => {
+        await getSwapStat(clients, swapPairs, currentSwap1.pair).then((data) =>
+          setSwapStat(data)
+        );
+      }, 60000);
 
-    return () => {
-      clearInterval(timer);
-    };
+      return () => {
+        clearInterval(timer);
+      };
+
+    } catch (e) {console.log(e);}
   }
   }, [currentSwap1, clients]);
 
   let counterAsset, swapReturn, swapFee, minExpectedReturn, networkFees, minReceived, bal;
   if((currentSwap1 && inputTokenAmount) && (clients["ethereum"] && clients["tezos"])) {
-    counterAsset = getCounterPair(currentSwap1.pair, currentSwap1.asset);
-    swapReturn = new BigNumber(
-      calcSwapReturn(
-        new BigNumber(inputTokenAmount).multipliedBy(
-          10 ** swapPairs[currentSwap1.pair][currentSwap1.asset].decimals
-        ),
-        swapStat.reward
-      )
-    );
-    swapFee = swapStat.assetConverter[counterAsset](
-      new BigNumber(inputTokenAmount)
-        .multipliedBy(
-          10 ** swapPairs[currentSwap1.pair][currentSwap1.asset].decimals
+    try {
+      counterAsset = getCounterPair(currentSwap1.pair, currentSwap1.asset);
+      swapReturn = new BigNumber(
+        calcSwapReturn(
+          new BigNumber(inputTokenAmount).multipliedBy(
+            10 ** swapPairs[currentSwap1.pair][currentSwap1.asset].decimals
+          ),
+          swapStat.reward
         )
-        .minus(swapReturn)
-    )
-      .div(10 ** swapPairs[currentSwap1.pair][counterAsset].decimals)
-      .toFixed(6);
-    minExpectedReturn = swapStat.assetConverter[counterAsset](
-      swapReturn
-    ).minus(swapStat.networkFees[counterAsset]);
-    networkFees = swapStat.networkFees[counterAsset]
-      .div(10 ** swapPairs[currentSwap1.pair][counterAsset].decimals)
-      .toFixed(6)
-    minReceived = minExpectedReturn
-      .div(10 ** swapPairs[currentSwap1.pair][counterAsset].decimals)
-      .toFixed(6)
-    bal = swapStat.balances[currentSwap1.asset]
-      .div(10 ** swapPairs[currentSwap1.pair][currentSwap1.asset].decimals)
-      .toFixed(6)
+      );
+      swapFee = swapStat.assetConverter[counterAsset](
+        new BigNumber(inputTokenAmount)
+          .multipliedBy(
+            10 ** swapPairs[currentSwap1.pair][currentSwap1.asset].decimals
+          )
+          .minus(swapReturn)
+      )
+        .div(10 ** swapPairs[currentSwap1.pair][counterAsset].decimals)
+        .toFixed(6);
+      minExpectedReturn = swapStat.assetConverter[counterAsset](
+        swapReturn
+      ).minus(swapStat.networkFees[counterAsset]);
+      networkFees = swapStat.networkFees[counterAsset]
+        .div(10 ** swapPairs[currentSwap1.pair][counterAsset].decimals)
+        .toFixed(6)
+      minReceived = minExpectedReturn
+        .div(10 ** swapPairs[currentSwap1.pair][counterAsset].decimals)
+        .toFixed(6)
+      bal = swapStat.balances[currentSwap1.asset]
+        .div(10 ** swapPairs[currentSwap1.pair][currentSwap1.asset].decimals)
+        .toFixed(6)
+    } catch (error) {}
     }
 
-    const generateSwap = async (e) => {
-      e.preventDefault();
+    const generateSwap = async () => {
+      // e.preventDefault();
       const swap = {
         pair: currentSwap1.pair,
         asset: currentSwap1.asset,
@@ -160,6 +165,14 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
         history.push("/");
       }
     };
+
+    const startSwap = () => {
+      openSwapProgress();
+      generateSwap();
+      console.log(swaps, 'swaps');
+    }
+    console.log(swaps, 'swaps2');
+
 
   const openInputTokenModal = () => { setInputTokenModalOpen(true); }
   const openOutputTokenModal = () => { setOutputTokenModalOpen(true); }
@@ -418,12 +431,13 @@ const toggleTokens = () => {
                           (
                             <>
                             {
-                              (inputTokenAmount) ?
+                              (inputTokenAmount && (minReceived > 0)) ?
                               (
                             <>
-                              <Button size="large" className = {classes.connectwalletbutton + " Element"} onClick={openSwapProgress} >swap tokens</Button>
+                              <Button size="large" className = {classes.connectwalletbutton + " Element"} onClick={startSwap} >swap tokens</Button>
+                              {/* <Button size="large" className = {classes.connectwalletbutton + " Element"} onClick={openSwapProgress} >swap tokens</Button> */}
                               {/* <Button size="large" className = {classes.connectwalletbutton + " Element"} onClick={generateSwap} >swap tokens</Button> */}
-                              <SwapProgress open={swapProgress} onClose={minimize} />
+                              <SwapProgress swaps={swaps} open={swapProgress} onClose={minimize} />
                             </>
                               ) :
                               (
