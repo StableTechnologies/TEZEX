@@ -165,7 +165,6 @@ module.exports.deepCopy = (allowances, pairs) => {
     if (!Object.prototype.hasOwnProperty.call(allowances, pair))
       continue;
     count++;
-    console.log("here")
     const assets = pair.split("/");
     max[pair] = {
       [assets[0]]: allowances[pair][assets[0]],
@@ -177,7 +176,6 @@ module.exports.deepCopy = (allowances, pairs) => {
     };
   }
   if (count === 0) return { max: undefined, total: undefined };
-  console.log("here1")
   return { max, total };
 };
 
