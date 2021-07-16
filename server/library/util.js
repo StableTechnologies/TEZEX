@@ -1,11 +1,9 @@
 const Ethereum = require("./ethereum");
 const Tezos = require("./tezos");
-const config = require(`./${
-  process.env.SERVER_ENV || "prod"
-}-network-config.json`);
-const configTezos = require(`./${
-  process.env.SERVER_ENV || "prod"
-}-network-config-tezos.json`);
+const config = require(`./${process.env.SERVER_ENV || "prod"
+  }-network-config.json`);
+const configTezos = require(`./${process.env.SERVER_ENV || "prod"
+  }-network-config-tezos.json`);
 const { BigNumber } = require("bignumber.js");
 
 module.exports.init = async () => {
@@ -28,9 +26,9 @@ module.exports.init = async () => {
         tokenContract =
           asset !== "eth"
             ? new clients["ethereum"].web3.eth.Contract(
-                config.pairs[pair][asset].tokenContract.abi,
-                config.pairs[pair][asset].tokenContract.address
-              )
+              config.pairs[pair][asset].tokenContract.abi,
+              config.pairs[pair][asset].tokenContract.address
+            )
             : undefined;
       }
       swapPairsCrossChain[pair] = {
@@ -158,11 +156,16 @@ module.exports.log = (msg) => {
   console.log(`\n[${(new Date().getTime() / 1000).toFixed()}] `, ...msg);
 };
 
-module.exports.deepCopy = (allowances) => {
-  const pairs = Object.keys(allowances);
+module.exports.deepCopy = (allowances, pairs) => {
   const max = {},
     total = {};
+  let count = 0;
   for (const pair of pairs) {
+    console.log(pair, allowances)
+    if (!Object.prototype.hasOwnProperty.call(allowances, pair))
+      continue;
+    count++;
+    console.log("here")
     const assets = pair.split("/");
     max[pair] = {
       [assets[0]]: allowances[pair][assets[0]],
@@ -173,6 +176,8 @@ module.exports.deepCopy = (allowances) => {
       [assets[1]]: allowances[pair][assets[1]],
     };
   }
+  if (count === 0) return { max: undefined, total: undefined };
+  console.log("here1")
   return { max, total };
 };
 
@@ -205,7 +210,9 @@ module.exports.getAllowancesTezos = async (
         if (!vol.isNaN() && vol.isPositive()) {
           allowances[pair] = {
             ...allowances[pair],
-            [asset]: vol,
+            [asset]: vol.div(
+              10 ** swapPairs[pair][asset].decimals
+            ),
           };
           foundNonZero = true;
         } else
