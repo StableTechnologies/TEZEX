@@ -20,8 +20,9 @@ import swapIcon from "../../assets/swapIcon.svg";
 import tzlogo from "../../assets/tzlogo.svg";
 
 import { TezexContext } from '../context/TezexContext';
-import TokenSelectionDialog from '../dialog/TokenSelectionDialog';
+import TokenSelectionDialog from '../dialog';
 import SwapProgress from '../swapProgress';
+import SwapStatus from '../swapStatus';
 import CurrentSwaps from '../currentSwaps'
 import  {content, tokens, tokenWallets}  from '../constants/index';
 import { shorten, connectEthAccount, connectTezAccount, setupEthClient } from "../../util";
@@ -43,6 +44,7 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
   const [walletModalOpen, setWalletModalOpen] = useState(false);
   const [errModalOpen, setErrModalOpen] = useState(false);
   const [swapProgress, setSwapProgress] = useState(false);
+  const [swapStatus, setSwapStatus] = useState(false);
   const [currentSwap, setCurrentSwap] = useState(false);
 
   const [inputToken, setInputToken] = useState(tokens[4]);
@@ -56,7 +58,6 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
 
   const [ethAccount, setEthAccount] = useState('');
   const [xtzAccount, setXtzAccount] = useState('');
-  // const [tokenPair, setTokenPair] = useState(tokens);
 
   const [currentSwap1, setCurrentSwap1] = useState(false);
   const [pairs, setPairs] = useState([]);
@@ -87,7 +88,6 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
   useEffect(() => {
     if (currentSwap1 === undefined) return;
 
-    // if (currentSwap1 &&  clients) {
   if (currentSwap1 && (clients["ethereum"] && clients["tezos"])) {
     try {
       getSwapStat(clients, swapPairs, currentSwap1.pair)
@@ -144,7 +144,6 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
     }
 
     const generateSwap = async () => {
-      // e.preventDefault();
       const swap = {
         pair: currentSwap1.pair,
         asset: currentSwap1.asset,
@@ -174,13 +173,27 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
     console.log(swaps, 'swaps2');
 
 
+
   const openInputTokenModal = () => { setInputTokenModalOpen(true); }
   const openOutputTokenModal = () => { setOutputTokenModalOpen(true); }
   const openSwapProgress = () => { setSwapProgress(true); }
   const openWalletModal = () => { setWalletModalOpen(true); }
   const openErrModal = () => { setErrModalOpen(true); setWalletModalOpen(false);}
+
   const minimize = () => { setSwapProgress(false); setCurrentSwap(true);}
   const maximize = () => { setSwapProgress(true); setCurrentSwap(false);}
+
+  const openSwapStatus = () => {
+    setSwapStatus(true);
+    setCurrentSwap(false);
+    setSwapProgress(false);
+  }
+  const closeSwapStatus = () => {
+    setSwapStatus(false)
+    setInputTokenAmount("");
+    setOutputTokenAmount("");
+    setOutputToken("");
+  }
 
   const setToken = (value, side) => {
     setInputTokenModalOpen(false);
@@ -219,6 +232,7 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
     }
   }, [clients,])
 
+
   const setWalletType = async (value) => {
     const str = inputToken.title.toLowerCase();
     if(str.includes('tz')) {
@@ -235,13 +249,13 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
     }
 }
 
-const tokenPair = selectToken(inputToken.title);
+  const tokenPair = selectToken(inputToken.title);
 
-const toggleTokens = () => {
+  const toggleTokens = () => {
 
-  setInputToken(outputToken);
-  setOutputToken(inputToken);
-}
+    setInputToken(outputToken);
+    setOutputToken(inputToken);
+  }
 
   const refundHandler = async (swap) => {
     try {
@@ -362,8 +376,6 @@ const toggleTokens = () => {
                           value={ inputTokenAmount}
                           className={classes.tokenValue }
                           inputProps={{className: classes.tokenValue, pattern: "^\d+(\.\d{1,4})?$", inputMode:"decimal"}}
-                          // inputProps={{className: classes.tokenValue, pattern: "^[+-]?((\[0-9]+(\.\[0-9]*)?)|(\.\[0-9]+))$", inputMode:"decimal"}}
-                          // inputProps={{className: classes.tokenValue, pattern: "^[0-9]*[.,]?[0-9]*$", inputMode:"decimal"}}
                           InputProps={{ disableUnderline: true}}
                         />
                       </div>
@@ -403,7 +415,6 @@ const toggleTokens = () => {
                           type="text"
                           placeholder="0.00"
                           // onInput={(e) => setOutputTokenAmount(e.target.value.replace(/[^0-9]/, '') )}
-                          // value={minReceived}
                           value={minReceived}
                           inputProps={{className: classes.tokenValue, pattern: "^[0-9]*[.,]?[0-9]*$", inputMode:"decimal"}}
                           InputProps={{ disableUnderline: true}}
@@ -435,9 +446,8 @@ const toggleTokens = () => {
                               (
                             <>
                               <Button size="large" className = {classes.connectwalletbutton + " Element"} onClick={startSwap} >swap tokens</Button>
-                              {/* <Button size="large" className = {classes.connectwalletbutton + " Element"} onClick={openSwapProgress} >swap tokens</Button> */}
-                              {/* <Button size="large" className = {classes.connectwalletbutton + " Element"} onClick={generateSwap} >swap tokens</Button> */}
-                              <SwapProgress swaps={swaps} open={swapProgress} onClose={minimize} />
+                              <SwapProgress swaps={swaps} open={swapProgress} onClose={minimize} completed={openSwapStatus} />
+                              <SwapStatus swaps={swaps} open={swapStatus} onClose={closeSwapStatus} />
                             </>
                               ) :
                               (
@@ -489,22 +499,18 @@ const toggleTokens = () => {
               <Paper  variant="outlined" className = {classes.feepaper + " Element"} square>
                 <div className= {classes.feeDetails}>
                   <Typography>Swap Fee</Typography>
-                  {/* <Typography>0.15 %</Typography> */}
                   <Typography>{swapFee || 0.00} {""} {outputToken.title} </Typography>
                 </div>
                 <div className= {classes.feeDetails}>
                   <Typography>Max Network Fee</Typography>
-                  {/* <Typography>0.00 {outputToken.title || "XTZ"}</Typography> */}
                   <Typography> {networkFees || 0.00} {""} {outputToken.title}</Typography>
 
                 </div>
                 <div className= {classes.feeDetails}>
                   <Typography>Minimum Received</Typography>
-                  {/* <Typography>0.00 {outputToken.title || "XTZ"}</Typography> */}
                   <Typography> {minReceived || 0.00} {""} {outputToken.title} </Typography>
                 </div>
               </Paper>
-              {/* {data} */}
             </div>
           </Grid>
           <Grid item  xs={12} sm={4} md={4} lg={3}>

@@ -34,7 +34,6 @@ const ExpandWalletView = (props) => {
         <Grid item xs={12}>
           <Typography> Connected To {  walletType || " Galleon"} </Typography>
         </Grid>
-        {/* <Grid container spacing={3}> */}
           <Grid item xs={8}>
             <Box py={1}>
             <Typography>{address || "tz1ae86gsd...KiRus8Xs"}</Typography>
@@ -46,9 +45,7 @@ const ExpandWalletView = (props) => {
                 <Typography>copy</Typography>
             </Box>
           </Grid>
-          {/* <div item xs={12} className={classes.divider}> {""} </div> */}
           <Divider className={classes.divider}/>
-          {/* <Grid  item xs={12} className={classes.walletAction}> */}
           <Grid  item xs={6} p={1}>
             <Box alignContent="center" spacing={3} display="flex" className={classes.walletAction} >
                 <img src={exchangeIcon} alt="exchangeIcon" />
@@ -61,24 +58,7 @@ const ExpandWalletView = (props) => {
                 <Typography> Disconnect Wallet </Typography>
             </Box>
           </Grid>
-          {/* </Grid> */}
-        {/* </Grid> */}
       </Grid>
-
-      {/* <Card  open={open}>
-        <CardHeader>
-          Connected To{ walletType || "Galleon"}
-        </CardHeader>
-
-        <CardContent>
-          <Typography>{"tz1ae86gsd...KiRus8Xs" || address}</Typography>
-          <div>
-            <FileCopyOutlinedIcon />
-            <Typography> Copy </Typography>
-          </div>
-        </CardContent>
-
-      </Card> */}
     </div>
   )
 }

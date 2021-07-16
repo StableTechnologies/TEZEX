@@ -14,7 +14,7 @@ import logo from "../../assets/TezexLogo.svg";
 import tzwalletlogo from "../../assets/tzwalletlogo.svg";
 import ethwalletlogo from "../../assets/ethwalletlogo.svg";
 
-import { shorten, connectEthAccount, connectTezAccount, setupEthClient, setupTezClient } from "../../util";
+import { shorten } from "../../util";
 import { TezexContext } from '../context/TezexContext';
 
 import useStyles from "./style";
@@ -24,8 +24,6 @@ const Header = ({ clients, swapPairs, balUpdate, setupEth, setupTez, }) => {
     const classes = useStyles();
     const history = useHistory();
     const globalContext = useContext(TezexContext);
-
-
 
     const [expandEthWallet, setExpandEthWallet] = useState({right: false,});
     const [expandTezWallet, setExpandTezWallet] = useState({right: false,});
@@ -37,11 +35,6 @@ const Header = ({ clients, swapPairs, balUpdate, setupEth, setupTez, }) => {
   const [currentSwap, setCurrentSwap] = useState(undefined);
   const [swapStat, setSwapStat] = useState(undefined);
   const [pairs, setPairs] = useState([]);
-
-
-    // const isTezAccount = globalContext.tezosClient.account;
-    // const isEthAccount = globalContext.ethereumClient.account;
-
 
     const toggleEthDrawer = (anchor, open) => (event) => {
       if (event && event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {

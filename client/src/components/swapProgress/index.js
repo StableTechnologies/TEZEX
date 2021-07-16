@@ -44,9 +44,9 @@ const getStepContent = (step) => {
 const SwapProgress = (props) => {
   const classes = useStyles();
 
-  const [activeStep, setActiveStep] = useState(0);
+  const [activeStep, setActiveStep] = useState();
   const [refundTime, setRefundTime] = useState(0);
-  const { open, onClose, swaps} = props;
+  const { open, onClose, swaps, completed} = props;
   const steps = getSteps();
 
   const handleStepChange = (step) => {
@@ -56,7 +56,21 @@ const SwapProgress = (props) => {
     });
   };
 
-useEffect(() => {
+
+  let notify;
+
+  const handleClose = () => {
+    clearTimeout(notify);
+    onClose();
+  }
+
+  useEffect(() => {
+    if(activeStep === 3) {
+      notify = setTimeout(async () => { await completed(); }, 6000);
+    }
+  }, [activeStep]);
+
+  useEffect(() => {
       if(swaps) {
       try {
         handleStepChange(swaps);
@@ -66,7 +80,7 @@ useEffect(() => {
 
   return(
     <Dialog aria-labelledby="simple-dialog-title" open={open} className={classes.root}>
-      <DialogTitle onClose={onClose}>
+      <DialogTitle onClose={handleClose}>
         Swap In Progress...
         <Typography> Do not close or refresh the page. </Typography>
         <IconButton aria-label="close" onClick={onClose} className={classes.close}>
@@ -84,17 +98,11 @@ useEffect(() => {
               <StepLabel StepIconComponent={CircleCheckStepIcon} >
                 {label}
               </StepLabel>
-              {/* <StepContent>
-              </StepContent> */}
             </Step>
             <Step >
               <StepLabel >
                 <Typography style={{paddingLeft: "14px"}}>{getStepContent(index)}</Typography>
               </StepLabel>
-
-              {/* <StepContent>
-
-              </StepContent> */}
             </Step>
           </Step>
         ))}
