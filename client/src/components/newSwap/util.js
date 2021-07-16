@@ -1,5 +1,6 @@
-import { BigNumber } from "bignumber.js";
 import { constants, updateBotStats } from "../../library/util";
+
+import { BigNumber } from "bignumber.js";
 
 const getBalance = async (clients, swapPairs, pair) => {
   const assets = pair.split("/");
@@ -24,10 +25,10 @@ const getBalance = async (clients, swapPairs, pair) => {
 /**
  * Returns tx fees and reward in bps
  */
-const getBotFees = async (clients, swapPairs) => {
+const getBotFees = async (clients, swapContract, network) => {
   const data = await Promise.all([
     clients["tezos"].getFees(),
-    clients["tezos"].getReward(swapPairs["usdc/usdtz"]["usdtz"].swapContract),
+    clients[network].getReward(swapContract),
     clients["ethereum"].web3.eth.getGasPrice(),
   ]);
   const ethereumGasPrice = new BigNumber(data[2]);
@@ -114,7 +115,7 @@ const getPureSwapFee = ({ txFees, ethereumGasPrice }, swapPairs, pair) => {
 };
 
 const getConverter = async (clients, pair) => {
-  const exchangeRates = await Promise.all([
+  const [eth_usd, xtz_usd] = await Promise.all([
     clients["tezos"].getPrice("ETH-USD"),
     clients["tezos"].getPrice("XTZ-USD"),
   ]);
@@ -123,16 +124,16 @@ const getConverter = async (clients, pair) => {
       new BigNumber(
         eth
           .div(10 ** 18)
-          .multipliedBy(new BigNumber(exchangeRates[0]))
-          .plus(xtz.div(10 ** 6).multipliedBy(new BigNumber(exchangeRates[1])))
+          .multipliedBy(new BigNumber(eth_usd))
+          .plus(xtz.div(10 ** 6).multipliedBy(new BigNumber(xtz_usd)))
           .toFixed(0, 2)
       ),
     usdtz: ({ eth, xtz }) =>
       new BigNumber(
         eth
           .div(10 ** 18)
-          .multipliedBy(new BigNumber(exchangeRates[0]))
-          .plus(xtz.div(10 ** 6).multipliedBy(new BigNumber(exchangeRates[1])))
+          .multipliedBy(new BigNumber(eth_usd))
+          .plus(xtz.div(10 ** 6).multipliedBy(new BigNumber(xtz_usd)))
           .toFixed(0, 2)
       ),
     ethtz: ({ eth, xtz }) =>
@@ -141,8 +142,8 @@ const getConverter = async (clients, pair) => {
           .plus(
             xtz
               .div(10 ** 6)
-              .multipliedBy(new BigNumber(exchangeRates[1]))
-              .div(new BigNumber(exchangeRates[0]))
+              .multipliedBy(new BigNumber(xtz_usd))
+              .div(new BigNumber(eth_usd))
               .multipliedBy(10 ** 18)
           )
           .toFixed(0, 2)
@@ -153,8 +154,8 @@ const getConverter = async (clients, pair) => {
           .plus(
             xtz
               .div(10 ** 6)
-              .multipliedBy(new BigNumber(exchangeRates[1]))
-              .div(new BigNumber(exchangeRates[0]))
+              .multipliedBy(new BigNumber(xtz_usd))
+              .div(new BigNumber(eth_usd))
               .multipliedBy(10 ** 18)
           )
           .toFixed(0, 2)
@@ -168,6 +169,58 @@ const getConverter = async (clients, pair) => {
     "eth/ethtz": {
       eth: (amt) => amt,
       ethtz: (amt) => amt,
+    },
+    "xtz/usdtz": {
+      xtz: (amt) =>
+        new BigNumber(
+          amt
+            .multipliedBy(10 ** 6)
+            .div(new BigNumber(xtz_usd))
+            .toFixed(0, 2)
+        ),
+      usdtz: (amt) =>
+        new BigNumber(
+          amt
+            .div(10 ** 6)
+            .multipliedBy(new BigNumber(xtz_usd))
+            .toFixed(0, 2)
+        ),
+    },
+    "xtz/ethtz": {
+      xtz: (amt) =>
+        new BigNumber(
+          amt
+            .div(10 ** 18)
+            .multipliedBy(new BigNumber(eth_usd))
+            .div(new BigNumber(xtz_usd))
+            .multipliedBy(10 ** 6)
+            .toFixed(0, 2)
+        ),
+      ethtz: (amt) =>
+        new BigNumber(
+          amt
+            .div(10 ** 6)
+            .multipliedBy(new BigNumber(xtz_usd))
+            .div(new BigNumber(eth_usd))
+            .multipliedBy(10 ** 18)
+            .toFixed(0, 2)
+        ),
+    },
+    "ethtz/usdtz": {
+      ethtz: (amt) =>
+        new BigNumber(
+          amt
+            .multipliedBy(10 ** 18)
+            .div(new BigNumber(eth_usd))
+            .toFixed(0, 2)
+        ),
+      usdtz: (amt) =>
+        new BigNumber(
+          amt
+            .div(10 ** 18)
+            .multipliedBy(new BigNumber(eth_usd))
+            .toFixed(0, 2)
+        ),
     },
   };
   return {
@@ -185,22 +238,30 @@ const getConverter = async (clients, pair) => {
  * @param pair pair whose stats are required
  */
 export const getSwapStat = async (clients, swapPairs, pair) => {
+  const assets = pair.split("/");
+  let swapContract = swapPairs["usdc/usdtz"]["usdtz"].swapContract;
+  let network = "tezos"
+  if (swapPairs[pair][assets[0]].network === "pureTezos") {
+    swapContract = swapPairs[pair][assets[0]].swapContract;
+    network = "pureTezos"
+  }
   const resp = await Promise.all([
     getBalance(clients, swapPairs, pair),
-    getBotFees(clients, swapPairs),
+    getBotFees(clients, swapContract, network),
     updateBotStats(),
     getConverter(clients, pair),
   ]);
-  const pureFees = getPureSwapFee(resp[1], swapPairs, pair);
   const { feeConverter, assetConverter } = resp[3];
-  const assets = pair.split("/");
   const networkFees = {};
-  for (const asset of assets) {
-    networkFees[asset] = feeConverter[asset](pureFees[pair][asset]);
+  if (network !== "pureTezos") {
+    const pureFees = getPureSwapFee(resp[1], swapPairs, pair);
+    for (const asset of assets) {
+      networkFees[asset] = feeConverter[asset](pureFees[pair][asset]);
+    }
   }
   return {
     balances: resp[0],
-    reward: resp[1].reward,
+    reward: resp[1].reward.reward,
     botStats: resp[2],
     networkFees,
     assetConverter,

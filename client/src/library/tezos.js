@@ -1,5 +1,3 @@
-import { TezosOperationType } from "@airgap/beacon-sdk";
-import { Mutex } from "async-mutex";
 import {
   ConseilDataClient,
   ConseilOperator,
@@ -9,17 +7,19 @@ import {
   TezosMessageUtils,
   TezosNodeReader,
 } from "conseiljs";
+
 import { JSONPath } from "jsonpath-plus";
+import { TezosOperationType } from "@airgap/beacon-sdk";
 
 export default class Tezos {
-  constructor(tezos, account, priceContract, feeContract, rpc, conseilServer) {
+  constructor(tezos, account, priceContract, feeContract, rpc, conseilServer, mutex) {
     this.account = account; // tezos wallet address
     this.tezos = tezos; //tezos beacon-sdk instance
     this.rpc = rpc; // rpc server address for network interaction
     this.conseilServer = conseilServer; // conseil server setting
     this.priceContract = priceContract; // tezos harbinger oracle contract details {address:string, mapID:nat}
     this.feeContract = feeContract; // tezos tx fee contract details {address:string, mapID:nat}
-    this.mutex = new Mutex();
+    this.mutex = mutex; // mutex
   }
 
   /**
@@ -80,8 +80,8 @@ export default class Tezos {
       allowances === undefined
         ? []
         : allowances.filter(
-            (allow) => allow.args[0].string === swapContract.address
-          );
+          (allow) => allow.args[0].string === swapContract.address
+        );
     return allowance.length === 0 ? "0" : allowance[0].args[1].int;
   }
 
@@ -255,12 +255,14 @@ export default class Tezos {
       this.rpc,
       swapContract.address
     );
-    return parseInt(
-      JSONPath({
-        path: "$.args[2].int",
-        json: storage,
-      })[0]
-    );
+    return {
+      reward: parseInt(
+        JSONPath({
+          path: "$.args[2].int",
+          json: storage,
+        })[0]
+      )
+    }
   }
 
   /**

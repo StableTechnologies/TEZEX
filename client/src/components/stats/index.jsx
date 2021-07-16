@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from "react";
+
 import { updateBotStats } from "../../library/util";
 import useStyles from "./style";
+
 const Stat = ({ swapPairs }) => {
   const classes = useStyles();
   const [stats, setStats] = useState(undefined);
   const updateStats = async () => {
     const stat = await updateBotStats();
+    console.log(stat)
     setStats(stat);
   };
   useEffect(() => {
@@ -29,8 +32,6 @@ const Stat = ({ swapPairs }) => {
           <div className={classes.indented}>
             - Total Liquidity : {stats.total[pair][assets[0]]} {assets[0]}/
             {stats.total[pair][assets[1]]} {assets[1]}
-            <br />- Max Swap Size : {stats.max[pair][assets[1]]} {assets[0]}/
-            {stats.max[pair][assets[0]]} {assets[1]}
           </div>
         </div>
       );

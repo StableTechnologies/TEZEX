@@ -1,11 +1,12 @@
-import { DAppClient } from "@airgap/beacon-sdk";
 import { BigNumber } from "bignumber.js";
-import Web3 from "web3";
+import { DAppClient } from "@airgap/beacon-sdk";
 import Ethereum from "../library/ethereum";
+import { Mutex } from "async-mutex";
+import PureTezos from "../library/pure_tezos";
 import Tezos from "../library/tezos";
-const config = require(`../library/${
-  process.env.REACT_APP_ENV || "prod"
-}-network-config.json`);
+import Web3 from "web3";
+const config = require(`../library/${process.env.REACT_APP_ENV || "prod"
+  }-network-config.json`);
 
 export const shorten = (first, last, str) => {
   return str.substring(0, first) + "..." + str.substring(str.length - last);
@@ -62,9 +63,9 @@ export const setupClient = async () => {
         tokenContract =
           asset !== "eth"
             ? new web3.eth.Contract(
-                config.pairs[pair][asset].tokenContract.abi,
-                config.pairs[pair][asset].tokenContract.address
-              )
+              config.pairs[pair][asset].tokenContract.abi,
+              config.pairs[pair][asset].tokenContract.address
+            )
             : undefined;
       }
       swapPairs[pair] = {
@@ -79,6 +80,7 @@ export const setupClient = async () => {
       };
     }
   });
+  const mutex = new Mutex()
   const clients = {
     ethereum: new Ethereum(web3, ethAccount),
     tezos: new Tezos(
@@ -87,8 +89,16 @@ export const setupClient = async () => {
       config.tezos.priceOracle,
       config.tezos.feeContract,
       config.tezos.RPC,
-      config.tezos.conseilServer
+      config.tezos.conseilServer,
+      mutex
     ),
+    pureTezos: new PureTezos(
+      client,
+      tezAccount,
+      config.tezos.priceOracle,
+      config.tezos.RPC,
+      config.tezos.conseilServer,
+      mutex)
   };
   return { swapPairs, clients };
 };
@@ -102,15 +112,24 @@ export const setupClient = async () => {
 export const getOldSwaps = async (clients, swapPairs) => {
   const swaps = {};
   const pairs = Object.keys(swapPairs);
+  let pureTez = false;
   for (const pair of pairs) {
     const assets = pair.split("/");
     for (const asset of assets) {
       const network = swapPairs[pair][asset].network;
+      if (network === "pureTezos" && pureTez)
+        continue;
+      if (network === "pureTezos")
+        pureTez = true;
       const allSwaps = await clients[network].getUserSwaps(
         swapPairs[pair][asset].swapContract,
         clients[network].account
       );
       allSwaps.forEach((swp) => {
+        let p = pair, a = asset;
+        if (network === "pureTezos") {
+          p = swp.pair; a = swp.asset;
+        }
         swaps[swp.hashedSecret] = {
           network: network,
           pair: pair,
@@ -118,10 +137,10 @@ export const getOldSwaps = async (clients, swapPairs) => {
           hashedSecret: swp.hashedSecret,
           value:
             new BigNumber(swp.value)
-              .div(10 ** swapPairs[pair][asset].decimals)
+              .div(10 ** swapPairs[p][a].decimals)
               .toString() +
             " " +
-            swapPairs[pair][asset].symbol,
+            swapPairs[p][a].symbol,
           minReturn: "nil",
           exact: "nil",
           refundTime: swp.refundTimestamp,

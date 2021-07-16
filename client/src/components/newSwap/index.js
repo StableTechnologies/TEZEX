@@ -1,12 +1,14 @@
+import React, { useEffect, useState } from "react";
+import { calcSwapReturn, getCounterPair } from "../../library/util";
+
+import BigNumber from "bignumber.js";
+import Loader from "../loader";
 import { MenuItem } from "@material-ui/core";
 import Select from "@material-ui/core/Select";
-import BigNumber from "bignumber.js";
-import React, { useEffect, useState } from "react";
-import { useHistory } from "react-router-dom";
-import { calcSwapReturn, getCounterPair } from "../../library/util";
-import Loader from "../loader";
-import useStyles from "./style";
 import { getSwapStat } from "./util";
+import { useHistory } from "react-router-dom";
+import useStyles from "./style";
+
 const CreateSwap = ({ clients, swapPairs, genSwap }) => {
   const [input, setInput] = useState(0);
   const [pairs, setPairs] = useState([]);
@@ -112,9 +114,13 @@ const CreateSwap = ({ clients, swapPairs, genSwap }) => {
   )
     .div(10 ** swapPairs[currentSwap.pair][counterAsset].decimals)
     .toFixed(6);
-  const minExpectedReturn = swapStat.assetConverter[counterAsset](
+  let minExpectedReturn = swapStat.assetConverter[counterAsset](
     swapReturn
-  ).minus(swapStat.networkFees[counterAsset]);
+  );
+  if (swapPairs[currentSwap.pair][currentSwap.asset].network !== "pureTezos")
+    minExpectedReturn = swapStat.assetConverter[counterAsset](
+      swapReturn
+    ).minus(swapStat.networkFees[counterAsset]);
 
   const generateSwap = async (e) => {
     e.preventDefault();
@@ -188,9 +194,8 @@ const CreateSwap = ({ clients, swapPairs, genSwap }) => {
           <div className={classes.swapValue}>
             <input
               type="number"
-              placeholder={`Amount in ${
-                swapPairs[currentSwap.pair][currentSwap.asset].symbol
-              }`}
+              placeholder={`Amount in ${swapPairs[currentSwap.pair][currentSwap.asset].symbol
+                }`}
               name="swap"
               step=".000001"
               min="0"
@@ -215,21 +220,21 @@ const CreateSwap = ({ clients, swapPairs, genSwap }) => {
           {input === 0
             ? 0
             : minExpectedReturn
-                .div(10 ** swapPairs[currentSwap.pair][counterAsset].decimals)
-                .toFixed(6)}{" "}
-          {swapPairs[currentSwap.pair][counterAsset].symbol}
-        </p>
-        <p className={classes.expectedValue}>
-          Max Network Fee :{" "}
-          {input === 0
-            ? 0
-            : swapStat.networkFees[counterAsset]
-                .div(10 ** swapPairs[currentSwap.pair][counterAsset].decimals)
-                .toFixed(6)}{" "}
+              .div(10 ** swapPairs[currentSwap.pair][counterAsset].decimals)
+              .toFixed(6)}{" "}
           {swapPairs[currentSwap.pair][counterAsset].symbol}
         </p>
         <p className={classes.expectedValue}>
           Swap Fee : {input === 0 ? 0 : swapFee}{" "}
+          {swapPairs[currentSwap.pair][counterAsset].symbol}
+        </p>
+        <p className={classes.expectedValue}>
+          Max Network Fee :{" "}
+          {swapPairs[currentSwap.pair][counterAsset].network === "pureTezos" ? 0 : (input === 0
+            ? 0
+            : swapStat.networkFees[counterAsset]
+              .div(10 ** swapPairs[currentSwap.pair][counterAsset].decimals)
+              .toFixed(6))}{" "}
           {swapPairs[currentSwap.pair][counterAsset].symbol}
         </p>
       </div>

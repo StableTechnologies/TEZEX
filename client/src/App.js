@@ -1,18 +1,22 @@
-import { BigNumber } from "bignumber.js";
-import React, { useEffect, useRef, useState } from "react";
-import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import "./App.css";
+
+import React, { useEffect, useRef, useState } from "react";
+import { Route, BrowserRouter as Router, Switch } from "react-router-dom";
+import { getOldSwaps, setupClient } from "./util";
+
 import About from "./components/about";
+import { BigNumber } from "bignumber.js";
+import CreateSwap from "./components/newSwap";
 import Header from "./components/header";
 import Home from "./components/home";
 import Loader from "./components/loader";
-import CreateSwap from "./components/newSwap";
 import Notice from "./components/notice";
 import Setup from "./components/setup";
 import Stat from "./components/stats";
-import requestSwap from "./library/request-swap";
 import { getCounterPair } from "./library/util";
-import { getOldSwaps, setupClient } from "./util";
+import requestPureSwap from "./library/request-pure-swap";
+import requestSwap from "./library/request-swap";
+
 const App = () => {
   const [clients, setClients] = useState(undefined);
   const [swapPairs, setSwapPairs] = useState(undefined);
@@ -64,7 +68,11 @@ const App = () => {
   };
 
   const genSwap = async (swap, req_swap = undefined) => {
-    const generatedSwap = await requestSwap(swap, clients, swapPairs, update);
+    let generatedSwap = {}
+    if (swap.network === "pureTezos")
+      generatedSwap = await requestPureSwap(swap, clients, swapPairs, update);
+    else
+      generatedSwap = await requestSwap(swap, clients, swapPairs, update);
     if (generatedSwap === undefined) return false;
     let newSwaps = swapRef.current;
     if (newSwaps === undefined) {
