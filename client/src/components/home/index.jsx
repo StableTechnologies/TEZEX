@@ -142,7 +142,6 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
         .toFixed(6)
     } catch (error) {}
     }
-
     const generateSwap = async () => {
       const swap = {
         pair: currentSwap1.pair,
@@ -168,9 +167,7 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
     const startSwap = () => {
       openSwapProgress();
       generateSwap();
-      console.log(swaps, 'swaps');
     }
-    console.log(swaps, 'swaps2');
 
 
 
@@ -267,7 +264,7 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
         swapPairs[swap.pair][swap.asset].swapContract,
         swap.hashedSecret
         );
-        console.log(swapPairs[swap.pair][swap.asset], 'swapPairs');
+        // console.log(swapPairs[swap.pair][swap.asset], 'swapPairs');
       update(swap.hashedSecret, 4);
     } catch (err) {
       console.error(err);

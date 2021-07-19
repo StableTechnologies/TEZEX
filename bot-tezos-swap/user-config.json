@@ -1,21 +1,21 @@
 {
   "tezos": {
-    "walletPK": "edskRiAW2GJN74TgNV5Y7KE76VxzYjUgaC3hdAUSYmwUA3aYVCmRtvcTZc2YFjctUjG4kMK59qBL8QPMSrJrNWogTb1rrVrRJy"
+    "walletPK": "your-tezos-private-key"
   },
   "maxVolume": {
     "xtz/usdtz": {
       "xtz": 100,
-      "usdtz": 50,
+      "usdtz": 300,
       "tolerance": 5
     },
     "xtz/ethtz": {
       "xtz": 100,
-      "ethtz": 50,
+      "ethtz": 0.1,
       "tolerance": 5
     },
     "ethtz/usdtz": {
-      "usdtz": 50,
-      "ethtz": 50,
+      "usdtz": 300,
+      "ethtz": 0.1,
       "tolerance": 5
     }
   }
