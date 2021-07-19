@@ -1,6 +1,5 @@
-const config = require(`./${
-  process.env.BOT_ENV || "prod"
-}-network-config.json`);
+const config = require(`./${process.env.BOT_ENV || "prod"
+  }-network-config.json`);
 const Web3 = require("web3");
 const respondToSwap = require("./respond-to-swap");
 const { calcSwapReturn, getAssets, getCounterPair, STATE } = require("./util");
@@ -68,9 +67,9 @@ module.exports = class Bot {
               tokenContract =
                 asset !== "eth"
                   ? new web3.eth.Contract(
-                      config.pairs[pair][asset].tokenContract.abi,
-                      config.pairs[pair][asset].tokenContract.address
-                    )
+                    config.pairs[pair][asset].tokenContract.abi,
+                    config.pairs[pair][asset].tokenContract.address
+                  )
                   : undefined;
             }
             volume[pair][asset] = new BigNumber(
@@ -276,7 +275,28 @@ module.exports = class Bot {
         ) {
           try {
             console.log(`[!] REFUNDING SWAP(${this.swaps[key].asset}): ${key}`);
-            this.logger.warn("refunding swap", { swap });
+            // check if swap already redeemed or refunded if so no point in trying
+            const swp = await this.clients[this.swaps[key].network].getSwap(
+              this.swapPairs[this.swaps[key].pair][this.swaps[key].asset]
+                .swapContract,
+              key
+            );
+            if (
+              (this.swaps[key].network === "ethereum" &&
+                swp.initiator_tez_addr === "" &&
+                swp.refundTimestamp === "0") ||
+              (this.swaps[key].network === "tezos" && swp === undefined)
+            ) {
+              console.log(
+                `[!] SWAP IS ALREADY REDEEMED OR REFUNDED ${this.swapPairs[this.swaps[key].pair][this.swaps[key].asset].symbol
+                } SWAP : ${key}\n`
+              );
+              this.logger.warn("swap already redeemed or refunded", { swap: key });
+              this.swaps[key].state = STATE.REFUNDED;
+              await this.updateSwap(this.swaps[key]);
+              continue;
+            }
+            this.logger.warn("refunding swap", { swap: this.swaps[key] });
             await this.clients[this.swaps[key].network].refund(
               this.swapPairs[this.swaps[key].pair][this.swaps[key].asset]
                 .swapContract,
@@ -288,7 +308,7 @@ module.exports = class Bot {
           } catch (err) {
             console.error(
               `[x] FAILED TO REFUND SWAP(${this.swaps[key].asset}): ${key}\n` +
-                err
+              err
             );
             this.logger.error(`failed to refund swap: ${key}`, err);
           }
@@ -372,7 +392,7 @@ module.exports = class Bot {
               refundTime:
                 swp.refundTimestamp -
                 config.swapConstants.refundPeriod /
-                  config.swapConstants.refundFactor,
+                config.swapConstants.refundFactor,
               network: network,
               pair: pair,
               asset: asset,
@@ -435,9 +455,8 @@ module.exports = class Bot {
         const currentSwapStats = {};
         for (const pair of pairs) {
           const assets = pair.split("/");
-          swapStats += `    [-] ${this.swapPairs[pair][assets[0]].symbol}/${
-            this.swapPairs[pair][assets[1]].symbol
-          }\n`;
+          swapStats += `    [-] ${this.swapPairs[pair][assets[0]].symbol}/${this.swapPairs[pair][assets[1]].symbol
+            }\n`;
           currentSwapStats[pair] = {};
           for (const asset of assets) {
             const networkFee =
@@ -462,8 +481,7 @@ module.exports = class Bot {
           currentSwapStats,
         });
         console.log(
-          `\n\n[*]CURRENT STATUS :\n  [!] ACTIVE SWAP COUNT : ${
-            Object.keys(this.swaps).length
+          `\n\n[*]CURRENT STATUS :\n  [!] ACTIVE SWAP COUNT : ${Object.keys(this.swaps).length
           }\n  [!] SWAP REWARD RATE : ${this.reward.toString()} BPS\n  [!] SWAP STATS :\n${swapStats}`
         );
       } catch (err) {

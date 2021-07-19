@@ -52,5 +52,9 @@
       "minTradeVolume": 5
     }
   },
-  "pairs": ["ethtz/usdtz", "xtz/usdtz", "xtz/ethtz"]
+  "pairs": [
+    "ethtz/usdtz",
+    "xtz/usdtz",
+    "xtz/ethtz"
+  ]
 }

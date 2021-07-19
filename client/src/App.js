@@ -7,19 +7,22 @@ import "aos/dist/aos.css";
 
 import "./App.css";
 import TezexContext from './components/context/TezexContext';
+
+
 import About from "./components/about";
+import CreateSwap from "./components/newSwap";
 import Header from "./components/header";
 import Footer from "./components/footer";
 import Home from "./components/home";
 import Loader from "./components/loader";
-import CreateSwap from "./components/newSwap";
 import Notice from "./components/notice";
 import Setup from "./components/setup";
 import Stat from "./components/stats";
-import requestSwap from "./library/request-swap";
 import { getCounterPair } from "./library/util";
 import { getOldSwaps, initSwapDetails, setupEthClient, setupTezClient } from "./util";
 import useStyles from "./style";
+import requestPureSwap from "./library/request-pure-swap";
+import requestSwap from "./library/request-swap";
 
 const App = () => {
   const [clients, setClients] = useState({ethereum: null, tezos: null});
@@ -110,7 +113,11 @@ const initialize = async () => {
   };
 
   const genSwap = async (swap, req_swap = undefined) => {
-    const generatedSwap = await requestSwap(swap, clients, swapPairs, update);
+    let generatedSwap = {}
+    if (swap.network === "pureTezos")
+      generatedSwap = await requestPureSwap(swap, clients, swapPairs, update);
+    else
+      generatedSwap = await requestSwap(swap, clients, swapPairs, update);
     if (generatedSwap === undefined) return false;
     let newSwaps = swapRef.current;
     if (newSwaps === undefined) {

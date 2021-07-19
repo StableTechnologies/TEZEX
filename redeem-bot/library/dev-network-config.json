@@ -1,8 +1,7 @@
 {
   "tezex": {
     "server": "https://tezex-server.onrender.com",
-    "route1": "/client/status",
-    "route2": "/client/status/tezos"
+    "route": "/bot/ping"
   },
   "swapConstants": {
     "refundPeriod": 7200,
@@ -26,7 +25,7 @@
     }
   },
   "ethereum": {
-    "RPC": "https://0a5b8853bfdc41fd954aea3d0ba6b327.goerli.rpc.rivet.cloud/",
+    "RPC": "https://goerli.infura.io/v3/580bfda0a4b746ed84501d247802ee25",
     "chain": "goerli"
   },
   "pairs": {
@@ -911,94 +910,6 @@
         },
         "feePad": 1.5,
         "minTradeVolume": 0.03
-      }
-    },
-    "ethtz/usdtz": {
-      "usdtz": {
-        "decimals": 6,
-        "symbol": "USDtz",
-        "network": "pureTezos",
-        "tokenContract": {
-          "address": "KT1TDkzGHBFAS9NiGLWpcB8BhBULXpvbfzPt",
-          "mapID": 45261
-        },
-        "swapContract": {
-          "address": "KT19Kk89jBmSwF8nMSkuxtorZLH1WDSHUSo8",
-          "mapID": 45498
-        },
-        "feePad": 1.5,
-        "minTradeVolume": 50
-      },
-      "ethtz": {
-        "decimals": 18,
-        "symbol": "ETHtz",
-        "network": "pureTezos",
-        "tokenContract": {
-          "address": "KT1NbLrkSiofxD1BtxGJ5ppPjghAGrbZzGfc",
-          "mapID": 45260
-        },
-        "swapContract": {
-          "address": "KT19Kk89jBmSwF8nMSkuxtorZLH1WDSHUSo8",
-          "mapID": 45498
-        },
-        "feePad": 1.5,
-        "minTradeVolume": 0.03
-      }
-    },
-    "xtz/usdtz": {
-      "xtz": {
-        "decimals": 6,
-        "symbol": "XTZ",
-        "feePad": 1.5,
-        "minTradeVolume": 5,
-        "network": "pureTezos",
-        "swapContract": {
-          "address": "KT19Kk89jBmSwF8nMSkuxtorZLH1WDSHUSo8",
-          "mapID": 45498
-        }
-      },
-      "usdtz": {
-        "decimals": 6,
-        "symbol": "USDtz",
-        "network": "pureTezos",
-        "tokenContract": {
-          "address": "KT1TDkzGHBFAS9NiGLWpcB8BhBULXpvbfzPt",
-          "mapID": 45261
-        },
-        "swapContract": {
-          "address": "KT19Kk89jBmSwF8nMSkuxtorZLH1WDSHUSo8",
-          "mapID": 45498
-        },
-        "feePad": 1.5,
-        "minTradeVolume": 50
-      }
-    },
-    "xtz/ethtz": {
-      "ethtz": {
-        "decimals": 18,
-        "symbol": "ETHtz",
-        "network": "pureTezos",
-        "tokenContract": {
-          "address": "KT1NbLrkSiofxD1BtxGJ5ppPjghAGrbZzGfc",
-          "mapID": 45260
-        },
-        "swapContract": {
-          "address": "KT19Kk89jBmSwF8nMSkuxtorZLH1WDSHUSo8",
-          "mapID": 45498
-        },
-        "feePad": 1.5,
-        "minTradeVolume": 0.03
-      },
-      "xtz": {
-        "decimals": 6,
-        "symbol": "XTZ",
-        "feePad": 1.5,
-        "minTradeVolume": 5,
-        "network": "pureTezos",
-        "swapContract": {
-          "address": "KT19Kk89jBmSwF8nMSkuxtorZLH1WDSHUSo8",
-          "mapID": 45498
-        }
       }
     }
   }

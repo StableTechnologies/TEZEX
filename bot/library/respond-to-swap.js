@@ -6,9 +6,29 @@ const waitCompletion = async (new_swap, counterNetwork, counterAsset, bot) => {
       bot.swapPairs[new_swap.pair][new_swap.asset].swapContract,
       new_swap.hashedSecret
     );
+    // check if the counter swap has already been refunded or redeemed
+    const swpCounter = await bot.clients[counterNetwork].getSwap(
+      bot.swapPairs[new_swap.pair][counterAsset].swapContract,
+      new_swap.hashedSecret
+    );
+    if (
+      (counterNetwork === "ethereum" &&
+        swpCounter.initiator_tez_addr === "" &&
+        swpCounter.refundTimestamp === "0") ||
+      (counterNetwork === "tezos" && swpCounter === undefined)
+    ) {
+      console.log(
+        `COUNTER SWAP IS ALREADY REDEEMED OR REFUNDED ${bot.swapPairs[new_swap.pair][counterAsset].symbol
+        } SWAP : ${new_swap.hashedSecret}\n`
+      );
+      bot.logger.warn("counter swap already redeemed or refunded", { swap: new_swap });
+      new_swap.state = STATE.DONE;
+      await bot.updateSwap(new_swap);
+      return STATE.DONE;
+    }
+    // else try to redeem it
     console.log(
-      `WAITING TO COMPLETE ${
-        bot.swapPairs[new_swap.pair][counterAsset].symbol
+      `WAITING TO COMPLETE ${bot.swapPairs[new_swap.pair][counterAsset].symbol
       } SWAP : ${new_swap.hashedSecret}\n`
     );
     bot.logger.warn("swap redeem check", { swap: new_swap });
@@ -20,8 +40,7 @@ const waitCompletion = async (new_swap, counterNetwork, counterAsset, bot) => {
     ) {
       if (Math.trunc(Date.now() / 1000) >= new_swap.refundTime) {
         console.log(
-          `REFUNDING ${
-            bot.swapPairs[new_swap.pair][new_swap.asset].symbol
+          `REFUNDING ${bot.swapPairs[new_swap.pair][new_swap.asset].symbol
           } SWAP : ${new_swap.hashedSecret}\n`
         );
         bot.logger.warn("refunding swap", { swap: new_swap });
@@ -35,8 +54,7 @@ const waitCompletion = async (new_swap, counterNetwork, counterAsset, bot) => {
           return STATE.REFUNDED;
         } catch (err) {
           console.error(
-            `FAILED TO REFUND ${
-              bot.swapPairs[new_swap.pair][counterAsset].symbol
+            `FAILED TO REFUND ${bot.swapPairs[new_swap.pair][counterAsset].symbol
             } SWAP : ${new_swap.hashedSecret}\n` + err
           );
           bot.logger.error(
@@ -51,8 +69,7 @@ const waitCompletion = async (new_swap, counterNetwork, counterAsset, bot) => {
       return STATE.RESPONSE_FOUND;
     }
     console.log(
-      `\nCOMPLETING ${
-        bot.swapPairs[new_swap.pair][counterAsset].symbol
+      `\nCOMPLETING ${bot.swapPairs[new_swap.pair][counterAsset].symbol
       } SWAP : ${new_swap.hashedSecret}\n`
     );
     bot.logger.warn("redeeming swap", { swap: new_swap });
@@ -60,6 +77,14 @@ const waitCompletion = async (new_swap, counterNetwork, counterAsset, bot) => {
       bot.swapPairs[new_swap.pair][new_swap.asset].swapContract,
       new_swap.hashedSecret
     );
+    if (secret === undefined) {
+      console.error(
+        `FAILED TO REDEEM ${bot.swapPairs[new_swap.pair][counterAsset].symbol
+        } SWAP : ${new_swap.hashedSecret} | No secret found`
+      );
+      bot.logger.error(`swap redeem check error, no secret found: ${new_swap.hashedSecret}`);
+      return STATE.RESPONSE_FOUND; // keep retrying to redeem
+    }
     await bot.clients[counterNetwork].redeem(
       bot.swapPairs[new_swap.pair][counterAsset].swapContract,
       new_swap.hashedSecret,
@@ -68,16 +93,14 @@ const waitCompletion = async (new_swap, counterNetwork, counterAsset, bot) => {
     new_swap.state = STATE.DONE;
     await bot.updateSwap(new_swap);
     console.log(
-      `\nCOMPLETED ${
-        bot.swapPairs[new_swap.pair][counterAsset].symbol
+      `\nCOMPLETED ${bot.swapPairs[new_swap.pair][counterAsset].symbol
       } SWAP : ${new_swap.hashedSecret}\n`
     );
     bot.logger.warn("redeemed swap", { swap: new_swap });
     return STATE.DONE;
   } catch (err) {
     console.error(
-      `FAILED TO REDEEM ${
-        bot.swapPairs[new_swap.pair][counterAsset].symbol
+      `FAILED TO REDEEM ${bot.swapPairs[new_swap.pair][counterAsset].symbol
       } SWAP : ${new_swap.hashedSecret}\n` + err
     );
     bot.logger.error(`swap redeem check error: ${new_swap.hashedSecret}`, err);
@@ -100,8 +123,7 @@ module.exports = async (new_swap, counterNetwork, counterAsset, bot, state) => {
       case STATE.START: {
         try {
           console.log(
-            `RESPONDING TO ${
-              bot.swapPairs[new_swap.pair][counterAsset].symbol
+            `RESPONDING TO ${bot.swapPairs[new_swap.pair][counterAsset].symbol
             }: ${new_swap.hashedSecret}`
           );
           bot.logger.warn("responding to swap", { swap: new_swap });
@@ -125,15 +147,13 @@ module.exports = async (new_swap, counterNetwork, counterAsset, bot, state) => {
           await bot.updateSwap(new_swap);
           state = STATE.INITIATED;
           console.log(
-            `\nSWAP GENERATED ${
-              bot.swapPairs[new_swap.pair][new_swap.asset].symbol
+            `\nSWAP GENERATED ${bot.swapPairs[new_swap.pair][new_swap.asset].symbol
             }| HASH: ${new_swap.hashedSecret}`
           );
           bot.logger.warn("swap generated", { swap: new_swap });
         } catch (err) {
           console.error(
-            `FAILED TO INITIATE ${
-              bot.swapPairs[new_swap.pair][new_swap.asset].symbol
+            `FAILED TO INITIATE ${bot.swapPairs[new_swap.pair][new_swap.asset].symbol
             } SWAP : ${new_swap.hashedSecret}\n` + err
           );
           bot.logger.error(
@@ -182,8 +202,7 @@ const waitResponse = async (new_swap, counterNetwork, counterAsset, bot) => {
   try {
     if (Math.trunc(Date.now() / 1000) >= new_swap.refundTime) {
       console.log(
-        `REFUNDING ${
-          bot.swapPairs[new_swap.pair][new_swap.asset].symbol
+        `REFUNDING ${bot.swapPairs[new_swap.pair][new_swap.asset].symbol
         } SWAP : ${new_swap.hashedSecret}\n`
       );
       bot.logger.warn("refunding swap", { swap: new_swap });
@@ -217,8 +236,7 @@ const waitResponse = async (new_swap, counterNetwork, counterAsset, bot) => {
     return STATE.RESPONSE_FOUND;
   } catch (err) {
     console.error(
-      `FAILED TO ADD COUNTER-PARTY TO ${
-        bot.swapPairs[new_swap.pair][new_swap.asset].symbol
+      `FAILED TO ADD COUNTER-PARTY TO ${bot.swapPairs[new_swap.pair][new_swap.asset].symbol
       } SWAP : ${new_swap.hashedSecret}\n` + err
     );
     bot.logger.error(

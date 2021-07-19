@@ -58,23 +58,24 @@ app.post("/bot/ping", async (req, res) => {
 app.get("/client/status", (req, res, next) => {
   try {
     const botData = Object.values(bots);
-    let max = {},
-      total = {},
-      count = 0;
+    let max = undefined,
+      total = undefined, count = 0;
     const currentTime = new Date().getTime();
     const pairs = Object.keys(swapPairsCrossChain);
     botData.forEach((data) => {
       if (data.lastSeen + maxInactiveTime <= currentTime) {
         return;
       }
-      count++;
-      if (count === 1) {
-        const temp = deepCopy(data.allowances);
+      if (max === undefined || total === undefined) {
+        const temp = deepCopy(data.allowances, pairs);
         max = temp.max;
         total = temp.total;
         return;
       }
+      count++;
       for (const pair of pairs) {
+        if (!Object.prototype.hasOwnProperty.call(data.allowances, pair))
+          continue;
         const assets = pair.split("/");
         if (max[pair][assets[0]].lt(data.allowances[pair][assets[0]]))
           max[pair][assets[0]] = data.allowances[pair][assets[0]];
@@ -88,13 +89,16 @@ app.get("/client/status", (req, res, next) => {
         );
       }
     });
-    if (count === 0) {
+    if (max === undefined || total === undefined) {
+      max = {}; total = {};
       for (const pair of pairs) {
         max[pair] = {};
         const assets = pair.split("/");
         max[pair] = { [assets[0]]: "0", [assets[1]]: "0" };
         total[pair] = { [assets[0]]: "0", [assets[1]]: "0" };
       }
+    } else {
+      count++;
     }
     res.status(200).send(
       JSON.stringify({
@@ -147,23 +151,24 @@ app.post("/bot/ping/tezos", async (req, res) => {
 app.get("/client/status/tezos", (req, res, next) => {
   try {
     const botData = Object.values(bots);
-    let max = {},
-      total = {},
-      count = 0;
+    let max = undefined,
+      total = undefined, count = 0;
     const currentTime = new Date().getTime();
     const pairs = Object.keys(swapPairsTezos);
     botData.forEach((data) => {
       if (data.lastSeen + maxInactiveTime <= currentTime) {
         return;
       }
-      count++;
-      if (count === 1) {
-        const temp = deepCopy(data.allowances);
+      if (max === undefined || total === undefined) {
+        const temp = deepCopy(data.allowances, pairs);
         max = temp.max;
         total = temp.total;
         return;
       }
+      count++;
       for (const pair of pairs) {
+        if (!Object.prototype.hasOwnProperty.call(data.allowances, pair))
+          continue;
         const assets = pair.split("/");
         if (max[pair][assets[0]].lt(data.allowances[pair][assets[0]]))
           max[pair][assets[0]] = data.allowances[pair][assets[0]];
@@ -177,13 +182,16 @@ app.get("/client/status/tezos", (req, res, next) => {
         );
       }
     });
-    if (count === 0) {
+    if (max === undefined || total === undefined) {
+      max = {}; total = {};
       for (const pair of pairs) {
         max[pair] = {};
         const assets = pair.split("/");
         max[pair] = { [assets[0]]: "0", [assets[1]]: "0" };
         total[pair] = { [assets[0]]: "0", [assets[1]]: "0" };
       }
+    } else {
+      count++;
     }
     res.status(200).send(
       JSON.stringify({
@@ -203,8 +211,7 @@ init().then((data) => {
   swapPairsTezos = data.swapPairsTezos;
   app.listen(port, () => {
     console.log(
-      `Tezex Server listening on port ${port}! for ${
-        process.env.SERVER_ENV || "prod"
+      `Tezex Server listening on port ${port}! for ${process.env.SERVER_ENV || "prod"
       }`
     );
   });
