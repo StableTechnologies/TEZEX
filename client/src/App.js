@@ -25,7 +25,7 @@ import requestPureSwap from "./library/request-pure-swap";
 import requestSwap from "./library/request-swap";
 
 const App = () => {
-  const [clients, setClients] = useState({ethereum: null, tezos: null});
+  const [clients, setClients] = useState({ethereum: null, tezos: null, pureTezos: null});
   const [swapPairs, setSwapPairs] = useState(undefined);
   const [swaps, updateSwaps] = useState(undefined);
   const [balance, balUpdate] = useState(undefined);

@@ -71,7 +71,6 @@ export const connectTezAccount = async () => {
 
   const mutex = new Mutex()
   const clients = {
-    ethereum: new Ethereum(web3, ethAccount),
     tezos: new Tezos(
       client,
       tezAccount,
