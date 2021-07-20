@@ -56,19 +56,18 @@ const SwapProgress = (props) => {
     });
   };
 
-
   let notify;
-
-  const handleClose = () => {
-    clearTimeout(notify);
-    onClose();
-  }
 
   useEffect(() => {
     if(activeStep === 3) {
       notify = setTimeout(async () => { await completed(); }, 6000);
     }
   }, [activeStep]);
+
+const handleClose = () => {
+  clearTimeout(notify);
+  onClose();
+}
 
   useEffect(() => {
       if(swaps) {

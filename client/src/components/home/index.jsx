@@ -108,7 +108,8 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
   }, [currentSwap1, clients]);
 
   let counterAsset, swapReturn, swapFee, minExpectedReturn, networkFees, minReceived, bal;
-  if((currentSwap1 && inputTokenAmount) && (clients["ethereum"] && clients["tezos"])) {
+
+  if((currentSwap1 && inputTokenAmount) && (clients["ethereum"] && clients["tezos"] )) {
     try {
       counterAsset = getCounterPair(currentSwap1.pair, currentSwap1.asset);
       swapReturn = new BigNumber(
@@ -128,15 +129,31 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
       )
         .div(10 ** swapPairs[currentSwap1.pair][counterAsset].decimals)
         .toFixed(6);
-      minExpectedReturn = swapStat.assetConverter[counterAsset](
-        swapReturn
-      ).minus(swapStat.networkFees[counterAsset]);
+
+        minExpectedReturn = swapStat.assetConverter[counterAsset](
+          swapReturn
+        ).minus(swapStat.networkFees[counterAsset]);
+
+      if (swapPairs[currentSwap1.pair][currentSwap1.asset].network === "pureTezos"){
+        minExpectedReturn = swapStat.assetConverter[counterAsset](
+          swapReturn
+          );
+        minReceived = minExpectedReturn
+        .div(10 ** swapPairs[currentSwap1.pair][counterAsset].decimals)
+        .toFixed(6);
+        bal = swapStat.balances[currentSwap1.asset]
+        .div(10 ** swapPairs[currentSwap1.pair][currentSwap1.asset].decimals)
+        .toFixed(6);
+      }
+
       networkFees = swapStat.networkFees[counterAsset]
-        .div(10 ** swapPairs[currentSwap1.pair][counterAsset].decimals)
-        .toFixed(6)
+      .div(10 ** swapPairs[currentSwap1.pair][counterAsset].decimals)
+      .toFixed(6)
+
       minReceived = minExpectedReturn
-        .div(10 ** swapPairs[currentSwap1.pair][counterAsset].decimals)
-        .toFixed(6)
+      .div(10 ** swapPairs[currentSwap1.pair][counterAsset].decimals)
+      .toFixed(6);
+
       bal = swapStat.balances[currentSwap1.asset]
         .div(10 ** swapPairs[currentSwap1.pair][currentSwap1.asset].decimals)
         .toFixed(6)
@@ -154,9 +171,7 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
           .toString(),
         minValue: minExpectedReturn.toString(),
       };
-      // setLoader("...Creating Swap...");
       const res = await genSwap(swap);
-      // setLoader("");
       if (!res) {
         alert("Error: Swap Couldn't be created");
       } else {
@@ -164,11 +179,10 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
       }
     };
 
-    const startSwap = () => {
-      openSwapProgress();
-      generateSwap();
+    const  startSwap = () => {
+      generateSwap()
+      openSwapProgress()
     }
-
 
 
   const openInputTokenModal = () => { setInputTokenModalOpen(true); }
