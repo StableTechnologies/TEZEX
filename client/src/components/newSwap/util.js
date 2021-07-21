@@ -26,12 +26,15 @@ const getBalance = async (clients, swapPairs, pair) => {
  * Returns tx fees and reward in bps
  */
 const getBotFees = async (clients, swapContract, network) => {
-  const data = await Promise.all([
+  let ops = [
     clients["tezos"].getFees(),
     clients[network].getReward(swapContract),
-    clients["ethereum"].web3.eth.getGasPrice(),
-  ]);
-  const ethereumGasPrice = new BigNumber(data[2]);
+  ];
+  if (network !== "pureTezos") {
+    ops.push(clients["ethereum"].web3.eth.getGasPrice());
+  }
+  const data = await Promise.all(ops);
+  const ethereumGasPrice = network !== "pureTezos" ? new BigNumber(data[2]) : new BigNumber(0);
   return {
     txFees: data[0],
     ethereumGasPrice,
@@ -117,120 +120,120 @@ const getPureSwapFee = ({ txFees, ethereumGasPrice }, swapPairs, pair) => {
 const getConverter = async (clients, pair) => {
   try {
 
-  const [eth_usd, xtz_usd] = await Promise.all([
-    clients["tezos"].getPrice("ETH-USD"),
-    clients["tezos"].getPrice("XTZ-USD"),
-  ]);
-  const feeConverter = {
-    usdc: ({ eth, xtz }) =>
-      new BigNumber(
-        eth
-          .div(10 ** 18)
-          .multipliedBy(new BigNumber(eth_usd))
-          .plus(xtz.div(10 ** 6).multipliedBy(new BigNumber(xtz_usd)))
-          .toFixed(0, 2)
-      ),
-    usdtz: ({ eth, xtz }) =>
-      new BigNumber(
-        eth
-          .div(10 ** 18)
-          .multipliedBy(new BigNumber(eth_usd))
-          .plus(xtz.div(10 ** 6).multipliedBy(new BigNumber(xtz_usd)))
-          .toFixed(0, 2)
-      ),
-    ethtz: ({ eth, xtz }) =>
-      new BigNumber(
-        eth
-          .plus(
-            xtz
+    const [eth_usd, xtz_usd] = await Promise.all([
+      clients["tezos"].getPrice("ETH-USD"),
+      clients["tezos"].getPrice("XTZ-USD"),
+    ]);
+    const feeConverter = {
+      usdc: ({ eth, xtz }) =>
+        new BigNumber(
+          eth
+            .div(10 ** 18)
+            .multipliedBy(new BigNumber(eth_usd))
+            .plus(xtz.div(10 ** 6).multipliedBy(new BigNumber(xtz_usd)))
+            .toFixed(0, 2)
+        ),
+      usdtz: ({ eth, xtz }) =>
+        new BigNumber(
+          eth
+            .div(10 ** 18)
+            .multipliedBy(new BigNumber(eth_usd))
+            .plus(xtz.div(10 ** 6).multipliedBy(new BigNumber(xtz_usd)))
+            .toFixed(0, 2)
+        ),
+      ethtz: ({ eth, xtz }) =>
+        new BigNumber(
+          eth
+            .plus(
+              xtz
+                .div(10 ** 6)
+                .multipliedBy(new BigNumber(xtz_usd))
+                .div(new BigNumber(eth_usd))
+                .multipliedBy(10 ** 18)
+            )
+            .toFixed(0, 2)
+        ),
+      eth: ({ eth, xtz }) =>
+        new BigNumber(
+          eth
+            .plus(
+              xtz
+                .div(10 ** 6)
+                .multipliedBy(new BigNumber(xtz_usd))
+                .div(new BigNumber(eth_usd))
+                .multipliedBy(10 ** 18)
+            )
+            .toFixed(0, 2)
+        ),
+    };
+    const assetConverter = {
+      "usdc/usdtz": {
+        usdc: (amt) => amt,
+        usdtz: (amt) => amt,
+      },
+      "eth/ethtz": {
+        eth: (amt) => amt,
+        ethtz: (amt) => amt,
+      },
+      "xtz/usdtz": {
+        xtz: (amt) =>
+          new BigNumber(
+            amt
+              .multipliedBy(10 ** 6)
+              .div(new BigNumber(xtz_usd))
+              .toFixed(0, 2)
+          ),
+        usdtz: (amt) =>
+          new BigNumber(
+            amt
+              .div(10 ** 6)
+              .multipliedBy(new BigNumber(xtz_usd))
+              .toFixed(0, 2)
+          ),
+      },
+      "xtz/ethtz": {
+        xtz: (amt) =>
+          new BigNumber(
+            amt
+              .div(10 ** 18)
+              .multipliedBy(new BigNumber(eth_usd))
+              .div(new BigNumber(xtz_usd))
+              .multipliedBy(10 ** 6)
+              .toFixed(0, 2)
+          ),
+        ethtz: (amt) =>
+          new BigNumber(
+            amt
               .div(10 ** 6)
               .multipliedBy(new BigNumber(xtz_usd))
               .div(new BigNumber(eth_usd))
               .multipliedBy(10 ** 18)
-          )
-          .toFixed(0, 2)
-      ),
-    eth: ({ eth, xtz }) =>
-      new BigNumber(
-        eth
-          .plus(
-            xtz
-              .div(10 ** 6)
-              .multipliedBy(new BigNumber(xtz_usd))
-              .div(new BigNumber(eth_usd))
+              .toFixed(0, 2)
+          ),
+      },
+      "ethtz/usdtz": {
+        ethtz: (amt) =>
+          new BigNumber(
+            amt
               .multipliedBy(10 ** 18)
-          )
-          .toFixed(0, 2)
-      ),
-  };
-  const assetConverter = {
-    "usdc/usdtz": {
-      usdc: (amt) => amt,
-      usdtz: (amt) => amt,
-    },
-    "eth/ethtz": {
-      eth: (amt) => amt,
-      ethtz: (amt) => amt,
-    },
-    "xtz/usdtz": {
-      xtz: (amt) =>
-        new BigNumber(
-          amt
-            .multipliedBy(10 ** 6)
-            .div(new BigNumber(xtz_usd))
-            .toFixed(0, 2)
-        ),
-      usdtz: (amt) =>
-        new BigNumber(
-          amt
-            .div(10 ** 6)
-            .multipliedBy(new BigNumber(xtz_usd))
-            .toFixed(0, 2)
-        ),
-    },
-    "xtz/ethtz": {
-      xtz: (amt) =>
-        new BigNumber(
-          amt
-            .div(10 ** 18)
-            .multipliedBy(new BigNumber(eth_usd))
-            .div(new BigNumber(xtz_usd))
-            .multipliedBy(10 ** 6)
-            .toFixed(0, 2)
-        ),
-      ethtz: (amt) =>
-        new BigNumber(
-          amt
-            .div(10 ** 6)
-            .multipliedBy(new BigNumber(xtz_usd))
-            .div(new BigNumber(eth_usd))
-            .multipliedBy(10 ** 18)
-            .toFixed(0, 2)
-        ),
-    },
-    "ethtz/usdtz": {
-      ethtz: (amt) =>
-        new BigNumber(
-          amt
-            .multipliedBy(10 ** 18)
-            .div(new BigNumber(eth_usd))
-            .toFixed(0, 2)
-        ),
-      usdtz: (amt) =>
-        new BigNumber(
-          amt
-            .div(10 ** 18)
-            .multipliedBy(new BigNumber(eth_usd))
-            .toFixed(0, 2)
-        ),
-    },
-  };
-  return {
-    feeConverter,
-    assetConverter: assetConverter[pair],
-  };
+              .div(new BigNumber(eth_usd))
+              .toFixed(0, 2)
+          ),
+        usdtz: (amt) =>
+          new BigNumber(
+            amt
+              .div(10 ** 18)
+              .multipliedBy(new BigNumber(eth_usd))
+              .toFixed(0, 2)
+          ),
+      },
+    };
+    return {
+      feeConverter,
+      assetConverter: assetConverter[pair],
+    };
   } catch (e) {
-      console.log(e);
+    console.log(e);
   }
 };
 
