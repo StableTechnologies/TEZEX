@@ -103,8 +103,8 @@ module.exports = class Tezos {
       allowances === undefined
         ? []
         : allowances.filter(
-            (allow) => allow.args[0].string === swapContract.address
-          );
+          (allow) => allow.args[0].string === swapContract.address
+        );
     return allowance.length === 0 ? "0" : allowance[0].args[1].int;
   }
 
@@ -219,6 +219,27 @@ module.exports = class Tezos {
         amtInMuTez: 0,
         entrypoint: "refund",
         parameters: `${swapHash}`,
+      },
+    ]);
+    if (res.status !== "applied") {
+      throw new Error("TEZOS TX FAILED");
+    }
+    return res;
+  }
+
+  /**
+ * Add Swap Pairs (only admin)
+ *
+ * @param swapContract tezos swap contract details {address:string, mapID:nat}
+ * @param assets asset dict from config
+ */
+  async addPairs(swapContract, assets) {
+    const res = await this.interact([
+      {
+        to: swapContract.address,
+        amtInMuTez: 0,
+        entrypoint: "addSwapPair",
+        parameters: `{ Elt "ethtz/usdtz" { Elt "ethtz" (Pair "${assets["ethtz"].tokenContract.address}" (Pair "usdtz" 18)); Elt "usdtz" (Pair "${assets["usdtz"].tokenContract.address}" (Pair "ethtz" 6))}; Elt "xtz/ethtz" {Elt "ethtz" (Pair "${assets["ethtz"].tokenContract.address}" (Pair "xtz" 18)); Elt "xtz" (Pair "${swapContract.address}" (Pair "ethtz" 6))}; Elt "xtz/usdtz" {Elt "usdtz" (Pair "${assets["usdtz"].tokenContract.address}" (Pair "xtz" 6)); Elt "xtz" (Pair "${swapContract.address}" (Pair "usdtz" 6))}}`,
       },
     ]);
     if (res.status !== "applied") {
