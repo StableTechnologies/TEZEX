@@ -44,9 +44,9 @@ const getStepContent = (step) => {
 const SwapProgress = (props) => {
   const classes = useStyles();
 
-  const [activeStep, setActiveStep] = useState();
+  const [activeStep, setActiveStep] = useState(3);
   const [refundTime, setRefundTime] = useState(0);
-  const { open, onClose, swaps, completed} = props;
+  const { open, onClose, swaps, completed, notCompleted} = props;
   const steps = getSteps();
 
   const handleStepChange = (step) => {
@@ -59,11 +59,19 @@ const SwapProgress = (props) => {
   let notify;
 
   useEffect(() => {
+    setActiveStep('');
+    if(activeStep === 0) {
+    setActiveStep('');
+      notify = setTimeout(async () => { await notCompleted(); }, 3000);
+    }
     if(activeStep === 3) {
-      notify = setTimeout(async () => { await completed(); }, 6000);
+      notify = setTimeout(async () => { await completed(); console.log('no');
+    }, 3000);
+
     }
   }, [activeStep]);
 
+console.log(activeStep, 'activeStep');
 const handleClose = () => {
   clearTimeout(notify);
   onClose();

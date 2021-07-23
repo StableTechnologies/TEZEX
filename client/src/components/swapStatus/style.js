@@ -4,6 +4,7 @@ export const useStyles = makeStyles((theme) => ({
   root: {
     "& .MuiDialog-paper": {
       textAlign: "center",
+      borderRadius: "24px",
     },
   },
 

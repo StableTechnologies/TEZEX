@@ -4,7 +4,6 @@ import {useStyles} from "./style";
 import Dialog from "@material-ui/core/Dialog";
 import DialogTitle from "@material-ui/core/DialogTitle";
 import DialogContent from '@material-ui/core/DialogContent';
-import DialogContentText from '@material-ui/core/DialogContentText';
 import Typography from "@material-ui/core/Typography";
 
 import complete from '../../assets/complete.gif';
@@ -12,7 +11,8 @@ import complete from '../../assets/complete.gif';
 const SwapStatus = (props) => {
   const classes = useStyles();
 
-  const { open, onClose } = props;
+  const { open, onClose, swaps } = props;
+  console.log(swaps, 'swaps@swapStatus');
   return (
     <Dialog onClose={onClose} aria-labelledby="simple-dialog-title" open={open} className={classes.root}>
       <DialogTitle id="simple-dialog-title" onClose={onClose}>

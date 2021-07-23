@@ -17,6 +17,7 @@ import Loader from "../loader";
 import Paper from '@material-ui/core/Paper';
 import SwapProgress from '../swapProgress';
 import SwapStatus from '../swapStatus';
+import SwapError from '../swapError';
 import TextField from '@material-ui/core/TextField';
 import { TezexContext } from '../context/TezexContext';
 import TokenSelectionDialog from '../dialog';
@@ -42,6 +43,7 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
   const [errModalOpen, setErrModalOpen] = useState(false);
   const [swapProgress, setSwapProgress] = useState(false);
   const [swapStatus, setSwapStatus] = useState(false);
+  const [swapError, setSwapError] = useState(false);
   const [currentSwap, setCurrentSwap] = useState(false);
 
   const [inputToken, setInputToken] = useState(tokens[4]);
@@ -180,13 +182,21 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
     };
     const res = await genSwap(swap);
     if (!res) {
-      alert("Error: Swap Couldn't be created");
-    } else {
-      history.push("/");
+      // alert("Error: Swap Couldn't be created");
+      setSwapProgress(false)
+      setSwapError(true)
     }
+    // else {
+    //   history.push("/");
+    // }
   };
 
   const startSwap = () => {
+    generateSwap()
+    openSwapProgress()
+  }
+  const tryAgain = () => {
+    setSwapError(false)
     generateSwap()
     openSwapProgress()
   }
@@ -211,6 +221,14 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
     setInputTokenAmount("");
     setOutputTokenAmount("");
     setOutputToken("");
+  }
+  const openSwapError = () => {
+    setSwapError(true);
+    setCurrentSwap(false);
+    setSwapProgress(false);
+  }
+  const closeSwapError = () => {
+    setSwapError(false)
   }
 
   const setToken = (value, side) => {
@@ -464,8 +482,9 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
                                       (
                                         <>
                                           <Button size="large" className={classes.connectwalletbutton + " Element"} onClick={startSwap} >swap tokens</Button>
-                                          <SwapProgress swaps={swaps} open={swapProgress} onClose={minimize} completed={openSwapStatus} />
+                                          <SwapProgress swaps={swaps} open={swapProgress} onClose={minimize} completed={openSwapStatus} notCompleted={openSwapError} />
                                           <SwapStatus swaps={swaps} open={swapStatus} onClose={closeSwapStatus} />
+                                          <SwapError open={swapError} onClose={closeSwapError} onClick={tryAgain} />
                                         </>
                                       ) :
                                       (
