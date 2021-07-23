@@ -923,8 +923,8 @@
           "mapID": 45261
         },
         "swapContract": {
-          "address": "KT19Kk89jBmSwF8nMSkuxtorZLH1WDSHUSo8",
-          "mapID": 45498
+          "address": "KT1JDRXuCcQWAeNA8UAV9NsY8ALJTajcPupT",
+          "mapID": 97599
         },
         "feePad": 1.5,
         "minTradeVolume": 50
@@ -938,8 +938,8 @@
           "mapID": 45260
         },
         "swapContract": {
-          "address": "KT19Kk89jBmSwF8nMSkuxtorZLH1WDSHUSo8",
-          "mapID": 45498
+          "address": "KT1JDRXuCcQWAeNA8UAV9NsY8ALJTajcPupT",
+          "mapID": 97599
         },
         "feePad": 1.5,
         "minTradeVolume": 0.03
@@ -953,8 +953,8 @@
         "minTradeVolume": 5,
         "network": "pureTezos",
         "swapContract": {
-          "address": "KT19Kk89jBmSwF8nMSkuxtorZLH1WDSHUSo8",
-          "mapID": 45498
+          "address": "KT1JDRXuCcQWAeNA8UAV9NsY8ALJTajcPupT",
+          "mapID": 97599
         }
       },
       "usdtz": {
@@ -966,8 +966,8 @@
           "mapID": 45261
         },
         "swapContract": {
-          "address": "KT19Kk89jBmSwF8nMSkuxtorZLH1WDSHUSo8",
-          "mapID": 45498
+          "address": "KT1JDRXuCcQWAeNA8UAV9NsY8ALJTajcPupT",
+          "mapID": 97599
         },
         "feePad": 1.5,
         "minTradeVolume": 50
@@ -983,8 +983,8 @@
           "mapID": 45260
         },
         "swapContract": {
-          "address": "KT19Kk89jBmSwF8nMSkuxtorZLH1WDSHUSo8",
-          "mapID": 45498
+          "address": "KT1JDRXuCcQWAeNA8UAV9NsY8ALJTajcPupT",
+          "mapID": 97599
         },
         "feePad": 1.5,
         "minTradeVolume": 0.03
@@ -996,8 +996,8 @@
         "minTradeVolume": 5,
         "network": "pureTezos",
         "swapContract": {
-          "address": "KT19Kk89jBmSwF8nMSkuxtorZLH1WDSHUSo8",
-          "mapID": 45498
+          "address": "KT1JDRXuCcQWAeNA8UAV9NsY8ALJTajcPupT",
+          "mapID": 97599
         }
       }
     }
