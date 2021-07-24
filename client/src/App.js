@@ -101,7 +101,7 @@ const initialize = async () => {
     alert("Error initializing swap", e);
   }
 };
-
+console.log(clients, 'clients');
   const update = (hash, state, exact = undefined) => {
     let newSwap = swapRef.current;
     if (newSwap[hash] !== undefined) {
@@ -127,6 +127,7 @@ const initialize = async () => {
       generatedSwap.pair,
       generatedSwap.asset
     );
+    if(swap){console.log(swap, 'swap')}
 
     generatedSwap["value"] =
       new BigNumber(generatedSwap.value)
@@ -164,6 +165,7 @@ const initialize = async () => {
             <Route exact path="/">
               <Home
                 swaps={swaps}
+                updateSwaps={updateSwaps}
                 clients={clientRef.current}
                 swapPairs={swapPairsRef.current}
                 update={update}

@@ -53,8 +53,8 @@ function TokenSelectionDialog(props) {
   return (
     <Dialog onClose={handleClose} aria-labelledby="simple-dialog-title" open={open} className={classes.root}>
       <DialogTitle id="simple-dialog-title">
-          {(side === 'input') && ('Select Input Token')}
-          {(side === 'output') && ('Select Output Token')}
+          {(side === 'input') && ('Select Token')}
+          {(side === 'output') && ('Select Token')}
           {(side === 'wallet') && ('Connect Ethereum Wallet')}
           {(side === 'err') && ('Connecting to Wallet')}
           { closeBtn && (

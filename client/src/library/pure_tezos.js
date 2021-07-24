@@ -290,60 +290,65 @@ export default class PureTezos {
      * @return the swap details if available
      */
     async getSwap(swapContract, hashedSecret, key_hash = undefined) {
-        let packedKey = "";
-        if (key_hash === undefined) {
-            hashedSecret = hashedSecret.substring(2);
-            packedKey = TezosMessageUtils.encodeBigMapKey(
-                Buffer.from(TezosMessageUtils.writePackedData(hashedSecret, "bytes"), "hex")
+        try {
+            let packedKey = "";
+            if (key_hash === undefined) {
+                hashedSecret = hashedSecret.substring(2);
+                packedKey = TezosMessageUtils.encodeBigMapKey(
+                    Buffer.from(TezosMessageUtils.writePackedData(hashedSecret, "bytes"), "hex")
+                );
+            } else {
+                packedKey = key_hash;
+            }
+            const jsonData = await TezosNodeReader.getValueForBigMapKey(
+                this.rpc,
+                swapContract.mapID,
+                packedKey
             );
-        } else {
-            packedKey = key_hash;
-        }
-        const jsonData = await TezosNodeReader.getValueForBigMapKey(
-            this.rpc,
-            swapContract.mapID,
-            packedKey
-        );
-        if (jsonData === undefined) return jsonData;
-        return {
-            hashedSecret:
-                "0x" +
-                JSONPath({
-                    path: "$.args[2].bytes",
+            if (jsonData === undefined) return jsonData;
+            return {
+                hashedSecret:
+                    "0x" +
+                    JSONPath({
+                        path: "$.args[2].bytes",
+                        json: jsonData,
+                    })[0],
+                initiator: JSONPath({
+                    path: "$.args[0].args[2].string",
                     json: jsonData,
                 })[0],
-            initiator: JSONPath({
-                path: "$.args[0].args[2].string",
-                json: jsonData,
-            })[0],
-            pair: JSONPath({
-                path: "$.args[1].args[0].string",
-                json: jsonData,
-            })[0],
-            asset: JSONPath({
-                path: "$.args[0].args[0].args[0].string",
-                json: jsonData,
-            })[0],
-            commission: JSONPath({
-                path: "$.args[0].args[0].args[1].int",
-                json: jsonData,
-            })[0],
-            refundTimestamp: Number(
-                Math.floor(
-                    new Date(
-                        JSONPath({
-                            path: "$.args[1].args[1].string",
-                            json: jsonData,
-                        })[0]
-                    ).getTime() / 1000
-                )
-            ),
-            value: JSONPath({ path: "$.args[3].int", json: jsonData })[0],
-            expectedValue: JSONPath({
-                path: "$.args[0].args[1].int",
-                json: jsonData,
-            })[0],
-        };
+                pair: JSONPath({
+                    path: "$.args[1].args[0].string",
+                    json: jsonData,
+                })[0],
+                asset: JSONPath({
+                    path: "$.args[0].args[0].args[0].string",
+                    json: jsonData,
+                })[0],
+                commission: JSONPath({
+                    path: "$.args[0].args[0].args[1].int",
+                    json: jsonData,
+                })[0],
+                refundTimestamp: Number(
+                    Math.floor(
+                        new Date(
+                            JSONPath({
+                                path: "$.args[1].args[1].string",
+                                json: jsonData,
+                            })[0]
+                        ).getTime() / 1000
+                    )
+                ),
+                value: JSONPath({ path: "$.args[3].int", json: jsonData })[0],
+                expectedValue: JSONPath({
+                    path: "$.args[0].args[1].int",
+                    json: jsonData,
+                })[0],
+            };
+        } catch (error) {
+            console.log(error, 'error@pureTezos');
+            throw(error);
+        }
     }
 
     /**

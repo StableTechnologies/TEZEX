@@ -44,9 +44,9 @@ const getStepContent = (step) => {
 const SwapProgress = (props) => {
   const classes = useStyles();
 
-  const [activeStep, setActiveStep] = useState(3);
+  const [activeStep, setActiveStep] = useState();
   const [refundTime, setRefundTime] = useState(0);
-  const { open, onClose, swaps, completed, notCompleted} = props;
+  const { open, onClose, swaps, completed, notCompleted, } = props;
   const steps = getSteps();
 
   const handleStepChange = (step) => {
@@ -59,9 +59,7 @@ const SwapProgress = (props) => {
   let notify;
 
   useEffect(() => {
-    setActiveStep('');
     if(activeStep === 0) {
-    setActiveStep('');
       notify = setTimeout(async () => { await notCompleted(); }, 3000);
     }
     if(activeStep === 3) {
@@ -83,14 +81,14 @@ const handleClose = () => {
         handleStepChange(swaps);
       } catch (e) {}
     }
-    }, [handleStepChange, ])
+    }, [handleStepChange])
 
   return(
     <Dialog aria-labelledby="simple-dialog-title" open={open} className={classes.root}>
       <DialogTitle onClose={handleClose}>
         Swap In Progress...
         <Typography> Do not close or refresh the page. </Typography>
-        <IconButton aria-label="close" onClick={onClose} className={classes.close}>
+        <IconButton aria-label="close" onClick={handleClose} className={classes.close}>
           <img src={minimize} alt="minimize" />
         </IconButton>
       </DialogTitle>

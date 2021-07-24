@@ -89,10 +89,10 @@ const Header = ({ clients, swapPairs, balUpdate, setupEth, setupTez, }) => {
     };
 
     useEffect(() => {
-      setEthAccount(globalContext.ethereumClient.account);
       setXtzAccount(globalContext.tezosClient.account);
+      setEthAccount(globalContext.ethereumClient.account);
 
-    }, [setupEthAccount, setupXtzAccount])
+    }, [setupXtzAccount, setupEthAccount])
 
     useEffect(() => {
       if(clients && clients['ethereum']) {
@@ -108,7 +108,7 @@ const Header = ({ clients, swapPairs, balUpdate, setupEth, setupTez, }) => {
         const timer = setInterval(async () => { await updateBalance(); }, 60000);
         return () => { clearInterval(timer); };
     }, [ethAccount, xtzAccount]);
-
+console.log(ethAccount, 'ethAccount');
     return (
         <div className={classes.header}>
             <div className={classes.nav}>

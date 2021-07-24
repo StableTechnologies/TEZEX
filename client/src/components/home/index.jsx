@@ -31,7 +31,7 @@ import tzlogo from "../../assets/tzlogo.svg";
 import { useHistory } from "react-router-dom";
 import useStyles from "./style";
 
-const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }) => {
+const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupTez, genSwap }) => {
   const history = useHistory();
   const classes = useStyles();
   const globalContext = useContext(TezexContext);
@@ -59,8 +59,16 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
   const [xtzAccount, setXtzAccount] = useState('');
 
   const [currentSwap1, setCurrentSwap1] = useState(false);
-  const [pairs, setPairs] = useState([]);
   const [swapStat, setSwapStat] = useState(undefined);
+
+  const openInputTokenModal = () => { setInputTokenModalOpen(true); }
+  const openOutputTokenModal = () => { setOutputTokenModalOpen(true); }
+  const openSwapProgress = () => { setSwapProgress(true); }
+  const openWalletModal = () => { setWalletModalOpen(true); }
+  const openErrModal = () => { setErrModalOpen(true); setWalletModalOpen(false); }
+
+  const minimize = () => { setSwapProgress(false); setCurrentSwap(true); }
+  const maximize = () => { setSwapProgress(true); setCurrentSwap(false); }
 
   useEffect(() => {
     if (inputToken && outputToken) {
@@ -83,7 +91,7 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
       })
     }
   }, [inputToken, outputToken]);
-
+console.log(currentSwap1, 'currentSwap1');
   useEffect(() => {
     if (currentSwap1 === undefined) return;
 
@@ -182,34 +190,21 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
     };
     const res = await genSwap(swap);
     if (!res) {
-      // alert("Error: Swap Couldn't be created");
       setSwapProgress(false)
       setSwapError(true)
     }
-    // else {
-    //   history.push("/");
-    // }
   };
+console.log(swaps, 'swaps');
 
   const startSwap = () => {
-    generateSwap()
-    openSwapProgress()
+    generateSwap();
+    openSwapProgress();
   }
   const tryAgain = () => {
     setSwapError(false)
-    generateSwap()
-    openSwapProgress()
+    generateSwap();
+    openSwapProgress();
   }
-
-
-  const openInputTokenModal = () => { setInputTokenModalOpen(true); }
-  const openOutputTokenModal = () => { setOutputTokenModalOpen(true); }
-  const openSwapProgress = () => { setSwapProgress(true); }
-  const openWalletModal = () => { setWalletModalOpen(true); }
-  const openErrModal = () => { setErrModalOpen(true); setWalletModalOpen(false); }
-
-  const minimize = () => { setSwapProgress(false); setCurrentSwap(true); }
-  const maximize = () => { setSwapProgress(true); setCurrentSwap(false); }
 
   const openSwapStatus = () => {
     setSwapStatus(true);
@@ -219,8 +214,10 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
   const closeSwapStatus = () => {
     setSwapStatus(false)
     setInputTokenAmount("");
-    setOutputTokenAmount("");
+    setOutputTokenAmount(0.00);
     setOutputToken("");
+    setCurrentSwap1('');
+    updateSwaps(undefined);
   }
   const openSwapError = () => {
     setSwapError(true);
@@ -268,7 +265,6 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
     }
   }, [clients,])
 
-
   const setWalletType = async (value) => {
     const str = inputToken.title.toLowerCase();
     if (str.includes('tz')) {
@@ -293,6 +289,11 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
     setOutputToken(inputToken);
   }
 
+  useEffect(() => {
+    setOutputTokenAmount(minReceived)
+  }, [minReceived]);
+
+
   const refundHandler = async (swap) => {
     try {
       if (Math.trunc(Date.now() / 1000) < swap.refundTime) {
@@ -303,7 +304,6 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
         swapPairs[swap.pair][swap.asset].swapContract,
         swap.hashedSecret
       );
-      // console.log(swapPairs[swap.pair][swap.asset], 'swapPairs');
       update(swap.hashedSecret, 4);
     } catch (err) {
       console.error(err);
@@ -311,56 +311,6 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
     }
   };
 
-  // const SwapItem = (data) => {
-  //   const exp = new Date(data.refundTime * 1000);
-  //   const state = {
-  //     0: "Error in Swap",
-  //     1: "Swap Initiated",
-  //     2: "Swap Response Found",
-  //     3: "Completed",
-  //     4: "Refunded",
-  //   };
-  //   return (
-  //     <div className={classes.swap} key={data.hashedSecret}>
-  //       <p>Hash : {data.hashedSecret}</p>
-  //       <p>Value : {data.value}</p>
-  //       {data.minReturn !== "nil" && (
-  //         <p>Min Expected Return : {data.minReturn}</p>
-  //       )}
-  //       {data.exact !== "nil" && <p>Exact Return : {data.exact}</p>}
-  //       <p>Expiry Time : {exp.toLocaleString()}</p>
-  //       {data.state === 0 && (
-  //         <div className={classes.error}>
-  //           <p>{state[data.state]}</p>
-  //           <button
-  //             className={classes.errorBtn}
-  //             onClick={() => refundHandler(data)}
-  //           >
-  //             refund!
-  //           </button>
-  //         </div>
-  //       )}
-  //       {data.state !== 0 && <p>State : {state[data.state]}</p>}
-  //     </div>
-  //   );
-  // };
-  // let data = (
-  //   <div className={classes.noSwap}>
-  //     <p>
-  //       No Swaps Created Yet! Learn more about <b>TEZEX</b> and how to create
-  //       your own Atomic Swap
-  //     </p>
-  //     <button className={classes.button} onClick={() => history.push("/about")}>
-  //       Learn More
-  //     </button>
-  //     <p>or create a Swap now!</p>
-  //     <button className={classes.button} onClick={() => history.push("/swap")}>
-  //       Start New Swap
-  //     </button>
-  //   </div>
-  // );
-  // if (swaps !== undefined)
-  //   data = Object.keys(swaps).map((key) => SwapItem(swaps[key]));
 
   return (
     <Grid container justify="center" className={classes.bodycontainer}>
@@ -451,7 +401,7 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
                           type="text"
                           placeholder="0.00"
                           // onInput={(e) => setOutputTokenAmount(e.target.value.replace(/[^0-9]/, '') )}
-                          value={minReceived}
+                          value={outputTokenAmount}
                           inputProps={{ className: classes.tokenValue, pattern: "^[0-9]*[.,]?[0-9]*$", inputMode: "decimal" }}
                           InputProps={{ disableUnderline: true }}
                           disabled
@@ -482,9 +432,9 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
                                       (
                                         <>
                                           <Button size="large" className={classes.connectwalletbutton + " Element"} onClick={startSwap} >swap tokens</Button>
-                                          <SwapProgress swaps={swaps} open={swapProgress} onClose={minimize} completed={openSwapStatus} notCompleted={openSwapError} />
                                           <SwapStatus swaps={swaps} open={swapStatus} onClose={closeSwapStatus} />
                                           <SwapError open={swapError} onClose={closeSwapError} onClick={tryAgain} />
+                                          <SwapProgress swaps={swaps} open={swapProgress} onClose={minimize} completed={openSwapStatus} notCompleted={openSwapError}   />
                                         </>
                                       ) :
                                       (
