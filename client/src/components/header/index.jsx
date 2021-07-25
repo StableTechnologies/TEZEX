@@ -32,9 +32,9 @@ const Header = ({ clients, swapPairs, balUpdate, setupEth, setupTez, }) => {
     const [ethAccount, setEthAccount] = useState('');
     const [xtzAccount, setXtzAccount] = useState('');
 
-  const [currentSwap, setCurrentSwap] = useState(undefined);
-  const [swapStat, setSwapStat] = useState(undefined);
-  const [pairs, setPairs] = useState([]);
+    const [currentSwap, setCurrentSwap] = useState(undefined);
+    const [swapStat, setSwapStat] = useState(undefined);
+    const [pairs, setPairs] = useState([]);
 
     const toggleEthDrawer = (anchor, open) => (event) => {
       if (event && event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
@@ -49,20 +49,20 @@ const Header = ({ clients, swapPairs, balUpdate, setupEth, setupTez, }) => {
         setExpandTezWallet({ ...expandTezWallet, [anchor]: open })
     };
 
-  const setupEthAccount = async (e) => {
-    e.preventDefault();
-    try {
-      setupEth();
-    } catch (error) {}
-  }
-
-  const setupXtzAccount = async (e) => {
-    e.preventDefault();
-    try{
-      setupTez();
+    const setupEthAccount = async () => {
+      // e.preventDefault();
+      try {
+        setupEth();
+      } catch (error) {}
     }
-    catch(error) {}
-  };
+
+    const setupXtzAccount = async () => {
+      // e.preventDefault();
+      try{
+        setupTez();
+      }
+      catch(error) {}
+    };
 
 
     const updateBalance = async () => {
@@ -89,6 +89,7 @@ const Header = ({ clients, swapPairs, balUpdate, setupEth, setupTez, }) => {
     };
 
     useEffect(() => {
+
       setXtzAccount(globalContext.tezosClient.account);
       setEthAccount(globalContext.ethereumClient.account);
 
@@ -97,18 +98,20 @@ const Header = ({ clients, swapPairs, balUpdate, setupEth, setupTez, }) => {
     useEffect(() => {
       if(clients && clients['ethereum']) {
         globalContext.changeEthereumClient(clients.ethereum);
+        const ethcc = clients.ethereum.account;
       }
+
       if(clients && clients['tezos']) {
         globalContext.changeTezosClient(clients.tezos);
       }
-    }, [clients,])
+    }, [clients['ethereum'], clients['tezos']])
+    // }, [clients,])
 
     useEffect(() => {
         updateBalance();
         const timer = setInterval(async () => { await updateBalance(); }, 60000);
         return () => { clearInterval(timer); };
     }, [ethAccount, xtzAccount]);
-console.log(ethAccount, 'ethAccount');
     return (
         <div className={classes.header}>
             <div className={classes.nav}>

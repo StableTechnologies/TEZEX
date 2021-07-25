@@ -9,7 +9,6 @@ import Card from "@material-ui/core/Card";
 import CardActions from "@material-ui/core/CardActions";
 import CardContent from "@material-ui/core/CardContent";
 import CardHeader from '@material-ui/core/CardHeader';
-import CreateSwap from "../newSwap/index";
 import CurrentSwaps from '../currentSwaps'
 import Grid from "@material-ui/core/Grid";
 import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
@@ -22,12 +21,10 @@ import TextField from '@material-ui/core/TextField';
 import { TezexContext } from '../context/TezexContext';
 import TokenSelectionDialog from '../dialog';
 import Typography from "@material-ui/core/Typography";
-import config from "../../library/dev-network-config.json";
 import { getSwapStat } from "../newSwap/util";
 import { selectToken } from "../tokenPairs/index";
 import sidelogo from "../../assets/sidelogo.svg";
 import swapIcon from "../../assets/swapIcon.svg";
-import tzlogo from "../../assets/tzlogo.svg";
 import { useHistory } from "react-router-dom";
 import useStyles from "./style";
 
@@ -41,25 +38,27 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
 
   const [walletModalOpen, setWalletModalOpen] = useState(false);
   const [errModalOpen, setErrModalOpen] = useState(false);
+
   const [swapProgress, setSwapProgress] = useState(false);
   const [swapStatus, setSwapStatus] = useState(false);
   const [swapError, setSwapError] = useState(false);
-  const [currentSwap, setCurrentSwap] = useState(false);
+  const [currentSwapView, setCurrentSwapView] = useState(false);
 
   const [inputToken, setInputToken] = useState(tokens[4]);
   const [outputToken, setOutputToken] = useState('');
+  const [inputTokenAmount, setInputTokenAmount] = useState();
+  const [outputTokenAmount, setOutputTokenAmount] = useState();
 
   const [wallet, setWallet] = useState('');
   const [err, setErr] = useState('');
 
-  const [inputTokenAmount, setInputTokenAmount] = useState();
-  const [outputTokenAmount, setOutputTokenAmount] = useState();
 
   const [ethAccount, setEthAccount] = useState('');
   const [xtzAccount, setXtzAccount] = useState('');
 
-  const [currentSwap1, setCurrentSwap1] = useState(false);
+  const [currentSwap, setCurrentSwap] = useState(false);
   const [swapStat, setSwapStat] = useState(undefined);
+  const [ongoingSwaps, setOngoingSwaps] = useState([]);
 
   const openInputTokenModal = () => { setInputTokenModalOpen(true); }
   const openOutputTokenModal = () => { setOutputTokenModalOpen(true); }
@@ -67,8 +66,8 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
   const openWalletModal = () => { setWalletModalOpen(true); }
   const openErrModal = () => { setErrModalOpen(true); setWalletModalOpen(false); }
 
-  const minimize = () => { setSwapProgress(false); setCurrentSwap(true); }
-  const maximize = () => { setSwapProgress(true); setCurrentSwap(false); }
+  const minimize = () => { setSwapProgress(false); setCurrentSwapView(true); }
+  const maximize = () => { setSwapProgress(true); setCurrentSwapView(false); }
 
   useEffect(() => {
     if (inputToken && outputToken) {
@@ -83,30 +82,30 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
 
       pairs.map((x) => {
         if (pair === x) {
-          setCurrentSwap1({ pair: pair, asset: asset });
+          setCurrentSwap({ pair: pair, asset: asset });
         }
         if (reversePair === x) {
-          setCurrentSwap1({ pair: reversePair, asset: asset });
+          setCurrentSwap({ pair: reversePair, asset: asset });
         }
       })
     }
   }, [inputToken, outputToken]);
-console.log(currentSwap1, 'currentSwap1');
-  useEffect(() => {
-    if (currentSwap1 === undefined) return;
 
-    if (currentSwap1
+  useEffect(() => {
+    if (currentSwap === undefined) return;
+
+    if (currentSwap
       && (
-        (swapPairs[currentSwap1.pair][currentSwap1.asset].network !== "pureTezos" && clients["ethereum"])
-        || swapPairs[currentSwap1.pair][currentSwap1.asset].network === "pureTezos"
+        (swapPairs[currentSwap.pair][currentSwap.asset].network !== "pureTezos" && clients["ethereum"])
+        || swapPairs[currentSwap.pair][currentSwap.asset].network === "pureTezos"
       )
       && clients["tezos"]) {
       try {
-        getSwapStat(clients, swapPairs, currentSwap1.pair)
+        getSwapStat(clients, swapPairs, currentSwap.pair)
           .then((data) => setSwapStat(data))
 
         const timer = setInterval(async () => {
-          await getSwapStat(clients, swapPairs, currentSwap1.pair).then((data) =>
+          await getSwapStat(clients, swapPairs, currentSwap.pair).then((data) =>
             setSwapStat(data)
           );
         }, 60000);
@@ -117,22 +116,22 @@ console.log(currentSwap1, 'currentSwap1');
 
       } catch (e) { console.log(e); }
     }
-  }, [currentSwap1, clients]);
+  }, [currentSwap, clients]);
 
   let counterAsset, swapReturn, swapFee, minExpectedReturn, networkFees, minReceived, bal;
 
-  if ((currentSwap1 && inputTokenAmount)
+  if ((currentSwap && inputTokenAmount)
     && (
-      (swapPairs[currentSwap1.pair][currentSwap1.asset].network !== "pureTezos" && clients["ethereum"])
-      || swapPairs[currentSwap1.pair][currentSwap1.asset].network === "pureTezos"
+      (swapPairs[currentSwap.pair][currentSwap.asset].network !== "pureTezos" && clients["ethereum"])
+      || swapPairs[currentSwap.pair][currentSwap.asset].network === "pureTezos"
     )
     && clients["tezos"]) {
     try {
-      counterAsset = getCounterPair(currentSwap1.pair, currentSwap1.asset);
+      counterAsset = getCounterPair(currentSwap.pair, currentSwap.asset);
       swapReturn = new BigNumber(
         calcSwapReturn(
           new BigNumber(inputTokenAmount).multipliedBy(
-            10 ** swapPairs[currentSwap1.pair][currentSwap1.asset].decimals
+            10 ** swapPairs[currentSwap.pair][currentSwap.asset].decimals
           ),
           swapStat.reward
         )
@@ -140,50 +139,50 @@ console.log(currentSwap1, 'currentSwap1');
       swapFee = swapStat.assetConverter[counterAsset](
         new BigNumber(inputTokenAmount)
           .multipliedBy(
-            10 ** swapPairs[currentSwap1.pair][currentSwap1.asset].decimals
+            10 ** swapPairs[currentSwap.pair][currentSwap.asset].decimals
           )
           .minus(swapReturn)
       )
-        .div(10 ** swapPairs[currentSwap1.pair][counterAsset].decimals)
+        .div(10 ** swapPairs[currentSwap.pair][counterAsset].decimals)
         .toFixed(6);
 
       minExpectedReturn = swapStat.assetConverter[counterAsset](
         swapReturn
       ).minus(swapStat.networkFees[counterAsset]);
 
-      if (swapPairs[currentSwap1.pair][currentSwap1.asset].network === "pureTezos") {
+      if (swapPairs[currentSwap.pair][currentSwap.asset].network === "pureTezos") {
         minExpectedReturn = swapStat.assetConverter[counterAsset](
           swapReturn
         );
         minReceived = minExpectedReturn
-          .div(10 ** swapPairs[currentSwap1.pair][counterAsset].decimals)
+          .div(10 ** swapPairs[currentSwap.pair][counterAsset].decimals)
           .toFixed(6);
-        bal = swapStat.balances[currentSwap1.asset]
-          .div(10 ** swapPairs[currentSwap1.pair][currentSwap1.asset].decimals)
+        bal = swapStat.balances[currentSwap.asset]
+          .div(10 ** swapPairs[currentSwap.pair][currentSwap.asset].decimals)
           .toFixed(6);
       }
 
       networkFees = swapStat.networkFees[counterAsset]
-        .div(10 ** swapPairs[currentSwap1.pair][counterAsset].decimals)
+        .div(10 ** swapPairs[currentSwap.pair][counterAsset].decimals)
         .toFixed(6)
 
       minReceived = minExpectedReturn
-        .div(10 ** swapPairs[currentSwap1.pair][counterAsset].decimals)
+        .div(10 ** swapPairs[currentSwap.pair][counterAsset].decimals)
         .toFixed(6);
 
-      bal = swapStat.balances[currentSwap1.asset]
-        .div(10 ** swapPairs[currentSwap1.pair][currentSwap1.asset].decimals)
+      bal = swapStat.balances[currentSwap.asset]
+        .div(10 ** swapPairs[currentSwap.pair][currentSwap.asset].decimals)
         .toFixed(6)
     } catch (error) { }
   }
   const generateSwap = async () => {
     const swap = {
-      pair: currentSwap1.pair,
-      asset: currentSwap1.asset,
-      network: swapPairs[currentSwap1.pair][currentSwap1.asset].network,
+      pair: currentSwap.pair,
+      asset: currentSwap.asset,
+      network: swapPairs[currentSwap.pair][currentSwap.asset].network,
       value: new BigNumber(inputTokenAmount)
         .multipliedBy(
-          10 ** swapPairs[currentSwap1.pair][currentSwap1.asset].decimals
+          10 ** swapPairs[currentSwap.pair][currentSwap.asset].decimals
         )
         .toString(),
       minValue: minExpectedReturn.toString(),
@@ -194,11 +193,11 @@ console.log(currentSwap1, 'currentSwap1');
       setSwapError(true)
     }
   };
-console.log(swaps, 'swaps');
 
   const startSwap = () => {
     generateSwap();
     openSwapProgress();
+    saveCurrentSwap(currentSwap);
   }
   const tryAgain = () => {
     setSwapError(false)
@@ -206,9 +205,15 @@ console.log(swaps, 'swaps');
     openSwapProgress();
   }
 
+
+  function saveCurrentSwap(swap) {
+    // setOngoingSwaps([...ongoingSwaps, swap]);
+    setOngoingSwaps(swap);
+  }
+
   const openSwapStatus = () => {
     setSwapStatus(true);
-    setCurrentSwap(false);
+    setCurrentSwapView(false);
     setSwapProgress(false);
   }
   const closeSwapStatus = () => {
@@ -216,12 +221,12 @@ console.log(swaps, 'swaps');
     setInputTokenAmount("");
     setOutputTokenAmount(0.00);
     setOutputToken("");
-    setCurrentSwap1('');
+    setCurrentSwap('');
     updateSwaps(undefined);
   }
   const openSwapError = () => {
     setSwapError(true);
-    setCurrentSwap(false);
+    setCurrentSwapView(false);
     setSwapProgress(false);
   }
   const closeSwapError = () => {
@@ -290,6 +295,14 @@ console.log(swaps, 'swaps');
   }
 
   useEffect(() => {
+    if(tokenPair.indexOf(outputToken) === -1) {
+      setOutputToken('');
+      setOutputTokenAmount('');
+      setCurrentSwap('');
+    }
+  }, [ inputToken, outputToken]);
+
+  useEffect(() => {
     setOutputTokenAmount(minReceived)
   }, [minReceived]);
 
@@ -310,7 +323,6 @@ console.log(swaps, 'swaps');
       alert("error in refunding, check if the refund time has come");
     }
   };
-
 
   return (
     <Grid container justify="center" className={classes.bodycontainer}>
@@ -501,8 +513,8 @@ console.log(swaps, 'swaps');
             </div>
           </Grid>
           <Grid item xs={12} sm={4} md={4} lg={3}>
-            {currentSwap && (
-              <CurrentSwaps asset={inputToken} pair={outputToken} onClick={maximize} />
+            {currentSwapView && (
+              <CurrentSwaps ongoingSwaps={ongoingSwaps} onClick={maximize} />
             )}
           </Grid>
         </Grid>

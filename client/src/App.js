@@ -45,6 +45,7 @@ const App = () => {
 
   const forceUpdate = React.useCallback(() => updateState({}), []);
 
+
   useEffect(() => {
     window.addEventListener("beforeunload", alertUser);
     return () => {
@@ -101,7 +102,7 @@ const initialize = async () => {
     alert("Error initializing swap", e);
   }
 };
-console.log(clients, 'clients');
+
   const update = (hash, state, exact = undefined) => {
     let newSwap = swapRef.current;
     if (newSwap[hash] !== undefined) {
