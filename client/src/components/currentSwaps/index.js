@@ -13,7 +13,7 @@ import { tokens } from '../constants';
   const { onClick, ongoingSwaps, swaps,  } = props;
   const classes = useStyles();
 
-  const [activeStep, setActiveStep] = useState(0);
+  const [activeStep, setActiveStep] = useState();
   const [refundTime, setRefundTime] = useState('');
 
   const [viewAsset, setViewAsset] = useState([]);
