@@ -69,6 +69,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
   const minimize = () => { setSwapProgress(false); setCurrentSwapView(true); }
   const maximize = () => { setSwapProgress(true); setCurrentSwapView(false); }
 
+
   useEffect(() => {
     if (inputToken && outputToken) {
       let pair = [inputToken.title.toLowerCase(), outputToken.title.toLowerCase()]
@@ -118,6 +119,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
       } catch (e) { console.log(e); }
     }
   }, [currentSwap, clients["ethereum"], clients["tezos"]]);
+
 
   let counterAsset, swapReturn, swapFee, minExpectedReturn, networkFees, minReceived, bal;
 
@@ -325,6 +327,12 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
     }
   };
 
+  if(inputTokenAmount <= bal) {
+    console.log('true');
+  }else {
+    console.log('false');
+  }
+
   return (
     <Grid container justify="center" className={classes.bodycontainer}>
       <Grid item className={classes.sidelogocontainer} xs={1}>
@@ -445,7 +453,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
                                       (
                                         <>
                                         {
-                                          ((inputTokenAmount <= bal)) ?
+                                          ((Number(inputTokenAmount) <= bal)) ?
                                           (
                                             <>
                                               <Button size="large" className={classes.connectwalletbutton + " Element"} onClick={startSwap} >swap tokens</Button>
