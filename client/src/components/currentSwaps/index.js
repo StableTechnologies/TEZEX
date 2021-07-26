@@ -19,12 +19,14 @@ import { tokens } from '../constants';
   useEffect(() => {
     if(ongoingSwaps.pair){
       const swapInProgress = ongoingSwaps.pair.split('/');
+      const asset = ongoingSwaps.asset;
       tokens.map((x) => {
         if (swapInProgress[0].toLowerCase() === x.title.toLowerCase()) {
-          setViewAsset(x);
+          (swapInProgress[0] === asset) ? setViewAsset(x) : setViewCounterAsset(x);
         }
+
         if (swapInProgress[1].toLowerCase() === x.title.toLowerCase()) {
-          setViewCounterAsset(x);
+          (swapInProgress[1] === asset) ? setViewAsset(x) : setViewCounterAsset(x);
         }
       })
     }
