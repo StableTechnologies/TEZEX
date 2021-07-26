@@ -63,13 +63,12 @@ const SwapProgress = (props) => {
       notify = setTimeout(async () => { await notCompleted(); }, 3000);
     }
     if(activeStep === 3) {
-      notify = setTimeout(async () => { await completed(); console.log('no');
+      notify = setTimeout(async () => { await completed();
     }, 3000);
 
     }
   }, [activeStep]);
 
-console.log(activeStep, 'activeStep');
 const handleClose = () => {
   clearTimeout(notify);
   onClose();

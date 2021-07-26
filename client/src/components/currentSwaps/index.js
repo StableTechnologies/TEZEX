@@ -10,11 +10,32 @@ import { tokens } from '../constants';
 
 
  const CurrentSwaps = (props) => {
-  const { onClick, ongoingSwaps } = props;
+  const { onClick, ongoingSwaps, swaps,  } = props;
   const classes = useStyles();
+
+  const [activeStep, setActiveStep] = useState(0);
+  const [refundTime, setRefundTime] = useState('');
 
   const [viewAsset, setViewAsset] = useState([]);
   const [viewCounterAsset, setViewCounterAsset] = useState([]);
+
+  useEffect(() => {
+
+    if(swaps) {
+      Object.keys(swaps).map((x) => {
+        setRefundTime(new Date(swaps[x].refundTime * 1000).toLocaleString())
+        setActiveStep(swaps[x].state)
+      });
+    }
+
+  }, [refundTime, activeStep])
+
+
+  const state = {
+    0: "Swap Initiated",
+    1: "Implementing Swap",
+    2: "Validating Transaction",
+  }
 
   useEffect(() => {
     if(ongoingSwaps.pair){
@@ -34,7 +55,11 @@ import { tokens } from '../constants';
 
   return (
     <div className={classes.root}>
-      <Typography> Current swaps in progress... </Typography>
+      <Typography>
+        {
+          swaps && "Current swaps in progress... "
+        }
+      </Typography>
       <Paper elevation={2}>
         <div className={classes.CurrentSwaps}>
           <Typography>
@@ -51,7 +76,8 @@ import { tokens } from '../constants';
           <img src={minimize} alt="minimize" className={ classes.img } />
         </Button>
       </Paper>
-      <Typography> Swap will timeout in: 1 hour 56 minutes </Typography>
+      <Typography> {refundTime &&  "Swap will timeout in: "} { refundTime }  </Typography>
+      <Typography> {activeStep &&  "State: "} { state[activeStep] }  </Typography>
     </div>
   )
 }

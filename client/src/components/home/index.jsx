@@ -114,9 +114,10 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
           clearInterval(timer);
         };
 
+
       } catch (e) { console.log(e); }
     }
-  }, [currentSwap, clients]);
+  }, [currentSwap, clients["ethereum"], clients["tezos"]]);
 
   let counterAsset, swapReturn, swapFee, minExpectedReturn, networkFees, minReceived, bal;
 
@@ -160,6 +161,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
         bal = swapStat.balances[currentSwap.asset]
           .div(10 ** swapPairs[currentSwap.pair][currentSwap.asset].decimals)
           .toFixed(6);
+
       }
 
       networkFees = swapStat.networkFees[counterAsset]
@@ -306,7 +308,6 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
     setOutputTokenAmount(minReceived)
   }, [minReceived]);
 
-
   const refundHandler = async (swap) => {
     try {
       if (Math.trunc(Date.now() / 1000) < swap.refundTime) {
@@ -440,13 +441,24 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
                               (
                                 <>
                                   {
-                                    (inputTokenAmount && (minReceived > 0)) ?
+                                    (inputTokenAmount && (minReceived > 0) ) ?
                                       (
                                         <>
-                                          <Button size="large" className={classes.connectwalletbutton + " Element"} onClick={startSwap} >swap tokens</Button>
-                                          <SwapStatus swaps={swaps} open={swapStatus} onClose={closeSwapStatus} />
-                                          <SwapError open={swapError} onClose={closeSwapError} onClick={tryAgain} />
-                                          <SwapProgress swaps={swaps} open={swapProgress} onClose={minimize} completed={openSwapStatus} notCompleted={openSwapError}   />
+                                        {
+                                          ((inputTokenAmount <= bal)) ?
+                                          (
+                                            <>
+                                              <Button size="large" className={classes.connectwalletbutton + " Element"} onClick={startSwap} >swap tokens</Button>
+                                              <SwapStatus swaps={swaps} open={swapStatus} onClose={closeSwapStatus} />
+                                              <SwapError open={swapError} onClose={closeSwapError} onClick={tryAgain} />
+                                              <SwapProgress swaps={swaps} open={swapProgress} onClose={minimize} completed={openSwapStatus} notCompleted={openSwapError}   />
+                                            </>
+                                          )
+                                          :
+                                          (
+                                            <Button size="large" className={`${classes.connectwalletbutton + " Element"} ${classes.disabled + " Element"}`} disabled>Insufficient funds</Button>
+                                          )
+                                        }
                                         </>
                                       ) :
                                       (
@@ -514,7 +526,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
           </Grid>
           <Grid item xs={12} sm={4} md={4} lg={3}>
             {currentSwapView && (
-              <CurrentSwaps ongoingSwaps={ongoingSwaps} onClick={maximize} />
+              <CurrentSwaps swaps={swaps} ongoingSwaps={ongoingSwaps} onClick={maximize} />
             )}
           </Grid>
         </Grid>
