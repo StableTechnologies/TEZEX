@@ -176,50 +176,61 @@ const useStyles = makeStyles((theme) => ({
     }
   },
 },
-disabled: {
-  "&.Element": {
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    border: "0",
-  }
-},
-  tokentext: {
+  disabled: {
     "&.Element": {
-      color: "#000",
-      fontSize: "1em",
-      textTransform: "capitalize",
-},
-},
-
-feepaper: {
-  "&.Element": {
-    background: 'transparent',
-    padding: "1.2rem",
-    color: "#4f4f4f",
-    border: "1px solid transparent",
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      border: "0",
+    }
   },
-},
-feeDetails: {
-  display: "flex",
-  justifyContent: "space-between",
-  fontStyle: "normal",
-  fontWeight: "500",
-  fontSize: ".9rem",
-  lineHeight: "19px",
-},
+    tokentext: {
+      "&.Element": {
+        color: "#000",
+        fontSize: "1em",
+        textTransform: "capitalize",
+  },
+  },
 
-loaderContainer: {
-  display: "flex",
-  justifyContent: "start",
-  alignItems: "center",
-  flexDirection: "row",
-  background: "#E0EFFF",
-  borderRadius: "8px",
-  padding: '0 1rem',
-},
-loader: {
-  width: "32px",
-  height: "32px",
-}
+  feepaper: {
+    "&.Element": {
+      background: 'transparent',
+      padding: "1.2rem",
+      color: "#4f4f4f",
+      border: "1px solid transparent",
+    },
+  },
+  feeDetails: {
+    display: "flex",
+    justifyContent: "space-between",
+    fontStyle: "normal",
+    fontWeight: "500",
+    fontSize: ".9rem",
+    lineHeight: "19px",
+  },
+
+  loaderContainer: {
+    display: "flex",
+    justifyContent: "start",
+    alignItems: "center",
+    flexDirection: "row",
+    background: "#E0EFFF",
+    borderRadius: "8px",
+    padding: '0 1rem',
+  },
+  loader: {
+    width: "32px",
+    height: "32px",
+  },
+
+  warning: {
+    textAlign: "center",
+    marginBottom: "-.4rem",
+  },
+
+  warningImg: {
+    width: "16px",
+    height: "16px",
+    margin: "0 8px -2px",
+  }
 }));
 
 export default useStyles;

@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { calcSwapReturn, createSecrets, getCounterPair } from "../../library/util";
 import { connectEthAccount, connectTezAccount, setupEthClient, shorten } from "../../util";
 import { content, tokenWallets, tokens } from '../constants/index';
+import { TezexContext } from '../context/TezexContext';
 
 import BigNumber from "bignumber.js";
 import Button from "@material-ui/core/Button";
@@ -18,22 +19,22 @@ import RefundSwap from '../swapError/refundSwap'
 import SwapProgress from '../swapProgress';
 import SwapStatus from '../swapStatus';
 import TextField from '@material-ui/core/TextField';
-import { TezexContext } from '../context/TezexContext';
 import TokenSelectionDialog from '../dialog';
 import TryAgain from '../swapError/retrySwap';
 import Typography from "@material-ui/core/Typography";
 import { getSwapStat } from "../newSwap/util";
 import { selectToken } from "../tokenPairs/index";
+
 import sidelogo from "../../assets/sidelogo.svg";
 import swapIcon from "../../assets/swapIcon.svg";
-import { useHistory } from "react-router-dom";
+import warning from "../../assets/warning.svg"
+
 import useStyles from "./style";
 
 const config = require(`../../library/${process.env.REACT_APP_ENV || "prod"
   }-network-config.json`);
 
 const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupTez, genSwap }) => {
-  const history = useHistory();
   const classes = useStyles();
   const globalContext = useContext(TezexContext);
 
@@ -60,6 +61,9 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
 
   const [ethAccount, setEthAccount] = useState('');
   const [xtzAccount, setXtzAccount] = useState('');
+
+  const [connectTez, setConnectTez] = useState(false);
+  const [connectEth, setConnectEth] = useState(false);
 
   const [currentSwap, setCurrentSwap] = useState(false);
   const [maxSwap, setMaximizedSwap] = useState(undefined);
@@ -308,13 +312,16 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
     catch (error) { }
   };
 
-  const setWalletType = async (value) => {
-    const str = inputToken.title.toLowerCase();
-    if (str.includes('tz')) {
-      setupXtzAccount()
-    }
-    else {
-      openWalletModal();
+  const setWalletType = async () => {
+    if(inputToken.title !== undefined) {
+      const inputStr = inputToken.title.toLowerCase();
+
+      if (inputStr.includes('tz')) {
+        setupXtzAccount()
+      }
+      else {
+        openWalletModal();
+      }
     }
   }
 
@@ -324,6 +331,29 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
     }
   }
 
+  const checkWallet = () => {
+    const str = inputToken.title.toLowerCase() && outputToken.title.toLowerCase();
+    const str1 = inputToken.title.toLowerCase() || outputToken.title.toLowerCase();
+    if(str.includes('tz') &&
+      (!globalContext.tezosClient.account && globalContext.ethereumClient.account)) {
+      setConnectTez(true);
+      setConnectEth(false);
+    }
+    if(globalContext.tezosClient.account) {
+      setConnectTez(false);
+    }
+   if(!(str1.includes('tz')) &&
+      (!globalContext.ethereumClient.account && globalContext.tezosClient.account)) {
+      setConnectEth(true);
+      setConnectTez(false);
+    }
+    if(globalContext.ethereumClient.account || !(str.includes('tz'))) {
+      setConnectEth(false);
+    }
+
+  }
+
+
   const tokenPair = selectToken(inputToken.title);
 
   const toggleTokens = () => {
@@ -331,6 +361,12 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
     setInputToken(outputToken);
     setOutputToken(inputToken);
   }
+
+  useEffect(() => {
+    if(inputToken && outputToken){
+      checkWallet();
+    }
+  }, [inputTokenAmount, inputToken, outputToken, setupEthAccount, setupXtzAccount])
 
   useEffect(() => {
     if (tokenPair.indexOf(outputToken) === -1) {
@@ -376,6 +412,13 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
         <Grid container justify="space-evenly" className={classes.con}>
           <Grid item xs={0} md={2} lg={2}></Grid>
           <Grid item xs={12} sm={7} md={5} lg={4}>
+            <Typography className={classes.warning}>
+              {(connectTez || connectEth) &&
+                <img src={warning} alt="warning logo" className={classes.warningImg} />
+              }
+              {connectTez &&  "Connect Your Tezos Wallet"}
+              {connectEth &&  "Connect Your Ethereum Wallet"}
+            </Typography>
             <div className={classes.swaps}>
               <Card className={classes.card} square>
                 <CardHeader
@@ -495,7 +538,11 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
                                             ((Number(inputTokenAmount) <= bal)) ?
                                               (
                                                 <>
+                                                { (connectTez || connectEth) ?
+                                                  <Button size="large" className={`${classes.connectwalletbutton + " Element"} ${classes.disabled + " Element"}`} disabled>swap tokens</Button>
+                                                  :
                                                   <Button size="large" className={classes.connectwalletbutton + " Element"} onClick={startSwap} >swap tokens</Button>
+                                                }
                                                 </>
                                               )
                                               :
