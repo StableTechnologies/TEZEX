@@ -22,6 +22,12 @@ export const useStyles = makeStyles((theme) => ({
     color: "#828282",
   },
 
+  close: {
+    position: 'absolute',
+    right: theme.spacing(1),
+    top: theme.spacing(1)
+  },
+
   button: {
     "&.Element": {
       width: "152px",

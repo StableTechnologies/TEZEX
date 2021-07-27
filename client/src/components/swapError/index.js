@@ -1,41 +1,36 @@
+import React from 'react';
+
 import Button from "@material-ui/core/Button";
 import Dialog from "@material-ui/core/Dialog";
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from "@material-ui/core/DialogTitle";
-import React from 'react';
 import Typography from "@material-ui/core/Typography";
-import complete from '../../assets/complete.gif';
+import IconButton from '@material-ui/core/IconButton';
+import CloseIcon from '@material-ui/icons/Close';
+
 import error from '../../assets/error.svg'
 import { useStyles } from "./style";
 
 const SwapError = (props) => {
   const classes = useStyles();
 
-  const { open, onClose, onClick, swap } = props;
+  const { open, onClose, onClick, titleImg, button, title, text1, text2, text3 } = props;
   return (
-    <Dialog onClose={onClose} aria-labelledby="simple-dialog-title" open={open} className={classes.root}>
+    <Dialog aria-labelledby="simple-dialog-title" open={open} onClose={onClose} className={classes.root}>
       <DialogTitle id="simple-dialog-title" onClose={onClose}>
-        <span> <img src={error} alt="error_logo" className={classes.img} /> </span>
-        Token Swap Did Not Complete!
-        {/* <IconButton aria-label="close" onClick={onClose} className={classes.close}>
-              <CloseIcon />
-            </IconButton> */}
+        <span> <img src={titleImg} alt="error_logo" className={classes.img} /> </span>
+          {title}
+            <IconButton aria-label="close" onClick={onClose} className={classes.close}>
+                <CloseIcon />
+            </IconButton>
       </DialogTitle>
       <DialogContent >
-        <Typography className={classes.p1} >
-          Swap Hash : {swap.hashedSecret}
-        </Typography>
-        <Typography className={classes.p1} >
-          You will able to refund your swap after the swap timeout period ends in 1 hour 30 minutes.
-        </Typography>
+        <Typography className={classes.p1} > {text1} </Typography>
+        <Typography className={classes.p1} > {text2} </Typography>
+        <Typography className={classes.p2}>  {text3} </Typography>
 
-        <Typography className={classes.p2}>
-          You can try your swap again at any time. Make sure you have a reliable internet connection
-          and remember not to refresh or close the site while the swap is in progress.
-        </Typography>
-
-        <Button size="large" className={classes.button + " Element"} onClick={onClick} >Try Again</Button>
+        <Button size="large" className={classes.button + " Element"} onClick={onClick} > {button} </Button>
       </DialogContent>
     </Dialog>
   )

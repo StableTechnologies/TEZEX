@@ -14,7 +14,8 @@ import Grid from "@material-ui/core/Grid";
 import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
 import Loader from "../loader";
 import Paper from '@material-ui/core/Paper';
-import SwapError from '../swapError';
+import TryAgain from '../swapError/retrySwap';
+import RefundSwap from '../swapError/refundSwap'
 import SwapProgress from '../swapProgress';
 import SwapStatus from '../swapStatus';
 import TextField from '@material-ui/core/TextField';
@@ -44,7 +45,8 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
 
   const [swapProgress, setSwapProgress] = useState(false);
   const [swapStatus, setSwapStatus] = useState(false);
-  const [swapError, setSwapError] = useState(false);
+  const [tryAgain, setTryAgain] = useState(false);
+  const [refundSwap, setRefundSwap] = useState(false);
   const [currentSwapView, setCurrentSwapView] = useState(false);
 
   const [inputToken, setInputToken] = useState(tokens[4]);
@@ -96,7 +98,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
   }, [inputToken, outputToken]);
 
   useEffect(() => {
-    if (maxSwap !== undefined) {
+    if (maxSwap !== undefined && swaps !== undefined) {
       if (swaps[maxSwap.hashedSecret] !== undefined && swaps[maxSwap.hashedSecret].state != maxSwap.state) {
         setMaximizedSwap(swaps[maxSwap.hashedSecret]);
       }
@@ -194,7 +196,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
     const res = await genSwap(swap, secret);
     if (!res) {
       setSwapProgress(false)
-      setSwapError(true)
+      setTryAgain(true)
     }
   };
 
@@ -218,7 +220,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
     openSwapProgress(swap);
     saveCurrentSwap(currentSwap);
   }
-  const tryAgain = () => {
+  const retry = () => {
     const secret = createSecrets();
     const swap = {
       hashedSecret: secret.hashedSecret,
@@ -234,7 +236,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
       refundTime: Math.trunc(Date.now() / 1000) + config.swapConstants.refundPeriod,
       state: -1
     };
-    setSwapError(false)
+    setTryAgain(false)
     generateSwap(swap, secret);
     openSwapProgress(swap);
   }
@@ -258,13 +260,22 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
     setOutputToken("");
     setCurrentSwap('');
   }
-  const openSwapError = () => {
+  const openTryAgain = () => {
     setSwapProgress(false);
-    setSwapError(true);
+    setTryAgain(true);
     setCurrentSwapView(false);
   }
-  const closeSwapError = () => {
-    setSwapError(false)
+  const closeTryAgain = () => {
+    setTryAgain(false)
+    setMaximizedSwap(undefined)
+  }
+  const openRefundSwap = () => {
+    setSwapProgress(false);
+    setRefundSwap(true);
+    setCurrentSwapView(false);
+  }
+  const closeRefundSwap = () => {
+    setRefundSwap(false)
     setMaximizedSwap(undefined)
   }
 
@@ -349,6 +360,14 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
       alert("error in refunding, check if the refund time has come");
     }
   };
+  const refundFailedSwap = () => {
+    if(swaps) {
+      Object.keys(swaps).map((x) =>{
+        refundHandler(swaps[x])
+        setRefundSwap(false)
+      })
+    }
+  }
 
   return (
     <Grid container justify="center" className={classes.bodycontainer}>
@@ -459,8 +478,9 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
                 <CardActions>
                   {(maxSwap !== undefined) && <>
                     <SwapStatus swap={maxSwap} open={swapStatus} onClose={closeSwapStatus} />
-                    <SwapError swap={maxSwap} open={swapError} onClose={closeSwapError} onClick={tryAgain} />
-                    <SwapProgress swap={maxSwap} open={swapProgress} onClose={minimize} completed={openSwapStatus} notCompleted={openSwapError} />
+                    <TryAgain swap={maxSwap} open={tryAgain} onClose={closeTryAgain} onClick={retry} />
+                    <RefundSwap swap={maxSwap} open={refundSwap} onClose={closeRefundSwap} onClick={refundFailedSwap} />
+                    <SwapProgress swap={maxSwap} open={swapProgress} onClose={minimize} completed={openSwapStatus} notCompleted={openRefundSwap} />
                   </>}
                   {
                     (globalContext.tezosClient.account || globalContext.ethereumClient.account) ?
@@ -479,9 +499,6 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
                                               (
                                                 <>
                                                   <Button size="large" className={classes.connectwalletbutton + " Element"} onClick={startSwap} >swap tokens</Button>
-                                                  {/* <SwapStatus swaps={swaps} open={swapStatus} onClose={closeSwapStatus} />
-                                                  <SwapError open={swapError} onClose={closeSwapError} onClick={tryAgain} />
-                                                  <SwapProgress swaps={swaps} open={swapProgress} onClose={minimize} completed={openSwapStatus} notCompleted={openSwapError} /> */}
                                                 </>
                                               )
                                               :

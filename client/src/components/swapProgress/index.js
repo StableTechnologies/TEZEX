@@ -56,7 +56,7 @@ const SwapProgress = (props) => {
   useEffect(() => {
     if (!open) return;
     if (activeStep === 0) {
-      notify = setTimeout(async () => { await notCompleted(); }, 3000);
+      notCompleted();
     }
     if (activeStep === 3) {
       notify = setTimeout(async () => {
