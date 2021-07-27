@@ -55,18 +55,18 @@ export const connectTezAccount = async () => {
 /**
  * Creates the ethereum clients
  */
- export const setupEthClient = async () => {
+export const setupEthClient = async () => {
   const { web3, account: ethAccount } = await connectEthAccount();
 
-  const clients ={
+  const clients = {
     ethereum: new Ethereum(web3, ethAccount),
   }
   return { clients };
- }
+}
 /**
  * Creates the tezos clients
  */
- export const setupTezClient = async () => {
+export const setupTezClient = async () => {
   const { client, account: tezAccount } = await connectTezAccount();
 
   const mutex = new Mutex()
@@ -89,7 +89,7 @@ export const connectTezAccount = async () => {
       mutex)
   };
   return { clients };
- };
+};
 
 
 /**
@@ -142,6 +142,7 @@ export const initSwapDetails = async () => {
  * @param swapPairs details of each swap pair
  */
 export const getOldSwaps = async (clients, swapPairs) => {
+  if (swapPairs === undefined) return {};
   const swaps = {};
   const pairs = Object.keys(swapPairs);
   let pureTez = false;
@@ -149,6 +150,7 @@ export const getOldSwaps = async (clients, swapPairs) => {
     const assets = pair.split("/");
     for (const asset of assets) {
       const network = swapPairs[pair][asset].network;
+      if (clients[network] === null) continue;
       if (network === "pureTezos" && pureTez)
         continue;
       if (network === "pureTezos")

@@ -1,24 +1,21 @@
-import React from 'react';
-import {useStyles} from "./style";
-
 import Dialog from "@material-ui/core/Dialog";
-import DialogTitle from "@material-ui/core/DialogTitle";
 import DialogContent from '@material-ui/core/DialogContent';
+import DialogTitle from "@material-ui/core/DialogTitle";
+import React from 'react';
 import Typography from "@material-ui/core/Typography";
-
 import complete from '../../assets/complete.gif';
+import { useStyles } from "./style";
 
 const SwapStatus = (props) => {
   const classes = useStyles();
 
-  const { open, onClose, swaps } = props;
-  console.log(swaps, 'swaps@swapStatus');
+  const { open, onClose, swap } = props;
   return (
     <Dialog onClose={onClose} aria-labelledby="simple-dialog-title" open={open} className={classes.root}>
       <DialogTitle id="simple-dialog-title" onClose={onClose}>
-          Congrats!
-          <Typography> Your Token Swap is Complete </Typography>
-          {/* <IconButton aria-label="close" onClick={onClose} className={classes.close}>
+        Congrats!
+        <Typography> Your Token Swap is Complete </Typography>
+        {/* <IconButton aria-label="close" onClick={onClose} className={classes.close}>
               <CloseIcon />
             </IconButton> */}
       </DialogTitle>
@@ -28,7 +25,7 @@ const SwapStatus = (props) => {
         </div>
         <div>
           <Typography> You can now view your updated token balances. </Typography>
-          <Typography> Operation Hash: 0xc739...c3df </Typography>
+          <Typography> Swap Hash : {swap.hashedSecret} </Typography>
         </div>
       </DialogContent>
     </Dialog>

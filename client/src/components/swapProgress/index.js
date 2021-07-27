@@ -1,28 +1,25 @@
 import React, { useContext, useEffect, useState } from "react";
-import {useStyles, } from "./style";
-import PropTypes from "prop-types";
 
-
+import Button from '@material-ui/core/Button';
+import CircleCheckStepIcon from './circleCheckStepIcon';
 import Dialog from "@material-ui/core/Dialog";
-import DialogTitle from "@material-ui/core/DialogTitle";
+import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
-import DialogActions from '@material-ui/core/DialogActions';
-import Stepper from '@material-ui/core/Stepper';
-import Step from '@material-ui/core/Step';
-import StepLabel from '@material-ui/core/StepLabel';
-import StepContent from '@material-ui/core/StepContent';
-import Button from '@material-ui/core/Button';
-import Paper from '@material-ui/core/Paper';
-import Typography from '@material-ui/core/Typography';
+import DialogTitle from "@material-ui/core/DialogTitle";
 import IconButton from '@material-ui/core/IconButton';
-
-import CircleCheckStepIcon from './circleCheckStepIcon';
-
+import Paper from '@material-ui/core/Paper';
+import PropTypes from "prop-types";
+import Step from '@material-ui/core/Step';
+import StepContent from '@material-ui/core/StepContent';
+import StepLabel from '@material-ui/core/StepLabel';
+import Stepper from '@material-ui/core/Stepper';
+import Typography from '@material-ui/core/Typography';
 import minimize from '../../assets/minimize.svg';
-import question_circle from '../../assets/question_circle.svg';
 import pleading_face from '../../assets/pleading_face.svg';
+import question_circle from '../../assets/question_circle.svg';
 import spinner from '../../assets/spinner.gif';
+import { useStyles, } from "./style";
 
 const getSteps = () => {
   return ['1. Creating Swap Request', '2. Implementing Swap', '3. Validating Transaction'];
@@ -46,43 +43,43 @@ const SwapProgress = (props) => {
 
   const [activeStep, setActiveStep] = useState();
   const [refundTime, setRefundTime] = useState(0);
-  const { open, onClose, swaps, completed, notCompleted, } = props;
+  const { open, onClose, swap, completed, notCompleted, } = props;
   const steps = getSteps();
 
   const handleStepChange = (step) => {
-    Object.keys(step).map((key) => {
-      setRefundTime(new Date(step[key].refundTime * 1000).toLocaleString())
-      setActiveStep(step[key].state)
-    });
+    setRefundTime(new Date(step.refundTime * 1000).toLocaleString())
+    setActiveStep(step.state)
   };
 
   let notify;
 
   useEffect(() => {
-    if(activeStep === 0) {
+    if (!open) return;
+    if (activeStep === 0) {
       notify = setTimeout(async () => { await notCompleted(); }, 3000);
     }
-    if(activeStep === 3) {
-      notify = setTimeout(async () => { await completed();
-    }, 3000);
+    if (activeStep === 3) {
+      notify = setTimeout(async () => {
+        await completed();
+      }, 3000);
 
     }
-  }, [activeStep]);
+  });
 
-const handleClose = () => {
-  clearTimeout(notify);
-  onClose();
-}
+  const handleClose = () => {
+    clearTimeout(notify);
+    onClose();
+  }
 
   useEffect(() => {
-      if(swaps) {
+    if (swap) {
       try {
-        handleStepChange(swaps);
-      } catch (e) {}
+        handleStepChange(swap);
+      } catch (e) { }
     }
-    }, [handleStepChange])
+  }, [handleStepChange])
 
-  return(
+  return (
     <Dialog aria-labelledby="simple-dialog-title" open={open} className={classes.root}>
       <DialogTitle onClose={handleClose}>
         Swap In Progress...
@@ -95,29 +92,29 @@ const handleClose = () => {
         <img src={spinner} alt="spinner" className={classes.spinner} />
       </DialogContent>
       <DialogActions>
-      <Stepper activeStep={activeStep} orientation="vertical" className={classes.root}>
-        {steps.map((label, index) => (
-          <Step key={label}>
-            <Step >
-              <StepLabel StepIconComponent={CircleCheckStepIcon} >
-                {label}
-              </StepLabel>
+        <Stepper activeStep={activeStep} orientation="vertical" className={classes.root}>
+          {steps.map((label, index) => (
+            <Step key={label}>
+              <Step >
+                <StepLabel StepIconComponent={CircleCheckStepIcon} >
+                  {label}
+                </StepLabel>
+              </Step>
+              <Step >
+                <StepLabel >
+                  <Typography style={{ paddingLeft: "14px" }}>{getStepContent(index)}</Typography>
+                </StepLabel>
+              </Step>
             </Step>
-            <Step >
-              <StepLabel >
-                <Typography style={{paddingLeft: "14px"}}>{getStepContent(index)}</Typography>
-              </StepLabel>
-            </Step>
-          </Step>
-        ))}
-      </Stepper>
+          ))}
+        </Stepper>
       </DialogActions>
       <DialogContent>
         <DialogContentText>
-          Swap will timeout in: {" "} {refundTime || " "} <img src={question_circle} alt="question_circle" className={classes.textImg}/>
+          Swap will timeout in: {" "} {refundTime || " "} <img src={question_circle} alt="question_circle" className={classes.textImg} />
         </DialogContentText>
         <DialogContentText>
-          Don’t leave me <img src={pleading_face} alt="pleading_face" className={classes.textImg}/>
+          Don’t leave me <img src={pleading_face} alt="pleading_face" className={classes.textImg} />
         </DialogContentText>
         <DialogContentText>
           To avoid accidental transaction fees, please stay connected to the site.

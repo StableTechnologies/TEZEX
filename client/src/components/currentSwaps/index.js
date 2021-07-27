@@ -1,16 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import Paper from '@material-ui/core/Paper';
+
 import Button from '@material-ui/core/Button';
+import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
-
-import useStyles from "./style";
-
 import minimize from '../../assets/minimize.svg';
 import { tokens } from '../constants';
+import useStyles from "./style";
 
-
- const CurrentSwaps = (props) => {
-  const { onClick, ongoingSwaps, swaps,  } = props;
+const CurrentSwaps = (props) => {
+  const { onClick, ongoingSwaps, swaps, } = props;
   const classes = useStyles();
 
   const [activeStep, setActiveStep] = useState();
@@ -21,7 +19,7 @@ import { tokens } from '../constants';
 
   useEffect(() => {
 
-    if(swaps) {
+    if (swaps) {
       Object.keys(swaps).map((x) => {
         setRefundTime(new Date(swaps[x].refundTime * 1000).toLocaleString())
         setActiveStep(swaps[x].state)
@@ -32,13 +30,53 @@ import { tokens } from '../constants';
 
 
   const state = {
-    0: "Swap Initiated",
-    1: "Implementing Swap",
-    2: "Validating Transaction",
+    0: "Failed",
+    1: "Swap Initiated",
+    2: "Implementing Swap",
+    3: "Validating Transaction",
+    4: "Refunded",
+  }
+
+  const SwapItem = (data) => {
+    // console.log(data)
+    const refund = new Date(data.refundTime * 1000).toLocaleString()
+    const swapInProgress = data.pair.split('/');
+    const asset = data.asset;
+    let token = {}
+    let counterToken = {}
+    tokens.map((x) => {
+      if (swapInProgress[0].toLowerCase() === x.title.toLowerCase()) {
+        if (swapInProgress[0] === asset) token = x; else counterToken = x;
+      }
+
+      if (swapInProgress[1].toLowerCase() === x.title.toLowerCase()) {
+        if (swapInProgress[1] === asset) token = x; else counterToken = x;
+      }
+    });
+    return (<div>
+      <Paper elevation={2}>
+        <div className={classes.CurrentSwaps}>
+          <Typography>
+            <span>
+              <img src={token.logo} alt="logo" className={classes.img} /> {token.title}
+            </span>
+            {" "} &#8594; {" "}
+            <span>
+              <img src={counterToken.logo} alt="logo" className={classes.img} /> {counterToken.title}
+            </span>
+          </Typography>
+        </div>
+        <Button onClick={() => onClick(data)}>
+          <img src={minimize} alt="minimize" className={classes.img} />
+        </Button>
+      </Paper>
+      <Typography> {refund && "Swap will timeout in: "} {refund}  </Typography>
+      <Typography> {activeStep && "State: "} {state[data.state]}  </Typography>
+    </div>)
   }
 
   useEffect(() => {
-    if(ongoingSwaps.pair){
+    if (ongoingSwaps.pair) {
       const swapInProgress = ongoingSwaps.pair.split('/');
       const asset = ongoingSwaps.asset;
       tokens.map((x) => {
@@ -55,29 +93,14 @@ import { tokens } from '../constants';
 
   return (
     <div className={classes.root}>
-      <Typography>
-        {
-          swaps && "Current swaps in progress... "
-        }
-      </Typography>
-      <Paper elevation={2}>
-        <div className={classes.CurrentSwaps}>
+      {swaps !== undefined &&
+        <>
           <Typography>
-            <span>
-              <img src={viewAsset.logo} alt="logo" className={classes.img} /> {viewAsset.title}
-            </span>
-            {" "} &#8594; {" "}
-            <span>
-              <img src={viewCounterAsset.logo} alt="logo" className={classes.img} /> {viewCounterAsset.title}
-            </span>
+            Current swaps in progress...
           </Typography>
-        </div>
-        <Button onClick={onClick}>
-          <img src={minimize} alt="minimize" className={ classes.img } />
-        </Button>
-      </Paper>
-      <Typography> {refundTime &&  "Swap will timeout in: "} { refundTime }  </Typography>
-      <Typography> {activeStep &&  "State: "} { state[activeStep] }  </Typography>
+          {Object.keys(swaps).map((x) => SwapItem(swaps[x]))}
+        </>
+      }
     </div>
   )
 }

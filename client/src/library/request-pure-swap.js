@@ -11,21 +11,16 @@ const config = require(`./${process.env.REACT_APP_ENV || "prod"
  * @param swapPairs data of all the swap pairs
  * @param update update callback to reflect state change in UI
  */
-const requestPureSwap = async (swap, clients, swapPairs, update) => {
+const requestPureSwap = async (swap, secret, clients, swapPairs, update) => {
   const network = swapPairs[swap.pair][swap.asset].network;
   const counterAsset = getCounterPair(swap.pair, swap.asset);
   // generate swap secret
-  console.log(swapPairs[swap.pair][swap.asset]);
   try {
-    const secret = createSecrets();
     console.log(
       `Your SWAP Secret (${swapPairs[swap.pair][swap.asset].symbol}->${swapPairs[swap.pair][counterAsset].symbol
       }): ${JSON.stringify(secret)}`
     );
 
-    // create new swap with refund time set to 2hrs
-    const refundTime =
-      Math.trunc(Date.now() / 1000) + config.swapConstants.refundPeriod;
     if (swap.asset !== "eth" && swap.asset !== "xtz") {
       await clients[network].approveToken(
         swapPairs[swap.pair][swap.asset].tokenContract,
@@ -37,7 +32,7 @@ const requestPureSwap = async (swap, clients, swapPairs, update) => {
         secret.hashedSecret,
         swap.pair,
         swap.asset,
-        refundTime,
+        swap.refundTime,
         swap.value,
         swap.minValue
       );
@@ -47,7 +42,7 @@ const requestPureSwap = async (swap, clients, swapPairs, update) => {
         secret.hashedSecret,
         swap.pair,
         swap.asset,
-        refundTime,
+        swap.refundTime,
         swap.value,
         swap.minValue,
         swap.value,
@@ -64,7 +59,6 @@ const requestPureSwap = async (swap, clients, swapPairs, update) => {
       ...swap,
       hashedSecret: secret.hashedSecret,
       exact: "nil",
-      refundTime,
       state: 1,
     };
     waitResponse(

@@ -346,8 +346,7 @@ export default class PureTezos {
                 })[0],
             };
         } catch (error) {
-            console.log(error, 'error@pureTezos');
-            throw(error);
+            throw (error);
         }
     }
 

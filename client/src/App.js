@@ -1,31 +1,29 @@
-import { BigNumber } from "bignumber.js";
+import "aos/dist/aos.css";
+import "./App.css";
+
 import React, { useContext, useEffect, useRef, useState } from "react";
-import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
+import { Route, BrowserRouter as Router, Switch } from "react-router-dom";
+import { getOldSwaps, initSwapDetails, setupEthClient, setupTezClient } from "./util";
 
 import AOS from 'aos';
-import "aos/dist/aos.css";
-
-import "./App.css";
-import TezexContext from './components/context/TezexContext';
-
-
 import About from "./components/about";
+import { BigNumber } from "bignumber.js";
 import CreateSwap from "./components/newSwap";
-import Header from "./components/header";
 import Footer from "./components/footer";
+import Header from "./components/header";
 import Home from "./components/home";
 import Loader from "./components/loader";
 import Notice from "./components/notice";
 import Setup from "./components/setup";
 import Stat from "./components/stats";
+import TezexContext from './components/context/TezexContext';
 import { getCounterPair } from "./library/util";
-import { getOldSwaps, initSwapDetails, setupEthClient, setupTezClient } from "./util";
-import useStyles from "./style";
 import requestPureSwap from "./library/request-pure-swap";
 import requestSwap from "./library/request-swap";
+import useStyles from "./style";
 
 const App = () => {
-  const [clients, setClients] = useState({ethereum: null, tezos: null, pureTezos: null});
+  const [clients, setClients] = useState({ ethereum: null, tezos: null, pureTezos: null });
   const [swapPairs, setSwapPairs] = useState(undefined);
   const [swaps, updateSwaps] = useState(undefined);
   const [balance, balUpdate] = useState(undefined);
@@ -61,21 +59,25 @@ const App = () => {
   useEffect(() => {
     // Initialize AOS animation
     AOS.init({
-      duration : 2000
+      duration: 2000
     });
 
     initialize();
 
   }, []);
 
+  useEffect(() => {
+    findOldSwaps();
+  }, [clients]);
+
   const setupEthAccount = async () => {
     try {
-      const {clients } = await setupEthClient();
+      const { clients } = await setupEthClient();
       // let swap = await getOldSwaps(clients, swapPairs);
       // if (Object.keys(swap).length > 0) updateSwaps(swap);
-      setClients(prevState => ({...prevState, ...clients}));
+      setClients(prevState => ({ ...prevState, ...clients }));
     }
-    catch(err) {
+    catch (err) {
       alert("Error Connecting to EthWallet", err);
 
     }
@@ -85,23 +87,26 @@ const App = () => {
       const { clients } = await setupTezClient();
       // let swap = await getOldSwaps(clients, swapPairs);
       // if (Object.keys(swap).length > 0) updateSwaps(swap);
-      setClients(prevState => ({...prevState, ...clients}));
+      setClients(prevState => ({ ...prevState, ...clients }));
     } catch (e) {
       alert("Error Connecting to TezWallet", e);
     }
   };
-const initialize = async () => {
-  try {
-    const { swapPairs } = await initSwapDetails();
-    // let swap = await getOldSwaps(clients, swapPairs);
-    // if (Object.keys(swap).length > 0) updateSwaps(swap);
-    // setClients(clients);
-    setSwapPairs(swapPairs);
-  } catch (e) {
-    console.log("error", e);
-    alert("Error initializing swap", e);
+  const initialize = async () => {
+    try {
+      const { swapPairs } = await initSwapDetails()
+      // setClients(clients);
+      setSwapPairs(swapPairs);
+    } catch (e) {
+      console.log("error", e);
+      alert("Error initializing swap", e);
+    }
+  };
+  const findOldSwaps = async () => {
+    console.log("getting old swaps")
+    let swap = await getOldSwaps(clients, swapPairs);
+    if (Object.keys(swap).length > 0) updateSwaps(swap);
   }
-};
 
   const update = (hash, state, exact = undefined) => {
     let newSwap = swapRef.current;
@@ -113,12 +118,12 @@ const initialize = async () => {
     } else console.log("missing hash update request");
   };
 
-  const genSwap = async (swap, req_swap = undefined) => {
+  const genSwap = async (swap, secret, req_swap = undefined) => {
     let generatedSwap = {}
     if (swap.network === "pureTezos")
-      generatedSwap = await requestPureSwap(swap, clients, swapPairs, update);
+      generatedSwap = await requestPureSwap(swap, secret, clients, swapPairs, update);
     else
-      generatedSwap = await requestSwap(swap, clients, swapPairs, update);
+      generatedSwap = await requestSwap(swap, secret, clients, swapPairs, update);
     if (generatedSwap === undefined) return false;
     let newSwaps = swapRef.current;
     if (newSwaps === undefined) {
@@ -128,7 +133,7 @@ const initialize = async () => {
       generatedSwap.pair,
       generatedSwap.asset
     );
-    if(swap){console.log(swap, 'swap')}
+    if (swap) { console.log(swap, 'swap') }
 
     generatedSwap["value"] =
       new BigNumber(generatedSwap.value)
@@ -151,17 +156,17 @@ const initialize = async () => {
 
   return (
     <TezexContext>
-    <Router basename={process.env.PUBLIC_URL}>
-      <div className="App">
-        <Header
-          clients={clientRef.current}
-          swapPairs={swapPairsRef.current}
-          balUpdate={balUpdate}
-          setupEth = {setupEthAccount}
-          setupTez = {setupXtzAccount}
-        />
-        {/* {balance === undefined && <Loader message="Loading Account" />} */}
-        {/* {balance !== undefined && ( */}
+      <Router basename={process.env.PUBLIC_URL}>
+        <div className="App">
+          <Header
+            clients={clientRef.current}
+            swapPairs={swapPairsRef.current}
+            balUpdate={balUpdate}
+            setupEth={setupEthAccount}
+            setupTez={setupXtzAccount}
+          />
+          {/* {balance === undefined && <Loader message="Loading Account" />} */}
+          {/* {balance !== undefined && ( */}
           <Switch>
             <Route exact path="/">
               <Home
@@ -170,8 +175,8 @@ const initialize = async () => {
                 clients={clientRef.current}
                 swapPairs={swapPairsRef.current}
                 update={update}
-                setupEth = {setupEthAccount}
-                setupTez = {setupXtzAccount}
+                setupEth={setupEthAccount}
+                setupTez={setupXtzAccount}
                 genSwap={genSwap}
               />
             </Route>
@@ -191,9 +196,9 @@ const initialize = async () => {
             </Route>
           </Switch>
           <Footer />
-        {/* )} */}
-      </div>
-    </Router>
+          {/* )} */}
+        </div>
+      </Router>
     </TezexContext>
   );
 };

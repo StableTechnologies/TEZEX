@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import { calcSwapReturn, getCounterPair } from "../../library/util";
+import { calcSwapReturn, createSecrets, getCounterPair } from "../../library/util";
 import { connectEthAccount, connectTezAccount, setupEthClient, shorten } from "../../util";
 import { content, tokenWallets, tokens } from '../constants/index';
 
@@ -14,9 +14,9 @@ import Grid from "@material-ui/core/Grid";
 import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
 import Loader from "../loader";
 import Paper from '@material-ui/core/Paper';
+import SwapError from '../swapError';
 import SwapProgress from '../swapProgress';
 import SwapStatus from '../swapStatus';
-import SwapError from '../swapError';
 import TextField from '@material-ui/core/TextField';
 import { TezexContext } from '../context/TezexContext';
 import TokenSelectionDialog from '../dialog';
@@ -27,6 +27,9 @@ import sidelogo from "../../assets/sidelogo.svg";
 import swapIcon from "../../assets/swapIcon.svg";
 import { useHistory } from "react-router-dom";
 import useStyles from "./style";
+
+const config = require(`../../library/${process.env.REACT_APP_ENV || "prod"
+  }-network-config.json`);
 
 const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupTez, genSwap }) => {
   const history = useHistory();
@@ -57,18 +60,18 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
   const [xtzAccount, setXtzAccount] = useState('');
 
   const [currentSwap, setCurrentSwap] = useState(false);
+  const [maxSwap, setMaximizedSwap] = useState(undefined);
   const [swapStat, setSwapStat] = useState(undefined);
   const [ongoingSwaps, setOngoingSwaps] = useState([]);
 
   const openInputTokenModal = () => { setInputTokenModalOpen(true); }
   const openOutputTokenModal = () => { setOutputTokenModalOpen(true); }
-  const openSwapProgress = () => { setSwapProgress(true); }
+  const openSwapProgress = (swap) => { setMaximizedSwap(swap); setSwapProgress(true); }
   const openWalletModal = () => { setWalletModalOpen(true); }
   const openErrModal = () => { setErrModalOpen(true); setWalletModalOpen(false); }
 
-  const minimize = () => { setSwapProgress(false); setCurrentSwapView(true); }
-  const maximize = () => { setSwapProgress(true); setCurrentSwapView(false); }
-
+  const minimize = () => { setMaximizedSwap(undefined); setSwapProgress(false); setCurrentSwapView(true); }
+  const maximize = (swap) => { setMaximizedSwap(swap); setSwapProgress(true); setCurrentSwapView(false); }
 
   useEffect(() => {
     if (inputToken && outputToken) {
@@ -91,6 +94,14 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
       })
     }
   }, [inputToken, outputToken]);
+
+  useEffect(() => {
+    if (maxSwap !== undefined) {
+      if (swaps[maxSwap.hashedSecret] !== undefined && swaps[maxSwap.hashedSecret].state != maxSwap.state) {
+        setMaximizedSwap(swaps[maxSwap.hashedSecret]);
+      }
+    }
+  });
 
   useEffect(() => {
     if (currentSwap === undefined) return;
@@ -179,8 +190,18 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
         .toFixed(6)
     } catch (error) { }
   }
-  const generateSwap = async () => {
+  const generateSwap = async (swap, secret) => {
+    const res = await genSwap(swap, secret);
+    if (!res) {
+      setSwapProgress(false)
+      setSwapError(true)
+    }
+  };
+
+  const startSwap = () => {
+    const secret = createSecrets();
     const swap = {
+      hashedSecret: secret.hashedSecret,
       pair: currentSwap.pair,
       asset: currentSwap.asset,
       network: swapPairs[currentSwap.pair][currentSwap.asset].network,
@@ -190,23 +211,32 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
         )
         .toString(),
       minValue: minExpectedReturn.toString(),
+      refundTime: Math.trunc(Date.now() / 1000) + config.swapConstants.refundPeriod,
+      state: -1
     };
-    const res = await genSwap(swap);
-    if (!res) {
-      setSwapProgress(false)
-      setSwapError(true)
-    }
-  };
-
-  const startSwap = () => {
-    generateSwap();
-    openSwapProgress();
+    generateSwap(swap, secret);
+    openSwapProgress(swap);
     saveCurrentSwap(currentSwap);
   }
   const tryAgain = () => {
+    const secret = createSecrets();
+    const swap = {
+      hashedSecret: secret.hashedSecret,
+      pair: currentSwap.pair,
+      asset: currentSwap.asset,
+      network: swapPairs[currentSwap.pair][currentSwap.asset].network,
+      value: new BigNumber(inputTokenAmount)
+        .multipliedBy(
+          10 ** swapPairs[currentSwap.pair][currentSwap.asset].decimals
+        )
+        .toString(),
+      minValue: minExpectedReturn.toString(),
+      refundTime: Math.trunc(Date.now() / 1000) + config.swapConstants.refundPeriod,
+      state: -1
+    };
     setSwapError(false)
-    generateSwap();
-    openSwapProgress();
+    generateSwap(swap, secret);
+    openSwapProgress(swap);
   }
 
 
@@ -222,19 +252,20 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
   }
   const closeSwapStatus = () => {
     setSwapStatus(false)
+    setMaximizedSwap(undefined)
     setInputTokenAmount("");
     setOutputTokenAmount(0.00);
     setOutputToken("");
     setCurrentSwap('');
-    updateSwaps(undefined);
   }
   const openSwapError = () => {
+    setSwapProgress(false);
     setSwapError(true);
     setCurrentSwapView(false);
-    setSwapProgress(false);
   }
   const closeSwapError = () => {
     setSwapError(false)
+    setMaximizedSwap(undefined)
   }
 
   const setToken = (value, side) => {
@@ -299,12 +330,12 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
   }
 
   useEffect(() => {
-    if(tokenPair.indexOf(outputToken) === -1) {
+    if (tokenPair.indexOf(outputToken) === -1) {
       setOutputToken('');
       setOutputTokenAmount('');
       setCurrentSwap('');
     }
-  }, [ inputToken, outputToken]);
+  }, [inputToken, outputToken]);
 
   useEffect(() => {
     setOutputTokenAmount(minReceived)
@@ -327,9 +358,9 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
     }
   };
 
-  if(inputTokenAmount <= bal) {
+  if (inputTokenAmount <= bal) {
     console.log('true');
-  }else {
+  } else {
     console.log('false');
   }
 
@@ -440,6 +471,11 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
                   </form>
                 </CardContent>
                 <CardActions>
+                  {(maxSwap !== undefined) && <>
+                    <SwapStatus swap={maxSwap} open={swapStatus} onClose={closeSwapStatus} />
+                    <SwapError swap={maxSwap} open={swapError} onClose={closeSwapError} onClick={tryAgain} />
+                    <SwapProgress swap={maxSwap} open={swapProgress} onClose={minimize} completed={openSwapStatus} notCompleted={openSwapError} />
+                  </>}
                   {
                     (globalContext.tezosClient.account || globalContext.ethereumClient.account) ?
                       (
@@ -449,24 +485,24 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
                               (
                                 <>
                                   {
-                                    (inputTokenAmount && (minReceived > 0) ) ?
+                                    (inputTokenAmount && (minReceived > 0)) ?
                                       (
                                         <>
-                                        {
-                                          ((Number(inputTokenAmount) <= bal)) ?
-                                          (
-                                            <>
-                                              <Button size="large" className={classes.connectwalletbutton + " Element"} onClick={startSwap} >swap tokens</Button>
-                                              <SwapStatus swaps={swaps} open={swapStatus} onClose={closeSwapStatus} />
-                                              <SwapError open={swapError} onClose={closeSwapError} onClick={tryAgain} />
-                                              <SwapProgress swaps={swaps} open={swapProgress} onClose={minimize} completed={openSwapStatus} notCompleted={openSwapError}   />
-                                            </>
-                                          )
-                                          :
-                                          (
-                                            <Button size="large" className={`${classes.connectwalletbutton + " Element"} ${classes.disabled + " Element"}`} disabled>Insufficient funds</Button>
-                                          )
-                                        }
+                                          {
+                                            ((Number(inputTokenAmount) <= bal)) ?
+                                              (
+                                                <>
+                                                  <Button size="large" className={classes.connectwalletbutton + " Element"} onClick={startSwap} >swap tokens</Button>
+                                                  {/* <SwapStatus swaps={swaps} open={swapStatus} onClose={closeSwapStatus} />
+                                                  <SwapError open={swapError} onClose={closeSwapError} onClick={tryAgain} />
+                                                  <SwapProgress swaps={swaps} open={swapProgress} onClose={minimize} completed={openSwapStatus} notCompleted={openSwapError} /> */}
+                                                </>
+                                              )
+                                              :
+                                              (
+                                                <Button size="large" className={`${classes.connectwalletbutton + " Element"} ${classes.disabled + " Element"}`} disabled>Insufficient funds</Button>
+                                              )
+                                          }
                                         </>
                                       ) :
                                       (
@@ -533,7 +569,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
             </div>
           </Grid>
           <Grid item xs={12} sm={4} md={4} lg={3}>
-            {currentSwapView && (
+            {(
               <CurrentSwaps swaps={swaps} ongoingSwaps={ongoingSwaps} onClick={maximize} />
             )}
           </Grid>

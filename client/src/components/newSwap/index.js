@@ -42,8 +42,6 @@ const CreateSwap = ({ clients, swapPairs, genSwap }) => {
       clearInterval(timer);
     };
   }, [currentSwap]);
-  console.log(swapStat);
-
 
   const handleChange = (e) => {
     e.preventDefault();
