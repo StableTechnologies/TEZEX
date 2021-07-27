@@ -14,13 +14,13 @@ import Grid from "@material-ui/core/Grid";
 import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
 import Loader from "../loader";
 import Paper from '@material-ui/core/Paper';
-import TryAgain from '../swapError/retrySwap';
 import RefundSwap from '../swapError/refundSwap'
 import SwapProgress from '../swapProgress';
 import SwapStatus from '../swapStatus';
 import TextField from '@material-ui/core/TextField';
 import { TezexContext } from '../context/TezexContext';
 import TokenSelectionDialog from '../dialog';
+import TryAgain from '../swapError/retrySwap';
 import Typography from "@material-ui/core/Typography";
 import { getSwapStat } from "../newSwap/util";
 import { selectToken } from "../tokenPairs/index";
@@ -360,13 +360,9 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
       alert("error in refunding, check if the refund time has come");
     }
   };
-  const refundFailedSwap = () => {
-    if(swaps) {
-      Object.keys(swaps).map((x) =>{
-        refundHandler(swaps[x])
-        setRefundSwap(false)
-      })
-    }
+  const refundFailedSwap = (swap) => {
+    refundHandler(swap)
+    setRefundSwap(false)
   }
 
   return (
@@ -479,7 +475,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
                   {(maxSwap !== undefined) && <>
                     <SwapStatus swap={maxSwap} open={swapStatus} onClose={closeSwapStatus} />
                     <TryAgain swap={maxSwap} open={tryAgain} onClose={closeTryAgain} onClick={retry} />
-                    <RefundSwap swap={maxSwap} open={refundSwap} onClose={closeRefundSwap} onClick={refundFailedSwap} />
+                    <RefundSwap swap={maxSwap} open={refundSwap} onClose={closeRefundSwap} onClick={() => refundFailedSwap(maxSwap)} />
                     <SwapProgress swap={maxSwap} open={swapProgress} onClose={minimize} completed={openSwapStatus} notCompleted={openRefundSwap} />
                   </>}
                   {
