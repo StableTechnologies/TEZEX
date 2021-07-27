@@ -93,19 +93,19 @@ const Header = ({ clients, swapPairs, balUpdate, setupEth, setupTez, }) => {
       setXtzAccount(globalContext.tezosClient.account);
       setEthAccount(globalContext.ethereumClient.account);
 
-    }, [setupXtzAccount, setupEthAccount])
+    }, [setupXtzAccount, setupEthAccount]);
 
     useEffect(() => {
-      if(clients && clients['ethereum']) {
-        globalContext.changeEthereumClient(clients.ethereum);
-        const ethcc = clients.ethereum.account;
-      }
-
-      if(clients && clients['tezos']) {
+      if (clients['tezos']) {
         globalContext.changeTezosClient(clients.tezos);
       }
-    }, [clients['ethereum'], clients['tezos']])
-    // }, [clients,])
+    }, [ clients['tezos']])
+
+    useEffect(() => {
+      if (clients['ethereum']) {
+        globalContext.changeEthereumClient(clients.ethereum);
+      }
+    }, [clients['ethereum']])
 
     useEffect(() => {
         updateBalance();
