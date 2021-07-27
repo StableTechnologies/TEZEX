@@ -361,8 +361,9 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
     }
   };
   const refundFailedSwap = (swap) => {
-    refundHandler(swap)
     setRefundSwap(false)
+    refundHandler(swap)
+    setMaximizedSwap(undefined)
   }
 
   return (
