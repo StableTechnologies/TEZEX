@@ -265,14 +265,6 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
     }
     catch (error) { }
   };
-  useEffect(() => {
-    if (clients && clients['ethereum']) {
-      globalContext.changeEthereumClient(clients.ethereum);
-    }
-    if (clients && clients['tezos']) {
-      globalContext.changeTezosClient(clients.tezos);
-    }
-  }, [clients,])
 
   const setWalletType = async (value) => {
     const str = inputToken.title.toLowerCase();
@@ -327,11 +319,6 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
     }
   };
 
-  if(inputTokenAmount <= bal) {
-    console.log('true');
-  }else {
-    console.log('false');
-  }
 
   return (
     <Grid container justify="center" className={classes.bodycontainer}>
