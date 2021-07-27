@@ -347,6 +347,10 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
       setConnectEth(true);
       setConnectTez(false);
     }
+   if((str1.includes('tz')) &&
+      (!globalContext.ethereumClient.account)) {
+      setConnectEth(false);
+    }
     if(globalContext.ethereumClient.account || !(str.includes('tz'))) {
       setConnectEth(false);
     }
