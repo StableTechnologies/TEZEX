@@ -346,7 +346,6 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
 
   const refundHandler = async (swap) => {
     try {
-      setRefundSwap(false)
       if (Math.trunc(Date.now() / 1000) < swap.refundTime) {
         alert("Wait till expiry!");
         return;
@@ -361,6 +360,11 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
       alert("error in refunding, check if the refund time has come");
     }
   };
+  const refundFailedSwap = (swap) => {
+    setRefundSwap(false)
+    refundHandler(swap)
+    setMaximizedSwap(undefined)
+  }
 
   return (
     <Grid container justify="center" className={classes.bodycontainer}>
@@ -472,7 +476,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
                   {(maxSwap !== undefined) && <>
                     <SwapStatus swap={maxSwap} open={swapStatus} onClose={closeSwapStatus} />
                     <TryAgain swap={maxSwap} open={tryAgain} onClose={closeTryAgain} onClick={retry} />
-                    <RefundSwap swap={maxSwap} open={refundSwap} onClose={closeRefundSwap} onClick={() => refundHandler(maxSwap)} />
+                    <RefundSwap swap={maxSwap} open={refundSwap} onClose={closeRefundSwap} onClick={() => refundFailedSwap(maxSwap)} />
                     <SwapProgress swap={maxSwap} open={swapProgress} onClose={minimize} completed={openSwapStatus} notCompleted={openRefundSwap} />
                   </>}
                   {
