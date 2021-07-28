@@ -332,9 +332,11 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
   }
 
   const checkWallet = () => {
-    const str = inputToken.title.toLowerCase() && outputToken.title.toLowerCase();
-    const str1 = inputToken.title.toLowerCase() || outputToken.title.toLowerCase();
-    if(str.includes('tz') &&
+
+    const inputStr = inputToken.title.toLowerCase().includes('tz');
+    const outputStr = outputToken.title.toLowerCase().includes('tz');
+
+    if( (inputStr && outputStr) &&
       (!globalContext.tezosClient.account && globalContext.ethereumClient.account)) {
       setConnectTez(true);
       setConnectEth(false);
@@ -342,19 +344,19 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
     if(globalContext.tezosClient.account) {
       setConnectTez(false);
     }
-   if(!(str1.includes('tz')) &&
+    if(globalContext.ethereumClient.account) {
+      setConnectEth(false);
+    }
+   if( (!inputStr || !outputStr) &&
       (!globalContext.ethereumClient.account && globalContext.tezosClient.account)) {
       setConnectEth(true);
       setConnectTez(false);
     }
-   if((str1.includes('tz')) &&
-      (!globalContext.ethereumClient.account)) {
+   if( (!inputStr || !outputStr) &&
+      (globalContext.ethereumClient.account && !globalContext.tezosClient.account)) {
       setConnectEth(false);
+      setConnectTez(true);
     }
-    if(globalContext.ethereumClient.account || !(str.includes('tz'))) {
-      setConnectEth(false);
-    }
-
   }
 
 
