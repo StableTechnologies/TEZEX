@@ -344,7 +344,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
     if(globalContext.tezosClient.account) {
       setConnectTez(false);
     }
-    if(globalContext.ethereumClient.account) {
+    if(globalContext.ethereumClient.account || (inputStr && outputStr)) {
       setConnectEth(false);
     }
    if( (!inputStr || !outputStr) &&
@@ -419,11 +419,12 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
           <Grid item xs={0} md={2} lg={2}></Grid>
           <Grid item xs={12} sm={7} md={5} lg={4}>
             <Typography className={classes.warning}>
-              {(connectTez || connectEth) &&
+              {((connectTez || connectEth) || (minReceived < 0)) &&
                 <img src={warning} alt="warning logo" className={classes.warningImg} />
               }
               {connectTez &&  "Connect Your Tezos Wallet"}
               {connectEth &&  "Connect Your Ethereum Wallet"}
+              {(minReceived < 0) &&  "Minimum Received must be greater than 0"}
             </Typography>
             <div className={classes.swaps}>
               <Card className={classes.card} square>
