@@ -43,11 +43,18 @@ export default class PureTezos {
         const key = TezosMessageUtils.encodeBigMapKey(
             Buffer.from(TezosMessageUtils.writePackedData(address, "address"), "hex")
         );
-        const tokenData = await TezosNodeReader.getValueForBigMapKey(
-            this.rpc,
-            tokenContract.mapID,
-            key
-        );
+        let tokenData = undefined;
+        try {
+            tokenData = await TezosNodeReader.getValueForBigMapKey(
+                this.rpc,
+                tokenContract.mapID,
+                key
+            );
+        } catch (err) {
+            if (!Object.prototype.hasOwnProperty.call(err, "httpStatus") && err.httpStatus === 404)
+                throw err;
+        }
+
         let balance =
             tokenData === undefined
                 ? "0"
@@ -238,11 +245,18 @@ export default class PureTezos {
         const packedKey = TezosMessageUtils.encodeBigMapKey(
             Buffer.from(TezosMessageUtils.writePackedData(asset, "string"), "hex")
         );
-        const jsonData = await TezosNodeReader.getValueForBigMapKey(
-            this.rpc,
-            this.priceContract.mapID,
-            packedKey
-        );
+        let jsonData = undefined;
+        try {
+            jsonData = await TezosNodeReader.getValueForBigMapKey(
+                this.rpc,
+                this.priceContract.mapID,
+                packedKey
+            );
+        } catch (err) {
+            if (!Object.prototype.hasOwnProperty.call(err, "httpStatus") && err.httpStatus === 404)
+                throw err;
+        }
+
         return parseInt(
             JSONPath({
                 path: "$.args[0].args[0].int",
@@ -259,24 +273,36 @@ export default class PureTezos {
             hashedSecret:
                 "0x" +
                 JSONPath({
-                    path: "$.args[0].bytes",
-                    json: jsonData[0],
+                    path: "$.bytes",
+                    json: jsonData[2],
                 })[0],
-            initiator: TezosMessageUtils.readAddress(
-                JSONPath({ path: "$.args[1].args[0].bytes", json: jsonData[0] })[0]
-            ),
-            initiator_eth_addr: JSONPath({
-                path: "$.args[1].args[1].string",
+            initiator: TezosMessageUtils.readAddress(JSONPath({
+                path: "$.args[1].args[1].bytes",
+                json: jsonData[0],
+            })[0]),
+            pair: JSONPath({
+                path: "$.args[0].string",
+                json: jsonData[1],
+            })[0],
+            asset: JSONPath({
+                path: "$.args[0].args[0].string",
                 json: jsonData[0],
             })[0],
-            participant: TezosMessageUtils.readAddress(
-                JSONPath({ path: "$.args[0].bytes", json: jsonData[1] })[0]
-            ),
+            commission: JSONPath({
+                path: "$.args[0].args[1].int",
+                json: jsonData[0],
+            })[0],
             refundTimestamp: Number(
-                JSONPath({ path: "$.args[1].int", json: jsonData[1] })[0]
+                JSONPath({
+                    path: "$.args[1].int",
+                    json: jsonData[1],
+                })[0]
             ),
-            state: Number(jsonData[2].int),
-            value: jsonData[3].int,
+            value: JSONPath({ path: "$.int", json: jsonData[3] })[0],
+            expectedValue: JSONPath({
+                path: "$.args[1].args[0].int",
+                json: jsonData[0],
+            })[0],
         };
     }
 
@@ -290,64 +316,68 @@ export default class PureTezos {
      * @return the swap details if available
      */
     async getSwap(swapContract, hashedSecret, key_hash = undefined) {
+        let packedKey = "";
+        if (key_hash === undefined) {
+            hashedSecret = hashedSecret.substring(2);
+            packedKey = TezosMessageUtils.encodeBigMapKey(
+                Buffer.from(TezosMessageUtils.writePackedData(hashedSecret, "bytes"), "hex")
+            );
+        } else {
+            packedKey = key_hash;
+        }
+
+        let jsonData = undefined;
         try {
-            let packedKey = "";
-            if (key_hash === undefined) {
-                hashedSecret = hashedSecret.substring(2);
-                packedKey = TezosMessageUtils.encodeBigMapKey(
-                    Buffer.from(TezosMessageUtils.writePackedData(hashedSecret, "bytes"), "hex")
-                );
-            } else {
-                packedKey = key_hash;
-            }
-            const jsonData = await TezosNodeReader.getValueForBigMapKey(
+            jsonData = await TezosNodeReader.getValueForBigMapKey(
                 this.rpc,
                 swapContract.mapID,
                 packedKey
             );
-            if (jsonData === undefined) return jsonData;
-            return {
-                hashedSecret:
-                    "0x" +
-                    JSONPath({
-                        path: "$.args[2].bytes",
-                        json: jsonData,
-                    })[0],
-                initiator: JSONPath({
-                    path: "$.args[0].args[2].string",
-                    json: jsonData,
-                })[0],
-                pair: JSONPath({
-                    path: "$.args[1].args[0].string",
-                    json: jsonData,
-                })[0],
-                asset: JSONPath({
-                    path: "$.args[0].args[0].args[0].string",
-                    json: jsonData,
-                })[0],
-                commission: JSONPath({
-                    path: "$.args[0].args[0].args[1].int",
-                    json: jsonData,
-                })[0],
-                refundTimestamp: Number(
-                    Math.floor(
-                        new Date(
-                            JSONPath({
-                                path: "$.args[1].args[1].string",
-                                json: jsonData,
-                            })[0]
-                        ).getTime() / 1000
-                    )
-                ),
-                value: JSONPath({ path: "$.args[3].int", json: jsonData })[0],
-                expectedValue: JSONPath({
-                    path: "$.args[0].args[1].int",
-                    json: jsonData,
-                })[0],
-            };
-        } catch (error) {
-            throw (error);
+        } catch (err) {
+            if (!Object.prototype.hasOwnProperty.call(err, "httpStatus") && err.httpStatus === 404)
+                throw err;
         }
+
+        if (jsonData === undefined) return jsonData;
+        return {
+            hashedSecret:
+                "0x" +
+                JSONPath({
+                    path: "$.args[2].bytes",
+                    json: jsonData,
+                })[0],
+            initiator: JSONPath({
+                path: "$.args[0].args[2].string",
+                json: jsonData,
+            })[0],
+            pair: JSONPath({
+                path: "$.args[1].args[0].string",
+                json: jsonData,
+            })[0],
+            asset: JSONPath({
+                path: "$.args[0].args[0].args[0].string",
+                json: jsonData,
+            })[0],
+            commission: JSONPath({
+                path: "$.args[0].args[0].args[1].int",
+                json: jsonData,
+            })[0],
+            refundTimestamp: Number(
+                Math.floor(
+                    new Date(
+                        JSONPath({
+                            path: "$.args[1].args[1].string",
+                            json: jsonData,
+                        })[0]
+                    ).getTime() / 1000
+                )
+            ),
+            value: JSONPath({ path: "$.args[3].int", json: jsonData })[0],
+            expectedValue: JSONPath({
+                path: "$.args[0].args[1].int",
+                json: jsonData,
+            })[0],
+        };
     }
 
     /**
@@ -365,8 +395,7 @@ export default class PureTezos {
             {
                 fields: [
                     "key",
-                    "key_hash",
-                    // "value",
+                    "value",
                 ],
                 predicates: [
                     {
@@ -388,12 +417,9 @@ export default class PureTezos {
             }
         );
         let swaps = [];
-        for (let e of data) {
-            if (e.key_hash !== null) {
-                const swp = await this.getSwap(swapContract, "", e.key_hash);
-                if (swp !== undefined) swaps.push(swp);
-            }
-        }
+        data.forEach((e) => {
+            if (e.value !== null) swaps.push(this.parseSwapValue(e.value));
+        });
         return swaps;
     }
 
@@ -407,7 +433,6 @@ export default class PureTezos {
      */
     async getUserSwaps(swapContract, account) {
         const swaps = await this.getAllSwaps(swapContract);
-        console.log("all swapsss", swaps)
         return swaps.filter((swp) => swp.initiator === account);
     }
 

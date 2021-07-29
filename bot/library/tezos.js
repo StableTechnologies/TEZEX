@@ -76,11 +76,17 @@ module.exports = class Tezos {
     const key = TezosMessageUtils.encodeBigMapKey(
       Buffer.from(TezosMessageUtils.writePackedData(address, "address"), "hex")
     );
-    const tokenData = await TezosNodeReader.getValueForBigMapKey(
-      this.rpc,
-      tokenContract.mapID,
-      key
-    );
+    let tokenData = undefined;
+    try {
+      tokenData = await TezosNodeReader.getValueForBigMapKey(
+        this.rpc,
+        tokenContract.mapID,
+        key
+      );
+    } catch (err) {
+      if (!Object.prototype.hasOwnProperty.call(err, "httpStatus") && err.httpStatus === 404)
+        throw err;
+    }
     let balance =
       tokenData === undefined
         ? "0"
@@ -99,11 +105,17 @@ module.exports = class Tezos {
     const key = TezosMessageUtils.encodeBigMapKey(
       Buffer.from(TezosMessageUtils.writePackedData(address, "address"), "hex")
     );
-    const tokenData = await TezosNodeReader.getValueForBigMapKey(
-      this.rpc,
-      tokenContract.mapID,
-      key
-    );
+    let tokenData = undefined;
+    try {
+      tokenData = await TezosNodeReader.getValueForBigMapKey(
+        this.rpc,
+        tokenContract.mapID,
+        key
+      );
+    } catch (err) {
+      if (!Object.prototype.hasOwnProperty.call(err, "httpStatus") && err.httpStatus === 404)
+        throw err;
+    }
     let allowances =
       tokenData === undefined
         ? undefined
@@ -287,12 +299,14 @@ module.exports = class Tezos {
       this.rpc,
       swapContract.address
     );
-    return parseInt(
-      JSONPath({
-        path: "$.args[2].int",
-        json: storage,
-      })[0]
-    );
+    return {
+      reward: parseInt(
+        JSONPath({
+          path: "$.args[2].int",
+          json: storage,
+        })[0]
+      )
+    };
   }
 
   /**
@@ -358,11 +372,17 @@ module.exports = class Tezos {
     const packedKey = TezosMessageUtils.encodeBigMapKey(
       Buffer.from(TezosMessageUtils.writePackedData(asset, "string"), "hex")
     );
-    const jsonData = await TezosNodeReader.getValueForBigMapKey(
-      this.rpc,
-      this.priceContract.mapID,
-      packedKey
-    );
+    let jsonData = undefined;
+    try {
+      jsonData = await TezosNodeReader.getValueForBigMapKey(
+        this.rpc,
+        this.priceContract.mapID,
+        packedKey
+      );
+    } catch (err) {
+      if (!Object.prototype.hasOwnProperty.call(err, "httpStatus") && err.httpStatus === 404)
+        throw err;
+    }
     return parseInt(
       JSONPath({
         path: "$.args[0].args[0].int",
@@ -489,11 +509,18 @@ module.exports = class Tezos {
         "hex"
       )
     );
-    const jsonData = await TezosNodeReader.getValueForBigMapKey(
-      this.rpc,
-      swapContract.mapID,
-      packedKey
-    );
+    let jsonData = undefined
+    try {
+      jsonData = await TezosNodeReader.getValueForBigMapKey(
+        this.rpc,
+        swapContract.mapID,
+        packedKey
+      );
+    } catch (err) {
+      if (!Object.prototype.hasOwnProperty.call(err, "httpStatus") && err.httpStatus === 404)
+        throw err;
+    }
+
     if (jsonData === undefined) return jsonData;
     return {
       hashedSecret:

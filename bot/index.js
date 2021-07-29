@@ -90,9 +90,9 @@ const validateBalance = ({
             asset
           ].balance
             .div(10 ** balances[asset].decimals)
-            .toString()} eth < ${balances[asset].need
-            .div(10 ** balances[asset].decimals)
-            .toString()} eth\n`
+            .toString()} ${balances[asset].symbol} < ${balances[asset].need
+              .div(10 ** balances[asset].decimals)
+              .toString()} ${balances[asset].symbol}\n`
         );
       }
     }

@@ -13,7 +13,7 @@
     "aos": "^2.3.4",
     "async-mutex": "^0.2.6",
     "bignumber.js": "^9.0.1",
-    "conseiljs": "^5.0.7",
+    "conseiljs": "5.0.9-beta.3",
     "conseiljs-softsigner": "^5.0.3",
     "ethereumjs-tx": "^2.1.2",
     "jsonpath-plus": "^4.0.0",
