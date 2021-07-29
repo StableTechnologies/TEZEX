@@ -67,8 +67,8 @@ export const useStyles = makeStyles((theme) => ({
     margin: "0 auto",
   },
   spinner: {
-    width: "206px",
-    width: "206px",
+    width: "120px",
+    width: "120px",
   },
   textImg: {
     marginBottom: "-4px",

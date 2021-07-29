@@ -122,13 +122,19 @@ console.log(swap, 'swap@swapProgress');
           />
         </DialogContentText>
         <DialogContentText>
-          Value: {swap.value}
+          {swap.value &&
+           "Value: " + swap.value
+          }
         </DialogContentText>
         <DialogContentText>
-          Min Expected Return : {swap.minReturn}
+        {swap.minReturn &&
+           "Min Expected Return: " + swap.minReturn
+        }
         </DialogContentText>
         <DialogContentText>
-          Exact Return : {swap.exact}
+        {swap.exact &&
+           "Exact Return: " + swap.exact
+        }
         </DialogContentText>
         <DialogContentText>
           Swap will timeout in: {" "} {refundTime || " "} <img src={question_circle} alt="question_circle" className={classes.textImg} />

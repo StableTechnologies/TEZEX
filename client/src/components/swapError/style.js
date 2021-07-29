@@ -9,7 +9,9 @@ export const useStyles = makeStyles((theme) => ({
   },
 
   img: {
-    marginBottom: "-4px"
+    marginBottom: "-6px",
+    width: "24px",
+    height: "24px"
   },
 
   p1: {
