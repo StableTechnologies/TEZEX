@@ -273,6 +273,7 @@ module.exports = class Bot {
           this.swaps[key].state === STATE.ERROR &&
           this.swaps[key].refundTime <= Date.now() / 1000
         ) {
+          const refAsset = this.swaps[key].asset;
           try {
             console.log(`[!] REFUNDING SWAP(${this.swaps[key].asset}): ${key}`);
             // check if swap already redeemed or refunded if so no point in trying
@@ -304,10 +305,10 @@ module.exports = class Bot {
             );
             this.swaps[key].state = STATE.REFUNDED;
             await this.updateSwap(this.swaps[key]);
-            console.log(`[!] REFUNDED SWAP(${this.swaps[key].asset}): ${key}`);
+            console.log(`[!] REFUNDED SWAP(${refAsset}): ${key}`);
           } catch (err) {
             console.error(
-              `[x] FAILED TO REFUND SWAP(${this.swaps[key].asset}): ${key}\n` +
+              `[x] FAILED TO REFUND SWAP(${refAsset}): ${key}\n` +
               err
             );
             this.logger.error(`failed to refund swap: ${key}`, err);
@@ -509,7 +510,7 @@ module.exports = class Bot {
     return {
       txFees: data[0],
       ethereumGasPrice,
-      reward: data[1],
+      reward: data[1].reward,
     };
   }
 
