@@ -166,8 +166,8 @@ export const getOldSwaps = async (clients, swapPairs) => {
         }
         swaps[swp.hashedSecret] = {
           network: network,
-          pair: pair,
-          asset: asset,
+          pair: p,
+          asset: a,
           hashedSecret: swp.hashedSecret,
           value:
             new BigNumber(swp.value)
