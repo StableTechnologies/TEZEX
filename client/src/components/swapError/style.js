@@ -47,6 +47,12 @@ export const useStyles = makeStyles((theme) => ({
     }
   },
 },
+  disabled: {
+    "&.Element": {
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      border: "0",
+    }
+  },
 
 }));
 

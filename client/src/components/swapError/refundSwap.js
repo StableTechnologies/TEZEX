@@ -1,5 +1,5 @@
 import React from 'react';
-import error from '../../assets/error.svg' //clock here
+import clock from '../../assets/clock.svg';
 
 import SwapError from './index';
 import { shorten } from "../../util";
@@ -13,13 +13,17 @@ const RefundSwap = (props) => {
       open = {open}
       onClose = {onClose}
       onClick = {onClick}
-      titleImg = {error}
+      swap = {swap}
+      titleImg = {clock}
       title = "Token Swap Timed Out"
       button = "Refund"
-      text1 = { "Swap Hash : "}
-      copyText = { shorten(7,7, swap.hashedSecret)}
+      text1 = {"Swap Hash : " +  shorten(7,7, swap.hashedSecret)}
+      copyText = {swap.hashedSecret}
       text2 = "A swap response was not found at this time. Please redeem your funds."
       text3 = "You can try your swap again at any time. Check out the stats page..."
+
+      expiryTime = {Math.trunc(Date.now() / 1000) < swap.refundTime}
+      text4 = "Please wait till after the expiry time to redeem your funds"
      />
   )
 }

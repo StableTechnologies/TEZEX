@@ -116,8 +116,8 @@ console.log(swap, 'swap@swapProgress');
       <DialogContent>
         <DialogContentText>
           <Copy
-            text = {"Swap Hash : "}
-            copyText = { shorten(7,7, swap.hashedSecret)}
+            text = {"Swap Hash : " +  shorten(10,8, swap.hashedSecret)}
+            copyText = {swap.hashedSecret}
             tooltip = "copy swap hash"
           />
         </DialogContentText>

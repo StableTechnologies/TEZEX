@@ -16,9 +16,9 @@ import Copy from '../copy';
 const SwapError = (props) => {
   const classes = useStyles();
 
-  const { open, onClose, onClick, titleImg, button, title, text1, text2, text3, copyText } = props;
+  const { open, onClose, onClick, titleImg, button, title, text1, text2, text3, text4, copyText, expiryTime } = props;
   return (
-    <Dialog aria-labelledby="simple-dialog-title" open={open} onClose={onClose} className={classes.root}>
+    <Dialog aria-labelledby="simple-dialog-title" open={open} className={classes.root}>
       <DialogTitle id="simple-dialog-title" onClose={onClose}>
         <span> <img src={titleImg} alt="error_logo" className={classes.img} /> </span>
           {title}
@@ -33,10 +33,19 @@ const SwapError = (props) => {
           copyText = {copyText}
           tooltip = "copy swap hash"
         />
-        <Typography className={classes.p1} > {text2} </Typography>
-        <Typography className={classes.p2}>  {text3} </Typography>
 
-        <Button size="large" className={classes.button + " Element"} onClick={onClick} > {button} </Button>
+        {expiryTime ?
+          <>
+              <Typography className={classes.p1} > {text4} </Typography>
+              <Button size="large" className={`${classes.button + " Element"} ${classes.disabled + " Element"}`} disabled>{button}</Button>
+          </>
+            :
+            <>
+              <Typography className={classes.p1} > {text2} </Typography>
+              <Typography className={classes.p2}>  {text3} </Typography>
+              <Button size="large" className={classes.button + " Element"} onClick={onClick} > {button} </Button>
+            </>
+          }
       </DialogContent>
     </Dialog>
   )

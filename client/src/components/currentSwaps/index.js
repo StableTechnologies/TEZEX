@@ -74,8 +74,9 @@ const CurrentSwaps = (props) => {
         </Paper>
         <Typography className={classes.minPad} > {refund && "Swap will timeout in: "} {refund}  </Typography>
         <Grid container alignContent="center" justify="space-between" >
-          <Typography className={classes.minPad}> {activeStep && "State: "} {state[data.state]}  </Typography>
-          <Typography className={classes.minPad}> Value: {data.value}  </Typography>
+          {/* <Typography className={classes.minPad}> {activeStep && "State: "} {state[data.state]}  </Typography> */}
+          <Typography className={classes.minPad}> {state[data.state]}  </Typography>
+          <Typography className={classes.minPad}> {data.value}  </Typography>
         </Grid>
       </div>
     )

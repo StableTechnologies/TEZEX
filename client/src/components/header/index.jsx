@@ -120,7 +120,7 @@ const Header = ({ clients, swapPairs, balUpdate, setupEth, setupTez, }) => {
                         <img className={classes.logo} src={logo} alt="Logo" />
                     </Grid>
                     <Grid container item alignContent = "center" justify = "center" xs={6} sm={5} md={6} lg={7} >
-                        <Grid md={2}></Grid>
+                        <Grid item md={2}></Grid>
                         <Grid container item alignContent = "center" justify = "center" xs={12} md={9} >
                             <button className={classes.button} onClick={() => history.push("/")} xs={4}>Home</button>
                             <button className={classes.button} onClick={() => history.push("/about")} xs={4}>About</button>
@@ -144,6 +144,7 @@ const Header = ({ clients, swapPairs, balUpdate, setupEth, setupTez, }) => {
 													<ExpandWalletView
 														address= {ethAccount &&(shorten(10, 7, ethAccount))}
                             walletType= {"Metamask"}
+                            copyText={ethAccount}
 														className= {classes.ethStyle + " Element"}
 													/>
 												</SwipeableDrawer>
@@ -165,6 +166,7 @@ const Header = ({ clients, swapPairs, balUpdate, setupEth, setupTez, }) => {
 													<ExpandWalletView
 														address= {xtzAccount &&(shorten(10, 7, xtzAccount))}
                             walletType= {"Temple"}
+                            copyText={xtzAccount}
 														className= {classes.tezStyle + " Element"}
 													/>
 												</SwipeableDrawer>

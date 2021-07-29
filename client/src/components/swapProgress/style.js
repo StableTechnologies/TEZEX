@@ -6,6 +6,9 @@ export const useStyles = makeStyles((theme) => ({
     "& .MuiPaper-root": {
       borderRadius: "1.5rem",
     },
+    "& .MuiDialogContent-root": {
+      overflow: "hidden",
+    },
     "& .MuiDialogActions-root": {
       justifyContent: "flex-start",
     },

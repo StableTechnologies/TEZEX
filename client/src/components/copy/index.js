@@ -1,4 +1,7 @@
 import React, { useRef, useState } from 'react';
+
+import useStyles from "./style";
+
 import Typography from "@material-ui/core/Typography";
 
 import copyIcon from '../../assets/copyIcon.svg';
@@ -8,30 +11,18 @@ import Tooltip from '@material-ui/core/Tooltip';
 
 
 const Copy = (props) => {
+  const classes = useStyles();
   const { text, copyText, tooltip, } = props;
 
-  const [copySuccess, setCopySuccess] = useState('');
-  const textAreaRef = useRef(null);
-
-  function copyToClipboard(e) {
-    textAreaRef.current.select();
-    document.execCommand('copy');
-    // This is just personal preference.
-    // I prefer to not show the whole text area selected.
-    e.target.focus();
-    setCopySuccess('Copied!');
-  };
   return (
     <div>
       <Typography>
-        { text +" "+ copyText}
+        { text }
         <Tooltip title={tooltip} >
-          {/* <Button onClick={copyToClipboard}> */}
           <Button onClick={() => navigator.clipboard.writeText(copyText)}>
-            <img src={copyIcon} alt="copyIcon" />
+            <img src={copyIcon} alt="copyIcon" className={classes.copyImg}/>
           </Button>
         </Tooltip>
-        {copySuccess}
       </Typography>
     </div>
   )

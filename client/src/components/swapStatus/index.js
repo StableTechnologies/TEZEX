@@ -33,8 +33,8 @@ const SwapStatus = (props) => {
         <div>
           <Typography> You can now view your updated token balances. </Typography>
           <Copy
-            text = { "Swap Hash : "}
-            copyText = { shorten(7,7, swap.hashedSecret)}
+            text = {"Swap Hash : " +  shorten(7,7, swap.hashedSecret)}
+            copyText = {swap.hashedSecret}
             tooltip = { "copy swap hash"}
           />
         </div>

@@ -5,7 +5,7 @@ const useStyles = makeStyles((theme) => ({
     MuiDialog: {
      "& paper": {
         position: "absolute",
-        height:" 135px",
+        height:" auto",
         width: "284px",
         borderRadius: "4px",
         right: "2.8%",
@@ -42,7 +42,7 @@ const useStyles = makeStyles((theme) => ({
       // right: "2.8%",
       // top: "7%",
       borderRadius: "4px",
-      height: "135px",
+      height: "auto",
       width: "284px",
       left: "1141px",
       top: "65px",
