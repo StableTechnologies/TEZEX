@@ -11,11 +11,12 @@ import CloseIcon from '@material-ui/icons/Close';
 
 import error from '../../assets/error.svg'
 import { useStyles } from "./style";
+import Copy from '../copy';
 
 const SwapError = (props) => {
   const classes = useStyles();
 
-  const { open, onClose, onClick, titleImg, button, title, text1, text2, text3 } = props;
+  const { open, onClose, onClick, titleImg, button, title, text1, text2, text3, copyText } = props;
   return (
     <Dialog aria-labelledby="simple-dialog-title" open={open} onClose={onClose} className={classes.root}>
       <DialogTitle id="simple-dialog-title" onClose={onClose}>
@@ -26,7 +27,12 @@ const SwapError = (props) => {
             </IconButton>
       </DialogTitle>
       <DialogContent >
-        <Typography className={classes.p1} > {text1} </Typography>
+        <Copy
+          className={classes.p1}
+          text = {text1}
+          copyText = {copyText}
+          tooltip = "copy swap hash"
+        />
         <Typography className={classes.p1} > {text2} </Typography>
         <Typography className={classes.p2}>  {text3} </Typography>
 

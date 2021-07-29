@@ -7,6 +7,7 @@ import complete from '../../assets/complete.gif';
 import { useStyles } from "./style";
 
 import { shorten } from "../../util";
+import Copy from "../copy";
 
 import IconButton from '@material-ui/core/IconButton';
 import CloseIcon from '@material-ui/icons/Close';
@@ -31,7 +32,11 @@ const SwapStatus = (props) => {
         </div>
         <div>
           <Typography> You can now view your updated token balances. </Typography>
-          <Typography> Swap Hash : {shorten(7,7, swap.hashedSecret)} </Typography>
+          <Copy
+            text = { "Swap Hash : "}
+            copyText = { shorten(7,7, swap.hashedSecret)}
+            tooltip = { "copy swap hash"}
+          />
         </div>
       </DialogContent>
     </Dialog>

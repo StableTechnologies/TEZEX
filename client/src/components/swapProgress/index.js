@@ -20,6 +20,8 @@ import pleading_face from '../../assets/pleading_face.svg';
 import question_circle from '../../assets/question_circle.svg';
 import spinner from '../../assets/spinner.gif';
 import { useStyles, } from "./style";
+import Copy from "../copy";
+import { shorten } from "../../util";
 
 const getSteps = () => {
   return ['1. Creating Swap Request', '2. Implementing Swap', '3. Validating Transaction'];
@@ -41,7 +43,7 @@ const getStepContent = (step) => {
 const SwapProgress = (props) => {
   const classes = useStyles();
 
-  const [activeStep, setActiveStep] = useState();
+  const [activeStep, setActiveStep] = useState(-1);
   const [refundTime, setRefundTime] = useState(0);
   const { open, onClose, swap, completed, notCompleted, } = props;
   const steps = getSteps();
@@ -78,15 +80,17 @@ const SwapProgress = (props) => {
       } catch (e) { }
     }
   }, [handleStepChange])
-
+console.log(swap, 'swap@swapProgress');
   return (
     <Dialog aria-labelledby="simple-dialog-title" open={open} className={classes.root}>
       <DialogTitle onClose={handleClose}>
         Swap In Progress...
         <Typography> Do not close or refresh the page. </Typography>
-        <IconButton aria-label="close" onClick={handleClose} className={classes.close}>
-          <img src={minimize} alt="minimize" />
-        </IconButton>
+        { (activeStep >=0 ) &&
+          <IconButton aria-label="close" onClick={handleClose} className={classes.close}>
+            <img src={minimize} alt="minimize" />
+          </IconButton>
+        }
       </DialogTitle>
       <DialogContent className={classes.spinnerCon}>
         <img src={spinner} alt="spinner" className={classes.spinner} />
@@ -110,6 +114,22 @@ const SwapProgress = (props) => {
         </Stepper>
       </DialogActions>
       <DialogContent>
+        <DialogContentText>
+          <Copy
+            text = {"Swap Hash : "}
+            copyText = { shorten(7,7, swap.hashedSecret)}
+            tooltip = "copy swap hash"
+          />
+        </DialogContentText>
+        <DialogContentText>
+          Value: {swap.value}
+        </DialogContentText>
+        <DialogContentText>
+          Min Expected Return : {swap.minReturn}
+        </DialogContentText>
+        <DialogContentText>
+          Exact Return : {swap.exact}
+        </DialogContentText>
         <DialogContentText>
           Swap will timeout in: {" "} {refundTime || " "} <img src={question_circle} alt="question_circle" className={classes.textImg} />
         </DialogContentText>

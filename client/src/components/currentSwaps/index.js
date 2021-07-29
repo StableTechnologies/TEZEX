@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
+import Grid from '@material-ui/core/Grid';
 import Button from '@material-ui/core/Button';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
@@ -53,26 +54,31 @@ const CurrentSwaps = (props) => {
         if (swapInProgress[1] === asset) token = x; else counterToken = x;
       }
     });
-    return (<div>
-      <Paper elevation={2}>
-        <div className={classes.CurrentSwaps}>
-          <Typography>
-            <span>
-              <img src={token.logo} alt="logo" className={classes.img} /> {token.title}
-            </span>
-            {" "} &#8594; {" "}
-            <span>
-              <img src={counterToken.logo} alt="logo" className={classes.img} /> {counterToken.title}
-            </span>
-          </Typography>
-        </div>
-        <Button onClick={() => onClick(data)}>
-          <img src={minimize} alt="minimize" className={classes.img} />
-        </Button>
-      </Paper>
-      <Typography> {refund && "Swap will timeout in: "} {refund}  </Typography>
-      <Typography> {activeStep && "State: "} {state[data.state]}  </Typography>
-    </div>)
+    return (
+      <div className={classes.container}>
+        <Paper elevation={2}>
+          <div className={classes.CurrentSwaps}>
+            <Typography>
+              <span>
+                <img src={token.logo} alt="logo" className={classes.img} /> {token.title}
+              </span>
+              {" "} &#8594; {" "}
+              <span>
+                <img src={counterToken.logo} alt="logo" className={classes.img} /> {counterToken.title}
+              </span>
+            </Typography>
+          </div>
+          <Button onClick={() => onClick(data)}>
+            <img src={minimize} alt="minimize" className={classes.img} />
+          </Button>
+        </Paper>
+        <Typography className={classes.minPad} > {refund && "Swap will timeout in: "} {refund}  </Typography>
+        <Grid container alignContent="center" justify="space-between" >
+          <Typography className={classes.minPad}> {activeStep && "State: "} {state[data.state]}  </Typography>
+          <Typography className={classes.minPad}> Value: {data.value}  </Typography>
+        </Grid>
+      </div>
+    )
   }
 
   useEffect(() => {

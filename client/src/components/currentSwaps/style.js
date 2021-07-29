@@ -17,6 +17,11 @@ const useStyles = makeStyles((theme) => ({
   '@media (max-width: 501px)': {
   }
   },
+  container: {
+    margin: "1rem 0",
+    background: "#f8f8f8",
+    borderRadius: "16px",
+  },
   img: {
     width: "24px",
     height: "24px",
@@ -25,6 +30,9 @@ const useStyles = makeStyles((theme) => ({
   CurrentSwaps: {
     flexGrow: "1",
   },
+  minPad: {
+    padding: ".2rem 1rem !important"
+  }
 }));
 
 export default useStyles;

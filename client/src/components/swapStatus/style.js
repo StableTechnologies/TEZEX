@@ -8,6 +8,12 @@ export const useStyles = makeStyles((theme) => ({
     },
   },
 
+  close: {
+    position: 'absolute',
+    right: theme.spacing(1),
+    top: theme.spacing(1)
+  },
+
   completed: {
     width: "160px",
     width: "160px",
