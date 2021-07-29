@@ -297,24 +297,36 @@ module.exports = class Tezos {
       hashedSecret:
         "0x" +
         JSONPath({
-          path: "$.args[0].bytes",
-          json: jsonData[0],
+          path: "$.bytes",
+          json: jsonData[2],
         })[0],
-      initiator: TezosMessageUtils.readAddress(
-        JSONPath({ path: "$.args[1].args[0].bytes", json: jsonData[0] })[0]
-      ),
-      initiator_eth_addr: JSONPath({
-        path: "$.args[1].args[1].string",
+      initiator: TezosMessageUtils.readAddress(JSONPath({
+        path: "$.args[1].args[1].bytes",
+        json: jsonData[0],
+      })[0]),
+      pair: JSONPath({
+        path: "$.args[0].string",
+        json: jsonData[1],
+      })[0],
+      asset: JSONPath({
+        path: "$.args[0].args[0].string",
         json: jsonData[0],
       })[0],
-      participant: TezosMessageUtils.readAddress(
-        JSONPath({ path: "$.args[0].bytes", json: jsonData[1] })[0]
-      ),
+      commission: JSONPath({
+        path: "$.args[0].args[1].int",
+        json: jsonData[0],
+      })[0],
       refundTimestamp: Number(
-        JSONPath({ path: "$.args[1].int", json: jsonData[1] })[0]
+        JSONPath({
+          path: "$.args[1].int",
+          json: jsonData[1],
+        })[0]
       ),
-      state: Number(jsonData[2].int),
-      value: jsonData[3].int,
+      value: JSONPath({ path: "$.int", json: jsonData[3] })[0],
+      expectedValue: JSONPath({
+        path: "$.args[1].args[0].int",
+        json: jsonData[0],
+      })[0],
     };
   }
 
@@ -407,8 +419,7 @@ module.exports = class Tezos {
       {
         fields: [
           "key",
-          "key_hash",
-          // "value",
+          "value",
         ],
         predicates: [
           {
@@ -430,12 +441,9 @@ module.exports = class Tezos {
       }
     );
     let swaps = [];
-    for (let e of data) {
-      if (e.key_hash !== null) {
-        const swp = await this.getSwap(swapContract, "", e.key_hash);
-        if (swp !== undefined) swaps.push(swp);
-      }
-    }
+    data.forEach((e) => {
+      if (e.value !== null) swaps.push(this.parseSwapValue(e.value));
+    });
     return swaps;
   }
 

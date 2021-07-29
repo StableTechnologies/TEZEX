@@ -1,22 +1,4 @@
 {
-  "tezos": {
-    "walletPK": "your-tezos-private-key"
-  },
-  "maxVolume": {
-    "xtz/usdtz": {
-      "xtz": 100,
-      "usdtz": 300,
-      "tolerance": 5
-    },
-    "xtz/ethtz": {
-      "xtz": 100,
-      "ethtz": 0.1,
-      "tolerance": 5
-    },
-    "ethtz/usdtz": {
-      "usdtz": 300,
-      "ethtz": 0.1,
-      "tolerance": 5
-    }
-  }
+  "iv": "57adfaab0a808390ae5d6411984952c7",
+  "content": "8132d1de2fec118e8e87f7655ed00ea41c55aa671a3ba098905376d903b26d661d3841893dcc1ddf9786cca73cc5b1208ffb5b943bd935373414769039c58862bbf8173793286d92b69aae6ce20b7a455f8d5d3d1aa99bd4c854bb3fdc4716df1650a2b443ba10b2f56abb65cffd2e37e0661d56a883e7b5713ee325810b799b5e5851f1415389493a4919ee27c1005996f8b5a16342edff691c57ddfa47b4b8d2e948e0ec33ca992c2c6652affcc22b0c1eed7d2bced4fb4ce7dabe59c8566278006e06487700fa357aca41f33d4ddcab03729c0d66878f78862c9e4eec403fa720f89e66aab4beb50b833f4971e093a2af3b9c9137de5779b96ce8f1ff738158b08fc1671178a913f0c5f8baa8441f0be6270894a681037ea13dbf5d6bc49ed8a4ef"
 }

@@ -1,18 +1,4 @@
 {
-  "tezos": {
-    "walletPK": "your-tezos-private-key"
-  },
-  "ethereum": {
-    "walletPK": "your-ethereum-private-key"
-  },
-  "maxVolume": {
-    "usdc/usdtz": {
-      "usdc": 300,
-      "usdtz": 300
-    },
-    "eth/ethtz": {
-      "eth": 0.1,
-      "ethtz": 0.1
-    }
-  }
+  "iv": "f1c0f8b07af720a93afcb7816a7a66bf",
+  "content": "3a4150f26eaf4a02cf6560df662854fb2f8b0c3f9dcde65424bb15262804a887d55ca5f93adaedbbc9a8416e5e5fa899b37517813d6bed41d52209356bf56d7906d68122713cbab2aeaf9348bf4539194aee5bb0279a52fc6493dc83e51a513bcdc5e0b684d982af143881d6dcb0888268a0575875fc84cbfdb79d053189fb225509e42c672f261c5869d147081bcc73ca3c6cf203f11b2d97611e5cd20b5dec9208bb206a697e90a7bd963182a9a3c25a6cee5bc5bfc7331d1ffbf20054a83460a9ea1bd64d9173edaa6bf7056112a7ec6462780227ad3b2824811deb515faa3288993d19199cb737b4bc05931c0df4670b518d4260d174ad21aec2464ecf9740e8df55ae3aee7d3d172aaeb9e6871799702dbb4d5eed0a6d9ee5345d10d08ccf27c1758a5195b90feeabfa9816"
 }
