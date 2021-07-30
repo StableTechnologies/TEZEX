@@ -84,7 +84,7 @@ module.exports = class Tezos {
         key
       );
     } catch (err) {
-      if (!Object.prototype.hasOwnProperty.call(err, "httpStatus") && err.httpStatus === 404)
+      if (!(Object.prototype.hasOwnProperty.call(err, "httpStatus") && err.httpStatus === 404))
         throw err;
     }
     let balance =
@@ -113,7 +113,7 @@ module.exports = class Tezos {
         key
       );
     } catch (err) {
-      if (!Object.prototype.hasOwnProperty.call(err, "httpStatus") && err.httpStatus === 404)
+      if (!(Object.prototype.hasOwnProperty.call(err, "httpStatus") && err.httpStatus === 404))
         throw err;
     }
     let allowances =
@@ -380,7 +380,7 @@ module.exports = class Tezos {
         packedKey
       );
     } catch (err) {
-      if (!Object.prototype.hasOwnProperty.call(err, "httpStatus") && err.httpStatus === 404)
+      if (!(Object.prototype.hasOwnProperty.call(err, "httpStatus") && err.httpStatus === 404))
         throw err;
     }
     return parseInt(
@@ -517,7 +517,7 @@ module.exports = class Tezos {
         packedKey
       );
     } catch (err) {
-      if (!Object.prototype.hasOwnProperty.call(err, "httpStatus") && err.httpStatus === 404)
+      if (!(Object.prototype.hasOwnProperty.call(err, "httpStatus") && err.httpStatus === 404))
         throw err;
     }
 

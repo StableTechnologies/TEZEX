@@ -51,7 +51,7 @@ export default class PureTezos {
                 key
             );
         } catch (err) {
-            if (!Object.prototype.hasOwnProperty.call(err, "httpStatus") && err.httpStatus === 404)
+            if (!(Object.prototype.hasOwnProperty.call(err, "httpStatus") && err.httpStatus === 404))
                 throw err;
         }
 
@@ -253,7 +253,7 @@ export default class PureTezos {
                 packedKey
             );
         } catch (err) {
-            if (!Object.prototype.hasOwnProperty.call(err, "httpStatus") && err.httpStatus === 404)
+            if (!(Object.prototype.hasOwnProperty.call(err, "httpStatus") && err.httpStatus === 404))
                 throw err;
         }
 
@@ -334,7 +334,7 @@ export default class PureTezos {
                 packedKey
             );
         } catch (err) {
-            if (!Object.prototype.hasOwnProperty.call(err, "httpStatus") && err.httpStatus === 404)
+            if (!(Object.prototype.hasOwnProperty.call(err, "httpStatus") && err.httpStatus === 404))
                 throw err;
         }
 
