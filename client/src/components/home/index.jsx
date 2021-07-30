@@ -15,7 +15,7 @@ import Grid from "@material-ui/core/Grid";
 import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
 import Loader from "../loader";
 import Paper from '@material-ui/core/Paper';
-import RefundSwap from '../swapError/refundSwap'
+import RedeemSwap from '../swapError/redeemSwap'
 import SwapProgress from '../swapProgress';
 import SwapStatus from '../swapStatus';
 import TextField from '@material-ui/core/TextField';
@@ -47,7 +47,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
   const [swapProgress, setSwapProgress] = useState(false);
   const [swapStatus, setSwapStatus] = useState(false);
   const [tryAgain, setTryAgain] = useState(false);
-  const [refundSwap, setRefundSwap] = useState(false);
+  const [redeemSwap, setRedeemSwap] = useState(false);
   const [currentSwapView, setCurrentSwapView] = useState(false);
 
   const [inputToken, setInputToken] = useState(tokens[4]);
@@ -273,13 +273,13 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
     setTryAgain(false)
     setMaximizedSwap(undefined)
   }
-  const openRefundSwap = () => {
+  const openRedeemSwap = () => {
     setSwapProgress(false);
-    setRefundSwap(true);
+    setRedeemSwap(true);
     setCurrentSwapView(false);
   }
-  const closeRefundSwap = () => {
-    setRefundSwap(false)
+  const closeRedeemSwap = () => {
+    setRedeemSwap(false)
     setMaximizedSwap(undefined)
   }
 
@@ -403,7 +403,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
     }
   };
   const refundFailedSwap = (swap) => {
-    setRefundSwap(false)
+    setRedeemSwap(false)
     refundHandler(swap)
     setMaximizedSwap(undefined)
   }
@@ -525,8 +525,8 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
                   {(maxSwap !== undefined) && <>
                     <SwapStatus swap={maxSwap} open={swapStatus} onClose={closeSwapStatus} />
                     <TryAgain swap={maxSwap} open={tryAgain} onClose={closeTryAgain} onClick={retry} />
-                    <RefundSwap swap={maxSwap} open={refundSwap} onClose={closeRefundSwap} onClick={() => refundFailedSwap(maxSwap)} />
-                    <SwapProgress swap={maxSwap} open={swapProgress} onClose={minimize} completed={openSwapStatus} notCompleted={openRefundSwap} />
+                    <RedeemSwap swap={maxSwap} open={redeemSwap} onClose={closeRedeemSwap} onClick={() => refundFailedSwap(maxSwap)} />
+                    <SwapProgress swap={maxSwap} open={swapProgress} onClose={minimize} completed={openSwapStatus} notCompleted={openRedeemSwap} />
                   </>}
                   {
                     (globalContext.tezosClient.account || globalContext.ethereumClient.account) ?
