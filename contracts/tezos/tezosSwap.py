@@ -71,8 +71,9 @@ class Swap(sp.Contract):
             _refundTimestamp: unix time(sec) after which the swap expires
     """
 
-    def isInitiable(self, _swapHash, _refundTimestamp, _pair, _asset):
+    def isInitiable(self, _swapHash, _refundTimestamp, _value,  _pair, _asset):
         self.contractIsActive()
+        sp.verify(_value!=0, "ZERO_VALUE_SWAP")
         sp.verify(~self.data.swaps.contains(_swapHash), "HASH_ALREADY_EXISTS")
         sp.verify(sp.now < _refundTimestamp, "REFUND_TIME_ALREADY_ARRIVED")
         sp.verify(self.data.pairs.contains(_pair),"INVALID_PAIR")
@@ -217,7 +218,7 @@ class Swap(sp.Contract):
 
     @sp.entry_point
     def offer(self, _swapHash, _value, _expected, _refundTimestamp, _pair, _asset):
-        self.isInitiable(_swapHash, _refundTimestamp, _pair, _asset)
+        self.isInitiable(_swapHash, _refundTimestamp,_value, _pair, _asset)
         sp.if _asset=="xtz":
             sp.verify(sp.amount==sp.utils.nat_to_mutez(_value+self.data.commission),"AMOUNT_MISMATCH")
             self.data.userXTZDeposit+= _value+self.data.commission
@@ -277,8 +278,9 @@ class Swap(sp.Contract):
             sp.send(self.data.swaps[_swapHash].initiator, sp.utils.nat_to_mutez(self.data.swaps[_swapHash].value+self.data.swaps[_swapHash].commission))
             self.data.userXTZDeposit = sp.as_nat(self.data.userXTZDeposit-(self.data.swaps[_swapHash].value+self.data.swaps[_swapHash].commission))
         sp.else:
-            self.data.userXTZDeposit = sp.as_nat(self.data.userXTZDeposit-self.data.swaps[_swapHash].commission)
-            sp.send(self.data.swaps[_swapHash].initiator, sp.utils.nat_to_mutez(self.data.swaps[_swapHash].commission))
+            sp.if self.data.swaps[_swapHash].commission!=0:
+                self.data.userXTZDeposit = sp.as_nat(self.data.userXTZDeposit-self.data.swaps[_swapHash].commission)
+                sp.send(self.data.swaps[_swapHash].initiator, sp.utils.nat_to_mutez(self.data.swaps[_swapHash].commission))
             c = sp.contract(TTransfer, self.data.pairs[self.data.swaps[_swapHash].pair][self.data.swaps[_swapHash].asset].contract, entry_point="transfer").open_some()
             transferData = sp.record(from_=sp.self_address, to_=self.data.swaps[_swapHash].initiator, value=self.data.swaps[_swapHash].value)
             sp.transfer(transferData, sp.utils.nat_to_mutez(0), c)

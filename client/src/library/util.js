@@ -1,8 +1,7 @@
 import { BigNumber } from "bignumber.js";
 import crypto from "crypto";
-const config = require(`./${
-  process.env.REACT_APP_ENV || "prod"
-}-network-config.json`);
+const config = require(`./${process.env.REACT_APP_ENV || "prod"
+  }-network-config.json`);
 /**
  * Creates a random secret and corresponding hashed secret for a swap
  */
@@ -92,9 +91,14 @@ export const getCounterPair = (pairString, asset) => {
  */
 export const updateBotStats = async () => {
   try {
-    const res = await fetch(config.tezex.server + config.tezex.route);
-    if (!res.ok) throw new Error("Failed to ping server\n");
-    return await res.json();
+    const [res1, res2] = await Promise.all([fetch(config.tezex.server + config.tezex.route1), fetch(config.tezex.server + config.tezex.route2)]);
+    if (!res1.ok || !res2.ok) throw new Error("Failed to ping server\n");
+    const [data1, data2] = await Promise.all([res1.json(), res2.json()])
+    return {
+      activeBots: data1.activeBots + data2.activeBots,
+      max: { ...data1.max, ...data2.max },
+      total: { ...data1.total, ...data2.total }
+    }
   } catch (err) {
     console.log(`\n[x] ERROR : ${err.toString()}`);
     return undefined;

@@ -1,8 +1,9 @@
-import { BigNumber } from "bignumber.js";
 import { createSecrets, getCounterPair } from "./util";
-const config = require(`./${
-  process.env.REACT_APP_ENV || "prod"
-}-network-config.json`);
+
+import { BigNumber } from "bignumber.js";
+
+const config = require(`./${process.env.REACT_APP_ENV || "prod"
+  }-network-config.json`);
 
 const waitCompletion = (
   secret,
@@ -30,7 +31,7 @@ const waitCompletion = (
       );
       console.log("WAITING TO COMPLETE SWAP");
       if (swp.participant !== clients[counterNetwork].account) {
-        setTimeout(run, 90000);
+        setTimeout(run, 30000);
         return;
       }
       console.log("\nCOMPLETING SWAP");
@@ -56,23 +57,21 @@ const waitCompletion = (
  * @param swapPairs data of all the swap pairs
  * @param update update callback to reflect state change in UI
  */
-const requestSwap = async (swap, clients, swapPairs, update) => {
+const requestSwap = async (swap, secret, clients, swapPairs, update) => {
   const network = swapPairs[swap.pair][swap.asset].network;
   const counterNetwork = network === "ethereum" ? "tezos" : "ethereum";
   const counterAsset = getCounterPair(swap.pair, swap.asset);
   // generate swap secret
   console.log(swapPairs[swap.pair][swap.asset]);
   try {
-    const secret = createSecrets();
     console.log(
-      `Your SWAP Secret (${swapPairs[swap.pair][swap.asset].symbol}->${
-        swapPairs[swap.pair][counterAsset].symbol
+      `Your SWAP Secret (${swapPairs[swap.pair][swap.asset].symbol}->${swapPairs[swap.pair][counterAsset].symbol
       }): ${JSON.stringify(secret)}`
     );
 
-    // create new swap with refund time set to 2hrs
-    const refundTime =
-      Math.trunc(Date.now() / 1000) + config.swapConstants.refundPeriod;
+    // // create new swap with refund time set to 2hrs
+    // const refundTime =
+    //   Math.trunc(Date.now() / 1000) + config.swapConstants.refundPeriod;
     if (swap.asset !== "eth" && swap.asset !== "xtz") {
       await clients[network].approveToken(
         swapPairs[swap.pair][swap.asset].tokenContract,
@@ -82,7 +81,7 @@ const requestSwap = async (swap, clients, swapPairs, update) => {
       await clients[network].tokenInitiateWait(
         swapPairs[swap.pair][swap.asset].swapContract,
         secret.hashedSecret,
-        refundTime,
+        swap.refundTime,
         clients[counterNetwork].account,
         swap.value
       );
@@ -90,7 +89,7 @@ const requestSwap = async (swap, clients, swapPairs, update) => {
       await clients[network].initiateWait(
         swapPairs[swap.pair][swap.asset].swapContract,
         secret.hashedSecret,
-        refundTime,
+        swap.refundTime,
         clients[counterNetwork].account,
         swap.value
       );
@@ -106,7 +105,6 @@ const requestSwap = async (swap, clients, swapPairs, update) => {
       ...swap,
       hashedSecret: secret.hashedSecret,
       exact: "nil",
-      refundTime,
       state: 1,
     };
     waitResponse(
@@ -147,21 +145,21 @@ const waitResponse = (
       const swp = await clients[counterNetwork].getSwap(
         swapPairs[swap.pair][counterAsset].swapContract,
         secret.hashedSecret
-      );
-      console.log("CHECKING FOR SWAP RESPONSE");
+      ).catch(err => console.log("erorororororo", err))
+      console.log(swp, "CHECKING FOR SWAP RESPONSE");
       if (
         (counterNetwork === "ethereum" &&
           swp.initiator_tez_addr === "" &&
           swp.refundTimestamp === "0") ||
         (counterNetwork === "tezos" && swp === undefined)
       ) {
-        setTimeout(run, 90000);
+        setTimeout(run, 30000);
         return;
       }
       console.log("\nA SWAP RESPONSE FOUND : \n", swp);
       if (new BigNumber(swp.value).lt(swap.minValue)) {
         console.log("swap response doesn't match min amount");
-        setTimeout(run, 90000);
+        setTimeout(run, 30000);
         return;
       }
       const addressKey = `initiator_${network.substring(0, 3)}_addr`;
@@ -176,8 +174,8 @@ const waitResponse = (
         new BigNumber(swp.value)
           .div(10 ** swapPairs[swap.pair][counterAsset].decimals)
           .toString() +
-          " " +
-          swapPairs[swap.pair][counterAsset].symbol
+        " " +
+        swapPairs[swap.pair][counterAsset].symbol
       );
       waitCompletion(
         secret,

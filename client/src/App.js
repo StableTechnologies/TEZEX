@@ -1,33 +1,48 @@
-import { BigNumber } from "bignumber.js";
-import React, { useEffect, useRef, useState } from "react";
-import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
+import "aos/dist/aos.css";
 import "./App.css";
+
+import React, { useContext, useEffect, useRef, useState } from "react";
+import { Route, BrowserRouter as Router, Switch } from "react-router-dom";
+import { getOldSwaps, initSwapDetails, setupEthClient, setupTezClient } from "./util";
+
+import AOS from 'aos';
 import About from "./components/about";
+import { BigNumber } from "bignumber.js";
+import CreateSwap from "./components/newSwap";
+import Footer from "./components/footer";
 import Header from "./components/header";
 import Home from "./components/home";
 import Loader from "./components/loader";
-import CreateSwap from "./components/newSwap";
 import Notice from "./components/notice";
 import Setup from "./components/setup";
 import Stat from "./components/stats";
-import requestSwap from "./library/request-swap";
+import TezexContext from './components/context/TezexContext';
 import { getCounterPair } from "./library/util";
-import { getOldSwaps, setupClient } from "./util";
+import requestPureSwap from "./library/request-pure-swap";
+import requestSwap from "./library/request-swap";
+import useStyles from "./style";
+
 const App = () => {
-  const [clients, setClients] = useState(undefined);
+  const [clients, setClients] = useState({ ethereum: null, tezos: null, pureTezos: null });
   const [swapPairs, setSwapPairs] = useState(undefined);
   const [swaps, updateSwaps] = useState(undefined);
   const [balance, balUpdate] = useState(undefined);
   const [, updateState] = React.useState();
 
+
+  const classes = useStyles();
+
   const swapRef = useRef();
   swapRef.current = swaps;
+
   const clientRef = useRef();
   clientRef.current = clients;
+
   const swapPairsRef = useRef();
   swapPairsRef.current = swapPairs;
 
   const forceUpdate = React.useCallback(() => updateState({}), []);
+
 
   useEffect(() => {
     window.addEventListener("beforeunload", alertUser);
@@ -40,18 +55,58 @@ const App = () => {
     e.returnValue = "";
   };
 
+
+  useEffect(() => {
+    // Initialize AOS animation
+    AOS.init({
+      duration: 2000
+    });
+
+    initialize();
+
+  }, []);
+
+  useEffect(() => {
+    findOldSwaps();
+  }, [clients]);
+
+  const setupEthAccount = async () => {
+    try {
+      const { clients } = await setupEthClient();
+      // let swap = await getOldSwaps(clients, swapPairs);
+      // if (Object.keys(swap).length > 0) updateSwaps(swap);
+      setClients(prevState => ({ ...prevState, ...clients }));
+    }
+    catch (err) {
+      alert("Error Connecting to EthWallet", err);
+
+    }
+  };
+  const setupXtzAccount = async () => {
+    try {
+      const { clients } = await setupTezClient();
+      // let swap = await getOldSwaps(clients, swapPairs);
+      // if (Object.keys(swap).length > 0) updateSwaps(swap);
+      setClients(prevState => ({ ...prevState, ...clients }));
+    } catch (e) {
+      alert("Error Connecting to TezWallet", e);
+    }
+  };
   const initialize = async () => {
     try {
-      const { swapPairs, clients } = await setupClient();
-      let swap = await getOldSwaps(clients, swapPairs);
-      if (Object.keys(swap).length > 0) updateSwaps(swap);
-      setClients(clients);
+      const { swapPairs } = await initSwapDetails()
+      // setClients(clients);
       setSwapPairs(swapPairs);
     } catch (e) {
       console.log("error", e);
-      alert("Error Connecting to Wallet", e);
+      alert("Error initializing swap", e);
     }
   };
+  const findOldSwaps = async () => {
+    console.log("getting old swaps")
+    let swap = await getOldSwaps(clients, swapPairs);
+    if (Object.keys(swap).length > 0) updateSwaps(swap);
+  }
 
   const update = (hash, state, exact = undefined) => {
     let newSwap = swapRef.current;
@@ -63,8 +118,12 @@ const App = () => {
     } else console.log("missing hash update request");
   };
 
-  const genSwap = async (swap, req_swap = undefined) => {
-    const generatedSwap = await requestSwap(swap, clients, swapPairs, update);
+  const genSwap = async (swap, secret, req_swap = undefined) => {
+    let generatedSwap = {}
+    if (swap.network === "pureTezos")
+      generatedSwap = await requestPureSwap(swap, secret, clients, swapPairs, update);
+    else
+      generatedSwap = await requestSwap(swap, secret, clients, swapPairs, update);
     if (generatedSwap === undefined) return false;
     let newSwaps = swapRef.current;
     if (newSwaps === undefined) {
@@ -94,30 +153,30 @@ const App = () => {
     return true;
   };
 
-  if (clients === undefined || swapPairs === undefined)
-    return (
-      <div className="App">
-        <Setup init={initialize} />
-      </div>
-    );
-
   return (
-    <Router basename={process.env.PUBLIC_URL}>
-      <div className="App">
-        <Header
-          clients={clientRef.current}
-          swapPairs={swapPairsRef.current}
-          balUpdate={balUpdate}
-        />
-        {balance === undefined && <Loader message="Loading Account" />}
-        {balance !== undefined && (
+    <TezexContext>
+      <Router basename={process.env.PUBLIC_URL}>
+        <div className="App">
+          <Header
+            clients={clientRef.current}
+            swapPairs={swapPairsRef.current}
+            balUpdate={balUpdate}
+            setupEth={setupEthAccount}
+            setupTez={setupXtzAccount}
+          />
+          {/* {balance === undefined && <Loader message="Loading Account" />} */}
+          {/* {balance !== undefined && ( */}
           <Switch>
             <Route exact path="/">
               <Home
                 swaps={swaps}
+                updateSwaps={updateSwaps}
                 clients={clientRef.current}
                 swapPairs={swapPairsRef.current}
                 update={update}
+                setupEth={setupEthAccount}
+                setupTez={setupXtzAccount}
+                genSwap={genSwap}
               />
             </Route>
             <Route exact path="/swap">
@@ -135,9 +194,11 @@ const App = () => {
               <Stat swapPairs={swapPairsRef.current} />
             </Route>
           </Switch>
-        )}
-      </div>
-    </Router>
+          <Footer />
+          {/* )} */}
+        </div>
+      </Router>
+    </TezexContext>
   );
 };
 

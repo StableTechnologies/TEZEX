@@ -67,11 +67,18 @@ module.exports = class Tezos {
     const key = TezosMessageUtils.encodeBigMapKey(
       Buffer.from(TezosMessageUtils.writePackedData(address, "address"), "hex")
     );
-    const tokenData = await TezosNodeReader.getValueForBigMapKey(
-      this.rpc,
-      tokenContract.mapID,
-      key
-    );
+    let tokenData = undefined;
+    try {
+      tokenData = await TezosNodeReader.getValueForBigMapKey(
+        this.rpc,
+        tokenContract.mapID,
+        key
+      );
+    } catch (err) {
+      if (!(Object.prototype.hasOwnProperty.call(err, "httpStatus") && err.httpStatus === 404))
+        throw err;
+    }
+
     let balance =
       tokenData === undefined
         ? "0"
@@ -103,8 +110,8 @@ module.exports = class Tezos {
       allowances === undefined
         ? []
         : allowances.filter(
-            (allow) => allow.args[0].string === swapContract.address
-          );
+          (allow) => allow.args[0].string === swapContract.address
+        );
     return allowance.length === 0 ? "0" : allowance[0].args[1].int;
   }
 
@@ -144,21 +151,21 @@ module.exports = class Tezos {
   }
 
   /**
-   * Initiate a swap offer on the tezos chain
-   *
-   * @param swapContract tezos swap contract details {address:string, mapID:nat}
-   * @param swapHash hash of the swap
-   * @param pair  swap pair used
-   * @param asset asset in the pair being traded
-   * @param refundTimestamp time after which the swap exires
-   * @param amount value of the swap in fa1.2 tokens or mutez
-   * @param expectedValue value expected in return in coiunter asset units
-   * @param mutez amount in mutez being sent (default=0)
-   */
+  * Initiate a swap offer on the tezos chain
+  *
+  * @param swapContract tezos swap contract details {address:string, mapID:nat}
+  * @param hashedSecret hash of the swap
+  * @param pair  swap pair used
+  * @param asset asset in the pair being traded
+  * @param refundTimestamp time after which the swap exires
+  * @param amount value of the swap in fa1.2 tokens or mutez
+  * @param expectedValue value expected in return in coiunter asset units
+  * @param mutez amount in mutez being sent (default=0)
+  */
 
   async offer(
     swapContract,
-    swapHash,
+    hashedSecret,
     pair,
     asset,
     refundTimestamp,
@@ -171,7 +178,7 @@ module.exports = class Tezos {
         to: swapContract.address,
         amtInMuTez: mutez,
         entrypoint: "offer",
-        parameters: `(Pair (Pair "${asset}" (Pair ${expectedValue} "${pair}")) (Pair "${refundTimestamp}" (Pair ${swapHash} ${amount})))`,
+        parameters: `(Pair (Pair "${asset}" (Pair ${expectedValue} "${pair}")) (Pair "${refundTimestamp}" (Pair ${hashedSecret} ${amount})))`,
       },
     ]);
     if (res.status !== "applied") {
@@ -184,20 +191,20 @@ module.exports = class Tezos {
    * Accept an existing swap offer on the tezos chain
    *
    * @param swapContract tezos swap contract details {address:string, mapID:nat}
-   * @param swapHash hash of the swap
+   * @param hashedSecret hash of the swap
    * @param pair  swap pair used
    * @param asset asset in the pair being traded
    * @param amount value of the swap in fa1.2 tokens or mutez
    * @param mutez amount in mutez being sent (default=0)
    */
 
-  async take(swapContract, swapHash, pair, asset, amount, mutez = 0) {
+  async take(swapContract, hashedSecret, pair, asset, amount, mutez = 0) {
     const res = await this.interact([
       {
         to: swapContract.address,
         amtInMuTez: mutez,
         entrypoint: "take",
-        parameters: `(Pair (Pair "${asset}" "${pair}") (Pair ${swapHash} ${amount}))`,
+        parameters: `(Pair (Pair "${asset}" "${pair}") (Pair ${hashedSecret} ${amount}))`,
       },
     ]);
     if (res.status !== "applied") {
@@ -210,15 +217,15 @@ module.exports = class Tezos {
    * Refund the swap if possible
    *
    * @param swapContract tezos swap contract details {address:string, mapID:nat}
-   * @param swapHash hash of the swap being refunded
+   * @param hashedSecret hash of the swap being refunded
    */
-  async refund(swapContract, swapHash) {
+  async refund(swapContract, hashedSecret) {
     const res = await this.interact([
       {
         to: swapContract.address,
         amtInMuTez: 0,
         entrypoint: "refund",
-        parameters: `${swapHash}`,
+        parameters: `${hashedSecret}`,
       },
     ]);
     if (res.status !== "applied") {
@@ -262,11 +269,18 @@ module.exports = class Tezos {
     const packedKey = TezosMessageUtils.encodeBigMapKey(
       Buffer.from(TezosMessageUtils.writePackedData(asset, "string"), "hex")
     );
-    const jsonData = await TezosNodeReader.getValueForBigMapKey(
-      this.rpc,
-      this.priceContract.mapID,
-      packedKey
-    );
+    let jsonData = undefined;
+    try {
+      jsonData = await TezosNodeReader.getValueForBigMapKey(
+        this.rpc,
+        this.priceContract.mapID,
+        packedKey
+      );
+    } catch (err) {
+      if (!(Object.prototype.hasOwnProperty.call(err, "httpStatus") && err.httpStatus === 404))
+        throw err;
+    }
+
     return parseInt(
       JSONPath({
         path: "$.args[0].args[0].int",
@@ -280,27 +294,39 @@ module.exports = class Tezos {
       TezosLanguageUtil.translateMichelsonToMicheline(michelsonData);
     const jsonData = JSON.parse(michelineData);
     return {
-      swapHash:
+      hashedSecret:
         "0x" +
         JSONPath({
-          path: "$.args[0].bytes",
-          json: jsonData[0],
+          path: "$.bytes",
+          json: jsonData[2],
         })[0],
-      initiator: TezosMessageUtils.readAddress(
-        JSONPath({ path: "$.args[1].args[0].bytes", json: jsonData[0] })[0]
-      ),
-      initiator_eth_addr: JSONPath({
-        path: "$.args[1].args[1].string",
+      initiator: TezosMessageUtils.readAddress(JSONPath({
+        path: "$.args[1].args[1].bytes",
+        json: jsonData[0],
+      })[0]),
+      pair: JSONPath({
+        path: "$.args[0].string",
+        json: jsonData[1],
+      })[0],
+      asset: JSONPath({
+        path: "$.args[0].args[0].string",
         json: jsonData[0],
       })[0],
-      participant: TezosMessageUtils.readAddress(
-        JSONPath({ path: "$.args[0].bytes", json: jsonData[1] })[0]
-      ),
+      commission: JSONPath({
+        path: "$.args[0].args[1].int",
+        json: jsonData[0],
+      })[0],
       refundTimestamp: Number(
-        JSONPath({ path: "$.args[1].int", json: jsonData[1] })[0]
+        JSONPath({
+          path: "$.args[1].int",
+          json: jsonData[1],
+        })[0]
       ),
-      state: Number(jsonData[2].int),
-      value: jsonData[3].int,
+      value: JSONPath({ path: "$.int", json: jsonData[3] })[0],
+      expectedValue: JSONPath({
+        path: "$.args[1].args[0].int",
+        json: jsonData[0],
+      })[0],
     };
   }
 
@@ -308,29 +334,37 @@ module.exports = class Tezos {
    * Get details of a particular swap
    *
    * @param swapContract tezos swap contract details {address:string, mapID:nat}
-   * @param swapHash hash of the swap requested
+   * @param hashedSecret hash of the swap requested
    * @param key_hash key hash for the bigmap to query
    *
    * @return the swap details if available
    */
-  async getSwap(swapContract, swapHash, key_hash = undefined) {
+  async getSwap(swapContract, hashedSecret, key_hash = undefined) {
     let packedKey = "";
     if (key_hash === undefined) {
-      swapHash = swapHash.substring(2);
+      hashedSecret = hashedSecret.substring(2);
       packedKey = TezosMessageUtils.encodeBigMapKey(
-        Buffer.from(TezosMessageUtils.writePackedData(swapHash, "bytes"), "hex")
+        Buffer.from(TezosMessageUtils.writePackedData(hashedSecret, "bytes"), "hex")
       );
     } else {
       packedKey = key_hash;
     }
-    const jsonData = await TezosNodeReader.getValueForBigMapKey(
-      this.rpc,
-      swapContract.mapID,
-      packedKey
-    );
+
+    let jsonData = undefined;
+    try {
+      jsonData = await TezosNodeReader.getValueForBigMapKey(
+        this.rpc,
+        swapContract.mapID,
+        packedKey
+      );
+    } catch (err) {
+      if (!(Object.prototype.hasOwnProperty.call(err, "httpStatus") && err.httpStatus === 404))
+        throw err;
+    }
+
     if (jsonData === undefined) return jsonData;
     return {
-      swapHash:
+      hashedSecret:
         "0x" +
         JSONPath({
           path: "$.args[2].bytes",
@@ -385,8 +419,7 @@ module.exports = class Tezos {
       {
         fields: [
           "key",
-          "key_hash",
-          // "value",
+          "value",
         ],
         predicates: [
           {
@@ -408,12 +441,9 @@ module.exports = class Tezos {
       }
     );
     let swaps = [];
-    for (let e of data) {
-      if (e.key_hash !== null) {
-        const swp = await this.getSwap(swapContract, "", e.key_hash);
-        if (swp !== undefined) swaps.push(swp);
-      }
-    }
+    data.forEach((e) => {
+      if (e.value !== null) swaps.push(this.parseSwapValue(e.value));
+    });
     return swaps;
   }
 
@@ -445,6 +475,27 @@ module.exports = class Tezos {
         swp.initiator !== this.account &&
         Math.trunc(Date.now() / 1000) < swp.refundTimestamp - minTimeToExpire
     );
+  }
+
+  /**
+* Add Swap Pairs (only admin)
+*
+* @param swapContract tezos swap contract details {address:string, mapID:nat}
+* @param assets asset dict from config
+*/
+  async addPairs(swapContract, assets) {
+    const res = await this.interact([
+      {
+        to: swapContract.address,
+        amtInMuTez: 0,
+        entrypoint: "addSwapPair",
+        parameters: `{ Elt "ethtz/usdtz" { Elt "ethtz" (Pair "${assets["ethtz"].tokenContract.address}" (Pair "usdtz" 18)); Elt "usdtz" (Pair "${assets["usdtz"].tokenContract.address}" (Pair "ethtz" 6))}; Elt "xtz/ethtz" {Elt "ethtz" (Pair "${assets["ethtz"].tokenContract.address}" (Pair "xtz" 18)); Elt "xtz" (Pair "${swapContract.address}" (Pair "ethtz" 6))}; Elt "xtz/usdtz" {Elt "usdtz" (Pair "${assets["usdtz"].tokenContract.address}" (Pair "xtz" 6)); Elt "xtz" (Pair "${swapContract.address}" (Pair "usdtz" 6))}}`,
+      },
+    ]);
+    if (res.status !== "applied") {
+      throw new Error("TEZOS TX FAILED");
+    }
+    return res;
   }
 
   /**

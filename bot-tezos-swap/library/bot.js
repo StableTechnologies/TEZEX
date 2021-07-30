@@ -1,6 +1,5 @@
-const config = require(`./${
-  process.env.BOT_ENV || "prod"
-}-network-config.json`);
+const config = require(`./${process.env.BOT_ENV || "prod"
+  }-network-config.json`);
 
 const fetch = require("node-fetch");
 const { BigNumber } = require("bignumber.js");
@@ -198,10 +197,9 @@ module.exports = class Bot {
               )
             ) {
               console.log(
-                `[!] FOUND ${
-                  this.swapPairs[swp.pair][counterAsset].symbol
+                `[!] FOUND ${this.swapPairs[swp.pair][counterAsset].symbol
                 } SWAP: `,
-                swp.swapHash
+                swp.hashedSecret
               );
               this.logger.warn(
                 `found ${this.swapPairs[swp.pair][counterAsset].symbol} swap`,
@@ -232,31 +230,30 @@ module.exports = class Bot {
                   if (
                     !Object.prototype.hasOwnProperty.call(
                       this.ignored,
-                      swp.swapHash
+                      swp.hashedSecret
                     )
                   ) {
-                    console.log("[x] SWAP NOT PROFITABLE : ", swp.swapHash);
+                    console.log("[x] SWAP NOT PROFITABLE : ", swp.hashedSecret);
                     this.logger.warn(
-                      `${
-                        this.swapPairs[swp.pair][counterAsset].symbol
+                      `${this.swapPairs[swp.pair][counterAsset].symbol
                       } swap not profitable`,
                       { swap: swp }
                     );
-                    this.ignored[swp.swapHash] = true;
+                    this.ignored[swp.hashedSecret] = true;
                   }
                   continue;
                 }
               }
               // if older ignored swap is profitable now remove from ignored list
               if (
-                Object.prototype.hasOwnProperty.call(this.ignored, swp.swapHash)
+                Object.prototype.hasOwnProperty.call(this.ignored, swp.hashedSecret)
               ) {
-                delete this.ignored[swp.swapHash];
+                delete this.ignored[swp.hashedSecret];
               }
               const mutez = counterAsset === "xtz" ? swp.expectedValue : 0;
               await this.client.take(
                 this.swapContract,
-                swp.swapHash,
+                swp.hashedSecret,
                 swp.pair,
                 counterAsset,
                 swp.expectedValue,
@@ -268,21 +265,20 @@ module.exports = class Bot {
                 counterAsset
               ].remainingVolume.minus(swp.expectedValue);
 
-              console.log("[!] SWAP COMPELTED : ", swp.swapHash);
+              console.log("[!] SWAP COMPELTED : ", swp.hashedSecret);
               this.logger.warn(
-                `${
-                  this.swapPairs[swp.pair][counterAsset].symbol
+                `${this.swapPairs[swp.pair][counterAsset].symbol
                 } swap compelted`,
                 { swap: swp }
               );
             }
           } catch (err) {
             console.error(
-              `[x] FAILED TO COMPELTE SWAP | ${swp.pair} ${swp.asset} ${swp.swapHash}\n`,
+              `[x] FAILED TO COMPELTE SWAP | ${swp.pair} ${swp.asset} ${swp.hashedSecret}\n`,
               err
             );
             this.logger.error(
-              `failed to complete swap | ${swp.pair} ${swp.asset} ${swp.swapHash}`,
+              `failed to complete swap | ${swp.pair} ${swp.asset} ${swp.hashedSecret}`,
               err
             );
           }
@@ -318,9 +314,8 @@ module.exports = class Bot {
         const currentSwapStats = {};
         for (const pair of pairs) {
           const assets = pair.split("/");
-          swapStats += `    [-] ${this.swapPairs[pair][assets[0]].symbol}/${
-            this.swapPairs[pair][assets[1]].symbol
-          }\n`;
+          swapStats += `    [-] ${this.swapPairs[pair][assets[0]].symbol}/${this.swapPairs[pair][assets[1]].symbol
+            }\n`;
           currentSwapStats[pair] = {};
           for (const asset of assets) {
             const vol = `${this.swapPairs[pair][asset].remainingVolume

@@ -5,7 +5,7 @@ const useStyles = makeStyles((theme) => ({
     color: "black",
     fontSize: "2vw",
   },
-  msg: { margin: "2vw", fontSize: "1.5vw" },
+  msg: { margin: "2vw", fontSize: "1rem" },
   container: {
     height: "100%",
     display: "flex",

@@ -1,12 +1,20 @@
 import { makeStyles } from "@material-ui/core/styles";
 
 const useStyles = makeStyles((theme) => ({
+  root: {
+    "& .MuiDrawer-paperAnchorRight": {
+       left: "auto",
+       right: "0",
+       top: "60px",
+       width: "284px",
+       height: "auto",
+       margin: "0 .5rem",
+       borderRadius: "4px",
+     },
+  },
   header: {
     display: "flex",
-    padding: "1.5vw",
-    fontSize: "1.5vw",
-    justifyContent: "space-between",
-    marginBottom: "1vw",
+    fontSize: "1.5vw"
   },
   account: {
     padding: "0.6vw",
@@ -17,29 +25,66 @@ const useStyles = makeStyles((theme) => ({
     marginTop: "1vw",
   },
   button: {
-    color: "white",
-    border: "0.2vw black solid",
+    color: "black",
+    border: "0",
     cursor: "pointer",
     margin: "1.5vw 0.7vw",
-    outline: "none",
-    padding: "0.4vw 0.2vw",
     fontSize: "1.2vw",
     fontWeight: "bold",
-    borderRadius: "0.5vw",
-    backgroundColor: "black",
+    backgroundColor: "white",
     width: "8vw",
     "&:hover": {
-      backgroundColor: "white",
-      color: "black",
+      textDecoration: "underline",
     },
   },
-  logo: {
-    width: "36vw",
-    display: "block",
-    margin: "1vw auto",
-    padding: "0 4vw",
+
+  nav: {
+    width: "100%",
   },
-  nav: {},
+  walletbutton: {
+    "&.Element": {
+    background: "white",
+    marginRight: ".3rem",
+    marginLeft: ".3rem",
+    border: "1px solid black",
+    textTransform: "none",
+    width: "max-content",
+    height: "40px",
+    fontSize: "16px",
+    '@media (max-width: 768px)': {
+      margin: ".2rem",
+      height: "35px",
+
+    },
+    '@media (max-width: 600px)': {
+      marginTop: ".5rem",
+      fontSize: "13px",
+      width: "150px",
+      height: "30px",
+    },
+  }
+  },
+  ethButton: {
+    "&.Element": {
+      background:"linear-gradient(92.7deg, rgba(206, 143, 255, 0.4) 4.54%, #F9FEFF 98.49%)",
+    }
+  },
+  tezButton: {
+    "&.Element": {
+      background: "linear-gradient(92.04deg, rgba(171, 240, 255, 0.4) 4.41%, #F9FEFF 84.62%)",
+    }
+  },
+  tezStyle: {
+    "&.Element": {
+      position: "absolute",
+      borderRadius: "4px",
+      height: "auto",
+      width: "284px",
+      left: "1141px",
+      top: "65px",
+      background: "linear-gradient(92.04deg, rgba(171, 240, 255, 0.4) 4.41%, #F9FEFF 84.62%)",
+    },
+  },
 }));
 
 export default useStyles;
