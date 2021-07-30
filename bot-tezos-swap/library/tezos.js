@@ -75,7 +75,7 @@ module.exports = class Tezos {
         key
       );
     } catch (err) {
-      if (!Object.prototype.hasOwnProperty.call(err, "httpStatus") && err.httpStatus === 404)
+      if (!(Object.prototype.hasOwnProperty.call(err, "httpStatus") && err.httpStatus === 404))
         throw err;
     }
 
@@ -277,7 +277,7 @@ module.exports = class Tezos {
         packedKey
       );
     } catch (err) {
-      if (!Object.prototype.hasOwnProperty.call(err, "httpStatus") && err.httpStatus === 404)
+      if (!(Object.prototype.hasOwnProperty.call(err, "httpStatus") && err.httpStatus === 404))
         throw err;
     }
 
@@ -358,7 +358,7 @@ module.exports = class Tezos {
         packedKey
       );
     } catch (err) {
-      if (!Object.prototype.hasOwnProperty.call(err, "httpStatus") && err.httpStatus === 404)
+      if (!(Object.prototype.hasOwnProperty.call(err, "httpStatus") && err.httpStatus === 404))
         throw err;
     }
 
