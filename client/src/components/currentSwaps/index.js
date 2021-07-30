@@ -31,7 +31,7 @@ const CurrentSwaps = (props) => {
 
 
   const state = {
-    0: "Swap Failed, Refund Your Swap",
+    0: "Swap Failed, Refund!",
     1: "Swap Initiated",
     2: "Implementing Swap",
     3: "Swap Completed",
@@ -72,7 +72,7 @@ const CurrentSwaps = (props) => {
             <img src={maximize} alt="maximize" className={classes.img} />
           </Button>
         </Paper>
-        <Typography className={classes.minPad} > {refund && "Swap will timeout in: "} {refund}  </Typography>
+        <Typography className={classes.minPad} > {refund && "Swap Timeout: "} {refund}  </Typography>
         <Grid container alignContent="center" justify="space-between" >
           {/* <Typography className={classes.minPad}> {activeStep && "State: "} {state[data.state]}  </Typography> */}
           <Typography className={classes.minPad}> {state[data.state]}  </Typography>

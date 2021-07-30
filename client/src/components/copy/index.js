@@ -15,7 +15,7 @@ const Copy = (props) => {
   const { text, copyText, tooltip, } = props;
 
   return (
-    <div>
+    <div className={classes.root}>
       <Typography>
         { text }
         <Tooltip title={tooltip} >

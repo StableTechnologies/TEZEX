@@ -407,7 +407,8 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
     refundHandler(swap)
     setMaximizedSwap(undefined)
   }
-
+console.log(currentSwap, 'currentSwap');
+console.log(swapStat, 'swapStat');
   return (
     <Grid container justify="center" className={classes.bodycontainer}>
       <Grid item className={classes.sidelogocontainer} xs={1}>
@@ -441,7 +442,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
                       <div className={classes.balContainer}>
                         <Typography color="textSecondary" variant="subtitle2">From</Typography>
                         {bal &&
-                          <Typography color="textSecondary" variant="subtitle2">wallet balance:{" "} {bal}{" "}{inputToken.title} </Typography>
+                          <Typography color="textSecondary" variant="subtitle2">wallet balance:{" "} {Math.floor(bal)}{" "}{inputToken.title} </Typography>
                         }
                       </div>
                       <div className={classes.tokenDetails} >
@@ -608,16 +609,18 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
               <Paper variant="outlined" className={classes.feepaper + " Element"} square>
                 <div className={classes.feeDetails}>
                   <Typography>Swap Fee</Typography>
-                  <Typography>{swapFee || "0.15 %"} {""} {outputToken.title} </Typography>
+                  <Typography>{swapFee || (!outputToken ? "0.15 % XTZ" : "0.00")} {""} {outputToken.title} </Typography>
                 </div>
                 <div className={classes.feeDetails}>
                   <Typography>Max Network Fee</Typography>
-                  <Typography> {networkFees || "0.00 XTZ"} {""} {outputToken.title}</Typography>
+                  <Typography>
+                    {networkFees ||(!outputToken ? "0.00 XTZ" : "0.00")} {""} {outputToken.title}
+                  </Typography>
 
                 </div>
                 <div className={classes.feeDetails}>
                   <Typography>Minimum Received</Typography>
-                  <Typography> {minReceived || "0.00 XTZ"} {""} {outputToken.title} </Typography>
+                  <Typography> {minReceived || (!outputToken ? "0.00 XTZ" : "0.00")} {""} {outputToken.title} </Typography>
                 </div>
               </Paper>
             </div>

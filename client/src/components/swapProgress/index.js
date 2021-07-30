@@ -135,7 +135,7 @@ console.log(swap, 'swap@swapProgress');
         }
         </DialogContentText> */}
         <DialogContentText>
-          Swap will timeout in: {" "} {refundTime || " "} <img src={question_circle} alt="question_circle" className={classes.textImg} />
+        Swap Timeout: {" "} {refundTime || " "} <img src={question_circle} alt="question_circle" className={classes.textImg} />
         </DialogContentText>
         <DialogContentText>
           Don’t leave me <img src={pleading_face} alt="pleading_face" className={classes.textImg} />
