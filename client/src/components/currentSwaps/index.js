@@ -31,7 +31,7 @@ const CurrentSwaps = (props) => {
 
 
   const state = {
-    0: "Failed",
+    0: "Swap Failed, Refund Your Swap",
     1: "Swap Initiated",
     2: "Implementing Swap",
     3: "Swap Completed",
