@@ -407,8 +407,6 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
     refundHandler(swap)
     setMaximizedSwap(undefined)
   }
-console.log(currentSwap, 'currentSwap');
-console.log(swapStat, 'swapStat');
   return (
     <Grid container justify="center" className={classes.bodycontainer}>
       <Grid item className={classes.sidelogocontainer} xs={1}>

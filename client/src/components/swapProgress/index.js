@@ -77,7 +77,6 @@ const SwapProgress = (props) => {
       } catch (e) { }
     }
   }, [handleStepChange])
-console.log(swap, 'swap@swapProgress');
   return (
     <Dialog aria-labelledby="simple-dialog-title" open={open} className={classes.root}>
       <DialogTitle onClose={handleClose}>

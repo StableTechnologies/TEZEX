@@ -133,7 +133,6 @@ const App = () => {
       generatedSwap.pair,
       generatedSwap.asset
     );
-    if (swap) { console.log(swap, 'swap') }
 
     generatedSwap["value"] =
       new BigNumber(generatedSwap.value)
