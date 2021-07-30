@@ -121,21 +121,11 @@ const SwapProgress = (props) => {
           <>
             <DialogContentText> Value:{" "} { swap.value} </DialogContentText>
             <DialogContentText> Min Expected Return:{" "} { swap.minReturn} </DialogContentText>
+            <DialogContentText>
+            Swap Timeout: {" "} {refundTime || " "} <img src={question_circle} alt="question_circle" className={classes.textImg} />
+            </DialogContentText>
           </>
         }
-        {/* <DialogContentText>
-          {swap.value &&
-           "Value: " + swap.value
-          }
-        </DialogContentText>
-        <DialogContentText>
-        {swap.minReturn &&
-           "Min Expected Return: " + swap.minReturn
-        }
-        </DialogContentText> */}
-        <DialogContentText>
-        Swap Timeout: {" "} {refundTime || " "} <img src={question_circle} alt="question_circle" className={classes.textImg} />
-        </DialogContentText>
         <DialogContentText>
           Don’t leave me <img src={pleading_face} alt="pleading_face" className={classes.textImg} />
         </DialogContentText>
