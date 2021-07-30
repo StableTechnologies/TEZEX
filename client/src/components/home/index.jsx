@@ -53,7 +53,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
   const [inputToken, setInputToken] = useState(tokens[4]);
   const [outputToken, setOutputToken] = useState('');
   const [inputTokenAmount, setInputTokenAmount] = useState();
-  const [outputTokenAmount, setOutputTokenAmount] = useState();
+  const [outputTokenAmount, setOutputTokenAmount] = useState('');
 
   const [wallet, setWallet] = useState('');
   const [err, setErr] = useState('');
@@ -384,7 +384,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
 
   useEffect(() => {
     setOutputTokenAmount(minReceived)
-  }, [minReceived]);
+  }, [minReceived, inputTokenAmount]);
 
   const refundHandler = async (swap) => {
     try {
@@ -441,7 +441,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
                       <div className={classes.balContainer}>
                         <Typography color="textSecondary" variant="subtitle2">From</Typography>
                         {bal &&
-                          <Typography color="textSecondary" variant="subtitle2">Balance: {bal}</Typography>
+                          <Typography color="textSecondary" variant="subtitle2">wallet balance:{" "} {bal}{" "}{inputToken.title} </Typography>
                         }
                       </div>
                       <div className={classes.tokenDetails} >
@@ -505,7 +505,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
                           type="text"
                           placeholder="0.00"
                           // onInput={(e) => setOutputTokenAmount(e.target.value.replace(/[^0-9]/, '') )}
-                          value={outputTokenAmount}
+                          value={outputTokenAmount || "0.00"}
                           inputProps={{ className: classes.tokenValue, pattern: "^[0-9]*[.,]?[0-9]*$", inputMode: "decimal" }}
                           InputProps={{ disableUnderline: true }}
                           disabled
@@ -546,15 +546,15 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
                                               (
                                                 <>
                                                 { (connectTez || connectEth) ?
-                                                  <Button size="large" className={`${classes.connectwalletbutton + " Element"} ${classes.disabled + " Element"}`} disabled>swap tokens</Button>
+                                                  <Button size="large" className={`${classes.connectwalletbutton + " Element"} ${classes.disabled + " Element"}`} disabled>Swap Tokens</Button>
                                                   :
-                                                  <Button size="large" className={classes.connectwalletbutton + " Element"} onClick={startSwap} >swap tokens</Button>
+                                                  <Button size="large" className={classes.connectwalletbutton + " Element"} onClick={startSwap} >Swap Tokens</Button>
                                                 }
                                                 </>
                                               )
                                               :
                                               (
-                                                <Button size="large" className={`${classes.connectwalletbutton + " Element"} ${classes.disabled + " Element"}`} disabled>Insufficient funds</Button>
+                                                <Button size="large" className={`${classes.connectwalletbutton + " Element"} ${classes.disabled + " Element"}`} disabled>Insufficient Funds</Button>
                                               )
                                           }
                                         </>
@@ -608,16 +608,16 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
               <Paper variant="outlined" className={classes.feepaper + " Element"} square>
                 <div className={classes.feeDetails}>
                   <Typography>Swap Fee</Typography>
-                  <Typography>{swapFee || 0.00} {""} {outputToken.title} </Typography>
+                  <Typography>{swapFee || "0.15 %"} {""} {outputToken.title} </Typography>
                 </div>
                 <div className={classes.feeDetails}>
                   <Typography>Max Network Fee</Typography>
-                  <Typography> {networkFees || 0.00} {""} {outputToken.title}</Typography>
+                  <Typography> {networkFees || "0.00 XTZ"} {""} {outputToken.title}</Typography>
 
                 </div>
                 <div className={classes.feeDetails}>
                   <Typography>Minimum Received</Typography>
-                  <Typography> {minReceived || 0.00} {""} {outputToken.title} </Typography>
+                  <Typography> {minReceived || "0.00 XTZ"} {""} {outputToken.title} </Typography>
                 </div>
               </Paper>
             </div>

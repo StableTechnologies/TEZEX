@@ -61,10 +61,7 @@ const SwapProgress = (props) => {
       notCompleted();
     }
     if (activeStep === 3) {
-      notify = setTimeout(async () => {
-        await completed();
-      }, 3000);
-
+      completed();
     }
   });
 
@@ -121,7 +118,13 @@ console.log(swap, 'swap@swapProgress');
             tooltip = "copy swap hash"
           />
         </DialogContentText>
-        <DialogContentText>
+        { activeStep >= 0 &&
+          <>
+            <DialogContentText> Value:{" "} { swap.value} </DialogContentText>
+            <DialogContentText> Min Expected Return:{" "} { swap.minReturn} </DialogContentText>
+          </>
+        }
+        {/* <DialogContentText>
           {swap.value &&
            "Value: " + swap.value
           }
@@ -130,12 +133,7 @@ console.log(swap, 'swap@swapProgress');
         {swap.minReturn &&
            "Min Expected Return: " + swap.minReturn
         }
-        </DialogContentText>
-        <DialogContentText>
-        {swap.exact &&
-           "Exact Return: " + swap.exact
-        }
-        </DialogContentText>
+        </DialogContentText> */}
         <DialogContentText>
           Swap will timeout in: {" "} {refundTime || " "} <img src={question_circle} alt="question_circle" className={classes.textImg} />
         </DialogContentText>

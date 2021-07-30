@@ -4,7 +4,7 @@ import Grid from '@material-ui/core/Grid';
 import Button from '@material-ui/core/Button';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
-import minimize from '../../assets/minimize.svg';
+import maximize from '../../assets/maximize.svg';
 import { tokens } from '../constants';
 import useStyles from "./style";
 
@@ -34,7 +34,7 @@ const CurrentSwaps = (props) => {
     0: "Failed",
     1: "Swap Initiated",
     2: "Implementing Swap",
-    3: "Validating Transaction",
+    3: "Swap Completed",
     4: "Refunded",
   }
 
@@ -69,7 +69,7 @@ const CurrentSwaps = (props) => {
             </Typography>
           </div>
           <Button onClick={() => onClick(data)}>
-            <img src={minimize} alt="minimize" className={classes.img} />
+            <img src={maximize} alt="maximize" className={classes.img} />
           </Button>
         </Paper>
         <Typography className={classes.minPad} > {refund && "Swap will timeout in: "} {refund}  </Typography>
@@ -103,7 +103,8 @@ const CurrentSwaps = (props) => {
       {swaps !== undefined &&
         <>
           <Typography>
-            Current swaps in progress...
+            {/* Current swaps in progress... */}
+            Swap Status
           </Typography>
           {Object.keys(swaps).map((x) => SwapItem(swaps[x]))}
         </>

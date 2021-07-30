@@ -40,7 +40,7 @@ export const useStyles = makeStyles((theme) => ({
       border: "1px solid black",
       borderRadius: "8px",
       fontWeight: "500",
-      fontSize: "1.5rem",
+      fontSize: "1.1255rem",
       lineHeight: "29px",
       letterSpacing: "0.01em",
       textTransform: 'none',
