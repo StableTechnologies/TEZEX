@@ -2,19 +2,15 @@ import React, { useContext, useState } from "react";
 import useStyles from "./style";
 import PropTypes from "prop-types";
 
-import Avatar from "@material-ui/core/Avatar";
 import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
-import ListItemAvatar from "@material-ui/core/ListItemAvatar";
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from "@material-ui/core/ListItemText";
 import Dialog from "@material-ui/core/Dialog";
 import DialogTitle from "@material-ui/core/DialogTitle";
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
-// import Autocomplete from '@material-ui/lab/Autocomplete';
 import TextField from '@material-ui/core/TextField';
-// import InputBase from '@material-ui/core/InputBase';
 import IconButton from '@material-ui/core/IconButton';
 import CloseIcon from '@material-ui/icons/Close';
 import SearchIcon from '@material-ui/icons/Search';
@@ -74,13 +70,7 @@ function TokenSelectionDialog(props) {
         placeholder= "Search Token"
         onChange= {e => setSearchList(e.target.value)}
       />)}
-      {/* <Autocomplete
-        id="combo-box-demo"
-        options={lists}
-        getOptionLabel={(lists) => lists.title}
-        style={{ width: 300 }}
-        renderInput={(params) => <TextField {...params} label="search token" variant="outlined" />}
-      /> */}
+
       {lists && (
       <List className={classes.listCon}>
         {search.map((value, key) => (
