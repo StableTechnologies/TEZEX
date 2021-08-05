@@ -140,7 +140,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
 
   let counterAsset, swapReturn, swapFee, minExpectedReturn, networkFees, minReceived, bal;
 
-  if ((currentSwap && inputTokenAmount)
+  if ((currentSwap)
     && (
       (swapPairs[currentSwap.pair][currentSwap.asset].network !== "pureTezos" && clients["ethereum"])
       || swapPairs[currentSwap.pair][currentSwap.asset].network === "pureTezos"
@@ -179,7 +179,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
           .toFixed(6);
         bal = swapStat.balances[currentSwap.asset]
           .div(10 ** swapPairs[currentSwap.pair][currentSwap.asset].decimals)
-          .toFixed(6);
+          .toFixed(2);
 
       }
 
@@ -193,7 +193,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
 
       bal = swapStat.balances[currentSwap.asset]
         .div(10 ** swapPairs[currentSwap.pair][currentSwap.asset].decimals)
-        .toFixed(6)
+        .toFixed(2)
     } catch (error) { }
   }
   const generateSwap = async (swap, secret) => {
@@ -247,7 +247,6 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
 
 
   function saveCurrentSwap(swap) {
-    // setOngoingSwaps([...ongoingSwaps, swap]);
     setOngoingSwaps(swap);
   }
 
@@ -383,6 +382,9 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
   }, [inputToken, outputToken]);
 
   useEffect(() => {
+    !inputTokenAmount ?
+    setOutputTokenAmount('')
+    :
     setOutputTokenAmount(minReceived)
   }, [minReceived, inputTokenAmount]);
 
@@ -440,7 +442,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
                       <div className={classes.balContainer}>
                         <Typography color="textSecondary" variant="subtitle2">From</Typography>
                         {bal &&
-                          <Typography color="textSecondary" variant="subtitle2">wallet balance:{" "} {Math.floor(bal)}{" "}{inputToken.title} </Typography>
+                          <Typography color="textSecondary" variant="subtitle2">wallet balance:{" "} {(bal >= 1) ? Math.floor(bal) : bal}{" "}{inputToken.title} </Typography>
                         }
                       </div>
                       <div className={classes.tokenDetails} >
@@ -607,18 +609,18 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
               <Paper variant="outlined" className={classes.feepaper + " Element"} square>
                 <div className={classes.feeDetails}>
                   <Typography>Swap Fee</Typography>
-                  <Typography>{swapFee || (!outputToken ? "0.15 % XTZ" : "0.00")} {""} {outputToken.title} </Typography>
+                  <Typography>{(!inputTokenAmount ? 0 : swapFee) || (!outputToken ? "0.15 %" : "0.00")} {""} {outputToken.title} </Typography>
                 </div>
                 <div className={classes.feeDetails}>
                   <Typography>Max Network Fee</Typography>
                   <Typography>
-                    {networkFees ||(!outputToken ? "0.00 XTZ" : "0.00")} {""} {outputToken.title}
+                    {(!inputTokenAmount ? 0 : networkFees) ||(!outputToken ? "0.00 XTZ" : "0.00")} {""} {outputToken.title}
                   </Typography>
 
                 </div>
                 <div className={classes.feeDetails}>
                   <Typography>Minimum Received</Typography>
-                  <Typography> {minReceived || (!outputToken ? "0.00 XTZ" : "0.00")} {""} {outputToken.title} </Typography>
+                  <Typography> {(!inputTokenAmount ? 0 : minReceived) || (!outputToken ? "0.00 XTZ" : "0.00")} {""} {outputToken.title} </Typography>
                 </div>
               </Paper>
             </div>
