@@ -179,7 +179,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
           .toFixed(6);
         bal = swapStat.balances[currentSwap.asset]
           .div(10 ** swapPairs[currentSwap.pair][currentSwap.asset].decimals)
-          .toFixed(6);
+          .toFixed(2);
 
       }
 
@@ -193,7 +193,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
 
       bal = swapStat.balances[currentSwap.asset]
         .div(10 ** swapPairs[currentSwap.pair][currentSwap.asset].decimals)
-        .toFixed(6)
+        .toFixed(2)
     } catch (error) { }
   }
   const generateSwap = async (swap, secret) => {
@@ -247,7 +247,6 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
 
 
   function saveCurrentSwap(swap) {
-    // setOngoingSwaps([...ongoingSwaps, swap]);
     setOngoingSwaps(swap);
   }
 
@@ -443,7 +442,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
                       <div className={classes.balContainer}>
                         <Typography color="textSecondary" variant="subtitle2">From</Typography>
                         {bal &&
-                          <Typography color="textSecondary" variant="subtitle2">wallet balance:{" "} {Math.floor(bal)}{" "}{inputToken.title} </Typography>
+                          <Typography color="textSecondary" variant="subtitle2">wallet balance:{" "} {(bal >= 1) ? Math.floor(bal) : bal}{" "}{inputToken.title} </Typography>
                         }
                       </div>
                       <div className={classes.tokenDetails} >
