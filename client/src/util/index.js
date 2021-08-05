@@ -28,6 +28,15 @@ export const truncate = (number, digits) => {
 export const connectEthAccount = async () => {
   if (window.ethereum) {
     const web3 = new Web3(window.ethereum);
+    const network = await web3.eth.net.getNetworkType()
+    if (config.ethereum.chain === "mainnet" && network !== "main") {
+      alert("Please connect to mainnet in your ethereum wallet");
+      throw new Error("ethereum not connected to mainnet")
+    }
+    if (config.ethereum.chain !== "mainnet" && network !== config.ethereum.chain) {
+      alert(`Please connect to ${config.ethereum.chain} in your ethereum wallet`);
+      throw new Error(`ethereum not connected ${config.ethereum.chain}`)
+    }
     await window.ethereum.enable();
     const account = await web3.eth.getAccounts();
     return { web3, account: account[0] };
