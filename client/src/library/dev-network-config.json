@@ -1,6 +1,6 @@
 {
   "tezex": {
-    "server": "http://localhost:8000",
+    "server": "https://tezex-server.onrender.com",
     "route1": "/client/status",
     "route2": "/client/status/tezos"
   },
