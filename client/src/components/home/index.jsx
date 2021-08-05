@@ -607,7 +607,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
               <Paper variant="outlined" className={classes.feepaper + " Element"} square>
                 <div className={classes.feeDetails}>
                   <Typography>Swap Fee</Typography>
-                  <Typography>{swapFee || (!outputToken ? "0.15 % XTZ" : "0.00")} {""} {outputToken.title} </Typography>
+                  <Typography>{swapFee || (!outputToken ? "0.15 %" : "0.00")} {""} {outputToken.title} </Typography>
                 </div>
                 <div className={classes.feeDetails}>
                   <Typography>Max Network Fee</Typography>
