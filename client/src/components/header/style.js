@@ -44,12 +44,14 @@ const useStyles = makeStyles((theme) => ({
   walletbutton: {
     "&.Element": {
     background: "white",
+    width: "160px",
+    height: "40px",
     marginRight: ".3rem",
     marginLeft: ".3rem",
     border: "1px solid black",
     textTransform: "none",
-    width: "max-content",
-    height: "40px",
+    // width: "max-content",
+    // height: "40px",
     fontSize: "16px",
     '@media (max-width: 768px)': {
       margin: ".2rem",
@@ -63,6 +65,9 @@ const useStyles = makeStyles((theme) => ({
       height: "30px",
     },
   }
+  },
+  btnContent: {
+    flexWrap: "nowrap"
   },
   ethButton: {
     "&.Element": {

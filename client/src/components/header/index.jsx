@@ -134,7 +134,7 @@ const Header = ({ clients, swapPairs, balUpdate, setupEth, setupTez, }) => {
 													onClick={!ethAccount ? setupEthAccount :  toggleEthDrawer(anchor, true)}
 													className={`${classes.walletbutton + " Element"} ${ ethAccount ? classes.ethButton + " Element" : '' }`}
                         >
-													<Grid container item alignContent="center" justify="space-evenly">
+													<Grid container item alignContent="center" justify="space-evenly" className={classes.btnContent}>
 															<img src={ethwalletlogo} />
 															{(!ethAccount || ethAccount.length === 0) && ('Connect Wallet')}
 															{(ethAccount && ethAccount.length > 0) && (shorten(5, 5, ethAccount))}
@@ -156,7 +156,7 @@ const Header = ({ clients, swapPairs, balUpdate, setupEth, setupTez, }) => {
 													onClick={!xtzAccount ? setupXtzAccount : toggleTezDrawer(anchor, true)}
 													className={`${classes.walletbutton + " Element"} ${ xtzAccount ? classes.tezButton + " Element" : '' }`}
 												>
-													<Grid container item alignContent="center" justify="space-evenly">
+													<Grid container item alignContent="center" justify="space-evenly" className={classes.btnContent}>
 														<img src={tzwalletlogo} />
 														{(!xtzAccount || xtzAccount.length === 0) && ('Connect Wallet')}
 														{(xtzAccount && xtzAccount.length > 0) && (shorten(5, 5, xtzAccount))}

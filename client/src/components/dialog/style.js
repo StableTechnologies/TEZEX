@@ -31,6 +31,10 @@ listBanner: {
   lineHeight: "1",
   color: "#828282",
 },
+logo: {
+  width: "32px",
+  height: "32px"
+}
 }));
 
 export default useStyles;
