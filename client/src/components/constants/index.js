@@ -3,7 +3,7 @@ import tzlogo from "../../assets/tzlogo.svg"
 import ethtzLogo from "../../assets/ethtzLogo.png";
 import usdcLogo from "../../assets/usdcLogo.svg";
 import usdtzLogo from "../../assets/usdtzLogo.png";
-import wbtcLogo from "../../assets/tzbtcLogo.svg";
+import wbtcLogo from "../../assets/wbtcLogo.svg";
 import btctzLogo from "../../assets/btctzLogo.png";
 import metamaskLogo from "../../assets/metamaskLogo.svg";
 import walletconnectLogo from "../../assets/walletconnectLogo.svg";
