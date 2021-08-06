@@ -3,7 +3,8 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from "@material-ui/core/DialogTitle";
 import React from 'react';
 import Typography from "@material-ui/core/Typography";
-import complete from '../../assets/complete.gif';
+// import complete from '../../assets/complete.gif';
+import complete from '../../assets/complete.svg';
 import { useStyles } from "./style";
 
 import { shorten } from "../../util";
@@ -28,7 +29,7 @@ const SwapStatus = (props) => {
       </DialogTitle>
       <DialogContent >
         <div>
-          <img src={complete} alt="complete_gif" className={classes.completed} />
+          <img src={complete} alt="complete_gif" className={classes.completed} loop="false" />
         </div>
         <div>
           <Typography> You can now view your updated token balances. </Typography>

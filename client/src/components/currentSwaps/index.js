@@ -7,28 +7,11 @@ import Typography from '@material-ui/core/Typography';
 import maximize from '../../assets/maximize.svg';
 import { tokens } from '../constants';
 import useStyles from "./style";
+import timer from '../convertDate.js';
 
 const CurrentSwaps = (props) => {
   const { onClick, ongoingSwaps, swaps, } = props;
   const classes = useStyles();
-
-  const [activeStep, setActiveStep] = useState();
-  const [refundTime, setRefundTime] = useState('');
-
-  const [viewAsset, setViewAsset] = useState([]);
-  const [viewCounterAsset, setViewCounterAsset] = useState([]);
-
-  useEffect(() => {
-
-    if (swaps) {
-      Object.keys(swaps).map((x) => {
-        setRefundTime(new Date(swaps[x].refundTime * 1000).toLocaleString())
-        setActiveStep(swaps[x].state)
-      });
-    }
-
-  }, [refundTime, activeStep])
-
 
   const state = {
     0: "Swap Failed, Refund!",
@@ -39,8 +22,8 @@ const CurrentSwaps = (props) => {
   }
 
   const SwapItem = (data) => {
-    // console.log(data)
-    const refund = new Date(data.refundTime * 1000).toLocaleString()
+    const refund = timer(data.refundTime, "Swap Timed Out!");
+
     const swapInProgress = data.pair.split('/');
     const asset = data.asset;
     let token = {}
@@ -72,31 +55,14 @@ const CurrentSwaps = (props) => {
             <img src={maximize} alt="maximize" className={classes.img} />
           </Button>
         </Paper>
-        <Typography className={classes.minPad} > {refund && "Swap Timeout: "} {refund}  </Typography>
+        <Typography className={classes.minPad} > {refund && "Swap will timeout in: "} {refund}  </Typography>
         <Grid container alignContent="center" justify="space-between" >
-          {/* <Typography className={classes.minPad}> {activeStep && "State: "} {state[data.state]}  </Typography> */}
           <Typography className={classes.minPad}> {state[data.state]}  </Typography>
           <Typography className={classes.minPad}> {data.value}  </Typography>
         </Grid>
       </div>
     )
   }
-
-  useEffect(() => {
-    if (ongoingSwaps.pair) {
-      const swapInProgress = ongoingSwaps.pair.split('/');
-      const asset = ongoingSwaps.asset;
-      tokens.map((x) => {
-        if (swapInProgress[0].toLowerCase() === x.title.toLowerCase()) {
-          (swapInProgress[0] === asset) ? setViewAsset(x) : setViewCounterAsset(x);
-        }
-
-        if (swapInProgress[1].toLowerCase() === x.title.toLowerCase()) {
-          (swapInProgress[1] === asset) ? setViewAsset(x) : setViewCounterAsset(x);
-        }
-      })
-    }
-  }, [ongoingSwaps])
 
   return (
     <div className={classes.root}>

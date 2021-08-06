@@ -29,11 +29,21 @@ const useStyles = makeStyles((theme) => ({
     border: "0",
     cursor: "pointer",
     margin: "1.5vw 0.7vw",
-    fontSize: "1.2vw",
+    fontSize: "1.125rem",
     fontWeight: "bold",
     backgroundColor: "white",
     width: "8vw",
+    '@media (max-width: 768px)': {
+      fontSize: "1rem",
+    },
+    '@media (max-width: 600px)': {
+      fontSize: ".7rem",
+      width: "auto"
+    },
     "&:hover": {
+      textDecoration: "underline",
+    },
+    "&:active": {
       textDecoration: "underline",
     },
   },

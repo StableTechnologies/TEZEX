@@ -1,6 +1,18 @@
 import { makeStyles } from "@material-ui/core/styles";
 
 const useStyles = makeStyles((theme) => ({
+  root: {
+    "& .MuiTypography-h2": {
+      fontSize: "2.5rem",
+      fontStyle: "normal",
+      fontWeight: "700",
+      lineHeight: "48px",
+      letterSpacing: "0.1rem",
+      margin: "1rem",
+      textAlign: "center",
+    },
+  },
+
   container: {
     width: "70%",
     margin: "-2vw auto",

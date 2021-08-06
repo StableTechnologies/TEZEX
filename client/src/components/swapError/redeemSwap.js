@@ -3,6 +3,7 @@ import clock from '../../assets/clock.svg';
 
 import SwapError from './index';
 import { shorten } from "../../util";
+import timer from '../convertDate.js';
 
 const RedeemSwap = (props) => {
 
@@ -23,7 +24,7 @@ const RedeemSwap = (props) => {
       text3 = "You can try your swap again at any time. Check out the stats page..."
 
       expiryTime = {Math.trunc(Date.now() / 1000) < swap.refundTime}
-      text4 = "You will be able to refund your swap after the swap timeout period ends in 1 hour 30 minutes."
+      text4 = {"You will be able to refund your swap after the swap timeout period ends in " + timer(swap.refundTime) }
      />
   )
 }

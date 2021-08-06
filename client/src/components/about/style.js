@@ -12,6 +12,7 @@ const useStyles = makeStyles((theme) => ({
       fontSize: "3.5rem",
       fontWeight: "700",
       lineHeight: "4.2rem",
+      letterSpacing: "0.1rem",
       margin: "1rem",
       textAlign: "center",
     },
