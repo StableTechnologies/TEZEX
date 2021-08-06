@@ -1,4 +1,5 @@
 import ethlogo from "../../assets/ethlogo.svg";
+import tzlogo from "../../assets/tzlogo.svg"
 import ethtzLogo from "../../assets/ethtzLogo.png";
 import usdcLogo from "../../assets/usdcLogo.svg";
 import usdtzLogo from "../../assets/usdtzLogo.png";
