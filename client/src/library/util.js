@@ -45,6 +45,10 @@ export const constants = {
       eth: new BigNumber(2),
       ethtz: new BigNumber(2),
     },
+    "wbtc/tzbtc": {
+      wbtc: new BigNumber(2),
+      tzbtc: new BigNumber(2),
+    },
   },
 };
 
