@@ -3,7 +3,7 @@ import tzlogo from "../../assets/tzlogo.svg"
 import ethtzLogo from "../../assets/ethtzLogo.png";
 import usdcLogo from "../../assets/usdcLogo.svg";
 import usdtzLogo from "../../assets/usdtzLogo.png";
-import tzbtcLogo from "../../assets/tzbtcLogo.svg";
+import wbtcLogo from "../../assets/tzbtcLogo.svg";
 import btctzLogo from "../../assets/btctzLogo.png";
 import metamaskLogo from "../../assets/metamaskLogo.svg";
 import walletconnectLogo from "../../assets/walletconnectLogo.svg";
@@ -21,7 +21,7 @@ export const tokens = [
   { title: 'ETH', logo: ethlogo, banner: 'Ether', pairs: ['ETHtz'] },
   { title: 'XTZ', logo: tzlogo, banner: 'Tez', pairs: ['USDtz', 'ETHtz'] },
   { title: 'WBTC', logo: btctzLogo, banner: 'WBTC', pairs: ['tzBTC'] },
-  { title: 'tzBTC', logo: tzbtcLogo, banner: 'tzBTC', pairs: ['WBTC'] },
+  { title: 'tzBTC', logo: wbtcLogo, banner: 'tzBTC', pairs: ['WBTC'] },
 ];
 export const tokenWallets = [
   { title: 'Metamask', logo: metamaskLogo, },
