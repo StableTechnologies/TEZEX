@@ -8,7 +8,7 @@ const useStyles = makeStyles((theme) => ({
       fontWeight: "700",
       lineHeight: "48px",
       letterSpacing: "0.1rem",
-      margin: "1rem",
+      margin: "3rem 1rem 1rem",
       textAlign: "center",
     },
   },
