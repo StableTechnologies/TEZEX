@@ -14,7 +14,7 @@ const CurrentSwaps = (props) => {
   const classes = useStyles();
 
   const state = {
-    0: "Swap Failed, Refund!",
+    0: "Swap Failed",
     1: "Swap Initiated",
     2: "Implementing Swap",
     3: "Swap Completed",
@@ -22,7 +22,8 @@ const CurrentSwaps = (props) => {
   }
 
   const SwapItem = (data) => {
-    const refund = timer(data.refundTime, "Swap Timed Out!");
+    // const refund = timer(data.refundTime, "Swap Timed Out!");
+    const refund = timer(data.refundTime);
 
     const swapInProgress = data.pair.split('/');
     const asset = data.asset;
@@ -55,11 +56,13 @@ const CurrentSwaps = (props) => {
             <img src={maximize} alt="maximize" className={classes.img} />
           </Button>
         </Paper>
-        <Typography className={classes.minPad} > {refund && "Swap will timeout in: "} {refund}  </Typography>
         <Grid container alignContent="center" justify="space-between" >
           <Typography className={classes.minPad}> {state[data.state]}  </Typography>
           <Typography className={classes.minPad}> {data.value}  </Typography>
         </Grid>
+        <Typography className={classes.minPad} >
+          {refund !== undefined ? "Swap will timeout in: " + refund : "Redeem your funds"}
+        </Typography>
       </div>
     )
   }

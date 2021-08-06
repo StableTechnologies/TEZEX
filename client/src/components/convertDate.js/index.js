@@ -1,4 +1,4 @@
-const timer= (timeout, msg) => {
+const timer= (timeout) => {
 
   const endDate = new Date(timeout * 1000).getTime();
 
@@ -17,7 +17,7 @@ const timer= (timeout, msg) => {
     }
 
     if(timeDiff < 0) {
-      return msg;
+      return undefined;
     }
     return output;
 
