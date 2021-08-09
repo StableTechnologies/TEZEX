@@ -12,8 +12,8 @@
       "mapID": 101
     },
     "swapContract": {
-      "address": "KT18hsNZzdjkA8CDhqCWLW1RvRimnyrZCtAN",
-      "mapID": 56174
+      "address": "KT1LDYAuQTF8aGKeaEhY9CUsS5h4MhpiGwEt",
+      "mapID": 9991
     }
   },
   "assets": {
@@ -46,5 +46,9 @@
       "minTradeVolume": 5
     }
   },
-  "pairs": ["ethtz/usdtz", "xtz/usdtz", "xtz/ethtz"]
+  "pairs": [
+    "ethtz/usdtz",
+    "xtz/usdtz",
+    "xtz/ethtz"
+  ]
 }

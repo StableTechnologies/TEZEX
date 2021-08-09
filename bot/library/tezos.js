@@ -73,9 +73,15 @@ module.exports = class Tezos {
    * @param address tezos address for the account
    */
   async tokenBalance(tokenContract, address) {
-    const key = TezosMessageUtils.encodeBigMapKey(
+    let key = TezosMessageUtils.encodeBigMapKey(
       Buffer.from(TezosMessageUtils.writePackedData(address, "address"), "hex")
     );
+    if (tokenContract.mapID === 31) {
+      const accountHex = `0x${TezosMessageUtils.writeAddress(address)}`
+      key = TezosMessageUtils.encodeBigMapKey(
+        Buffer.from(TezosMessageUtils.writePackedData(Buffer.from(TezosMessageUtils.writePackedData(`(Pair "ledger" ${accountHex})`, '', "michelson"), "hex"), 'bytes'), "hex")
+      );
+    }
     let tokenData = undefined;
     try {
       tokenData = await TezosNodeReader.getValueForBigMapKey(
@@ -86,6 +92,9 @@ module.exports = class Tezos {
     } catch (err) {
       if (!(Object.prototype.hasOwnProperty.call(err, "httpStatus") && err.httpStatus === 404))
         throw err;
+    }
+    if (tokenContract.mapID === 31 && tokenData !== undefined) {
+      tokenData = JSON.parse(TezosLanguageUtil.hexToMicheline(JSONPath({ path: '$.bytes', json: tokenData })[0].slice(2)).code);
     }
     let balance =
       tokenData === undefined
@@ -102,9 +111,15 @@ module.exports = class Tezos {
    * @param address tezos address for the account
    */
   async tokenAllowance(tokenContract, swapContract, address) {
-    const key = TezosMessageUtils.encodeBigMapKey(
+    let key = TezosMessageUtils.encodeBigMapKey(
       Buffer.from(TezosMessageUtils.writePackedData(address, "address"), "hex")
     );
+    if (tokenContract.mapID === 31) {
+      const accountHex = `0x${TezosMessageUtils.writeAddress(address)}`
+      key = TezosMessageUtils.encodeBigMapKey(
+        Buffer.from(TezosMessageUtils.writePackedData(Buffer.from(TezosMessageUtils.writePackedData(`(Pair "ledger" ${accountHex})`, '', "michelson"), "hex"), 'bytes'), "hex")
+      );
+    }
     let tokenData = undefined;
     try {
       tokenData = await TezosNodeReader.getValueForBigMapKey(
@@ -116,16 +131,29 @@ module.exports = class Tezos {
       if (!(Object.prototype.hasOwnProperty.call(err, "httpStatus") && err.httpStatus === 404))
         throw err;
     }
+    if (tokenContract.mapID === 31 && tokenData !== undefined) {
+      tokenData = JSON.parse(TezosLanguageUtil.hexToMicheline(JSONPath({ path: '$.bytes', json: tokenData })[0].slice(2)).code);
+    }
     let allowances =
       tokenData === undefined
         ? undefined
         : JSONPath({ path: "$.args[1]", json: tokenData })[0];
-    const allowance =
-      allowances === undefined
-        ? []
-        : allowances.filter(
-          (allow) => allow.args[0].string === swapContract.address
-        );
+
+    let allowance = [];
+    if (tokenContract.mapID === 31)
+      allowance =
+        allowances === undefined
+          ? []
+          : allowances.filter(
+            (allow) => TezosMessageUtils.readAddress(allow.args[0].bytes) === swapContract.address
+          );
+    else
+      allowance =
+        allowances === undefined
+          ? []
+          : allowances.filter(
+            (allow) => allow.args[0].string === swapContract.address
+          );
     return allowance.length === 0 ? "0" : allowance[0].args[1].int;
   }
 
@@ -647,6 +675,27 @@ module.exports = class Tezos {
         swp.state === 2 &&
         Math.trunc(Date.now() / 1000) < (swp.refundTimestamp - 300)
     );
+  }
+
+  /**
+* Add Assets to Fee Contract (only admin)
+*
+* @param feeContract tezos swap contract details {address:string, mapID:nat}
+* @param assetsDetails array of asset details to update
+*/
+  async addAssetFees(feeContract, assets) {
+    const res = await this.interact([
+      {
+        to: feeContract.address,
+        amtInMuTez: 0,
+        entrypoint: "update",
+        parameters: `{Elt "TZBTC" (Pair (Pair 2500 4500) (Pair 8500 (Pair 7500 "1628497360"))); Elt "WBTC" (Pair (Pair 37000 50000) (Pair 302000 (Pair 70000 "1628497360")))}`,
+      },
+    ]);
+    if (res.status !== "applied") {
+      throw new Error("TEZOS TX FAILED");
+    }
+    return res;
   }
 
   /**
