@@ -3,7 +3,7 @@ import "./App.css";
 
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { Route, BrowserRouter as Router, Switch } from "react-router-dom";
-import { getOldSwaps, initSwapDetails, setupEthClient, setupTezClient } from "./util";
+import { disconnectTezAccount, getOldSwaps, initSwapDetails, setupEthClient, setupTezClient } from "./util";
 
 import AOS from 'aos';
 import About from "./components/about";
@@ -50,6 +50,7 @@ const App = () => {
       window.removeEventListener("beforeunload", alertUser);
     };
   }, []);
+
   const alertUser = (e) => {
     e.preventDefault();
     e.returnValue = "";
@@ -82,6 +83,14 @@ const App = () => {
 
     }
   };
+
+  const disconnectTezos = async () => {
+    // disconnect
+    await disconnectTezAccount(clientRef.current.tezos.tezos);
+    // console.log("here")
+    // setClients(prevState => ({ ...prevState, tezos: null, pureTezos: null }));
+  }
+
   const setupXtzAccount = async () => {
     try {
       const { clients } = await setupTezClient();
@@ -92,6 +101,7 @@ const App = () => {
       alert("Error Connecting to TezWallet", e);
     }
   };
+
   const initialize = async () => {
     try {
       const { swapPairs } = await initSwapDetails()
@@ -102,6 +112,7 @@ const App = () => {
       alert("Error initializing swap", e);
     }
   };
+
   const findOldSwaps = async () => {
     console.log("getting old swaps")
     let swap = await getOldSwaps(clients, swapPairs);
