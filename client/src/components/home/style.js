@@ -2,16 +2,19 @@ import { makeStyles } from "@material-ui/core/styles";
 
 const useStyles = makeStyles((theme) => ({
   root: {
-    // maxWidth: "30vw",
-    boxSizing: 'border-box',
-    "& .MuiPaper-root": {
-      borderRadius: "1.5rem",
+
+
+    '& .MuiButton-text': {
+      '&:hover': {
+        background: 'transparent',
+    },
     },
   },
   '& .MuiCardContent-root': {
     padding: '24px 31px 31px 31px',
     textAlign: 'left'
   },
+
 
   '@media(max-width: 501px)': {
     con: {
@@ -79,8 +82,7 @@ const useStyles = makeStyles((theme) => ({
     border: '0.5px solid #E5E5E5',
     cursor: "pointer",
   },
-  bodycontainer: {
-  },
+
   sidelogocontainer: {
     maxHeight: "100%",
     '@media (max-width: 600px)': {
@@ -93,6 +95,11 @@ const useStyles = makeStyles((theme) => ({
   logo: {
     marginRight: "8px",
     maxWidth: "24px",
+    width: "24px",
+    height: "24px",
+    '& .MuiButton-root': {
+      backgroundColor: "red"
+    }
   },
   img: {
     width: "24px",
@@ -125,19 +132,7 @@ const useStyles = makeStyles((theme) => ({
       fontSize: "2.1vw",
     },
   },
-  swap: {
-    color: "white",
-    width: "fit-content",
-    border: "0.2vw black solid",
-    margin: "3vw auto",
-    padding: "0.5vw 2vw",
-    lineHeight: "1.7vw",
-    borderRadius: "2vw",
-    backgroundColor: "black",
-  },
-  noSwap: {
-    fontSize: "1.2vw",
-  },
+
   error: {
     display: "flex",
     justifyContent: "space-around",
@@ -171,8 +166,12 @@ const useStyles = makeStyles((theme) => ({
       lineHeight: "29px",
       letterSpacing: "0.01em",
       textTransform: 'none',
+      '&:hover': {
+        background: '#000',
+    },
     '@media (max-width: 600px)': {
       margin: "1rem .2rem",
+      fontSize: "1.2rem",
     }
   },
 },
@@ -203,8 +202,13 @@ const useStyles = makeStyles((theme) => ({
     justifyContent: "space-between",
     fontStyle: "normal",
     fontWeight: "500",
-    fontSize: ".9rem",
     lineHeight: "19px",
+    "& .MuiTypography-body1": {
+      fontSize: "1rem",
+      '@media (max-width: 600px)': {
+        fontSize: ".9rem",
+      }
+    }
   },
 
   loaderContainer: {

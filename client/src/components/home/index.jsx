@@ -410,7 +410,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
     setMaximizedSwap(undefined)
   }
   return (
-    <Grid container justify="center" className={classes.bodycontainer}>
+    <Grid container justify="center" className={classes.root}>
       <Grid item className={classes.sidelogocontainer} xs={1}>
         {" "}
         <img className={classes.sidelogo} src={sidelogo} />
@@ -451,6 +451,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
                           size="small"
                           onClick={openInputTokenModal}
                           className={classes.tokenButton}
+                          disableRipple
                         >
                           {inputToken && (
                             <img className={classes.logo} src={inputToken.logo} alt="logo" />
@@ -481,7 +482,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
                       />
                     </div>
 
-                    <Button className={classes.swapIcon} onClick={toggleTokens}>
+                    <Button className={classes.swapIcon} onClick={toggleTokens} disableRipple>
                       <img src={swapIcon} alt="swap-Icon" />
                     </Button>
 
@@ -493,6 +494,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
                           size="small"
                           onClick={openOutputTokenModal}
                           className={classes.tokenButton}
+                          disableRipple
                         >
                           {outputToken && (
                             <img className={classes.logo} src={outputToken.logo} alt="logo" />
@@ -532,78 +534,75 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
                   </>}
                   {
                     (globalContext.tezosClient.account || globalContext.ethereumClient.account) ?
-                      (
                         <>
                           {
                             (inputToken && outputToken) ?
-                              (
-                                <>
-                                  {
-                                    (inputTokenAmount && (minReceived > 0)) ?
-                                      (
+                              <>
+                                { (!connectTez && !connectEth) ?
+                                  <>
+                                    { (inputTokenAmount && (minReceived > 0)) ?
                                         <>
                                           {
                                             ((Number(inputTokenAmount) <= bal)) ?
-                                              (
-                                                <>
-                                                { (connectTez || connectEth) ?
-                                                  <Button size="large" className={`${classes.connectwalletbutton + " Element"} ${classes.disabled + " Element"}`} disabled>Swap Tokens</Button>
-                                                  :
-                                                  <Button size="large" className={classes.connectwalletbutton + " Element"} onClick={startSwap} >Swap Tokens</Button>
-                                                }
-                                                </>
-                                              )
-                                              :
-                                              (
-                                                <Button size="large" className={`${classes.connectwalletbutton + " Element"} ${classes.disabled + " Element"}`} disabled>Insufficient Funds</Button>
-                                              )
+                                              <>
+                                              { (connectTez || connectEth) ?
+                                                <Button size="large" className={`${classes.connectwalletbutton + " Element"} ${classes.disabled + " Element"}`} disabled>Swap Tokens</Button>
+                                                :
+                                                <Button size="large" className={classes.connectwalletbutton + " Element"} onClick={startSwap} >Swap Tokens</Button>
+                                              }
+                                              </> :
+                                              <Button size="large" className={`${classes.connectwalletbutton + " Element"} ${classes.disabled + " Element"}`} disabled>Insufficient Funds</Button>
                                           }
-                                        </>
-                                      ) :
-                                      (
+                                        </> :
                                         <Button size="large" className={`${classes.connectwalletbutton + " Element"} ${classes.disabled + " Element"}`} disabled>Enter Amount</Button>
+                                    }
+                                  </> :
+                                  <>
+                                    {
+                                      (connectTez &&
+                                        <Button size="large" className = {classes.connectwalletbutton + " Element"} onClick={setupXtzAccount} >Connect Tezos Wallet</Button>
+                                      ) ||
+                                      (connectEth &&
+                                        <Button size="large" className = {classes.connectwalletbutton + " Element"} onClick={openWalletModal} >Connect Ethereum Wallet</Button>
                                       )
-                                  }
-                                </>
-                              ) :
-                              (
-                                <Button size="large" className={`${classes.connectwalletbutton + " Element"} ${classes.disabled + " Element"}`} disabled>Select Token</Button>
-                              )
+                                    }
+                                  </>
+                                }
+                              </> :
+                              <Button size="large" className={`${classes.connectwalletbutton + " Element"} ${classes.disabled + " Element"}`} disabled>Select Token</Button>
                           }
                         </>
-                      ) :
-                      (
+                       :
                         <>
                           <Button size="large" className={classes.connectwalletbutton + " Element"} onClick={setWalletType} >Connect Wallet</Button>
-                          <TokenSelectionDialog
-                            selectedValue={wallet}
-                            open={walletModalOpen}
-                            onClose={setToken}
-                            side='wallet'
-                            lists={tokenWallets}
-                            content={content.connectWallet}
-                            handleClick={setEthWallet}
-                            closeBtn
-                          />
-                          <TokenSelectionDialog
-                            selectedValue={err}
-                            open={errModalOpen}
-                            side='err'
-                            onClose={setToken}
-                            content={content.errorMessage}
-                            lists={[]}
-                            content1={
-                              <Loader
-                                message="Waiting for connection confirmation..."
-                                loaderContainer={classes.loaderContainer}
-                                loader={classes.loader}
-                                size={32}
-                              />}
-                            closeBtn
-                          />
                         </>
-                      )
-                  }
+                    }
+                    <TokenSelectionDialog
+                      selectedValue={wallet}
+                      open={walletModalOpen}
+                      onClose={setToken}
+                      side='wallet'
+                      lists={tokenWallets}
+                      content={content.connectWallet}
+                      handleClick={setEthWallet}
+                      closeBtn
+                    />
+                    <TokenSelectionDialog
+                      selectedValue={err}
+                      open={errModalOpen}
+                      side='err'
+                      onClose={setToken}
+                      content={content.errorMessage}
+                      lists={[]}
+                      content1={
+                        <Loader
+                          message="Waiting for connection confirmation..."
+                          loaderContainer={classes.loaderContainer}
+                          loader={classes.loader}
+                          size={32}
+                        />}
+                      closeBtn
+                    />
                 </CardActions>
               </Card>
               <Paper variant="outlined" className={classes.feepaper + " Element"} square>
@@ -619,7 +618,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
 
                 </div>
                 <div className={classes.feeDetails}>
-                  <Typography>Minimum Received</Typography>
+                  <Typography>Minimum Receiveable</Typography>
                   <Typography> {(!inputTokenAmount ? 0 : minReceived) || (!outputToken ? "0.00 XTZ" : "0.00")} {""} {outputToken.title} </Typography>
                 </div>
               </Paper>

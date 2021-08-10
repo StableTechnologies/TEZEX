@@ -17,16 +17,16 @@ const About = () => {
         {" "}
           <img className = {classes.sidelogo} src={sidelogo} />
       </Grid> */}
-      <Typography data-aos="flip-up" variant="h1" > About Tezex </Typography>
+      <Typography variant="h1" > About Tezex </Typography>
       <div className={classes.container}>
-        <div data-aos="fade-right" className={classes.txtCon}>
+        <div className={classes.txtCon}>
           <Typography variant="h4" >What are Atomic Swaps?</Typography>
           <Typography> Atomic swaps are automated, self-enforcing crypto-currency exchange contracts
             that allow crypto-currencies to be traded peer-to-peer without the need for a trusted third party.
           </Typography>
         </div>
 
-        <div data-aos="zoom-out-up" className={classes.txtCon}>
+        <div className={classes.txtCon}>
           <Typography variant="h4">Why TEZEX?</Typography>
           <Typography>
             The goal of atomic swaps was to remove any need for centralized 3rd parties,
@@ -43,7 +43,7 @@ const About = () => {
           </Typography>
         </div>
 
-        <div data-aos="fade-left" className={classes.txtCon}>
+        <div className={classes.txtCon}>
           <Typography variant="h4"> How to Perform a Swap? </Typography>
           <Typography>
             Currently, TEZEX provides cross chain atomic swaps between Ethereum and Tezos, to start a swap follow these steps :
@@ -56,7 +56,7 @@ const About = () => {
           </List>
         </div>
 
-        <div data-aos="fade-up" className={classes.txtCon}>
+        <div className={classes.txtCon}>
           <Typography variant="h4"> The swap can be in the following states : </Typography>
           <List>
             <ListItem> 1. Swap Initiated : Swap Request initiated, waiting for response Swaps. </ListItem>
