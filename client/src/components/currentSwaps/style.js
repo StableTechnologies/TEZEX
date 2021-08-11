@@ -9,6 +9,7 @@ const useStyles = makeStyles((theme) => ({
     },
     '& .MuiPaper-root ': {
       display: 'flex',
+      position: 'relative',
       padding: '.5rem',
       lineHeight: "1.1875rem",
       fontSize: "1rem",
@@ -26,6 +27,12 @@ const useStyles = makeStyles((theme) => ({
     width: "24px",
     height: "24px",
     marginBottom: "-6px",
+  },
+  maximize: {
+    width: "24px",
+    height: "24px",
+    position: "absolute",
+    right: "5px",
   },
   CurrentSwaps: {
     flexGrow: "1",

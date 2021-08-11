@@ -87,8 +87,7 @@ const App = () => {
   const disconnectTezos = async () => {
     // disconnect
     await disconnectTezAccount(clientRef.current.tezos.tezos);
-    // console.log("here")
-    // setClients(prevState => ({ ...prevState, tezos: null, pureTezos: null }));
+    setClients(prevState => ({ ...prevState, tezos: null, pureTezos: null }));
   }
 
   const setupXtzAccount = async () => {
@@ -116,7 +115,7 @@ const App = () => {
   const findOldSwaps = async () => {
     console.log("getting old swaps")
     let swap = await getOldSwaps(clients, swapPairs);
-    if (Object.keys(swap).length > 0) updateSwaps(swap);
+     updateSwaps(swap);
   }
 
   const update = (hash, state, exact = undefined) => {
@@ -166,7 +165,7 @@ const App = () => {
 
   return (
     <TezexContext>
-      <Router basename={process.env.PUBLIC_URL}>
+      <Router >
         <div className="App">
           <Header
             clients={clientRef.current}
@@ -174,6 +173,7 @@ const App = () => {
             balUpdate={balUpdate}
             setupEth={setupEthAccount}
             setupTez={setupXtzAccount}
+            disconnectTez={disconnectTezos}
           />
           {/* {balance === undefined && <Loader message="Loading Account" />} */}
           {/* {balance !== undefined && ( */}

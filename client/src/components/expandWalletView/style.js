@@ -11,7 +11,12 @@ const useStyles = makeStyles((theme) => ({
         right: "2.8%",
         top: "7%",
       }
-    }
+    },
+    '& .MuiButton-text': {
+      '&:hover': {
+        background: 'transparent',
+    },
+    },
   },
   dialogContent: {
     display: "flex",
