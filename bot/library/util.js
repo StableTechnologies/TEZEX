@@ -31,10 +31,10 @@ module.exports.constants = {
       eth: new BigNumber(config.pairs["eth/ethtz"]["eth"].feePad),
       ethtz: new BigNumber(config.pairs["eth/ethtz"]["ethtz"].feePad),
     },
-    "wbtc/tzbtc": {
-      wbtc: new BigNumber(config.pairs["wbtc/tzbtc"]["wbtc"].feePad),
-      tzbtc: new BigNumber(config.pairs["wbtc/tzbtc"]["tzbtc"].feePad),
-    },
+    // "wbtc/tzbtc": {
+    //   wbtc: new BigNumber(config.pairs["wbtc/tzbtc"]["wbtc"].feePad),
+    //   tzbtc: new BigNumber(config.pairs["wbtc/tzbtc"]["tzbtc"].feePad),
+    // },
   },
   minTradeVolume: {
     "usdc/usdtz": {
@@ -53,14 +53,14 @@ module.exports.constants = {
         config.pairs["eth/ethtz"]["ethtz"].minTradeVolume
       ).multipliedBy(10 ** 18),
     },
-    "wbtc/tzbtc": {
-      wbtc: new BigNumber(
-        config.pairs["wbtc/tzbtc"]["wbtc"].minTradeVolume
-      ).multipliedBy(10 ** 8),
-      tzbtc: new BigNumber(
-        config.pairs["wbtc/tzbtc"]["tzbtc"].minTradeVolume
-      ).multipliedBy(10 ** 8),
-    },
+    // "wbtc/tzbtc": {
+    //   wbtc: new BigNumber(
+    //     config.pairs["wbtc/tzbtc"]["wbtc"].minTradeVolume
+    //   ).multipliedBy(10 ** 8),
+    //   tzbtc: new BigNumber(
+    //     config.pairs["wbtc/tzbtc"]["tzbtc"].minTradeVolume
+    //   ).multipliedBy(10 ** 8),
+    // },
   },
 };
 
