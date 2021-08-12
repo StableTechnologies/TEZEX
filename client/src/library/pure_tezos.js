@@ -73,11 +73,17 @@ export default class PureTezos {
         const key = TezosMessageUtils.encodeBigMapKey(
             Buffer.from(TezosMessageUtils.writePackedData(address, "address"), "hex")
         );
-        const tokenData = await TezosNodeReader.getValueForBigMapKey(
-            this.rpc,
-            tokenContract.mapID,
-            key
-        );
+        let tokenData = undefined;
+        try {
+            tokenData = await TezosNodeReader.getValueForBigMapKey(
+                this.rpc,
+                tokenContract.mapID,
+                key
+            );
+        } catch (err) {
+            if (!(Object.prototype.hasOwnProperty.call(err, "httpStatus") && err.httpStatus === 404))
+                throw err;
+        }
         let allowances =
             tokenData === undefined
                 ? undefined
