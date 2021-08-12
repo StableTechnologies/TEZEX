@@ -24,8 +24,8 @@ export const tokens = [
   { title: 'ETHtz', logo: ethtzLogo, banner: 'ETH Tez', pairs: ['USDtz', 'ETH', 'XTZ'] },
   { title: 'ETH', logo: ethlogo, banner: 'Ether', pairs: ['ETHtz'] },
   { title: 'XTZ', logo: tzlogo, banner: 'Tez', pairs: ['USDtz', 'ETHtz'] },
-  { title: 'WBTC', logo: ethlogo, banner: 'WBTC', pairs: ['tzBTC'] },
-  { title: 'tzBTC', logo: tzlogo, banner: 'tzBTC', pairs: ['WBTC'] },
+  // { title: 'WBTC', logo: ethlogo, banner: 'WBTC', pairs: ['tzBTC'] },
+  // { title: 'tzBTC', logo: tzlogo, banner: 'tzBTC', pairs: ['WBTC'] },
 ];
 export const tokenWallets = [
   { title: 'Metamask', logo: metamaskLogo, },
