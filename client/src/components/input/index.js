@@ -12,8 +12,8 @@ export const SearchInput = (props) => {
   const { placeholder, value, onChange, } = props;
 
   return (
-    <Paper classes={{ root: classes.paper}}>
-      <IconButton className={classes.iconButton} aria-label="search">
+    <Paper classes={{ root: classes.paper}} className={classes.root}>
+      <IconButton className={classes.iconButton} aria-label="search" disableRipple>
         <SearchIcon />
       </IconButton>
       <InputBase

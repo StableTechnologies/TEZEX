@@ -9,9 +9,10 @@ const useStyles = makeStyles((theme) => ({
       padding: '.5rem 0',
     },
     "& .MuiTypography-h1": {
-      fontSize: "3.5rem",
+      fontSize: "2.5rem",
       fontWeight: "700",
       lineHeight: "4.2rem",
+      letterSpacing: "0.1rem",
       margin: "1rem",
       textAlign: "center",
     },

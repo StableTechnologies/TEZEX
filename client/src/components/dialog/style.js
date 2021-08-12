@@ -4,7 +4,12 @@ const useStyles = makeStyles((theme) => ({
   root: {
     "& .MuiPaper-root": {
       borderRadius: "1.5rem",
-    }
+    },
+    "& .MuiListItem-button": {
+      "&:hover": {
+        backgroundColor: "transparent"
+    },
+    },
   },
 close: {
   position: 'absolute',

@@ -6,6 +6,12 @@ const useStyles = makeStyles((theme) => ({
       padding: '.5rem 0',
       lineHeight: "1.1rem",
       fontSize: ".875rem",
+      '@media (max-width: 768px)': {
+        fontSize: "0.7rem"
+      },
+      '@media (max-width: 600px)': {
+        fontSize: "0.875rem"
+      }
     },
     '& .MuiPaper-root ': {
       display: 'flex',
@@ -14,8 +20,6 @@ const useStyles = makeStyles((theme) => ({
       fontSize: "1rem",
       fontWeight: "500",
     },
-  '@media (max-width: 501px)': {
-  }
   },
   container: {
     margin: "1rem 0",
@@ -31,7 +35,7 @@ const useStyles = makeStyles((theme) => ({
     flexGrow: "1",
   },
   minPad: {
-    padding: ".2rem 1rem !important"
+    padding: ".2rem 1rem !important",
   }
 }));
 
