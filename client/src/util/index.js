@@ -61,10 +61,6 @@ export const connectTezAccount = async () => {
   return { client, account: account["address"] };
 };
 
-export const disconnectTezAccount = async (client) => {
-  return client.destroy()
-};
-
 /**
  * Creates the ethereum clients
  */

@@ -3,7 +3,7 @@ import "./App.css";
 
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { Route, BrowserRouter as Router, Switch } from "react-router-dom";
-import { disconnectTezAccount, getOldSwaps, initSwapDetails, setupEthClient, setupTezClient } from "./util";
+import { getOldSwaps, initSwapDetails, setupEthClient, setupTezClient } from "./util";
 
 import AOS from 'aos';
 import About from "./components/about";
@@ -71,10 +71,6 @@ const App = () => {
     findOldSwaps();
   }, [clients]);
 
-  const disconnectTezosAccount = async () => {
-    await clients.tezos.tezos.clearActiveAccount();
-  }
-
   const setupEthAccount = async () => {
     try {
       const { clients } = await setupEthClient();
@@ -90,7 +86,7 @@ const App = () => {
 
   const disconnectTezos = async () => {
     // disconnect
-    await disconnectTezAccount(clientRef.current.tezos.tezos);
+    await clients.tezos.tezos.clearActiveAccount();
     setClients(prevState => ({ ...prevState, tezos: null, pureTezos: null }));
   }
 
