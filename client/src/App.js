@@ -70,6 +70,10 @@ const App = () => {
     findOldSwaps();
   }, [clients]);
 
+  const disconnectTezosAccount = async () => {
+    await clients.tezos.tezos.clearActiveAccount();
+  }
+
   const setupEthAccount = async () => {
     try {
       const { clients } = await setupEthClient();
