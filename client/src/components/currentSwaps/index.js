@@ -8,31 +8,14 @@ import maximize from '../../assets/maximize.svg';
 import  arrowRight from '../../assets/arrowRight.svg';
 import { tokens } from '../constants';
 import useStyles from "./style";
+import timer from '../convertDate.js';
 
 const CurrentSwaps = (props) => {
   const { onClick, swaps, } = props;
   const classes = useStyles();
 
-  const [activeStep, setActiveStep] = useState();
-  const [refundTime, setRefundTime] = useState('');
-
-  const [viewAsset, setViewAsset] = useState([]);
-  const [viewCounterAsset, setViewCounterAsset] = useState([]);
-
-  useEffect(() => {
-
-    if (swaps) {
-      Object.keys(swaps).map((x) => {
-        setRefundTime(new Date(swaps[x].refundTime * 1000).toLocaleString())
-        setActiveStep(swaps[x].state)
-      });
-    }
-
-  }, [refundTime, activeStep])
-
-
   const state = {
-    0: "Swap Failed, Refund!",
+    0: "Swap Failed",
     1: "Swap Initiated",
     2: "Implementing Swap",
     3: "Swap Completed",
@@ -40,7 +23,9 @@ const CurrentSwaps = (props) => {
   }
 
   const SwapItem = (data) => {
-    const refund = new Date(data.refundTime * 1000).toLocaleString()
+    // const refund = timer(data.refundTime, "Swap Timed Out!");
+    const refund = timer(data.refundTime);
+
     const swapInProgress = data.pair.split('/');
     const asset = data.asset;
     let token = {}
@@ -72,12 +57,13 @@ const CurrentSwaps = (props) => {
             <img src={maximize} alt="maximize" className={classes.maximize} />
           </Button>
         </Paper>
-        <Typography className={classes.minPad} > {refund && "Swap Timeout: "} {refund}  </Typography>
         <Grid container alignContent="center" justify="space-between" >
-          {/* <Typography className={classes.minPad}> {activeStep && "State: "} {state[data.state]}  </Typography> */}
           <Typography className={classes.minPad}> {state[data.state]}  </Typography>
           <Typography className={classes.minPad}> {data.value}  </Typography>
         </Grid>
+        <Typography className={classes.minPad} >
+          {refund !== undefined ? "Swap will timeout in: " + refund : "Redeem your funds"}
+        </Typography>
       </div>
     )
   }

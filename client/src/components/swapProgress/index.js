@@ -22,6 +22,7 @@ import spinner from '../../assets/spinner.gif';
 import { useStyles, } from "./style";
 import Copy from "../copy";
 import { shorten } from "../../util";
+import timer from "../convertDate.js";
 
 const getSteps = () => {
   return ['1. Creating Swap Request', '2. Implementing Swap', '3. Validating Transaction'];
@@ -43,13 +44,13 @@ const getStepContent = (step) => {
 const SwapProgress = (props) => {
   const classes = useStyles();
 
-  const [activeStep, setActiveStep] = useState(-1);
+  const [activeStep, setActiveStep] = useState();
   const [refundTime, setRefundTime] = useState(0);
   const { open, onClose, swap, completed, notCompleted, } = props;
   const steps = getSteps();
 
   const handleStepChange = (step) => {
-    setRefundTime(new Date(step.refundTime * 1000).toLocaleString())
+    setRefundTime(timer(step.refundTime));
     setActiveStep(step.state)
   };
 
@@ -74,6 +75,8 @@ const SwapProgress = (props) => {
     if (swap) {
       try {
         handleStepChange(swap);
+        console.log(swap.refundTime, 'swap.refundTime');
+        console.log(swap, 'swap');
       } catch (e) { }
     }
   }, [handleStepChange])
@@ -120,9 +123,13 @@ const SwapProgress = (props) => {
         { activeStep >= 0 &&
           <>
             <DialogContentText> Value:{" "} { swap.value} </DialogContentText>
-            <DialogContentText> Min Expected Return:{" "} { swap.minReturn} </DialogContentText>
+            {(swap.exact !== "nil") ?
+              <DialogContentText> Exact Return:{" "} { swap.exact} </DialogContentText>
+              :
+              <DialogContentText> Min Expected Return:{" "} { swap.minReturn} </DialogContentText>
+            }
             <DialogContentText>
-            Swap Timeout: {" "} {refundTime || " "} <img src={question_circle} alt="question_circle" className={classes.textImg} />
+            Swap will timeout in: {" "} {refundTime || " "} <img src={question_circle} alt="question_circle" className={classes.textImg} />
             </DialogContentText>
           </>
         }

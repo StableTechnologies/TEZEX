@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from "react";
 
+import { Typography } from "@material-ui/core";
+
+
 import { updateBotStats } from "../../library/util";
 import useStyles from "./style";
 
@@ -39,8 +42,8 @@ const Stat = ({ swapPairs }) => {
     return data;
   };
   return (
-    <div className={classes.container}>
-      <h2>TEZEX STATS</h2>
+    <div className={`${classes.container} ${classes.root}`}>
+      <Typography variant="h2" >Current Stats </Typography>
       {stats === undefined && (
         <div className={classes.stat}>Couldn't Connect to Server</div>
       )}

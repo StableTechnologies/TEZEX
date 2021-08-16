@@ -161,7 +161,6 @@ module.exports.deepCopy = (allowances, pairs) => {
     total = {};
   let count = 0;
   for (const pair of pairs) {
-    console.log(pair, allowances)
     if (!Object.prototype.hasOwnProperty.call(allowances, pair))
       continue;
     count++;

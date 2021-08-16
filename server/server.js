@@ -63,6 +63,8 @@ app.get("/client/status", (req, res, next) => {
     const currentTime = new Date().getTime();
     const pairs = Object.keys(swapPairsCrossChain);
     botData.forEach((data) => {
+      if (!Object.prototype.hasOwnProperty.call(data.accounts, "ethereum"))
+        return
       if (data.lastSeen + maxInactiveTime <= currentTime) {
         return;
       }
@@ -120,14 +122,13 @@ app.post("/bot/ping/tezos", async (req, res) => {
       clients,
       swapPairsTezos
     );
-    console.log(accounts, volume, allowances, foundNonZero);
     if (allowances === undefined || foundNonZero === undefined) {
       return res.status(400).json({ error: "Malformed Request" });
     }
     if (foundNonZero === false) {
       return res.status(400).json({ error: "No allowance found" });
     }
-    const id = accounts["ethereum"] + accounts["tezos"];
+    const id = accounts["tezos"];
 
     bots[id] = {
       accounts,
@@ -156,6 +157,8 @@ app.get("/client/status/tezos", (req, res, next) => {
     const currentTime = new Date().getTime();
     const pairs = Object.keys(swapPairsTezos);
     botData.forEach((data) => {
+      if (Object.prototype.hasOwnProperty.call(data.accounts, "ethereum"))
+        return
       if (data.lastSeen + maxInactiveTime <= currentTime) {
         return;
       }

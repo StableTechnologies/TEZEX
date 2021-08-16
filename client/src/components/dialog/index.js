@@ -74,7 +74,7 @@ function TokenSelectionDialog(props) {
       {lists && (
       <List className={classes.listCon}>
         {search.map((value, key) => (
-          <ListItem button onClick={() => handleListItemClick(value)} key={key} className={classes.list}>
+          <ListItem button onClick={() => handleListItemClick(value)} key={key} className={classes.list} disableRipple>
             <ListItemIcon className={classes.avatar}>
               <img className={classes.logo} src={value.logo} alt="Logo" />
             </ListItemIcon>
