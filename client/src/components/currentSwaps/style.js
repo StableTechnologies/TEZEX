@@ -5,7 +5,6 @@ const useStyles = makeStyles((theme) => ({
     '& .MuiTypography-body1': {
       padding: '.5rem 0',
       lineHeight: "1.1rem",
-      fontSize: ".875rem",
       '@media (max-width: 768px)': {
         fontSize: "0.7rem"
       },
@@ -31,18 +30,33 @@ const useStyles = makeStyles((theme) => ({
     width: "24px",
     height: "24px",
     marginBottom: "-6px",
+    padding: "0 0.1rem",
+    '@media (max-width: 768px)': {
+      width: "16px",
+      height: "16px",
+      marginBottom: "-4px",
+    },
+    '@media (max-width: 600px)': {
+      width: "20px",
+      height: "20px",
+    }
   },
   maximize: {
     width: "24px",
     height: "24px",
     position: "absolute",
     right: "5px",
+    '@media (max-width: 768px)': {
+      width: "20px",
+      height: "20px",
+    },
   },
   CurrentSwaps: {
     flexGrow: "1",
   },
   minPad: {
     padding: ".2rem 1rem !important",
+    fontSize: "0.875rem",
   }
 }));
 
