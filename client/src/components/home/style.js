@@ -10,14 +10,19 @@ const useStyles = makeStyles((theme) => ({
     },
 
     '& .MuiTypography-subtitle2': {
-      '@media(max-width: 320px)': {
-        fontSize: '0.7rem',
-      },
-      '@media(max-width: 375px)': {
-        fontSize: '0.85rem',
-      },
+      fontSize: '0.875rem',
+
       '@media(max-width: 1024px)': {
         fontSize: '0.75rem',
+      },
+      '@media(max-width: 768px)': {
+        fontSize: '0.875rem',
+      },
+      '@media(max-width: 376px)': {
+        fontSize: '0.85rem',
+      },
+      '@media(max-width: 320px)': {
+        fontSize: '0.7rem',
       },
     },
   },
