@@ -68,7 +68,6 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
   const [currentSwap, setCurrentSwap] = useState(false);
   const [maxSwap, setMaximizedSwap] = useState(undefined);
   const [swapStat, setSwapStat] = useState(undefined);
-  const [ongoingSwaps, setOngoingSwaps] = useState([]);
 
   const openInputTokenModal = () => { setInputTokenModalOpen(true); }
   const openOutputTokenModal = () => { setOutputTokenModalOpen(true); }
@@ -76,8 +75,8 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
   const openWalletModal = () => { setWalletModalOpen(true); }
   const openErrModal = () => { setErrModalOpen(true); setWalletModalOpen(false); }
 
-  const minimize = () => { setMaximizedSwap(undefined); setSwapProgress(false); setCurrentSwapView(true); }
-  const maximize = (swap) => { setMaximizedSwap(swap); setSwapProgress(true); setCurrentSwapView(false); }
+  const minimize = () => { setMaximizedSwap(undefined); setSwapProgress(false); }
+  const maximize = (swap) => { setMaximizedSwap(swap); setSwapProgress(true); }
 
   useEffect(() => {
     if (inputToken && outputToken) {
@@ -222,7 +221,6 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
     };
     generateSwap(swap, secret);
     openSwapProgress(swap);
-    saveCurrentSwap(currentSwap);
   }
   const retry = () => {
     const secret = createSecrets();
@@ -246,13 +244,8 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
   }
 
 
-  function saveCurrentSwap(swap) {
-    setOngoingSwaps(swap);
-  }
-
   const openSwapStatus = () => {
     setSwapStatus(true);
-    setCurrentSwapView(false);
     setSwapProgress(false);
   }
   const closeSwapStatus = () => {
@@ -266,7 +259,6 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
   const openTryAgain = () => {
     setSwapProgress(false);
     setTryAgain(true);
-    setCurrentSwapView(false);
   }
   const closeTryAgain = () => {
     setTryAgain(false)
@@ -275,13 +267,11 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
   const openRedeemSwap = () => {
     setSwapProgress(false);
     setRedeemSwap(true);
-    setCurrentSwapView(false);
   }
   const closeRedeemSwap = () => {
     setRedeemSwap(false)
     setMaximizedSwap(undefined)
   }
-
   const setToken = (value, side) => {
     setInputTokenModalOpen(false);
     setOutputTokenModalOpen(false);
@@ -626,7 +616,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
           </Grid>
           <Grid item xs={12} sm={4} md={4} lg={3}>
             {(
-              <CurrentSwaps swaps={swaps} ongoingSwaps={ongoingSwaps} onClick={maximize} />
+              <CurrentSwaps swaps={swaps} onClick={maximize} />
             )}
           </Grid>
         </Grid>

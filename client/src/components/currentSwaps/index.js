@@ -5,12 +5,13 @@ import Button from '@material-ui/core/Button';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import maximize from '../../assets/maximize.svg';
+import  arrowRight from '../../assets/arrowRight.svg';
 import { tokens } from '../constants';
 import useStyles from "./style";
 import timer from '../convertDate.js';
 
 const CurrentSwaps = (props) => {
-  const { onClick, ongoingSwaps, swaps, } = props;
+  const { onClick, swaps, } = props;
   const classes = useStyles();
 
   const state = {
@@ -46,14 +47,14 @@ const CurrentSwaps = (props) => {
               <span>
                 <img src={token.logo} alt="logo" className={classes.img} /> {token.title}
               </span>
-              {" "} &#8594; {" "}
+              {" "} <img src={arrowRight} alt="right arrow" className={classes.img}/> {" "}
               <span>
                 <img src={counterToken.logo} alt="logo" className={classes.img} /> {counterToken.title}
               </span>
             </Typography>
           </div>
           <Button onClick={() => onClick(data)}>
-            <img src={maximize} alt="maximize" className={classes.img} />
+            <img src={maximize} alt="maximize" className={classes.maximize} />
           </Button>
         </Paper>
         <Grid container alignContent="center" justify="space-between" >
@@ -69,7 +70,7 @@ const CurrentSwaps = (props) => {
 
   return (
     <div className={classes.root}>
-      {swaps !== undefined &&
+      {(swaps !== undefined && Object.keys(swaps).length > 0) &&
         <>
           <Typography>
             {/* Current swaps in progress... */}

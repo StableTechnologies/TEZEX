@@ -50,6 +50,7 @@ const App = () => {
       window.removeEventListener("beforeunload", alertUser);
     };
   }, []);
+
   const alertUser = (e) => {
     e.preventDefault();
     e.returnValue = "";
@@ -70,10 +71,6 @@ const App = () => {
     findOldSwaps();
   }, [clients]);
 
-  const disconnectTezosAccount = async () => {
-    await clients.tezos.tezos.clearActiveAccount();
-  }
-
   const setupEthAccount = async () => {
     try {
       const { clients } = await setupEthClient();
@@ -86,6 +83,13 @@ const App = () => {
 
     }
   };
+
+  const disconnectTezos = async () => {
+    // disconnect
+    await clients.tezos.tezos.clearActiveAccount();
+    setClients(prevState => ({ ...prevState, tezos: null, pureTezos: null }));
+  }
+
   const setupXtzAccount = async () => {
     try {
       const { clients } = await setupTezClient();
@@ -96,6 +100,7 @@ const App = () => {
       alert("Error Connecting to TezWallet", e);
     }
   };
+
   const initialize = async () => {
     try {
       const { swapPairs } = await initSwapDetails()
@@ -106,10 +111,11 @@ const App = () => {
       alert("Error initializing swap", e);
     }
   };
+
   const findOldSwaps = async () => {
     console.log("getting old swaps")
     let swap = await getOldSwaps(clients, swapPairs);
-    if (Object.keys(swap).length > 0) updateSwaps(swap);
+     updateSwaps(swap);
   }
 
   const update = (hash, state, exact = undefined) => {
@@ -167,6 +173,7 @@ const App = () => {
             balUpdate={balUpdate}
             setupEth={setupEthAccount}
             setupTez={setupXtzAccount}
+            disconnectTez={disconnectTezos}
           />
           {/* {balance === undefined && <Loader message="Loading Account" />} */}
           {/* {balance !== undefined && ( */}

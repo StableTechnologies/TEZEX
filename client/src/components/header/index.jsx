@@ -20,7 +20,7 @@ import { TezexContext } from '../context/TezexContext';
 import useStyles from "./style";
 import { getSwapStat } from "../newSwap/util";
 
-const Header = ({ clients, swapPairs, balUpdate, setupEth, setupTez, }) => {
+const Header = ({ clients, swapPairs, balUpdate, setupEth, setupTez, disconnectTez }) => {
     const classes = useStyles();
     const history = useHistory();
     const globalContext = useContext(TezexContext);
@@ -64,6 +64,13 @@ const Header = ({ clients, swapPairs, balUpdate, setupEth, setupTez, }) => {
       catch(error) {}
     };
 
+    const disconnectXtzAccount = async () => {
+      try{
+        disconnectTez();
+        globalContext.changeTezosClient('');
+      }
+      catch(error) {}
+    };
 
     const updateBalance = async () => {
 
@@ -168,6 +175,10 @@ const Header = ({ clients, swapPairs, balUpdate, setupEth, setupTez, }) => {
                             walletType= {"Temple"}
                             copyText={xtzAccount}
 														className= {classes.tezStyle + " Element"}
+                            disconnect
+                            divider
+                            disconnectXTZ = { disconnectXtzAccount}
+                            onClose={toggleTezDrawer(anchor, false)}
 													/>
 												</SwipeableDrawer>
 												</>
