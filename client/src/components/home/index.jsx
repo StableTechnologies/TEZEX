@@ -50,8 +50,8 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
   const [redeemSwap, setRedeemSwap] = useState(false);
   const [currentSwapView, setCurrentSwapView] = useState(false);
 
-  const [inputToken, setInputToken] = useState(tokens[4]);
-  const [outputToken, setOutputToken] = useState('');
+  const [inputToken, setInputToken] = useState(tokens[3]);
+  const [outputToken, setOutputToken] = useState(tokens[2]);
   const [inputTokenAmount, setInputTokenAmount] = useState();
   const [outputTokenAmount, setOutputTokenAmount] = useState('');
 
@@ -87,16 +87,17 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
       pair = pair.join('/')
       reversePair = reversePair.join('/')
 
-      const pairs = Object.keys(swapPairs);
-
-      pairs.map((x) => {
-        if (pair === x) {
-          setCurrentSwap({ pair: pair, asset: asset });
-        }
-        if (reversePair === x) {
-          setCurrentSwap({ pair: reversePair, asset: asset });
-        }
-      })
+      if(swapPairs) {
+        const pairs = Object.keys(swapPairs);
+        pairs.map((x) => {
+          if (pair === x) {
+            setCurrentSwap({ pair: pair, asset: asset });
+          }
+          if (reversePair === x) {
+            setCurrentSwap({ pair: reversePair, asset: asset });
+          }
+        })
+      }
     }
   }, [inputToken, outputToken]);
 
