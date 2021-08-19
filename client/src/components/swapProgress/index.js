@@ -43,7 +43,7 @@ const SwapProgress = (props) => {
 
   const [activeStep, setActiveStep] = useState(0);
   const [refundTime, setRefundTime] = useState(0);
-  const [delay, setDelay] = useState(true);
+  const [delay, setDelay] = useState(false);
   const { open, onClose, swap, completed, notCompleted, } = props;
   const steps = getSteps();
 console.log(activeStep, 'activeStep');
@@ -120,9 +120,6 @@ console.log(activeStep, 'activeStep');
                 }
                 { (index > 0 && delay)  &&
                   <Typography style={{ paddingLeft: "18px" }}>{getStepContent(index)}</Typography>
-                }
-                { (index ===1 && delay)  &&
-                  <Typography style={{ paddingLeft: "18px" }}>{getStepContent(2)}</Typography>
                 }
               </StepContent>
             </Step>
