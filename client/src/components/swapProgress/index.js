@@ -1,14 +1,13 @@
 import React, { useContext, useEffect, useState } from "react";
 
-import Button from '@material-ui/core/Button';
 import CircleCheckStepIcon from './circleCheckStepIcon';
+import Tooltip from './tooltip';
 import Dialog from "@material-ui/core/Dialog";
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from "@material-ui/core/DialogTitle";
 import IconButton from '@material-ui/core/IconButton';
-import Paper from '@material-ui/core/Paper';
 import PropTypes from "prop-types";
 import Step from '@material-ui/core/Step';
 import StepContent from '@material-ui/core/StepContent';
@@ -33,9 +32,7 @@ const getStepContent = (step) => {
     case 0:
       return `Approve the Token and confirm the amount in your wallet.`;
     case 1:
-      return 'Response found! Authorize the transaction in your wallet.';
-    // case 2:
-    //   return `If no response is found to your swap request, you will be able to redeem a refund after this timeout period.`;
+      return (<>Response found! Authorize the transaction in your wallet. <Tooltip /> </>);
     default:
       return ' ';
   }
@@ -46,7 +43,7 @@ const SwapProgress = (props) => {
 
   const [activeStep, setActiveStep] = useState(0);
   const [refundTime, setRefundTime] = useState(0);
-  const [delay, setDelay] = useState(false);
+  const [delay, setDelay] = useState(true);
   const { open, onClose, swap, completed, notCompleted, } = props;
   const steps = getSteps();
 console.log(activeStep, 'activeStep');
@@ -123,6 +120,9 @@ console.log(activeStep, 'activeStep');
                 }
                 { (index > 0 && delay)  &&
                   <Typography style={{ paddingLeft: "18px" }}>{getStepContent(index)}</Typography>
+                }
+                { (index ===1 && delay)  &&
+                  <Typography style={{ paddingLeft: "18px" }}>{getStepContent(2)}</Typography>
                 }
               </StepContent>
             </Step>
