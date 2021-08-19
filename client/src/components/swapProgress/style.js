@@ -50,6 +50,11 @@ export const useStyles = makeStyles((theme) => ({
         padding: "0 8px",
       },
     },
+    "& .MuiStepContent-root": {
+      padding: "0 0 0 1px",
+      margin: "0",
+      border: "0",
+    },
   },
   stepText: {
     root: {

@@ -44,21 +44,36 @@ const getStepContent = (step) => {
 const SwapProgress = (props) => {
   const classes = useStyles();
 
-  const [activeStep, setActiveStep] = useState();
+  const [activeStep, setActiveStep] = useState(0);
   const [refundTime, setRefundTime] = useState(0);
+  const [delay, setDelay] = useState(false);
   const { open, onClose, swap, completed, notCompleted, } = props;
   const steps = getSteps();
-
+console.log(activeStep, 'activeStep');
   const handleStepChange = (step) => {
     setRefundTime(timer(step.refundTime));
-    setActiveStep(step.state)
+    if(step.state === -1) {
+      setActiveStep(0);
+    }
+    else if(step.state === 0) {
+      setActiveStep(-1);
+    }
+    else{
+      setActiveStep(step.state);
+    }
   };
+
+  if (activeStep === 1) {
+    setTimeout(()=>{
+      setDelay(true);
+    }, 30000)
+  }
 
   let notify;
 
   useEffect(() => {
     if (!open) return;
-    if (activeStep === 0) {
+    if (activeStep === -1) {
       notCompleted();
     }
     if (activeStep === 3) {
@@ -80,12 +95,13 @@ const SwapProgress = (props) => {
       } catch (e) { }
     }
   }, [handleStepChange])
+
   return (
     <Dialog aria-labelledby="simple-dialog-title" open={open} className={classes.root}>
       <DialogTitle onClose={handleClose}>
         Swap In Progress...
         <Typography> Do not close or refresh the page. </Typography>
-        { (activeStep >=0 ) &&
+        { (activeStep >0 ) &&
           <IconButton aria-label="close" onClick={handleClose} className={classes.close}>
             <img src={minimize} alt="minimize" />
           </IconButton>
@@ -97,17 +113,18 @@ const SwapProgress = (props) => {
       <DialogActions>
         <Stepper activeStep={activeStep} orientation="vertical" className={classes.root}>
           {steps.map((label, index) => (
-            <Step key={label}>
-              <Step >
-                <StepLabel StepIconComponent={CircleCheckStepIcon} >
-                  {label}
-                </StepLabel>
-              </Step>
-              <Step >
-                <StepLabel >
-                  <Typography style={{ paddingLeft: "14px" }}>{getStepContent(index)}</Typography>
-                </StepLabel>
-              </Step>
+            <Step key={label} active={index===activeStep -1 || index===activeStep}>
+              <StepLabel StepIconComponent={CircleCheckStepIcon} >
+                {label}
+              </StepLabel>
+              <StepContent>
+                { (index === 0) &&
+                  <Typography style={{ paddingLeft: "14px" }}>{getStepContent(0)}</Typography>
+                }
+                { (index > 0 && delay)  &&
+                  <Typography style={{ paddingLeft: "18px" }}>{getStepContent(index)}</Typography>
+                }
+              </StepContent>
             </Step>
           ))}
         </Stepper>
@@ -120,7 +137,7 @@ const SwapProgress = (props) => {
             tooltip = "copy swap hash"
           />
         </DialogContentText>
-        { activeStep >= 0 &&
+        { activeStep > 0 &&
           <>
             <DialogContentText> Value:{" "} { swap.value} </DialogContentText>
             {(swap.exact !== "nil") ?
