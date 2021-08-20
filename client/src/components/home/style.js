@@ -90,7 +90,7 @@ const useStyles = makeStyles((theme) => ({
     textAlign: "right",
   },
   swapIcon: {
-    margin: '1.5rem 1rem',
+    margin: '1.5rem 0rem',
     padding: (1),
     minWidth: "0",
     width: "40px",
@@ -272,6 +272,9 @@ const useStyles = makeStyles((theme) => ({
     fontSize: "0.875rem",
     lineHeight: "17px",
     padding: "0.1rem 0",
+    '@media (max-width: 321px)': {
+      fontSize: "0.75rem",
+    },
   },
   redWarningImg: {
     margin: "0 3px -3px 0",
