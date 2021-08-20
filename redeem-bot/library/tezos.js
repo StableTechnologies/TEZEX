@@ -73,14 +73,29 @@ module.exports = class Tezos {
    * @param address tezos address for the account
    */
   async tokenBalance(tokenContract, address) {
-    const key = TezosMessageUtils.encodeBigMapKey(
+    let key = TezosMessageUtils.encodeBigMapKey(
       Buffer.from(TezosMessageUtils.writePackedData(address, "address"), "hex")
     );
-    const tokenData = await TezosNodeReader.getValueForBigMapKey(
-      this.rpc,
-      tokenContract.mapID,
-      key
-    );
+    if (tokenContract.mapID === 31) {
+      key = Buffer.from(TezosMessageUtils.writePackedData(`(Pair "ledger" 0x${TezosMessageUtils.writeAddress(address)})`, '', TezosParameterFormat.Michelson), 'hex');
+      key = TezosMessageUtils.encodeBigMapKey(
+        Buffer.from(TezosMessageUtils.writePackedData(key, "bytes"), "hex")
+      );
+    }
+    let tokenData = undefined;
+    try {
+      tokenData = await TezosNodeReader.getValueForBigMapKey(
+        this.rpc,
+        tokenContract.mapID,
+        key
+      );
+    } catch (err) {
+      if (!(Object.prototype.hasOwnProperty.call(err, "httpStatus") && err.httpStatus === 404))
+        throw err;
+    }
+    if (tokenContract.mapID === 31 && tokenData !== undefined) {
+      tokenData = JSON.parse(TezosLanguageUtil.hexToMicheline(JSONPath({ path: '$.bytes', json: tokenData })[0].slice(2)).code)
+    }
     let balance =
       tokenData === undefined
         ? "0"
@@ -96,24 +111,48 @@ module.exports = class Tezos {
    * @param address tezos address for the account
    */
   async tokenAllowance(tokenContract, swapContract, address) {
-    const key = TezosMessageUtils.encodeBigMapKey(
+    let key = TezosMessageUtils.encodeBigMapKey(
       Buffer.from(TezosMessageUtils.writePackedData(address, "address"), "hex")
     );
-    const tokenData = await TezosNodeReader.getValueForBigMapKey(
-      this.rpc,
-      tokenContract.mapID,
-      key
-    );
+    if (tokenContract.mapID === 31) {
+      key = Buffer.from(TezosMessageUtils.writePackedData(`(Pair "ledger" 0x${TezosMessageUtils.writeAddress(address)})`, '', TezosParameterFormat.Michelson), 'hex');
+      key = TezosMessageUtils.encodeBigMapKey(
+        Buffer.from(TezosMessageUtils.writePackedData(key, "bytes"), "hex")
+      );
+    }
+    let tokenData = undefined;
+    try {
+      tokenData = await TezosNodeReader.getValueForBigMapKey(
+        this.rpc,
+        tokenContract.mapID,
+        key
+      );
+    } catch (err) {
+      if (!(Object.prototype.hasOwnProperty.call(err, "httpStatus") && err.httpStatus === 404))
+        throw err;
+    }
+    if (tokenContract.mapID === 31 && tokenData !== undefined) {
+      tokenData = JSON.parse(TezosLanguageUtil.hexToMicheline(JSONPath({ path: '$.bytes', json: tokenData })[0].slice(2)).code)
+    }
     let allowances =
       tokenData === undefined
         ? undefined
         : JSONPath({ path: "$.args[1]", json: tokenData })[0];
-    const allowance =
-      allowances === undefined
-        ? []
-        : allowances.filter(
-          (allow) => allow.args[0].string === swapContract.address
-        );
+    let allowance = [];
+    if (tokenContract.mapID === 31)
+      allowance =
+        allowances === undefined
+          ? []
+          : allowances.filter(
+            (allow) => TezosMessageUtils.readAddress(allow.args[0].bytes) === swapContract.address
+          );
+    else
+      allowance =
+        allowances === undefined
+          ? []
+          : allowances.filter(
+            (allow) => allow.args[0].string === swapContract.address
+          );
     return allowance.length === 0 ? "0" : allowance[0].args[1].int;
   }
 

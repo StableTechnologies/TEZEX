@@ -37,6 +37,10 @@ tezex@bot:~/TEZEX/bot$ npm i
     "eth/ethtz": {
       "eth": 0.1,
       "ethtz": 0.1
+    },    
+    "wbtc/tzbtc": {
+      "wbtc": 0.1,
+      "tzbtc": 0.1
     }
   }
 }
