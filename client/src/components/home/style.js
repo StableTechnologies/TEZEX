@@ -5,9 +5,27 @@ const useStyles = makeStyles((theme) => ({
     '& .MuiButton-text': {
       '&:hover': {
         background: 'transparent',
+      },
     },
+
+    '& .MuiTypography-subtitle2': {
+      fontSize: '0.875rem',
+
+      '@media(max-width: 1024px)': {
+        fontSize: '0.75rem',
+      },
+      '@media(max-width: 768px)': {
+        fontSize: '0.875rem',
+      },
+      '@media(max-width: 376px)': {
+        fontSize: '0.85rem',
+      },
+      '@media(max-width: 320px)': {
+        fontSize: '0.7rem',
+      },
     },
   },
+
   '& .MuiCardContent-root': {
     padding: '24px 31px 31px 31px',
     textAlign: 'left'
@@ -86,7 +104,7 @@ const useStyles = makeStyles((theme) => ({
     display: "flex",
     justifyContent: "space-between",
   },
-  tokenValue: {
+  rightAlignText: {
     textAlign: "right",
   },
   swapIcon: {

@@ -14,6 +14,9 @@ export const useStyles = makeStyles((theme) => ({
     },
     "& .MuiStepConnector-lineVertical": {
       border: "0",
+      '@media (max-width: 600px)': {
+        display: "none",
+       }
     },
     "& .MuiStepLabel-root": {
       flexFlow: "row-reverse",
@@ -49,6 +52,11 @@ export const useStyles = makeStyles((theme) => ({
       "& .MuiDialogContent-root": {
         padding: "0 8px",
       },
+    },
+    "& .MuiStepContent-root": {
+      padding: "0 0 0 1px",
+      margin: "0",
+      border: "0",
     },
   },
   stepText: {
@@ -98,4 +106,26 @@ export const useStepIconStyles = makeStyles({
     zIndex: 1,
     fontSize: 18,
   },
+});
+
+export const tooltipStyles = makeStyles({
+  tooltip: {
+    background: "#E0EFFF",
+    color: "#828282",
+    lineHeight: "15px",
+    fontSize: "12px",
+    fontWeight: "500",
+    textAlign: "center",
+    borderRadius: "8px !important",
+    boxShadow: "0px 2px 4px rgba(187, 187, 187, 0.25)",
+    width: "auto",
+    padding: ".5rem",
+    '@media (min-width: 600px)': {
+      marginTop: "2rem",
+      marginBottom: "-5rem"
+    },
+    '@media (max-width: 600px)': {
+     display: "none",
+    }
+  }
 });
