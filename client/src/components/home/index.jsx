@@ -38,6 +38,9 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
   const classes = useStyles();
   const globalContext = useContext(TezexContext);
 
+  const Eth = tokens[3];
+  const Ethtz = tokens[2];
+
   const [inputTokenModalOpen, setInputTokenModalOpen] = useState(false);
   const [outputTokenModalOpen, setOutputTokenModalOpen] = useState(false);
 
@@ -50,8 +53,8 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
   const [redeemSwap, setRedeemSwap] = useState(false);
   const [currentSwapView, setCurrentSwapView] = useState(false);
 
-  const [inputToken, setInputToken] = useState(tokens[3]);
-  const [outputToken, setOutputToken] = useState(tokens[2]);
+  const [inputToken, setInputToken] = useState(Eth);
+  const [outputToken, setOutputToken] = useState(Ethtz);
   const [inputTokenAmount, setInputTokenAmount] = useState();
   const [outputTokenAmount, setOutputTokenAmount] = useState('');
 
