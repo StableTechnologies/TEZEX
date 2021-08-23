@@ -376,7 +376,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
       checkWallet();
     }
 
-    if(minReceived > swapLimit){
+    if(Number(minReceived) > Number(swapLimit)){
       setMaxLimit(true);
     }
     else {
@@ -422,7 +422,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
   }
   const totalLiquidity = () => {
     setMaxButton(false);
-    setInputTokenAmount(swapLimit);
+    setInputTokenAmount(Number(swapLimit));
   }
 
   return (
@@ -503,7 +503,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
                       />
                     </div>
                     <Grid className={classes.maxSwapLimitCon}>
-                      {(inputTokenAmount && maxLimit) &&
+                      {(Number(inputTokenAmount) <= bal &&  maxLimit) &&
                       <>
                           <Typography className={classes.maxSwapLimit}>
                             <img src={exclamationError} alt="warning logo" className={`${classes.warningImg} ${classes.redWarningImg}`}/>
@@ -511,7 +511,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
                           </Typography>
                           {swapLimit <= 0 ? "" :
                             <Typography className={classes.maxSwapLimit}>
-                              Please enter an amount lower than {" "} {swapLimit} {" "} {inputToken.title}
+                              Please enter an amount lower than {" "} {Number(swapLimit)} {" "} {inputToken.title}
                             </Typography>
                           }
                         </>
