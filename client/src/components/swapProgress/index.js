@@ -46,12 +46,17 @@ const SwapProgress = (props) => {
   const [delay, setDelay] = useState(false);
   const { open, onClose, swap, completed, notCompleted, } = props;
   const steps = getSteps();
-console.log(activeStep, 'activeStep');
+
   const handleStepChange = (step) => {
     setRefundTime(timer(step.refundTime));
+
+    // state '-1' is the default state for a swap
+    // state '0' is the default state for the progress modal
+    // checks for the default state of a swap and then sets the active step to the default state of the modal
     if(step.state === -1) {
       setActiveStep(0);
     }
+    // state '0' is the error state for a failed swap due to network
     else if(step.state === 0) {
       setActiveStep(-1);
     }
@@ -87,8 +92,6 @@ console.log(activeStep, 'activeStep');
     if (swap) {
       try {
         handleStepChange(swap);
-        console.log(swap.refundTime, 'swap.refundTime');
-        console.log(swap, 'swap');
       } catch (e) { }
     }
   }, [handleStepChange])
