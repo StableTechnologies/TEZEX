@@ -179,7 +179,6 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
         swapLimit =  max
         .div(10 ** swapPairs[currentSwap.pair][currentSwap.asset].decimals)
         .toFixed(6);
-
       minExpectedReturn = swapStat.assetConverter[counterAsset](
         swapReturn
       ).minus(swapStat.networkFees[counterAsset]);
@@ -376,6 +375,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
     if(inputToken && outputToken){
       checkWallet();
     }
+
     if(minReceived > swapLimit){
       setMaxLimit(true);
     }
@@ -422,7 +422,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
   }
   const totalLiquidity = () => {
     setMaxButton(false);
-    setInputTokenAmount(Number(swapLimit));
+    setInputTokenAmount(swapLimit);
   }
 
   return (
@@ -441,7 +441,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
               }
               {connectTez &&  "Connect Your Tezos Wallet"}
               {connectEth &&  "Connect Your Ethereum Wallet"}
-              {(minReceived <= 0) &&  "Minimum Receiveable must be greater than 0"}
+              {(minReceived <= 0) &&  "Minimum receivable must be greater than zero"}
             </Typography>
             <div className={classes.swaps}>
               <Card className={classes.card} square>
@@ -511,7 +511,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
                           </Typography>
                           {swapLimit <= 0 ? "" :
                             <Typography className={classes.maxSwapLimit}>
-                              Please enter an amount lower than {" "} {Number(swapLimit)} {" "} {inputToken.title}
+                              Please enter an amount lower than {" "} {swapLimit} {" "} {inputToken.title}
                             </Typography>
                           }
                         </>
