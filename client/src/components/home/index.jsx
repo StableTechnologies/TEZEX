@@ -38,6 +38,9 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
   const classes = useStyles();
   const globalContext = useContext(TezexContext);
 
+  const Eth = tokens[3];
+  const Ethtz = tokens[2];
+
   const [inputTokenModalOpen, setInputTokenModalOpen] = useState(false);
   const [outputTokenModalOpen, setOutputTokenModalOpen] = useState(false);
 
@@ -50,8 +53,8 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
   const [redeemSwap, setRedeemSwap] = useState(false);
   const [currentSwapView, setCurrentSwapView] = useState(false);
 
-  const [inputToken, setInputToken] = useState(tokens[4]);
-  const [outputToken, setOutputToken] = useState('');
+  const [inputToken, setInputToken] = useState(Eth);
+  const [outputToken, setOutputToken] = useState(Ethtz);
   const [inputTokenAmount, setInputTokenAmount] = useState();
   const [outputTokenAmount, setOutputTokenAmount] = useState('');
 
@@ -87,16 +90,17 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
       pair = pair.join('/')
       reversePair = reversePair.join('/')
 
-      const pairs = Object.keys(swapPairs);
-
-      pairs.map((x) => {
-        if (pair === x) {
-          setCurrentSwap({ pair: pair, asset: asset });
-        }
-        if (reversePair === x) {
-          setCurrentSwap({ pair: reversePair, asset: asset });
-        }
-      })
+      if(swapPairs) {
+        const pairs = Object.keys(swapPairs);
+        pairs.map((x) => {
+          if (pair === x) {
+            setCurrentSwap({ pair: pair, asset: asset });
+          }
+          if (reversePair === x) {
+            setCurrentSwap({ pair: reversePair, asset: asset });
+          }
+        })
+      }
     }
   }, [inputToken, outputToken]);
 
@@ -178,7 +182,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
           .toFixed(6);
         bal = swapStat.balances[currentSwap.asset]
           .div(10 ** swapPairs[currentSwap.pair][currentSwap.asset].decimals)
-          .toFixed(2);
+          .toFixed(6);
 
       }
 
@@ -429,12 +433,18 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
                 <CardContent>
                   <form>
                     <div className={classes.tokenContainer + " Element"}>
-                      <div className={classes.balContainer}>
-                        <Typography color="textSecondary" variant="subtitle2">From</Typography>
-                        {bal &&
-                          <Typography color="textSecondary" variant="subtitle2">wallet balance:{" "} {(bal >= 1) ? Math.floor(bal) : bal}{" "}{inputToken.title} </Typography>
-                        }
-                      </div>
+                      <Grid container className={classes.balContainer}>
+                        <Grid item xs={2} md={3} lg={4}>
+                          <Typography color="textSecondary" variant="subtitle2">From</Typography>
+                        </Grid>
+                        <Grid item xs={10} md={9} lg={8}>
+                          {bal &&
+                            <Typography color="textSecondary" variant="subtitle2" className={classes.rightAlignText}>
+                              wallet balance:{" "} { bal }{" "}{inputToken.title}
+                            </Typography>
+                          }
+                        </Grid>
+                      </Grid>
                       <div className={classes.tokenDetails} >
                         <Button
                           endIcon={<KeyboardArrowDownIcon style={{ color: "#000" }} />}
@@ -456,8 +466,8 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
                           placeholder="0.00"
                           onInput={(e) => setInputTokenAmount(e.target.value.replace(/"^[0-9]*[.,]?[0-9]*$/, ''))}
                           value={inputTokenAmount}
-                          className={classes.tokenValue}
-                          inputProps={{ className: classes.tokenValue, pattern: "^\d+(\.\d{1,4})?$", inputMode: "decimal" }}
+                          className={classes.rightAlignText}
+                          inputProps={{ className: classes.rightAlignText, pattern: "^\d+(\.\d{1,4})?$", inputMode: "decimal" }}
                           InputProps={{ disableUnderline: true }}
                         />
                       </div>
@@ -499,7 +509,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
                           placeholder="0.00"
                           // onInput={(e) => setOutputTokenAmount(e.target.value.replace(/[^0-9]/, '') )}
                           value={outputTokenAmount || "0.00"}
-                          inputProps={{ className: classes.tokenValue, pattern: "^[0-9]*[.,]?[0-9]*$", inputMode: "decimal" }}
+                          inputProps={{ className: classes.rightAlignText, pattern: "^[0-9]*[.,]?[0-9]*$", inputMode: "decimal" }}
                           InputProps={{ disableUnderline: true }}
                           disabled
                         />

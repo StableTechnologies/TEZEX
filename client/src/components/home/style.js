@@ -3,18 +3,34 @@ import { makeStyles } from "@material-ui/core/styles";
 const useStyles = makeStyles((theme) => ({
   root: {
 
-
     '& .MuiButton-text': {
       '&:hover': {
         background: 'transparent',
+      },
     },
+
+    '& .MuiTypography-subtitle2': {
+      fontSize: '0.875rem',
+
+      '@media(max-width: 1024px)': {
+        fontSize: '0.75rem',
+      },
+      '@media(max-width: 768px)': {
+        fontSize: '0.875rem',
+      },
+      '@media(max-width: 376px)': {
+        fontSize: '0.85rem',
+      },
+      '@media(max-width: 320px)': {
+        fontSize: '0.7rem',
+      },
     },
   },
+
   '& .MuiCardContent-root': {
     padding: '24px 31px 31px 31px',
     textAlign: 'left'
   },
-
 
   '@media(max-width: 501px)': {
     con: {
@@ -69,7 +85,7 @@ const useStyles = makeStyles((theme) => ({
     display: "flex",
     justifyContent: "space-between",
   },
-  tokenValue: {
+  rightAlignText: {
     textAlign: "right",
   },
   swapIcon: {
