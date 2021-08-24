@@ -618,7 +618,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
 
                 </div>
                 <div className={classes.feeDetails}>
-                  <Typography>Minimum Receiveable</Typography>
+                  <Typography>Minimum Received</Typography>
                   <Typography> {(!inputTokenAmount ? 0 : minReceived) || (!outputToken ? "0.00 XTZ" : "0.00")} {""} {outputToken.title} </Typography>
                 </div>
               </Paper>
