@@ -2,7 +2,6 @@ import { makeStyles } from "@material-ui/core/styles";
 
 const useStyles = makeStyles((theme) => ({
   root: {
-
     '& .MuiButton-text': {
       '&:hover': {
         background: 'transparent',
@@ -70,6 +69,26 @@ const useStyles = makeStyles((theme) => ({
     lineHeight: "21.78px",
     padding: "0",
   },
+  maxButton: {
+    background: "#3391F6",
+    color: "#fff",
+    width: "53px",
+    minWidth: "53px",
+    height: "24px",
+    textTransform: "uppercase",
+    fontSize: "0.875",
+    fontWeight: "500",
+    lineHeight: "17px",
+    margin: "0.5rem 1.5rem",
+    '@media(max-width: 600px)': {
+      minWidth: "43px",
+      margin: "0.5rem 0.5rem",
+    },
+    '&:hover': {
+      background: "#3391F6",
+      color: "#fff",
+  },
+  },
   tokenContainer: {
     backgroundColor: "#F8F8F8",
     borderRadius: "8px",
@@ -89,7 +108,7 @@ const useStyles = makeStyles((theme) => ({
     textAlign: "right",
   },
   swapIcon: {
-    margin: '1.5rem 1rem',
+    margin: '1.5rem 0rem',
     padding: (1),
     minWidth: "0",
     width: "40px",
@@ -121,7 +140,7 @@ const useStyles = makeStyles((theme) => ({
     width: "24px",
   },
   swapcontainer: {
-    marginTop: "3vh",
+    // marginTop: "3vh",
     textAlign: "left"
   },
   button: {
@@ -223,6 +242,9 @@ const useStyles = makeStyles((theme) => ({
       fontSize: "1rem",
       '@media (max-width: 600px)': {
         fontSize: ".9rem",
+      },
+      '@media (max-width: 376px)': {
+        fontSize: ".8rem",
       }
     }
   },
@@ -244,13 +266,37 @@ const useStyles = makeStyles((theme) => ({
   warning: {
     textAlign: "center",
     marginBottom: "-.4rem",
+    height: "1.5rem",
+    marginTop: "3vh",
+    '@media (max-width: 600px)': {
+      fontSize: "0.875rem"
+    },
+    '@media (max-width: 321px)': {
+      height: "3rem",
+    },
   },
 
   warningImg: {
-    width: "16px",
-    height: "16px",
-    margin: "0 8px -2px",
-  }
+    width: "1rem",
+    height: "1rem",
+    margin: "0 4px -3px",
+  },
+  maxSwapLimitCon: {
+    height: "2rem",
+  },
+
+  maxSwapLimit: {
+    color: "#FF4E4E",
+    fontSize: "0.875rem",
+    lineHeight: "17px",
+    padding: "0.1rem 0",
+    '@media (max-width: 321px)': {
+      fontSize: "0.75rem",
+    },
+  },
+  redWarningImg: {
+    margin: "0 3px -3px 0",
+  },
 }));
 
 export default useStyles;
