@@ -382,8 +382,9 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
       checkWallet();
     }
 
-    if(Number(minReceived) > Number(swapLimit)){
+    if(new BigNumber(inputTokenAmount).gt(new BigNumber(swapLimit))) {
       setMaxLimit(true);
+      setMaxButton(true);
     }
     else {
       setMaxLimit(false);
@@ -428,7 +429,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
   }
   const totalLiquidity = () => {
     setMaxButton(false);
-    setInputTokenAmount(Number(swapLimit));
+    setInputTokenAmount(new BigNumber(swapLimit));
   }
 
   return (
@@ -515,7 +516,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
                       />
                     </div>
                     <Grid className={classes.maxSwapLimitCon}>
-                      {(Number(inputTokenAmount) <= bal &&  maxLimit) &&
+                      {( new BigNumber(inputTokenAmount).lte(new BigNumber(bal))  &&  maxLimit) &&
                       <>
                           <Typography className={classes.maxSwapLimit}>
                             <img src={exclamationError} alt="warning logo" className={`${classes.warningImg} ${classes.redWarningImg}`}/>
@@ -523,7 +524,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
                           </Typography>
                           {swapLimit <= 0 ? "" :
                             <Typography className={classes.maxSwapLimit}>
-                              Please enter an amount lower than {" "} {Number(swapLimit)} {" "} {inputToken.title}
+                              Please enter an amount lower than {" "} {new BigNumber(swapLimit).toString()} {" "} {inputToken.title}
                             </Typography>
                           }
                         </>
@@ -590,7 +591,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
                                     { (inputTokenAmount && (minReceived > 0)) ?
                                         <>
                                           {
-                                            ((Number(inputTokenAmount) <= bal)) ?
+                                            (new BigNumber(inputTokenAmount).lte(new BigNumber(bal))) ?
                                               <>
                                               { (connectTez || connectEth) || (maxLimit) ?
                                                 <Button size="large" className={`${classes.connectwalletbutton + " Element"} ${classes.disabled + " Element"}`} disabled>Swap Tokens</Button>
