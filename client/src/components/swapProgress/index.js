@@ -1,14 +1,13 @@
 import React, { useContext, useEffect, useState } from "react";
 
-import Button from '@material-ui/core/Button';
 import CircleCheckStepIcon from './circleCheckStepIcon';
+import Tooltip from './tooltip';
 import Dialog from "@material-ui/core/Dialog";
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from "@material-ui/core/DialogTitle";
 import IconButton from '@material-ui/core/IconButton';
-import Paper from '@material-ui/core/Paper';
 import PropTypes from "prop-types";
 import Step from '@material-ui/core/Step';
 import StepContent from '@material-ui/core/StepContent';
@@ -33,9 +32,7 @@ const getStepContent = (step) => {
     case 0:
       return `Approve the Token and confirm the amount in your wallet.`;
     case 1:
-      return 'Response found! Authorize the transaction in your wallet.';
-    // case 2:
-    //   return `If no response is found to your swap request, you will be able to redeem a refund after this timeout period.`;
+      return (<>Response found! Authorize the transaction in your wallet. <Tooltip /> </>);
     default:
       return ' ';
   }
@@ -44,21 +41,41 @@ const getStepContent = (step) => {
 const SwapProgress = (props) => {
   const classes = useStyles();
 
-  const [activeStep, setActiveStep] = useState();
+  const [activeStep, setActiveStep] = useState(0);
   const [refundTime, setRefundTime] = useState(0);
+  const [delay, setDelay] = useState(false);
   const { open, onClose, swap, completed, notCompleted, } = props;
   const steps = getSteps();
 
   const handleStepChange = (step) => {
     setRefundTime(timer(step.refundTime));
-    setActiveStep(step.state)
+
+    // state '-1' is the default state for a swap
+    // state '0' is the default state for the progress modal
+    // checks for the default state of a swap and then sets the active step to the default state of the modal
+    if(step.state === -1) {
+      setActiveStep(0);
+    }
+    // state '0' is the error state for a failed swap due to network
+    else if(step.state === 0) {
+      setActiveStep(-1);
+    }
+    else{
+      setActiveStep(step.state);
+    }
   };
+
+  if (activeStep === 1) {
+    setTimeout(()=>{
+      setDelay(true);
+    }, 30000)
+  }
 
   let notify;
 
   useEffect(() => {
     if (!open) return;
-    if (activeStep === 0) {
+    if (activeStep === -1) {
       notCompleted();
     }
     if (activeStep === 3) {
@@ -75,17 +92,16 @@ const SwapProgress = (props) => {
     if (swap) {
       try {
         handleStepChange(swap);
-        console.log(swap.refundTime, 'swap.refundTime');
-        console.log(swap, 'swap');
       } catch (e) { }
     }
   }, [handleStepChange])
+
   return (
     <Dialog aria-labelledby="simple-dialog-title" open={open} className={classes.root}>
       <DialogTitle onClose={handleClose}>
         Swap In Progress...
         <Typography> Do not close or refresh the page. </Typography>
-        { (activeStep >=0 ) &&
+        { (activeStep >0 ) &&
           <IconButton aria-label="close" onClick={handleClose} className={classes.close}>
             <img src={minimize} alt="minimize" />
           </IconButton>
@@ -97,17 +113,18 @@ const SwapProgress = (props) => {
       <DialogActions>
         <Stepper activeStep={activeStep} orientation="vertical" className={classes.root}>
           {steps.map((label, index) => (
-            <Step key={label}>
-              <Step >
-                <StepLabel StepIconComponent={CircleCheckStepIcon} >
-                  {label}
-                </StepLabel>
-              </Step>
-              <Step >
-                <StepLabel >
-                  <Typography style={{ paddingLeft: "14px" }}>{getStepContent(index)}</Typography>
-                </StepLabel>
-              </Step>
+            <Step key={label} active={index===activeStep -1 || index===activeStep}>
+              <StepLabel StepIconComponent={CircleCheckStepIcon} >
+                {label}
+              </StepLabel>
+              <StepContent>
+                { (index === 0) &&
+                  <Typography style={{ paddingLeft: "14px" }}>{getStepContent(0)}</Typography>
+                }
+                { (index > 0 && delay)  &&
+                  <Typography style={{ paddingLeft: "18px" }}>{getStepContent(index)}</Typography>
+                }
+              </StepContent>
             </Step>
           ))}
         </Stepper>
@@ -120,7 +137,7 @@ const SwapProgress = (props) => {
             tooltip = "copy swap hash"
           />
         </DialogContentText>
-        { activeStep >= 0 &&
+        { activeStep > 0 &&
           <>
             <DialogContentText> Value:{" "} { swap.value} </DialogContentText>
             {(swap.exact !== "nil") ?

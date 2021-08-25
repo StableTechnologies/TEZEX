@@ -27,7 +27,8 @@ import { selectToken } from "../tokenPairs/index";
 
 import sidelogo from "../../assets/sidelogo.svg";
 import swapIcon from "../../assets/swapIcon.svg";
-import warning from "../../assets/warning.svg"
+import warning from "../../assets/warning.svg";
+import exclamationError from "../../assets/exclamationError.svg";
 
 import useStyles from "./style";
 
@@ -37,6 +38,9 @@ const config = require(`../../library/${process.env.REACT_APP_ENV || "prod"
 const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupTez, genSwap }) => {
   const classes = useStyles();
   const globalContext = useContext(TezexContext);
+
+  const Eth = tokens[3];
+  const Ethtz = tokens[2];
 
   const [inputTokenModalOpen, setInputTokenModalOpen] = useState(false);
   const [outputTokenModalOpen, setOutputTokenModalOpen] = useState(false);
@@ -50,8 +54,8 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
   const [redeemSwap, setRedeemSwap] = useState(false);
   const [currentSwapView, setCurrentSwapView] = useState(false);
 
-  const [inputToken, setInputToken] = useState(tokens[4]);
-  const [outputToken, setOutputToken] = useState('');
+  const [inputToken, setInputToken] = useState(Eth);
+  const [outputToken, setOutputToken] = useState(Ethtz);
   const [inputTokenAmount, setInputTokenAmount] = useState();
   const [outputTokenAmount, setOutputTokenAmount] = useState('');
 
@@ -64,6 +68,8 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
 
   const [connectTez, setConnectTez] = useState(false);
   const [connectEth, setConnectEth] = useState(false);
+  const [maxLimit, setMaxLimit] = useState(false);
+  const [maxButton, setMaxButton] = useState(false);
 
   const [currentSwap, setCurrentSwap] = useState(false);
   const [maxSwap, setMaximizedSwap] = useState(undefined);
@@ -87,16 +93,17 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
       pair = pair.join('/')
       reversePair = reversePair.join('/')
 
-      const pairs = Object.keys(swapPairs);
-
-      pairs.map((x) => {
-        if (pair === x) {
-          setCurrentSwap({ pair: pair, asset: asset });
-        }
-        if (reversePair === x) {
-          setCurrentSwap({ pair: reversePair, asset: asset });
-        }
-      })
+      if(swapPairs) {
+        const pairs = Object.keys(swapPairs);
+        pairs.map((x) => {
+          if (pair === x) {
+            setCurrentSwap({ pair: pair, asset: asset });
+          }
+          if (reversePair === x) {
+            setCurrentSwap({ pair: reversePair, asset: asset });
+          }
+        })
+      }
     }
   }, [inputToken, outputToken]);
 
@@ -127,17 +134,18 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
           );
         }, 60000);
 
+        setMaxButton(true);
+        setMaxLimit(false);
+
         return () => {
           clearInterval(timer);
         };
-
 
       } catch (e) { console.log(e); }
     }
   }, [currentSwap, clients["ethereum"], clients["tezos"]]);
 
-
-  let counterAsset, swapReturn, swapFee, minExpectedReturn, networkFees, minReceived, bal;
+  let counterAsset, swapReturn, swapFee, minExpectedReturn, networkFees, minReceived, bal, max, swapLimit;
 
   if ((currentSwap)
     && (
@@ -165,6 +173,16 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
         .div(10 ** swapPairs[currentSwap.pair][counterAsset].decimals)
         .toFixed(6);
 
+      max = swapStat.assetConverter[currentSwap.asset](
+        new BigNumber(
+          swapStat.botStats.max[currentSwap.pair][counterAsset]
+        ).multipliedBy(10 ** swapPairs[currentSwap.pair][counterAsset].decimals)
+      );
+      if (swapStat.balances[currentSwap.asset].lt(max))
+        max = swapStat.balances[currentSwap.asset];
+        swapLimit =  max
+        .div(10 ** swapPairs[currentSwap.pair][currentSwap.asset].decimals)
+        .toFixed(6);
       minExpectedReturn = swapStat.assetConverter[counterAsset](
         swapReturn
       ).minus(swapStat.networkFees[counterAsset]);
@@ -178,7 +196,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
           .toFixed(6);
         bal = swapStat.balances[currentSwap.asset]
           .div(10 ** swapPairs[currentSwap.pair][currentSwap.asset].decimals)
-          .toFixed(2);
+          .toFixed(6);
 
       }
 
@@ -192,7 +210,8 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
 
       bal = swapStat.balances[currentSwap.asset]
         .div(10 ** swapPairs[currentSwap.pair][currentSwap.asset].decimals)
-        .toFixed(2)
+        .toFixed(6);
+
     } catch (error) { }
   }
   const generateSwap = async (swap, secret) => {
@@ -253,7 +272,8 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
     setMaximizedSwap(undefined)
     setInputTokenAmount("");
     setOutputTokenAmount(0.00);
-    setOutputToken("");
+    setInputToken(Eth);
+    setOutputToken(Ethtz);
     setCurrentSwap('');
   }
   const openTryAgain = () => {
@@ -361,6 +381,14 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
     if(inputToken && outputToken){
       checkWallet();
     }
+
+    if(new BigNumber(inputTokenAmount).gt(new BigNumber(swapLimit))) {
+      setMaxLimit(true);
+      setMaxButton(true);
+    }
+    else {
+      setMaxLimit(false);
+    }
   }, [inputTokenAmount, inputToken, outputToken, setupEthAccount, setupXtzAccount])
 
   useEffect(() => {
@@ -399,6 +427,11 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
     refundHandler(swap)
     setMaximizedSwap(undefined)
   }
+  const totalLiquidity = () => {
+    setMaxButton(false);
+    setInputTokenAmount(new BigNumber(swapLimit));
+  }
+
   return (
     <Grid container justify="center" className={classes.root}>
       <Grid item className={classes.sidelogocontainer} xs={1}>
@@ -410,12 +443,12 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
           <Grid item xs={0} md={2} lg={2}></Grid>
           <Grid item xs={12} sm={7} md={5} lg={4}>
             <Typography className={classes.warning}>
-              {((connectTez || connectEth) || (minReceived < 0)) &&
+              {((connectTez || connectEth) || (minReceived <= 0)) &&
                 <img src={warning} alt="warning logo" className={classes.warningImg} />
               }
               {connectTez &&  "Connect Your Tezos Wallet"}
               {connectEth &&  "Connect Your Ethereum Wallet"}
-              {(minReceived < 0) &&  "Minimum Received must be greater than 0"}
+              {(minReceived <= 0) &&  "Minimum receivable must be greater than zero"}
             </Typography>
             <div className={classes.swaps}>
               <Card className={classes.card} square>
@@ -429,12 +462,18 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
                 <CardContent>
                   <form>
                     <div className={classes.tokenContainer + " Element"}>
-                      <div className={classes.balContainer}>
-                        <Typography color="textSecondary" variant="subtitle2">From</Typography>
-                        {bal &&
-                          <Typography color="textSecondary" variant="subtitle2">wallet balance:{" "} {(bal >= 1) ? Math.floor(bal) : bal}{" "}{inputToken.title} </Typography>
-                        }
-                      </div>
+                      <Grid container className={classes.balContainer}>
+                        <Grid item xs={2} md={3} lg={4}>
+                          <Typography color="textSecondary" variant="subtitle2">From</Typography>
+                        </Grid>
+                        <Grid item xs={10} md={9} lg={8}>
+                          {bal &&
+                            <Typography color="textSecondary" variant="subtitle2" className={classes.rightAlignText}>
+                              wallet balance:{" "} { bal }{" "}{inputToken.title}
+                            </Typography>
+                          }
+                        </Grid>
+                      </Grid>
                       <div className={classes.tokenDetails} >
                         <Button
                           endIcon={<KeyboardArrowDownIcon style={{ color: "#000" }} />}
@@ -448,6 +487,11 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
                           )}
                           {inputToken.title || "Select Token"}
                         </Button>
+                        {(swapLimit >0 && maxButton) &&
+                          <Button variant="contained" className={classes.maxButton} onClick={totalLiquidity}>
+                            Max
+                          </Button>
+                        }
                         <TextField
                           autoFocus
                           margin="dense"
@@ -456,8 +500,8 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
                           placeholder="0.00"
                           onInput={(e) => setInputTokenAmount(e.target.value.replace(/"^[0-9]*[.,]?[0-9]*$/, ''))}
                           value={inputTokenAmount}
-                          className={classes.tokenValue}
-                          inputProps={{ className: classes.tokenValue, pattern: "^\d+(\.\d{1,4})?$", inputMode: "decimal" }}
+                          className={classes.rightAlignText}
+                          inputProps={{ className: classes.rightAlignText, pattern: "^\d+(\.\d{1,4})?$", inputMode: "decimal" }}
                           InputProps={{ disableUnderline: true }}
                         />
                       </div>
@@ -471,7 +515,21 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
                         lists={tokens}
                       />
                     </div>
-
+                    <Grid className={classes.maxSwapLimitCon}>
+                      {( new BigNumber(inputTokenAmount).lte(new BigNumber(bal))  &&  maxLimit) &&
+                      <>
+                          <Typography className={classes.maxSwapLimit}>
+                            <img src={exclamationError} alt="warning logo" className={`${classes.warningImg} ${classes.redWarningImg}`}/>
+                            Insufficient liquidity for this swap.
+                          </Typography>
+                          {swapLimit <= 0 ? "" :
+                            <Typography className={classes.maxSwapLimit}>
+                              Please enter an amount lower than {" "} {new BigNumber(swapLimit).toString()} {" "} {inputToken.title}
+                            </Typography>
+                          }
+                        </>
+                      }
+                    </Grid>
                     <Button className={classes.swapIcon} onClick={toggleTokens} disableRipple>
                       <img src={swapIcon} alt="swap-Icon" />
                     </Button>
@@ -499,7 +557,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
                           placeholder="0.00"
                           // onInput={(e) => setOutputTokenAmount(e.target.value.replace(/[^0-9]/, '') )}
                           value={outputTokenAmount || "0.00"}
-                          inputProps={{ className: classes.tokenValue, pattern: "^[0-9]*[.,]?[0-9]*$", inputMode: "decimal" }}
+                          inputProps={{ className: classes.rightAlignText, pattern: "^[0-9]*[.,]?[0-9]*$", inputMode: "decimal" }}
                           InputProps={{ disableUnderline: true }}
                           disabled
                         />
@@ -533,9 +591,9 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
                                     { (inputTokenAmount && (minReceived > 0)) ?
                                         <>
                                           {
-                                            ((Number(inputTokenAmount) <= bal)) ?
+                                            (new BigNumber(inputTokenAmount).lte(new BigNumber(bal))) ?
                                               <>
-                                              { (connectTez || connectEth) ?
+                                              { (connectTez || connectEth) || (maxLimit) ?
                                                 <Button size="large" className={`${classes.connectwalletbutton + " Element"} ${classes.disabled + " Element"}`} disabled>Swap Tokens</Button>
                                                 :
                                                 <Button size="large" className={classes.connectwalletbutton + " Element"} onClick={startSwap} >Swap Tokens</Button>
@@ -608,7 +666,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
 
                 </div>
                 <div className={classes.feeDetails}>
-                  <Typography>Minimum Receiveable</Typography>
+                  <Typography>Minimum Received</Typography>
                   <Typography> {(!inputTokenAmount ? 0 : minReceived) || (!outputToken ? "0.00 XTZ" : "0.00")} {""} {outputToken.title} </Typography>
                 </div>
               </Paper>
