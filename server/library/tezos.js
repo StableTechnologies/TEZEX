@@ -3,7 +3,8 @@ const {
   registerFetch,
   TezosMessageUtils,
   TezosNodeReader,
-  TezosParameterFormat
+  TezosParameterFormat,
+  TezosLanguageUtil
 } = require("conseiljs");
 const { JSONPath } = require("jsonpath-plus");
 const log = require("loglevel");
