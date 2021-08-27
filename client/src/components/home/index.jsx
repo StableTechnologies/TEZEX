@@ -661,13 +661,13 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
                 <div className={classes.feeDetails}>
                   <Typography>Swap Fee</Typography>
                   <Typography>
-                    {((minReceived <= 0 || !inputTokenAmount) ? 0 : swapFee) || (!outputToken ? "0.15 %" : "0.00")} {""} {outputToken.title}
+                    {(!inputTokenAmount ? 0 : swapFee) || (!outputToken ? "0.15 %" : "0.00")} {""} {outputToken.title}
                   </Typography>
                 </div>
                 <div className={classes.feeDetails}>
                   <Typography>Max Network Fee</Typography>
                   <Typography>
-                    {((minReceived <= 0 || !inputTokenAmount) ? 0 : networkFees) ||(!outputToken ? "0.00 XTZ" : "0.00")} {""} {outputToken.title}
+                    {(!inputTokenAmount ? 0 : networkFees) ||(!outputToken ? "0.00 XTZ" : "0.00")} {""} {outputToken.title}
                   </Typography>
 
                 </div>
