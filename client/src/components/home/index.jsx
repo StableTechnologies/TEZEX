@@ -392,6 +392,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
 
     if(minReceived <= 0) {
       setMaxLimit(true);
+      setOutputTokenAmount('')
     }
   }, [inputTokenAmount, inputToken, outputToken, setupEthAccount, setupXtzAccount])
 
@@ -664,18 +665,25 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
               <Paper variant="outlined" className={classes.feepaper + " Element"} square>
                 <div className={classes.feeDetails}>
                   <Typography>Swap Fee</Typography>
-                  <Typography>{(!inputTokenAmount ? 0 : swapFee) || (!outputToken ? "0.15 %" : "0.00")} {""} {outputToken.title} </Typography>
+                  <Typography>
+                    {/* {(minReceived <= 0) && ("0.00" + " " + outputToken.title)} */}
+                    {((minReceived <= 0 || !inputTokenAmount) ? 0 : swapFee) || (!outputToken ? "0.15 %" : "0.00")} {""} {outputToken.title}
+                  </Typography>
                 </div>
                 <div className={classes.feeDetails}>
                   <Typography>Max Network Fee</Typography>
                   <Typography>
-                    {(!inputTokenAmount ? 0 : networkFees) ||(!outputToken ? "0.00 XTZ" : "0.00")} {""} {outputToken.title}
+                    {/* {minReceived <= 0 && "0.00" + " " + outputToken.title} */}
+                    {((minReceived <= 0 || !inputTokenAmount) ? 0 : networkFees) ||(!outputToken ? "0.00 XTZ" : "0.00")} {""} {outputToken.title}
                   </Typography>
 
                 </div>
                 <div className={classes.feeDetails}>
                   <Typography>Minimum Received</Typography>
-                  <Typography> {(!inputTokenAmount ? 0 : minReceived) || (!outputToken ? "0.00 XTZ" : "0.00")} {""} {outputToken.title} </Typography>
+                  <Typography>
+                    {/* {minReceived <= 0 && "0.00" + " " + outputToken.title} */}
+                    {((minReceived <= 0 || !inputTokenAmount) ? 0 : minReceived) || (!outputToken ? "0.00 XTZ" : "0.00")} {""} {outputToken.title}
+                  </Typography>
                 </div>
               </Paper>
             </div>
