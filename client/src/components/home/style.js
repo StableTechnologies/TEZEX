@@ -140,7 +140,7 @@ const useStyles = makeStyles((theme) => ({
     width: "24px",
   },
   swapcontainer: {
-    // marginTop: "3vh",
+    marginTop: "3vh",
     textAlign: "left"
   },
   button: {
@@ -266,23 +266,21 @@ const useStyles = makeStyles((theme) => ({
   warning: {
     textAlign: "center",
     marginBottom: "-.4rem",
-    height: "1.5rem",
-    marginTop: "3vh",
+    color: "#FF4E4E",
+    // height: "1.5rem",
+    // marginTop: "3vh",
     '@media (max-width: 600px)': {
       fontSize: "0.875rem"
     },
-    '@media (max-width: 321px)': {
-      height: "3rem",
-    },
+    // '@media (max-width: 321px)': {
+    //   height: "3rem",
+    // },
   },
 
   warningImg: {
     width: "1rem",
     height: "1rem",
-    margin: "0 4px -3px",
-  },
-  maxSwapLimitCon: {
-    height: "2rem",
+    margin: "0 4px -2px",
   },
 
   maxSwapLimit: {

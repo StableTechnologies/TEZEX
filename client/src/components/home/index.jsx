@@ -389,6 +389,11 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
     else {
       setMaxLimit(false);
     }
+
+    if(minReceived <= 0) {
+      setMaxLimit(true);
+      setOutputTokenAmount('')
+    }
   }, [inputTokenAmount, inputToken, outputToken, setupEthAccount, setupXtzAccount])
 
   useEffect(() => {
@@ -443,12 +448,11 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
           <Grid item xs={0} md={2} lg={2}></Grid>
           <Grid item xs={12} sm={7} md={5} lg={4}>
             <Typography className={classes.warning}>
-              {((connectTez || connectEth) || (minReceived <= 0)) &&
-                <img src={warning} alt="warning logo" className={classes.warningImg} />
+              {(connectTez || connectEth) &&
+                <img src={exclamationError} alt="warning logo" className={classes.warningImg} />
               }
               {connectTez &&  "Connect Your Tezos Wallet"}
               {connectEth &&  "Connect Your Ethereum Wallet"}
-              {(minReceived <= 0) &&  "Minimum receivable must be greater than zero"}
             </Typography>
             <div className={classes.swaps}>
               <Card className={classes.card} square>
@@ -515,14 +519,14 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
                         lists={tokens}
                       />
                     </div>
-                    <Grid className={classes.maxSwapLimitCon}>
-                      {( new BigNumber(inputTokenAmount).lte(new BigNumber(bal))  &&  maxLimit) &&
+                    <Grid>
+                      {( inputTokenAmount  &&  maxLimit) &&
                       <>
                           <Typography className={classes.maxSwapLimit}>
                             <img src={exclamationError} alt="warning logo" className={`${classes.warningImg} ${classes.redWarningImg}`}/>
                             Insufficient liquidity for this swap.
                           </Typography>
-                          {swapLimit <= 0 ? "" :
+                          {((swapLimit > 0) && (minReceived > 0)) &&
                             <Typography className={classes.maxSwapLimit}>
                               Please enter an amount lower than {" "} {new BigNumber(swapLimit).toString()} {" "} {inputToken.title}
                             </Typography>
@@ -588,7 +592,7 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
                               <>
                                 { (!connectTez && !connectEth) ?
                                   <>
-                                    { (inputTokenAmount && (minReceived > 0)) ?
+                                    { (inputTokenAmount && minReceived) ?
                                         <>
                                           {
                                             (new BigNumber(inputTokenAmount).lte(new BigNumber(bal))) ?
@@ -656,7 +660,9 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
               <Paper variant="outlined" className={classes.feepaper + " Element"} square>
                 <div className={classes.feeDetails}>
                   <Typography>Swap Fee</Typography>
-                  <Typography>{(!inputTokenAmount ? 0 : swapFee) || (!outputToken ? "0.15 %" : "0.00")} {""} {outputToken.title} </Typography>
+                  <Typography>
+                    {(!inputTokenAmount ? 0 : swapFee) || (!outputToken ? "0.15 %" : "0.00")} {""} {outputToken.title}
+                  </Typography>
                 </div>
                 <div className={classes.feeDetails}>
                   <Typography>Max Network Fee</Typography>
@@ -667,7 +673,9 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
                 </div>
                 <div className={classes.feeDetails}>
                   <Typography>Minimum Received</Typography>
-                  <Typography> {(!inputTokenAmount ? 0 : minReceived) || (!outputToken ? "0.00 XTZ" : "0.00")} {""} {outputToken.title} </Typography>
+                  <Typography>
+                    {((minReceived <= 0 || !inputTokenAmount) ? 0 : minReceived) || (!outputToken ? "0.00 XTZ" : "0.00")} {""} {outputToken.title}
+                  </Typography>
                 </div>
               </Paper>
             </div>
