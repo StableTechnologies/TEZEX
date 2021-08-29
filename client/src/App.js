@@ -2,7 +2,7 @@ import "aos/dist/aos.css";
 import "./App.css";
 
 import React, { useContext, useEffect, useRef, useState } from "react";
-import { Route, BrowserRouter as Router, Switch } from "react-router-dom";
+import { Route, BrowserRouter as Router, Switch, useParams } from "react-router-dom";
 import { getOldSwaps, initSwapDetails, setupEthClient, setupTezClient } from "./util";
 
 import AOS from 'aos';
@@ -162,7 +162,6 @@ const App = () => {
     forceUpdate();
     return true;
   };
-
   return (
     <TezexContext>
       <Router basename={process.env.PUBLIC_URL}>
@@ -178,7 +177,7 @@ const App = () => {
           {/* {balance === undefined && <Loader message="Loading Account" />} */}
           {/* {balance !== undefined && ( */}
           <Switch>
-            <Route exact path="/">
+            <Route exact path="/:param">
               <Home
                 swaps={swaps}
                 updateSwaps={updateSwaps}

@@ -31,13 +31,15 @@ import warning from "../../assets/warning.svg";
 import exclamationError from "../../assets/exclamationError.svg";
 
 import useStyles from "./style";
+import { useHistory, useParams, useRouteMatch } from "react-router-dom";
 
 const config = require(`../../library/${process.env.REACT_APP_ENV || "prod"
   }-network-config.json`);
 
-const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupTez, genSwap }) => {
+const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }) => {
   const classes = useStyles();
   const globalContext = useContext(TezexContext);
+  const history = useHistory();
 
   const Eth = tokens[3];
   const Ethtz = tokens[2];
@@ -52,7 +54,6 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
   const [swapStatus, setSwapStatus] = useState(false);
   const [tryAgain, setTryAgain] = useState(false);
   const [redeemSwap, setRedeemSwap] = useState(false);
-  const [currentSwapView, setCurrentSwapView] = useState(false);
 
   const [inputToken, setInputToken] = useState(Eth);
   const [outputToken, setOutputToken] = useState(Ethtz);
@@ -62,15 +63,11 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
   const [wallet, setWallet] = useState('');
   const [err, setErr] = useState('');
 
-
-  const [ethAccount, setEthAccount] = useState('');
-  const [xtzAccount, setXtzAccount] = useState('');
-
   const [connectTez, setConnectTez] = useState(false);
   const [connectEth, setConnectEth] = useState(false);
+
   const [maxLimit, setMaxLimit] = useState(false);
   const [maxButton, setMaxButton] = useState(false);
-
   const [currentSwap, setCurrentSwap] = useState(false);
   const [maxSwap, setMaximizedSwap] = useState(undefined);
   const [swapStat, setSwapStat] = useState(undefined);
@@ -436,6 +433,38 @@ const Home = ({ swaps, updateSwaps, clients, swapPairs, update, setupEth, setupT
     setMaxButton(false);
     setInputTokenAmount(new BigNumber(swapLimit));
   }
+
+  const { param } = useParams();
+  const urlStr = param.split('_to_');
+
+  const setURL = () => {
+    tokens.map(x=> {
+      if (urlStr[0]=== x.title.toLowerCase()){
+        setInputToken(x);
+      }
+      if (urlStr[1]=== x.title.toLowerCase()){
+        setOutputToken(x);
+      }
+    })
+  }
+  const pushURL = () => {
+    const from = inputToken.title.toLowerCase();
+    const to = outputToken.title.toLowerCase();
+    history.push(from + '_to_' + to);
+    if (tokenPair.indexOf(outputToken) === -1) {
+      history.push(from);
+    }
+  }
+
+  useEffect(() => {
+    setURL()
+  }, [history])
+
+  useEffect(() => {
+    if(inputToken && outputToken) {
+      pushURL()
+    }
+  }, [inputToken, outputToken])
 
   return (
     <Grid container justify="center" className={classes.root}>
