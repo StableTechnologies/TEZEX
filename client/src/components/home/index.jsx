@@ -40,6 +40,7 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
   const classes = useStyles();
   const globalContext = useContext(TezexContext);
   const history = useHistory();
+  const { param } = useParams();
 
   const Eth = tokens[3];
   const Ethtz = tokens[2];
@@ -101,7 +102,10 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
           }
         })
       }
+
+      pushURL();
     }
+
   }, [inputToken, outputToken]);
 
   useEffect(() => {
@@ -434,19 +438,22 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
     setInputTokenAmount(new BigNumber(swapLimit));
   }
 
-  const { param } = useParams();
-  const urlStr = param.split('_to_');
-
+  // preloads swap pairs based on the URL
   const setURL = () => {
-    tokens.map(x=> {
-      if (urlStr[0]=== x.title.toLowerCase()){
-        setInputToken(x);
-      }
-      if (urlStr[1]=== x.title.toLowerCase()){
-        setOutputToken(x);
-      }
-    })
+    if(param) {
+      const pathname = param.split('_to_');
+      tokens.map(x=> {
+        if (pathname[0]=== x.title.toLowerCase()){
+          setInputToken(x);
+        }
+        if (pathname[1]=== x.title.toLowerCase()){
+          setOutputToken(x);
+        }
+      })
+    }
   }
+
+  // update URL based on the selected swap pair
   const pushURL = () => {
     const from = inputToken.title.toLowerCase();
     const to = outputToken.title.toLowerCase();
@@ -459,12 +466,6 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
   useEffect(() => {
     setURL()
   }, [history])
-
-  useEffect(() => {
-    if(inputToken && outputToken) {
-      pushURL()
-    }
-  }, [inputToken, outputToken])
 
   return (
     <Grid container justify="center" className={classes.root}>

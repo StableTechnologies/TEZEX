@@ -177,7 +177,7 @@ const App = () => {
           {/* {balance === undefined && <Loader message="Loading Account" />} */}
           {/* {balance !== undefined && ( */}
           <Switch>
-            <Route exact path="/:param">
+            <Route exact path= {["/", "/:param"]}>
               <Home
                 swaps={swaps}
                 updateSwaps={updateSwaps}
