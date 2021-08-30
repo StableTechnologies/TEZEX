@@ -455,11 +455,11 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
 
   // update URL based on the selected swap pair
   const pushURL = () => {
-    const from = inputToken.title.toLowerCase();
-    const to = outputToken.title.toLowerCase();
-    history.push(from + '_to_' + to);
+    const assetURL = inputToken.title.toLowerCase();
+    const counterAssetURL = outputToken.title.toLowerCase();
+    history.push(assetURL + '_to_' + counterAssetURL);
     if (tokenPair.indexOf(outputToken) === -1) {
-      history.push(from);
+      history.push(assetURL);
     }
   }
 
