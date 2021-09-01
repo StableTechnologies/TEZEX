@@ -549,21 +549,7 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
                         lists={tokens}
                       />
                     </div>
-                    <Grid>
-                      {( inputTokenAmount  &&  maxLimit) &&
-                      <>
-                          <Typography className={classes.maxSwapLimit}>
-                            <img src={exclamationError} alt="warning logo" className={`${classes.warningImg} ${classes.redWarningImg}`}/>
-                            Insufficient liquidity for this swap.
-                          </Typography>
-                          {((swapLimit > 0) && (minReceived > 0)) &&
-                            <Typography className={classes.maxSwapLimit}>
-                              Please enter an amount lower than {" "} {new BigNumber(swapLimit).toString()} {" "} {inputToken.title}
-                            </Typography>
-                          }
-                        </>
-                      }
-                    </Grid>
+
                     <Button className={classes.swapIcon} onClick={toggleTokens} disableRipple>
                       <img src={swapIcon} alt="swap-Icon" />
                     </Button>
@@ -605,6 +591,26 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
                         lists={tokenPair}
                       />
                     </div>
+                    <Grid>
+                      {( inputTokenAmount  &&  maxLimit) &&
+                      <>
+                          <Typography className={`${classes.maxSwapLimit} ${classes.errOne}`}>
+                            <img src={exclamationError} alt="warning logo" className={`${classes.warningImg} ${classes.redWarningImg}`}/>
+                            Insufficient liquidity for this swap.
+                          </Typography>
+                          {((swapLimit > 0) && (minReceived > 0)) &&
+                            <Typography className={`${classes.maxSwapLimit} ${classes.errTwo}`}>
+                              Please enter an amount lower than {" "} {new BigNumber(swapLimit).toString()} {" "} {inputToken.title}
+                            </Typography>
+                          }
+                          {((swapLimit > 0) && (minReceived <= 0)) &&
+                            <Typography className={`${classes.maxSwapLimit} ${classes.errTwo}`}>
+                              Please enter an amount higher than {" "} {inputTokenAmount} {" "} {inputToken.title}
+                            </Typography>
+                          }
+                        </>
+                      }
+                    </Grid>
                   </form>
                 </CardContent>
                 <CardActions>
