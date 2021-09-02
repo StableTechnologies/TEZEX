@@ -174,9 +174,13 @@ const App = () => {
             setupTez={setupXtzAccount}
             disconnectTez={disconnectTezos}
           />
-          {/* {balance === undefined && <Loader message="Loading Account" />} */}
-          {/* {balance !== undefined && ( */}
           <Switch>
+            <Route exact path="/about">
+              <About />
+            </Route>
+            <Route exact path="/stats">
+              <Stat swapPairs={swapPairsRef.current} />
+            </Route>
             <Route exact path= {["/", "/:param"]}>
               <Home
                 swaps={swaps}
@@ -188,20 +192,6 @@ const App = () => {
                 setupTez={setupXtzAccount}
                 genSwap={genSwap}
               />
-            </Route>
-            <Route exact path="/swap">
-              <CreateSwap
-                genSwap={genSwap}
-                clients={clientRef.current}
-                swapPairs={swapPairsRef.current}
-                balance={balance}
-              />
-            </Route>
-            <Route exact path="/about">
-              <About />
-            </Route>
-            <Route exact path="/stats">
-              <Stat swapPairs={swapPairsRef.current} />
             </Route>
           </Switch>
           <Footer />
