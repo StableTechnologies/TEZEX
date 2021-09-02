@@ -295,6 +295,12 @@ const useStyles = makeStyles((theme) => ({
   redWarningImg: {
     margin: "0 3px -3px 0",
   },
+  errOne: {
+    margin: ".8rem 0 0 0",
+  },
+  errTwo: {
+    margin: "0 0 -1.2rem 0",
+  },
 }));
 
 export default useStyles;
