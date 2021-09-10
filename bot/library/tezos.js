@@ -676,6 +676,25 @@ module.exports = class Tezos {
     );
   }
 
+    /**
+* Add Fee details (only admin)
+*
+* @param feeContract fee contract details {address:string, mapID:nat}
+*/
+async addFeeDetails(feeContract) {
+  const res = await this.interact([
+    {
+      to: feeContract.address,
+      amtInMuTez: 0,
+      entrypoint: "update",
+      parameters: `{Elt "ETH" (Pair (Pair 3700 50000) (Pair 30200 (Pair 70000 1620914059))); Elt "ETHTZ" (Pair (Pair 2500 3000) (Pair 8500 (Pair 7500 1620914059))); Elt "TZBTC" (Pair (Pair 2500 3000) (Pair 8500 (Pair 7500 1620914059))); Elt "USDC" (Pair (Pair 370000 50000) (Pair 302000 (Pair 70000 1620914059))); Elt "USDTZ" (Pair (Pair 2500 3000) (Pair 8500 (Pair 7500 1620914059)));Elt "WBTC" (Pair (Pair 370000 50000) (Pair 302000 (Pair 70000 1620914059)))}`,
+    },
+  ]);
+  if (res.status !== "applied") {
+    throw new Error("TEZOS TX FAILED");
+  }
+  return res;
+}
   /**
    * Send a tx to the blockchain
    *

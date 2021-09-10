@@ -166,24 +166,24 @@ const deployEthereumContract = async (ethConfig, argument, web3) => {
 const deploy = async (store, web3) => {
   try {
     console.log("\nContract Addresses :");
-    const tezosSwapContract = await deployTezosContract(
-      tezConfig,
-      `(Pair (Pair True "${store.keyStore.publicKeyHash}") (Pair "${config.tezos.tokenContract.address}" (Pair 15 {})))`,
-      store
-    );
-    console.log(`- Tezos Swap contract at ${tezosSwapContract}`);
+    // const tezosSwapContract = await deployTezosContract(
+    //   tezConfig,
+    //   `(Pair (Pair True "${store.keyStore.publicKeyHash}") (Pair "${config.tezos.tokenContract.address}" (Pair 15 {})))`,
+    //   store
+    // );
+    // console.log(`- Tezos Swap contract at ${tezosSwapContract}`);
     const tezosFeeContract = await deployTezosContract(
       feeStore,
       `(Pair "${store.keyStore.publicKeyHash}" {})`,
       store
     );
     console.log(`- Tezos Fee contract at ${tezosFeeContract}`);
-    const ethereumSwapContract = await deployEthereumContract(
-      ethConfig,
-      [config.ethereum.tokenAddr],
-      web3
-    );
-    console.log(`- Ethereum Swap contract at ${ethereumSwapContract}`);
+    // const ethereumSwapContract = await deployEthereumContract(
+    //   ethConfig,
+    //   [config.ethereum.tokenAddr],
+    //   web3
+    // );
+    // console.log(`- Ethereum Swap contract at ${ethereumSwapContract}`);
   } catch (err) {
     console.log("[x] Failed to deploy contracts : ", err);
   }
@@ -191,7 +191,7 @@ const deploy = async (store, web3) => {
 
 const run = async (estimate = true) => {
   const { store, web3 } = await init();
-  await estimateFees(store, web3);
+  // await estimateFees(store, web3);
   if (!estimate) {
     await deploy(store, web3);
   }

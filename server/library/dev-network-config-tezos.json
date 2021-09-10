@@ -1,19 +1,19 @@
 {
   "tezos": {
-    "RPC": "https://tezos-florence.cryptonomic-infra.tech:443",
-    "chain_id": "NetXxkAx4woPLyu",
+    "RPC": "https://tezos-granada.cryptonomic-infra.tech:443",
+    "chain_id": "NetXz969SFaFn8k",
     "conseilServer": {
-      "url": "https://conseil-florence.cryptonomic-infra.tech:443",
+      "url": "https://conseil-granada.cryptonomic-infra.tech:443",
       "apiKey": "4bb2f288-c36a-49ea-a50e-e7cbdc495e0e",
-      "network": "florencenet"
+      "network": "granadanet"
     },
     "priceOracle": {
-      "address": "KT1SUP27JhX24Kvr11oUdWswk7FnCW78ZyUn",
-      "mapID": 8472
+      "address": "KT1AQuWowr3WKwF69oTGcKaJrMajic3CKwR2",
+      "mapID": 47922
     },
     "swapContract": {
-      "address": "KT1JDRXuCcQWAeNA8UAV9NsY8ALJTajcPupT",
-      "mapID": 97599
+      "address": "KT1MnVYAmcRYPFBx8dsX1h2YkFShxL9kkkrn",
+      "mapID": 50370
     }
   },
   "assets": {
@@ -21,8 +21,8 @@
       "decimals": 6,
       "symbol": "USDtz",
       "tokenContract": {
-        "address": "KT1TDkzGHBFAS9NiGLWpcB8BhBULXpvbfzPt",
-        "mapID": 45261
+        "address": "KT1DT5opZQWdkWqBMRQJQmuZiJ8fMS29nQLk",
+        "mapID": 50363
       },
       "feePad": 1.5,
       "minTradeVolume": 25
@@ -31,8 +31,8 @@
       "decimals": 18,
       "symbol": "ETHtz",
       "tokenContract": {
-        "address": "KT1NbLrkSiofxD1BtxGJ5ppPjghAGrbZzGfc",
-        "mapID": 45260
+        "address": "KT1PVkkLsQXzMd5xA4pBZo2q6N7Y2h9DAM5b",
+        "mapID": 50364
       },
       "feePad": 1.5,
       "minTradeVolume": 0.01
