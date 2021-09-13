@@ -57,7 +57,7 @@ async function mintMinimumBalance(store, contractAddress) {
     20_000,
     store.keyStore.publicKeyHash,
     bigInt(500000)
-      .multiply(10 ** 6)
+      .multiply(10 ** 8)
       .toString(),
     120_000,
     100

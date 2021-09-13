@@ -1,15 +1,15 @@
 {
   "tezos": {
     "privateKey": "",
-    "RPC": "https://tezos-florence.cryptonomic-infra.tech:443",
-    "chain_id": "NetXxkAx4woPLyu",
+    "RPC": "https://tezos-granada.cryptonomic-infra.tech:443",
+    "chain_id": "NetXz969SFaFn8k",
     "conseilServer": {
-      "url": "https://conseil-florence.cryptonomic-infra.tech:443",
+      "url": "https://conseil-granada.cryptonomic-infra.tech:443",
       "apiKey": "4bb2f288-c36a-49ea-a50e-e7cbdc495e0e",
-      "network": "florencenet"
+      "network": "granadanet"
     },
     "tokenContract": {
-      "address": "KT1NbLrkSiofxD1BtxGJ5ppPjghAGrbZzGfc"
+      "address": "KT1A291gYSPsJzYL77xwzBXhYMS9eebDyznU"
     }
   },
   "ethereum": {

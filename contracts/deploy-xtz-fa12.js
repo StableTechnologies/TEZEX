@@ -1,8 +1,8 @@
 const conseiljs = require("conseiljs");
 const config = require("./config.json");
-const ethConfig = require("./ethereum/build/contracts/TokenSwap.json");
+// const ethConfig = require("./ethereum/build/contracts/TokenSwap.json");
 const fa12Config = require("./tezos/build/TokenSwap/step_000_cont_1_contract.json");
-const xtzConfig = require("./tezos/build/AtomicSwap/step_000_cont_0_contract.json");
+// const xtzConfig = require("./tezos/build/AtomicSwap/step_000_cont_0_contract.json");
 const log = require("loglevel");
 const conSign = require("conseiljs-softsigner");
 const fetch = require("node-fetch");
@@ -47,32 +47,32 @@ const estimateFees = async (store, web3) => {
         conseiljs.TezosParameterFormat.Micheline
       );
 
-    const xtzEstimate =
-      await conseiljs.TezosNodeWriter.testContractDeployOperation(
-        config.tezos.RPC,
-        config.tezos.chain_id,
-        store.keyStore,
-        0,
-        undefined,
-        100000,
-        10000,
-        20000,
-        trim(xtzConfig),
-        conseiljs.TezosLanguageUtil.translateMichelsonToMicheline(
-          `(Pair True (Pair "${store.keyStore.publicKeyHash}" {}))`
-        ),
-        conseiljs.TezosParameterFormat.Micheline
-      );
+    // const xtzEstimate =
+    //   await conseiljs.TezosNodeWriter.testContractDeployOperation(
+    //     config.tezos.RPC,
+    //     config.tezos.chain_id,
+    //     store.keyStore,
+    //     0,
+    //     undefined,
+    //     100000,
+    //     10000,
+    //     20000,
+    //     trim(xtzConfig),
+    //     conseiljs.TezosLanguageUtil.translateMichelsonToMicheline(
+    //       `(Pair True (Pair "${store.keyStore.publicKeyHash}" {}))`
+    //     ),
+    //     conseiljs.TezosParameterFormat.Micheline
+    //   );
 
-    console.log(
-      `\nFee Estimates:\n\n- Tesoz Fee Required : ${
-        (xtzEstimate["estimatedFee"] +
-          xtzEstimate["estimatedStorageBurn"] +
-          fa12Estimate["estimatedFee"] +
-          fa12Estimate["estimatedStorageBurn"]) /
-        1000000
-      }`
-    );
+    // console.log(
+    //   `\nFee Estimates:\n\n- Tesoz Fee Required : ${
+    //     (xtzEstimate["estimatedFee"] +
+    //       xtzEstimate["estimatedStorageBurn"] +
+    //       fa12Estimate["estimatedFee"] +
+    //       fa12Estimate["estimatedStorageBurn"]) /
+    //     1000000
+    //   }`
+    // );
   } catch (err) {
     console.log("[x] Failed to estimate deploy fees : ", err);
   }
@@ -158,16 +158,16 @@ const deploy = async (store, web3) => {
     console.log("\nContract Addresses :");
     const fa12SwapContract = await deployTezosContract(
       fa12Config,
-      `(Pair (Pair True "${store.keyStore.publicKeyHash}") (Pair "${config.tezos.tokenContract.address}" (Pair 15 {})))`,
+      `(Pair (Pair True "${store.keyStore.publicKeyHash}") (Pair "${config.tezos.tokenContract.address}" (Pair 45 {})))`,
       store
     );
     console.log(`- FA12 Swap contract at ${fa12SwapContract}`);
-    const xtzSwapContract = await deployTezosContract(
-      xtzConfig,
-      `(Pair True (Pair "${store.keyStore.publicKeyHash}" {}))`,
-      store
-    );
-    console.log(`- XTZ Swap contract at ${xtzSwapContract}`);
+    // const xtzSwapContract = await deployTezosContract(
+    //   xtzConfig,
+    //   `(Pair True (Pair "${store.keyStore.publicKeyHash}" {}))`,
+    //   store
+    // );
+    // console.log(`- XTZ Swap contract at ${xtzSwapContract}`);
   } catch (err) {
     console.log("[x] Failed to deploy contracts : ", err);
   }
@@ -175,7 +175,7 @@ const deploy = async (store, web3) => {
 
 const run = async (estimate = true) => {
   const { store, web3 } = await init();
-  await estimateFees(store, web3);
+  // await estimateFees(store, web3);
   if (!estimate) {
     await deploy(store, web3);
   }

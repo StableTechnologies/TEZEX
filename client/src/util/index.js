@@ -53,7 +53,7 @@ export const connectEthAccount = async () => {
 export const connectTezAccount = async () => {
   const client = new DAppClient({ name: "TEZEX" });
   const network =
-    config.tezos.conseilServer.network === "mainnet" ? "mainnet" : "florencenet";
+    config.tezos.conseilServer.network === "mainnet" ? "mainnet" : "granadanet";
   const resp = await client.requestPermissions({
     network: { type: network },
   });

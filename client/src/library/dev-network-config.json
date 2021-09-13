@@ -9,24 +9,24 @@
     "refundFactor": 2
   },
   "tezos": {
-    "RPC": "https://tezos-florence.cryptonomic-infra.tech:443",
-    "chain_id": "NetXxkAx4woPLyu",
+    "RPC": "https://tezos-granada.cryptonomic-infra.tech:443",
+    "chain_id": "NetXz969SFaFn8k",
     "conseilServer": {
-      "url": "https://conseil-florence.cryptonomic-infra.tech:443",
+      "url": "https://conseil-granada.cryptonomic-infra.tech:443",
       "apiKey": "4bb2f288-c36a-49ea-a50e-e7cbdc495e0e",
-      "network": "florencenet"
+      "network": "granadanet"
     },
     "feeContract": {
-      "address": "KT1W6MgKzfFVUZwH1F5hSu7MRQsSjGHMeN2Y",
+      "address": "KT1USJgTCR2fyvt5tFyeEx6adNkbXgNjw6YL",
       "mapID": ""
     },
     "priceOracle": {
-      "address": "KT1SUP27JhX24Kvr11oUdWswk7FnCW78ZyUn",
-      "mapID": 8472
+      "address": "KT1AQuWowr3WKwF69oTGcKaJrMajic3CKwR2",
+      "mapID": 47922
     }
   },
   "ethereum": {
-    "RPC": "https://0a5b8853bfdc41fd954aea3d0ba6b327.goerli.rpc.rivet.cloud/",
+    "RPC": "https://goerli.infura.io/v3/580bfda0a4b746ed84501d247802ee25",
     "chain": "goerli"
   },
   "pairs": {
@@ -36,12 +36,12 @@
         "symbol": "USDtz",
         "network": "tezos",
         "tokenContract": {
-          "address": "KT1TDkzGHBFAS9NiGLWpcB8BhBULXpvbfzPt",
-          "mapID": 45261
+          "address": "KT1DT5opZQWdkWqBMRQJQmuZiJ8fMS29nQLk",
+          "mapID": 50363
         },
         "swapContract": {
-          "address": "KT1Bt9hJV4Agzhp48bsfAMBX9u11HpLSAViu",
-          "mapID": 45262
+          "address": "KT1AeAMDuSV9WGcZUGb7YCKajNoFq18BwqZe",
+          "mapID": 50366
         },
         "feePad": 1.5,
         "minTradeVolume": 50
@@ -902,12 +902,12 @@
         "symbol": "ETHtz",
         "network": "tezos",
         "tokenContract": {
-          "address": "KT1NbLrkSiofxD1BtxGJ5ppPjghAGrbZzGfc",
-          "mapID": 45260
+          "address": "KT1PVkkLsQXzMd5xA4pBZo2q6N7Y2h9DAM5b",
+          "mapID": 50364
         },
         "swapContract": {
-          "address": "KT1CJRVae61ycESay1SSQKpdw1dFryeUGKNk",
-          "mapID": 45269
+          "address": "KT1UTiqCqacpyi9LwWg1L8QrsSoVA523RFjF",
+          "mapID": 50367
         },
         "feePad": 1.5,
         "minTradeVolume": 0.03
@@ -919,12 +919,12 @@
         "symbol": "tzBTC",
         "network": "tezos",
         "tokenContract": {
-          "address": "KT1NUp3bJFgnJFoyKBLtnpgp6fBp2qXp8tRm",
-          "mapID": 104426
+          "address": "KT1A291gYSPsJzYL77xwzBXhYMS9eebDyznU",
+          "mapID": 50365
         },
         "swapContract": {
-          "address": "KT1DzMxCS9ZdQpTddqGqSCZ4dDzNTDHkMK1k",
-          "mapID": 104427
+          "address": "KT1Fk13jbvoWaJiRjGKc688ymSVazVWuNaJH",
+          "mapID": 50368
         },
         "feePad": 1.5,
         "minTradeVolume": 0.001
@@ -1506,12 +1506,12 @@
         "symbol": "USDtz",
         "network": "pureTezos",
         "tokenContract": {
-          "address": "KT1TDkzGHBFAS9NiGLWpcB8BhBULXpvbfzPt",
-          "mapID": 45261
+          "address": "KT1DT5opZQWdkWqBMRQJQmuZiJ8fMS29nQLk",
+          "mapID": 50363
         },
         "swapContract": {
-          "address": "KT1JDRXuCcQWAeNA8UAV9NsY8ALJTajcPupT",
-          "mapID": 97599
+          "address": "KT1MnVYAmcRYPFBx8dsX1h2YkFShxL9kkkrn",
+          "mapID": 50370
         },
         "feePad": 1.5,
         "minTradeVolume": 50
@@ -1521,12 +1521,12 @@
         "symbol": "ETHtz",
         "network": "pureTezos",
         "tokenContract": {
-          "address": "KT1NbLrkSiofxD1BtxGJ5ppPjghAGrbZzGfc",
-          "mapID": 45260
+          "address": "KT1PVkkLsQXzMd5xA4pBZo2q6N7Y2h9DAM5b",
+          "mapID": 50364
         },
         "swapContract": {
-          "address": "KT1JDRXuCcQWAeNA8UAV9NsY8ALJTajcPupT",
-          "mapID": 97599
+          "address": "KT1MnVYAmcRYPFBx8dsX1h2YkFShxL9kkkrn",
+          "mapID": 50370
         },
         "feePad": 1.5,
         "minTradeVolume": 0.03
@@ -1540,8 +1540,8 @@
         "minTradeVolume": 5,
         "network": "pureTezos",
         "swapContract": {
-          "address": "KT1JDRXuCcQWAeNA8UAV9NsY8ALJTajcPupT",
-          "mapID": 97599
+          "address": "KT1MnVYAmcRYPFBx8dsX1h2YkFShxL9kkkrn",
+          "mapID": 50370
         }
       },
       "usdtz": {
@@ -1549,12 +1549,12 @@
         "symbol": "USDtz",
         "network": "pureTezos",
         "tokenContract": {
-          "address": "KT1TDkzGHBFAS9NiGLWpcB8BhBULXpvbfzPt",
-          "mapID": 45261
+          "address": "KT1DT5opZQWdkWqBMRQJQmuZiJ8fMS29nQLk",
+          "mapID": 50363
         },
         "swapContract": {
-          "address": "KT1JDRXuCcQWAeNA8UAV9NsY8ALJTajcPupT",
-          "mapID": 97599
+          "address": "KT1MnVYAmcRYPFBx8dsX1h2YkFShxL9kkkrn",
+          "mapID": 50370
         },
         "feePad": 1.5,
         "minTradeVolume": 50
@@ -1566,12 +1566,12 @@
         "symbol": "ETHtz",
         "network": "pureTezos",
         "tokenContract": {
-          "address": "KT1NbLrkSiofxD1BtxGJ5ppPjghAGrbZzGfc",
-          "mapID": 45260
+          "address": "KT1PVkkLsQXzMd5xA4pBZo2q6N7Y2h9DAM5b",
+          "mapID": 50364
         },
         "swapContract": {
-          "address": "KT1JDRXuCcQWAeNA8UAV9NsY8ALJTajcPupT",
-          "mapID": 97599
+          "address": "KT1MnVYAmcRYPFBx8dsX1h2YkFShxL9kkkrn",
+          "mapID": 50370
         },
         "feePad": 1.5,
         "minTradeVolume": 0.03
@@ -1583,8 +1583,8 @@
         "minTradeVolume": 5,
         "network": "pureTezos",
         "swapContract": {
-          "address": "KT1JDRXuCcQWAeNA8UAV9NsY8ALJTajcPupT",
-          "mapID": 97599
+          "address": "KT1MnVYAmcRYPFBx8dsX1h2YkFShxL9kkkrn",
+          "mapID": 50370
         }
       }
     }

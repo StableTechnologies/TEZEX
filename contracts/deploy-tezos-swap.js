@@ -113,7 +113,7 @@ const deploy = async (store, web3) => {
     console.log("\nContract Addresses :");
     const tezosSwapContract = await deployTezosContract(
       tezosConfig,
-      `(Pair (Pair False (Pair "${store.keyStore.publicKeyHash}" 0)) (Pair (Pair {} 15) (Pair {} 0)))`,
+      `(Pair (Pair True (Pair "${store.keyStore.publicKeyHash}" 0)) (Pair (Pair {} 45) (Pair {} 0)))`,
       store
     );
     console.log(`- Tezos Swap contract at ${tezosSwapContract}`);
