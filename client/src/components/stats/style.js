@@ -103,7 +103,10 @@ const useStyles = makeStyles((theme) => ({
   },
 
   tokenTable: {
-    margin: "5rem 0 0",
+    margin: "5rem 0",
+  },
+  infoImg: {
+    margin: "0 3px -3px",
   },
 }));
 
