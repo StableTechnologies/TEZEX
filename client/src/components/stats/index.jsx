@@ -52,14 +52,14 @@ const Stat = ({ swapPairs }) => {
         <TableRow>
           <TableCell>
             <Grid item className={classes.currencyPairTop}>
-              <img src={token.logo} alt="logo" className={classes.img} /> {token.title}
-              {" "} <img src={arrowRight} alt="right arrow" className={classes.imgArrow}/> {" "}
-              <img src={counterToken.logo} alt="logo" className={classes.img} /> {counterToken.title}
+              <span><img src={token.logo} alt="logo" className={classes.img} /></span> {token.title}
+              {" "} <span><img src={arrowRight} alt="right arrow" className={classes.imgArrow}/></span> {" "}
+              <span><img src={counterToken.logo} alt="logo" className={classes.img} /></span> {counterToken.title}
             </Grid>
             <Grid item className={classes.currencyPairBottom}>
-              <img src={counterToken.logo} alt="logo" className={classes.img} /> {counterToken.title}
-              {" "} <img src={arrowRight} alt="right arrow" className={classes.imgArrow}/> {" "}
-              <img src={token.logo} alt="logo" className={classes.img} /> {token.title}
+              <span><img src={counterToken.logo} alt="logo" className={classes.img} /></span> {counterToken.title}
+              {" "} <span><img src={arrowRight} alt="right arrow" className={classes.imgArrow}/></span>{" "}
+              <span><img src={token.logo} alt="logo" className={classes.img} /></span> {token.title}
             </Grid>
           </TableCell>
           <TableCell>
@@ -72,39 +72,6 @@ const Stat = ({ swapPairs }) => {
           </TableCell>
         </TableRow>
       );
-    }
-    return data;
-  }
-
-  const tokenStat = () => {
-
-    const data = [];
-    const tokenList = []
-    const pairs = Object.keys(stats.max);
-    let assets, token;
-
-    pairs.map(pair=> {
-      assets = pair.split("/");
-      if(tokenList.indexOf(assets[0]) === -1) { tokenList.push(assets[0]) }
-      if(tokenList.indexOf(assets[1]) === -1) { tokenList.push(assets[1]) }
-    });
-
-    for (const item of tokenList) {
-      tokens.map(x=>{
-        if(item.toLowerCase()  === x.title.toLowerCase()) {token = x;}
-      });
-      data.push(
-        <TableRow>
-          <TableCell> <img src={token.logo} alt="logo" className={classes.img} /> {token.banner} </TableCell>
-          <TableCell> {token.title} </TableCell>
-          <TableCell>
-            {/* get max swap limit of each token */}
-          </TableCell>
-          <TableCell>
-            {/* get total liquidity of each token */}
-          </TableCell>
-        </TableRow>
-      )
     }
     return data;
   }
@@ -135,27 +102,6 @@ const Stat = ({ swapPairs }) => {
               </TableBody>
             </Table>
           </TableContainer>
-          <div className={classes.tokenTable}>
-            {/* <Typography variant="h3"> Tokens </Typography>
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell> Name </TableCell>
-                    <TableCell> Symbol </TableCell>
-                    <TableCell>
-                      Max Swap Size
-                      <span><img className={classes.infoImg} src={infoIcon} alt="infoIcon"/></span>
-                    </TableCell>
-                    <TableCell> Total Liquidity </TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {tokenStat()}
-                </TableBody>
-              </Table>
-            </TableContainer> */}
-          </div>
         </Grid>
       )}
     </Grid>

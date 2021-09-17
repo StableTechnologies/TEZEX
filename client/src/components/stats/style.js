@@ -48,6 +48,7 @@ const useStyles = makeStyles((theme) => ({
   statsCon: {
     width: "723px",
     marginLeft: "1rem",
+    marginBottom: "5rem",
     '@media(max-width: 1024px)': {
       maxWidth: "723px",
     },
@@ -55,44 +56,43 @@ const useStyles = makeStyles((theme) => ({
       marginLeft: "3rem",
     },
   },
-  // stat: {
-  //   fontWeight: "bold",
-  //   fontSize: "1.2vw",
-  //   border: "0.3vw solid black",
-  //   padding: "2vw",
-  //   borderRadius: "1vw",
-  //   width: "fit-content",
-  //   margin: "4vw auto",
-  //   textAlign: "left",
-  // },
 
   imgArrow: {
-    width: "24px",
-    height: "24px",
+    width: "22px",
+    height: "22px",
     margin: "0 0rem -8px",
     '@media (max-width: 768px)': {
-      width: "24px",
-      height: "24px",
+      width: "22px",
+      height: "22px",
       marginBottom: "-6px",
     },
     '@media (max-width: 600px)': {
-      width: "20px",
-      height: "20px",
+      width: "14px",
+      height: "14px",
+      marginBottom: "-4px",
+    },
+    '@media (max-width: 321px)': {
+      width: "12px",
+      height: "12px",
     }
   },
   img: {
-    width: "24px",
-    height: "24px",
+    width: "22px",
+    height: "22px",
     margin: "0 0rem -6px",
-    fontSize: "1rem",
     '@media (max-width: 768px)': {
-      width: "24px",
-      height: "24px",
+      width: "22px",
+      height: "22px",
       marginBottom: "-6px",
     },
     '@media (max-width: 600px)': {
-      width: "20px",
-      height: "20px",
+      width: "14px",
+      height: "14px",
+      marginBottom: "-4px",
+    },
+    '@media (max-width: 321px)': {
+      width: "12px",
+      height: "12px",
     }
   },
   currencyPairTop: {
@@ -102,11 +102,13 @@ const useStyles = makeStyles((theme) => ({
     margin: ".8rem 0 0rem",
   },
 
-  tokenTable: {
-    margin: "5rem 0",
-  },
   infoImg: {
     margin: "0 3px -3px",
+    '@media (max-width: 600px)': {
+      width: "10px",
+      height: "10px",
+      marginBottom: "-3px",
+    }
   },
 }));
 
