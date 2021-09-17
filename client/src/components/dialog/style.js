@@ -10,6 +10,11 @@ const useStyles = makeStyles((theme) => ({
         backgroundColor: "transparent"
     },
     },
+    '& .MuiIconButton-root': {
+      '&:hover': {
+        background: 'transparent',
+      },
+    },
   },
 close: {
   position: 'absolute',

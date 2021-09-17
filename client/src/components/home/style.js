@@ -260,21 +260,15 @@ const useStyles = makeStyles((theme) => ({
   },
   loader: {
     width: "32px",
-    height: "32px",
   },
 
   warning: {
     textAlign: "center",
     marginBottom: "-.4rem",
     color: "#FF4E4E",
-    // height: "1.5rem",
-    // marginTop: "3vh",
     '@media (max-width: 600px)': {
       fontSize: "0.875rem"
     },
-    // '@media (max-width: 321px)': {
-    //   height: "3rem",
-    // },
   },
 
   warningImg: {

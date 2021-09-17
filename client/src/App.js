@@ -29,6 +29,8 @@ const App = () => {
   const [balance, balUpdate] = useState(undefined);
   const [, updateState] = React.useState();
 
+  const [pending, setPending] = useState(false);
+
 
   const classes = useStyles();
 
@@ -74,13 +76,12 @@ const App = () => {
   const setupEthAccount = async () => {
     try {
       const { clients } = await setupEthClient();
-      // let swap = await getOldSwaps(clients, swapPairs);
-      // if (Object.keys(swap).length > 0) updateSwaps(swap);
       setClients(prevState => ({ ...prevState, ...clients }));
+      setPending(false);
     }
     catch (err) {
-      alert("Error Connecting to EthWallet", err);
-
+      setPending(true);
+      console.log(err);
     }
   };
 
@@ -93,8 +94,6 @@ const App = () => {
   const setupXtzAccount = async () => {
     try {
       const { clients } = await setupTezClient();
-      // let swap = await getOldSwaps(clients, swapPairs);
-      // if (Object.keys(swap).length > 0) updateSwaps(swap);
       setClients(prevState => ({ ...prevState, ...clients }));
     } catch (e) {
       alert("Error Connecting to TezWallet", e);
@@ -190,6 +189,7 @@ const App = () => {
                 update={update}
                 setupEth={setupEthAccount}
                 setupTez={setupXtzAccount}
+                pending={pending}
                 genSwap={genSwap}
               />
             </Route>
