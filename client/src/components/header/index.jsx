@@ -128,10 +128,16 @@ const Header = ({ clients, swapPairs, balUpdate, setupEth, setupTez, disconnectT
                     </Grid>
                     <Grid container item alignContent = "center" justify = "center" xs={6} sm={5} md={6} lg={6} >
                         <Grid item md={2} lg={4}></Grid>
-                        <Grid container item alignContent = "center" justify = "center" xs={12} md={9} lg={7}>
-                            <button className={classes.button} onClick={() => history.push("/")} xs={4}>Home</button>
-                            <button className={classes.button} onClick={() => history.push("/about")} xs={4}>About</button>
-                            <button className={classes.button} onClick={() => history.push("/stats")} xs={4}> Stats </button>
+                        <Grid container item alignContent = "center" justify = "center" xs={12} md={9} lg={8}>
+                          <Grid item lg={3} className={classes.btn + " Element"}>
+                            <button className={classes.button} onClick={() => history.push("/")}>Home</button>
+                          </Grid>
+                          <Grid item lg={3} className={classes.btn + " Element"}>
+                            <button className={classes.button} onClick={() => history.push("/about")}>About</button>
+                          </Grid>
+                          <Grid item lg={3} className={classes.btn + " Element"}>
+                            <button className={classes.button} onClick={() => history.push("/stats")}> Stats </button>
+                          </Grid>
                         </Grid>
                     </Grid>
                     <Grid container item alignContent = "center" justify = "center" xs={12} sm={4} md={4} lg={4}>

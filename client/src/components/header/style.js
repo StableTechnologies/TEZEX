@@ -48,6 +48,14 @@ const useStyles = makeStyles((theme) => ({
     },
   },
 
+  btn: {
+    "&.Element": {
+    '@media (min-width: 1200px)': {
+      marginRight: "1.3rem",
+      marginLeft: "-2rem",
+    },
+    },
+  },
   nav: {
     width: "100%",
   },
