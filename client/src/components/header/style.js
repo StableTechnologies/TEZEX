@@ -60,13 +60,10 @@ const useStyles = makeStyles((theme) => ({
     marginLeft: ".3rem",
     border: "1px solid black",
     textTransform: "none",
-    // width: "max-content",
-    // height: "40px",
     fontSize: "16px",
     '@media (max-width: 768px)': {
       margin: ".2rem",
       height: "35px",
-
     },
     '@media (max-width: 600px)': {
       marginTop: ".5rem",
@@ -74,7 +71,18 @@ const useStyles = makeStyles((theme) => ({
       width: "150px",
       height: "30px",
     },
+    '@media (min-width: 1200px)': {
+      margin: "0 .9375rem",
+    }
   }
+  },
+  rightwalletbutton: {
+    "&.Element": {
+      '@media (min-width: 1200px)': {
+        marginRight: "0",
+        marginLeft: "1rem"
+      },
+    }
   },
   btnContent: {
     flexWrap: "nowrap"

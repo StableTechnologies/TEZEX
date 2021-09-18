@@ -126,15 +126,15 @@ const Header = ({ clients, swapPairs, balUpdate, setupEth, setupTez, disconnectT
                     <Grid data-aos="flip-left" container item xs={6} sm={3} md={2} alignContent = "center" justify = "center">
                         <img className={classes.logo} src={logo} alt="Logo" />
                     </Grid>
-                    <Grid container item alignContent = "center" justify = "center" xs={6} sm={5} md={6} lg={7} >
-                        <Grid item md={2}></Grid>
-                        <Grid container item alignContent = "center" justify = "center" xs={12} md={9} >
+                    <Grid container item alignContent = "center" justify = "center" xs={6} sm={5} md={6} lg={6} >
+                        <Grid item md={2} lg={4}></Grid>
+                        <Grid container item alignContent = "center" justify = "center" xs={12} md={9} lg={7}>
                             <button className={classes.button} onClick={() => history.push("/")} xs={4}>Home</button>
                             <button className={classes.button} onClick={() => history.push("/about")} xs={4}>About</button>
                             <button className={classes.button} onClick={() => history.push("/stats")} xs={4}> Stats </button>
                         </Grid>
                     </Grid>
-                    <Grid container item alignContent = "center" justify = "center" xs={12} sm={4} md={4} lg={3}>
+                    <Grid container item alignContent = "center" justify = "center" xs={12} sm={4} md={4} lg={4}>
 											{['right'].map((anchor) => (
 												<>
                         <Button key={anchor} variant="outlined" size="small" disableElevation
@@ -161,7 +161,7 @@ const Header = ({ clients, swapPairs, balUpdate, setupEth, setupTez, disconnectT
 												<>
 												<Button key={anchor} variant="outlined" size="small" disableElevation
 													onClick={!xtzAccount ? setupXtzAccount : toggleTezDrawer(anchor, true)}
-													className={`${classes.walletbutton + " Element"} ${ xtzAccount ? classes.tezButton + " Element" : '' }`}
+													className={`${classes.walletbutton + " Element"} ${ xtzAccount ? classes.tezButton + " Element" : '' } ${classes.rightwalletbutton + " Element"}`}
 												>
 													<Grid container item alignContent="center" justify="space-evenly" className={classes.btnContent}>
 														<img src={tzwalletlogo} />
