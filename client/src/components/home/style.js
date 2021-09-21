@@ -118,15 +118,6 @@ const useStyles = makeStyles((theme) => ({
     cursor: "pointer",
   },
 
-  sidelogocontainer: {
-    maxHeight: "100%",
-    '@media (max-width: 600px)': {
-      display: "none"
-    }
-  },
-  sidelogo: {
-    maxHeight: "85vh",
-  },
   logo: {
     marginRight: "8px",
     maxWidth: "24px",
