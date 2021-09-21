@@ -24,12 +24,12 @@ const useStyles = makeStyles((theme) => ({
         fontSize: '0.7rem',
       },
     },
+    '& .MuiCardContent-root': {
+      padding: '.8rem 1.9rem .5rem',
+      // textAlign: 'left'
+    },
   },
 
-  '& .MuiCardContent-root': {
-    padding: '24px 31px 31px 31px',
-    textAlign: 'left'
-  },
 
   '@media(max-width: 501px)': {
     con: {
@@ -95,6 +95,9 @@ const useStyles = makeStyles((theme) => ({
     textAlign: "left",
     marginBottom: "1vh",
     padding:  ".5rem 1rem",
+    '@media(min-width: 960px)': {
+      height: "60px",
+    }
   },
   balContainer: {
     display: "flex",
@@ -103,6 +106,7 @@ const useStyles = makeStyles((theme) => ({
   tokenDetails: {
     display: "flex",
     justifyContent: "space-between",
+    marginTop: ".5rem",
   },
   rightAlignText: {
     textAlign: "right",
@@ -157,6 +161,10 @@ const useStyles = makeStyles((theme) => ({
     "& h3": {
       fontSize: "2.1vw",
     },
+    '@media(min-width: 1280px)': {
+      width: "440px",
+      minWidth: "440px",
+    }
   },
 
   error: {
