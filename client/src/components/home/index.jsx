@@ -35,7 +35,7 @@ import { useHistory, useParams, useRouteMatch } from "react-router-dom";
 const config = require(`../../library/${process.env.REACT_APP_ENV || "prod"
   }-network-config.json`);
 
-const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }) => {
+const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap, pending }) => {
   const classes = useStyles();
   const globalContext = useContext(TezexContext);
   const history = useHistory();
@@ -304,16 +304,14 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
     if (side === 'err') { setErr(value); }
   };
 
+
   const setupEthAccount = async () => {
     try {
       setupEth();
     }
-    catch (error) {
-      return (
-        openErrModal()
-      )
-    }
+    catch (error) {}
   };
+
   const setupXtzAccount = async () => {
     try {
       setupTez();
@@ -466,6 +464,15 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
     setURL()
   }, [history])
 
+  useEffect(() => {
+    if(pending === false) {
+      setErrModalOpen(false);
+    }
+    if(pending === true) {
+      openErrModal();
+    }
+  }, [pending]);
+
   return (
     <Grid container justify="center" className={classes.root}>
       <Grid data-aos="zoom-in-up" item xs={12} justify="center" className={classes.swapcontainer}>
@@ -542,6 +549,7 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
                         side='input'
                         isSearch
                         lists={tokens}
+                        closeBtn
                       />
                     </div>
 
@@ -584,6 +592,7 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
                         side='output'
                         isSearch
                         lists={tokenPair}
+                        closeBtn
                       />
                     </div>
                     <Grid>
@@ -682,7 +691,7 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap }
                           message="Waiting for connection confirmation..."
                           loaderContainer={classes.loaderContainer}
                           loader={classes.loader}
-                          size={32}
+                          size={{width: '32'}}
                         />}
                       closeBtn
                     />
