@@ -25,7 +25,6 @@ import Typography from "@material-ui/core/Typography";
 import { getSwapStat } from "../newSwap/util";
 import { selectToken } from "../tokenPairs/index";
 
-import sidelogo from "../../assets/sidelogo.svg";
 import swapIcon from "../../assets/swapIcon.svg";
 import warning from "../../assets/warning.svg";
 import exclamationError from "../../assets/exclamationError.svg";
@@ -476,11 +475,7 @@ const Home = ({ swaps, clients, swapPairs, update, setupEth, setupTez, genSwap, 
 
   return (
     <Grid container justify="center" className={classes.root}>
-      <Grid item className={classes.sidelogocontainer} xs={1}>
-        {" "}
-        <img className={classes.sidelogo} src={sidelogo} />
-      </Grid>
-      <Grid data-aos="zoom-in-up" item xs={11} justify="center" className={classes.swapcontainer}>
+      <Grid data-aos="zoom-in-up" item xs={12} justify="center" className={classes.swapcontainer}>
         <Grid container justify="space-evenly" className={classes.con}>
           <Grid item xs={0} md={2} lg={2}></Grid>
           <Grid item xs={12} sm={7} md={5} lg={4}>

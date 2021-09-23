@@ -11,6 +11,7 @@ import { BigNumber } from "bignumber.js";
 import CreateSwap from "./components/newSwap";
 import Footer from "./components/footer";
 import Header from "./components/header";
+import SideLogo from "./components/sideLogo";
 import Home from "./components/home";
 import Loader from "./components/loader";
 import Notice from "./components/notice";
@@ -21,6 +22,7 @@ import { getCounterPair } from "./library/util";
 import requestPureSwap from "./library/request-pure-swap";
 import requestSwap from "./library/request-swap";
 import useStyles from "./style";
+import { Grid } from "@material-ui/core";
 
 const App = () => {
   const [clients, setClients] = useState({ ethereum: null, tezos: null, pureTezos: null });
@@ -173,27 +175,29 @@ const App = () => {
             setupTez={setupXtzAccount}
             disconnectTez={disconnectTezos}
           />
-          <Switch>
-            <Route exact path="/about">
-              <About />
-            </Route>
-            <Route exact path="/stats">
-              <Stat swapPairs={swapPairsRef.current} />
-            </Route>
-            <Route exact path= {["/", "/:param"]}>
-              <Home
-                swaps={swaps}
-                updateSwaps={updateSwaps}
-                clients={clientRef.current}
-                swapPairs={swapPairsRef.current}
-                update={update}
-                setupEth={setupEthAccount}
-                setupTez={setupXtzAccount}
-                pending={pending}
-                genSwap={genSwap}
-              />
-            </Route>
-          </Switch>
+          <div className="mainCon">
+            <SideLogo />
+            <Switch>
+              <Route exact path="/about">
+                <About />
+              </Route>
+              <Route exact path="/stats">
+                <Stat swapPairs={swapPairsRef.current} />
+              </Route>
+              <Route exact path= {["/", "/:param"]}>
+                <Home
+                  swaps={swaps}
+                  updateSwaps={updateSwaps}
+                  clients={clientRef.current}
+                  swapPairs={swapPairsRef.current}
+                  update={update}
+                  setupEth={setupEthAccount}
+                  setupTez={setupXtzAccount}
+                  genSwap={genSwap}
+                  />
+              </Route>
+            </Switch>
+          </div>
           <Footer />
           {/* )} */}
         </div>
