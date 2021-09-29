@@ -1,4 +1,4 @@
-import btctzLogo from "../../assets/btctzLogo.png";
+import wbtcLogo from "../../assets/wbtcLogo.svg";
 import ethlogo from "../../assets/ethlogo.svg";
 import ethtzLogo from "../../assets/ethtzLogo.png";
 import metamaskLogo from "../../assets/metamaskLogo.svg";
@@ -6,7 +6,7 @@ import tzlogo from "../../assets/tzlogo.svg"
 import usdcLogo from "../../assets/usdcLogo.svg";
 import usdtzLogo from "../../assets/usdtzLogo.png";
 import walletconnectLogo from "../../assets/walletconnectLogo.svg";
-import wbtcLogo from "../../assets/wbtcLogo.svg";
+import tzbtcLogo from "../../assets/tzbtcLogo.svg";
 
 export const content = {
   connectWallet: "If you would like create a cross-chain swap, you will need to connect to both your Ethereum and Tezos wallets.",
@@ -20,8 +20,8 @@ export const tokens = [
   { title: 'ETHtz', logo: ethtzLogo, banner: 'ETH Tez', pairs: ['USDtz', 'ETH', 'XTZ'] },
   { title: 'ETH', logo: ethlogo, banner: 'Ether', pairs: ['ETHtz'] },
   { title: 'XTZ', logo: tzlogo, banner: 'Tez', pairs: ['USDtz', 'ETHtz'] },
-  { title: 'WBTC', logo: btctzLogo, banner: 'WBTC', pairs: ['tzBTC'] },
-  { title: 'tzBTC', logo: wbtcLogo, banner: 'tzBTC', pairs: ['WBTC'] },
+  { title: 'WBTC', logo: wbtcLogo, banner: 'WBTC', pairs: ['tzBTC'] },
+  { title: 'tzBTC', logo: tzbtcLogo, banner: 'tzBTC', pairs: ['WBTC'] },
 ];
 export const tokenWallets = [
   { title: 'Metamask', logo: metamaskLogo, },
