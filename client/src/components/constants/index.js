@@ -1,7 +1,7 @@
-import btctzLogo from "../../assets/btctzLogo.png";
 import ethlogo from "../../assets/ethlogo.svg";
 import ethtzLogo from "../../assets/ethtzLogo.png";
 import metamaskLogo from "../../assets/metamaskLogo.svg";
+import tzbtcLogo from "../../assets/tzbtcLogo.svg";
 import tzlogo from "../../assets/tzlogo.svg"
 import usdcLogo from "../../assets/usdcLogo.svg";
 import usdtzLogo from "../../assets/usdtzLogo.png";
@@ -20,8 +20,8 @@ export const tokens = [
   { title: 'ETHtz', logo: ethtzLogo, banner: 'ETH Tez', pairs: ['USDtz', 'ETH', 'XTZ'] },
   { title: 'ETH', logo: ethlogo, banner: 'Ether', pairs: ['ETHtz'] },
   { title: 'XTZ', logo: tzlogo, banner: 'Tez', pairs: ['USDtz', 'ETHtz'] },
-  { title: 'WBTC', logo: btctzLogo, banner: 'WBTC', pairs: ['tzBTC', 'BTCtz'] },
-  { title: 'tzBTC', logo: wbtcLogo, banner: 'tzBTC', pairs: ['WBTC'] },
+  { title: 'WBTC', logo: wbtcLogo, banner: 'WBTC', pairs: ['tzBTC', 'BTCtz'] },
+  { title: 'tzBTC', logo: tzbtcLogo, banner: 'tzBTC', pairs: ['WBTC'] },
   { title: 'BTCtz', logo: tzlogo, banner: 'BTCtz', pairs: ['WBTC'] },
 ];
 export const tokenWallets = [
