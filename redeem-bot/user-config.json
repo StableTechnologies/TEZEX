@@ -1,8 +1,0 @@
-{
-  "tezos": {
-    "walletPK": "your-tezos-private-key"
-  },
-  "ethereum": {
-    "walletPK": "your-ethereum-private-key"
-  }
-}

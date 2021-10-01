@@ -35,6 +35,10 @@ export const calcSwapReturn = (swapValue, rewardInBIPS) => {
  * feePad : padding to be added to the network fees for each swap pair and asset [Y*txFee]
  */
 export const constants = {
+  tokenTypes: {
+    FA2: "fa2",
+    FA12: "FA12",
+  },
   decimals10_6: 1000000,
   feePad: {
     "usdc/usdtz": {
@@ -48,6 +52,10 @@ export const constants = {
     "wbtc/tzbtc": {
       wbtc: new BigNumber(2),
       tzbtc: new BigNumber(2),
+    },
+    "wbtc/btctz": {
+      wbtc: new BigNumber(2),
+      btctz: new BigNumber(2),
     },
   },
 };
