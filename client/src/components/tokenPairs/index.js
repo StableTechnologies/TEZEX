@@ -14,8 +14,10 @@ export const getPairings = (tokens) => {
       case "XTZ":
         return { token: token.title, pairs: [tokens[0], tokens[2]] }
       case "WBTC":
-        return { token: token.title, pairs: [tokens[6]] }
+        return { token: token.title, pairs: [tokens[6], tokens[7]] }
       case "tzBTC":
+        return { token: token.title, pairs: [tokens[5]] }
+      case "BTCtz":
         return { token: token.title, pairs: [tokens[5]] }
       default:
         return tokens;

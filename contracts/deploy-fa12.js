@@ -24,7 +24,7 @@ const init = async () => {
 };
 
 const deployTokenContract = async (store) => {
-  console.log("deploying a tzip7 token contract");
+  console.log("deploying a tzip12 token contract");
   const groupid = await conseiljs.Tzip7ReferenceTokenHelper.deployContract(
     config.tezos.RPC,
     store.signer,

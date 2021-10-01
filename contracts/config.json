@@ -1,21 +1,22 @@
 {
   "tezos": {
     "privateKey": "",
-    "RPC": "https://tezos-granada.cryptonomic-infra.tech:443",
-    "chain_id": "NetXz969SFaFn8k",
+    "RPC": "https://tezos-prod.cryptonomic-infra.tech:443",
+    "chain_id": "NetXdQprcVkpaWU",
     "conseilServer": {
-      "url": "https://conseil-granada.cryptonomic-infra.tech:443",
-      "apiKey": "4bb2f288-c36a-49ea-a50e-e7cbdc495e0e",
-      "network": "granadanet"
+      "url": "https://conseil-prod.cryptonomic-infra.tech:443",
+      "apiKey": "4660121e-1bab-4740-8d57-083681e3441d",
+      "network": "mainnet"
     },
     "tokenContract": {
-      "address": "KT1A291gYSPsJzYL77xwzBXhYMS9eebDyznU"
+      "address": "KT1Mg7Jaxz9n6YM9XjbDLhAjbuWa9bzhAAy9",
+      "tokenID": 0
     }
   },
   "ethereum": {
     "privateKey": "",
-    "RPC": "https://goerli.infura.io/v3/3f764c2122644024825ab09e9e4d39d2",
-    "chain": "goerli",
-    "tokenAddr": "0xCe8D4A6DE326C4A8b021dA892408f30238689377"
+    "RPC": "https://0a5b8853bfdc41fd954aea3d0ba6b327.eth.rpc.rivet.cloud/",
+    "chain": "mainnet",
+    "tokenAddr": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599"
   }
 }

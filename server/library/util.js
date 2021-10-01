@@ -6,6 +6,8 @@ const configTezos = require(`./${process.env.SERVER_ENV || "prod"
   }-network-config-tezos.json`);
 const { BigNumber } = require("bignumber.js");
 
+const FA2="fa2",FA12="fa12";
+
 module.exports.init = async () => {
   const clients = {
     ethereum: Ethereum.newClient(),
@@ -92,7 +94,17 @@ module.exports.getAllowances = async (
       Object.prototype.hasOwnProperty.call(volume[pair], assets[1])
     ) {
       for (const asset of assets) {
-        if (asset !== "eth" && asset !== "xtz") {
+        if(swapPairs[pair][asset].network==="tezos" && swapPairs[pair][asset].tokenContract.type===FA2){
+          const vol = new BigNumber(
+            new BigNumber(volume[pair][asset]).toFixed(0, 3)
+          );
+          if (!vol.isNaN() && vol.isPositive())
+            ops.push(
+                vol.toString()
+            );
+          else ops.push("0");
+        }
+        else if (asset !== "eth" && asset !== "xtz") {
           ops.push(
             clients[swapPairs[pair][asset].network].tokenAllowance(
               swapPairs[pair][asset].tokenContract,
