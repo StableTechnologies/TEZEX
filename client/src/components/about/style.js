@@ -9,56 +9,50 @@ const useStyles = makeStyles((theme) => ({
       padding: '.5rem 0',
       fontSize: "1rem",
       lineHeight: "1.1875rem"
-    }
-  //   '& .MuiList-root, MuiListItem-gutters': {
-  //     padding: '.5rem 0',
-  //   },
-  //   '& .MuiListItem-gutters': {
-  //     padding: '.5rem 0',
-  //   },
-  //   "& .MuiTypography-h1": {
-  //     fontSize: "2.5rem",
-  //     fontWeight: "700",
-  //     lineHeight: "4.2rem",
-  //     letterSpacing: "0.1rem",
-  //     margin: "1rem",
-  //     textAlign: "center",
-  //   },
-  //   '& .MuiTypography-h4': {
-  //     fontSize: '2rem',
-  //     fontWeight: '500',
-  //   },
-  //   '& .MuiTypography-body1': {
-  //     padding: '.5rem 0',
-  //     lineHeight: "1.1rem",
-  //   },
-  // '@media (max-width: 501px)': {
-  //   '& .MuiTypography-h1': {
-  //     fontSize: '2rem',
-  //   },
-  //   '& .MuiTypography-h4': {
-  //     fontSize: '1.2rem',
-  //     fontWeight: '600',
-  //   },
-  // }
+    },
+    '& .MuiIconButton-root': {
+      '&:hover': {
+        background: 'transparent',
+      },
+    },
+    '& .MuiLink-root': {
+      color: '#000',
+      '&:hover': {
+        textDecoration: 'none',
+        cursor: 'pointer'
+      },
+    },
+
   },
   container: {
     textAlign: "justify",
     padding: "1rem",
   },
-  // txtCon: {
-  //   padding: ".5rem"
-  // },
-  // '@media (max-width: 769px)': {
-  //   container: {
-  //     width: "80%",
-  //   }
-  // },
-  // '@media (max-width: 501px)': {
-  //   container: {
-  //     width: "85%",
-  //   }
-  // },
+  subTitle: {
+    fontSize: "1.5rem !important",
+    fontWeight: "500 !important",
+  },
+  iconCon: {
+    textAlign: "center",
+  },
+  icon: {
+    width: "1.5rem",
+    height: "1.5rem",
+    '@media(min-width: 768px)': {
+      width: "2rem",
+      height: "2rem",
+    }
+  },
+  tezexFlow: {
+    width: "100%",
+    marginTop: '1rem',
+    boxShadow: '1px 1px 5px 2px #eee'
+  },
+  outlinedLink: {
+    textDecoration: "underline !important",
+    color: 'blue !important',
+  },
+
 }));
 
 export default useStyles;
