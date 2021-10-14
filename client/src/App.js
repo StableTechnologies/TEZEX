@@ -11,6 +11,7 @@ import { BigNumber } from "bignumber.js";
 import CreateSwap from "./components/newSwap";
 import Footer from "./components/footer";
 import Header from "./components/header";
+import SideLogo from "./components/sideLogo";
 import Home from "./components/home";
 import Loader from "./components/loader";
 import Notice from "./components/notice";
@@ -21,6 +22,7 @@ import { getCounterPair } from "./library/util";
 import requestPureSwap from "./library/request-pure-swap";
 import requestSwap from "./library/request-swap";
 import useStyles from "./style";
+import { Grid } from "@material-ui/core";
 
 const App = () => {
   const [clients, setClients] = useState({ ethereum: null, tezos: null, pureTezos: null });
@@ -28,6 +30,8 @@ const App = () => {
   const [swaps, updateSwaps] = useState(undefined);
   const [balance, balUpdate] = useState(undefined);
   const [, updateState] = React.useState();
+
+  const [pending, setPending] = useState(false);
 
 
   const classes = useStyles();
@@ -74,13 +78,12 @@ const App = () => {
   const setupEthAccount = async () => {
     try {
       const { clients } = await setupEthClient();
-      // let swap = await getOldSwaps(clients, swapPairs);
-      // if (Object.keys(swap).length > 0) updateSwaps(swap);
       setClients(prevState => ({ ...prevState, ...clients }));
+      setPending(false);
     }
     catch (err) {
-      alert("Error Connecting to EthWallet", err);
-
+      setPending(true);
+      console.log(err);
     }
   };
 
@@ -93,8 +96,6 @@ const App = () => {
   const setupXtzAccount = async () => {
     try {
       const { clients } = await setupTezClient();
-      // let swap = await getOldSwaps(clients, swapPairs);
-      // if (Object.keys(swap).length > 0) updateSwaps(swap);
       setClients(prevState => ({ ...prevState, ...clients }));
     } catch (e) {
       alert("Error Connecting to TezWallet", e);
@@ -174,26 +175,29 @@ const App = () => {
             setupTez={setupXtzAccount}
             disconnectTez={disconnectTezos}
           />
-          <Switch>
-            <Route exact path="/about">
-              <About />
-            </Route>
-            <Route exact path="/stats">
-              <Stat swapPairs={swapPairsRef.current} />
-            </Route>
-            <Route exact path= {["/", "/:param"]}>
-              <Home
-                swaps={swaps}
-                updateSwaps={updateSwaps}
-                clients={clientRef.current}
-                swapPairs={swapPairsRef.current}
-                update={update}
-                setupEth={setupEthAccount}
-                setupTez={setupXtzAccount}
-                genSwap={genSwap}
-              />
-            </Route>
-          </Switch>
+          <div className="mainCon">
+            <SideLogo />
+            <Switch>
+              <Route exact path="/about">
+                <About />
+              </Route>
+              <Route exact path="/stats">
+                <Stat swapPairs={swapPairsRef.current} />
+              </Route>
+              <Route exact path= {["/", "/:param"]}>
+                <Home
+                  swaps={swaps}
+                  updateSwaps={updateSwaps}
+                  clients={clientRef.current}
+                  swapPairs={swapPairsRef.current}
+                  update={update}
+                  setupEth={setupEthAccount}
+                  setupTez={setupXtzAccount}
+                  genSwap={genSwap}
+                  />
+              </Route>
+            </Switch>
+          </div>
           <Footer />
           {/* )} */}
         </div>

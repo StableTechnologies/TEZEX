@@ -146,6 +146,16 @@ const getConverter = async (clients, pair) => {
             .multipliedBy(10 ** 8)
             .toFixed(0, 2)
         ),
+      btctz: ({ eth, xtz }) =>
+        new BigNumber(
+          eth
+            .div(10 ** 18)
+            .multipliedBy(new BigNumber(eth_usd))
+            .plus(xtz.div(10 ** 6).multipliedBy(new BigNumber(xtz_usd)))
+            .div(new BigNumber(btc_usd))
+            .multipliedBy(10 ** 8)
+            .toFixed(0, 2)
+        ),
       usdc: ({ eth, xtz }) =>
         new BigNumber(
           eth
@@ -199,6 +209,10 @@ const getConverter = async (clients, pair) => {
       "wbtc/tzbtc": {
         wbtc: (amt) => amt,
         tzbtc: (amt) => amt,
+      },
+      "wbtc/btctz": {
+        wbtc: (amt) => amt,
+        btctz: (amt) => amt,
       },
       "xtz/usdtz": {
         xtz: (amt) =>

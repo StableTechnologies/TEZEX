@@ -36,6 +36,7 @@
         "symbol": "USDtz",
         "network": "tezos",
         "tokenContract": {
+          "type": "fa12",
           "address": "KT1DT5opZQWdkWqBMRQJQmuZiJ8fMS29nQLk",
           "mapID": 50363
         },
@@ -902,6 +903,7 @@
         "symbol": "ETHtz",
         "network": "tezos",
         "tokenContract": {
+          "type": "fa12",
           "address": "KT1PVkkLsQXzMd5xA4pBZo2q6N7Y2h9DAM5b",
           "mapID": 50364
         },
@@ -919,6 +921,7 @@
         "symbol": "tzBTC",
         "network": "tezos",
         "tokenContract": {
+          "type": "fa12",
           "address": "KT1A291gYSPsJzYL77xwzBXhYMS9eebDyznU",
           "mapID": 50365
         },
@@ -1500,12 +1503,603 @@
         "minTradeVolume": 0.001
       }
     },
+    "wbtc/btctz": {
+      "btctz": {
+        "decimals": 8,
+        "symbol": "BTCtz",
+        "network": "tezos",
+        "tokenContract": {
+          "type": "fa2",
+          "address": "KT1BUQZYcqx8Qxt2WZaBj677Ga8upAPzAuY5",
+          "mapID": 66568,
+          "allowanceMapID": 66570,
+          "tokenID": 0
+        },
+        "swapContract": {
+          "address": "KT1H976jH7hY189HXSf3pSKo9GCpKWRgvNkK",
+          "mapID": 66572
+        },
+        "feePad": 1.5,
+        "minTradeVolume": 0.001
+      },
+      "wbtc": {
+        "decimals": 8,
+        "symbol": "WBTC",
+        "network": "ethereum",
+        "swapContract": {
+          "address": "0xf9D6C10f2AA7C367cF0187a48304A5F8aB17f44C",
+          "abi": [
+            {
+              "inputs": [
+                {
+                  "internalType": "address",
+                  "name": "_erc20",
+                  "type": "address"
+                }
+              ],
+              "stateMutability": "nonpayable",
+              "type": "constructor"
+            },
+            {
+              "anonymous": false,
+              "inputs": [
+                {
+                  "indexed": true,
+                  "internalType": "bytes32",
+                  "name": "_hashedSecret",
+                  "type": "bytes32"
+                },
+                {
+                  "indexed": false,
+                  "internalType": "bytes32",
+                  "name": "_secret",
+                  "type": "bytes32"
+                }
+              ],
+              "name": "Redeemed",
+              "type": "event"
+            },
+            {
+              "inputs": [],
+              "name": "active",
+              "outputs": [
+                {
+                  "internalType": "bool",
+                  "name": "",
+                  "type": "bool"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
+            },
+            {
+              "inputs": [],
+              "name": "count",
+              "outputs": [
+                {
+                  "internalType": "uint256",
+                  "name": "",
+                  "type": "uint256"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
+            },
+            {
+              "inputs": [],
+              "name": "head",
+              "outputs": [
+                {
+                  "internalType": "bytes32",
+                  "name": "",
+                  "type": "bytes32"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "bytes32",
+                  "name": "",
+                  "type": "bytes32"
+                }
+              ],
+              "name": "swaps",
+              "outputs": [
+                {
+                  "internalType": "bytes32",
+                  "name": "prevHash",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "bytes32",
+                  "name": "nextHash",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "bytes32",
+                  "name": "hashedSecret",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "address payable",
+                  "name": "initiator",
+                  "type": "address"
+                },
+                {
+                  "internalType": "address payable",
+                  "name": "participant",
+                  "type": "address"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "refundTimestamp",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "value",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "enum TokenSwap.State",
+                  "name": "state",
+                  "type": "uint8"
+                },
+                {
+                  "internalType": "string",
+                  "name": "initiator_tez_addr",
+                  "type": "string"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "bool",
+                  "name": "_active",
+                  "type": "bool"
+                }
+              ],
+              "name": "toggleContractState",
+              "outputs": [],
+              "stateMutability": "nonpayable",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "bytes32",
+                  "name": "_hashedSecret",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "string",
+                  "name": "_initiator_tez_addr",
+                  "type": "string"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "_amount",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "_refundTimestamp",
+                  "type": "uint256"
+                }
+              ],
+              "name": "initiateWait",
+              "outputs": [],
+              "stateMutability": "nonpayable",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "bytes32",
+                  "name": "_hashedSecret",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "address payable",
+                  "name": "_participant",
+                  "type": "address"
+                }
+              ],
+              "name": "addCounterParty",
+              "outputs": [],
+              "stateMutability": "nonpayable",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "bytes32",
+                  "name": "_hashedSecret",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "bytes32",
+                  "name": "_secret",
+                  "type": "bytes32"
+                }
+              ],
+              "name": "redeem",
+              "outputs": [],
+              "stateMutability": "nonpayable",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "bytes32",
+                  "name": "_hashedSecret",
+                  "type": "bytes32"
+                }
+              ],
+              "name": "refund",
+              "outputs": [],
+              "stateMutability": "nonpayable",
+              "type": "function"
+            },
+            {
+              "inputs": [],
+              "name": "getAllSwaps",
+              "outputs": [
+                {
+                  "components": [
+                    {
+                      "internalType": "bytes32",
+                      "name": "prevHash",
+                      "type": "bytes32"
+                    },
+                    {
+                      "internalType": "bytes32",
+                      "name": "nextHash",
+                      "type": "bytes32"
+                    },
+                    {
+                      "internalType": "bytes32",
+                      "name": "hashedSecret",
+                      "type": "bytes32"
+                    },
+                    {
+                      "internalType": "address payable",
+                      "name": "initiator",
+                      "type": "address"
+                    },
+                    {
+                      "internalType": "address payable",
+                      "name": "participant",
+                      "type": "address"
+                    },
+                    {
+                      "internalType": "uint256",
+                      "name": "refundTimestamp",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "uint256",
+                      "name": "value",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "enum TokenSwap.State",
+                      "name": "state",
+                      "type": "uint8"
+                    },
+                    {
+                      "internalType": "string",
+                      "name": "initiator_tez_addr",
+                      "type": "string"
+                    }
+                  ],
+                  "internalType": "struct TokenSwap.Swap[]",
+                  "name": "",
+                  "type": "tuple[]"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
+            }
+          ]
+        },
+        "tokenContract": {
+          "address": "0x7805112d2752C50F3A87fF53d49ba45775549C12",
+          "abi": [
+            {
+              "inputs": [],
+              "stateMutability": "nonpayable",
+              "type": "constructor"
+            },
+            {
+              "anonymous": false,
+              "inputs": [
+                {
+                  "indexed": true,
+                  "internalType": "address",
+                  "name": "owner",
+                  "type": "address"
+                },
+                {
+                  "indexed": true,
+                  "internalType": "address",
+                  "name": "spender",
+                  "type": "address"
+                },
+                {
+                  "indexed": false,
+                  "internalType": "uint256",
+                  "name": "value",
+                  "type": "uint256"
+                }
+              ],
+              "name": "Approval",
+              "type": "event"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "address",
+                  "name": "spender",
+                  "type": "address"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "amount",
+                  "type": "uint256"
+                }
+              ],
+              "name": "approve",
+              "outputs": [
+                {
+                  "internalType": "bool",
+                  "name": "",
+                  "type": "bool"
+                }
+              ],
+              "stateMutability": "nonpayable",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "address",
+                  "name": "spender",
+                  "type": "address"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "subtractedValue",
+                  "type": "uint256"
+                }
+              ],
+              "name": "decreaseAllowance",
+              "outputs": [
+                {
+                  "internalType": "bool",
+                  "name": "",
+                  "type": "bool"
+                }
+              ],
+              "stateMutability": "nonpayable",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "address",
+                  "name": "spender",
+                  "type": "address"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "addedValue",
+                  "type": "uint256"
+                }
+              ],
+              "name": "increaseAllowance",
+              "outputs": [
+                {
+                  "internalType": "bool",
+                  "name": "",
+                  "type": "bool"
+                }
+              ],
+              "stateMutability": "nonpayable",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "address",
+                  "name": "recipient",
+                  "type": "address"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "amount",
+                  "type": "uint256"
+                }
+              ],
+              "name": "transfer",
+              "outputs": [
+                {
+                  "internalType": "bool",
+                  "name": "",
+                  "type": "bool"
+                }
+              ],
+              "stateMutability": "nonpayable",
+              "type": "function"
+            },
+            {
+              "anonymous": false,
+              "inputs": [
+                {
+                  "indexed": true,
+                  "internalType": "address",
+                  "name": "from",
+                  "type": "address"
+                },
+                {
+                  "indexed": true,
+                  "internalType": "address",
+                  "name": "to",
+                  "type": "address"
+                },
+                {
+                  "indexed": false,
+                  "internalType": "uint256",
+                  "name": "value",
+                  "type": "uint256"
+                }
+              ],
+              "name": "Transfer",
+              "type": "event"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "address",
+                  "name": "sender",
+                  "type": "address"
+                },
+                {
+                  "internalType": "address",
+                  "name": "recipient",
+                  "type": "address"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "amount",
+                  "type": "uint256"
+                }
+              ],
+              "name": "transferFrom",
+              "outputs": [
+                {
+                  "internalType": "bool",
+                  "name": "",
+                  "type": "bool"
+                }
+              ],
+              "stateMutability": "nonpayable",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "address",
+                  "name": "owner",
+                  "type": "address"
+                },
+                {
+                  "internalType": "address",
+                  "name": "spender",
+                  "type": "address"
+                }
+              ],
+              "name": "allowance",
+              "outputs": [
+                {
+                  "internalType": "uint256",
+                  "name": "",
+                  "type": "uint256"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
+            },
+            {
+              "inputs": [
+                {
+                  "internalType": "address",
+                  "name": "account",
+                  "type": "address"
+                }
+              ],
+              "name": "balanceOf",
+              "outputs": [
+                {
+                  "internalType": "uint256",
+                  "name": "",
+                  "type": "uint256"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
+            },
+            {
+              "inputs": [],
+              "name": "decimals",
+              "outputs": [
+                {
+                  "internalType": "uint8",
+                  "name": "",
+                  "type": "uint8"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
+            },
+            {
+              "inputs": [],
+              "name": "name",
+              "outputs": [
+                {
+                  "internalType": "string",
+                  "name": "",
+                  "type": "string"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
+            },
+            {
+              "inputs": [],
+              "name": "symbol",
+              "outputs": [
+                {
+                  "internalType": "string",
+                  "name": "",
+                  "type": "string"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
+            },
+            {
+              "inputs": [],
+              "name": "totalSupply",
+              "outputs": [
+                {
+                  "internalType": "uint256",
+                  "name": "",
+                  "type": "uint256"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
+            }
+          ]
+        },
+        "feePad": 1.7,
+        "minTradeVolume": 0.001
+      }
+    },
     "ethtz/usdtz": {
       "usdtz": {
         "decimals": 6,
         "symbol": "USDtz",
         "network": "pureTezos",
         "tokenContract": {
+          "type": "fa12",
           "address": "KT1DT5opZQWdkWqBMRQJQmuZiJ8fMS29nQLk",
           "mapID": 50363
         },
@@ -1521,6 +2115,7 @@
         "symbol": "ETHtz",
         "network": "pureTezos",
         "tokenContract": {
+          "type": "fa12",
           "address": "KT1PVkkLsQXzMd5xA4pBZo2q6N7Y2h9DAM5b",
           "mapID": 50364
         },
@@ -1549,6 +2144,7 @@
         "symbol": "USDtz",
         "network": "pureTezos",
         "tokenContract": {
+          "type": "fa12",
           "address": "KT1DT5opZQWdkWqBMRQJQmuZiJ8fMS29nQLk",
           "mapID": 50363
         },
@@ -1566,6 +2162,7 @@
         "symbol": "ETHtz",
         "network": "pureTezos",
         "tokenContract": {
+          "type": "fa12",
           "address": "KT1PVkkLsQXzMd5xA4pBZo2q6N7Y2h9DAM5b",
           "mapID": 50364
         },
