@@ -2,57 +2,58 @@ import { makeStyles } from "@material-ui/core/styles";
 
 const useStyles = makeStyles((theme) => ({
   root: {
-    '& .MuiList-root, MuiListItem-gutters': {
+    '& .MuiGrid-item': {
+      padding: '1rem 0',
+    },
+    "& .MuiTypography-root": {
       padding: '.5rem 0',
+      fontSize: "1rem",
+      lineHeight: "1.1875rem"
     },
-    '& .MuiListItem-gutters': {
-      padding: '.5rem 0',
+    '& .MuiIconButton-root': {
+      '&:hover': {
+        background: 'transparent',
+      },
     },
-    "& .MuiTypography-h1": {
-      fontSize: "2.5rem",
-      fontWeight: "700",
-      lineHeight: "4.2rem",
-      letterSpacing: "0.1rem",
-      margin: "1rem",
-      textAlign: "center",
+    '& .MuiLink-root': {
+      color: '#000',
+      '&:hover': {
+        textDecoration: 'none',
+        cursor: 'pointer',
+        opacity: '.8',
+      },
     },
-    '& .MuiTypography-h4': {
-      fontSize: '2rem',
-      fontWeight: '500',
-    },
-    '& .MuiTypography-body1': {
-      padding: '.5rem 0',
-      lineHeight: "1.1rem",
-    },
-  '@media (max-width: 501px)': {
-    '& .MuiTypography-h1': {
-      fontSize: '2rem',
-    },
-    '& .MuiTypography-h4': {
-      fontSize: '1.2rem',
-      fontWeight: '600',
-    },
-  }
+
   },
   container: {
-    width: "70%",
+    textAlign: "justify",
     padding: "1rem",
-    margin: "1rem 1rem 5rem",
-    textAlign: "justify"
   },
-  txtCon: {
-    padding: ".5rem"
+  subTitle: {
+    fontSize: "1.5rem !important",
+    fontWeight: "500 !important",
   },
-  '@media (max-width: 769px)': {
-    container: {
-      width: "80%",
-    }
+  iconCon: {
+    textAlign: "center",
   },
-  '@media (max-width: 501px)': {
-    container: {
-      width: "85%",
-    }
+  icon: {
+    width: "1.5rem",
+    height: "1.5rem",
   },
+  telegramLogo: {
+    background: "#2AABEE",
+    borderRadius: '50%',
+  },
+  tezexFlow: {
+    width: "100%",
+    marginTop: '1rem',
+    boxShadow: '1px 1px 5px 2px #eee'
+  },
+  outlinedLink: {
+    textDecoration: "underline !important",
+    color: 'blue !important',
+  },
+
 }));
 
 export default useStyles;

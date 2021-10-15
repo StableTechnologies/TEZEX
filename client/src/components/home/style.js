@@ -34,6 +34,7 @@ const useStyles = makeStyles((theme) => ({
   '@media(max-width: 501px)': {
     con: {
       flexDirection: "column-reverse",
+      padding: '0 .5rem'
     }
   },
   card: {
