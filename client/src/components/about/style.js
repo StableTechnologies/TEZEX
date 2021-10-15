@@ -19,7 +19,8 @@ const useStyles = makeStyles((theme) => ({
       color: '#000',
       '&:hover': {
         textDecoration: 'none',
-        cursor: 'pointer'
+        cursor: 'pointer',
+        opacity: '.8',
       },
     },
 
@@ -38,10 +39,10 @@ const useStyles = makeStyles((theme) => ({
   icon: {
     width: "1.5rem",
     height: "1.5rem",
-    '@media(min-width: 768px)': {
-      width: "2rem",
-      height: "2rem",
-    }
+  },
+  telegramLogo: {
+    background: "#2AABEE",
+    borderRadius: '50%',
   },
   tezexFlow: {
     width: "100%",

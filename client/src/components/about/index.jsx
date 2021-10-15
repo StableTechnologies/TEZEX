@@ -1,16 +1,14 @@
 import React from "react";
 import useStyles from "./style";
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
 import Grid from "@material-ui/core/Grid";
 import IconButton from '@material-ui/core/IconButton';
 import Link from '@material-ui/core/Link';
 
-import sidelogo from "../../assets/sidelogo.svg";
 import tezexFlow from "../../assets/tezexFlow.svg";
 import twitter from "../../assets/twitter.svg";
 import telegram from "../../assets/telegram.svg";
 import discord from "../../assets/discord.svg";
+import AuditReport from "../../assets/AuditReport.pdf";
 
 import { Typography } from "@material-ui/core";
 
@@ -44,7 +42,7 @@ const About = () => {
           <Link href="https://telegram.com/tezexofficial" target="_blank" rel="noopener">
             Telegram
             <IconButton disableRipple>
-            <img src={telegram} alt="telegram-icon" className={classes.icon}/>
+            <img src={telegram} alt="telegram-icon" className={`${classes.icon} ${classes.telegramLogo}`}/>
             </IconButton>
           </Link>
         </Grid>
@@ -123,7 +121,7 @@ const About = () => {
       <Grid item xs={12} sm={9} text-align="left">
         <Typography className={classes.subTitle}> Audits </Typography>
         <Typography> TEZEX has been audited by Apriorit. View the report
-          <Link href="#" target="_blank" rel="noopener" className={classes.outlinedLink}> here.</Link>
+          <Link href={AuditReport} target="_blank" rel="noopener" className={classes.outlinedLink}> here.</Link>
         </Typography>
       </Grid>
     </Grid>
