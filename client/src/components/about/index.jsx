@@ -39,7 +39,7 @@ const About = () => {
           </Link>
         </Grid>
         <Grid item xs={4}  className={classes.iconCon}>
-          <Link href="https://telegram.com/tezexofficial" target="_blank" rel="noopener">
+          <Link href="https://t.me/tezexofficial" target="_blank" rel="noopener">
             Telegram
             <IconButton disableRipple>
             <img src={telegram} alt="telegram-icon" className={`${classes.icon} ${classes.telegramLogo}`}/>
