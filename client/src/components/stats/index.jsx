@@ -1,20 +1,17 @@
+import { Grid, Typography } from "@material-ui/core";
 import React, { useEffect, useState } from "react";
 
-import useStyles from "./style";
-
-import { Grid, Typography } from "@material-ui/core";
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
 import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
-
-import  arrowRight from '../../assets/arrowRightAlt.svg';
+import arrowRight from '../../assets/arrowRightAlt.svg';
 import infoIcon from '../../assets/infoIcon.svg'
-
-import { updateBotStats } from "../../library/util";
 import { tokens } from "../constants";
+import { updateBotStats } from "../../library/util";
+import useStyles from "./style";
 
 const Stat = ({ swapPairs }) => {
   const classes = useStyles();
@@ -53,18 +50,18 @@ const Stat = ({ swapPairs }) => {
           <TableCell>
             <Grid item className={classes.currencyPairTop}>
               <span><img src={token.logo} alt="logo" className={classes.img} /></span> {token.title}
-              {" "} <span><img src={arrowRight} alt="right arrow" className={classes.imgArrow}/></span> {" "}
+              {" "} <span><img src={arrowRight} alt="right arrow" className={classes.imgArrow} /></span> {" "}
               <span><img src={counterToken.logo} alt="logo" className={classes.img} /></span> {counterToken.title}
             </Grid>
             <Grid item className={classes.currencyPairBottom}>
               <span><img src={counterToken.logo} alt="logo" className={classes.img} /></span> {counterToken.title}
-              {" "} <span><img src={arrowRight} alt="right arrow" className={classes.imgArrow}/></span>{" "}
+              {" "} <span><img src={arrowRight} alt="right arrow" className={classes.imgArrow} /></span>{" "}
               <span><img src={token.logo} alt="logo" className={classes.img} /></span> {token.title}
             </Grid>
           </TableCell>
           <TableCell>
-            <Grid item className={classes.currencyPairTop}> {stats.max[pair][assets[0]]} {counterToken.title} </Grid>
-            <Grid item className={classes.currencyPairBottom}> {stats.max[pair][assets[1]]} {token.title}</Grid>
+            <Grid item className={classes.currencyPairTop}> {stats.max[pair][assets[1]]} {counterToken.title} </Grid>
+            <Grid item className={classes.currencyPairBottom}> {stats.max[pair][assets[0]]} {token.title}</Grid>
           </TableCell>
           <TableCell>
             <Grid item className={classes.currencyPairTop}> {stats.total[pair][assets[1]]} {counterToken.title} </Grid>
@@ -90,10 +87,10 @@ const Stat = ({ swapPairs }) => {
               <TableHead>
                 <TableRow>
                   <TableCell> Name </TableCell>
-                    <TableCell>
-                        Max Swap Size
-                        <span><img className={classes.infoImg} src={infoIcon} alt="infoIcon"/></span>
-                    </TableCell>
+                  <TableCell>
+                    Max Swap Size
+                    <span><img className={classes.infoImg} src={infoIcon} alt="infoIcon" /></span>
+                  </TableCell>
                   <TableCell> Total Liquidity </TableCell>
                 </TableRow>
               </TableHead>
