@@ -1501,15 +1501,16 @@
                 "network": "tezos",
                 "tokenContract": {
                     "type": "fa2",
-                    "address": "KT1Mg7Jaxz9n6YM9XjbDLhAjbuWa9bzhAAy9",
-                    "mapID": 16594,
-                    "allowanceMapID": 16596,
+                    "address": "KT1T87QbpXEVgkwsNPzz8iRoah3SS3D1MDmh",
+                    "mapID": 24117,
+                    "allowanceMapID": 24119,
                     "tokenID": 0
                 },
                 "swapContract": {
-                    "address": "KT1TmYgi3EHK5qdyxa31VHfyrZzgqbCigLtu",
-                    "mapID": 18126
+                    "address": "KT1WtHz88ZwC8rESo75rMiAkdD4CJErWUedm",
+                    "mapID": 35028
                 },
+                ,
                 "feePad": 1.5,
                 "minTradeVolume": 0.001
             },
