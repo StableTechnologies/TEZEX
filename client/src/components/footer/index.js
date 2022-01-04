@@ -6,7 +6,7 @@ const Footer = () => {
   return (
     <Grid container justify = "center" xs={12}>
       <Grid item >
-        <Typography>&#169; 2021 Tezos Stable Technologies, Ltd.</Typography>
+        <Typography>&#169; {new Date().getFullYear()} Tezos Stable Technologies, Ltd.</Typography>
       </Grid>
     </Grid>
   )
