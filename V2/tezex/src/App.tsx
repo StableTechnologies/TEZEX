@@ -2,7 +2,7 @@ import React from 'react';
 import logo from './logo.svg';
 import './App.css';
 
-import {Wallet} from './components/session/wallet';
+import {Wallet} from './components/wallet/wallet';
 
 function App() {
   return (
