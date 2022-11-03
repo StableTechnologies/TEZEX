@@ -5,7 +5,6 @@ export const Wallet: FC = () => {
 	const onSubmit = async () => {
 		await connectWallet();
 	};
-	return <>
-	<button onClick={onSubmit}></button>;
-</>;
+	return 	<button onClick={onSubmit}>Connect Wallet</button>;
+
 };

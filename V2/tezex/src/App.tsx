@@ -9,11 +9,10 @@ function App() {
     <div className="App">
       <header className="App-header">
         <p>
-         Tezex 
+      <Wallet />
         </p>
       </header>
 
-      <Wallet />
     </div>
   );
 }
