@@ -2,8 +2,8 @@ import { FC } from "react";
 import React, { useEffect } from "react";
 import connectWallet from "../../functions/beacon";
 
-import { WaletConnected } from "../session/walletConnected";
-import { WalletDisconnected } from "../session/walletDisconnected";
+import { WaletConnected } from "../session/WalletConnected";
+import { WalletDisconnected } from "../session/WalletDisconnected";
 export const Wallet: FC = () => {
 	const onSubmit = async () => {
 		await connectWallet();

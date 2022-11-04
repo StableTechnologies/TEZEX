@@ -1,10 +1,9 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, { FC } from "react";
 import './App.css';
 
-import {Wallet} from './components/wallet/wallet';
+import {Wallet} from './components/wallet/Wallet';
 
-function App() {
+export const App: FC = () => {
   return (
     <div className="App">
       <header className="App-header">
