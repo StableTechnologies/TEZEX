@@ -1,6 +1,6 @@
 import { FC } from "react";
 import React, { useEffect } from "react";
-import connectWallet from "../../functions/wallet";
+import connectWallet from "../../functions/beacon";
 
 import { WaletConnected } from "../session/walletConnected";
 import { WalletDisconnected } from "../session/walletDisconnected";
