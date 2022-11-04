@@ -4,13 +4,15 @@ export const SessionContext = createContext<any | null>(null);
 
 export function SessionProvider({ children }) {
 	const [isWalletConnected, setIsWalletConnected] = useState(false);
-	const [walletInfo, setWalletInfo] = useState<WalletInfo | null>(null);
+	const [client, setClient] = useState<any | null>(null);
 
 	useEffect(() => {
-		walletInfo
+		client
 			? setIsWalletConnected(true)
 			: setIsWalletConnected(false);
-	}, [walletInfo]);
+	}, [client]);
+
+	const walletInfo: WalletInfo = { client, setClient };
 
 	return (
 		<SessionContext.Provider
