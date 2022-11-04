@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState } from "react";
+import { createContext, FC, useEffect, useState } from "react";
 import { WalletContext, WalletInfo } from "./wallet";
 export const SessionContext = createContext<any | null>(null);
 
