@@ -14,10 +14,17 @@ export function SessionProvider({ children }) {
 	}, [client]);
 
 	const disconnect = () => {
-		setClient(null)
-		setAddress(null)
-	}
-	const walletInfo: WalletInfo = { client, setClient, address, disconnect };
+		setClient(null);
+		setAddress(null);
+	};
+
+	const walletInfo: WalletInfo = {
+		client,
+		setClient,
+		address,
+		setAddress,
+		disconnect,
+	};
 
 	return (
 		<SessionContext.Provider
