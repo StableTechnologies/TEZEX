@@ -12,7 +12,10 @@ export function SessionProvider({ children }) {
 			: setIsWalletConnected(false);
 	}, [client]);
 
-	const walletInfo: WalletInfo = { client, setClient };
+	const disconnect = () => {
+		setClient(null)
+	}
+	const walletInfo: WalletInfo = { client, setClient, disconnect };
 
 	return (
 		<SessionContext.Provider
