@@ -1,9 +1,8 @@
-import { useContext } from "react";
-import { WalletContext , WalletInfo } from "../contexts/wallet";
+import { useContext } from 'react';
+import { WalletContext } from '../contexts/wallet.tsx';
 
-export function useWallet() {
-  const wallet = useContext(WalletContext);
+export default function useWallet() {
+    const wallet = useContext(WalletContext);
 
-  return wallet;
+    return wallet;
 }
- 

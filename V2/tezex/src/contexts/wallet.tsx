@@ -7,6 +7,16 @@ export interface WalletInfo {
 	setAddress: any,
 	disconnect: any
 }
-export const WalletContext = createContext<WalletInfo | null>(null);
+ 
+const emptyInfo = () => {
+	return {
+		client: null,
+		setClient: (any) => {},
+		address: null,
+		setAddress: (any) => {},
+		disconnect: (any) => {},
+	}
+}
+export const WalletContext = createContext<WalletInfo>(emptyInfo());
 
 
