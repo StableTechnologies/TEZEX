@@ -10,7 +10,6 @@ export const App: FC = () => {
       <header className="App-header">
         <p>
 		<Layout>
-			Main window
 		</Layout>
         </p>
       </header>
