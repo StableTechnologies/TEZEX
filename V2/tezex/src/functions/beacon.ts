@@ -1,5 +1,5 @@
 import { DAppClient } from '@airgap/beacon-sdk';
-import { WalletInfo } from '../contexts/wallet.tsx';
+import { WalletInfo } from '../contexts/wallet';
 
 export default async function connectWallet(walletInfo: WalletInfo) {
     const dAppClient = new DAppClient({ name: 'Beacon Docs' });
