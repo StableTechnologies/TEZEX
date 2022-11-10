@@ -1,6 +1,9 @@
-import { FC, HTMLAttributes } from "react";
+import { FC } from "react";
 
-export const AppTitle: FC = (props) => {
+export interface IHeading {
+  children: string
+}
+export const AppTitle: FC<IHeading> = (props) => {
 
   return (
     <h1
