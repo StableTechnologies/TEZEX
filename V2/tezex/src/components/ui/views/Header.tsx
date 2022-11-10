@@ -1,7 +1,7 @@
-import { FC, HTMLAttributes } from "react";
+import { FC } from "react";
 import { AppTitle } from "../elements/Headings";
 import { Wallet } from "../../wallet/Wallet";
-export const Header: FC = (props) => {
+export const Header: FC = () => {
 	return (
 		<div>
 			<header>
