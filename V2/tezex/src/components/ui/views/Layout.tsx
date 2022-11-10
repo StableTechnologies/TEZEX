@@ -3,7 +3,17 @@ import { AppTitle } from "../elements/Headings";
 import { Wallet } from "../../wallet/Wallet";
 import { Header } from "./Header";
 import { MainWindow } from "./MainWindow";
-export const Layout: FC = (props) => {
+
+export interface ILayout {
+  children:
+    | JSX.Element[]
+    | JSX.Element
+    | React.ReactElement
+    | React.ReactElement[]
+    | string
+}
+
+export const Layout: FC<ILayout> = (props) => {
 	return (
 		<div>
 			<Header />
