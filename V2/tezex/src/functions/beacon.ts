@@ -7,7 +7,9 @@ export default async function connectWallet(walletInfo: WalletInfo) {
     try {
         const permissions = await dAppClient.requestPermissions();
         walletInfo.setAddress(permissions.address);
-    } finally {
+    } catch(err){ 
+        walletInfo.setClient(null);
+    }finally {
         walletInfo.setClient(dAppClient);
     }
 }

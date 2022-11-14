@@ -1,7 +1,13 @@
-import { createContext, FC, useEffect, useState } from "react";
+import {  createContext, FC, useEffect, useState } from "react";
 import { WalletContext, WalletInfo } from "./wallet";
+
+import { DAppClient } from '@airgap/beacon-sdk';
+
 export const SessionContext = createContext<any | null>(null);
 
+export interface SessionInfo {
+	setClient: React.Dispatch<DAppClient> 	
+}
 export interface ISession {
   children:
     | JSX.Element[]
@@ -13,8 +19,8 @@ export interface ISession {
 
 export function SessionProvider(props: ISession) {
 	const [isWalletConnected, setIsWalletConnected] = useState(false);
-	const [client, setClient] = useState<any | null>(null);
-	const [address, setAddress] = useState<any | null>(null);
+	const [client, setClient] = useState<DAppClient | null>(null);
+	const [address, setAddress] = useState<string | null>(null);
 
 	useEffect(() => {
 		client

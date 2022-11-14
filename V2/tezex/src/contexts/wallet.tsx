@@ -1,22 +1,14 @@
 import { createContext, useState } from "react";
+import { DAppClient } from '@airgap/beacon-sdk';
 
 export interface WalletInfo {
-	client: any,
-	setClient: any,
-	address: any,
-	setAddress: any,
-	disconnect: any
+	client: DAppClient | null,
+		setClient: React.Dispatch<React.SetStateAction<DAppClient | null>>, 	
+	address: string | null,
+		setAddress: React.Dispatch<React.SetStateAction<string | null>>,
+		disconnect: () => void
 }
  
-const emptyInfo = () => {
-	return {
-		client: null,
-		setClient: (any) => {},
-		address: null,
-		setAddress: (any) => {},
-		disconnect: (any) => {},
-	}
-}
-export const WalletContext = createContext<WalletInfo>(emptyInfo());
+export const WalletContext = createContext<WalletInfo | null>(null)
 
 

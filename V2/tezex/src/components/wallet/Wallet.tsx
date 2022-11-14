@@ -7,12 +7,17 @@ import { WalletConnected } from "../session/WalletConnected";
 import { WalletDisconnected } from "../session/WalletDisconnected";
 
 export const Wallet: FC = () => {
-	const walletInfo: WalletInfo = useWallet();
+	const walletInfo: WalletInfo | null = useWallet();
 	const connect = async () => {
-		await connectWallet(walletInfo);
+		if (walletInfo) { 
+			await connectWallet(walletInfo) ;
+		}
 	};
 	const disconnect = async () => {
+
+		if (walletInfo) { 
 		walletInfo.disconnect();
+		}
 	};
 	return (
 		<>
@@ -23,7 +28,7 @@ export const Wallet: FC = () => {
 			</WalletDisconnected>
 			<WalletConnected>
 				<button onClick={disconnect}>
-					{walletInfo.address}
+					{(walletInfo) ? walletInfo.address : ''}
 				</button>
 			</WalletConnected>
 		</>
