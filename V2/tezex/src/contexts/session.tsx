@@ -3,10 +3,10 @@ import { WalletContext, WalletInfo } from "./wallet";
 
 import { DAppClient } from '@airgap/beacon-sdk';
 
-export const SessionContext = createContext<any | null>(null);
+export const SessionContext = createContext<SessionInfo>({ isWalletConnected: false});
 
 export interface SessionInfo {
-	setClient: React.Dispatch<DAppClient> 	
+	isWalletConnected: boolean
 }
 export interface ISession {
   children:
