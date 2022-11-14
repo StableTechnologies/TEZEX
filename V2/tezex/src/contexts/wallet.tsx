@@ -1,4 +1,4 @@
-import { createContext, useState } from "react";
+import { createContext} from "react";
 import { DAppClient } from '@airgap/beacon-sdk';
 
 export interface WalletInfo {

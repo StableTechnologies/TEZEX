@@ -1,6 +1,4 @@
-import { FC, HTMLAttributes } from "react";
-import { AppTitle } from "../elements/Headings";
-import { Wallet } from "../../wallet/Wallet";
+import { FC} from "react";
 import { Header } from "./Header";
 import { MainWindow } from "./MainWindow";
 

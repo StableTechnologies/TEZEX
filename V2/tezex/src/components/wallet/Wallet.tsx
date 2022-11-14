@@ -1,5 +1,4 @@
 import { FC } from "react";
-import React, { useEffect } from "react";
 import connectWallet from "../../functions/beacon";
 import { useWallet } from "../../hooks/wallet";
 import { WalletInfo } from "../../contexts/wallet";

@@ -1,7 +1,6 @@
 import React, { FC } from "react";
 import './App.css';
 
-import {Wallet} from './components/wallet/Wallet';
 import { Layout } from "./components/ui/views/Layout";
 
 export const App: FC = () => {

@@ -1,4 +1,4 @@
-import {  createContext, FC, useEffect, useState } from "react";
+import {  createContext, useEffect, useState } from "react";
 import { WalletContext, WalletInfo } from "./wallet";
 
 import { DAppClient } from '@airgap/beacon-sdk';
