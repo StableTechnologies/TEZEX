@@ -9,7 +9,7 @@ export interface NetworkInfo {
     apiKey: string,
 }
  
-export const WalletContext = createContext<NetworkInfo>({
+export const NetworkContext = createContext<NetworkInfo>({
     network: NetworkType.MAINNET,
     tezosServer: "https://tezos-prod.cryptonomic-infra.tech:443",
     tezosServerForTaquito: "",
