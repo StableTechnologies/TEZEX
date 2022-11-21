@@ -1,5 +1,6 @@
 import {  createContext, useEffect, useState } from "react";
 import { WalletContext, WalletInfo } from "./wallet";
+import { NetworkContext,  networks } from "./network";
 
 import { DAppClient } from '@airgap/beacon-sdk';
 
@@ -47,9 +48,11 @@ export function SessionProvider(props: ISession) {
 				isWalletConnected,
 			}}
 		>
+			<NetworkContext.Provider value={networks}>
 			<WalletContext.Provider value={walletInfo}>
 				{props.children}
 			</WalletContext.Provider>
+			</NetworkContext.Provider>
 		</SessionContext.Provider>
 	);
 }
