@@ -1,7 +1,7 @@
 import {  createContext, useEffect, useState } from "react";
 import { WalletContext, WalletInfo } from "./wallet";
 import { NetworkContext,  networks } from "./network";
-
+import { TezosToolkit } from "@taquito/taquito";
 import { DAppClient } from '@airgap/beacon-sdk';
 
 export const SessionContext = createContext<SessionInfo>({ isWalletConnected: false});
@@ -21,6 +21,7 @@ export interface ISession {
 export function SessionProvider(props: ISession) {
 	const [isWalletConnected, setIsWalletConnected] = useState(false);
 	const [client, setClient] = useState<DAppClient | null>(null);
+	const [toolkit, setToolkit] = useState<TezosToolkit | null>(null);
 	const [address, setAddress] = useState<string | null>(null);
 
 	useEffect(() => {
@@ -37,6 +38,8 @@ export function SessionProvider(props: ISession) {
 	const walletInfo: WalletInfo = {
 		client,
 		setClient,
+		toolkit,
+		setToolkit,
 		address,
 		setAddress,
 		disconnect,
