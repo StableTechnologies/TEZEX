@@ -368,7 +368,7 @@ export async function sendDexterSell(
 			const lbContract = await walletInfo.toolkit.wallet.at(
 				poolAddress
 			);
-			const tzBtcContract =
+			const tokenContract =
 				await walletInfo.toolkit.wallet.at(
 					tokenAddress
 				);
@@ -376,13 +376,13 @@ export async function sendDexterSell(
 			let batch = walletInfo.toolkit.wallet
 				.batch()
 				.withContractCall(
-					tzBtcContract.methods.approve(
+					tokenContract.methods.approve(
 						poolAddress,
 						0
 					)
 				)
 				.withContractCall(
-					tzBtcContract.methods.approve(
+					tokenContract.methods.approve(
 						poolAddress,
 						size
 					)
