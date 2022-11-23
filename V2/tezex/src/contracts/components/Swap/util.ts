@@ -307,6 +307,7 @@ export async function sendDexterBuy(
 
 export async function sendDexterSell(
 	tezosNode: string,
+	walletInfo: WalletInfo,
 	keyStore: KeyStore,
 	signer: Signer,
 	tokenAddress: string,
@@ -363,6 +364,40 @@ export async function sendDexterSell(
 	);
 
 	try {
+		if (walletInfo.toolkit) {
+			const lbContract = await walletInfo.toolkit.wallet.at(
+				poolAddress
+			);
+			const tzBtcContract =
+				await walletInfo.toolkit.wallet.at(
+					tokenAddress
+				);
+
+			let batch = walletInfo.toolkit.wallet
+				.batch()
+				.withContractCall(
+					tzBtcContract.methods.approve(
+						poolAddress,
+						0
+					)
+				)
+				.withContractCall(
+					tzBtcContract.methods.approve(
+						poolAddress,
+						size
+					)
+				)
+				.withContractCall(
+					lbContract.methods.tokenToXtz(
+						keyStore.publicKeyHash,
+						size,
+						notional,
+						expiration
+					)
+				);
+			const batchOp = await batch.send();
+			await batchOp.confirmation();
+		}
 		const opGroup = await TezosNodeWriter.prepareOperationGroup(
 			tezosNode,
 			keyStore,
