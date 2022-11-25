@@ -1,12 +1,16 @@
 import { FC } from "react";
 
+import { CurrencyInput} from "../../ui/elements/Inputs";
 export interface ISwapToken {
 	children: null;
 }
-export const SwapToken: FC= (props) => {
+export const SwapXTZToToken: FC= (props) => {
 	return (
 		<div>
-			<h1>{"Buy Token"}</h1>
+			<h3>{"Buy Token"}</h3>
+			<CurrencyInput>
+			</CurrencyInput>
+
 		</div>
 	);
 };
