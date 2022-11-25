@@ -2,7 +2,7 @@ import React, { FC } from "react";
 import './App.css';
 
 import { Layout } from "./components/ui/views/Layout";
-import { SwapToken } from "./components/liquidityBaking/swapToken/SwapToken";
+import { SwapXTZToToken } from "./components/liquidityBaking/swapXTZToToken";
 
 export const App: FC = () => {
   return (
@@ -10,7 +10,7 @@ export const App: FC = () => {
       <header className="App-header">
         <p>
 		<Layout>
-			<SwapToken />	
+			<SwapXTZToToken />	
 		</Layout>
         </p>
       </header>
