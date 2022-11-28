@@ -1,11 +1,18 @@
 import { FC } from "react";
+import { BigNumber } from 'bignumber.js' ;
 
 export interface ICurrencyInput {
-     setAddress: React.Dispatch<React.SetStateAction<string | null>>,
-     children: string | never[]
+	setAmount: React.Dispatch<React.SetStateAction<BigNumber | null>>;
+	children: string | never[];
 }
 
 export const CurrencyInput: FC<ICurrencyInput> = (props) => {
+
+	const updateAmount = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const num = new BigNumber(e.target.value);
+		(num.isNaN()) ? props.setAmount(null) : props.setAmount(new BigNumber(e.target.value));
+		}
+	
 	return (
 		<div>
 			<label
@@ -19,6 +26,7 @@ export const CurrencyInput: FC<ICurrencyInput> = (props) => {
 				id="amountOfCurrency"
 				name="amountOfCurrency"
 				className="input-currency"
+				onChange={updateAmount}
 			></input>
 		</div>
 	);
