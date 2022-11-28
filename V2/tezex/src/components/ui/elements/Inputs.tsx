@@ -1,7 +1,8 @@
 import { FC } from "react";
 
 export interface ICurrencyInput {
-	children: string | never[];
+     setAddress: React.Dispatch<React.SetStateAction<string | null>>,
+     children: string | never[]
 }
 
 export const CurrencyInput: FC<ICurrencyInput> = (props) => {
