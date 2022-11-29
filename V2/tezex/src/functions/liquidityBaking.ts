@@ -46,15 +46,25 @@ const xtzToTokenTokenOutput = (p: {
       return null;
     }
   };
-export function estimateTokensFromXtz(xtzAmountInMutez, walletInfo: WalletInfo): number {
+export async function estimateTokensFromXtz(xtzAmountInMutez: BigNumber, lbContractAddress: string, walletInfo: WalletInfo): Promise<number> {
+	 
+		if (walletInfo.toolkit) {
+			const lbContract = await walletInfo.toolkit.wallet.at(
+				lbContractAddress
+			);
+			console.log(lbContract.storage)
+		}
+	/*
 	const minTokensBought = xtzToTokenTokenOutput({
 	    xtzIn: xtzAmountInMutez,
 	    xtzPool,
 	    tokenPool
 	}) ;
-
+	
 	if (minTokensBought){ 
 		return	minTokensBought.toNumber()} else { return 0; }
+	*/
+	return 0 ;
 }
 export async function xtzToToken(walletInfo: WalletInfo, lbContractAddress: string, xtzAmountInMutez: BigNumber){
 
@@ -65,7 +75,7 @@ export async function xtzToToken(walletInfo: WalletInfo, lbContractAddress: stri
 			);
 
 			const deadline = new Date(Date.now() + 60000).toISOString();
-			const minTokensBought = estimateTokensFromXtz(xtzAmountInMutez, walletInfo);
+			const minTokensBought = estimateTokensFromXtz(xtzAmountInMutez,lbContractAddress, walletInfo);
 			const op = await lbContract.methods.xtzToToken(
 			    USER_ADDRESS, minTokensBought, deadline
 			).send();
