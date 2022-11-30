@@ -1,6 +1,6 @@
 import {  createContext, useEffect, useState } from "react";
 import { WalletContext, WalletInfo } from "./wallet";
-import { NetworkContext,  networks } from "./network";
+import { NetworkContext,  networkDefaults } from "./network";
 import { TezosToolkit } from "@taquito/taquito";
 import { DAppClient } from '@airgap/beacon-sdk';
 
@@ -51,7 +51,7 @@ export function SessionProvider(props: ISession) {
 				isWalletConnected,
 			}}
 		>
-			<NetworkContext.Provider value={networks}>
+			<NetworkContext.Provider value={networkDefaults}>
 			<WalletContext.Provider value={walletInfo}>
 				{props.children}
 			</WalletContext.Provider>

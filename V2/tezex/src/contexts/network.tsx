@@ -36,7 +36,9 @@ export const networks: NetworkMap = {
 	[NetworkType.MAINNET as string]: mainnet,
 };
 
-export const NetworkContext = createContext<INetwork>({
+export const networkDefaults : INetwork ={
 	selectedNetwork: NetworkType.MAINNET,
 	networks,
-});
+}
+
+export const NetworkContext = createContext<INetwork>(networkDefaults);
