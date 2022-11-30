@@ -1,8 +1,8 @@
 import { FC, useState, useEffect } from "react";
 
 import { BigNumber } from "bignumber.js";
-import { CurrencyInput } from "../../ui/elements/Inputs";
-import { CurrencyOutput } from "../../ui/elements/Labels";
+import { TokenAmountInput } from "../../ui/elements/Inputs";
+import { TokenAmountOutput } from "../../ui/elements/Labels";
 import { useWallet } from "../../../hooks/wallet";
 import { useNetwork } from "../../../hooks/network";
 import { estimateTokensFromXtz } from "../../../functions/liquidityBaking";
@@ -35,13 +35,13 @@ export const SwapXTZToToken: FC = (props) => {
 	}, [amountOfXTZ, walletInfo, networkInfo]);
 	return (
 		<div>
-			<h3>{"Buy Token"}</h3>
-			<CurrencyInput setAmount={setAmountOfXTZ}>
+			<h3>{"Swap xtz for tzbtc"}</h3>
+			<TokenAmountInput setAmount={setAmountOfXTZ}>
 				{"xtz"}
-			</CurrencyInput>
-			<CurrencyOutput denomination="tzbtc">
+			</TokenAmountInput>
+			<TokenAmountOutput denomination="tzbtc">
 				{amountOfToken}
-			</CurrencyOutput>
+			</TokenAmountOutput>
 		</div>
 	);
 };

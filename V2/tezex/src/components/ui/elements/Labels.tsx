@@ -1,12 +1,12 @@
 import { FC } from "react";
 import { BigNumber } from "bignumber.js";
 
-export interface ICurrencyOutput {
+export interface ITokenAmountOutput {
 	denomination: string;
 	children: number | BigNumber | null;
 }
 
-export const CurrencyOutput: FC<ICurrencyOutput> = (props) => {
+export const TokenAmountOutput: FC<ITokenAmountOutput> = (props) => {
 	return (
 		<div>
 			<label className="output-currency">
