@@ -52,7 +52,7 @@ export async function estimateTokensFromXtz(xtzAmountInMutez: BigNumber, lbContr
 			const lbContract = await walletInfo.toolkit.wallet.at(
 				lbContractAddress
 			);
-			console.log(lbContract.storage)
+			console.log(await lbContract.storage())
 		}
 	/*
 	const minTokensBought = xtzToTokenTokenOutput({
