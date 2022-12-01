@@ -5,7 +5,10 @@ import { TokenAmountInput } from "../../ui/elements/Inputs";
 import { TokenAmountOutput } from "../../ui/elements/Labels";
 import { useWallet } from "../../../hooks/wallet";
 import { useNetwork } from "../../../hooks/network";
-import { estimateTokensFromXtz } from "../../../functions/liquidityBaking";
+import {
+	estimateTokensFromXtz,
+	xtzToToken,
+} from "../../../functions/liquidityBaking";
 import { Transact } from "../../ui/elements/Buttons";
 
 export interface ISwapToken {
@@ -17,14 +20,34 @@ export const SwapXTZToToken: FC = (props) => {
 	const walletInfo = useWallet();
 	const networkInfo = useNetwork();
 
+	const transact = async () => {
+		if (amountOfXTZ && walletInfo) {
+			await xtzToToken(
+				amountOfXTZ,
+				networkInfo.addresses.tzbtc.dex.sirius,
+				walletInfo
+			);
+		}
+	};
 	useEffect(() => {
 		const estimateTokens = async () => {
+			if (amountOfXTZ) {
+				console.log(
+					"\n",
+					"amountOfXTZ : ",
+					amountOfXTZ.toString(),
+					"\n"
+				);
+			}
 			if (amountOfXTZ && walletInfo) {
-				setAmountOfToken(await estimateTokensFromXtz(
-					amountOfXTZ,
-					networkInfo.addresses.tzbtc.dex.sirius,
-					walletInfo
-				));
+				setAmountOfToken(
+					await estimateTokensFromXtz(
+						amountOfXTZ,
+						networkInfo.addresses.tzbtc.dex
+							.sirius,
+						walletInfo
+					)
+				);
 			}
 		};
 
@@ -42,6 +65,9 @@ export const SwapXTZToToken: FC = (props) => {
 			<TokenAmountOutput denomination="tzbtc">
 				{amountOfToken}
 			</TokenAmountOutput>
+			<Transact callback={transact}>
+				{"Buy xtz"}
+			</Transact>
 		</div>
 	);
 };

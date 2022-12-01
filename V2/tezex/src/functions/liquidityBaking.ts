@@ -116,9 +116,9 @@ export async function estimateTokensFromXtz(
 	}
 }
 export async function xtzToToken(
-	walletInfo: WalletInfo,
+	xtzAmountInMutez: BigNumber,
 	lbContractAddress: string,
-	xtzAmountInMutez: BigNumber
+	walletInfo: WalletInfo
 ) {
 	try {
 		if (walletInfo.toolkit) {
@@ -129,14 +129,14 @@ export async function xtzToToken(
 			const deadline = new Date(
 				Date.now() + 60000
 			).toISOString();
-			const minTokensBought = estimateTokensFromXtz(
+			const minTokensBought = await estimateTokensFromXtz(
 				xtzAmountInMutez,
 				lbContractAddress,
 				walletInfo
 			);
 			const op = await lbContract.methods
 				.xtzToToken(
-					USER_ADDRESS,
+					walletInfo.address,
 					minTokensBought,
 					deadline
 				)

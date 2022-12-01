@@ -9,8 +9,8 @@ export interface ITokenAmountInput {
 export const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 
 	const updateAmount = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const num = new BigNumber(e.target.value).times(new BigNumber(1000000));
-		(num.isNaN()) ? props.setAmount(null) : props.setAmount(new BigNumber(e.target.value));
+		const num = new BigNumber(e.target.value).times(new BigNumber(100000));
+		(num.isNaN()) ? props.setAmount(null) : props.setAmount(num);
 		}
 	
 	return (

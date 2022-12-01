@@ -1,13 +1,13 @@
 import { FC } from "react";
 
 export interface ITransact {
-	walletTransaction: () => Promise<void>;
+	callback: () => Promise<void>;
 	children: string ;
 }
 
 export const Transact: FC<ITransact> = (props) => {
 	const transact = async () => {
-		await props.walletTransaction();
+		await props.callback();
 	};
 	return (
 		<div>
