@@ -3,14 +3,14 @@ import { WalletInfo } from "../contexts/wallet";
 import { NetworkInfo } from "../contexts/network";
 import { BeaconWallet } from "@taquito/beacon-wallet";
 import { TezosToolkit, MichelCodecPacker } from "@taquito/taquito";
-import {BigNumber} from 'bignumber.js';
+import { BigNumber } from "bignumber.js";
 import { NetworkType } from "@airgap/beacon-sdk";
 import { useNetwork } from "../hooks/network";
 
 import { TokenKind } from "../types/general";
 
 export function mutezToTez(amount: BigNumber) {
-	return amount.dividedBy(1000000)
+	return amount.dividedBy(1000000);
 }
 export async function getBalance(
 	walletInfo: WalletInfo,
@@ -29,16 +29,18 @@ export async function getBalance(
 				} else {
 					return amount;
 				}
-			case TokenKind.TzBTC: return new BigNumber(0); //todo
+			case TokenKind.TzBTC:
+				return new BigNumber(0); //todo
 		}
 	} else return new BigNumber(0);
 }
+
 export async function hasSufficientBalance(
 	minimumBalance: BigNumber,
 	walletInfo: WalletInfo,
 	asset: TokenKind,
-	mantissa: boolean
-): Promise<boolean>{
+	mantissa: boolean = false
+): Promise<boolean> {
 	const balance = await getBalance(walletInfo, asset, mantissa);
 	return minimumBalance.isLessThanOrEqualTo(balance);
 }

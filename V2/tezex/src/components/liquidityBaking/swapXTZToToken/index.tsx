@@ -11,6 +11,8 @@ import {
 } from "../../../functions/liquidityBaking";
 import { Transact } from "../../ui/elements/Buttons";
 
+import { TokenKind } from "../../../types/general";
+
 export interface ISwapToken {
 	children: null;
 }
@@ -59,7 +61,7 @@ export const SwapXTZToToken: FC = (props) => {
 	return (
 		<div>
 			<h3>{"Swap xtz for tzbtc"}</h3>
-			<TokenAmountInput setAmount={setAmountOfXTZ}>
+			<TokenAmountInput asset={TokenKind.XTZ} walletInfo={walletInfo} setAmount={setAmountOfXTZ}>
 				{"xtz"}
 			</TokenAmountInput>
 			<TokenAmountOutput denomination="tzbtc">
