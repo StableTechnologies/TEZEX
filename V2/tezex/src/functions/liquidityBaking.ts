@@ -107,8 +107,7 @@ export async function estimateTokensFromXtz(
 		});
 
 		if (minTokensBought) {
-			
-			return minTokensBought.decimalPlaces(0,1).toNumber();
+			return minTokensBought.decimalPlaces(0, 1).toNumber();
 		} else {
 			return 0;
 		}
@@ -139,7 +138,7 @@ export async function xtzToToken(
 				"\n"
 			);
 
-			await walletInfo.toolkit.wallet
+			const estimate = await walletInfo.toolkit.wallet
 				.at(lbContractAddress)
 				.then((contract) => {
 					return contract.methods
@@ -149,9 +148,8 @@ export async function xtzToToken(
 							deadline
 						)
 						.toTransferParams({
-							amount: xtzAmountInMutez
-								.toNumber(),
-							mutez: true
+							amount: xtzAmountInMutez.toNumber(),
+							mutez: true,
 						});
 				})
 				.then((op) => {
@@ -168,6 +166,7 @@ export async function xtzToToken(
     suggestedFeeMutez : ${est.suggestedFeeMutez}, 
     totalCost : ${est.totalCost}, 
     usingBaseFeeMutez : ${est.usingBaseFeeMutez}`);
+					return est;
 				})
 				.catch((error) =>
 					console.table(
@@ -179,21 +178,29 @@ export async function xtzToToken(
 					)
 				);
 
-			const lbContract = await walletInfo.toolkit.wallet.at(
-				lbContractAddress
-			);
-			const op = await lbContract.methods
-				.xtzToToken(walletInfo.address, 6006, deadline)
-				.send({
-					source: "tz1cGAdcXYcDaNNH8fxzFvffPzbhWofgVT37",
-					amount: xtzAmountInMutez
-						.toNumber(),
-					mutez: true
-					//	fee: 2111,
-					//	gasLimit: 8513,
-					//storageLimit: 1,
-				});
-			await op.confirmation();
+			if (estimate) {
+				const lbContract =
+					await walletInfo.toolkit.wallet.at(
+						lbContractAddress
+					);
+				const op = await lbContract.methods
+					.xtzToToken(
+						walletInfo.address,
+						minTokensBought,
+						deadline
+					)
+					.send({
+						source: "tz1cGAdcXYcDaNNH8fxzFvffPzbhWofgVT37",
+						amount: xtzAmountInMutez.toNumber(),
+						mutez: true,
+						fee: estimate.suggestedFeeMutez,
+						gasLimit: estimate.gasLimit,
+						storageLimit:
+							estimate.storageLimit,
+					});
+
+				await op.confirmation();
+			}
 		}
 	} catch (err) {
 		console.log(`failed in sendDexterBuy ${JSON.stringify(err)}}`);
