@@ -22,7 +22,7 @@ export interface INetwork {
 
 export const mainnet = {
 	network: NetworkType.MAINNET,
-	tezosServer: "https://tezos-prod.cryptonomic-infra.tech:443",
+	tezosServer: "https://mainnet.api.tez.ie",
 	tezosServerForTaquito: "",
 	apiKey: "ab682065-864a-4f11-bc77-0ef4e9493fa1",
 	addresses: {

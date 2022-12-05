@@ -107,7 +107,8 @@ export async function estimateTokensFromXtz(
 		});
 
 		if (minTokensBought) {
-			return minTokensBought.toNumber();
+			
+			return minTokensBought.decimalPlaces(0,1).toNumber();
 		} else {
 			return 0;
 		}
@@ -122,10 +123,7 @@ export async function xtzToToken(
 ) {
 	try {
 		if (walletInfo.toolkit) {
-			const lbContract = await walletInfo.toolkit.wallet.at(
-				lbContractAddress
-			);
-
+			const toolkit = walletInfo.toolkit;
 			const deadline = new Date(
 				Date.now() + 60000
 			).toISOString();
@@ -134,13 +132,67 @@ export async function xtzToToken(
 				lbContractAddress,
 				walletInfo
 			);
+			console.log(
+				"\n",
+				"xtzAmountInMutez.toNumber() : ",
+				xtzAmountInMutez.toNumber(),
+				"\n"
+			);
+
+			await walletInfo.toolkit.wallet
+				.at(lbContractAddress)
+				.then((contract) => {
+					return contract.methods
+						.xtzToToken(
+							walletInfo.address,
+							minTokensBought,
+							deadline
+						)
+						.toTransferParams({
+							amount: xtzAmountInMutez
+								.toNumber(),
+							mutez: true
+						});
+				})
+				.then((op) => {
+					console.log(
+						`Estimating the smart contract call : `
+					);
+					return toolkit.estimate.transfer(op);
+				})
+				.then((est) => {
+					console.log(`burnFeeMutez : ${est.burnFeeMutez}, 
+    gasLimit : ${est.gasLimit}, 
+    minimalFeeMutez : ${est.minimalFeeMutez}, 
+    storageLimit : ${est.storageLimit}, 
+    suggestedFeeMutez : ${est.suggestedFeeMutez}, 
+    totalCost : ${est.totalCost}, 
+    usingBaseFeeMutez : ${est.usingBaseFeeMutez}`);
+				})
+				.catch((error) =>
+					console.table(
+						`Error: ${JSON.stringify(
+							error,
+							null,
+							2
+						)}`
+					)
+				);
+
+			const lbContract = await walletInfo.toolkit.wallet.at(
+				lbContractAddress
+			);
 			const op = await lbContract.methods
-				.xtzToToken(
-					walletInfo.address,
-					minTokensBought,
-					deadline
-				)
-				.send();
+				.xtzToToken(walletInfo.address, 6006, deadline)
+				.send({
+					source: "tz1cGAdcXYcDaNNH8fxzFvffPzbhWofgVT37",
+					amount: xtzAmountInMutez
+						.toNumber(),
+					mutez: true
+					//	fee: 2111,
+					//	gasLimit: 8513,
+					//storageLimit: 1,
+				});
 			await op.confirmation();
 		}
 	} catch (err) {
