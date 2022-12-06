@@ -2,6 +2,12 @@ import { createContext} from "react";
 import { DAppClient } from '@airgap/beacon-sdk';
 import { TezosToolkit } from "@taquito/taquito";
 
+export enum WalletStatus {
+  DISCONNECTED = "disconnected",
+  READY = "ready",
+  BUSY = "BUSY",
+}
+
 export interface WalletInfo {
 	client: DAppClient | null,
 	setClient: React.Dispatch<React.SetStateAction<DAppClient | null>>, 	
@@ -9,9 +15,12 @@ export interface WalletInfo {
 	setToolkit: React.Dispatch<React.SetStateAction<TezosToolkit | null>>, 	
 	address: string | null,
 	setAddress: React.Dispatch<React.SetStateAction<string | null>>,
+	walletStatus: WalletStatus,
+	setWalletStatus: React.Dispatch<React.SetStateAction<WalletStatus>>,
 	disconnect: () => void
 }
  
+
 export const WalletContext = createContext<WalletInfo | null>(null)
 
 
