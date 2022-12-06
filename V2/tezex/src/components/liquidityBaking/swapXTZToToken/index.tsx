@@ -68,7 +68,7 @@ export const SwapXTZToToken: FC = (props) => {
 				{amountOfToken}
 			</TokenAmountOutput>
 			<Transact callback={transact}>
-				{"Buy xtz"}
+				{"Buy TzBtc"}
 			</Transact>
 		</div>
 	);
