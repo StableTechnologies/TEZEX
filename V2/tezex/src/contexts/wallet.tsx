@@ -8,6 +8,13 @@ export enum WalletStatus {
 	BUSY = "busy",
 }
 
+export function isReady( 
+	walletStatus: WalletStatus){
+	const ready = (): boolean => {
+		return walletStatus === WalletStatus.READY;
+	}
+	return ready
+}
 export function walletUser(
 	walletStatus: WalletStatus,
 	setWalletStatus: React.Dispatch<React.SetStateAction<WalletStatus>>
@@ -39,6 +46,7 @@ export interface WalletInfo {
 	walletStatus: WalletStatus;
 	setWalletStatus: React.Dispatch<React.SetStateAction<WalletStatus>>;
 	walletUser: (op: () => Promise<unknown>) => Promise<void>;
+	isReady: () => boolean,
 	disconnect: () => void;
 }
 
