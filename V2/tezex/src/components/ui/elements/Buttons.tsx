@@ -13,7 +13,10 @@ export const Transact: FC<ITransact> = (props) => {
 	const walletInfo: WalletInfo | null = useWallet();
 
 	const transact = async () => {
-		await props.callback();
+
+		if (walletInfo) {
+		await walletInfo.walletUser(props.callback);
+		}
 	};
 
 	useEffect(() => {
