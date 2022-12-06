@@ -115,6 +115,162 @@ export async function estimateTokensFromXtz(
 		return 0;
 	}
 }
+
+export async function tokenToXtz(
+	xtzAmountInMutez: BigNumber,
+	lbContractAddress: string,
+	walletInfo: WalletInfo
+) {
+	try {
+		if (walletInfo.toolkit) {
+			const toolkit = walletInfo.toolkit;
+			const deadline = new Date(
+				Date.now() + 60000
+			).toISOString();
+			const minTokensBought = await estimateTokensFromXtz(
+				xtzAmountInMutez,
+				lbContractAddress,
+				walletInfo
+			);
+			console.log(
+				"\n",
+				"xtzAmountInMutez.toNumber() : ",
+				xtzAmountInMutez.toNumber(),
+				"\n"
+			);
+
+const tokenToXtz= (p: {
+    tokenIn: BigNumber | number;
+    xtzPool: BigNumber | number;
+    tokenPool: BigNumber | number;
+  }): BigNumber | null => {
+    const { tokenIn, xtzPool: _xtzPool, tokenPool } = p;
+    let xtzPool = creditSubsidy(_xtzPool);
+    let tokenIn_ = new BigNumber(0);
+    let xtzPool_ = new BigNumber(0);
+    let tokenPool_ = new BigNumber(0);
+    try {
+      tokenIn_ = new BigNumber(tokenIn);
+      xtzPool_ = new BigNumber(xtzPool);
+      tokenPool_ = new BigNumber(tokenPool);
+    } catch (err) {
+      return null;
+    }
+    if (
+      tokenIn_.isGreaterThan(0) &&
+      xtzPool_.isGreaterThan(0) &&
+      tokenPool_.isGreaterThan(0)
+    ) {
+      // Includes 0.1% fee and 0.1% burn calculated separatedly: 
+      // 999/1000 * 999/1000 = 998001/1000000
+      let numerator = new BigNumber(tokenIn)
+        .times(new BigNumber(xtzPool))
+        .times(new BigNumber(998001));
+      let denominator = new BigNumber(tokenPool)
+        .times(new BigNumber(1000000))
+        .plus(new BigNumber(tokenIn).times(new BigNumber(999000)));
+      return numerator.dividedBy(denominator);
+    } else {
+      return null;
+    }
+};
+
+			
+const lbContract = await Tezos.wallet.at(LB_CONTRACT_ADDRESS);
+// the deadline value is arbitrary and can be changed
+const deadline = new Date(Date.now() + 60000).toISOString();
+const tzBtcContract = await Tezos.wallet.at(TZBTC_ADDRESS);
+const tokensSold = AMOUNT_IN_TZBTC;
+const minXtzBought = tokenToXtz({
+    tokenIn: tokensSold,
+    xtzPool,
+    tokenPool
+  }).toNumber();
+    
+let batch =.wallet.batch()              
+    .withContractCall(tzBtcContract.methods.approve(lbContractAddress, 0))
+    .withContractCall(
+        tzBtcContract.methods.approve(lbContractAddress, tokensSold)
+    )
+    .withContractCall(
+        lbContract.methods.tokenToXtz(
+            USERADDRESS,
+            tokensSold,
+            minXtzBought,
+            deadline
+        )
+    );
+const batchOp = await batch.send();
+await batchOp.confirmation();
+
+			const estimate = await walletInfo.toolkit.wallet
+				.at(lbContractAddress)
+				.then((contract) => {
+					return contract.methods
+						.xtzToToken(
+							walletInfo.address,
+							minTokensBought,
+							deadline
+						)
+						.toTransferParams({
+							amount: xtzAmountInMutez.toNumber(),
+							mutez: true,
+						});
+				})
+				.then((op) => {
+					console.log(
+						`Estimating the smart contract call : `
+					);
+					return toolkit.estimate.transfer(op);
+				})
+				.then((est) => {
+					console.log(`burnFeeMutez : ${est.burnFeeMutez}, 
+    gasLimit : ${est.gasLimit}, 
+    minimalFeeMutez : ${est.minimalFeeMutez}, 
+    storageLimit : ${est.storageLimit}, 
+    suggestedFeeMutez : ${est.suggestedFeeMutez}, 
+    totalCost : ${est.totalCost}, 
+    usingBaseFeeMutez : ${est.usingBaseFeeMutez}`);
+					return est;
+				})
+				.catch((error) =>
+					console.table(
+						`Error: ${JSON.stringify(
+							error,
+							null,
+							2
+						)}`
+					)
+				);
+
+			if (estimate) {
+				const lbContract =
+					await walletInfo.toolkit.wallet.at(
+						lbContractAddress
+					);
+				const op = await lbContract.methods
+					.xtzToToken(
+						walletInfo.address,
+						minTokensBought,
+						deadline
+					)
+					.send({
+						source: "tz1cGAdcXYcDaNNH8fxzFvffPzbhWofgVT37",
+						amount: xtzAmountInMutez.toNumber(),
+						mutez: true,
+						fee: estimate.suggestedFeeMutez,
+						gasLimit: estimate.gasLimit,
+						storageLimit:
+							estimate.storageLimit,
+					});
+
+				await op.confirmation();
+			}
+		}
+	} catch (err) {
+		console.log(`failed in sendDexterBuy ${JSON.stringify(err)}}`);
+	}
+}
 export async function xtzToToken(
 	xtzAmountInMutez: BigNumber,
 	lbContractAddress: string,
