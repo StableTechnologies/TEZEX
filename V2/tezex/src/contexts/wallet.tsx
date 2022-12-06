@@ -5,10 +5,11 @@ import { TezosToolkit } from "@taquito/taquito";
 export enum WalletStatus {
 	DISCONNECTED = "disconnected",
 	READY = "ready",
-	BUSY = "BUSY",
+	BUSY = "busy",
 }
 
 export function walletUser(
+	walletStatus: WalletStatus,
 	setWalletStatus: React.Dispatch<React.SetStateAction<WalletStatus>>
 ) {
 	const useWallet = async (op: () => Promise<unknown>) => {
@@ -18,9 +19,11 @@ export function walletUser(
 		const setReady = async () => {
 			setWalletStatus(WalletStatus.READY);
 		};
-		await setBusy();
-		await op();
-		await setReady();
+		if (walletStatus === WalletStatus.READY) {
+			await setBusy();
+			await op();
+			await setReady();
+		}
 	};
 
 	return useWallet;
