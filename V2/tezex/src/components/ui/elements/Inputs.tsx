@@ -24,7 +24,7 @@ export const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 	const updateAmount = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		const num = tokenDecimalToMantissa(e.target.value, props.asset);
 		num.isNaN() ? props.setMantissa(null) : props.setMantissa(num);
-		if (props.walletInfo) {
+		if (props.walletInfo && num.gt(0) && !num.isNaN()) {
 			setSufficientBalance(
 				await hasSufficientBalance(
 					new BigNumber(e.target.value),
@@ -32,7 +32,10 @@ export const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 					props.asset
 				)
 			);
+		} else {
+			setSufficientBalance(true)
 		}
+		
 	};
 
 	return (
@@ -64,7 +67,7 @@ export const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 				htmlFor="amountOfCurrency"
 				className="input-currency"
 			>
-				{props.children}
+				{props.asset as string}
 			</label>
 		</div>
 	);
