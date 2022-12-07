@@ -6,7 +6,12 @@ export const decimals = {
 	TzBTC: 8,
 };
 
-function tokenDecimalToMantissa(decimalAmount: BigNumber, asset: TokenKind) {
+export function tokenMantissaToDecimal(mantissa: BigNumber, asset: TokenKind) {
+	const decimal = mantissa.div(new BigNumber(10)
+		.pow(decimals[asset]))
+	return decimal;
+}
+export function tokenDecimalToMantissa(decimalAmount: BigNumber, asset: TokenKind) {
 	const mantissa = new BigNumber(10)
 		.pow(decimals[asset])
 		.times(decimalAmount)
