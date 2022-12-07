@@ -13,9 +13,8 @@ import {
 export interface ITokenAmountInput {
 	asset: TokenKind;
 	walletInfo: WalletInfo | null;
-	setMantissa: React.Dispatch<React.SetStateAction<BigNumber | null>>;
-	children: string | never[];
-	mantissa?: BigNumber | null;
+	setMantissa: React.Dispatch<React.SetStateAction<BigNumber | number | null>>;
+	mantissa?: BigNumber | number | null;
 }
 
 export const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
