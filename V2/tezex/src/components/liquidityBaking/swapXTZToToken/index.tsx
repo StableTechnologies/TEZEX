@@ -17,15 +17,16 @@ export interface ISwapToken {
 	children: null;
 }
 export const SwapXTZToToken: FC = (props) => {
-	const [amountOfXTZ, setAmountOfXTZ] = useState<BigNumber | null>(null);
-	const [amountOfToken, setAmountOfToken] = useState<number>(0);
+	const [inputAmountMantissa, setInputAmountMantissa] = useState<BigNumber | null>(null);
+	const [outputAmountMantissa, setOutputAmountMantissa] = useState<number>(0);
+	const [swapFields, setSwapFields] = useState<boolean>(false);
 	const walletInfo = useWallet();
 	const networkInfo = useNetwork();
 
 	const transact = async () => {
-		if (amountOfXTZ && walletInfo) {
+		if (inputAmountMantissa && walletInfo) {
 			await xtzToToken(
-				amountOfXTZ,
+				inputAmountMantissa,
 				networkInfo.addresses.tzbtc.dex.sirius,
 				walletInfo
 			);
@@ -33,18 +34,18 @@ export const SwapXTZToToken: FC = (props) => {
 	};
 	useEffect(() => {
 		const estimateTokens = async () => {
-			if (amountOfXTZ) {
+			if (inputAmountMantissa) {
 				console.log(
 					"\n",
-					"amountOfXTZ : ",
-					amountOfXTZ.toString(),
+					"inputAmountMantissa : ",
+					inputAmountMantissa.toString(),
 					"\n"
 				);
 			}
-			if (amountOfXTZ && walletInfo) {
-				setAmountOfToken(
+			if (inputAmountMantissa && walletInfo) {
+				setOutputAmountMantissa(
 					await estimateTokensFromXtz(
-						amountOfXTZ,
+						inputAmountMantissa,
 						networkInfo.addresses.tzbtc.dex
 							.sirius,
 						walletInfo
@@ -57,15 +58,15 @@ export const SwapXTZToToken: FC = (props) => {
 		return () => {
 			//unmount code
 		};
-	}, [amountOfXTZ, walletInfo, networkInfo]);
+	}, [inputAmountMantissa, walletInfo, networkInfo]);
 	return (
 		<div>
 			<h3>{"Swap xtz for tzbtc"}</h3>
-			<TokenAmountInput asset={TokenKind.XTZ} walletInfo={walletInfo} setAmount={setAmountOfXTZ}>
+			<TokenAmountInput asset={TokenKind.XTZ} walletInfo={walletInfo} setMantissa={setInputAmountMantissa}>
 				{"xtz"}
 			</TokenAmountInput>
 			<TokenAmountOutput denomination="tzbtc">
-				{amountOfToken}
+				{outputAmountMantissa}
 			</TokenAmountOutput>
 			<Transact callback={transact}>
 				{"Buy TzBtc"}

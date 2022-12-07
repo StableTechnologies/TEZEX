@@ -5,11 +5,12 @@ import { WalletInfo } from "../../../contexts/wallet";
 
 import { TokenKind } from "../../../types/general";
 import { hasSufficientBalance } from "../../../functions/beacon";
+import { tokenDecimalToMantissa } from "../../../functions/scaling";
 
 export interface ITokenAmountInput {
 	asset: TokenKind;
 	walletInfo: WalletInfo | null;
-	setAmount: React.Dispatch<React.SetStateAction<BigNumber | null>>;
+	setMantissa: React.Dispatch<React.SetStateAction<BigNumber | null>>;
 	children: string | never[];
 }
 
@@ -17,10 +18,8 @@ export const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 	const [sufficientBalance, setSufficientBalance] = useState(true);
 
 	const updateAmount = async (e: React.ChangeEvent<HTMLInputElement>) => {
-		const num = new BigNumber(e.target.value).times(
-			new BigNumber(1000000)
-		);
-		num.isNaN() ? props.setAmount(null) : props.setAmount(num);
+		const num = tokenDecimalToMantissa(e.target.value, props.asset);
+		num.isNaN() ? props.setMantissa(null) : props.setMantissa(num);
 		if (props.walletInfo){
 		setSufficientBalance(
 			await hasSufficientBalance(
