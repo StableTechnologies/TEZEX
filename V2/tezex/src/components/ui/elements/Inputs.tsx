@@ -20,14 +20,14 @@ export const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 	const updateAmount = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		const num = tokenDecimalToMantissa(e.target.value, props.asset);
 		num.isNaN() ? props.setMantissa(null) : props.setMantissa(num);
-		if (props.walletInfo){
-		setSufficientBalance(
-			await hasSufficientBalance(
-				new BigNumber(e.target.value),
-				props.walletInfo,
-				props.asset
-			)
-		);
+		if (props.walletInfo) {
+			setSufficientBalance(
+				await hasSufficientBalance(
+					new BigNumber(e.target.value),
+					props.walletInfo,
+					props.asset
+				)
+			);
 		}
 	};
 
