@@ -62,10 +62,10 @@ export const SwapXTZToToken: FC = (props) => {
 	return (
 		<div>
 			<h3>{"Swap xtz for tzbtc"}</h3>
-			<TokenAmountInput asset={TokenKind.XTZ} walletInfo={walletInfo} setMantissa={setInputAmountMantissa}>
+			<TokenAmountInput asset={TokenKind.XTZ} walletInfo={walletInfo} setMantissa={setInputAmountMantissa} mantissa={inputAmountMantissa}>
 				{"xtz"}
 			</TokenAmountInput>
-			<TokenAmountOutput denomination="tzbtc">
+			<TokenAmountOutput asset={TokenKind.XTZ}>
 				{outputAmountMantissa}
 			</TokenAmountOutput>
 			<Transact callback={transact}>

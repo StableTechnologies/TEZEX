@@ -7,7 +7,7 @@ export const decimals = {
 };
 
 export function tokenMantissaToDecimal(
-	mantissa: BigNumber | string,
+	mantissa: BigNumber  | number | string,
 	asset: TokenKind
 ) {
 	const decimal = new BigNumber(mantissa).div(
@@ -17,7 +17,7 @@ export function tokenMantissaToDecimal(
 	return decimal;
 }
 export function tokenDecimalToMantissa(
-	decimalAmount: BigNumber | string,
+	decimalAmount: BigNumber | number | string,
 	asset: TokenKind
 ) {
 	const mantissa = new BigNumber(10)

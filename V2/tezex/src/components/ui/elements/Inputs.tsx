@@ -5,13 +5,17 @@ import { WalletInfo } from "../../../contexts/wallet";
 
 import { TokenKind } from "../../../types/general";
 import { hasSufficientBalance } from "../../../functions/beacon";
-import { tokenDecimalToMantissa } from "../../../functions/scaling";
+import {
+	tokenDecimalToMantissa,
+	tokenMantissaToDecimal,
+} from "../../../functions/scaling";
 
 export interface ITokenAmountInput {
 	asset: TokenKind;
 	walletInfo: WalletInfo | null;
 	setMantissa: React.Dispatch<React.SetStateAction<BigNumber | null>>;
 	children: string | never[];
+	mantissa?: BigNumber | null;
 }
 
 export const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
@@ -39,6 +43,14 @@ export const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 				name="amountOfCurrency"
 				className="input-currency"
 				onChange={updateAmount}
+				value={
+					props.mantissa
+						? tokenMantissaToDecimal(
+								props.mantissa,
+								props.asset
+						  ).toString()
+						: "0"
+				}
 			></input>
 
 			<label

@@ -1,8 +1,11 @@
 import { FC } from "react";
 import { BigNumber } from "bignumber.js";
 
+import { TokenKind } from "../../../types/general";
+import { tokenMantissaToDecimal } from "../../../functions/scaling";
+
 export interface ITokenAmountOutput {
-	denomination: string;
+	asset: TokenKind;
 	children: number | BigNumber | null;
 }
 
@@ -11,11 +14,11 @@ export const TokenAmountOutput: FC<ITokenAmountOutput> = (props) => {
 		<div>
 			<label className="output-currency">
 				{props.children
-					? props.children.toString()
+					? tokenMantissaToDecimal(props.children, props.asset).toString()
 					: "0"}
 			</label>
 			<label className="output-currency-label">
-				{props.denomination}
+				{props.asset as string}
 			</label>
 		</div>
 	);
