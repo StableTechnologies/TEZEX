@@ -2,7 +2,7 @@ import { createContext } from "react";
 import { NetworkType } from "@airgap/beacon-sdk";
 
 export interface Addresses {
-	tzbtc: { dex: { sirius: string } };
+	tzbtc: {  address: string ,dex: { sirius: string } };
 }
 export interface NetworkInfo {
 	network: NetworkType;
@@ -27,6 +27,7 @@ export const mainnet = {
 	apiKey: "ab682065-864a-4f11-bc77-0ef4e9493fa1",
 	addresses: {
 		tzbtc: {
+			address: "KT1PWx2mnDueood7fEmfbBDKx1D9BAnnXitn",
 			dex: { sirius: "KT1TxqZ8QtKvLu3V3JH7Gx58n7Co8pgtpQU5" },
 		},
 	}, 

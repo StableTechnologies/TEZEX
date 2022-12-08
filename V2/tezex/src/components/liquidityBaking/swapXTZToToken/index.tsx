@@ -9,6 +9,7 @@ import {
 	estimateTokensFromXtz,
 	estimateXtzFromToken,
 	xtzToToken,
+	tokenToXtz
 } from "../../../functions/liquidityBaking";
 import { Transact } from "../../ui/elements/Buttons";
 import { Toggle } from "../../ui/elements/Toggles";
@@ -43,8 +44,8 @@ export const SwapXTZToToken: FC = (props) => {
 						walletInfo
 					);
 				break;
-				case TokenKind.TzBTC: {
-				}
+				case TokenKind.TzBTC: 
+			                await tokenToXtz(new BigNumber(inputAmountMantissa), new BigNumber(outputAmountMantissa), networkInfo.addresses.tzbtc.dex.sirius, networkInfo.addresses.tzbtc.address, walletInfo)
 			}
 		}
 	};
