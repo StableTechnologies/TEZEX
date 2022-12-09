@@ -13,7 +13,6 @@ const creditSubsidy = (xtzPool: BigNumber | number): BigNumber => {
 	}
 };
 
-
 const _calcTokenToXtz = (p: {
 	tokenIn: BigNumber | number;
 	xtzPool: BigNumber | number;
@@ -36,14 +35,18 @@ const _calcTokenToXtz = (p: {
 		xtzPool_.isGreaterThan(0) &&
 		tokenPool_.isGreaterThan(0)
 	) {
-		// Includes 0.1% fee and 0.1% burn calculated separatedly: 
+		// Includes 0.1% fee and 0.1% burn calculated separatedly:
 		// 999/1000 * 999/1000 = 998001/1000000
 		let numerator = new BigNumber(tokenIn)
 			.times(new BigNumber(xtzPool))
 			.times(new BigNumber(998001));
 		let denominator = new BigNumber(tokenPool)
 			.times(new BigNumber(1000000))
-			.plus(new BigNumber(tokenIn).times(new BigNumber(999000)));
+			.plus(
+				new BigNumber(tokenIn).times(
+					new BigNumber(999000)
+				)
+			);
 		return numerator.dividedBy(denominator);
 	} else {
 		return null;
@@ -119,7 +122,6 @@ export async function estimateXtzFromToken(
 	walletInfo: WalletInfo
 ): Promise<number> {
 	if (walletInfo.toolkit) {
-
 		const lbContractStorage = await getLbContractStorage(
 			walletInfo.toolkit,
 			lbContractAddress
@@ -167,26 +169,108 @@ export async function tokenToXtz(
 				Date.now() + 60000
 			).toISOString();
 
-const lbContract = await toolkit.wallet.at(lbContractAddress);
-// the deadline value is arbitrary and can be changed
-const tzBtcContract = await toolkit.wallet.at(tzbtcContractAddress);
-const approve = tzBtcContract.methods.approve(lbContractAddress, 0);
-const transfer =  lbContract.methods.tokenToXtz(
-		    walletInfo.address,
-		    tokenMantissa,
-		    xtzAmountInMutez,
-		    deadline
-);
-const estimate =  await toolkit.estimate.batch([
-            {
-              kind: OpKind.TRANSACTION,
-        	    ...approve.toTransferParams()
-            },
-            {
-              kind: OpKind.TRANSACTION,
-		...transfer.toTransferParams(),
-            },
-          ]);
+			const lbContract = await toolkit.wallet.at(
+				lbContractAddress
+			);
+			// the deadline value is arbitrary and can be changed
+			const tzBtcContract = await toolkit.wallet.at(
+				tzbtcContractAddress
+			);
+			const approve = tzBtcContract.methods.approve(
+				lbContractAddress,
+				tokenMantissa
+			);
+			const transfer = lbContract.methods.tokenToXtz(
+				walletInfo.address,
+				tokenMantissa.integerValue(
+					BigNumber.ROUND_DOWN
+				),
+				xtzAmountInMutez.integerValue(
+					BigNumber.ROUND_DOWN
+				),
+				new Date(Date.now() + 60000).toISOString()
+			);
+			const estimate = await toolkit.estimate.batch([
+				{
+					kind: OpKind.TRANSACTION,
+					...approve.toTransferParams({}),
+				},
+				{
+					kind: OpKind.TRANSACTION,
+					...transfer.toTransferParams({}),
+				},
+			]);
+			console.log("\n", "estimate1 : ", estimate, "\n");
+
+			/*
+						const estimate2 = await walletInfo.toolkit.wallet
+							.at(lbContractAddress)
+							.then((contract) => {
+								return contract.methods
+									.tokenToXtz(
+										walletInfo.address,
+										1170,
+										toolkit.format("tz","mutez", xtzAmountInMutez) as any, 
+										deadline
+									)
+									.toTransferParams({});
+							})
+							.then((op) => {
+								console.log(
+									`Estimating the smart contract call : `
+								);
+								return toolkit.estimate.transfer(op);
+							})
+							.then((est) => {
+								console.log(`burnFeeMutez : ${est.burnFeeMutez}, 
+			    gasLimit : ${est.gasLimit}, 
+			    minimalFeeMutez : ${est.minimalFeeMutez}, 
+			    storageLimit : ${est.storageLimit}, 
+			    suggestedFeeMutez : ${est.suggestedFeeMutez}, 
+			    totalCost : ${est.totalCost}, 
+			    usingBaseFeeMutez : ${est.usingBaseFeeMutez}`);
+								return est;
+							})
+							.catch((error) =>
+								console.table(
+									`Error: ${JSON.stringify(
+										error,
+										null,
+										2
+									)}`
+								)
+							);
+			*/
+			/*
+			let batch = toolkit.wallet.batch().with([
+				{
+					kind: OpKind.TRANSACTION,
+					...approve.toTransferParams({
+						fee: estimate[0]
+							.suggestedFeeMutez,
+						gasLimit: estimate[0].gasLimit,
+						storageLimit:
+							estimate[0]
+								.storageLimit,
+					}),
+				},
+				{
+					kind: OpKind.TRANSACTION,
+					...transfer.toTransferParams({
+						fee: estimate[1]
+							.suggestedFeeMutez,
+						gasLimit: estimate[1].gasLimit,
+						storageLimit:
+							estimate[1]
+								.storageLimit,
+					}),
+				},
+			]);
+			
+			const batchOp = await batch.send();
+			await batchOp.confirmation();
+			*/
+			/*
 let batch =toolkit.wallet.batch()              
     .withContractCall(tzBtcContract.methods.approve(lbContractAddress, 0))
     .withContractCall(
@@ -200,8 +284,7 @@ let batch =toolkit.wallet.batch()
 	    deadline
 	)
     );
-const batchOp = await batch.send();
-await batchOp.confirmation();
+*/
 
 			/*
 						const estimate = await walletInfo.toolkit.wallet
@@ -387,7 +470,6 @@ export async function xtzToToken(
 						deadline
 					)
 					.send({
-						source: "tz1cGAdcXYcDaNNH8fxzFvffPzbhWofgVT37",
 						amount: xtzAmountInMutez.toNumber(),
 						mutez: true,
 						fee: estimate.suggestedFeeMutez,
