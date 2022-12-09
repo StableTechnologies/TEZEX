@@ -170,7 +170,23 @@ export async function tokenToXtz(
 const lbContract = await toolkit.wallet.at(lbContractAddress);
 // the deadline value is arbitrary and can be changed
 const tzBtcContract = await toolkit.wallet.at(tzbtcContractAddress);
-
+const approve = tzBtcContract.methods.approve(lbContractAddress, 0);
+const transfer =  lbContract.methods.tokenToXtz(
+		    walletInfo.address,
+		    tokenMantissa,
+		    xtzAmountInMutez,
+		    deadline
+);
+const estimate =  await toolkit.estimate.batch([
+            {
+              kind: OpKind.TRANSACTION,
+        	    ...approve.toTransferParams()
+            },
+            {
+              kind: OpKind.TRANSACTION,
+		...transfer.toTransferParams(),
+            },
+          ]);
 let batch =toolkit.wallet.batch()              
     .withContractCall(tzBtcContract.methods.approve(lbContractAddress, 0))
     .withContractCall(
