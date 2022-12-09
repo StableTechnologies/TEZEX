@@ -176,11 +176,13 @@ export async function tokenToXtz(
 			const tzBtcContract = await toolkit.wallet.at(
 				tzbtcContractAddress
 			);
-			const approve = tzBtcContract.methods.approve(
+			let approve = tzBtcContract.methods.approve(
 				lbContractAddress,
 				tokenMantissa
 			);
-			const transfer = lbContract.methods.tokenToXtz(
+			console.log('\n','tokenMantissa.toString() : ', tokenMantissa.toString(),'\n'); 
+			console.log('\n','tokenMantissa.toString() : ', xtzAmountInMutez.toString(),'\n'); 
+			let transfer = lbContract.methods.tokenToXtz(
 				walletInfo.address,
 				tokenMantissa.integerValue(
 					BigNumber.ROUND_DOWN
@@ -188,9 +190,9 @@ export async function tokenToXtz(
 				xtzAmountInMutez.integerValue(
 					BigNumber.ROUND_DOWN
 				),
-				new Date(Date.now() + 60000).toISOString()
+				new Date(Date.now() + 120000000).toISOString()
 			);
-			const estimate = await toolkit.estimate.batch([
+			let estimate = await toolkit.estimate.batch([
 				{
 					kind: OpKind.TRANSACTION,
 					...approve.toTransferParams({}),
@@ -241,7 +243,6 @@ export async function tokenToXtz(
 								)
 							);
 			*/
-			/*
 			let batch = toolkit.wallet.batch().with([
 				{
 					kind: OpKind.TRANSACTION,
@@ -267,10 +268,10 @@ export async function tokenToXtz(
 				},
 			]);
 			
-			const batchOp = await batch.send();
+			let batchOp = await batch.send();
 			await batchOp.confirmation();
-			*/
-			/*
+
+/*
 let batch =toolkit.wallet.batch()              
     .withContractCall(tzBtcContract.methods.approve(lbContractAddress, 0))
     .withContractCall(
