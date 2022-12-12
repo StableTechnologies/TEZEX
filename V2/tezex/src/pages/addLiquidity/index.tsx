@@ -19,7 +19,7 @@ import { TokenKind } from "../../types/general";
 export interface ISwapToken {
 	children: null;
 }
-export const SwapXTZToToken: FC = (props) => {
+export const AddLiquidity: FC = (props) => {
 	const [inputAmountMantissa, setInputAmountMantissa] = useState<
 		BigNumber | number | null
 	>(null);
@@ -120,7 +120,7 @@ export const SwapXTZToToken: FC = (props) => {
 	}, [inputAmountMantissa, inToken, walletInfo, networkInfo]);
 	return (
 		<div>
-			<h3>{"Swap " + inToken as string + " for " + outToken as string}</h3>
+			<h3>{"Add Liquidity" }</h3>
 			<TokenAmountInput
 				asset={inToken}
 				walletInfo={walletInfo}
