@@ -108,6 +108,7 @@ export const SwapXTZToToken: FC = (props) => {
 								walletInfo
 							)
 						);
+						break;
 				}
 			}
 		};

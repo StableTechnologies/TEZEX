@@ -180,6 +180,7 @@ export async function tokenToXtz(
 				lbContractAddress,
 				tokenMantissa
 			);
+			let minXtzBought = await estimateXtzFromToken(tokenMantissa, lbContractAddress, walletInfo);
 			console.log('\n','tokenMantissa.toString() : ', tokenMantissa.toString(),'\n'); 
 			console.log('\n','tokenMantissa.toString() : ', xtzAmountInMutez.toString(),'\n'); 
 			let transfer = lbContract.methods.tokenToXtz(
@@ -187,11 +188,10 @@ export async function tokenToXtz(
 				tokenMantissa.integerValue(
 					BigNumber.ROUND_DOWN
 				),
-				xtzAmountInMutez.integerValue(
-					BigNumber.ROUND_DOWN
-				),
-				new Date(Date.now() + 120000000).toISOString()
+				minXtzBought,
+				new Date(Date.now() + 12000000).toISOString()
 			);
+			let est = async () =>{	try{
 			let estimate = await toolkit.estimate.batch([
 				{
 					kind: OpKind.TRANSACTION,
@@ -203,6 +203,13 @@ export async function tokenToXtz(
 				},
 			]);
 			console.log("\n", "estimate1 : ", estimate, "\n");
+			return estimate
+			}catch (err){
+
+				console.log(`failed in estimating tokenToXtz ${JSON.stringify(err)}}`);
+			}
+		}
+			let estimate = await est()
 
 			/*
 						const estimate2 = await walletInfo.toolkit.wallet
@@ -243,6 +250,7 @@ export async function tokenToXtz(
 								)
 							);
 			*/
+			if (estimate) {
 			let batch = toolkit.wallet.batch().with([
 				{
 					kind: OpKind.TRANSACTION,
@@ -270,6 +278,7 @@ export async function tokenToXtz(
 			
 			let batchOp = await batch.send();
 			await batchOp.confirmation();
+			}
 
 /*
 let batch =toolkit.wallet.batch()              

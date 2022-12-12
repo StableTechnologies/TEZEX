@@ -14,7 +14,9 @@ import {
 export interface ITokenAmountInput {
 	asset: TokenKind;
 	walletInfo: WalletInfo | null;
-	setMantissa: React.Dispatch<React.SetStateAction<BigNumber | number | null>>;
+	setMantissa: React.Dispatch<
+		React.SetStateAction<BigNumber | number | null>
+	>;
 	mantissa?: BigNumber | number | null;
 }
 
@@ -37,27 +39,37 @@ export const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 				)
 			);
 		} else {
-			setSufficientBalance(true)
+			setSufficientBalance(true);
 		}
-		
 	};
 	const setValue = () => {
-
-		if (props.mantissa){
-
-			if (new BigNumber(props.mantissa).isEqualTo(new BigNumber(inputString))) {
-				return inputString
+		if (props.mantissa) {
+			if (
+				new BigNumber(props.mantissa).isEqualTo(
+					tokenDecimalToMantissa(
+						new BigNumber(inputString),
+						props.asset
+					)
+				)
+			) {
+				return inputString;
 			} else {
-
-					return  tokenMantissaToDecimal(
-								props.mantissa,
-								props.asset
-						  ).toString()
+				console.log(
+					"\n",
+					"props.mantissa, inputString : ",
+					props.mantissa.toString(),
+					inputString,
+					"\n"
+				);
+				return tokenMantissaToDecimal(
+					props.mantissa,
+					props.asset
+				).toString();
 			}
-		}else{
-			return "0";
+		} else {
+			return "";
 		}
-	}
+	};
 
 	return (
 		<div>
@@ -67,9 +79,7 @@ export const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 				name="amountOfCurrency"
 				className="input-currency"
 				onChange={updateAmount}
-				value={
-					setValue()
-				}
+				value={setValue()}
 			></input>
 
 			<label
@@ -80,7 +90,7 @@ export const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 			</label>
 
 			<label
-				style={{color: 'red'}}
+				style={{ color: "red" }}
 				className="balance-warning"
 				hidden={sufficientBalance}
 			>
