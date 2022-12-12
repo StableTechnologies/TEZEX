@@ -1,20 +1,20 @@
 import { FC, useState, useEffect } from "react";
 
 import { BigNumber } from "bignumber.js";
-import { TokenAmountInput } from "../../ui/elements/Inputs";
-import { TokenAmountOutput } from "../../ui/elements/Labels";
-import { useWallet } from "../../../hooks/wallet";
-import { useNetwork } from "../../../hooks/network";
+import { TokenAmountInput } from "../../components/ui/elements/Inputs";
+import { TokenAmountOutput } from "../../components/ui/elements/Labels";
+import { useWallet } from "../../hooks/wallet";
+import { useNetwork } from "../../hooks/network";
 import {
 	estimateTokensFromXtz,
 	estimateXtzFromToken,
 	xtzToToken,
 	tokenToXtz
-} from "../../../functions/liquidityBaking";
-import { Transact } from "../../ui/elements/Buttons";
-import { Toggle } from "../../ui/elements/Toggles";
+} from "../../functions/liquidityBaking";
+import { Transact } from "../../components/ui/elements/Buttons";
+import { Toggle } from "../../components/ui/elements/Toggles";
 
-import { TokenKind } from "../../../types/general";
+import { TokenKind } from "../../types/general";
 
 export interface ISwapToken {
 	children: null;
