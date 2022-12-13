@@ -20,6 +20,12 @@ export interface ISwapToken {
 	children: null;
 }
 export const AddLiquidity: FC = (props) => {
+	const [tokenMantissa, setTokenMantissa] = useState<
+		BigNumber | number | null
+	>(null);
+	const [xtzMantissa, setXtzMantissa] = useState<
+		BigNumber | number | null
+	>(null);
 	const [inputAmountMantissa, setInputAmountMantissa] = useState<
 		BigNumber | number | null
 	>(null);
@@ -50,55 +56,24 @@ export const AddLiquidity: FC = (props) => {
 		}
 	};
 
-	useEffect(() => {
-		if (swapFields) {
-			if (inToken === TokenKind.XTZ) {
-				setInputAmountMantissa(outputAmountMantissa)
-			}
-			setInToken(TokenKind.TzBTC);
-			setOutToken(TokenKind.XTZ);
-		} else {
-
-			if (inToken === TokenKind.TzBTC) {
-				setInputAmountMantissa(outputAmountMantissa)
-			}
-			setInToken(TokenKind.XTZ);
-			setOutToken(TokenKind.TzBTC);
-		}
-	}, [inToken,outToken,swapFields, outputAmountMantissa]);
 
 	useEffect(() => {
 		const estimateTokens = async () => {
-			if (inputAmountMantissa) {
+			if (xtzMantissa) {
 				console.log(
 					"\n",
-					"inputAmountMantissa : ",
-					inputAmountMantissa.toString(),
+					"xtzMantissa : ",
+					xtzMantissa.toString(),
 					"\n"
 				);
 			}
-			if (inputAmountMantissa && walletInfo) {
+			if (xtzMantissa && walletInfo) {
 				switch (inToken) {
 					case TokenKind.XTZ:
 						setOutputAmountMantissa(
 							await estimateTokensFromXtz(
 								new BigNumber(
-									inputAmountMantissa
-								),
-								networkInfo
-									.addresses
-									.tzbtc
-									.dex
-									.sirius,
-								walletInfo
-							)
-						);
-						break;
-					case TokenKind.TzBTC:
-						setOutputAmountMantissa(
-							await estimateXtzFromToken(
-								new BigNumber(
-									inputAmountMantissa
+									xtzMantissa
 								),
 								networkInfo
 									.addresses
@@ -117,22 +92,59 @@ export const AddLiquidity: FC = (props) => {
 		return () => {
 			//unmount code
 		};
-	}, [inputAmountMantissa, inToken, walletInfo, networkInfo]);
+	}, [xtzMantissa, inToken, walletInfo, networkInfo]);
+
+	useEffect(() => {
+		const estimateTokens = async () => {
+			if (tokenMantissa) {
+				console.log(
+					"\n",
+					"xtzMantissa : ",
+					tokenMantissa.toString(),
+					"\n"
+				);
+			}
+			if (tokenMantissa && walletInfo) {
+				switch (inToken) {
+					case TokenKind.TzBTC:
+						setOutputAmountMantissa(
+							await estimateXtzFromToken(
+								new BigNumber(
+									tokenMantissa.toString()
+								),
+								networkInfo
+									.addresses
+									.tzbtc
+									.dex
+									.sirius,
+								walletInfo
+							)
+						);
+						break;
+				}
+			}
+		};
+
+		estimateTokens();
+		return () => {
+			//unmount code
+		};
+	}, [tokenMantissa, inToken, walletInfo, networkInfo]);
 	return (
 		<div>
 			<h3>{"Add Liquidity" }</h3>
 			<TokenAmountInput
-				asset={inToken}
+				asset={TokenKind.XTZ}
 				walletInfo={walletInfo}
 				setMantissa={setInputAmountMantissa}
 				mantissa={inputAmountMantissa}
 				/>
-			<Toggle toggle={swapFields} setToggle={setSwapFields}>
-				{"swap fields"}
-			</Toggle>
-			<TokenAmountOutput asset={outToken}>
-				{outputAmountMantissa}
-			</TokenAmountOutput>
+			<TokenAmountInput
+				asset={TokenKind.TzBTC}
+				walletInfo={walletInfo}
+				setMantissa={setInputAmountMantissa}
+				mantissa={inputAmountMantissa}
+				/>
 			<Transact callback={transact}>{"Buy " + outToken as string}</Transact>
 		</div>
 	);
