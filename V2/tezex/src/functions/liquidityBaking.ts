@@ -180,9 +180,23 @@ export async function tokenToXtz(
 				lbContractAddress,
 				tokenMantissa
 			);
-			let minXtzBought = await estimateXtzFromToken(tokenMantissa, lbContractAddress, walletInfo);
-			console.log('\n','tokenMantissa.toString() : ', tokenMantissa.toString(),'\n'); 
-			console.log('\n','tokenMantissa.toString() : ', xtzAmountInMutez.toString(),'\n'); 
+			let minXtzBought = await estimateXtzFromToken(
+				tokenMantissa,
+				lbContractAddress,
+				walletInfo
+			);
+			console.log(
+				"\n",
+				"tokenMantissa.toString() : ",
+				tokenMantissa.toString(),
+				"\n"
+			);
+			console.log(
+				"\n",
+				"tokenMantissa.toString() : ",
+				xtzAmountInMutez.toString(),
+				"\n"
+			);
 			let transfer = lbContract.methods.tokenToXtz(
 				walletInfo.address,
 				tokenMantissa.integerValue(
@@ -191,25 +205,39 @@ export async function tokenToXtz(
 				minXtzBought,
 				new Date(Date.now() + 12000000).toISOString()
 			);
-			let est = async () =>{	try{
-			let estimate = await toolkit.estimate.batch([
-				{
-					kind: OpKind.TRANSACTION,
-					...approve.toTransferParams({}),
-				},
-				{
-					kind: OpKind.TRANSACTION,
-					...transfer.toTransferParams({}),
-				},
-			]);
-			console.log("\n", "estimate1 : ", estimate, "\n");
-			return estimate
-			}catch (err){
-
-				console.log(`failed in estimating tokenToXtz ${JSON.stringify(err)}}`);
-			}
-		}
-			let estimate = await est()
+			let est = async () => {
+				try {
+					let estimate =
+						await toolkit.estimate.batch([
+							{
+								kind: OpKind.TRANSACTION,
+								...approve.toTransferParams(
+									{}
+								),
+							},
+							{
+								kind: OpKind.TRANSACTION,
+								...transfer.toTransferParams(
+									{}
+								),
+							},
+						]);
+					console.log(
+						"\n",
+						"estimate1 : ",
+						estimate,
+						"\n"
+					);
+					return estimate;
+				} catch (err) {
+					console.log(
+						`failed in estimating tokenToXtz ${JSON.stringify(
+							err
+						)}}`
+					);
+				}
+			};
+			let estimate = await est();
 
 			/*
 						const estimate2 = await walletInfo.toolkit.wallet
@@ -251,36 +279,38 @@ export async function tokenToXtz(
 							);
 			*/
 			if (estimate) {
-			let batch = toolkit.wallet.batch().with([
-				{
-					kind: OpKind.TRANSACTION,
-					...approve.toTransferParams({
-						fee: estimate[0]
-							.suggestedFeeMutez,
-						gasLimit: estimate[0].gasLimit,
-						storageLimit:
-							estimate[0]
-								.storageLimit,
-					}),
-				},
-				{
-					kind: OpKind.TRANSACTION,
-					...transfer.toTransferParams({
-						fee: estimate[1]
-							.suggestedFeeMutez,
-						gasLimit: estimate[1].gasLimit,
-						storageLimit:
-							estimate[1]
-								.storageLimit,
-					}),
-				},
-			]);
-			
-			let batchOp = await batch.send();
-			await batchOp.confirmation();
+				let batch = toolkit.wallet.batch().with([
+					{
+						kind: OpKind.TRANSACTION,
+						...approve.toTransferParams({
+							fee: estimate[0]
+								.suggestedFeeMutez,
+							gasLimit: estimate[0]
+								.gasLimit,
+							storageLimit:
+								estimate[0]
+									.storageLimit,
+						}),
+					},
+					{
+						kind: OpKind.TRANSACTION,
+						...transfer.toTransferParams({
+							fee: estimate[1]
+								.suggestedFeeMutez,
+							gasLimit: estimate[1]
+								.gasLimit,
+							storageLimit:
+								estimate[1]
+									.storageLimit,
+						}),
+					},
+				]);
+
+				let batchOp = await batch.send();
+				await batchOp.confirmation();
 			}
 
-/*
+			/*
 let batch =toolkit.wallet.batch()              
     .withContractCall(tzBtcContract.methods.approve(lbContractAddress, 0))
     .withContractCall(
@@ -494,4 +524,145 @@ export async function xtzToToken(
 	} catch (err) {
 		console.log(`failed in sendDexterBuy ${JSON.stringify(err)}}`);
 	}
+}
+
+// add Liquidity
+
+export async function addLiquidity(
+	tokenMantissa: BigNumber,
+	xtzAmountInMutez: BigNumber,
+	lbContractAddress: string,
+	tzbtcContractAddress: string,
+	walletInfo: WalletInfo
+) {
+	try {
+		if (walletInfo.toolkit) {
+			const toolkit = walletInfo.toolkit;
+			const deadline = new Date(
+				Date.now() + 60000
+			).toISOString();
+
+			const lbContract = await toolkit.wallet.at(
+				lbContractAddress
+			);
+			// the deadline value is arbitrary and can be changed
+			const tzBtcContract = await toolkit.wallet.at(
+				tzbtcContractAddress
+			);
+
+			const maxTokensSold = Math.floor(
+				AMOUNT_IN_TZBTC +
+					(AMOUNT_IN_TZBTC * slippage) / 100
+			);
+			const minLqtMinted = Math.floor(
+				(AMOUNT_IN_XTZ * lqtTotal) / xtzPool
+			);
+
+			let approve = tzBtcContract.methods.approve(
+				lbContractAddress,
+				tokenMantissa
+			);
+			let minXtzBought = await estimateXtzFromToken(
+				tokenMantissa,
+				lbContractAddress,
+				walletInfo
+			);
+			console.log(
+				"\n",
+				"tokenMantissa.toString() : ",
+				tokenMantissa.toString(),
+				"\n"
+			);
+			console.log(
+				"\n",
+				"tokenMantissa.toString() : ",
+				xtzAmountInMutez.toString(),
+				"\n"
+			);
+			let transfer = lbContract.methods.tokenToXtz(
+				walletInfo.address,
+				tokenMantissa.integerValue(
+					BigNumber.ROUND_DOWN
+				),
+				minXtzBought,
+				new Date(Date.now() + 12000000).toISOString()
+			);
+
+			const addLiquidity = lbContract.methods.addLiquidity(
+				walletInfo.address,
+				minLqtMinted - 3,
+				maxTokensSold,
+				deadline
+			);
+			const approve0 = tzBtcContract.methods.approve(
+				lbContractAddress,
+				0
+			);
+			const approve1 = tzBtcContract.methods.approve(
+				lbContractAddress,
+				maxTokensSold
+			);
+
+			let est = async () => {
+				try {
+					let estimate =
+						await toolkit.estimate.batch([
+							{
+								kind: OpKind.TRANSACTION,
+								...approve0.toTransferParams(),
+							},
+							{
+								kind: OpKind.TRANSACTION,
+								...approve1.toTransferParams(),
+							},
+							{
+								kind: OpKind.TRANSACTION,
+								...addLiquidity.toTransferParams(),
+								amount: xtzAmountInMutez.toNumber(),
+								mutez: true,
+							},
+						]);
+					console.log(
+						"\n",
+						"estimate1 : ",
+						estimate,
+						"\n"
+					);
+					return estimate;
+				} catch (err) {
+					console.log(
+						`failed in estimating tokenToXtz ${JSON.stringify(
+							err
+						)}}`
+					);
+				}
+			};
+			let estimate = await est();
+
+			console.log("\n", "estimate : ", estimate, "\n");
+
+			/*
+			const batchOp = await Tezos.wallet
+			.batch([
+			    {
+			        kind: OpKind.TRANSACTION,
+			        ...approve0.toTransferParams()
+			    },
+			    {
+			        kind: OpKind.TRANSACTION,
+			        ...approve1.toTransferParams()
+			    },
+			    {
+			        kind: OpKind.TRANSACTION,
+			        ...addLiquidity.toTransferParams(),
+			        amount: xtzAmountInMutez,
+			        mutez: true
+			    },
+			])
+			.send();
+			
+			await batchOp.confirmation();
+			*/
+		}
+	} catch (err) {}
 }
