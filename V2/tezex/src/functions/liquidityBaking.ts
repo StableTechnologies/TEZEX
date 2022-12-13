@@ -538,6 +538,14 @@ export function estimateSharesFromXtz(xtzAmountInMutez: BigNumber, dexStorage: a
     .integerValue(BigNumber.ROUND_DOWN);
 }
 
+export function estimateSharesFromToken(tokenMantissa: BigNumber, dexStorage: any) {
+
+  return tokenMantissa
+    .integerValue(BigNumber.ROUND_DOWN)
+    .times(dexStorage.totalSupply)
+    .div(dexStorage.tezPool)
+    .integerValue(BigNumber.ROUND_DOWN);
+}
 
 export async function addLiquidity(
 	tokenMantissa: BigNumber,
