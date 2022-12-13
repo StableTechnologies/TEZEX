@@ -528,28 +528,47 @@ export async function xtzToToken(
 
 // add Liquidity
 
-
-export function estimateSharesFromXtz(xtzAmountInMutez: BigNumber, dexStorage: any) {
-
-  return xtzAmountInMutez
-    .integerValue(BigNumber.ROUND_DOWN)
-    .times(dexStorage.totalSupply)
-    .div(dexStorage.tezPool)
-    .integerValue(BigNumber.ROUND_DOWN);
+export function estimateShares(
+	xtzAmountInMutez: BigNumber,
+	tokenMantissa: BigNumber,
+	dexStorage: any
+) {
+	const shares = BigNumber.max(
+		BigNumber.min(
+			estimateSharesFromXtz(xtzAmountInMutez, dexStorage),
+			estimateSharesFromToken(tokenMantissa, dexStorage)
+		),
+		1
+	);
+	return shares;
 }
 
-export function estimateSharesFromToken(tokenMantissa: BigNumber, dexStorage: any) {
+export function estimateSharesFromXtz(
+	xtzAmountInMutez: BigNumber,
+	dexStorage: any
+) {
+	return xtzAmountInMutez
+		.integerValue(BigNumber.ROUND_DOWN)
+		.times(dexStorage.totalSupply)
+		.div(dexStorage.tezPool)
+		.integerValue(BigNumber.ROUND_DOWN);
+}
 
-  return tokenMantissa
-    .integerValue(BigNumber.ROUND_DOWN)
-    .times(dexStorage.totalSupply)
-    .div(dexStorage.tezPool)
-    .integerValue(BigNumber.ROUND_DOWN);
+export function estimateSharesFromToken(
+	tokenMantissa: BigNumber,
+	dexStorage: any
+) {
+	return tokenMantissa
+		.integerValue(BigNumber.ROUND_DOWN)
+		.times(dexStorage.totalSupply)
+		.div(dexStorage.tezPool)
+		.integerValue(BigNumber.ROUND_DOWN);
 }
 
 export async function addLiquidity(
 	tokenMantissa: BigNumber,
 	xtzAmountInMutez: BigNumber,
+	slipage: BigNumber,
 	lbContractAddress: string,
 	tzbtcContractAddress: string,
 	walletInfo: WalletInfo
@@ -569,12 +588,19 @@ export async function addLiquidity(
 				tzbtcContractAddress
 			);
 
-			const maxTokensSold = Math.floor(
-				AMOUNT_IN_TZBTC +
-					(AMOUNT_IN_TZBTC * slippage) / 100
+			const maxTokensSold = tokenMantissa.plus(
+				tokenMantissa.multipliedBy(slipage).div(100)
 			);
-			const minLqtMinted = Math.floor(
-				(AMOUNT_IN_XTZ * lqtTotal) / xtzPool
+
+			const lbContractStorage = await getLbContractStorage(
+				walletInfo.toolkit,
+				lbContractAddress
+			);
+
+			const minLqtMinted = estimateShares(
+				xtzAmountInMutez,
+				tokenMantissa,
+				lbContractStorage
 			);
 
 			let approve = tzBtcContract.methods.approve(
@@ -609,7 +635,7 @@ export async function addLiquidity(
 
 			const addLiquidity = lbContract.methods.addLiquidity(
 				walletInfo.address,
-				minLqtMinted - 3,
+				minLqtMinted.minus(3),
 				maxTokensSold,
 				deadline
 			);
