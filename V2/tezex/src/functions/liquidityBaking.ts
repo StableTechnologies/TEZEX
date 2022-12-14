@@ -105,14 +105,17 @@ export async function getLbContractStorage(
 ) {
 	const contract = await tezosToolkit.wallet.at(lbContractAddress);
 	const storage = await contract.storage<any>();
+	console.log('\n','storage : ', storage,'\n'); 
 	if (storage) {
 		const xtzPool = new BigNumber(storage.xtzPool);
 		const tokenPool = new BigNumber(storage.tokenPool);
-		return { xtzPool, tokenPool };
+		const lqtTotal = new BigNumber(storage.lqtTotal);
+		return { xtzPool, tokenPool , lqtTotal };
 	} else {
 		const xtzPool = new BigNumber(0);
 		const tokenPool = new BigNumber(0);
-		return { xtzPool, tokenPool };
+		const lqtTotal = new BigNumber(0);
+		return { xtzPool, tokenPool, lqtTotal };
 	}
 }
 
@@ -533,11 +536,23 @@ export function estimateShares(
 	tokenMantissa: BigNumber,
 	dexStorage: any
 ) {
+	const sharesFromXtz = estimateSharesFromXtz(
+		xtzAmountInMutez,
+		dexStorage
+	);
+	const sharesFromToken = estimateSharesFromToken(
+		tokenMantissa,
+		dexStorage
+	);
+	console.log(
+		"\n",
+		"sharesFromXtz, sharesFromToken : ",
+		sharesFromXtz.toString(),
+		sharesFromToken.toString(),
+		"\n"
+	);
 	const shares = BigNumber.max(
-		BigNumber.min(
-			estimateSharesFromXtz(xtzAmountInMutez, dexStorage),
-			estimateSharesFromToken(tokenMantissa, dexStorage)
-		),
+		BigNumber.min(sharesFromXtz, sharesFromToken),
 		1
 	);
 	return shares;
@@ -547,10 +562,11 @@ export function estimateSharesFromXtz(
 	xtzAmountInMutez: BigNumber,
 	dexStorage: any
 ) {
+	console.log('\n','dexStorageXtz : ', dexStorage,'\n'); 
 	return xtzAmountInMutez
 		.integerValue(BigNumber.ROUND_DOWN)
-		.times(dexStorage.totalSupply)
-		.div(dexStorage.tezPool)
+		.times(dexStorage.lqtTotal)
+		.div(dexStorage.xtzPool)
 		.integerValue(BigNumber.ROUND_DOWN);
 }
 
@@ -560,8 +576,8 @@ export function estimateSharesFromToken(
 ) {
 	return tokenMantissa
 		.integerValue(BigNumber.ROUND_DOWN)
-		.times(dexStorage.totalSupply)
-		.div(dexStorage.tezPool)
+		.times(dexStorage.lqtTotal)
+		.div(dexStorage.tokenPool)
 		.integerValue(BigNumber.ROUND_DOWN);
 }
 
@@ -633,9 +649,17 @@ export async function buyLiquidityShares(
 				new Date(Date.now() + 12000000).toISOString()
 			);
 
+			console.log(
+				"\n",
+				"minLqtMinted.toString() : ",
+				minLqtMinted.toString(),
+				"\n"
+			);
 			const addLiquidity = lbContract.methods.addLiquidity(
 				walletInfo.address,
-				minLqtMinted.minus(3),
+				minLqtMinted
+					.minus(3)
+					.integerValue(BigNumber.ROUND_DOWN),
 				maxTokensSold,
 				deadline
 			);
