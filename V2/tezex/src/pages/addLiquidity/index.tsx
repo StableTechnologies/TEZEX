@@ -42,7 +42,7 @@ export const AddLiquidity: FC = (props) => {
 							inputAmountMantissa
 						),
 						new BigNumber(
-							0
+							0.5
 						),
 						networkInfo.addresses.tzbtc.dex
 							.sirius,

@@ -606,7 +606,9 @@ export async function buyLiquidityShares(
 
 			const maxTokensSold = tokenMantissa.plus(
 				tokenMantissa.multipliedBy(slipage).div(100)
-			);
+			).integerValue(
+					BigNumber.ROUND_DOWN
+				);
 
 			const lbContractStorage = await getLbContractStorage(
 				walletInfo.toolkit,
@@ -636,10 +638,11 @@ export async function buyLiquidityShares(
 			);
 			console.log(
 				"\n",
-				"tokenMantissa.toString() : ",
+				"xtzAmountInMutez.toString() : ",
 				xtzAmountInMutez.toString(),
 				"\n"
 			);
+			console.log('\n','maxTokensSold.toString() : ', maxTokensSold.toString(),'\n'); 
 			let transfer = lbContract.methods.tokenToXtz(
 				walletInfo.address,
 				tokenMantissa.integerValue(
