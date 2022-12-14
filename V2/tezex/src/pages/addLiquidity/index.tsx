@@ -150,7 +150,7 @@ export const AddLiquidity: FC = (props) => {
 			<Toggle toggle={swapFields} setToggle={setSwapFields}>
 				{"swap fields"}
 			</Toggle>
-			<TokenAmountOutput asset={outToken}>
+			<TokenAmountOutput asset={outToken} checkBalance={true}>
 				{outputAmountMantissa}
 			</TokenAmountOutput>
 			<Transact callback={transact}>{"Buy Shares"}</Transact>
