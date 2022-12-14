@@ -565,7 +565,7 @@ export function estimateSharesFromToken(
 		.integerValue(BigNumber.ROUND_DOWN);
 }
 
-export async function addLiquidity(
+export async function buyLiquidityShares(
 	tokenMantissa: BigNumber,
 	xtzAmountInMutez: BigNumber,
 	slipage: BigNumber,
