@@ -1,7 +1,7 @@
 import { FC, useState, useEffect } from "react";
 
 import { BigNumber } from "bignumber.js";
-import { TokenAmountInput } from "../../components/ui/elements/inputs";
+import { TokenAmountInput, Slippage} from "../../components/ui/elements/inputs";
 import { TokenAmountOutput } from "../../components/ui/elements/Labels";
 import { useWallet } from "../../hooks/wallet";
 import { useNetwork } from "../../hooks/network";
@@ -22,6 +22,8 @@ export const AddLiquidity: FC = (props) => {
 	const [inputAmountMantissa, setInputAmountMantissa] = useState<
 		BigNumber | number | null
 	>(null);
+	const [slippage, setSlippage] =
+		useState<BigNumber | number | null>(0.5);
 	const [outputAmountMantissa, setOutputAmountMantissa] =
 		useState<number>(0);
 	const [outToken, setOutToken] = useState(TokenKind.TzBTC);
@@ -42,7 +44,7 @@ export const AddLiquidity: FC = (props) => {
 							inputAmountMantissa
 						),
 						new BigNumber(
-							0.5
+							(slippage)? slippage: 0
 						),
 						networkInfo.addresses.tzbtc.dex
 							.sirius,
@@ -59,7 +61,7 @@ export const AddLiquidity: FC = (props) => {
 							outputAmountMantissa
 						),
 						new BigNumber(
-							0
+							(slippage)? slippage: 0
 						),
 						networkInfo.addresses.tzbtc.dex
 							.sirius,
@@ -153,6 +155,13 @@ export const AddLiquidity: FC = (props) => {
 			<TokenAmountOutput asset={outToken} checkBalance={true}>
 				{outputAmountMantissa}
 			</TokenAmountOutput>
+			<Slippage
+				asset={TokenKind.TzBTC}
+				walletInfo={walletInfo}
+				setSlippage={setSlippage}
+				slippage={slippage}
+				amountMantissa={new BigNumber(outputAmountMantissa)}
+				/>
 			<Transact callback={transact}>{"Buy Shares"}</Transact>
 		</div>
 	);

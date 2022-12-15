@@ -15,9 +15,9 @@ export interface ISlippage {
 	asset: TokenKind;
 	walletInfo: WalletInfo | null;
 	setSlippage: React.Dispatch<
-		React.SetStateAction<BigNumber | number | null>
+		React.SetStateAction< BigNumber | number | null>
 	>;
-	slippage:  number | null;
+	slippage:  BigNumber | number | null;
 	amountMantissa:  BigNumber ;
 }
 
@@ -37,7 +37,7 @@ export const Slippage: FC<ISlippage> = (props) => {
 	const net = useNetwork();
 	const updateAmount = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		setInputString(e.target.value);
-		const num = tokenDecimalToMantissa(e.target.value, props.asset);
+		const num = new BigNumber(e.target.value);
 
 		num.isNaN() ? props.setSlippage(null) : props.setSlippage(num);
 		if (props.walletInfo && num.gt(0) && !num.isNaN()) {
@@ -57,13 +57,20 @@ export const Slippage: FC<ISlippage> = (props) => {
 
 	return (
 		<div>
+
+			<label
+				style={{ }}
+				className="slippage-label"
+			>
+				{"slippage "}
+			</label>
 			<input
 				type="number"
 				id="slippage"
 				name="slippage"
 				className="slippage-input"
 				onChange={updateAmount}
-				value={(props.slippage)? props.slippage : "0"}
+				value={(props.slippage)? props.slippage.toString() : "0"}
 			></input>
 
 
