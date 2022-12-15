@@ -15,10 +15,10 @@ import { Toggle } from "../../components/ui/elements/Toggles";
 
 import { TokenKind } from "../../types/general";
 
-export interface IAddLiquidity {
+export interface IRemoveLiquidity {
 	children: null;
 }
-export const AddLiquidity: FC = (props) => {
+export const RemoveLiquidity: FC = (props) => {
 	const [inputAmountMantissa, setInputAmountMantissa] = useState<
 		BigNumber | number | null
 	>(null);
