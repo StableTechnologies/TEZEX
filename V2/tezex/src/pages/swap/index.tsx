@@ -1,7 +1,7 @@
 import { FC, useState, useEffect } from "react";
 
 import { BigNumber } from "bignumber.js";
-import { TokenAmountInput } from "../../components/ui/elements/Inputs";
+import { TokenAmountInput } from "../../components/ui/elements/inputs";
 import { TokenAmountOutput } from "../../components/ui/elements/Labels";
 import { useWallet } from "../../hooks/wallet";
 import { useNetwork } from "../../hooks/network";
