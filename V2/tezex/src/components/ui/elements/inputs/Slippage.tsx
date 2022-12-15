@@ -14,12 +14,23 @@ import {
 export interface ISlippage {
 	asset: TokenKind;
 	walletInfo: WalletInfo | null;
-	setMantissa: React.Dispatch<
+	setSlippage: React.Dispatch<
 		React.SetStateAction<BigNumber | number | null>
 	>;
-	mantissa?: BigNumber | number | null;
+	slippage:  number | null;
+	amountMantissa:  BigNumber ;
 }
 
+function addSlippage(slippage: BigNumber | number | null, tokenMantissa: BigNumber){
+	if (slippage){
+
+			return tokenMantissa.plus(
+				tokenMantissa.multipliedBy(slippage).div(100)
+			).integerValue(
+					BigNumber.ROUND_DOWN
+				);
+	}else{ return tokenMantissa}
+}
 export const Slippage: FC<ISlippage> = (props) => {
 	const [sufficientBalance, setSufficientBalance] = useState(true);
 	const [inputString, setInputString] = useState("0");
@@ -28,46 +39,19 @@ export const Slippage: FC<ISlippage> = (props) => {
 		setInputString(e.target.value);
 		const num = tokenDecimalToMantissa(e.target.value, props.asset);
 
-		num.isNaN() ? props.setMantissa(null) : props.setMantissa(num);
+		num.isNaN() ? props.setSlippage(null) : props.setSlippage(num);
 		if (props.walletInfo && num.gt(0) && !num.isNaN()) {
 			setSufficientBalance(
 				await hasSufficientBalance(
-					new BigNumber(e.target.value),
+					addSlippage(new BigNumber(e.target.value), props.amountMantissa),
 					props.walletInfo,
 					net,
-					props.asset
+					props.asset,
+					true
 				)
 			);
 		} else {
 			setSufficientBalance(true);
-		}
-	};
-	const setValue = () => {
-		if (props.mantissa) {
-			if (
-				new BigNumber(props.mantissa).isEqualTo(
-					tokenDecimalToMantissa(
-						new BigNumber(inputString),
-						props.asset
-					)
-				)
-			) {
-				return inputString;
-			} else {
-				console.log(
-					"\n",
-					"props.mantissa, inputString : ",
-					props.mantissa.toString(),
-					inputString,
-					"\n"
-				);
-				return tokenMantissaToDecimal(
-					props.mantissa,
-					props.asset
-				).toString();
-			}
-		} else {
-			return "";
 		}
 	};
 
@@ -75,19 +59,13 @@ export const Slippage: FC<ISlippage> = (props) => {
 		<div>
 			<input
 				type="number"
-				id="amountOfCurrency"
-				name="amountOfCurrency"
-				className="input-currency"
+				id="slippage"
+				name="slippage"
+				className="slippage-input"
 				onChange={updateAmount}
-				value={setValue()}
+				value={(props.slippage)? props.slippage : "0"}
 			></input>
 
-			<label
-				htmlFor="amountOfCurrency"
-				className="input-currency"
-			>
-				{props.asset as string}
-			</label>
 
 			<label
 				style={{ color: "red" }}
