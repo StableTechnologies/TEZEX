@@ -713,28 +713,53 @@ export async function buyLiquidityShares(
 
 			console.log("\n", "estimate : ", estimate, "\n");
 
-			/*
-			const batchOp = await Tezos.wallet
-			.batch([
-			    {
-			        kind: OpKind.TRANSACTION,
-			        ...approve0.toTransferParams()
-			    },
-			    {
-			        kind: OpKind.TRANSACTION,
-			        ...approve1.toTransferParams()
-			    },
-			    {
-			        kind: OpKind.TRANSACTION,
-			        ...addLiquidity.toTransferParams(),
-			        amount: xtzAmountInMutez,
-			        mutez: true
-			    },
-			])
-			.send();
-			
-			await batchOp.confirmation();
-			*/
+
+			if (estimate) {
+				let batch = toolkit.wallet.batch().with([
+					{
+						kind: OpKind.TRANSACTION,
+						...approve0.toTransferParams({
+							fee: estimate[0]
+								.suggestedFeeMutez,
+							gasLimit: estimate[0]
+								.gasLimit,
+							storageLimit:
+								estimate[0]
+									.storageLimit,
+						}),
+					},
+					{
+						kind: OpKind.TRANSACTION,
+						...approve1.toTransferParams({
+							fee: estimate[1]
+								.suggestedFeeMutez,
+							gasLimit: estimate[1]
+								.gasLimit,
+							storageLimit:
+								estimate[1]
+									.storageLimit,
+						}),
+					},
+					{
+						kind: OpKind.TRANSACTION,
+						...addLiquidity.toTransferParams({
+							fee: estimate[2]
+								.suggestedFeeMutez,
+							gasLimit: estimate[2]
+								.gasLimit,
+							storageLimit:
+								estimate[1]
+									.storageLimit,
+						}),
+
+								amount: xtzAmountInMutez.toNumber(),
+								mutez: true,
+					},
+				]);
+
+				let batchOp = await batch.send();
+				await batchOp.confirmation();
+			}
 		}
 	} catch (err) {}
 }
