@@ -30,6 +30,28 @@ export async function getBalance(
 				return await tzBtcContract.views
 					.getBalance(walletInfo.address)
 					.read();
+			case TokenKind.Sirius:
+				const siriusContract =
+					await walletInfo.toolkit.wallet.at(
+						netInfo.addresses.tzbtc.address
+					);
+
+				const fa2Balance = await siriusContract.views
+					.balance_of([
+						{
+							owner: walletInfo.address,
+							token_id: 0,
+						},
+					])
+					.read();
+				console.log(
+					"\n",
+					"fa2Balance : ",
+					fa2Balance,
+					"\n"
+				);
+				const num = fa2Balance.balance;
+				return num;
 		}
 	} else return new BigNumber(0);
 }

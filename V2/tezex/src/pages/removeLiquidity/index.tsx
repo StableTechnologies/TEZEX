@@ -142,9 +142,9 @@ export const RemoveLiquidity: FC = (props) => {
 	}, [inputAmountMantissa, inToken, walletInfo, networkInfo]);
 	return (
 		<div>
-			<h3>{"Add Liquidity" }</h3>
+			<h3>{"Remove Liquidity" }</h3>
 			<TokenAmountInput
-				asset={inToken}
+				asset={TokenKind.Sirius}
 				walletInfo={walletInfo}
 				setMantissa={setInputAmountMantissa}
 				mantissa={inputAmountMantissa}
@@ -152,7 +152,10 @@ export const RemoveLiquidity: FC = (props) => {
 			<Toggle toggle={swapFields} setToggle={setSwapFields}>
 				{"swap fields"}
 			</Toggle>
-			<TokenAmountOutput asset={outToken} checkBalance={true}>
+			<TokenAmountOutput asset={outToken} checkBalance={false}>
+				{outputAmountMantissa}
+			</TokenAmountOutput>
+			<TokenAmountOutput asset={outToken} checkBalance={false}>
 				{outputAmountMantissa}
 			</TokenAmountOutput>
 			<Slippage
