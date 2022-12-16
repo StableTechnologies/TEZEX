@@ -772,7 +772,7 @@ export async function buyLiquidityShares(
 	} catch (err) {}
 }
 
-export function calculateLqtOutput(
+export function _calcLqtOutput(
 	lqTokens: BigNumber,
 	xtzPool: BigNumber | number,
 	tzbtcPool: BigNumber | number,
@@ -784,6 +784,30 @@ export function calculateLqtOutput(
 		xtz: xtzOut,
 		tzbtc: tzbtcOut,
 	};
+}
+
+export async function lqtOutput(
+	lqTokens: BigNumber,
+	lbContractAddress: string,
+	walletInfo: WalletInfo
+) {
+	if (walletInfo.toolkit) {
+		const lbContractStorage = await getLbContractStorage(
+			walletInfo.toolkit,
+			lbContractAddress
+		);
+		return _calcLqtOutput(
+			lqTokens,
+			new BigNumber(lbContractStorage.xtzPool),
+			new BigNumber(lbContractStorage.tokenPool),
+			new BigNumber(lbContractStorage.lqtTotal)
+		);
+	} else {
+		return {
+			xtz: new BigNumber(0),
+			tzbtc: new BigNumber(0),
+		};
+	}
 }
 
 export async function removeLiquidit(
@@ -802,7 +826,7 @@ export async function removeLiquidit(
 				walletInfo.toolkit,
 				lbContractAddress
 			);
-			const { xtz, tzbtc } = calculateLqtOutput(
+			const { xtz, tzbtc } = _calcLqtOutput(
 				lqTokens,
 				new BigNumber(lbContractStorage.xtzPool),
 				new BigNumber(lbContractStorage.tokenPool),
@@ -812,7 +836,7 @@ export async function removeLiquidit(
 			const estimate = await walletInfo.toolkit.wallet
 				.at(lbContractAddress)
 				.then((contract) => {
-				return	contract.methods
+					return contract.methods
 						.removeLiquidity(
 							walletInfo.address,
 							lqTokens,
@@ -854,13 +878,13 @@ export async function removeLiquidit(
 						lbContractAddress
 					);
 				const op = await lbContract.methods
-						.removeLiquidity(
-							walletInfo.address,
-							lqTokens,
-							xtz,
-							tzbtc,
-							deadline
-						)
+					.removeLiquidity(
+						walletInfo.address,
+						lqTokens,
+						xtz,
+						tzbtc,
+						deadline
+					)
 					.send({
 						fee: estimate.suggestedFeeMutez,
 						gasLimit: estimate.gasLimit,
