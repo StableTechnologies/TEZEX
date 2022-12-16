@@ -4,6 +4,7 @@ import { TokenKind } from "../types/general";
 export const decimals = {
 	XTZ: 6,
 	TzBTC: 8,
+	Sirius: 1,
 };
 
 export function tokenMantissaToDecimal(
