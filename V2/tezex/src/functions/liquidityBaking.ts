@@ -105,12 +105,12 @@ export async function getLbContractStorage(
 ) {
 	const contract = await tezosToolkit.wallet.at(lbContractAddress);
 	const storage = await contract.storage<any>();
-	console.log('\n','storage : ', storage,'\n'); 
+	console.log("\n", "storage : ", storage, "\n");
 	if (storage) {
 		const xtzPool = new BigNumber(storage.xtzPool);
 		const tokenPool = new BigNumber(storage.tokenPool);
 		const lqtTotal = new BigNumber(storage.lqtTotal);
-		return { xtzPool, tokenPool , lqtTotal };
+		return { xtzPool, tokenPool, lqtTotal };
 	} else {
 		const xtzPool = new BigNumber(0);
 		const tokenPool = new BigNumber(0);
@@ -562,7 +562,7 @@ export function estimateSharesFromXtz(
 	xtzAmountInMutez: BigNumber,
 	dexStorage: any
 ) {
-	console.log('\n','dexStorageXtz : ', dexStorage,'\n'); 
+	console.log("\n", "dexStorageXtz : ", dexStorage, "\n");
 	return xtzAmountInMutez
 		.integerValue(BigNumber.ROUND_DOWN)
 		.times(dexStorage.lqtTotal)
@@ -604,11 +604,13 @@ export async function buyLiquidityShares(
 				tzbtcContractAddress
 			);
 
-			const maxTokensSold = tokenMantissa.plus(
-				tokenMantissa.multipliedBy(slipage).div(100)
-			).integerValue(
-					BigNumber.ROUND_DOWN
-				);
+			const maxTokensSold = tokenMantissa
+				.plus(
+					tokenMantissa
+						.multipliedBy(slipage)
+						.div(100)
+				)
+				.integerValue(BigNumber.ROUND_DOWN);
 
 			const lbContractStorage = await getLbContractStorage(
 				walletInfo.toolkit,
@@ -642,7 +644,12 @@ export async function buyLiquidityShares(
 				xtzAmountInMutez.toString(),
 				"\n"
 			);
-			console.log('\n','maxTokensSold.toString() : ', maxTokensSold.toString(),'\n'); 
+			console.log(
+				"\n",
+				"maxTokensSold.toString() : ",
+				maxTokensSold.toString(),
+				"\n"
+			);
 			let transfer = lbContract.methods.tokenToXtz(
 				walletInfo.address,
 				tokenMantissa.integerValue(
@@ -713,7 +720,6 @@ export async function buyLiquidityShares(
 
 			console.log("\n", "estimate : ", estimate, "\n");
 
-
 			if (estimate) {
 				let batch = toolkit.wallet.batch().with([
 					{
@@ -742,18 +748,20 @@ export async function buyLiquidityShares(
 					},
 					{
 						kind: OpKind.TRANSACTION,
-						...addLiquidity.toTransferParams({
-							fee: estimate[2]
-								.suggestedFeeMutez,
-							gasLimit: estimate[2]
-								.gasLimit,
-							storageLimit:
-								estimate[1]
-									.storageLimit,
-						}),
+						...addLiquidity.toTransferParams(
+							{
+								fee: estimate[2]
+									.suggestedFeeMutez,
+								gasLimit: estimate[2]
+									.gasLimit,
+								storageLimit:
+									estimate[1]
+										.storageLimit,
+							}
+						),
 
-								amount: xtzAmountInMutez.toNumber(),
-								mutez: true,
+						amount: xtzAmountInMutez.toNumber(),
+						mutez: true,
 					},
 				]);
 
@@ -762,4 +770,108 @@ export async function buyLiquidityShares(
 			}
 		}
 	} catch (err) {}
+}
+
+export function calculateLqtOutput(
+	lqTokens: BigNumber,
+	xtzPool: BigNumber | number,
+	tzbtcPool: BigNumber | number,
+	lqtTotal: BigNumber | number
+): { xtz: BigNumber; tzbtc: BigNumber } {
+	const xtzOut = lqTokens.multipliedBy(xtzPool).dividedBy(lqtTotal);
+	const tzbtcOut = lqTokens.multipliedBy(tzbtcPool).dividedBy(lqtTotal);
+	return {
+		xtz: xtzOut,
+		tzbtc: tzbtcOut,
+	};
+}
+
+export async function removeLiquidit(
+	lqTokens: BigNumber,
+	lbContractAddress: string,
+	walletInfo: WalletInfo
+) {
+	try {
+		if (walletInfo.toolkit) {
+			const toolkit = walletInfo.toolkit;
+			const deadline = new Date(
+				Date.now() + 60000
+			).toISOString();
+
+			const lbContractStorage = await getLbContractStorage(
+				walletInfo.toolkit,
+				lbContractAddress
+			);
+			const { xtz, tzbtc } = calculateLqtOutput(
+				lqTokens,
+				new BigNumber(lbContractStorage.xtzPool),
+				new BigNumber(lbContractStorage.tokenPool),
+				new BigNumber(lbContractStorage.lqtTotal)
+			);
+
+			const estimate = await walletInfo.toolkit.wallet
+				.at(lbContractAddress)
+				.then((contract) => {
+				return	contract.methods
+						.removeLiquidity(
+							walletInfo.address,
+							lqTokens,
+							xtz,
+							tzbtc,
+							deadline
+						)
+						.toTransferParams();
+				})
+				.then((op) => {
+					console.log(
+						`Estimating the smart contract call : `
+					);
+					return toolkit.estimate.transfer(op);
+				})
+				.then((est) => {
+					console.log(`burnFeeMutez : ${est.burnFeeMutez}, 
+    gasLimit : ${est.gasLimit}, 
+    minimalFeeMutez : ${est.minimalFeeMutez}, 
+    storageLimit : ${est.storageLimit}, 
+    suggestedFeeMutez : ${est.suggestedFeeMutez}, 
+    totalCost : ${est.totalCost}, 
+    usingBaseFeeMutez : ${est.usingBaseFeeMutez}`);
+					return est;
+				})
+				.catch((error) =>
+					console.table(
+						`Error: ${JSON.stringify(
+							error,
+							null,
+							2
+						)}`
+					)
+				);
+
+			if (estimate) {
+				const lbContract =
+					await walletInfo.toolkit.wallet.at(
+						lbContractAddress
+					);
+				const op = await lbContract.methods
+						.removeLiquidity(
+							walletInfo.address,
+							lqTokens,
+							xtz,
+							tzbtc,
+							deadline
+						)
+					.send({
+						fee: estimate.suggestedFeeMutez,
+						gasLimit: estimate.gasLimit,
+						storageLimit:
+							estimate.storageLimit,
+					});
+
+				await op.confirmation();
+			}
+		}
+	} catch (err) {
+		console.log(`failed in sendDexterBuy ${JSON.stringify(err)}}`);
+	}
 }
