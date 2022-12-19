@@ -810,7 +810,7 @@ export async function lqtOutput(
 	}
 }
 
-export async function removeLiquidit(
+export async function removeLiquidity(
 	lqTokens: BigNumber,
 	lbContractAddress: string,
 	walletInfo: WalletInfo
@@ -840,8 +840,12 @@ export async function removeLiquidit(
 						.removeLiquidity(
 							walletInfo.address,
 							lqTokens,
-							xtz,
-							tzbtc,
+							xtz.integerValue(
+								BigNumber.ROUND_DOWN
+							),
+							tzbtc.integerValue(
+								BigNumber.ROUND_DOWN
+							),
 							deadline
 						)
 						.toTransferParams();
@@ -881,8 +885,12 @@ export async function removeLiquidit(
 					.removeLiquidity(
 						walletInfo.address,
 						lqTokens,
-						xtz,
-						tzbtc,
+						xtz.integerValue(
+							BigNumber.ROUND_DOWN
+						),
+						tzbtc.integerValue(
+							BigNumber.ROUND_DOWN
+						),
 						deadline
 					)
 					.send({
@@ -896,6 +904,8 @@ export async function removeLiquidit(
 			}
 		}
 	} catch (err) {
-		console.log(`failed in sendDexterBuy ${JSON.stringify(err)}}`);
+		console.log(
+			`failed in removeLiquidity ${JSON.stringify(err)}}`
+		);
 	}
 }

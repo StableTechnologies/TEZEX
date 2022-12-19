@@ -1,14 +1,19 @@
 import { FC, useState, useEffect } from "react";
 
 import { BigNumber } from "bignumber.js";
-import { TokenAmountInput, Slippage} from "../../components/ui/elements/inputs";
+import {
+	TokenAmountInput,
+	Slippage,
+} from "../../components/ui/elements/inputs";
 import { TokenAmountOutput } from "../../components/ui/elements/Labels";
 import { useWallet } from "../../hooks/wallet";
 import { useNetwork } from "../../hooks/network";
 import {
 	estimateTokensFromXtz,
 	estimateXtzFromToken,
-	buyLiquidityShares
+	buyLiquidityShares,
+	lqtOutput,
+	removeLiquidity,
 } from "../../functions/liquidityBaking";
 import { Transact } from "../../components/ui/elements/Buttons";
 import { Toggle } from "../../components/ui/elements/Toggles";
@@ -22,10 +27,13 @@ export const RemoveLiquidity: FC = (props) => {
 	const [inputAmountMantissa, setInputAmountMantissa] = useState<
 		BigNumber | number | null
 	>(null);
-	const [slippage, setSlippage] =
-		useState<BigNumber | number | null>(0.5);
+	const [slippage, setSlippage] = useState<BigNumber | number | null>(
+		0.5
+	);
 	const [outputAmountMantissa, setOutputAmountMantissa] =
 		useState<number>(0);
+	const [xtzMantissa, setXtzMantissa] = useState<number>(0);
+	const [tzbtcMantissa, setTzbtcMantissa] = useState<number>(0);
 	const [outToken, setOutToken] = useState(TokenKind.TzBTC);
 	const [inToken, setInToken] = useState(TokenKind.XTZ);
 	const [swapFields, setSwapFields] = useState<boolean>(true);
@@ -34,60 +42,13 @@ export const RemoveLiquidity: FC = (props) => {
 
 	const transact = async () => {
 		if (inputAmountMantissa && walletInfo) {
-			switch (inToken) {
-				case TokenKind.XTZ:
-					await buyLiquidityShares(
-						new BigNumber(
-							outputAmountMantissa
-						),
-						new BigNumber(
-							inputAmountMantissa
-						),
-						new BigNumber(
-							(slippage)? slippage: 0
-						),
-						networkInfo.addresses.tzbtc.dex
-							.sirius,
-						networkInfo.addresses.tzbtc.address,
-						walletInfo
-					);
-				break;
-				case TokenKind.TzBTC: 
-					await buyLiquidityShares(
-						new BigNumber(
-							inputAmountMantissa
-						),
-						new BigNumber(
-							outputAmountMantissa
-						),
-						new BigNumber(
-							(slippage)? slippage: 0
-						),
-						networkInfo.addresses.tzbtc.dex
-							.sirius,
-						networkInfo.addresses.tzbtc.address,
-						walletInfo
-					);
-			}
+			await removeLiquidity(
+				new BigNumber(inputAmountMantissa),
+				networkInfo.addresses.tzbtc.dex.sirius,
+				walletInfo
+			);
 		}
 	};
-
-	useEffect(() => {
-		if (swapFields) {
-			if (inToken === TokenKind.XTZ) {
-				setInputAmountMantissa(outputAmountMantissa)
-			}
-			setInToken(TokenKind.TzBTC);
-			setOutToken(TokenKind.XTZ);
-		} else {
-
-			if (inToken === TokenKind.TzBTC) {
-				setInputAmountMantissa(outputAmountMantissa)
-			}
-			setInToken(TokenKind.XTZ);
-			setOutToken(TokenKind.TzBTC);
-		}
-	}, [inToken,outToken,swapFields, outputAmountMantissa]);
 
 	useEffect(() => {
 		const estimateTokens = async () => {
@@ -100,38 +61,13 @@ export const RemoveLiquidity: FC = (props) => {
 				);
 			}
 			if (inputAmountMantissa && walletInfo) {
-				switch (inToken) {
-					case TokenKind.XTZ:
-						setOutputAmountMantissa(
-							await estimateTokensFromXtz(
-								new BigNumber(
-									inputAmountMantissa
-								),
-								networkInfo
-									.addresses
-									.tzbtc
-									.dex
-									.sirius,
-								walletInfo
-							)
-						);
-						break;
-					case TokenKind.TzBTC:
-						setOutputAmountMantissa(
-							await estimateXtzFromToken(
-								new BigNumber(
-									inputAmountMantissa
-								),
-								networkInfo
-									.addresses
-									.tzbtc
-									.dex
-									.sirius,
-								walletInfo
-							)
-						);
-						break;
-				}
+				const { xtz, tzbtc } = await lqtOutput(
+					new BigNumber(inputAmountMantissa),
+					networkInfo.addresses.tzbtc.dex.sirius,
+					walletInfo
+				);
+				setTzbtcMantissa(tzbtc.toNumber());
+				setXtzMantissa(xtz.toNumber());
 			}
 		};
 
@@ -142,30 +78,26 @@ export const RemoveLiquidity: FC = (props) => {
 	}, [inputAmountMantissa, inToken, walletInfo, networkInfo]);
 	return (
 		<div>
-			<h3>{"Remove Liquidity" }</h3>
+			<h3>{"Remove Liquidity"}</h3>
 			<TokenAmountInput
 				asset={TokenKind.Sirius}
 				walletInfo={walletInfo}
 				setMantissa={setInputAmountMantissa}
 				mantissa={inputAmountMantissa}
-				/>
-			<Toggle toggle={swapFields} setToggle={setSwapFields}>
-				{"swap fields"}
-			</Toggle>
-			<TokenAmountOutput asset={outToken} checkBalance={false}>
-				{outputAmountMantissa}
+			/>
+			<TokenAmountOutput
+				asset={TokenKind.XTZ}
+				checkBalance={false}
+			>
+				{xtzMantissa}
 			</TokenAmountOutput>
-			<TokenAmountOutput asset={outToken} checkBalance={false}>
-				{outputAmountMantissa}
-			</TokenAmountOutput>
-			<Slippage
+			<TokenAmountOutput
 				asset={TokenKind.TzBTC}
-				walletInfo={walletInfo}
-				setSlippage={setSlippage}
-				slippage={slippage}
-				amountMantissa={new BigNumber(outputAmountMantissa)}
-				/>
-			<Transact callback={transact}>{"Buy Shares"}</Transact>
+				checkBalance={false}
+			>
+				{tzbtcMantissa}
+			</TokenAmountOutput>
+			<Transact callback={transact}>{"Sell Shares"}</Transact>
 		</div>
 	);
 };
