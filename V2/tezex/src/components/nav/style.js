@@ -1,6 +1,6 @@
-import { makeStyles } from "@mui/material";
+import { styled } from "@mui/system";
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = styled((theme) => ({
   root: {
     "& .MuiDrawer-paperAnchorRight": {
        left: "auto",

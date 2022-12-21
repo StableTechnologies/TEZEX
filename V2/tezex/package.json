@@ -11,6 +11,7 @@
     "@ledgerhq/hw-transport-webhid": "^6.27.1",
     "@ledgerhq/logs": "^6.10.0",
     "@mui/material": "^5.11.0",
+    "@mui/system": "^5.11.1",
     "@taquito/beacon-wallet": "^14.1.0",
     "@taquito/taquito": "^14.1.0",
     "@testing-library/jest-dom": "^5.16.4",
