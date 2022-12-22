@@ -1,7 +1,7 @@
 import { FC, useState, useEffect } from "react";
 
 import { BigNumber } from "bignumber.js";
-import { TokenAmountInput } from "../../components/ui/elements/inputs";
+import { TokenAmountInput, Slippage } from "../../components/ui/elements/inputs";
 import { TokenAmountOutput } from "../../components/ui/elements/Labels";
 import { useWallet } from "../../hooks/wallet";
 import { useNetwork } from "../../hooks/network";
@@ -23,6 +23,8 @@ export const Swap: FC = (props) => {
 	const [inputAmountMantissa, setInputAmountMantissa] = useState<
 		BigNumber | number | null
 	>(null);
+	const [slippage, setSlippage] =
+		useState<BigNumber | number | null>(-0.5);
 	const [outputAmountMantissa, setOutputAmountMantissa] =
 		useState<number>(0);
 	const [outToken, setOutToken] = useState(TokenKind.TzBTC);
@@ -45,7 +47,7 @@ export const Swap: FC = (props) => {
 					);
 				break;
 				case TokenKind.TzBTC: 
-			                await tokenToXtz(new BigNumber(inputAmountMantissa), new BigNumber(outputAmountMantissa), networkInfo.addresses.tzbtc.dex.sirius, networkInfo.addresses.tzbtc.address, walletInfo)
+			                await tokenToXtz(new BigNumber(inputAmountMantissa), new BigNumber(outputAmountMantissa), networkInfo.addresses.tzbtc.dex.sirius, networkInfo.addresses.tzbtc.address, walletInfo, (slippage) ? slippage : 0)
 			}
 		}
 	};
@@ -133,6 +135,14 @@ export const Swap: FC = (props) => {
 			<TokenAmountOutput asset={outToken}>
 				{outputAmountMantissa}
 			</TokenAmountOutput>
+			<Slippage
+				asset={outToken}
+				walletInfo={walletInfo}
+				setSlippage={setSlippage}
+				slippage={slippage}
+				amountMantissa={new BigNumber(outputAmountMantissa)}
+				inverse={true}
+				/>
 			<Transact callback={transact}>{"Buy " + outToken as string}</Transact>
 		</div>
 	);

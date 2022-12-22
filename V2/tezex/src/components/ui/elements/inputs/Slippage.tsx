@@ -6,6 +6,7 @@ import { WalletInfo } from "../../../../contexts/wallet";
 import { useNetwork } from "../../../../hooks/network";
 import { TokenKind } from "../../../../types/general";
 import { hasSufficientBalance } from "../../../../functions/beacon";
+import { addSlippage } from "../../../../functions/liquidityBaking";
 import {
 	tokenDecimalToMantissa,
 	tokenMantissaToDecimal,
@@ -15,53 +16,55 @@ export interface ISlippage {
 	asset: TokenKind;
 	walletInfo: WalletInfo | null;
 	setSlippage: React.Dispatch<
-		React.SetStateAction< BigNumber | number | null>
+		React.SetStateAction<BigNumber | number | null>
 	>;
-	slippage:  BigNumber | number | null;
-	amountMantissa:  BigNumber ;
+	slippage: BigNumber | number | null;
+	amountMantissa: BigNumber;
+	inverse?: boolean;
+	balanceCheck?: boolean;
 }
 
-function addSlippage(slippage: BigNumber | number | null, tokenMantissa: BigNumber){
-	if (slippage){
-
-			return tokenMantissa.plus(
-				tokenMantissa.multipliedBy(slippage).div(100)
-			).integerValue(
-					BigNumber.ROUND_DOWN
-				);
-	}else{ return tokenMantissa}
-}
 export const Slippage: FC<ISlippage> = (props) => {
 	const [sufficientBalance, setSufficientBalance] = useState(true);
 	const [inputString, setInputString] = useState("0");
 	const net = useNetwork();
 	const updateAmount = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		setInputString(e.target.value);
-		const num = new BigNumber(e.target.value);
+		const num = props.inverse
+			? new BigNumber(e.target.value).multipliedBy(-1)
+			: new BigNumber(e.target.value);
 
 		num.isNaN() ? props.setSlippage(null) : props.setSlippage(num);
-		if (props.walletInfo && num.gt(0) && !num.isNaN()) {
-			setSufficientBalance(
-				await hasSufficientBalance(
-					addSlippage(new BigNumber(e.target.value), props.amountMantissa),
-					props.walletInfo,
-					net,
-					props.asset,
-					true
-				)
-			);
-		} else {
-			setSufficientBalance(true);
+		if (props.balanceCheck) {
+			if (props.walletInfo && num.gt(0) && !num.isNaN()) {
+				setSufficientBalance(
+					await hasSufficientBalance(
+						addSlippage(
+							new BigNumber(
+								e.target.value
+							),
+							props.amountMantissa
+						),
+						props.walletInfo,
+						net,
+						props.asset,
+						true
+					)
+				);
+			} else {
+				setSufficientBalance(true);
+			}
 		}
 	};
 
+	const view = (): string => {
+		if (props.slippage) {
+			return( props.inverse ) ? new BigNumber(props.slippage).multipliedBy(-1).toString() :  new BigNumber(props.slippage).toString()
+		} else return "0"
+	}
 	return (
 		<div>
-
-			<label
-				style={{ }}
-				className="slippage-label"
-			>
+			<label style={{}} className="slippage-label">
 				{"slippage "}
 			</label>
 			<input
@@ -70,9 +73,8 @@ export const Slippage: FC<ISlippage> = (props) => {
 				name="slippage"
 				className="slippage-input"
 				onChange={updateAmount}
-				value={(props.slippage)? props.slippage.toString() : "0"}
+				value={view()}
 			></input>
-
 
 			<label
 				style={{ color: "red" }}

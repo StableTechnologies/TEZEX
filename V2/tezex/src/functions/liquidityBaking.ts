@@ -2,6 +2,17 @@ import { TezosToolkit, OpKind } from "@taquito/taquito";
 import { BigNumber } from "bignumber.js";
 
 import { WalletInfo } from "../contexts/wallet";
+
+export function addSlippage(slippage: BigNumber | number | string | null, tokenMantissa: BigNumber){
+	if (slippage){
+
+			return tokenMantissa.plus(
+				tokenMantissa.multipliedBy(slippage).div(100)
+			).integerValue(
+					BigNumber.ROUND_DOWN
+				);
+	}else{ return tokenMantissa}
+}
 const creditSubsidy = (xtzPool: BigNumber | number): BigNumber => {
 	const LIQUIDITY_BAKING_SUBSIDY = 2500000;
 	if (BigNumber.isBigNumber(xtzPool)) {
@@ -163,7 +174,8 @@ export async function tokenToXtz(
 	xtzAmountInMutez: BigNumber,
 	lbContractAddress: string,
 	tzbtcContractAddress: string,
-	walletInfo: WalletInfo
+	walletInfo: WalletInfo,
+	slippage: number | BigNumber | string = 0 
 ) {
 	try {
 		if (walletInfo.toolkit) {
@@ -183,11 +195,14 @@ export async function tokenToXtz(
 				lbContractAddress,
 				tokenMantissa
 			);
+			let minXtzBought = addSlippage(slippage, xtzAmountInMutez)
+			/*
 			let minXtzBought = await estimateXtzFromToken(
 				tokenMantissa,
 				lbContractAddress,
 				walletInfo
 			);
+			*/
 			console.log(
 				"\n",
 				"tokenMantissa.toString() : ",
