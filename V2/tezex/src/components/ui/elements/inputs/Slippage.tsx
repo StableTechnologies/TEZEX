@@ -7,10 +7,6 @@ import { useNetwork } from "../../../../hooks/network";
 import { TokenKind } from "../../../../types/general";
 import { hasSufficientBalance } from "../../../../functions/beacon";
 import { addSlippage } from "../../../../functions/liquidityBaking";
-import {
-	tokenDecimalToMantissa,
-	tokenMantissaToDecimal,
-} from "../../../../functions/scaling";
 
 export interface ISlippage {
 	asset: TokenKind;
@@ -26,10 +22,8 @@ export interface ISlippage {
 
 export const Slippage: FC<ISlippage> = (props) => {
 	const [sufficientBalance, setSufficientBalance] = useState(true);
-	const [inputString, setInputString] = useState("0");
 	const net = useNetwork();
 	const updateAmount = async (e: React.ChangeEvent<HTMLInputElement>) => {
-		setInputString(e.target.value);
 		const num = props.inverse
 			? new BigNumber(e.target.value).multipliedBy(-1)
 			: new BigNumber(e.target.value);

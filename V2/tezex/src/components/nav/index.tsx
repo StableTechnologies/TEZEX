@@ -1,15 +1,13 @@
 import { FC } from "react";
 
 import { useNavigate } from "react-router-dom";
-import BigNumber from "bignumber.js";
 import Grid from "@mui/material/Grid";
-import Button from "@mui/material";
+import Button from "@mui/material/Button";
 
-import useStyles from "./style";
 export interface INav {
 	children: string;
 }
-export const Nav: FC = (props) => {
+export const Nav: FC = () => {
 	const navigate = useNavigate();
 	return (
 		<div className="nav">
@@ -46,8 +44,8 @@ export const Nav: FC = (props) => {
 							lg={3}
 							className="btn Element"
 						>
-							<button
-								className="button"
+							<Button
+								className="Button"
 								onClick={() =>
 									navigate(
 										"/swap"
@@ -55,15 +53,15 @@ export const Nav: FC = (props) => {
 								}
 							>
 								Swap
-							</button>
+							</Button>
 						</Grid>
 						<Grid
 							item
 							lg={3}
 							className="btn Element"
 						>
-							<button
-								className="button"
+							<Button
+								className="Button"
 								onClick={() =>
 									navigate(
 										"/add"
@@ -71,15 +69,15 @@ export const Nav: FC = (props) => {
 								}
 							>
 								Add Liquidity
-							</button>
+							</Button>
 						</Grid>
 						<Grid
 							item
 							lg={3}
 							className="btn Element"
 						>
-							<button
-								className="button"
+							<Button
+								className="Button"
 								onClick={() =>
 									navigate(
 										"/remove"
@@ -87,7 +85,7 @@ export const Nav: FC = (props) => {
 								}
 							>
 								Remove Liquidity
-							</button>
+							</Button>
 						</Grid>
 					</Grid>
 				</Grid>

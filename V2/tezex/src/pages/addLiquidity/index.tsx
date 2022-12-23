@@ -1,14 +1,18 @@
 import { FC, useState, useEffect } from "react";
 
 import { BigNumber } from "bignumber.js";
-import { TokenAmountInput, Slippage} from "../../components/ui/elements/inputs";
+import {
+	TokenAmountInput,
+	Slippage,
+} from "../../components/ui/elements/inputs";
 import { TokenAmountOutput } from "../../components/ui/elements/Labels";
 import { useWallet } from "../../hooks/wallet";
 import { useNetwork } from "../../hooks/network";
 import {
 	estimateTokensFromXtz,
 	estimateXtzFromToken,
-	buyLiquidityShares
+	estimateShares,
+	buyLiquidityShares,
 } from "../../functions/liquidityBaking";
 import { Transact } from "../../components/ui/elements/Buttons";
 import { Toggle } from "../../components/ui/elements/Toggles";
@@ -22,8 +26,10 @@ export const AddLiquidity: FC = (props) => {
 	const [inputAmountMantissa, setInputAmountMantissa] = useState<
 		BigNumber | number | null
 	>(null);
-	const [slippage, setSlippage] =
-		useState<BigNumber | number | null>(0.5);
+	const [shares, setShares] = useState<BigNumber | number>(0);
+	const [slippage, setSlippage] = useState<BigNumber | number | null>(
+		0.5
+	);
 	const [outputAmountMantissa, setOutputAmountMantissa] =
 		useState<number>(0);
 	const [outToken, setOutToken] = useState(TokenKind.TzBTC);
@@ -44,15 +50,16 @@ export const AddLiquidity: FC = (props) => {
 							inputAmountMantissa
 						),
 						new BigNumber(
-							(slippage)? slippage: 0
+							slippage ? slippage : 0
 						),
 						networkInfo.addresses.tzbtc.dex
 							.sirius,
-						networkInfo.addresses.tzbtc.address,
+						networkInfo.addresses.tzbtc
+							.address,
 						walletInfo
 					);
-				break;
-				case TokenKind.TzBTC: 
+					break;
+				case TokenKind.TzBTC:
 					await buyLiquidityShares(
 						new BigNumber(
 							inputAmountMantissa
@@ -61,11 +68,12 @@ export const AddLiquidity: FC = (props) => {
 							outputAmountMantissa
 						),
 						new BigNumber(
-							(slippage)? slippage: 0
+							slippage ? slippage : 0
 						),
 						networkInfo.addresses.tzbtc.dex
 							.sirius,
-						networkInfo.addresses.tzbtc.address,
+						networkInfo.addresses.tzbtc
+							.address,
 						walletInfo
 					);
 			}
@@ -75,19 +83,18 @@ export const AddLiquidity: FC = (props) => {
 	useEffect(() => {
 		if (swapFields) {
 			if (inToken === TokenKind.XTZ) {
-				setInputAmountMantissa(outputAmountMantissa)
+				setInputAmountMantissa(outputAmountMantissa);
 			}
 			setInToken(TokenKind.TzBTC);
 			setOutToken(TokenKind.XTZ);
 		} else {
-
 			if (inToken === TokenKind.TzBTC) {
-				setInputAmountMantissa(outputAmountMantissa)
+				setInputAmountMantissa(outputAmountMantissa);
 			}
 			setInToken(TokenKind.XTZ);
 			setOutToken(TokenKind.TzBTC);
 		}
-	}, [inToken,outToken,swapFields, outputAmountMantissa]);
+	}, [inToken, outToken, swapFields, outputAmountMantissa]);
 
 	useEffect(() => {
 		const estimateTokens = async () => {
@@ -140,15 +147,67 @@ export const AddLiquidity: FC = (props) => {
 			//unmount code
 		};
 	}, [inputAmountMantissa, inToken, walletInfo, networkInfo]);
+
+	useEffect(() => {
+		const shares = async () => {
+			if (inputAmountMantissa && walletInfo) {
+				switch (inToken) {
+					case TokenKind.XTZ:
+						setShares(
+							await estimateShares(
+								new BigNumber(
+									inputAmountMantissa
+								),
+								new BigNumber(
+									outputAmountMantissa
+								),
+								networkInfo
+									.addresses
+									.tzbtc
+									.dex
+									.sirius,
+								walletInfo
+							)
+						);
+						break;
+					case TokenKind.TzBTC:
+						setShares(
+							await estimateShares(
+								new BigNumber(
+									outputAmountMantissa
+								),
+								new BigNumber(
+									inputAmountMantissa
+								),
+								networkInfo
+									.addresses
+									.tzbtc
+									.dex
+									.sirius,
+								walletInfo
+							)
+						);
+				}
+			}
+		};
+		shares()
+	}, [
+		outputAmountMantissa,
+		inputAmountMantissa,
+		inToken,
+		walletInfo,
+		networkInfo,
+	]);
+
 	return (
 		<div>
-			<h3>{"Add Liquidity" }</h3>
+			<h3>{"Add Liquidity"}</h3>
 			<TokenAmountInput
 				asset={inToken}
 				walletInfo={walletInfo}
 				setMantissa={setInputAmountMantissa}
 				mantissa={inputAmountMantissa}
-				/>
+			/>
 			<Toggle toggle={swapFields} setToggle={setSwapFields}>
 				{"swap fields"}
 			</Toggle>
@@ -160,9 +219,13 @@ export const AddLiquidity: FC = (props) => {
 				walletInfo={walletInfo}
 				setSlippage={setSlippage}
 				slippage={slippage}
-				amountMantissa={new BigNumber(outputAmountMantissa)}
-				/>
-			<Transact callback={transact}>{"Buy Shares"}</Transact>
+				amountMantissa={
+					new BigNumber(outputAmountMantissa)
+				}
+			/>
+			<Transact callback={transact}>
+				{"Buy " + shares.toString() + " Shares"}
+			</Transact>
 		</div>
 	);
 };

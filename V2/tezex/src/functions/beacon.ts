@@ -1,13 +1,11 @@
-import { DAppClient } from "@airgap/beacon-sdk";
 import { WalletInfo } from "../contexts/wallet";
 import { NetworkInfo } from "../contexts/network";
 import { BeaconWallet } from "@taquito/beacon-wallet";
 import { TezosToolkit, MichelCodecPacker } from "@taquito/taquito";
 import { BigNumber } from "bignumber.js";
-import { NetworkType } from "@airgap/beacon-sdk";
 
 import { TokenKind } from "../types/general";
-import { tokenDecimalToMantissa, tokenMantissaToDecimal } from "./scaling";
+import {  tokenMantissaToDecimal } from "./scaling";
 export function mutezToTez(amount: BigNumber) {
 	return amount.dividedBy(1000000);
 }

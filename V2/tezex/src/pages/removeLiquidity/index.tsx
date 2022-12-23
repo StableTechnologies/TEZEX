@@ -3,20 +3,15 @@ import { FC, useState, useEffect } from "react";
 import { BigNumber } from "bignumber.js";
 import {
 	TokenAmountInput,
-	Slippage,
 } from "../../components/ui/elements/inputs";
 import { TokenAmountOutput } from "../../components/ui/elements/Labels";
 import { useWallet } from "../../hooks/wallet";
 import { useNetwork } from "../../hooks/network";
 import {
-	estimateTokensFromXtz,
-	estimateXtzFromToken,
-	buyLiquidityShares,
 	lqtOutput,
 	removeLiquidity,
 } from "../../functions/liquidityBaking";
 import { Transact } from "../../components/ui/elements/Buttons";
-import { Toggle } from "../../components/ui/elements/Toggles";
 
 import { TokenKind } from "../../types/general";
 
@@ -27,16 +22,8 @@ export const RemoveLiquidity: FC = (props) => {
 	const [inputAmountMantissa, setInputAmountMantissa] = useState<
 		BigNumber | number | null
 	>(null);
-	const [slippage, setSlippage] = useState<BigNumber | number | null>(
-		0.5
-	);
-	const [outputAmountMantissa, setOutputAmountMantissa] =
-		useState<number>(0);
 	const [xtzMantissa, setXtzMantissa] = useState<number>(0);
 	const [tzbtcMantissa, setTzbtcMantissa] = useState<number>(0);
-	const [outToken, setOutToken] = useState(TokenKind.TzBTC);
-	const [inToken, setInToken] = useState(TokenKind.XTZ);
-	const [swapFields, setSwapFields] = useState<boolean>(true);
 	const walletInfo = useWallet();
 	const networkInfo = useNetwork();
 
@@ -75,7 +62,7 @@ export const RemoveLiquidity: FC = (props) => {
 		return () => {
 			//unmount code
 		};
-	}, [inputAmountMantissa, inToken, walletInfo, networkInfo]);
+	}, [inputAmountMantissa,  walletInfo, networkInfo]);
 	return (
 		<div>
 			<h3>{"Remove Liquidity"}</h3>
