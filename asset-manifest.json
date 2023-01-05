@@ -1,0 +1,17 @@
+{
+  "files": {
+    "main.css": "/TEZEX/static/css/main.b0454de6.css",
+    "main.js": "/TEZEX/static/js/main.253ae675.js",
+    "static/js/792.194f3e1d.chunk.js": "/TEZEX/static/js/792.194f3e1d.chunk.js",
+    "static/js/496.a016e724.chunk.js": "/TEZEX/static/js/496.a016e724.chunk.js",
+    "index.html": "/TEZEX/index.html",
+    "main.b0454de6.css.map": "/TEZEX/static/css/main.b0454de6.css.map",
+    "main.253ae675.js.map": "/TEZEX/static/js/main.253ae675.js.map",
+    "792.194f3e1d.chunk.js.map": "/TEZEX/static/js/792.194f3e1d.chunk.js.map",
+    "496.a016e724.chunk.js.map": "/TEZEX/static/js/496.a016e724.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.b0454de6.css",
+    "static/js/main.253ae675.js"
+  ]
+}
