@@ -1,89 +1,92 @@
 {
-  "name": "Tezex",
-  "version": "0.1.0",
-  "homepage": "",
-  "private": true,
-  "dependencies": {
-    "@airgap/beacon-sdk": "^3.1.0",
-    "@emotion/react": "^11.10.5",
-    "@emotion/styled": "^11.10.5",
-    "@ledgerhq/hw-app-tezos": "^6.27.1",
-    "@ledgerhq/hw-transport-webhid": "^6.27.1",
-    "@ledgerhq/logs": "^6.10.0",
-    "@mui/material": "^5.11.0",
-    "@mui/system": "^5.11.1",
-    "@taquito/beacon-wallet": "^14.1.0",
-    "@taquito/taquito": "^14.1.0",
-    "@testing-library/jest-dom": "^5.16.4",
-    "@testing-library/react": "^13.1.1",
-    "@testing-library/user-event": "^13.5.0",
-    "@types/jest": "^27.5.2",
-    "@types/node": "^16.18.3",
-    "@types/react": "^18.0.24",
-    "@types/react-dom": "^18.0.8",
-    "big-integer": "^1.6.51",
-    "bignumber.js": "^9.1.0",
-    "conseiljs": "^5.2.3",
-    "jsonpath-plus": "^7.2.0",
-    "prettier": "^2.7.1",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-router-dom": "^6.5.0",
-    "react-scripts": "^5.0.1",
-    "typescript": "^4.8.4",
-    "web-vitals": "^3.0.4"
-  },
-  "author": {
-    "name": "Cryptonomic Inc.",
-    "email": "info@cryptonomic.tech"
-  },
-  "build": {
-    "appId": "",
-    "productName": "Tezex",
-    "files": [
-      "build/**/*",
-      "package.json"
-    ],
-    "linux": {
-      "target": "deb"
-    },
-    "extends": null
-  },
-  "scripts": {
-    "start": "react-app-rewired start",
-    "build": "react-app-rewired build",
-    "test": "react-app-rewired test",
-    "eject": "react-scripts eject"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
-  },
-  "devDependencies": {
-    "assert": "^2.0.0",
-    "buffer": "^6.0.3",
-    "crypto-browserify": "^3.12.0",
-    "https-browserify": "^1.0.0",
-    "os-browserify": "^0.3.0",
-    "path-browserify": "^1.0.1",
-    "process": "^0.11.10",
-    "react-app-rewired": "^2.2.1",
-    "stream-browserify": "^3.0.0",
-    "stream-http": "^3.2.0",
-    "url": "^0.11.0"
-  }
+	"name": "Tezex",
+	"version": "0.1.0",
+	"homepage": "https://stabletechnologies.github.io/TEZEX/",
+	"private": true,
+	"dependencies": {
+		"@airgap/beacon-sdk": "^3.1.0",
+		"@emotion/react": "^11.10.5",
+		"@emotion/styled": "^11.10.5",
+		"@ledgerhq/hw-app-tezos": "^6.27.1",
+		"@ledgerhq/hw-transport-webhid": "^6.27.1",
+		"@ledgerhq/logs": "^6.10.0",
+		"@mui/material": "^5.11.0",
+		"@mui/system": "^5.11.1",
+		"@taquito/beacon-wallet": "^14.1.0",
+		"@taquito/taquito": "^14.1.0",
+		"@testing-library/jest-dom": "^5.16.4",
+		"@testing-library/react": "^13.1.1",
+		"@testing-library/user-event": "^13.5.0",
+		"@types/jest": "^27.5.2",
+		"@types/node": "^16.18.3",
+		"@types/react": "^18.0.24",
+		"@types/react-dom": "^18.0.8",
+		"big-integer": "^1.6.51",
+		"bignumber.js": "^9.1.0",
+		"conseiljs": "^5.2.3",
+		"gh-pages": "^4.0.0",
+		"jsonpath-plus": "^7.2.0",
+		"prettier": "^2.7.1",
+		"react": "^18.2.0",
+		"react-dom": "^18.2.0",
+		"react-router-dom": "^6.5.0",
+		"react-scripts": "^5.0.1",
+		"typescript": "^4.8.4",
+		"web-vitals": "^3.0.4"
+	},
+	"author": {
+		"name": "Cryptonomic Inc.",
+		"email": "info@cryptonomic.tech"
+	},
+	"build": {
+		"appId": "",
+		"productName": "Tezex",
+		"files": [
+			"build/**/*",
+			"package.json"
+		],
+		"linux": {
+			"target": "deb"
+		},
+		"extends": null
+	},
+	"scripts": {
+		"predeploy": "npm run build",
+		"deploy": "gh-pages -d build",
+		"start": "react-app-rewired start",
+		"build": "react-app-rewired build",
+		"test": "react-app-rewired test",
+		"eject": "react-scripts eject"
+	},
+	"eslintConfig": {
+		"extends": [
+			"react-app",
+			"react-app/jest"
+		]
+	},
+	"browserslist": {
+		"production": [
+			">0.2%",
+			"not dead",
+			"not op_mini all"
+		],
+		"development": [
+			"last 1 chrome version",
+			"last 1 firefox version",
+			"last 1 safari version"
+		]
+	},
+	"devDependencies": {
+		"assert": "^2.0.0",
+		"buffer": "^6.0.3",
+		"crypto-browserify": "^3.12.0",
+		"https-browserify": "^1.0.0",
+		"os-browserify": "^0.3.0",
+		"path-browserify": "^1.0.1",
+		"process": "^0.11.10",
+		"react-app-rewired": "^2.2.1",
+		"stream-browserify": "^3.0.0",
+		"stream-http": "^3.2.0",
+		"url": "^0.11.0"
+	}
 }
