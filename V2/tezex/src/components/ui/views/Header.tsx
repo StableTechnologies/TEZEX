@@ -1,7 +1,7 @@
 import { FC } from "react";
 import { AppTitle } from "../elements/Headings";
 import { Wallet } from "../../wallet/Wallet";
-import { Nav } from "../../nav";
+import { NavApp } from "../../nav";
 
 export const Header: FC = () => {
 	return (
@@ -10,7 +10,7 @@ export const Header: FC = () => {
 				<div>
 					<AppTitle>TEZEX</AppTitle>
 				</div>
-				<Nav />
+				<NavApp />
 				<div>
 					<Wallet />
 				</div>

@@ -17,7 +17,6 @@ export const App: FC = () => {
 		<div className="App">
 			<Router basename={process.env.PUBLIC_URL}>
 				<header className="App-header">
-					<p>
 						<Layout>
 							<Routes>
 								<Route path="/swap" element={<Swap />} />
@@ -25,7 +24,6 @@ export const App: FC = () => {
 								<Route path="/remove" element={<RemoveLiquidity />} />
 							</Routes>
 						</Layout>
-					</p>
 				</header>
 			</Router>
 		</div>
