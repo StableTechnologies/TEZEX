@@ -8,9 +8,9 @@ import {
 } from "react-router-dom";
 
 import { Layout } from "./components/ui/views/Layout";
-import { Swap } from "./pages/swap";
-import { AddLiquidity } from "./pages/addLiquidity";
-import { RemoveLiquidity } from "./pages/removeLiquidity";
+import { Home } from "./pages/Home";
+import { Analytics } from "./pages/Analytics";
+import { About } from "./pages/About";
 
 export const App: FC = () => {
 	return (
@@ -19,9 +19,9 @@ export const App: FC = () => {
 				<header className="App-header">
 						<Layout>
 							<Routes>
-								<Route path="/swap" element={<Swap />} />
-								<Route path="/add" element={<AddLiquidity />} />
-								<Route path="/remove" element={<RemoveLiquidity />} />
+								<Route path="/Home" element={<Home />} />
+								<Route path="/Analytics" element={<Analytics />} />
+								<Route path="/About" element={<About />} />
 							</Routes>
 						</Layout>
 				</header>

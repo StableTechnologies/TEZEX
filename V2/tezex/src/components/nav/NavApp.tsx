@@ -48,11 +48,11 @@ export const NavApp: FC = () => {
 								className="Button"
 								onClick={() =>
 									navigate(
-										"/swap"
+										"/Home"
 									)
 								}
 							>
-								Swap
+								Home
 							</Button>
 						</Grid>
 						<Grid
@@ -64,11 +64,11 @@ export const NavApp: FC = () => {
 								className="Button"
 								onClick={() =>
 									navigate(
-										"/add"
+										"/Analytics"
 									)
 								}
 							>
-								Add Liquidity
+								Analytics
 							</Button>
 						</Grid>
 						<Grid
@@ -80,11 +80,11 @@ export const NavApp: FC = () => {
 								className="Button"
 								onClick={() =>
 									navigate(
-										"/remove"
+										"/About"
 									)
 								}
 							>
-								Remove Liquidity
+								About
 							</Button>
 						</Grid>
 					</Grid>
