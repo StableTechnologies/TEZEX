@@ -6,13 +6,30 @@ import { AddLiquidity  } from "../addLiquidity";
 import { RemoveLiquidity  } from "../removeLiquidity";
 import { Swap } from "../swap";
 
-export const Home: FC = () => {
+type HomePaths = 'swap' | 'add' | 'remove'
+
+export interface IHome {
+	path: HomePaths
+}
+export const Home: FC<IHome> = (props) => {
+	const c = props.path;
+
+	const Comp = (() =>{ switch(props.path) {
+		case 'add': 
+			return AddLiquidity;
+		case 'remove': 
+			return RemoveLiquidity;
+		case 'swap': 
+			return Swap;
+	}})();
+
 	return (
 		<div>
 			<div>
 		           <NavHome /> 	
 			</div>
 			<div>
+				<Comp />
 			</div>
 		</div>
 	);

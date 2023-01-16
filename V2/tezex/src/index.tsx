@@ -6,7 +6,7 @@ import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import { SessionProvider } from "./contexts/session";
 import ReactDOM from "react-dom/client";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, redirect } from "react-router-dom";
 import "./index.css";
 
 import { Home } from "./pages/Home";
@@ -19,8 +19,16 @@ const router = createBrowserRouter([
 		element: <App />,
 		children: [
 			{
-				path: "home/:path",
-				element: <Home />,
+				path: "home/swap",
+				element: <Home path="swap"/>,
+			},
+			{
+				path: "home/add",
+				element: <Home path="add"/>,
+			},
+			{
+				path: "home/remove",
+				element: <Home path="remove"/>,
 			},
 			{
 				path: "analytics",

@@ -48,7 +48,7 @@ export const NavHome: FC = () => {
 								className="Button"
 								onClick={() =>
 									navigate(
-										"/swap"
+									"/home/swap"
 									)
 								}
 							>
@@ -64,7 +64,7 @@ export const NavHome: FC = () => {
 								className="Button"
 								onClick={() =>
 									navigate(
-										"/add"
+									"/home/add"
 									)
 								}
 							>
@@ -80,7 +80,7 @@ export const NavHome: FC = () => {
 								className="Button"
 								onClick={() =>
 									navigate(
-										"/remove"
+									"/home/remove"
 									)
 								}
 							>
