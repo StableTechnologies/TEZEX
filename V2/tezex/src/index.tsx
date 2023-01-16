@@ -1,20 +1,49 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
-import { ThemeProvider } from '@mui/material';
-import theme from './theme';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
-import { SessionProvider } from './contexts/session';
-ReactDOM.render(
-  <React.StrictMode>
-    <SessionProvider>
-    <ThemeProvider theme={theme}>
-        <App />
-    </ThemeProvider>
-    </SessionProvider>
-  </React.StrictMode>,
-  document.getElementById('root')
+import React from "react";
+import "./index.css";
+import { ThemeProvider } from "@mui/material";
+import theme from "./theme";
+import App from "./App";
+import reportWebVitals from "./reportWebVitals";
+import { SessionProvider } from "./contexts/session";
+import ReactDOM from "react-dom/client";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import "./index.css";
+
+import { Home } from "./pages/Home";
+import { Analytics } from "./pages/Analytics";
+import { About } from "./pages/About";
+
+const router = createBrowserRouter([
+	{
+		path: "/",
+		element: <App />,
+		children: [
+			{
+				path: "home/:path",
+				element: <Home />,
+			},
+			{
+				path: "analytics",
+				element: <Analytics />,
+			},
+			{
+				path: "about",
+				element: <About />,
+			},
+		],
+	},
+]);
+const container = document.getElementById("root");
+const root = ReactDOM.createRoot(container!); // createRoot(container!) if you use TypeScript
+
+root.render(
+	<React.StrictMode>
+		<SessionProvider>
+			<ThemeProvider theme={theme}>
+				<RouterProvider router={router} />
+			</ThemeProvider>
+		</SessionProvider>
+	</React.StrictMode>
 );
 
 // If you want to start measuring performance in your app, pass a function

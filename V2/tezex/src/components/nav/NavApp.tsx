@@ -1,5 +1,5 @@
 import { FC } from "react";
-
+import { redirect, Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import Grid from "@mui/material/Grid";
 import Button from "@mui/material/Button";
@@ -35,7 +35,7 @@ export const NavApp: FC = () => {
 								className="Button"
 								onClick={() =>
 									navigate(
-										"/Home"
+									"home/swap"
 									)
 								}
 							>

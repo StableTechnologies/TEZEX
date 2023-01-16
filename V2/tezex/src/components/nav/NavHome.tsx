@@ -4,10 +4,10 @@ import { useNavigate } from "react-router-dom";
 import Grid from "@mui/material/Grid";
 import Button from "@mui/material/Button";
 
-export interface INav {
+export interface INavHome {
 	children: string;
 }
-export const Nav: FC = () => {
+export const NavHome: FC = () => {
 	const navigate = useNavigate();
 	return (
 		<div className="nav">
