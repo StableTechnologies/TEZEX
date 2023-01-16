@@ -1,6 +1,6 @@
 import React from "react";
 import "./index.css";
-import { ThemeProvider } from "@mui/material";
+import { Box, ThemeProvider } from '@mui/system';
 import theme from "./theme";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
@@ -48,7 +48,9 @@ root.render(
 	<React.StrictMode>
 		<SessionProvider>
 			<ThemeProvider theme={theme}>
+				<Box>
 				<RouterProvider router={router} />
+				</Box>
 			</ThemeProvider>
 		</SessionProvider>
 	</React.StrictMode>
