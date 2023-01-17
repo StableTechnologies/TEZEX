@@ -3,7 +3,7 @@ import { FC } from "react";
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import {NavHome} from '../../components/nav'
 import {Swap} from '../../components/Swap'
-import { AddLiquidity  } from "../addLiquidity";
+import { AddLiquidity  } from "../../components/AddLiquidity";
 import { RemoveLiquidity  } from "../removeLiquidity";
 
 type HomePaths = 'swap' | 'add' | 'remove'
