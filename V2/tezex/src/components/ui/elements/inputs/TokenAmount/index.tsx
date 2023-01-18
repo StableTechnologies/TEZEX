@@ -27,7 +27,7 @@ import FormControl from "@mui/material/FormControl";
 import TextField from "@mui/material/TextField";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
-import { SvgIcon } from '@mui/material';
+import { SvgIcon } from "@mui/material";
 export interface ITokenAmountInput {
 	asset: TokenKind;
 	walletInfo: WalletInfo | null;
@@ -104,43 +104,76 @@ export const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 	return (
 		<Grid2 container>
 			<FormControl fullWidth sx={{ m: 1 }}>
-				<TextField
-		onChange={updateAmount}
-		value={setValue()}
-					label={props.label ? props.label : ""}
-					id="filled-start-adornment"
-					sx={styles}
-					InputProps={{
+				<Grid2
+					container
+					sx={{ flexDirection: "column" ,
+							backgroundColor:
+								"#F9F9F9",
+					}}
 
-						disableUnderline: true,
-						startAdornment: (
-							<InputAdornment position="start">
-								
-								<div style={style.textAndLogo} flex-direction="row">
-									<div>
-									
-                            <img  style={{ marginRight: "8px",maxWidth: "24px", width: "24px", height: "24px"} }src={asset.logo} alt="logo" />
-    
-    
-    
-    
+				>
+					<TextField
+						onChange={updateAmount}
+						value={setValue()}
+						label={
+							props.label
+								? props.label
+								: ""
+						}
+						id="filled-start-adornment"
+						sx={styles}
+						InputProps={{
+							disableUnderline: true,
+							startAdornment: (
+								<InputAdornment position="start">
+									<div
+										style={
+											style.textAndLogo
+										}
+										flex-direction="row"
+									>
+										<div>
+											<img
+												style={{
+													marginRight:
+														"8px",
+													maxWidth: "24px",
+													width: "24px",
+													height: "24px",
+												}}
+												src={
+													asset.logo
+												}
+												alt="logo"
+											/>
+										</div>
+										<div>
+											{
+												asset.label
+											}
+										</div>
 									</div>
-									<div>
-									{asset.label}
-									</div>
-								</div>
-							</InputAdornment>
-						),
-					}}
-					inputProps={{
-						style: {
-							textAlign: "right",
-						},
-					}}
-					variant="filled"
-				/>
+								</InputAdornment>
+							),
+						}}
+						inputProps={{
+							style: {
+								textAlign: "right",
+							},
+						}}
+						variant="standard"
+					/>
+						<Typography
+							color="textSecondary"
+							variant="subtitle2"
+							sx={{
+								textAlign: "right",
+							}}
+						>
+							balance: TODO
+						</Typography>
+				</Grid2>
 			</FormControl>
-
 		</Grid2>
 	);
 };
