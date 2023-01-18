@@ -4,3 +4,8 @@ export enum TokenKind {
   Sirius = "Sirius",
 }
 
+export interface Asset {
+	name: TokenKind,
+        label: string,
+	logo: string,
+}
