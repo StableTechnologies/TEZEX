@@ -46,7 +46,7 @@ const classes = {
       right: 4,
       bottom: '10%',
       borderRadius: 3,
-	    backgroundColor:  '#E3F7FF',//'palette.action.selected' ,
+	    backgroundColor: 'selectedHomeTab.main'//'#E3F7FF',//'palette.action.selected' ,
     }
   }
 }

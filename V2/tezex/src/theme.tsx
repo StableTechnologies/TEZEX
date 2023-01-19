@@ -1,5 +1,26 @@
-import { createTheme, Theme } from '@mui/material/styles';
-import { green, purple } from '@mui/material/colors';
+import { createTheme } from '@mui/material/styles';
+declare module '@mui/material/styles' {
+
+  interface Palette {
+    selectedHomeTab: Palette['primary'];
+  }
+
+  interface PaletteOptions {
+    selectedHomeTab: PaletteOptions['primary'];
+  }
+
+  interface PaletteColor {
+    darker?: string;
+  }
+
+  interface SimplePaletteColorOptions {
+    darker?: string;
+  }
+
+  interface ThemeOptions {
+  }
+}
+
 const { palette } = createTheme();
 
 const theme = createTheme({
@@ -9,7 +30,10 @@ const theme = createTheme({
    },
   palette: {
 
-
+ selectedHomeTab: {
+      main: '#E3F7FF',
+      contrastText: '#fff',
+    },
     action: {
       selected: '#E3F7FF',
     },
