@@ -37,7 +37,7 @@ export const Home: FC<IHome> = (props) => {
 
 	return (
 		<Grid2 sx={{ flexDirection: "column", justifyContent: "center"}} container>
-<Grid2>
+<Grid2 >
 
 		           <NavHome /> 	
 </Grid2>
