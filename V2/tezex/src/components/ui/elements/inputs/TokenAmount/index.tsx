@@ -108,7 +108,7 @@ export const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 					container
 					sx={{ flexDirection: "column" ,
 							backgroundColor:
-								"#F9F9F9",
+								'background.default',
 					}}
 
 				>

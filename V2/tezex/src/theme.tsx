@@ -1,6 +1,33 @@
-import { createMuiTheme } from '@mui/material';
+import { createTheme, Theme } from '@mui/material/styles';
+import { green, purple } from '@mui/material/colors';
+const { palette } = createTheme();
 
-const theme = createMuiTheme({
+const theme = createTheme({
+
+  typography: {
+		  fontFamily: "Inter",
+   },
+  palette: {
+
+    primary: {
+      main: '#1E1E1E',
+    },
+    secondary: {
+      main: '#DEF5FF',
+      dark: '#00A0E4',
+    },
+	  background: {
+		  default: '#F9F9F9',
+	  }
+  },
+});
+/*
+const theme: Theme = createTheme({
+	palette: {
+		grey: {
+      main: purple[500],
+		}
+	},
   typography: {
     fontFamily: "Inter",
    },
@@ -38,4 +65,6 @@ const theme = createMuiTheme({
   },
 })
 
+*/
 export default theme;
+

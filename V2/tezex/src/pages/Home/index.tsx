@@ -6,6 +6,18 @@ import {Swap} from '../../components/Swap'
 import { AddLiquidity  } from "../../components/AddLiquidity";
 import { RemoveLiquidity  } from "../removeLiquidity";
 
+import Grid2 from '@mui/material/Unstable_Grid2'; // Grid version 2
+import Button from "@mui/material/Button";
+import Card from "@mui/material/Card";
+import CardActions from "@mui/material/CardActions";
+import CardContent from "@mui/material/CardContent";
+import CardHeader from '@mui/material/CardHeader';
+import Grid from "@mui/material/Grid";
+//import KeyboardArrowDownIcon from '@mui/material/icons/KeyboardArrowDown';
+import Paper from '@mui/material/Paper';
+import TextField from '@mui/material/TextField';
+import Typography from "@mui/material/Typography";
+
 type HomePaths = 'swap' | 'add' | 'remove'
 
 export interface IHome {
@@ -24,13 +36,15 @@ export const Home: FC<IHome> = (props) => {
 	}})();
 
 	return (
-		<div>
-			<div>
+		<Grid2 sx={{ flexDirection: "column", justifyContent: "center"}} container>
+<Grid2>
+
 		           <NavHome /> 	
-			</div>
-			<div>
+</Grid2>
+<Grid2>
+
 				<Comp />
-			</div>
-		</div>
+</Grid2>
+</Grid2>
 	);
 };
