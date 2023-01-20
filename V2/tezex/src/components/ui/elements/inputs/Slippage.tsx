@@ -23,59 +23,105 @@ import FormControl from "@mui/material/FormControl";
 import TextField from "@mui/material/TextField";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
-const tabClasses = {
-	"&.MuiButtonBase-root": {
-		minHeight: 44,
-		minWidth: 96,
-		zIndex: 2,
-		// marginTop: spacing(0.5),
-		color: "palette.text.primary",
-		textTransform: "initial",
-	},
-	wrapper: {
-		// zIndex: 2,
-		// marginTop: spacing(0.5),
-		color: "palette.text.primary",
-		textTransform: "initial",
-	},
-};
 
 const classes = {
-	".MuiTabs-flexContainer": {
-		border: "1px solid #EDEDED",
-		borderRadius: 4,
-		display: "inline-flex",
-		position: "relative",
+	/*
+	
+fontFamily: 'Inter',
+fontStyle: 'normal',
+fontWeight: '500',
+fontSize: '12px',
+lineHeight: '15px',
+textAlign: 'right',
+
+	*/
+	tabClasses: {
+		"&.MuiButtonBase-root": {
+			fontFamily: "Inter",
+			fontStyle: "normal",
+			fontWeight: "500",
+			fontSize: "12px",
+			lineHeight: "15px",
+			textAlign: "right",
+			minHeight: 10,
+			minWidth: 96,
+			zIndex: 2,
+			// marginTop: spacing(0.5),
+			color: "palette.text.primary",
+			textTransform: "initial",
+		},
+		wrapper: {
+			// zIndex: 2,
+			// marginTop: spacing(0.5),
+			color: "palette.text.primary",
+			textTransform: "initial",
+		},
 	},
-	".MuiTabs-indicator": {
-		top: 0,
-		bottom: "12%",
-		right: 3,
-		height: "auto",
-		background: "none",
-		"&:after": {
-			content: '""',
-			display: "block",
-			position: "absolute",
-			top: "10%",
-			left: 4,
-			right: 4,
-			bottom: "10%",
-			borderRadius: 3,
-			backgroundColor: "selectedHomeTab.main", //'#E3F7FF',//'palette.action.selected' ,
+	textField: {
+		"& .MuiInputAdornment-root": {},
+
+		"& .MuiTypography-root": {
+			fontFamily: "Inter",
+			fontStyle: "normal",
+			fontWeight: "500",
+			fontSize: "12px",
+			lineHeight: "15px",
+			textAlign: "left",
+		},
+		"& .MuiInputBase-root": {
+			fontFamily: "Inter",
+			fontStyle: "normal",
+			fontWeight: "500",
+			fontSize: "12px",
+			lineHeight: "15px",
+			textAlign: "right",
+			maxHeight: 20,
+			minWidth: 50,
+			maxWidth: 50,
+			// marginTop: spacing(0.5),
+			textTransform: "initial",
+		},
+	},
+	tabs: {
+		"& .MuiTabs-root": {},
+
+		"& .MuiTabs-scroller": {},
+		"& .MuiTabs-flexContainer": {
+			border: "1px solid #EDEDED",
+			borderRadius: 4,
+			display: "flex",
+			position: "relative",
+		},
+		"& .MuiTabs-indicator": {
+			top: 0,
+			bottom: "12%",
+			right: 3,
+			height: "auto",
+			background: "none",
+			"&:after": {
+				content: '""',
+				display: "block",
+				position: "absolute",
+				top: "10%",
+				left: 4,
+				right: 4,
+				bottom: "10%",
+				borderRadius: 3,
+				backgroundColor: "selectedHomeTab.main", //'#E3F7FF',//'palette.action.selected' ,
+			},
 		},
 	},
 };
 
-interface NavTabProps {
+interface SlippageTabProps {
 	label: string;
 	href: string;
 }
 
-function NavTab(props: NavTabProps) {
+function SlippageTab(props: SlippageTabProps) {
 	return (
 		<Tab
-			sx={tabClasses}
+			sx={classes.tabClasses}
 			onClick={(
 				event: React.MouseEvent<
 					HTMLAnchorElement,
@@ -165,25 +211,7 @@ export const Slippage: FC<ISlippage> = (props) => {
 					onChange={updateAmount}
 					value={view()}
 					id="filled-start-adornment"
-					sx={{
-
-						"& .MuiInputBase-root": {
-							minHeight: 44,
-							minWidth: 50,
-							maxWidth: 50,
-							// marginTop: spacing(0.5),
-							textTransform:
-								"initial",
-						},
-						"&.MuiButtonBase-root": {
-							minHeight: 44,
-							minWidth: 100,
-							maxWidth: 100,
-							// marginTop: spacing(0.5),
-							textTransform:
-								"initial",
-						},
-					}}
+					sx={classes.textField}
 					InputProps={{
 						disableUnderline: true,
 						endAdornment: (
@@ -193,9 +221,7 @@ export const Slippage: FC<ISlippage> = (props) => {
 						),
 					}}
 					inputProps={{
-						style: {
-							textAlign: "right",
-						},
+						style: {},
 					}}
 					size="small"
 					variant="standard"
@@ -207,31 +233,19 @@ export const Slippage: FC<ISlippage> = (props) => {
 		return (
 			<Tabs
 				value={value}
-				sx={classes}
+				sx={classes.tabs}
 				onChange={handleChange}
 				aria-label="nav tabs example"
 			>
-				<NavTab label="Swap" href="/home/swap" />
-				<NavTab
-					label="Add Liquidity"
-					href="/home/add"
-				/>
+				<SlippageTab label="1%" href="/home/swap" />
+				<SlippageTab label="2%" href="/home/add" />
 				<Tab label={<SlippageInput />} />
 			</Tabs>
 		);
 	};
 
-	// move grid to individual comp swap/add 
-	return (
-		<Grid2 container sx={{ flexDirection: "row" }}>
-			<Grid2>Slippage</Grid2>
-
-			<Grid2>
-				<SlippageTabs />
-			      
-			</Grid2>
-		</Grid2>
-	);
+	// move grid to individual comp swap/add
+	return <SlippageTabs />;
 };
 /*
   
@@ -245,8 +259,8 @@ export const Slippage: FC<ISlippage> = (props) => {
 				onChange={handleChange}
 				aria-label="nav tabs example"
 			>
-				<NavTab label="Swap" href="/home/swap" />
-				<NavTab label="Add Liquidity" href="/home/add" />
+				<SlippageTab label="Swap" href="/home/swap" />
+				<SlippageTab label="Add Liquidity" href="/home/add" />
 				<Tab
 					label={<SlippageInput />} 
 				/>
