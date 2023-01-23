@@ -38,7 +38,7 @@ export const AddLiquidity: FC = (props) => {
 		BigNumber | number | null
 	>(null);
 	const [shares, setShares] = useState<BigNumber | number>(0);
-	const [slippage, setSlippage] = useState<BigNumber | number | null>(
+	const [slippage, setSlippage] = useState<BigNumber | number >(
 		0.5
 	);
 	const [outputAmountMantissa, setOutputAmountMantissa] =
@@ -253,7 +253,7 @@ export const AddLiquidity: FC = (props) => {
 			<Slippage
 				asset={TokenKind.TzBTC}
 				walletInfo={walletInfo}
-				setSlippage={setSlippage}
+				setslippage={setSlippage}
 				slippage={slippage}
 				amountMantissa={
 					new BigNumber(outputAmountMantissa)

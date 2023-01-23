@@ -57,9 +57,7 @@ export const Swap: FC = (props) => {
 	const [inputAmountMantissa, setInputAmountMantissa] = useState<
 		BigNumber | number | null
 	>(null);
-	const [slippage, setSlippage] = useState<BigNumber | number | null>(
-		-0.5
-	);
+	const [slippage, setSlippage] = useState<BigNumber | number >(-0.5);
 	const [outputAmountMantissa, setOutputAmountMantissa] =
 		useState<number>(0);
 	const [outToken, setOutToken] = useState(TokenKind.TzBTC);
@@ -252,7 +250,7 @@ export const Swap: FC = (props) => {
 					<Slippage
 					asset={outToken}
 						walletInfo={walletInfo}
-						setSlippage={setSlippage}
+						setslippage={setSlippage}
 						slippage={slippage}
 						amountMantissa={
 							new BigNumber(

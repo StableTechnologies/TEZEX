@@ -1,4 +1,4 @@
-import { FC, useState } from "react";
+import { FC, useState, useEffect } from "react";
 import { BigNumber } from "bignumber.js";
 
 import { WalletInfo } from "../../../../contexts/wallet";
@@ -60,9 +60,7 @@ textAlign: 'right',
 		},
 	},
 	textField: {
-		"& .MuiButtonBase-root": {
-
-		},
+		"& .MuiButtonBase-root": {},
 		"& .MuiInputAdornment-root": {},
 
 		"& .MuiTypography-root": {
@@ -78,7 +76,8 @@ textAlign: 'right',
 			position: "absolute",
 			fontFamily: "Inter",
 
-			display: "inline-flex", 
+			zIndex: 3,
+			display: "inline-flex",
 			justifyContent: "center",
 			textAlign: "center",
 			bottom: "45%",
@@ -98,7 +97,7 @@ textAlign: 'right',
 			position: "absolute",
 			fontFamily: "Inter",
 
-		        
+			zIndex: 5,
 			right: "1%",
 			left: "6%",
 			padding: "0px",
@@ -169,59 +168,45 @@ textAlign: 'right',
 	},
 };
 
-interface SlippageTabProps {
-	label?: React.ReactNode;
-	input?: boolean;
-	amount?: number;
-}
-
-function SlippageTab(props: SlippageTabProps) {
-	return (
-		<Tab
-			href=""
-			sx={classes.tabClasses}
-			onClick={(
-				event: React.MouseEvent<
-					HTMLAnchorElement,
-					MouseEvent
-				>
-			) => {
-				event.preventDefault();
-			}}
-			{...props}
-		/>
-	);
-}
-
 export interface ISlippage {
 	asset: TokenKind;
 	walletInfo: WalletInfo | null;
-	setSlippage: React.Dispatch<
-		React.SetStateAction<BigNumber | number | null>
+	setslippage: React.Dispatch<
+		React.SetStateAction<BigNumber | number >
 	>;
-	slippage: BigNumber | number | null;
+	slippage: BigNumber | number ;
 	amountMantissa: BigNumber;
 	inverse?: boolean;
 	balanceCheck?: boolean;
 }
 
 export const Slippage: FC<ISlippage> = (props) => {
+	const [selectedId, setSelectedId] = useState("0");
 	const [sufficientBalance, setSufficientBalance] = useState(true);
 	const net = useNetwork();
-	const updateAmount = async (e: React.ChangeEvent<HTMLInputElement>) => {
-		const num = props.inverse
-			? new BigNumber(e.target.value).multipliedBy(-1)
-			: new BigNumber(e.target.value);
+	const stringToBigNumber = (value: string) => {
 
-		num.isNaN() ? props.setSlippage(null) : props.setSlippage(num);
+		const num = props.inverse
+			? new BigNumber(value).multipliedBy(-1)
+			: new BigNumber(value);
+
+		 return BigNumber(num);
+	}
+
+	const updateAmount = (value: string) => {
+		props.setslippage(stringToBigNumber('3'));
+		//props.setSlippage(stringToBigNumber(value));
+	};
+
+	const _updateAmount = async (value: string) => {
+		const num =  stringToBigNumber(value);
+		props.setslippage(num);
 		if (props.balanceCheck) {
 			if (props.walletInfo && num.gt(0) && !num.isNaN()) {
 				setSufficientBalance(
 					await hasSufficientBalance(
 						addSlippage(
-							new BigNumber(
-								e.target.value
-							),
+							num,
 							props.amountMantissa
 						),
 						props.walletInfo,
@@ -254,11 +239,124 @@ export const Slippage: FC<ISlippage> = (props) => {
 		} else return "0";
 	};
 
-	const SlippageInput = () => {
+	interface ISlippageInput {
+		disabled?: boolean;
+	}
+	const SlippageInput = (prop: ISlippageInput) => {
+		const [value, setValue] = useState("");
+		const updateSlippage = (
+			e: React.ChangeEvent<HTMLInputElement>
+		) => {
+			e.preventDefault();
+
+			const num =  stringToBigNumber(e.target.value);
+		if (!num.isNaN()){
+			setValue(e.target.value);
+		
+		}	
+		};
+
+		useEffect(() =>{
+			const num =  stringToBigNumber(value);
+		if (!num.isNaN()){
+			console.log(num.toNumber());
+
+				console.log('\n','value : ', value,'\n'); 
+			try {
+
+				console.log('\n','value : ', value,'\n'); 
+			props.setslippage(num.toNumber());
+			} catch(e) {
+				console.log('\n','e : ', e,'\n'); 
+				console.log('\n','value : ', value,'\n'); 
+			}
+		}	
+		},[value])
+
 		return (
 			<TextField
-				onChange={updateAmount}
-				value={view()}
+				disabled={prop.disabled}
+				onChange={updateSlippage}
+				sx={classes.textField}
+				value={value}
+				InputProps={{
+					disableUnderline: true,
+					endAdornment: (
+						<InputAdornment position="start">
+							%
+						</InputAdornment>
+					),
+				}}
+				inputProps={{}}
+				size="small"
+				variant="standard"
+				{...prop}
+			/>
+		);
+	};
+
+	interface SlippageTabProps {
+		id: string;
+		label?: React.ReactNode;
+		
+		amount?: number;
+	}
+
+	function SlippageTab(props: SlippageTabProps, input?: boolean) {
+		return (
+			<Tab
+				label={
+					(props.id === 'input') ? (
+						<SlippageInput
+							disabled={
+								selectedId !==
+								props.id
+							}
+						/>
+					) : (
+						props.label
+					)
+				}
+				href=""
+				sx={classes.tabClasses}
+				onClick={(
+					event: React.MouseEvent<
+						HTMLAnchorElement,
+						MouseEvent
+					>
+				) => {
+					event.preventDefault();
+					setSelectedId(props.id);
+				}}
+				{...props}
+			/>
+		);
+	}
+		return (
+			<div>
+			<Tabs
+				value={value}
+				sx={classes.tabs}
+				onChange={handleChange}
+				aria-label="nav tabs example"
+			>
+				<SlippageTab
+					id="0"
+					label="0.5%"
+					amount={0.5}
+				/>
+				<SlippageTab
+					id="1"
+					label="1%"
+					amount={1}
+				/>
+				<SlippageTab
+					id="3"
+					label={
+
+			<TextField
+				onChange={(e) =>{props.setslippage(stringToBigNumber(e.target.value).toNumber())}}
+				value={props.slippage}
 				sx={classes.textField}
 				InputProps={{
 					disableUnderline: true,
@@ -272,28 +370,16 @@ export const Slippage: FC<ISlippage> = (props) => {
 				size="small"
 				variant="standard"
 			/>
-		);
-	};
-	const SlippageTabs = () => {
-		return (
-			<Tabs
-				value={value}
-				sx={classes.tabs}
-				onChange={handleChange}
-				aria-label="nav tabs example"
-			>
-				<SlippageTab label="0.5%" amount={0.5} />
-				<SlippageTab label="1%" amount={1} />
-				<SlippageTab
-					label={<SlippageInput />}
-					amount={1}
+					}
 				/>
 			</Tabs>
+			
+			<div>
+			</div>
+			</div>
 		);
-	};
 
 	// move grid to individual comp swap/add
-	return <SlippageTabs />;
 };
 /*
   
