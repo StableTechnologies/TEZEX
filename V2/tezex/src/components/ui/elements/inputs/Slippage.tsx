@@ -42,9 +42,11 @@ textAlign: 'right',
 			fontWeight: "500",
 			fontSize: "12px",
 			lineHeight: "15px",
-			textAlign: "right",
+			display: "inline-flex",
+			justifyContent: "center",
+			textAlign: "center",
 			minHeight: 10,
-			minWidth: 96,
+			minWidth: 60,
 			zIndex: 2,
 			// marginTop: spacing(0.5),
 			color: "palette.text.primary",
@@ -58,6 +60,9 @@ textAlign: 'right',
 		},
 	},
 	textField: {
+		"& .MuiButtonBase-root": {
+
+		},
 		"& .MuiInputAdornment-root": {},
 
 		"& .MuiTypography-root": {
@@ -68,29 +73,80 @@ textAlign: 'right',
 			lineHeight: "15px",
 			textAlign: "left",
 		},
-		"& .MuiInputBase-root": {
+
+		"&.MuiFormControl-root": {
+			position: "absolute",
 			fontFamily: "Inter",
+
+			display: "inline-flex", 
+			justifyContent: "center",
+			textAlign: "center",
+			bottom: "45%",
+			left: "26%",
+			padding: "0px",
 			fontStyle: "normal",
 			fontWeight: "500",
 			fontSize: "12px",
 			lineHeight: "15px",
-			textAlign: "right",
-			maxHeight: 20,
-			minWidth: 50,
-			maxWidth: 50,
+			maxHeight: 10,
+			minWidth: 40,
+			// marginTop: spacing(0.5),
+			textTransform: "initial",
+		},
+
+		"& .MuiInputBase-root": {
+			position: "absolute",
+			fontFamily: "Inter",
+
+		        
+			right: "1%",
+			left: "6%",
+			padding: "0px",
+			fontStyle: "normal",
+			fontWeight: "500",
+			fontSize: "12px",
+			lineHeight: "15px",
+			maxHeight: 10,
+			minWidth: 40,
 			// marginTop: spacing(0.5),
 			textTransform: "initial",
 		},
 	},
 	tabs: {
-		"& .MuiTabs-root": {},
+		"& .MuiTabs-root": {
+			minHeight: 10,
+		},
 
-		"& .MuiTabs-scroller": {},
+		"& .MuiTabs-scroller": {
+			position: "relative",
+			/*
+		display: "flex",
+		flexDirection: "row",
+		alignItems: "flex-start",
+		padding: "4px",
+		gap: "16px",
+		position: "absolute",
+		left: "46.34%",
+		right: "3.64%",
+		top: "51.37%",
+		bottom: "21.92%",
+		background: "#FFFFFF",
+		border: "1px solid #EDEDED",
+		borderRadius: "8px",
+			
+			*/
+		},
 		"& .MuiTabs-flexContainer": {
+			padding: "1",
+			gap: "4px",
+			justifyContent: "center",
+			position: "absolute",
+			left: "20%",
+			bottom: "30%",
+			right: "10%",
+			top: "10%",
 			border: "1px solid #EDEDED",
 			borderRadius: 4,
-			display: "flex",
-			position: "relative",
 		},
 		"& .MuiTabs-indicator": {
 			top: 0,
@@ -102,10 +158,10 @@ textAlign: 'right',
 				content: '""',
 				display: "block",
 				position: "absolute",
-				top: "10%",
-				left: 4,
-				right: 4,
-				bottom: "10%",
+				top: "15%",
+				left: 7,
+				right: 7,
+				bottom: "25%",
 				borderRadius: 3,
 				backgroundColor: "selectedHomeTab.main", //'#E3F7FF',//'palette.action.selected' ,
 			},
@@ -114,13 +170,15 @@ textAlign: 'right',
 };
 
 interface SlippageTabProps {
-	label: string;
-	href: string;
+	label?: React.ReactNode;
+	input?: boolean;
+	amount?: number;
 }
 
 function SlippageTab(props: SlippageTabProps) {
 	return (
 		<Tab
+			href=""
 			sx={classes.tabClasses}
 			onClick={(
 				event: React.MouseEvent<
@@ -198,35 +256,22 @@ export const Slippage: FC<ISlippage> = (props) => {
 
 	const SlippageInput = () => {
 		return (
-			<Grid2
-				sx={{
-					zIndex: 3,
+			<TextField
+				onChange={updateAmount}
+				value={view()}
+				sx={classes.textField}
+				InputProps={{
+					disableUnderline: true,
+					endAdornment: (
+						<InputAdornment position="start">
+							%
+						</InputAdornment>
+					),
 				}}
-				xs={3}
-				sm={3}
-				md={3}
-				lg={3}
-			>
-				<TextField
-					onChange={updateAmount}
-					value={view()}
-					id="filled-start-adornment"
-					sx={classes.textField}
-					InputProps={{
-						disableUnderline: true,
-						endAdornment: (
-							<InputAdornment position="start">
-								%
-							</InputAdornment>
-						),
-					}}
-					inputProps={{
-						style: {},
-					}}
-					size="small"
-					variant="standard"
-				/>
-			</Grid2>
+				inputProps={{}}
+				size="small"
+				variant="standard"
+			/>
 		);
 	};
 	const SlippageTabs = () => {
@@ -237,9 +282,12 @@ export const Slippage: FC<ISlippage> = (props) => {
 				onChange={handleChange}
 				aria-label="nav tabs example"
 			>
-				<SlippageTab label="1%" href="/home/swap" />
-				<SlippageTab label="2%" href="/home/add" />
-				<Tab label={<SlippageInput />} />
+				<SlippageTab label="0.5%" amount={0.5} />
+				<SlippageTab label="1%" amount={1} />
+				<SlippageTab
+					label={<SlippageInput />}
+					amount={1}
+				/>
 			</Tabs>
 		);
 	};

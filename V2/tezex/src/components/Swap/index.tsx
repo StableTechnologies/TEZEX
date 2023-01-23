@@ -30,7 +30,24 @@ import Grid from "@mui/material/Grid";
 import Paper from "@mui/material/Paper";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import classes from "./style";
+const classes = {
+	slippageContainer: {
+		flexDirection: "row",
+		"& .MuiGrid2-root": {
+		},
+	},
+
+	slippageComponent: {
+		"& .MuiGrid2-root": {
+		},
+	},
+	slippage: {
+		text: {},
+	},
+	root: {
+		justifyContent: "center",
+	},
+	};
 
 export interface ISwapToken {
 	children: null;
@@ -217,12 +234,23 @@ export const Swap: FC = (props) => {
 
 				<Paper variant="outlined" square>
 
-		<Grid2 container sx={{ flexDirection: "row" }}>
-			<Grid2>Slippage</Grid2>
+		<Grid2 container sx={classes.slippageContainer}>
+			<Grid2 
+					xs={2}
+					sm={2}
+					md={2}
+					lg={2}
+			>Slippage</Grid2>
 
-			<Grid2>
+		<Grid2
+
+					xs={10}
+					sm={10}
+					md={10}
+					lg={10}
+			sx={classes.slippageComponent}>
 					<Slippage
-						asset={outToken}
+					asset={outToken}
 						walletInfo={walletInfo}
 						setSlippage={setSlippage}
 						slippage={slippage}
