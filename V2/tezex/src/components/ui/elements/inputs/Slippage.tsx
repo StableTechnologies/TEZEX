@@ -76,7 +76,6 @@ textAlign: 'right',
 			position: "absolute",
 			fontFamily: "Inter",
 
-			zIndex: 3,
 			display: "inline-flex",
 			justifyContent: "center",
 			textAlign: "center",
@@ -97,7 +96,6 @@ textAlign: 'right',
 			position: "absolute",
 			fontFamily: "Inter",
 
-			zIndex: 5,
 			right: "1%",
 			left: "6%",
 			padding: "0px",
@@ -239,46 +237,25 @@ export const Slippage: FC<ISlippage> = (props) => {
 		} else return "0";
 	};
 
+
+	const [input, setInput] = useState<string>("0.1");
+
+	useEffect(()=>{
+              props.setslippage(stringToBigNumber(input).toNumber())
+	},[input]);
+
 	interface ISlippageInput {
 		disabled?: boolean;
 	}
 	const SlippageInput = (prop: ISlippageInput) => {
-		const [value, setValue] = useState("");
-		const updateSlippage = (
-			e: React.ChangeEvent<HTMLInputElement>
-		) => {
-			e.preventDefault();
-
-			const num =  stringToBigNumber(e.target.value);
-		if (!num.isNaN()){
-			setValue(e.target.value);
-		
-		}	
-		};
-
-		useEffect(() =>{
-			const num =  stringToBigNumber(value);
-		if (!num.isNaN()){
-			console.log(num.toNumber());
-
-				console.log('\n','value : ', value,'\n'); 
-			try {
-
-				console.log('\n','value : ', value,'\n'); 
-			props.setslippage(num.toNumber());
-			} catch(e) {
-				console.log('\n','e : ', e,'\n'); 
-				console.log('\n','value : ', value,'\n'); 
-			}
-		}	
-		},[value])
 
 		return (
 			<TextField
+				autoFocus
 				disabled={prop.disabled}
-				onChange={updateSlippage}
+				onChange={(e) =>{setInput(e.target.value)}}
+				value={input}
 				sx={classes.textField}
-				value={value}
 				InputProps={{
 					disableUnderline: true,
 					endAdornment: (
@@ -290,7 +267,6 @@ export const Slippage: FC<ISlippage> = (props) => {
 				inputProps={{}}
 				size="small"
 				variant="standard"
-				{...prop}
 			/>
 		);
 	};
@@ -332,8 +308,8 @@ export const Slippage: FC<ISlippage> = (props) => {
 			/>
 		);
 	}
+	const SlippageTabs = () => {
 		return (
-			<div>
 			<Tabs
 				value={value}
 				sx={classes.tabs}
@@ -351,35 +327,14 @@ export const Slippage: FC<ISlippage> = (props) => {
 					amount={1}
 				/>
 				<SlippageTab
-					id="3"
-					label={
-
-			<TextField
-				onChange={(e) =>{props.setslippage(stringToBigNumber(e.target.value).toNumber())}}
-				value={props.slippage}
-				sx={classes.textField}
-				InputProps={{
-					disableUnderline: true,
-					endAdornment: (
-						<InputAdornment position="start">
-							%
-						</InputAdornment>
-					),
-				}}
-				inputProps={{}}
-				size="small"
-				variant="standard"
-			/>
-					}
+					id="input"
 				/>
 			</Tabs>
-			
-			<div>
-			</div>
-			</div>
 		);
+	};
 
 	// move grid to individual comp swap/add
+	return <SlippageTabs />;
 };
 /*
   
