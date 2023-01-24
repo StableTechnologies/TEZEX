@@ -1,9 +1,21 @@
 import { createContext, useEffect, useState } from "react";
-import { WalletContext, WalletInfo, WalletStatus, walletUser, isReady } from "./wallet";
+import {
+	WalletContext,
+	WalletInfo,
+	WalletStatus,
+	walletUser,
+	isReady,
+	viewBalance,
+} from "./wallet";
 import { NetworkContext, networkDefaults } from "./network";
 import { TezosToolkit } from "@taquito/taquito";
 import { DAppClient } from "@airgap/beacon-sdk";
 
+import { TokenKind } from "../types/general";
+import { getBalance } from "../functions/beacon";
+import { NetworkInfo } from "./network";
+import { useWallet } from "../hooks/wallet";
+import { useNetwork } from "../hooks/network";
 export const SessionContext = createContext<SessionInfo>({
 	isWalletConnected: false,
 });
@@ -44,6 +56,9 @@ export function SessionProvider(props: ISession) {
 		setAddress(null);
 	};
 
+	const network = useNetwork();
+	const wallet = useWallet();
+
 	const walletInfo: WalletInfo = {
 		client,
 		setClient,
@@ -56,6 +71,7 @@ export function SessionProvider(props: ISession) {
 		walletUser: walletUser(walletStatus, setWalletStatus),
 		isReady: isReady(walletStatus),
 		disconnect,
+		viewBalance: viewBalance,
 	};
 
 	return (

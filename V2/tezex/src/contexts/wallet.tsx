@@ -1,6 +1,10 @@
 import { createContext } from "react";
 import { DAppClient } from "@airgap/beacon-sdk";
 import { TezosToolkit } from "@taquito/taquito";
+import { TokenKind } from "../types/general";
+import { NetworkInfo } from "./network";
+
+import { getBalance } from "../functions/beacon";
 
 export enum WalletStatus {
 	DISCONNECTED = "disconnected",
@@ -8,12 +12,11 @@ export enum WalletStatus {
 	BUSY = "busy",
 }
 
-export function isReady( 
-	walletStatus: WalletStatus){
+export function isReady(walletStatus: WalletStatus) {
 	const ready = (): boolean => {
 		return walletStatus === WalletStatus.READY;
-	}
-	return ready
+	};
+	return ready;
 }
 export function walletUser(
 	walletStatus: WalletStatus,
@@ -36,6 +39,19 @@ export function walletUser(
 	return useWallet;
 }
 
+export async function viewBalance(
+	asset: TokenKind,
+	wallet: WalletInfo,
+	network: NetworkInfo
+): Promise<string> {
+	console.log("\n", "balance : ");
+	console.log("\n", "wallet : ", wallet, "\n");
+	if (wallet) {
+		const balance = await getBalance(wallet, network, asset, true);
+		console.log("\n", "balance : ", balance, "\n");
+		return balance.toString();
+	} else return "";
+}
 export interface WalletInfo {
 	client: DAppClient | null;
 	setClient: React.Dispatch<React.SetStateAction<DAppClient | null>>;
@@ -46,8 +62,13 @@ export interface WalletInfo {
 	walletStatus: WalletStatus;
 	setWalletStatus: React.Dispatch<React.SetStateAction<WalletStatus>>;
 	walletUser: (op: () => Promise<unknown>) => Promise<void>;
-	isReady: () => boolean,
+	isReady: () => boolean;
 	disconnect: () => void;
+	viewBalance: (
+		asset: TokenKind,
+		wallet: WalletInfo,
+		network: NetworkInfo
+	) => Promise<string>;
 }
 
 export const WalletContext = createContext<WalletInfo | null>(null);

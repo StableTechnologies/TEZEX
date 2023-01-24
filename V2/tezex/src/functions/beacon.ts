@@ -5,39 +5,49 @@ import { TezosToolkit, MichelCodecPacker } from "@taquito/taquito";
 import { BigNumber } from "bignumber.js";
 
 import { TokenKind } from "../types/general";
-import {  tokenMantissaToDecimal } from "./scaling";
+import { tokenMantissaToDecimal } from "./scaling";
 export function mutezToTez(amount: BigNumber) {
 	return amount.dividedBy(1000000);
 }
 export async function getBalance(
 	walletInfo: WalletInfo,
 	netInfo: NetworkInfo,
-	asset: TokenKind
+	asset: TokenKind,
+	asDecimal?: boolean
 ) {
-	if (walletInfo.toolkit && walletInfo.address) {
-		switch (asset) {
-			case TokenKind.XTZ:
-				return await walletInfo.toolkit.tz.getBalance(
-					walletInfo.address
-				);
-			case TokenKind.TzBTC:
-				const tzBtcContract =
-					await walletInfo.toolkit.wallet.at(
-						netInfo.addresses.tzbtc.address
+	const balance = async () => {
+		if (walletInfo.toolkit && walletInfo.address) {
+			switch (asset) {
+				case TokenKind.XTZ:
+					return await walletInfo.toolkit.tz.getBalance(
+						walletInfo.address
 					);
-				return await tzBtcContract.views
-					.getBalance(walletInfo.address)
-					.read();
-			case TokenKind.Sirius:
-				const siriusContract =
-					await walletInfo.toolkit.wallet.at(
-						netInfo.addresses.sirs.address
-					);
-				return await siriusContract.views
-					.getBalance(walletInfo.address)
-					.read();
-		}
-	} else return new BigNumber(0);
+				case TokenKind.TzBTC:
+					const tzBtcContract =
+						await walletInfo.toolkit.wallet.at(
+							netInfo.addresses.tzbtc
+								.address
+						);
+					return await tzBtcContract.views
+						.getBalance(walletInfo.address)
+						.read();
+				case TokenKind.Sirius:
+					const siriusContract =
+						await walletInfo.toolkit.wallet.at(
+							netInfo.addresses.sirs
+								.address
+						);
+					return await siriusContract.views
+						.getBalance(walletInfo.address)
+						.read();
+			}
+		} else return new BigNumber(0);
+	};
+	if (asDecimal) {
+		return tokenMantissaToDecimal(await balance(), asset);
+	} else {
+		return await balance();
+	}
 }
 
 export async function hasSufficientBalance(

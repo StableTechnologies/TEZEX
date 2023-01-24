@@ -1,12 +1,16 @@
-import { FC, useState } from "react";
+import { FC, useState, useEffect } from "react";
 import { BigNumber } from "bignumber.js";
 
 import { WalletInfo } from "../../../../../contexts/wallet";
 
+import { useWallet } from "../../../../../hooks/wallet";
 import { useNetwork } from "../../../../../hooks/network";
 import { TokenKind, Asset } from "../../../../../types/general";
 import { getAsset } from "../../../../../constants";
-import { hasSufficientBalance } from "../../../../../functions/beacon";
+import {
+	hasSufficientBalance,
+	getBalance,
+} from "../../../../../functions/beacon";
 import {
 	tokenDecimalToMantissa,
 	tokenMantissaToDecimal,
@@ -46,7 +50,9 @@ const style = {
 export const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 	const [sufficientBalance, setSufficientBalance] = useState(true);
 	const [inputString, setInputString] = useState("0");
+	const [balance, setBalance] = useState("0.0");
 	const net = useNetwork();
+	const wallet = useWallet();
 	const asset: Asset = getAsset(props.asset);
 
 	const updateAmount = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,6 +73,25 @@ export const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 			setSufficientBalance(true);
 		}
 	};
+
+	useEffect(() => {
+		if (wallet) {
+			const check = async () => {
+
+				if (wallet) {
+					setBalance(
+						await wallet.viewBalance(
+							props.asset,
+							wallet,
+							net
+						)
+					);
+				}
+			};
+			check();
+		}
+	}, [wallet, net, props.asset, inputString]);
+
 	const setValue = () => {
 		if (props.mantissa) {
 			if (
@@ -106,11 +131,11 @@ export const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 			<FormControl fullWidth sx={{ m: 1 }}>
 				<Grid2
 					container
-					sx={{ flexDirection: "column" ,
-							backgroundColor:
-								'background.default',
+					sx={{
+						flexDirection: "column",
+						backgroundColor:
+							"background.default",
 					}}
-
 				>
 					<TextField
 						onChange={updateAmount}
@@ -163,15 +188,15 @@ export const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 						}}
 						variant="standard"
 					/>
-						<Typography
-							color="textSecondary"
-							variant="subtitle2"
-							sx={{
-								textAlign: "right",
-							}}
-						>
-							balance: TODO
-						</Typography>
+					<Typography
+						color="textSecondary"
+						variant="subtitle2"
+						sx={{
+							textAlign: "right",
+						}}
+					>
+						balance: {balance} {props.asset}
+					</Typography>
 				</Grid2>
 			</FormControl>
 		</Grid2>
