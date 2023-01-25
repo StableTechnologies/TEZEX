@@ -78,7 +78,6 @@ export const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 	useEffect(() => {
 		if (wallet) {
 			const check = async () => {
-
 				if (wallet) {
 					setBalance(
 						await wallet.viewBalance(
@@ -92,7 +91,6 @@ export const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 			check();
 		}
 	}, [wallet, net, props.asset, inputString]);
-
 
 	const setValue = () => {
 		if (props.mantissa) {
@@ -127,89 +125,83 @@ export const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 		justifyContent: "center",
 		width: "418px",
 		height: "100px",
-
 	});
 
 	return (
 		<Grid2 container>
-				<Grid2
-					container
-					sx={{
-						flexDirection: "column",
+			<Grid2
+				container
+				sx={{
+					flexDirection: "column",
 
-		borderRadius: "16px",
-						backgroundColor:
-							"background.default",
+					borderRadius: "16px",
+					backgroundColor: "background.default",
+				}}
+			>
+				<TextField
+					onChange={updateAmount}
+					value={setValue()}
+					label={props.label ? props.label : ""}
+					id="filled-start-adornment"
+					sx={{
+						width: "418px",
+						height: "71px",
+					}}
+					InputProps={{
+						disableUnderline: true,
+						startAdornment: (
+							<InputAdornment position="start">
+								<div
+									style={
+										style.textAndLogo
+									}
+									flex-direction="row"
+								>
+									<div>
+										<img
+											style={{
+												marginLeft:
+													"8px",
+												marginRight:
+													"8px",
+												maxWidth: "30px",
+												width: "30px",
+												height: "30px",
+											}}
+											src={
+												asset.logo
+											}
+											alt="logo"
+										/>
+									</div>
+									<div>
+										{
+											asset.label
+										}
+									</div>
+								</div>
+							</InputAdornment>
+						),
+					}}
+					inputProps={{
+						readOnly: props.readOnly,
+						style: {
+							textAlign: "right",
+						},
+					}}
+					variant="standard"
+				/>
+				<Typography
+					color="textSecondary"
+					variant="subtitle2"
+					sx={{
+						padding: "0px 16px",
+						textAlign: "right",
 					}}
 				>
-					<TextField
-						onChange={updateAmount}
-						value={setValue()}
-						label={
-							props.label
-								? props.label
-								: ""
-						}
-						id="filled-start-adornment"
-						sx={{  
-
-		width: "418px",
-		height: "71px",
-
-						}}
-						InputProps={{
-							disableUnderline: true,
-							startAdornment: (
-								<InputAdornment position="start">
-									<div
-										style={
-											style.textAndLogo
-										}
-										flex-direction="row"
-									>
-										<div>
-											<img
-												style={{
-													marginRight:
-														"8px",
-													maxWidth: "24px",
-													width: "24px",
-													height: "24px",
-												}}
-												src={
-													asset.logo
-												}
-												alt="logo"
-											/>
-										</div>
-										<div>
-											{
-												asset.label
-											}
-										</div>
-									</div>
-								</InputAdornment>
-							),
-						}}
-						inputProps={{
-							readOnly: props.readOnly,
-							style: {
-								textAlign: "right",
-							},
-						}}
-						variant="standard"
-					/>
-					<Typography
-						color="textSecondary"
-						variant="subtitle2"
-						sx={{
-							padding: "0px 16px",
-							textAlign: "right",
-						}}
-					>
-						balance: {balance} {props.asset}
-					</Typography>
-				</Grid2>
+					balance: {balance} {props.asset}
+				</Typography>
+			</Grid2>
 		</Grid2>
 	);
 };
