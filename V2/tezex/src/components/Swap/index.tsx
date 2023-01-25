@@ -31,6 +31,9 @@ import Paper from "@mui/material/Paper";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 const classes = {
+	cardAction: {
+		justifyContent: "center"
+	},
 	slippageContainer: {
 		flexDirection: "row",
 		"& .MuiGrid2-root": {
@@ -227,13 +230,16 @@ export const Swap: FC = (props) => {
 							/>
 						</Grid2>
 					</CardContent>
-					<CardActions>
+					<CardActions sx={classes.cardAction}>
+						<Grid2 sx={{justifyContent: "center"}}xs={12}>
 						<Transact callback={transact}>
+							
 							{
 								("Buy " +
 									outToken) as string
 							}
 						</Transact>
+						</Grid2>
 					</CardActions>
 				</Card>
 
