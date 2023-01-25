@@ -125,7 +125,7 @@ export const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 
 	const styles = () => ({
 		m: 1,
-		width: "25ch",
+		width: "408px",
 	});
 
 	return (

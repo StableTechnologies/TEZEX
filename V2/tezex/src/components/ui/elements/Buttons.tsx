@@ -9,16 +9,16 @@ export interface ITransact {
 }
 const classes = {
 	transact: {
+
 		"&.MuiButton-root.Mui-disabled": {
 			color: "white",
 		},
 		width: "100%",
 		height: "56px",
 		backgroundColor: "#000",
-		margin: "0.5rem 0rem",
 		color: "white",
 		border: "1px solid black",
-		borderRadius: "8px",
+		borderRadius: "16px",
 		fontWeight: "500",
 		fontSize: "24px",
 		lineHeight: "29px",
@@ -57,7 +57,6 @@ export const Transact: FC<ITransact> = (props) => {
 				onClick={transact}
 				sx={classes.transact}
 				disabled={disabled}
-                                fullWidth
 			>
 				{props.children}
 			</Button>

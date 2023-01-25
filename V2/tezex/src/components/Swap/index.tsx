@@ -231,7 +231,7 @@ export const Swap: FC = (props) => {
 						</Grid2>
 					</CardContent>
 					<CardActions sx={classes.cardAction}>
-						<Grid2 sx={{justifyContent: "center"}}xs={12}>
+						<Grid2 sx={{ padding: "24px 8px", justifyContent: "center"}}xs={12}>
 						<Transact callback={transact}>
 							
 							{
