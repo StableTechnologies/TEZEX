@@ -40,6 +40,7 @@ export interface ITokenAmountInput {
 	>;
 	label?: string;
 	mantissa?: BigNumber | number | null;
+	readOnly?: boolean;
 }
 
 const style = {
@@ -91,6 +92,7 @@ export const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 			check();
 		}
 	}, [wallet, net, props.asset, inputString]);
+
 
 	const setValue = () => {
 		if (props.mantissa) {
@@ -182,6 +184,7 @@ export const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 							),
 						}}
 						inputProps={{
+							readOnly: props.readOnly,
 							style: {
 								textAlign: "right",
 							},

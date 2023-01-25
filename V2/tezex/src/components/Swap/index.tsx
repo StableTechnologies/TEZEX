@@ -59,7 +59,7 @@ export const Swap: FC = (props) => {
 	>(null);
 	const [slippage, setSlippage] = useState<BigNumber | number >(-0.5);
 	const [outputAmountMantissa, setOutputAmountMantissa] =
-		useState<number>(0);
+		useState< BigNumber | number | null >(0);
 	const [outToken, setOutToken] = useState(TokenKind.TzBTC);
 	const [inToken, setInToken] = useState(TokenKind.XTZ);
 	const [swapFields, setSwapFields] = useState<boolean>(true);
@@ -67,7 +67,7 @@ export const Swap: FC = (props) => {
 	const networkInfo = useNetwork();
 
 	const transact = async () => {
-		if (inputAmountMantissa && walletInfo) {
+		if (inputAmountMantissa && outputAmountMantissa && walletInfo) {
 			switch (inToken) {
 				case TokenKind.XTZ:
 					await xtzToToken(
@@ -211,13 +211,20 @@ export const Swap: FC = (props) => {
 						</Grid2>
 
 						<Grid2 xs={12}>
-							<TokenAmountOutput
+							<TokenAmountInput
 								asset={outToken}
-							>
-								{
+								walletInfo={
+									walletInfo
+								}
+								setMantissa={
+									setOutputAmountMantissa
+								}
+								mantissa={
 									outputAmountMantissa
 								}
-							</TokenAmountOutput>
+								readOnly={true}
+
+							/>
 						</Grid2>
 					</CardContent>
 					<CardActions>
@@ -254,7 +261,7 @@ export const Swap: FC = (props) => {
 						slippage={slippage}
 						amountMantissa={
 							new BigNumber(
-								outputAmountMantissa
+							(outputAmountMantissa) ? outputAmountMantissa : 0
 							)
 						}
 						inverse={true}
