@@ -26,6 +26,9 @@ const tabClasses = {
 
 const classes = {
   '.MuiTabs-flexContainer': {
+
+    justifyContent: "space-between",
+    minWidth: 440,
     border: '1px solid #EDEDED',
     borderRadius: 4,
     display: 'inline-flex',
@@ -103,87 +106,3 @@ export const NavHome: FC = () => {
 			</Tabs>
 	);
 };
-/*
-
-		<div className="nav">
-			<Grid container>
-				<Grid
-					data-aos="flip-left"
-					container
-					item
-					xs={6}
-					sm={3}
-					md={2}
-					alignContent="center"
-				></Grid>
-				<Grid
-					container
-					item
-					alignContent="center"
-					xs={6}
-					sm={5}
-					md={6}
-					lg={6}
-				>
-					<Grid item md={2} lg={4}></Grid>
-					<Grid
-						container
-						item
-						alignContent="center"
-						xs={12}
-						md={9}
-						lg={8}
-					>
-						<Grid
-							item
-							lg={3}
-							className="btn Element"
-						>
-							<Button
-								className="Button"
-								onClick={() =>
-									navigate(
-									"/home/swap"
-									)
-								}
-							>
-								Swap
-							</Button>
-						</Grid>
-						<Grid
-							item
-							lg={3}
-							className="btn Element"
-						>
-							<Button
-								className="Button"
-								onClick={() =>
-									navigate(
-									"/home/add"
-									)
-								}
-							>
-								Add Liquidity
-							</Button>
-						</Grid>
-						<Grid
-							item
-							lg={3}
-							className="btn Element"
-						>
-							<Button
-								className="Button"
-								onClick={() =>
-									navigate(
-									"/home/remove"
-									)
-								}
-							>
-								Remove Liquidity
-							</Button>
-						</Grid>
-					</Grid>
-				</Grid>
-			</Grid>
-		</div>
-*/

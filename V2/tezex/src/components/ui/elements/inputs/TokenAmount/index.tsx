@@ -124,17 +124,20 @@ export const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 	};
 
 	const styles = () => ({
-		m: 1,
-		width: "408px",
+		justifyContent: "center",
+		width: "418px",
+		height: "100px",
+
 	});
 
 	return (
 		<Grid2 container>
-			<FormControl fullWidth sx={{ m: 1 }}>
 				<Grid2
 					container
 					sx={{
 						flexDirection: "column",
+
+		borderRadius: "16px",
 						backgroundColor:
 							"background.default",
 					}}
@@ -148,7 +151,12 @@ export const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 								: ""
 						}
 						id="filled-start-adornment"
-						sx={styles}
+						sx={{  
+
+		width: "418px",
+		height: "71px",
+
+						}}
 						InputProps={{
 							disableUnderline: true,
 							startAdornment: (
@@ -195,13 +203,13 @@ export const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 						color="textSecondary"
 						variant="subtitle2"
 						sx={{
+							padding: "0px 16px",
 							textAlign: "right",
 						}}
 					>
 						balance: {balance} {props.asset}
 					</Typography>
 				</Grid2>
-			</FormControl>
 		</Grid2>
 	);
 };

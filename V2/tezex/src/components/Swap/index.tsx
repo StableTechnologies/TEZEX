@@ -32,25 +32,30 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 const classes = {
 	cardAction: {
-		justifyContent: "center"
+		justifyContent: "center",
 	},
 	slippageContainer: {
 		flexDirection: "row",
-		"& .MuiGrid2-root": {
-		},
+		"& .MuiGrid2-root": {},
 	},
 
 	slippageComponent: {
-		"& .MuiGrid2-root": {
-		},
+		"& .MuiGrid2-root": {},
 	},
 	slippage: {
 		text: {},
 	},
+	card: { minHeight: "408px", minWidth: "440px",
+
+                 
+		"& .MuiCardContent-root": { 
+			padding: "8px",
+		},
+	},
 	root: {
 		justifyContent: "center",
 	},
-	};
+};
 
 export interface ISwapToken {
 	children: null;
@@ -60,9 +65,10 @@ export const Swap: FC = (props) => {
 	const [inputAmountMantissa, setInputAmountMantissa] = useState<
 		BigNumber | number | null
 	>(null);
-	const [slippage, setSlippage] = useState<BigNumber | number >(-0.5);
-	const [outputAmountMantissa, setOutputAmountMantissa] =
-		useState< BigNumber | number | null >(0);
+	const [slippage, setSlippage] = useState<BigNumber | number>(-0.5);
+	const [outputAmountMantissa, setOutputAmountMantissa] = useState<
+		BigNumber | number | null
+	>(0);
 	const [outToken, setOutToken] = useState(TokenKind.TzBTC);
 	const [inToken, setInToken] = useState(TokenKind.XTZ);
 	const [swapFields, setSwapFields] = useState<boolean>(true);
@@ -169,14 +175,11 @@ export const Swap: FC = (props) => {
 		};
 	}, [inputAmountMantissa, inToken, walletInfo, networkInfo]);
 	return (
-		<Grid2
-			container
-			sx={classes.root}
-			rowSpacing={1}
-			columnSpacing={1}
-		>
+		<Grid2 container sx={classes.root}>
 			<Grid2>
-				<Card>
+				<Card
+					sx={classes.card}
+				>
 					<CardHeader
 						title={
 							<Typography variant="h6">
@@ -185,7 +188,7 @@ export const Swap: FC = (props) => {
 						}
 					/>
 					<CardContent>
-						<Grid2 xs={12}>
+						<Grid2 xs={12} sx={{}}>
 							<TokenAmountInput
 								asset={inToken}
 								walletInfo={
@@ -200,7 +203,7 @@ export const Swap: FC = (props) => {
 							/>
 						</Grid2>
 
-						<Grid2 xs={12}>
+						<Grid2 xs={12} sx={{position: "relative", zIndex: 5}}>
 							<Toggle
 								toggle={
 									swapFields
@@ -226,55 +229,76 @@ export const Swap: FC = (props) => {
 									outputAmountMantissa
 								}
 								readOnly={true}
-
 							/>
 						</Grid2>
 					</CardContent>
 					<CardActions sx={classes.cardAction}>
-						<Grid2 sx={{ padding: "24px 8px", justifyContent: "center"}}xs={12}>
-						<Transact callback={transact}>
-							
-							{
-								("Buy " +
-									outToken) as string
-							}
-						</Transact>
+						<Grid2
+							sx={{
+								justifyContent:
+									"center",
+							}}
+							xs={12}
+						>
+							<Transact
+								callback={
+									transact
+								}
+							>
+								{
+									("Buy " +
+										outToken) as string
+								}
+							</Transact>
 						</Grid2>
 					</CardActions>
 				</Card>
 
 				<Paper variant="outlined" square>
+					<Grid2
+						container
+						sx={classes.slippageContainer}
+					>
+						<Grid2
+							xs={2}
+							sm={2}
+							md={2}
+							lg={2}
+						>
+							Slippage
+						</Grid2>
 
-		<Grid2 container sx={classes.slippageContainer}>
-			<Grid2 
-					xs={2}
-					sm={2}
-					md={2}
-					lg={2}
-			>Slippage</Grid2>
-
-		<Grid2
-
-					xs={10}
-					sm={10}
-					md={10}
-					lg={10}
-			sx={classes.slippageComponent}>
-					<Slippage
-					asset={outToken}
-						walletInfo={walletInfo}
-						setslippage={setSlippage}
-						slippage={slippage}
-						amountMantissa={
-							new BigNumber(
-							(outputAmountMantissa) ? outputAmountMantissa : 0
-							)
-						}
-						inverse={true}
-					/>
-			</Grid2>
-		</Grid2>
-
+						<Grid2
+							xs={10}
+							sm={10}
+							md={10}
+							lg={10}
+							sx={
+								classes.slippageComponent
+							}
+						>
+							<Slippage
+								asset={outToken}
+								walletInfo={
+									walletInfo
+								}
+								setslippage={
+									setSlippage
+								}
+								slippage={
+									slippage
+								}
+								amountMantissa={
+									new BigNumber(
+										outputAmountMantissa
+											? outputAmountMantissa
+											: 0
+									)
+								}
+								inverse={true}
+							/>
+						</Grid2>
+					</Grid2>
 				</Paper>
 			</Grid2>
 		</Grid2>
