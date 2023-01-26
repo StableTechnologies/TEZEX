@@ -15,7 +15,7 @@ import {
 	tokenToXtz,
 } from "../../functions/liquidityBaking";
 import { Transact } from "../../components/ui/elements/Buttons";
-import { Toggle } from "../../components/ui/elements/Toggles";
+import { SwapUpDownToggle } from "../../components/ui/elements/Toggles";
 
 import { TokenKind } from "../../types/general";
 
@@ -204,7 +204,7 @@ export const Swap: FC = (props) => {
 						</Grid2>
 
 						<Grid2 xs={12} sx={{position: "relative", zIndex: 5}}>
-							<Toggle
+							<SwapUpDownToggle
 								toggle={
 									swapFields
 								}
@@ -213,7 +213,7 @@ export const Swap: FC = (props) => {
 								}
 							>
 								{"swap fields"}
-							</Toggle>
+							</SwapUpDownToggle>
 						</Grid2>
 
 						<Grid2 xs={12}>
