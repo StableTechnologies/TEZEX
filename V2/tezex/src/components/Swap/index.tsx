@@ -19,6 +19,7 @@ import { SwapUpDownToggle } from "../../components/ui/elements/Toggles";
 
 import { TokenKind } from "../../types/general";
 
+import Box from "@mui/material/Box";
 import Grid2 from "@mui/material/Unstable_Grid2"; // Grid version 2
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
@@ -36,6 +37,12 @@ const classes = {
 	},
 	slippageContainer: {
 		flexDirection: "row",
+		position: "absolute",
+		zIndex: 5,
+		display: "flex",
+		alignItems: "center",
+		minWidth: 408,
+		bottom: "17%",
 		"& .MuiGrid2-root": {},
 	},
 
@@ -45,14 +52,28 @@ const classes = {
 	slippage: {
 		text: {},
 	},
-	card: { minHeight: "408px", minWidth: "440px",
-
-                 
-		"& .MuiCardContent-root": { 
+	card: {
+		minHeight: "408px",
+		minWidth: "440px",
+		borderRadius: "20px",
+		zIndex: 5,
+		background: "#FFFFFF",
+		border: "1px solid #E1E1E1",
+		"& .MuiCardContent-root": {
 			padding: "8px",
 		},
 	},
+	paper: {
+		background: "#F9F9F9",
+		minHeight: "146px",
+		position: "relative",
+		bottom: "10%",
+
+		zIndex: -1,
+		marginBottom: "20px",
+	},
 	root: {
+		position: "relative",
 		justifyContent: "center",
 	},
 };
@@ -177,9 +198,7 @@ export const Swap: FC = (props) => {
 	return (
 		<Grid2 container sx={classes.root}>
 			<Grid2>
-				<Card
-					sx={classes.card}
-				>
+				<Card sx={classes.card}>
 					<CardHeader
 						title={
 							<Typography variant="h6">
@@ -188,7 +207,13 @@ export const Swap: FC = (props) => {
 						}
 					/>
 					<CardContent>
-						<Grid2 xs={12} sx={{position: "relative", top:"10px"}}>
+						<Grid2
+							xs={12}
+							sx={{
+								position: "relative",
+								top: "10px",
+							}}
+						>
 							<TokenAmountInput
 								asset={inToken}
 								walletInfo={
@@ -203,7 +228,13 @@ export const Swap: FC = (props) => {
 							/>
 						</Grid2>
 
-						<Grid2 xs={12} sx={{position: "relative", zIndex: 5}}>
+						<Grid2
+							xs={12}
+							sx={{
+								position: "relative",
+								zIndex: 5,
+							}}
+						>
 							<SwapUpDownToggle
 								toggle={
 									swapFields
@@ -216,7 +247,13 @@ export const Swap: FC = (props) => {
 							</SwapUpDownToggle>
 						</Grid2>
 
-						<Grid2 xs={12} sx={{position: "relative", bottom:"10px"}}>
+						<Grid2
+							xs={12}
+							sx={{
+								position: "relative",
+								bottom: "10px",
+							}}
+						>
 							<TokenAmountInput
 								asset={outToken}
 								walletInfo={
@@ -231,6 +268,52 @@ export const Swap: FC = (props) => {
 								readOnly={true}
 							/>
 						</Grid2>
+
+						<Box sx={classes.slippageContainer}>
+							<Grid2
+								xs={2}
+								sm={2}
+								md={2}
+								lg={2}
+							>
+								Slippage
+							</Grid2>
+
+							<Grid2
+								xs={10}
+								sm={10}
+								md={10}
+								lg={10}
+								sx={
+									classes.slippageComponent
+								}
+							>
+								<Slippage
+									asset={
+										outToken
+									}
+									walletInfo={
+										walletInfo
+									}
+									setslippage={
+										setSlippage
+									}
+									slippage={
+										slippage
+									}
+									amountMantissa={
+										new BigNumber(
+											outputAmountMantissa
+												? outputAmountMantissa
+												: 0
+										)
+									}
+									inverse={
+										true
+									}
+								/>
+							</Grid2>
+						</Box>
 					</CardContent>
 					<CardActions sx={classes.cardAction}>
 						<Grid2
@@ -254,51 +337,15 @@ export const Swap: FC = (props) => {
 					</CardActions>
 				</Card>
 
-				<Paper variant="outlined" square>
+				<Paper
+					variant="outlined"
+					sx={classes.paper}
+					square
+				>
 					<Grid2
 						container
 						sx={classes.slippageContainer}
-					>
-						<Grid2
-							xs={2}
-							sm={2}
-							md={2}
-							lg={2}
-						>
-							Slippage
-						</Grid2>
-
-						<Grid2
-							xs={10}
-							sm={10}
-							md={10}
-							lg={10}
-							sx={
-								classes.slippageComponent
-							}
-						>
-							<Slippage
-								asset={outToken}
-								walletInfo={
-									walletInfo
-								}
-								setslippage={
-									setSlippage
-								}
-								slippage={
-									slippage
-								}
-								amountMantissa={
-									new BigNumber(
-										outputAmountMantissa
-											? outputAmountMantissa
-											: 0
-									)
-								}
-								inverse={true}
-							/>
-						</Grid2>
-					</Grid2>
+					></Grid2>
 				</Paper>
 			</Grid2>
 		</Grid2>

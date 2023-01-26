@@ -35,6 +35,32 @@ lineHeight: '15px',
 textAlign: 'right',
 
 	*/
+
+	tabInput: {
+		"&.MuiButtonBase-root": {
+			fontFamily: "Inter",
+			fontStyle: "normal",
+			fontWeight: "500",
+			fontSize: "12px",
+			lineHeight: "15px",
+			display: "inline-flex",
+			justifyContent: "center",
+			textAlign: "center",
+			minHeight: "31px",
+			marginRight: "40px", 
+			minWidth: "61px",
+			zIndex: 5,
+			// marginTop: spacing(0.5),
+			color: "palette.text.primary",
+			textTransform: "initial",
+		},
+		wrapper: {
+			// zIndex: 2,
+			// marginTop: spacing(0.5),
+			color: "palette.text.primary",
+			textTransform: "initial",
+		},
+	},
 	tabClasses: {
 		"&.MuiButtonBase-root": {
 			fontFamily: "Inter",
@@ -45,9 +71,10 @@ textAlign: 'right',
 			display: "inline-flex",
 			justifyContent: "center",
 			textAlign: "center",
-			minHeight: 10,
-			minWidth: 60,
-			zIndex: 2,
+			minHeight: "31px",
+			paddingRight: "3px", 
+			minWidth: "61px",
+			zIndex: 5,
 			// marginTop: spacing(0.5),
 			color: "palette.text.primary",
 			textTransform: "initial",
@@ -86,8 +113,7 @@ textAlign: 'right',
 			fontWeight: "500",
 			fontSize: "12px",
 			lineHeight: "15px",
-			maxHeight: 10,
-			minWidth: 40,
+
 			// marginTop: spacing(0.5),
 			textTransform: "initial",
 		},
@@ -116,6 +142,13 @@ textAlign: 'right',
 
 		"& .MuiTabs-scroller": {
 			position: "relative",
+
+		display: "flex",
+
+		flexDirection: "row",
+		left:"20%",
+		padding: "4px",
+
 			/*
 		display: "flex",
 		flexDirection: "row",
@@ -139,27 +172,25 @@ textAlign: 'right',
 			justifyContent: "center",
 			position: "absolute",
 			left: "20%",
-			bottom: "30%",
-			right: "10%",
-			top: "10%",
 			border: "1px solid #EDEDED",
-			borderRadius: 4,
+				borderRadius: "8px",
 		},
 		"& .MuiTabs-indicator": {
-			top: 0,
-			bottom: "12%",
-			right: 3,
-			height: "auto",
+			position: "relative",
+
+			top: "5%",
+			padding: "3px", 
 			background: "none",
 			"&:after": {
+
+			minHeight: "31px",
+			minWidth: "61px",
+			padding: "", 
+
 				content: '""',
-				display: "block",
+				display: "flex",
 				position: "absolute",
-				top: "15%",
-				left: 7,
-				right: 7,
-				bottom: "25%",
-				borderRadius: 3,
+				borderRadius: "8px",
 				backgroundColor: "selectedHomeTab.main", //'#E3F7FF',//'palette.action.selected' ,
 			},
 		},
@@ -294,7 +325,7 @@ export const Slippage: FC<ISlippage> = (props) => {
 					)
 				}
 				href=""
-				sx={classes.tabClasses}
+				sx={(props.id === 'input')? classes.tabInput : classes.tabClasses}
 				onClick={(
 					event: React.MouseEvent<
 						HTMLAnchorElement,

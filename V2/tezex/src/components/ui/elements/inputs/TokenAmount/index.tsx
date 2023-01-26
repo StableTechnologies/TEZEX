@@ -144,8 +144,10 @@ export const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 					label={props.label ? props.label : ""}
 					id="filled-start-adornment"
 					sx={{
-						width: "418px",
-						height: "71px",
+
+						paddingLeft: "16px",
+						width: "408px",
+						height: "75px",
 					}}
 					InputProps={{
 						disableUnderline: true,
