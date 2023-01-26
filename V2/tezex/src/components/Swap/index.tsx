@@ -188,7 +188,7 @@ export const Swap: FC = (props) => {
 						}
 					/>
 					<CardContent>
-						<Grid2 xs={12} sx={{}}>
+						<Grid2 xs={12} sx={{position: "relative", top:"10px"}}>
 							<TokenAmountInput
 								asset={inToken}
 								walletInfo={
@@ -216,7 +216,7 @@ export const Swap: FC = (props) => {
 							</SwapUpDownToggle>
 						</Grid2>
 
-						<Grid2 xs={12}>
+						<Grid2 xs={12} sx={{position: "relative", bottom:"10px"}}>
 							<TokenAmountInput
 								asset={outToken}
 								walletInfo={

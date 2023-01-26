@@ -18,10 +18,10 @@ export const SwapUpDownToggle: FC<IToggle> = (props) => {
 		<Box>
 			<Button
 				sx={{
-
-						minWidth: "32px",
-						minHeight: "32px",
+					minWidth: "32px",
+					minHeight: "32px",
 					boxShadow: "0px 4px 20px rgba(181, 181, 181, 0.25)",
+					background: "#FFFFFF",
 					borderRadius: "8px",
 				}}
 				onClick={toggle}
