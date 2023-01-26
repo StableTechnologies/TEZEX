@@ -68,7 +68,7 @@ const classes = {
 		minHeight: "146px",
 		position: "relative",
 		bottom: "10%",
-
+		borderRadius: "20px",
 		zIndex: -1,
 		marginBottom: "20px",
 	},

@@ -37,7 +37,7 @@ export const Home: FC<IHome> = (props) => {
 
 	return (
 		<Grid2 sx={{ flexDirection: "column", justifyContent: "center"}} container>
-<Grid2 >
+<Grid2  sx={{paddingBottom: "32px" ,  paddingTop: "60px"}}>
 
 		           <NavHome /> 	
 </Grid2>

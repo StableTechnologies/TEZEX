@@ -47,9 +47,9 @@ textAlign: 'right',
 			justifyContent: "center",
 			textAlign: "center",
 			minHeight: "31px",
-			marginRight: "40px", 
+			marginRight: "40px",
 			minWidth: "61px",
-			zIndex: 5,
+			zIndex: 2,
 			// marginTop: spacing(0.5),
 			color: "palette.text.primary",
 			textTransform: "initial",
@@ -72,9 +72,9 @@ textAlign: 'right',
 			justifyContent: "center",
 			textAlign: "center",
 			minHeight: "31px",
-			paddingRight: "3px", 
+			paddingRight: "3px",
 			minWidth: "61px",
-			zIndex: 5,
+			zIndex: 1,
 			// marginTop: spacing(0.5),
 			color: "palette.text.primary",
 			textTransform: "initial",
@@ -87,7 +87,9 @@ textAlign: 'right',
 		},
 	},
 	textField: {
-		"& .MuiButtonBase-root": {},
+		"& .MuiButtonBase-root": {
+			zIndex: 3,
+		},
 		"& .MuiInputAdornment-root": {},
 
 		"& .MuiTypography-root": {
@@ -103,6 +105,7 @@ textAlign: 'right',
 			position: "absolute",
 			fontFamily: "Inter",
 
+			zIndex: -1,
 			display: "inline-flex",
 			justifyContent: "center",
 			textAlign: "center",
@@ -143,11 +146,11 @@ textAlign: 'right',
 		"& .MuiTabs-scroller": {
 			position: "relative",
 
-		display: "flex",
+			display: "flex",
 
-		flexDirection: "row",
-		left:"20%",
-		padding: "4px",
+			flexDirection: "row",
+			left: "20%",
+			padding: "4px",
 
 			/*
 		display: "flex",
@@ -173,19 +176,18 @@ textAlign: 'right',
 			position: "absolute",
 			left: "20%",
 			border: "1px solid #EDEDED",
-				borderRadius: "8px",
+			borderRadius: "8px",
 		},
 		"& .MuiTabs-indicator": {
 			position: "relative",
 
 			top: "5%",
-			padding: "3px", 
+			padding: "3px",
 			background: "none",
 			"&:after": {
-
-			minHeight: "31px",
-			minWidth: "61px",
-			padding: "", 
+				minHeight: "31px",
+				minWidth: "61px",
+				padding: "",
 
 				content: '""',
 				display: "flex",
@@ -200,10 +202,8 @@ textAlign: 'right',
 export interface ISlippage {
 	asset: TokenKind;
 	walletInfo: WalletInfo | null;
-	setslippage: React.Dispatch<
-		React.SetStateAction<BigNumber | number >
-	>;
-	slippage: BigNumber | number ;
+	setslippage: React.Dispatch<React.SetStateAction<BigNumber | number>>;
+	slippage: BigNumber | number;
 	amountMantissa: BigNumber;
 	inverse?: boolean;
 	balanceCheck?: boolean;
@@ -214,21 +214,20 @@ export const Slippage: FC<ISlippage> = (props) => {
 	const [sufficientBalance, setSufficientBalance] = useState(true);
 	const net = useNetwork();
 	const stringToBigNumber = (value: string) => {
-
 		const num = props.inverse
 			? new BigNumber(value).multipliedBy(-1)
 			: new BigNumber(value);
 
-		 return BigNumber(num);
-	}
+		return BigNumber(num);
+	};
 
 	const updateAmount = (value: string) => {
-		props.setslippage(stringToBigNumber('3'));
+		props.setslippage(stringToBigNumber("3"));
 		//props.setSlippage(stringToBigNumber(value));
 	};
 
 	const _updateAmount = async (value: string) => {
-		const num =  stringToBigNumber(value);
+		const num = stringToBigNumber(value);
 		props.setslippage(num);
 		if (props.balanceCheck) {
 			if (props.walletInfo && num.gt(0) && !num.isNaN()) {
@@ -268,23 +267,23 @@ export const Slippage: FC<ISlippage> = (props) => {
 		} else return "0";
 	};
 
-
 	const [input, setInput] = useState<string>("0.1");
 
-	useEffect(()=>{
-              props.setslippage(stringToBigNumber(input).toNumber())
-	},[input]);
+	useEffect(() => {
+		props.setslippage(stringToBigNumber(input).toNumber());
+	}, [input]);
 
 	interface ISlippageInput {
 		disabled?: boolean;
 	}
 	const SlippageInput = (prop: ISlippageInput) => {
-
 		return (
 			<TextField
 				autoFocus
 				disabled={prop.disabled}
-				onChange={(e) =>{setInput(e.target.value)}}
+				onChange={(e) => {
+					setInput(e.target.value);
+				}}
 				value={input}
 				sx={classes.textField}
 				InputProps={{
@@ -305,7 +304,7 @@ export const Slippage: FC<ISlippage> = (props) => {
 	interface SlippageTabProps {
 		id: string;
 		label?: React.ReactNode;
-		
+
 		amount?: number;
 	}
 
@@ -313,7 +312,7 @@ export const Slippage: FC<ISlippage> = (props) => {
 		return (
 			<Tab
 				label={
-					(props.id === 'input') ? (
+					props.id === "input" ? (
 						<SlippageInput
 							disabled={
 								selectedId !==
@@ -325,7 +324,11 @@ export const Slippage: FC<ISlippage> = (props) => {
 					)
 				}
 				href=""
-				sx={(props.id === 'input')? classes.tabInput : classes.tabClasses}
+				sx={
+					props.id === "input"
+						? classes.tabInput
+						: classes.tabClasses
+				}
 				onClick={(
 					event: React.MouseEvent<
 						HTMLAnchorElement,
@@ -347,19 +350,9 @@ export const Slippage: FC<ISlippage> = (props) => {
 				onChange={handleChange}
 				aria-label="nav tabs example"
 			>
-				<SlippageTab
-					id="0"
-					label="0.5%"
-					amount={0.5}
-				/>
-				<SlippageTab
-					id="1"
-					label="1%"
-					amount={1}
-				/>
-				<SlippageTab
-					id="input"
-				/>
+				<SlippageTab id="0" label="0.5%" amount={0.5} />
+				<SlippageTab id="1" label="1%" amount={1} />
+				<SlippageTab id="input" />
 			</Tabs>
 		);
 	};
