@@ -62,7 +62,7 @@ export const NavApp: FC = () => {
 	return (
 			<Tabs
 				value={value}
-				sx={{}}
+				sx={{ width: "275px",}}
 				onChange={handleChange}
 				aria-label="nav tabs example"
 			>

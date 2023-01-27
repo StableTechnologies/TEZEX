@@ -26,7 +26,10 @@ const style = {
 	},
 	header: {
 		fontSize: "1.5vw",
-		justifyContent: "center",
+		display:"flex",
+
+					alignItems: "center",
+					justifyContent: "flex-start",
 		minWidth: "1440px",
 		minHeight: "72px",
 		left: "0px",
@@ -40,19 +43,32 @@ export const Header: FC = () => {
 	return (
 		<Grid2 container sx={style.header}>
 			<Grid2
-				data-aos="flip-left"
-				xs={6}
-				sm={3}
+				xs={4}
+				sm={2}
 				md={2}
-				alignContent="center"
+				sx={{
+					alignContent: "center",
+					justifyContent: "flex-start",
+				}}
 			>
 				<img src={logo} alt="Logo" />
 			</Grid2>
 
-			<Grid2 xs={12} sm={12} md={8} alignContent="center">
+			<Grid2
+				xs={1}
+				sm={3}
+				md={5}
+				sx={{
+					alignContent: "center",
+					justifyContent: "flex-start",
+				}}
+			>
 				<NavApp />
 			</Grid2>
-			<Grid2>
+			<Grid2 xs={2} sm={2} md={2}  sx={{ 
+
+		display:"flex",
+			}} >
 				<Wallet />
 			</Grid2>
 		</Grid2>
