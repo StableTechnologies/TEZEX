@@ -1,8 +1,11 @@
-import { FC } from "react";
+import { FC, useState } from "react";
 import { redirect, Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import Grid from "@mui/material/Grid";
 import Button from "@mui/material/Button";
+import Tabs from "@mui/material/Tabs";
+import Tab from "@mui/material/Tab";
+
 export interface INav {
 	children: string;
 }
@@ -22,58 +25,53 @@ const style1 = {
 	},
 };
 
-export const NavApp: FC = () => {
+interface NavTabProps {
+	label: string;
+	href: string;
+}
+
+function NavTab(props: NavTabProps) {
 	const navigate = useNavigate();
 	return (
-		<div flex-direction="row" style={style1.nav}>
-						<Grid
-							item
-							lg={3}
-							className="btn Element"
-						>
-							<Button
-								className="Button"
-								onClick={() =>
-									navigate(
-									"home/swap"
-									)
-								}
-							>
-								Home
-							</Button>
-						</Grid>
-						<Grid
-							item
-							lg={3}
-							className="btn Element"
-						>
-							<Button
-								className="Button"
-								onClick={() =>
-									navigate(
-										"/Analytics"
-									)
-								}
-							>
-								Analytics
-							</Button>
-						</Grid>
-						<Grid
-							item
-							lg={3}
-							className="btn Element"
-						>
-							<Button
-								className="Button"
-								onClick={() =>
-									navigate(
-										"/About"
-									)
-								}
-							>
-								About
-							</Button>
-					</Grid>
-			</div>
+		<Tab
+			sx={{}}
+			onClick={(
+				event: React.MouseEvent<
+					HTMLAnchorElement,
+					MouseEvent
+				>
+			) => {
+				event.preventDefault();
+				navigate(props.href);
+			}}
+			{...props}
+		/>
 	);
-};
+}
+export const NavApp: FC = () => {
+	const navigate = useNavigate();
+
+	const [value, setValue] = useState(0);
+
+	const handleChange = (
+		event: React.SyntheticEvent,
+		newValue: number
+	) => {
+		setValue(newValue);
+	};
+	return (
+			<Tabs
+				value={value}
+				sx={{}}
+				onChange={handleChange}
+				aria-label="nav tabs example"
+			>
+				<NavTab label="Home" href="/home/swap" />
+				<NavTab label="Analytics" href="/Analytics" />
+				<NavTab
+					label="About"
+					href="/About"
+				/>
+			</Tabs>
+	);
+}
