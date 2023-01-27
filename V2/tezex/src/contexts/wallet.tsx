@@ -7,9 +7,14 @@ import { NetworkInfo } from "./network";
 import { getBalance } from "../functions/beacon";
 
 export enum WalletStatus {
+	ESTIMATING_SIRS = "Estimating Sirs",
+	ESTIMATING_XTZ = "Estimating Tez",
+	ESTIMATING_TZBTC = "Estimating tzBTC",
+	ZERO_BALANCE = "Insufficient Funds",
+	ZERO_AMOUNT = "Enter Amount",
 	DISCONNECTED = "disconnected",
 	READY = "ready",
-	BUSY = "busy",
+	BUSY = "In Progress",
 }
 
 export function isReady(walletStatus: WalletStatus) {
@@ -22,17 +27,24 @@ export function walletUser(
 	walletStatus: WalletStatus,
 	setWalletStatus: React.Dispatch<React.SetStateAction<WalletStatus>>
 ) {
-	const useWallet = async (op: () => Promise<unknown>) => {
+	const useWallet = async (
+		op: () => Promise<unknown>,
+		transientStatus: WalletStatus = WalletStatus.BUSY,
+		force?: boolean
+	) => {
 		const setBusy = async () => {
-			setWalletStatus(WalletStatus.BUSY);
+			setWalletStatus(transientStatus);
 		};
 		const setReady = async () => {
 			setWalletStatus(WalletStatus.READY);
 		};
-		if (walletStatus === WalletStatus.READY) {
+		if (!force && walletStatus === WalletStatus.READY) {
 			await setBusy();
 			await op();
 			await setReady();
+		} else if (force) {
+			await setBusy();
+			await op();
 		}
 	};
 
@@ -61,7 +73,10 @@ export interface WalletInfo {
 	setAddress: React.Dispatch<React.SetStateAction<string | null>>;
 	walletStatus: WalletStatus;
 	setWalletStatus: React.Dispatch<React.SetStateAction<WalletStatus>>;
-	walletUser: (op: () => Promise<unknown>) => Promise<void>;
+	walletUser: (
+		op: () => Promise<unknown>,
+		walletStatus?: WalletStatus
+	) => Promise<void>;
 	isReady: () => boolean;
 	disconnect: () => void;
 	viewBalance: (

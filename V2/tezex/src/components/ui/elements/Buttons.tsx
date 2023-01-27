@@ -1,6 +1,8 @@
 import { FC, useEffect, useState } from "react";
 import { useWallet } from "../../../hooks/wallet";
 import { WalletInfo } from "../../../contexts/wallet";
+import { WalletConnected, WalletDisconnected } from "../../session";
+import { Wallet } from "../../wallet";
 import Button from "@mui/material/Button";
 
 export interface ITransact {
@@ -9,10 +11,11 @@ export interface ITransact {
 }
 const classes = {
 	transact: {
-
 		"&.MuiButton-root.Mui-disabled": {
 			color: "white",
 		},
+
+		fontFamily: "Inter",
 		width: "100%",
 		height: "56px",
 		backgroundColor: "#000",
@@ -42,6 +45,16 @@ export const Transact: FC<ITransact> = (props) => {
 		}
 	};
 
+	const info = (() => {
+		if (walletInfo) {
+			return walletInfo.isReady()
+				? props.children
+				: walletInfo.walletStatus;
+		} else {
+			return "";
+		}
+	})();
+
 	useEffect(() => {
 		if (walletInfo) {
 			walletInfo.isReady()
@@ -52,14 +65,22 @@ export const Transact: FC<ITransact> = (props) => {
 
 	return (
 		<div>
-			<Button
-				size="large"
-				onClick={transact}
-				sx={classes.transact}
-				disabled={disabled}
-			>
-				{props.children}
-			</Button>
+			<div>
+				<WalletConnected>
+					<Button
+						size="large"
+						onClick={transact}
+						sx={classes.transact}
+						disabled={disabled}
+					>
+						{info}
+					</Button>
+				</WalletConnected>
+			</div>
+
+			<WalletDisconnected>
+				<Wallet />
+			</WalletDisconnected>
 		</div>
 	);
 };

@@ -71,7 +71,7 @@ export const Header: FC = () => {
 			
 					justifyContent: "flex-start",
 			}} >
-				<Wallet />
+				<Wallet variant={"header"}/>
 			</Grid2>
 		</Grid2>
 	);
