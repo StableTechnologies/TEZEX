@@ -43,7 +43,7 @@ export const Header: FC = () => {
 	return (
 		<Grid2 container sx={style.header}>
 			<Grid2
-				xs={4}
+				xs={2}
 				sm={2}
 				md={2}
 				sx={{
@@ -56,7 +56,7 @@ export const Header: FC = () => {
 
 			<Grid2
 				xs={1}
-				sm={3}
+				sm={3.3}
 				md={5}
 				sx={{
 					alignContent: "center",
@@ -68,6 +68,8 @@ export const Header: FC = () => {
 			<Grid2 xs={2} sm={2} md={2}  sx={{ 
 
 		display:"flex",
+			
+					justifyContent: "flex-start",
 			}} >
 				<Wallet />
 			</Grid2>

@@ -10,15 +10,41 @@ export interface INav {
 	children: string;
 }
 
-const style1 = {
+const classes = {
 	root: {
 		backgroundColor: "red",
 	},
 	right: {
 		justifyContent: "center",
-                alignContent: "center"
+		alignContent: "center",
 	},
 	nav: {
+		"&.MuiButton-root.Mui-disabled": {
+			color: "#999999",
+		},
+
+		"& .MuiButtonBase-root": {
+
+			"&.Mui-selected": {
+				color: "#000000",
+			},
+			fontFamily: "Inter",
+			fontStyle: "normal",
+			fontWeight: "500",
+			fontSize: "16px",
+			lineHeight: "19px",
+			display: "inline-flex",
+			justifyContent: "center",
+			textAlign: "center",
+			minHeight: "16",
+			marginRight: "40px",
+			minWidth: "46",
+			// marginTop: spacing(0.5),
+
+			color: "#999999",
+			background: "white",
+			textTransform: "initial",
+		},
 		display: "flex",
 		fontSize: "1.5vw",
 		justifyContent: "center",
@@ -60,18 +86,18 @@ export const NavApp: FC = () => {
 		setValue(newValue);
 	};
 	return (
-			<Tabs
-				value={value}
-				sx={{ width: "275px",}}
-				onChange={handleChange}
-				aria-label="nav tabs example"
-			>
-				<NavTab label="Home" href="/home/swap" />
-				<NavTab label="Analytics" href="/Analytics" />
-				<NavTab
-					label="About"
-					href="/About"
-				/>
-			</Tabs>
+		<Tabs
+			value={value}
+			sx={classes.nav}
+			onChange={handleChange}
+			aria-label="nav tabs "
+			TabIndicatorProps={{
+				style: { display: "none" },
+			}}
+		>
+			<NavTab label="Home" href="/home/swap" />
+			<NavTab label="Analytics" href="/Analytics" />
+			<NavTab label="About" href="/About" />
+		</Tabs>
 	);
-}
+};
