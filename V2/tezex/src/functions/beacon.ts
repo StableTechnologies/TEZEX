@@ -4,66 +4,65 @@ import { BeaconWallet } from "@taquito/beacon-wallet";
 import { TezosToolkit, MichelCodecPacker } from "@taquito/taquito";
 import { BigNumber } from "bignumber.js";
 
-import { TokenKind } from "../types/general";
+import { DAppClient } from "@airgap/beacon-sdk";
+import { TokenKind,Asset, Balance  } from "../types/general";
 import { tokenMantissaToDecimal } from "./scaling";
 export function mutezToTez(amount: BigNumber) {
 	return amount.dividedBy(1000000);
 }
 export async function getBalance(
-	walletInfo: WalletInfo,
+	toolkit: TezosToolkit,
+	address: string,
 	netInfo: NetworkInfo,
-	asset: TokenKind,
-	asDecimal?: boolean
-) {
-	const balance = async () => {
-		if (walletInfo.toolkit && walletInfo.address) {
-			switch (asset) {
+	asset: Asset,
+): Promise<Balance> {
+	const getBalance = async () => {
+			switch (asset.name) {
 				case TokenKind.XTZ:
-					return await walletInfo.toolkit.tz.getBalance(
-						walletInfo.address
+					return await toolkit.tz.getBalance(
+						address
 					);
 				case TokenKind.TzBTC:
 					const tzBtcContract =
-						await walletInfo.toolkit.wallet.at(
+						await toolkit.wallet.at(
 							netInfo.addresses.tzbtc
 								.address
 						);
 					return await tzBtcContract.views
-						.getBalance(walletInfo.address)
+						.getBalance(address)
 						.read();
 				case TokenKind.Sirius:
 					const siriusContract =
-						await walletInfo.toolkit.wallet.at(
+						await toolkit.wallet.at(
 							netInfo.addresses.sirs
 								.address
 						);
 					return await siriusContract.views
-						.getBalance(walletInfo.address)
+						.getBalance(address)
 						.read();
 			}
-		} else return new BigNumber(0);
 	};
-	if (asDecimal) {
-		return tokenMantissaToDecimal(await balance(), asset);
-	} else {
-		return await balance();
+	
+	const balance = await getBalance();
+	return {
+		decimal: tokenMantissaToDecimal(balance, asset.name),
+		mantissa: balance
 	}
 }
 
 export async function hasSufficientBalance(
 	minimumBalance: BigNumber,
-	walletInfo: WalletInfo,
+	toolkit: TezosToolkit,
+	address: string,
 	netInfo: NetworkInfo,
-	asset: TokenKind,
+	asset: Asset,
 	mantissa: boolean = false
 ): Promise<boolean> {
-	const balance = await getBalance(walletInfo, netInfo, asset);
+	const balance = await getBalance(toolkit,address, netInfo, asset);
 	if (!mantissa) {
-		return minimumBalance.isLessThanOrEqualTo(
-			tokenMantissaToDecimal(balance, asset)
-		);
+		return minimumBalance.isLessThanOrEqualTo(balance.mantissa)
 	} else {
-		return minimumBalance.isLessThanOrEqualTo(balance);
+		return minimumBalance.isLessThanOrEqualTo(balance.decimal)
 	}
 }
 

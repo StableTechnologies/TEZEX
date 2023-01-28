@@ -19,32 +19,6 @@ export const TokenAmountOutput: FC<ITokenAmountOutput> = (props) => {
 
 	const walletInfo = useWallet();
 	const net = useNetwork();
-	useEffect(() => {
-		const checkBalance = async () => {
-			if (props.checkBalance) {
-				if (walletInfo && props.children) {
-					setSufficientBalance(
-						await hasSufficientBalance(
-							new BigNumber(
-								props.children
-							),
-							walletInfo,
-							net,
-							props.asset,
-							true
-						)
-					);
-				} else {
-					setSufficientBalance(true);
-				}
-			}
-		};
-
-		checkBalance();
-		return () => {
-			//unmount code
-		};
-	}, [props, walletInfo, net]);
 
 	return (
 		<div>

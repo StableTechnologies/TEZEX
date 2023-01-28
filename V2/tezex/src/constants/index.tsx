@@ -1,37 +1,38 @@
 import { TokenKind, Asset } from "../types/general";
 import tzbtcLogo from "../assets/tzbtcLogo.svg";
-import tzlogo from "../assets/tzlogo.svg"
+import tzlogo from "../assets/tzlogo.svg";
 export const assets: Asset[] = [
 	{
-	name: TokenKind.XTZ,
-		label: 'Tez',
-	logo: tzlogo
+		name: TokenKind.XTZ,
+		label: "Tez",
+		logo: tzlogo,
+		address: "",
+	},
+	{
+		name: TokenKind.TzBTC,
+		label: TokenKind.TzBTC as string,
+		logo: tzbtcLogo,
+		address: "KT1PWx2mnDueood7fEmfbBDKx1D9BAnnXitn",
+	},
+	{
+		name: TokenKind.Sirius,
+		label: "Sirs",
+		logo: "",
+		address: "KT1AafHA1C1vk959wvHWBispY9Y2f3fxBUUo",
+	},
+];
 
-	},
-	{
-	name: TokenKind.TzBTC,
-	label: TokenKind.TzBTC as string,
-	logo: tzbtcLogo
-	},
-	{
-	name: TokenKind.Sirius,
-	label: 'Sirs', 
-	logo: ""
-	},
-]
- 
 export const XTZ: Asset = assets[0];
 export const TzBTC = assets[1];
 export const SIRS = assets[2];
 
-export function getAsset(token: TokenKind) : Asset {
-
-	switch(token) {
-		case TokenKind.TzBTC :
+export function getAsset(token: TokenKind): Asset {
+	switch (token) {
+		case TokenKind.TzBTC:
 			return TzBTC;
-		case TokenKind.XTZ :
+		case TokenKind.XTZ:
 			return XTZ;
-		case TokenKind.Sirius :
+		case TokenKind.Sirius:
 			return SIRS;
 	}
 }

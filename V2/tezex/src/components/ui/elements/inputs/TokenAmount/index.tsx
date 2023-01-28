@@ -57,46 +57,6 @@ export const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 	const wallet = useWallet();
 	const asset: Asset = getAsset(props.asset);
 
-	useEffect(() => {
-		const balance = async () => {
-		   props.readOnly &&
-		   	props.mantissa &&
-		   	setInputString(
-		   		tokenMantissaToDecimal(
-		   			props.mantissa.toString(),
-		   			props.asset
-		   		).toString()
-		   	);
-		   
-		   if (props.walletInfo && props.mantissa) {
-		   	setBalance(
-		   		await props.walletInfo.viewBalance(
-		   			props.asset,
-		   			props.walletInfo,
-		   			net
-		   		)
-		   	);
-		   	setSufficientBalance(
-		   		await hasSufficientBalance(
-		   			tokenMantissaToDecimal(
-		   				props.mantissa.toString(),
-		   				props.asset
-		   			),
-		   			props.walletInfo,
-		   			net,
-		   			props.asset
-		   		)
-		   	);
-		   }
-		}
-		balance();
-	}, [
-		props.mantissa,
-		net,
-		props.walletInfo,
-		props.asset,
-		props.readOnly,
-	]);
 
 	const updateAmount = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		const num = tokenDecimalToMantissa(e.target.value, props.asset);
@@ -113,25 +73,6 @@ export const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 		!props.readOnly && num.isNaN()
 			? props.setMantissa(null)
 			: props.setMantissa(num);
-		if (props.walletInfo && num.gt(0) && !num.isNaN()) {
-			setBalance(
-				await props.walletInfo.viewBalance(
-					props.asset,
-					props.walletInfo,
-					net
-				)
-			);
-			setSufficientBalance(
-				await hasSufficientBalance(
-					new BigNumber(e.target.value),
-					props.walletInfo,
-					net,
-					props.asset
-				)
-			);
-		} else {
-			setSufficientBalance(true);
-		}
 		props.onChange && (await props.onChange());
 	};
 

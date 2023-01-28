@@ -5,7 +5,6 @@ import {
 	WalletStatus,
 	walletUser,
 	isReady,
-	viewBalance,
 } from "./wallet";
 import { NetworkContext, networkDefaults } from "./network";
 import { TezosToolkit } from "@taquito/taquito";
@@ -59,6 +58,13 @@ export function SessionProvider(props: ISession) {
 	const network = useNetwork();
 	const wallet = useWallet();
 
+	useEffect(() => {
+		const interval = setInterval(() => {
+			console.log("This will run every second!");
+		}, 5000);
+		return () => clearInterval(interval);
+	}, []);
+
 	const walletInfo: WalletInfo = {
 		client,
 		setClient,
@@ -71,7 +77,6 @@ export function SessionProvider(props: ISession) {
 		walletUser: walletUser(walletStatus, setWalletStatus),
 		isReady: isReady(walletStatus),
 		disconnect,
-		viewBalance: viewBalance,
 	};
 
 	return (

@@ -226,28 +226,6 @@ export const Slippage: FC<ISlippage> = (props) => {
 		//props.setSlippage(stringToBigNumber(value));
 	};
 
-	const _updateAmount = async (value: string) => {
-		const num = stringToBigNumber(value);
-		props.setslippage(num);
-		if (props.balanceCheck) {
-			if (props.walletInfo && num.gt(0) && !num.isNaN()) {
-				setSufficientBalance(
-					await hasSufficientBalance(
-						addSlippage(
-							num,
-							props.amountMantissa
-						),
-						props.walletInfo,
-						net,
-						props.asset,
-						true
-					)
-				);
-			} else {
-				setSufficientBalance(true);
-			}
-		}
-	};
 
 	const [value, setValue] = useState(0);
 

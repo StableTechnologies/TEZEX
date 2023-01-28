@@ -52,6 +52,7 @@ export function walletUser(
 	return useWallet;
 }
 
+/*
 export async function viewBalance(
 	asset: TokenKind,
 	wallet: WalletInfo,
@@ -65,6 +66,7 @@ export async function viewBalance(
 		return balance.toString();
 	} else return "";
 }
+*/
 export interface WalletInfo {
 	client: DAppClient | null;
 	setClient: React.Dispatch<React.SetStateAction<DAppClient | null>>;
@@ -80,11 +82,13 @@ export interface WalletInfo {
 	) => Promise<void>;
 	isReady: () => boolean;
 	disconnect: () => void;
+	/*
 	viewBalance: (
 		asset: TokenKind,
 		wallet: WalletInfo,
 		network: NetworkInfo
 	) => Promise<string>;
+	*/
 }
 
 export const WalletContext = createContext<WalletInfo | null>(null);
