@@ -58,6 +58,7 @@ export const Header: FC = () => {
 				xs={1}
 				sm={3.3}
 				md={5}
+				lg={7}
 				sx={{
 					alignContent: "center",
 					justifyContent: "flex-start",

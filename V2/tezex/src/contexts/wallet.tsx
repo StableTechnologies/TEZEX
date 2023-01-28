@@ -32,6 +32,7 @@ export function walletUser(
 		transientStatus: WalletStatus = WalletStatus.BUSY,
 		force?: boolean
 	) => {
+		console.log('\n',' here ','\n'); 
 		const setBusy = async () => {
 			setWalletStatus(transientStatus);
 		};

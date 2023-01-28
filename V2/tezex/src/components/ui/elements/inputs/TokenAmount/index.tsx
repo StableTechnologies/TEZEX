@@ -38,6 +38,7 @@ export interface ITokenAmountInput {
 	setMantissa: React.Dispatch<
 		React.SetStateAction<BigNumber | number | null>
 	>;
+	onChange?: () => Promise<void>;
 	label?: string;
 	mantissa?: BigNumber | number | null;
 	readOnly?: boolean;
@@ -57,11 +58,19 @@ export const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 	const asset: Asset = getAsset(props.asset);
 
 	const updateAmount = async (e: React.ChangeEvent<HTMLInputElement>) => {
-		setInputString(e.target.value);
 		const num = tokenDecimalToMantissa(e.target.value, props.asset);
-
-		num.isNaN() ? props.setMantissa(null) : props.setMantissa(num);
+		if(props.mantissa){
+			(!props.readOnly )? setInputString(e.target.value) : setInputString(tokenDecimalToMantissa(props.mantissa.toString(), props.asset).toString());
+		}
+		!props.readOnly && num.isNaN() ? props.setMantissa(null) : props.setMantissa(num);
 		if (props.walletInfo && num.gt(0) && !num.isNaN()) {
+			setBalance(
+				await props.walletInfo.viewBalance(
+					props.asset,
+					props.walletInfo,
+					net
+				)
+			);
 			setSufficientBalance(
 				await hasSufficientBalance(
 					new BigNumber(e.target.value),
@@ -73,26 +82,11 @@ export const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 		} else {
 			setSufficientBalance(true);
 		}
+		props.onChange && (await props.onChange());
 	};
 
-	useEffect(() => {
-		if (wallet) {
-			const check = async () => {
-				if (wallet) {
-					setBalance(
-						await wallet.viewBalance(
-							props.asset,
-							wallet,
-							net
-						)
-					);
-				}
-			};
-			check();
-		}
-	}, [wallet, net, props.asset, inputString]);
-
 	const setValue = () => {
+		if (inputString === "") return inputString;
 		if (props.mantissa) {
 			if (
 				new BigNumber(props.mantissa).isEqualTo(
@@ -117,7 +111,7 @@ export const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 				).toString();
 			}
 		} else {
-			return "";
+			return "0.0";
 		}
 	};
 
@@ -140,11 +134,10 @@ export const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 			>
 				<TextField
 					onChange={updateAmount}
-					value={setValue()}
+					value={inputString}
 					label={props.label ? props.label : ""}
 					id="filled-start-adornment"
 					sx={{
-
 						paddingLeft: "16px",
 						width: "408px",
 						height: "75px",
@@ -162,8 +155,7 @@ export const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 									<div>
 										<img
 											style={{
-												marginLeft:
-													"8px",
+												marginLeft: "8px",
 												marginRight:
 													"8px",
 												maxWidth: "30px",

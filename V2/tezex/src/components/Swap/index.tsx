@@ -1,4 +1,4 @@
-import { FC, useState, useEffect } from "react";
+import { FC, useState, useEffect, useCallback } from "react";
 
 import { BigNumber } from "bignumber.js";
 import {
@@ -144,8 +144,9 @@ export const Swap: FC = (props) => {
 		}
 	}, [inToken, outToken, swapFields, outputAmountMantissa]);
 
-	useEffect(() => {
-		const estimateTokens = async () => {
+
+
+		const estimate = async () => {
 			if (inputAmountMantissa) {
 				console.log(
 					"\n",
@@ -188,13 +189,10 @@ export const Swap: FC = (props) => {
 						break;
 				}
 			}
-		};
+		
+		}
+	const estimateCallback = useCallback(async () => {walletInfo && await walletInfo.walletUser(estimate);},[walletInfo, estimate])
 
-		estimateTokens();
-		return () => {
-			//unmount code
-		};
-	}, [inputAmountMantissa, inToken, walletInfo, networkInfo]);
 	return (
 		<Grid2 container sx={classes.root}>
 			<Grid2>
@@ -225,6 +223,7 @@ export const Swap: FC = (props) => {
 								mantissa={
 									inputAmountMantissa
 								}
+								onChange={estimateCallback}
 							/>
 						</Grid2>
 
@@ -269,7 +268,11 @@ export const Swap: FC = (props) => {
 							/>
 						</Grid2>
 
-						<Box sx={classes.slippageContainer}>
+						<Box
+							sx={
+								classes.slippageContainer
+							}
+						>
 							<Grid2
 								xs={2}
 								sm={2}
@@ -328,10 +331,7 @@ export const Swap: FC = (props) => {
 									transact
 								}
 							>
-								{
-									("Buy " +
-										outToken) as string
-								}
+								{"Swap Tokens"}
 							</Transact>
 						</Grid2>
 					</CardActions>
