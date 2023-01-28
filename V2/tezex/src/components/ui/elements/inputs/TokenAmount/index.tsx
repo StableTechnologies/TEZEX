@@ -57,12 +57,62 @@ export const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 	const wallet = useWallet();
 	const asset: Asset = getAsset(props.asset);
 
+	useEffect(() => {
+		const balance = async () => {
+		   props.readOnly &&
+		   	props.mantissa &&
+		   	setInputString(
+		   		tokenMantissaToDecimal(
+		   			props.mantissa.toString(),
+		   			props.asset
+		   		).toString()
+		   	);
+		   
+		   if (props.walletInfo && props.mantissa) {
+		   	setBalance(
+		   		await props.walletInfo.viewBalance(
+		   			props.asset,
+		   			props.walletInfo,
+		   			net
+		   		)
+		   	);
+		   	setSufficientBalance(
+		   		await hasSufficientBalance(
+		   			tokenMantissaToDecimal(
+		   				props.mantissa.toString(),
+		   				props.asset
+		   			),
+		   			props.walletInfo,
+		   			net,
+		   			props.asset
+		   		)
+		   	);
+		   }
+		}
+		balance();
+	}, [
+		props.mantissa,
+		net,
+		props.walletInfo,
+		props.asset,
+		props.readOnly,
+	]);
+
 	const updateAmount = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		const num = tokenDecimalToMantissa(e.target.value, props.asset);
-		if(props.mantissa){
-			(!props.readOnly )? setInputString(e.target.value) : setInputString(tokenDecimalToMantissa(props.mantissa.toString(), props.asset).toString());
+		if (props.mantissa) {
+			!props.readOnly
+				? setInputString(e.target.value)
+				: setInputString(
+						tokenDecimalToMantissa(
+							props.mantissa.toString(),
+							props.asset
+						).toString()
+				  );
 		}
-		!props.readOnly && num.isNaN() ? props.setMantissa(null) : props.setMantissa(num);
+		!props.readOnly && num.isNaN()
+			? props.setMantissa(null)
+			: props.setMantissa(num);
 		if (props.walletInfo && num.gt(0) && !num.isNaN()) {
 			setBalance(
 				await props.walletInfo.viewBalance(
