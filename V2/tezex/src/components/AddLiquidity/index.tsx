@@ -2,7 +2,7 @@ import { FC, useState, useEffect } from "react";
 
 import { BigNumber } from "bignumber.js";
 import {
-	TokenAmountInput,
+	TokenInput,
 	Slippage,
 } from "../../components/ui/elements/inputs";
 import { TokenAmountOutput } from "../../components/ui/elements/Labels";

@@ -101,22 +101,22 @@ export interface WalletInfo {
 	isReady: () => boolean;
 	disconnect: () => void;
 	transactions: Transaction[] | null | undefined;
-        initialiseTransaction:  (
-			component: TransactingComponent,
-			sendAsset: AssetOrAssetPair,
-			receiveAsset: AssetOrAssetPair,
-			sendAmount?: Amount,
-			receiveAmount?: Amount
-		) => Id | null; 
+	initialiseTransaction: (
+		component: TransactingComponent,
+		sendAsset: AssetOrAssetPair,
+		receiveAsset: AssetOrAssetPair,
+		sendAmount?: Amount,
+		receiveAmount?: Amount
+	) => Id | null;
 
-	updateAmount: 
-		(
-			id: string,
-			assets: AssetOrAssetPair,
-			amountUpdate: Amount,
-			kind: SendOrRecieve,
-			slippageUpdate?: number,
-		) => Promise<boolean> ;
+	updateAmount: (
+		id: string,
+		assets: AssetOrAssetPair,
+		kind: SendOrRecieve,
+		amountUpdate?: Amount,
+		slippageUpdate?: number
+	) => Promise<boolean>;
+	fetchTransaction: (id: string) => Transaction | undefined | null;
 }
 
 export const WalletContext = createContext<WalletInfo | null>(null);
@@ -274,24 +274,31 @@ export function WalletProvider(props: IWalletProvider) {
 	) => Promise<Transaction | null>;
 
 	const modifyAmount = (
-		amount: Amount,
 		kind: "Send" | "Receive",
+		amount?: Amount,
 		slippage?: number
 	): EditTransaction => {
 		const mod = (transaction: Transaction): boolean => {
 			if (transaction && canModifyTransaction(transaction)) {
 				if (slippage) transaction.slippage = slippage;
 				if (kind === "Send") {
-					transaction.sendAmount = amount;
+					if (amount) {
+						transaction.sendAmount = amount;
+					}
 				}
 
 				if (kind === "Receive") {
-					transaction.receiveAmount = amount;
+					if (amount) {
+						transaction.receiveAmount =
+							amount;
+					}
 				}
 
 				transaction.transactionStatus =
 					TransactionStatus.MODIFIED;
-				return true;
+				if (amount || slippage) {
+					return true;
+				} else return false;
 			}
 			return false;
 		};
@@ -355,13 +362,13 @@ export function WalletProvider(props: IWalletProvider) {
 	};
 	const modifyTransaction = (
 		id: string,
-		amount: Amount,
 		kind: "Send" | "Receive",
+		amount?: Amount,
 		slippage?: number
 	): boolean => {
 		return withTransaction(
 			id,
-			modifyAmount(amount, kind, slippage)
+			modifyAmount(kind, amount, slippage)
 		);
 	};
 
@@ -434,16 +441,19 @@ export function WalletProvider(props: IWalletProvider) {
 		async (
 			id: string,
 			assets: AssetOrAssetPair,
-			amountUpdate: Amount,
 			kind: SendOrRecieve,
-			slippageUpdate?: number,
+			amountUpdate?: Amount,
+			slippageUpdate?: number
 		): Promise<boolean> => {
 			const update: EditTransactionAsync = async (
 				oldTransaction: MaybeTransaction
 			) => {
 				return await getBalanceOfAssets(assets)
 					.then((userBalance: Amount | null) => {
-						if (userBalance) {
+						if (
+							userBalance &&
+							amountUpdate
+						) {
 							const checkBalance: boolean =
 								kind === "Send"
 									? checkSufficientBalance(
@@ -469,7 +479,8 @@ export function WalletProvider(props: IWalletProvider) {
 					.then((checkedBalance: AmountCheck) => {
 						if (
 							checkedBalance[0] &&
-							checkedBalance[1]
+							checkedBalance[1] &&
+							amountUpdate
 						) {
 							switch (kind) {
 								case "Send":
@@ -483,7 +494,8 @@ export function WalletProvider(props: IWalletProvider) {
 									if (
 										slippageUpdate
 									) {
-										checkedBalance[1].slippage = slippageUpdate
+										checkedBalance[1].slippage =
+											slippageUpdate;
 										return checkedBalance[1];
 									} else
 										return checkedBalance[1];
@@ -493,8 +505,8 @@ export function WalletProvider(props: IWalletProvider) {
 									if (
 										slippageUpdate
 									) {
-
-										checkedBalance[1].slippage = slippageUpdate
+										checkedBalance[1].slippage =
+											slippageUpdate;
 										return checkedBalance[1];
 									} else
 										return checkedBalance[1];
@@ -552,9 +564,9 @@ export function WalletProvider(props: IWalletProvider) {
 		isReady: isReady(walletStatus),
 		transactions,
 		initialiseTransaction,
-                updateAmount,
+		updateAmount,
+		fetchTransaction,
 		disconnect,
-
 	};
 
 	return (

@@ -66,19 +66,6 @@ export function SessionProvider(props: ISession) {
 		return () => clearInterval(interval);
 	}, []);
 
-	const walletInfo: WalletInfo = {
-		client,
-		setClient,
-		toolkit,
-		setToolkit,
-		address,
-		setAddress,
-		walletStatus,
-		setWalletStatus,
-		walletUser: walletUser(walletStatus, setWalletStatus),
-		isReady: isReady(walletStatus),
-		disconnect,
-	};
 
 	return (
 		<SessionContext.Provider

@@ -2,7 +2,7 @@ import { FC, useState, useEffect } from "react";
 
 import { BigNumber } from "bignumber.js";
 import {
-	TokenAmountInput,
+	TokenInput,
 } from "../../components/ui/elements/inputs";
 import { TokenAmountOutput } from "../../components/ui/elements/Labels";
 import { useWallet } from "../../hooks/wallet";
@@ -19,6 +19,7 @@ export interface IRemoveLiquidity {
 	children: null;
 }
 export const RemoveLiquidity: FC = (props) => {
+	/*
 	const [inputAmountMantissa, setInputAmountMantissa] = useState<
 		BigNumber | number | null
 	>(null);
@@ -26,7 +27,7 @@ export const RemoveLiquidity: FC = (props) => {
 	const [tzbtcMantissa, setTzbtcMantissa] = useState<number>(0);
 	const walletInfo = useWallet();
 	const networkInfo = useNetwork();
-
+	
 	const transact = async () => {
 		if (inputAmountMantissa && walletInfo) {
 			await removeLiquidity(
@@ -36,7 +37,7 @@ export const RemoveLiquidity: FC = (props) => {
 			);
 		}
 	};
-
+	
 	useEffect(() => {
 		const estimateTokens = async () => {
 			if (inputAmountMantissa) {
@@ -57,7 +58,7 @@ export const RemoveLiquidity: FC = (props) => {
 				setXtzMantissa(xtz.toNumber());
 			}
 		};
-
+	
 		estimateTokens();
 		return () => {
 			//unmount code
@@ -66,7 +67,7 @@ export const RemoveLiquidity: FC = (props) => {
 	return (
 		<div>
 			<h3>{"Remove Liquidity"}</h3>
-			<TokenAmountInput
+			<TokenInput
 				asset={TokenKind.Sirius}
 				walletInfo={walletInfo}
 				setMantissa={setInputAmountMantissa}
@@ -85,6 +86,12 @@ export const RemoveLiquidity: FC = (props) => {
 				{tzbtcMantissa}
 			</TokenAmountOutput>
 			<Transact callback={transact}>{"Sell Shares"}</Transact>
+		</div>
+	);
+	*/
+
+	return (
+		<div>
 		</div>
 	);
 };
