@@ -34,6 +34,7 @@ export interface IAddLiquidity {
 	children: null;
 }
 export const AddLiquidity: FC = (props) => {
+	/*
 	const [inputAmountMantissa, setInputAmountMantissa] = useState<
 		BigNumber | number | null
 	>(null);
@@ -48,7 +49,7 @@ export const AddLiquidity: FC = (props) => {
 	const [swapFields, setSwapFields] = useState<boolean>(true);
 	const walletInfo = useWallet();
 	const networkInfo = useNetwork();
-
+	
 	const transact = async () => {
 		if (inputAmountMantissa && walletInfo) {
 			switch (inToken) {
@@ -90,7 +91,7 @@ export const AddLiquidity: FC = (props) => {
 			}
 		}
 	};
-
+	
 	useEffect(() => {
 		if (swapFields) {
 			if (inToken === TokenKind.XTZ) {
@@ -106,7 +107,7 @@ export const AddLiquidity: FC = (props) => {
 			setOutToken(TokenKind.TzBTC);
 		}
 	}, [inToken, outToken, swapFields, outputAmountMantissa]);
-
+	
 	useEffect(() => {
 		const estimateTokens = async () => {
 			if (inputAmountMantissa) {
@@ -152,13 +153,13 @@ export const AddLiquidity: FC = (props) => {
 				}
 			}
 		};
-
+	
 		estimateTokens();
 		return () => {
 			//unmount code
 		};
 	}, [inputAmountMantissa, inToken, walletInfo, networkInfo]);
-
+	
 	useEffect(() => {
 		const shares = async () => {
 			if (inputAmountMantissa && walletInfo) {
@@ -209,13 +210,13 @@ export const AddLiquidity: FC = (props) => {
 		walletInfo,
 		networkInfo,
 	]);
-
+	
 	return (
-
+	
 		<Grid2  container >
 			<div>
 						<Card>
-			
+	
 			                <CardHeader
 			                  title={
 			                    <Typography variant="h6" >
@@ -225,7 +226,7 @@ export const AddLiquidity: FC = (props) => {
 			                />
 					<CardContent>
 				<Grid2 xs={12}>
-			
+	
 			<TokenAmountInput
 				asset={inToken}
 				walletInfo={walletInfo}
@@ -233,23 +234,23 @@ export const AddLiquidity: FC = (props) => {
 				mantissa={inputAmountMantissa}
 			/>
 				</Grid2>	
-			
+	
 				<Grid2 xs={12}>
-			
+	
 			<Toggle toggle={swapFields} setToggle={setSwapFields}>
 				{"swap fields"}
 			</Toggle>
 				</Grid2>	
-			
+	
 			<TokenAmountOutput asset={outToken} checkBalance={true}>
 				{outputAmountMantissa}
 			</TokenAmountOutput>
 				<Grid2 xs={12}>
-			
+	
 				</Grid2>	
 					</CardContent>
 					<CardActions>
-
+	
 			<Slippage
 				asset={TokenKind.TzBTC}
 				walletInfo={walletInfo}
@@ -264,10 +265,16 @@ export const AddLiquidity: FC = (props) => {
 			</Transact>
 					</CardActions>
 						</Card>
-			
-			
-			
+	
+	
+	
 			</div>
 		</Grid2>
 	);
+	*/
+	return (
+		<div>
+		
+		</div>
+	)
 };

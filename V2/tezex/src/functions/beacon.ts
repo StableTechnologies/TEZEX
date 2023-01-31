@@ -1,4 +1,4 @@
-import { WalletInfo } from "../contexts/wallet";
+import { WalletInfo, balanceBuilder } from "../contexts/wallet";
 import { NetworkInfo } from "../contexts/network";
 import { BeaconWallet } from "@taquito/beacon-wallet";
 import { TezosToolkit, MichelCodecPacker } from "@taquito/taquito";
@@ -10,7 +10,33 @@ import { tokenMantissaToDecimal } from "./scaling";
 export function mutezToTez(amount: BigNumber) {
 	return amount.dividedBy(1000000);
 }
+
 export async function getBalance(
+	toolkit: TezosToolkit,
+	address: string,
+	asset: Asset,
+): Promise<Balance> {
+	const getBalance = async () => {
+			switch (asset.name) {
+				case TokenKind.XTZ:
+					return await toolkit.tz.getBalance(
+						address
+					);
+				default:
+					const contract =
+						await toolkit.wallet.at(
+							asset.address
+						);
+					return await contract.views
+						.getBalance(address)
+						.read();
+			}
+	};
+	
+	const balance = await getBalance();
+	return balanceBuilder(balance, asset)
+}
+export async function _getBalance(
 	toolkit: TezosToolkit,
 	address: string,
 	netInfo: NetworkInfo,
@@ -44,10 +70,8 @@ export async function getBalance(
 	};
 	
 	const balance = await getBalance();
-	return {
-		decimal: tokenMantissaToDecimal(balance, asset.name),
-		mantissa: balance
-	}
+
+	return balanceBuilder(balance, asset)
 }
 
 export async function hasSufficientBalance(
@@ -58,7 +82,7 @@ export async function hasSufficientBalance(
 	asset: Asset,
 	mantissa: boolean = false
 ): Promise<boolean> {
-	const balance = await getBalance(toolkit,address, netInfo, asset);
+	const balance = await getBalance(toolkit,address,  asset);
 	if (!mantissa) {
 		return minimumBalance.isLessThanOrEqualTo(balance.mantissa)
 	} else {

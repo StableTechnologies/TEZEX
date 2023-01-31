@@ -1,11 +1,17 @@
-import { createContext } from "react";
+import produce from "immer";
+import React, { useCallback, createContext, useEffect, useState } from "react";
 import { DAppClient } from "@airgap/beacon-sdk";
 import { TezosToolkit } from "@taquito/taquito";
-import { TokenKind } from "../types/general";
-import { NetworkInfo } from "./network";
+import { TokenKind, Asset, Balance } from "../types/general";
 
+import { useNetwork } from "../hooks/network";
+import { NetworkType } from "@airgap/beacon-sdk";
+import { NetworkInfo } from "./network";
+import { v4 as uuidv4 } from "uuid";
+import { BigNumber } from "bignumber.js";
 import { getBalance } from "../functions/beacon";
 
+import { tokenMantissaToDecimal } from "../functions/scaling";
 export enum WalletStatus {
 	ESTIMATING_SIRS = "Estimating Sirs",
 	ESTIMATING_XTZ = "Estimating Tez",
@@ -15,6 +21,7 @@ export enum WalletStatus {
 	DISCONNECTED = "disconnected",
 	READY = "ready",
 	BUSY = "In Progress",
+	LOADING = "Loading",
 }
 
 export function isReady(walletStatus: WalletStatus) {
@@ -32,7 +39,7 @@ export function walletUser(
 		transientStatus: WalletStatus = WalletStatus.BUSY,
 		force?: boolean
 	) => {
-		console.log('\n',' here ','\n'); 
+		console.log("\n", " here ", "\n");
 		const setBusy = async () => {
 			setWalletStatus(transientStatus);
 		};
@@ -92,3 +99,449 @@ export interface WalletInfo {
 }
 
 export const WalletContext = createContext<WalletInfo | null>(null);
+
+export interface IWallet {
+	children:
+		| JSX.Element[]
+		| JSX.Element
+		| React.ReactElement
+		| React.ReactElement[]
+		| string;
+}
+
+type AssetType = "Asset" | "AssetPair";
+type LoadAsset = [Asset] | [Asset, Asset];
+type Id = string;
+type Amount = [Balance] | [Balance, Balance];
+export enum Components {
+	SWAP = "Initialised",
+	ADD_LIQUIDITY = "Add Liquidity",
+	REMOVE_LIQUIDITY = "Remove Liquidity",
+}
+export enum TransactionStatus {
+	INITIALISED = "Initialised",
+	MODIFIED = "Modified",
+	INSUFFICIENT_BALANCE = "Insufficient Balance",
+	PENDING = "Pending",
+	COMPLETED = "Completed",
+	FAILED = "Failed",
+}
+
+const canModifyTransaction = (t: Transaction | undefined | null): boolean => {
+	if (
+		t &&
+		(t.transactionStatus === TransactionStatus.FAILED ||
+			t.transactionStatus === TransactionStatus.COMPLETED)
+	) {
+		return false;
+	}
+	return true;
+};
+const date = new Date();
+
+interface Transaction {
+	id: string;
+	network: NetworkType;
+	component: Components;
+	sendAsset: LoadAsset;
+	sendAmount: Amount;
+	sendAssetBalance: Amount;
+	receiveAsset: LoadAsset;
+	receiveAmount: Amount;
+	receiveAssetBalance: Amount;
+	transactionStatus: TransactionStatus;
+	lastModified: Date;
+}
+
+export const balanceGreaterOrEqualTo = (
+	balance1: Balance,
+	balance2: Balance
+): boolean => {
+	return balance1.mantissa.isGreaterThanOrEqualTo(balance2.mantissa);
+};
+
+export const balanceBuilder = (mantissa: BigNumber, asset: Asset): Balance => {
+	const geq = (balance: Balance): boolean => {
+		return mantissa.isGreaterThanOrEqualTo(balance.mantissa);
+	};
+	return {
+		decimal: tokenMantissaToDecimal(mantissa, asset.name),
+		mantissa: mantissa,
+		greaterOrEqualTo: geq,
+	};
+};
+interface IWalletProvider {
+	children:
+		| JSX.Element[]
+		| JSX.Element
+		| React.ReactElement
+		| React.ReactElement[]
+		| string;
+}
+export function WalletProvider(props: IWalletProvider) {
+	const zeroBalance = {
+		decimal: new BigNumber(0),
+		mantissa: new BigNumber(0),
+		greaterOrEqualTo: (balance: Balance): boolean => {
+			return new BigNumber(0).isGreaterThanOrEqualTo(
+				balance.mantissa
+			);
+		},
+	};
+
+	//use Immer
+	const [transactions, setTransactions] = useState<
+		Transaction[] | null | undefined
+	>();
+
+	const [isWalletConnected, setIsWalletConnected] = useState(false);
+	const [walletStatus, setWalletStatus] = useState(
+		WalletStatus.DISCONNECTED
+	);
+	const [client, setClient] = useState<DAppClient | null>(null);
+	const [toolkit, setToolkit] = useState<TezosToolkit | null>(null);
+	const [address, setAddress] = useState<string | null>(null);
+	const [loading, setLoading] = useState(false);
+
+	const network = useNetwork();
+	useEffect(() => {
+		if (loading) {
+			setLoading(false);
+		}
+	}, []);
+
+	//check and update balance of Modifyable
+
+	const Initialise = useCallback(
+		(
+			component: Components,
+			sendAsset: LoadAsset,
+			receiveAsset: LoadAsset,
+			sendAmount?: Amount,
+			receiveAmount?: Amount
+		): Id | null => {
+			var id = null;
+			const initBalance = (asset: LoadAsset): Amount => {
+				switch (asset.length) {
+					case 1:
+						return [zeroBalance];
+					case 2:
+						return [
+							zeroBalance,
+							zeroBalance,
+						];
+				}
+			};
+			const send: Amount = sendAmount
+				? sendAmount
+				: initBalance(sendAsset);
+			const receive: Amount = receiveAmount
+				? receiveAmount
+				: initBalance(receiveAsset);
+
+			const transaction: Transaction = {
+				id: uuidv4(),
+
+				network: network.network,
+				component,
+				sendAsset,
+				sendAmount: send,
+				sendAssetBalance: initBalance(sendAsset),
+				receiveAsset,
+				receiveAmount: receive,
+				receiveAssetBalance: initBalance(receiveAsset),
+				transactionStatus:
+					TransactionStatus.INITIALISED,
+
+				lastModified: new Date(),
+			};
+			setTransactions(
+				produce(
+					(
+						draft:
+							| Transaction[]
+							| undefined
+							| null
+					) => {
+						if (draft) {
+							draft.push(transaction);
+						} else draft = [transaction];
+						id = transaction.id;
+					}
+				)
+			);
+			return id;
+		},
+		[]
+	);
+
+	type EditTransaction = (transaction: Transaction) => boolean;
+	type EditTransactionAsync = (
+		transaction: Transaction | undefined | null
+	) => Promise<Transaction | null>;
+
+	const modifyAmount = (
+		amount: Amount,
+		kind: "Send" | "Receive"
+	): EditTransaction => {
+		const mod = (transaction: Transaction): boolean => {
+			if (transaction && canModifyTransaction(transaction)) {
+				if (kind === "Send") {
+					transaction.sendAmount = amount;
+				}
+
+				if (kind === "Receive") {
+					transaction.receiveAmount = amount;
+				}
+
+				transaction.transactionStatus =
+					TransactionStatus.MODIFIED;
+				return true;
+			}
+			return false;
+		};
+		return mod;
+	};
+
+	const fetchTransaction = (
+		id: string
+	): Transaction | undefined | null => {
+		if (transactions) {
+			return transactions.find(
+				(t: Transaction) => t.id === id
+			);
+		}
+		return null;
+	};
+
+	const withTransactionAsync = async (
+		id: string,
+		edit: EditTransactionAsync
+	): Promise<boolean> => {
+		return await edit(fetchTransaction(id))
+			.then((modifiedTransaction: Transaction | null) => {
+				if (modifiedTransaction) {
+					return withTransaction(
+						id,
+						(transaction: Transaction) => {
+							transaction =
+								modifiedTransaction;
+							return true;
+						}
+					);
+				} else return false;
+			})
+			.catch((e) => {
+				throw e;
+			});
+	};
+	const withTransaction = (
+		id: string,
+		edit: EditTransaction
+	): boolean => {
+		var updated = false;
+		setTransactions(
+			produce((draft: Transaction[] | null) => {
+				const transaction:
+					| Transaction
+					| null
+					| undefined =
+					draft &&
+					draft.find(
+						(transaction) =>
+							transaction.id === id
+					);
+				if (transaction) {
+					return edit(transaction);
+				}
+			})
+		);
+		return updated;
+	};
+	const modifyTransaction = (
+		id: string,
+		amount: Amount,
+		kind: "Send" | "Receive"
+	): boolean => {
+		return withTransaction(id, modifyAmount(amount, kind));
+	};
+
+	const getBalanceOfAssets = async (
+		assets: LoadAsset
+	): Promise<Amount | null> => {
+		if (toolkit && address) {
+			switch (assets.length) {
+				case 1:
+					return [
+						await getBalance(
+							toolkit,
+							address,
+							assets[0]
+						),
+					];
+				case 2:
+					return [
+						await getBalance(
+							toolkit,
+							address,
+							assets[0]
+						),
+						await getBalance(
+							toolkit,
+							address,
+							assets[1]
+						),
+					];
+			}
+		}
+
+		return null;
+	};
+
+	const checkSufficientBalance = (
+		userBalance: Amount,
+		requiredAmount: Amount
+	): boolean => {
+		if (userBalance.length === requiredAmount.length)
+			throw Error("Error: balance check asset pair mismatch");
+		const checks: boolean[] = Array.from(
+			userBalance,
+			(assetBalance, index) => {
+				const required = requiredAmount[index];
+				if (required) {
+					return assetBalance.greaterOrEqualTo(
+						required
+					);
+				} else
+					throw Error(
+						"Balance issue , during suffucientcy check"
+					);
+			}
+		);
+		const hasSufficientBalance: boolean = checks.reduce(
+			(accumulator, currentValue) =>
+				accumulator === currentValue,
+			true
+		);
+
+		return hasSufficientBalance;
+	};
+	type MaybeTransaction = Transaction | undefined | null;
+	type AmountCheck =
+		| [Amount, MaybeTransaction, boolean]
+		| [null, null, false];
+	const updateAmount = useCallback(
+		async (
+			id: string,
+			assets: LoadAsset,
+			amountUpdate: Amount,
+			kind: "Send" | "Receive"
+		): Promise<boolean> => {
+			const update: EditTransactionAsync = async (
+				oldTransaction: MaybeTransaction
+			) => {
+				return await getBalanceOfAssets(assets)
+					.then((userBalance: Amount | null) => {
+						if (userBalance) {
+							const checkBalance: boolean =
+								kind === "Send"
+									? checkSufficientBalance(
+											userBalance,
+											amountUpdate
+									  )
+									: true;
+
+							return [
+								userBalance,
+								fetchTransaction(
+									id
+								),
+								checkBalance,
+							] as AmountCheck;
+						}
+						return [
+							null,
+							null,
+							false,
+						] as AmountCheck;
+					})
+					.then((checkedBalance: AmountCheck) => {
+						if (
+							checkedBalance[0] &&
+							checkedBalance[1]
+						) {
+							switch (kind) {
+								case "Send":
+									checkedBalance[1].sendAmount =
+										amountUpdate;
+
+									checkedBalance[1].transactionStatus =
+										checkedBalance[2]
+											? TransactionStatus.PENDING
+											: TransactionStatus.INSUFFICIENT_BALANCE;
+									break;
+								case "Receive":
+									checkedBalance[1].receiveAmount =
+										amountUpdate;
+									break;
+							}
+							return checkedBalance[1];
+						}
+
+						return null;
+					})
+					.catch((error) => {
+						return null;
+					});
+			}; //
+			return await withTransactionAsync(id, update)
+			//^^^ MAKE ASYNC...set balance THEN check balance THEN modify transaction
+			//todo create async getBlaance(loadAsset, Amount)
+			//todo create sync checkSufficientBalance(Amount, Amount)
+			// modify transaction with balance and sufficiency check
+			//delete below strategy
+		},
+		[]
+	);
+	useEffect(() => {
+		if (client) {
+			setIsWalletConnected(true);
+			setWalletStatus(WalletStatus.READY);
+		} else {
+			setIsWalletConnected(false);
+			setWalletStatus(WalletStatus.BUSY);
+		}
+	}, [client]);
+
+	const disconnect = () => {
+		setClient(null);
+		setAddress(null);
+	};
+
+	useEffect(() => {
+		const interval = setInterval(() => {
+			console.log("This will run every second!");
+		}, 5000);
+		return () => clearInterval(interval);
+	}, []);
+
+	const walletInfo: WalletInfo = {
+		client,
+		setClient,
+		toolkit,
+		setToolkit,
+		address,
+		setAddress,
+		walletStatus,
+		setWalletStatus,
+		walletUser: walletUser(walletStatus, setWalletStatus),
+		isReady: isReady(walletStatus),
+		disconnect,
+	};
+
+	return (
+		<WalletContext.Provider value={walletInfo}>
+			{props.children}
+		</WalletContext.Provider>
+	);
+}

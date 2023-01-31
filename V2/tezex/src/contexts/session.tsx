@@ -1,5 +1,6 @@
 import { createContext, useEffect, useState } from "react";
 import {
+	WalletProvider,
 	WalletContext,
 	WalletInfo,
 	WalletStatus,
@@ -86,9 +87,9 @@ export function SessionProvider(props: ISession) {
 			}}
 		>
 			<NetworkContext.Provider value={networkDefaults}>
-				<WalletContext.Provider value={walletInfo}>
+				<WalletProvider>
 					{props.children}
-				</WalletContext.Provider>
+				</WalletProvider>
 			</NetworkContext.Provider>
 		</SessionContext.Provider>
 	);
