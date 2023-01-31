@@ -1,7 +1,18 @@
 import produce from "immer";
 import React, { useCallback, createContext, useEffect, useState } from "react";
 import { DAppClient } from "@airgap/beacon-sdk";
-import { Transaction, TokenKind, Asset, Balance, Id, TransactionStatus, TransactingComponent, Amount, AssetOrAssetPair } from "../types/general";
+import {
+	Transaction,
+	TokenKind,
+	Asset,
+	Balance,
+	Id,
+	TransactionStatus,
+	TransactingComponent,
+	Amount,
+	AssetOrAssetPair,
+	SendOrRecieve,
+} from "../types/general";
 import { TezosToolkit } from "@taquito/taquito";
 
 import { useNetwork } from "../hooks/network";
@@ -89,13 +100,23 @@ export interface WalletInfo {
 	) => Promise<void>;
 	isReady: () => boolean;
 	disconnect: () => void;
-	/*
-	viewBalance: (
-		asset: TokenKind,
-		wallet: WalletInfo,
-		network: NetworkInfo
-	) => Promise<string>;
-	*/
+	transactions: Transaction[] | null | undefined;
+        initialiseTransaction:  (
+			component: TransactingComponent,
+			sendAsset: AssetOrAssetPair,
+			receiveAsset: AssetOrAssetPair,
+			sendAmount?: Amount,
+			receiveAmount?: Amount
+		) => Id | null; 
+
+	updateAmount: 
+		(
+			id: string,
+			assets: AssetOrAssetPair,
+			amountUpdate: Amount,
+			kind: SendOrRecieve,
+			slippageUpdate?: number,
+		) => Promise<boolean> ;
 }
 
 export const WalletContext = createContext<WalletInfo | null>(null);
@@ -122,7 +143,6 @@ const canModifyTransaction = (t: Transaction | undefined | null): boolean => {
 	return true;
 };
 const date = new Date();
-
 
 export const balanceGreaterOrEqualTo = (
 	balance1: Balance,
@@ -183,7 +203,7 @@ export function WalletProvider(props: IWalletProvider) {
 
 	//check and update balance of Modifyable
 
-	const Initialise = useCallback(
+	const initialiseTransaction = useCallback(
 		(
 			component: TransactingComponent,
 			sendAsset: AssetOrAssetPair,
@@ -192,7 +212,9 @@ export function WalletProvider(props: IWalletProvider) {
 			receiveAmount?: Amount
 		): Id | null => {
 			var id = null;
-			const initBalance = (asset: AssetOrAssetPair): Amount => {
+			const initBalance = (
+				asset: AssetOrAssetPair
+			): Amount => {
 				switch (asset.length) {
 					case 1:
 						return [zeroBalance];
@@ -223,7 +245,7 @@ export function WalletProvider(props: IWalletProvider) {
 				receiveAssetBalance: initBalance(receiveAsset),
 				transactionStatus:
 					TransactionStatus.INITIALISED,
-                                slippage: 0.5,
+				slippage: 0.5,
 				lastModified: new Date(),
 			};
 			setTransactions(
@@ -253,10 +275,12 @@ export function WalletProvider(props: IWalletProvider) {
 
 	const modifyAmount = (
 		amount: Amount,
-		kind: "Send" | "Receive"
+		kind: "Send" | "Receive",
+		slippage?: number
 	): EditTransaction => {
 		const mod = (transaction: Transaction): boolean => {
 			if (transaction && canModifyTransaction(transaction)) {
+				if (slippage) transaction.slippage = slippage;
 				if (kind === "Send") {
 					transaction.sendAmount = amount;
 				}
@@ -332,9 +356,13 @@ export function WalletProvider(props: IWalletProvider) {
 	const modifyTransaction = (
 		id: string,
 		amount: Amount,
-		kind: "Send" | "Receive"
+		kind: "Send" | "Receive",
+		slippage?: number
 	): boolean => {
-		return withTransaction(id, modifyAmount(amount, kind));
+		return withTransaction(
+			id,
+			modifyAmount(amount, kind, slippage)
+		);
 	};
 
 	const getBalanceOfAssets = async (
@@ -401,12 +429,14 @@ export function WalletProvider(props: IWalletProvider) {
 	type AmountCheck =
 		| [Amount, MaybeTransaction, boolean]
 		| [null, null, false];
+
 	const updateAmount = useCallback(
 		async (
 			id: string,
 			assets: AssetOrAssetPair,
 			amountUpdate: Amount,
-			kind: "Send" | "Receive"
+			kind: SendOrRecieve,
+			slippageUpdate?: number,
 		): Promise<boolean> => {
 			const update: EditTransactionAsync = async (
 				oldTransaction: MaybeTransaction
@@ -450,13 +480,25 @@ export function WalletProvider(props: IWalletProvider) {
 										checkedBalance[2]
 											? TransactionStatus.PENDING
 											: TransactionStatus.INSUFFICIENT_BALANCE;
-									break;
+									if (
+										slippageUpdate
+									) {
+										checkedBalance[1].slippage = slippageUpdate
+										return checkedBalance[1];
+									} else
+										return checkedBalance[1];
 								case "Receive":
 									checkedBalance[1].receiveAmount =
 										amountUpdate;
-									break;
+									if (
+										slippageUpdate
+									) {
+
+										checkedBalance[1].slippage = slippageUpdate
+										return checkedBalance[1];
+									} else
+										return checkedBalance[1];
 							}
-							return checkedBalance[1];
 						}
 
 						return null;
@@ -465,7 +507,7 @@ export function WalletProvider(props: IWalletProvider) {
 						return null;
 					});
 			}; //
-			withTransactionAsync(id, update)
+			withTransactionAsync(id, update);
 			//^^^ MAKE ASYNC...set balance THEN check balance THEN modify transaction
 			//todo create async getBlaance(loadAsset, Amount)
 			//todo create sync checkSufficientBalance(Amount, Amount)
@@ -508,7 +550,11 @@ export function WalletProvider(props: IWalletProvider) {
 		setWalletStatus,
 		walletUser: walletUser(walletStatus, setWalletStatus),
 		isReady: isReady(walletStatus),
+		transactions,
+		initialiseTransaction,
+                updateAmount,
 		disconnect,
+
 	};
 
 	return (

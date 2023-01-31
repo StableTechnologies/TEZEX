@@ -38,6 +38,7 @@ export enum TransactingComponent {
 
 export type Id = string;
 
+export type SendOrRecieve = "Send" | "Receive";
 export type Amount = [Balance] | [Balance, Balance];
 export type AssetOrAssetPair = [Asset] | [Asset, Asset];
 
