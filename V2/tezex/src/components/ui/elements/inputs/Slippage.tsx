@@ -1,4 +1,4 @@
-import { FC, useState, useEffect } from "react";
+import {memo, MemoExoticComponent, FC, useCallback, useState, useEffect } from "react";
 import { BigNumber } from "bignumber.js";
 
 import { WalletInfo } from "../../../../contexts/wallet";
@@ -201,28 +201,21 @@ textAlign: 'right',
 
 export interface ISlippage {
 	asset: TokenKind;
-	walletInfo: WalletInfo | null;
-	setslippage: React.Dispatch<React.SetStateAction<BigNumber | number>>;
-	slippage: BigNumber | number;
-	amountMantissa: BigNumber;
-	inverse?: boolean;
-	balanceCheck?: boolean;
+	value: BigNumber | number;
+	onChange: (value: number) => void;
+        inverse?: boolean;
 }
 
-export const Slippage: FC<ISlippage> = (props) => {
-	const [selectedId, setSelectedId] = useState("0");
-	const [sufficientBalance, setSufficientBalance] = useState(true);
-	const net = useNetwork();
-	const stringToBigNumber = (value: string) => {
-		const num = props.inverse
-			? new BigNumber(value).multipliedBy(-1)
-			: new BigNumber(value);
 
-		return BigNumber(num);
-	};
+
+
+const SlippageInput: FC<ISlippage> = (props) => {
+	const [selectedId, setSelectedId] = useState("0");
+	//const [slippage, setSlippage] = useState("0.0");
+	const net = useNetwork();
 
 	const updateAmount = (value: string) => {
-		props.setslippage(stringToBigNumber("3"));
+		//		props.setslippage(stringToBigNumber("3"));
 		//props.setSlippage(stringToBigNumber(value));
 	};
 
@@ -235,21 +228,21 @@ export const Slippage: FC<ISlippage> = (props) => {
 	) => {
 		setValue(newValue);
 	};
-	const view = (): string => {
-		if (props.slippage) {
-			return props.inverse
-				? new BigNumber(props.slippage)
-						.multipliedBy(-1)
-						.toString()
-				: new BigNumber(props.slippage).toString();
-		} else return "0";
-	};
 
 	const [input, setInput] = useState<string>("0.1");
 
 	useEffect(() => {
-		props.setslippage(stringToBigNumber(input).toNumber());
-	}, [input]);
+
+	const stringToNumber = (value: string) => {
+		const num = props.inverse
+			? new BigNumber(value).multipliedBy(-1)
+			: new BigNumber(value);
+
+		return BigNumber(num).toNumber();
+	};
+		props.onChange(stringToNumber(input));
+
+	}, [input, props]);
 
 	interface ISlippageInput {
 		disabled?: boolean;
@@ -259,10 +252,10 @@ export const Slippage: FC<ISlippage> = (props) => {
 			<TextField
 				autoFocus
 				disabled={prop.disabled}
-				onChange={(e) => {
+				onChange={useCallback((e: React.ChangeEvent<HTMLInputElement>)=> {
+					e.preventDefault();
 					setInput(e.target.value);
-				}}
-				value={input}
+				},[])}
 				sx={classes.textField}
 				InputProps={{
 					disableUnderline: true,
@@ -283,7 +276,7 @@ export const Slippage: FC<ISlippage> = (props) => {
 		id: string;
 		label?: React.ReactNode;
 
-		amount?: number;
+		amount: number;
 	}
 
 	function SlippageTab(props: SlippageTabProps, input?: boolean) {
@@ -315,6 +308,7 @@ export const Slippage: FC<ISlippage> = (props) => {
 				) => {
 					event.preventDefault();
 					setSelectedId(props.id);
+					setInput(props.amount.toString());
 				}}
 				{...props}
 			/>
@@ -330,7 +324,7 @@ export const Slippage: FC<ISlippage> = (props) => {
 			>
 				<SlippageTab id="0" label="0.5%" amount={0.5} />
 				<SlippageTab id="1" label="1%" amount={1} />
-				<SlippageTab id="input" />
+				<SlippageTab id="input" amount={0}/>
 			</Tabs>
 		);
 	};
@@ -338,6 +332,8 @@ export const Slippage: FC<ISlippage> = (props) => {
 	// move grid to individual comp swap/add
 	return <SlippageTabs />;
 };
+
+export const Slippage = memo(SlippageInput);
 /*
   
 		<div>

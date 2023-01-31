@@ -1,4 +1,4 @@
-import { FC, useState, useEffect } from "react";
+import {memo, MemoExoticComponent, FC, useCallback, useState, useEffect } from "react";
 import { BigNumber } from "bignumber.js";
 
 import { WalletInfo } from "../../../../../contexts/wallet";
@@ -33,14 +33,11 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { SvgIcon } from "@mui/material";
 export interface ITokenAmountInput {
-	asset: TokenKind;
-	walletInfo: WalletInfo | null;
-	setMantissa: React.Dispatch<
-		React.SetStateAction<BigNumber | number | null>
-	>;
-	onChange?: () => Promise<void>;
+	assetName: TokenKind;
+	onChange: (value: string) => void;
+	balance?: string;
+	value?: string;
 	label?: string;
-	mantissa?: BigNumber | number | null;
 	readOnly?: boolean;
 }
 
@@ -49,15 +46,36 @@ const style = {
 		display: "flex",
 	},
 };
-export const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
-	const [sufficientBalance, setSufficientBalance] = useState(true);
+
+const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 	const [inputString, setInputString] = useState("0");
 	const [balance, setBalance] = useState("0.0");
 	const net = useNetwork();
 	const wallet = useWallet();
-	const asset: Asset = getAsset(props.asset);
+	const asset: Asset = getAsset(props.assetName);
 
 
+	/*
+	useEffect(() => {
+	      if(props.value && props.value !== inputString) setInputString(props.value);	
+	}, [inputString, props]);
+	
+	useEffect(() => {
+		const updateParent = async () => {
+			await props.onChange(inputString);
+		};
+	
+		updateParent();
+	
+	}, [inputString, props]);
+	*/
+
+	const updateAmount = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+		e.preventDefault();
+		setInputString(e.target.value);
+props.onChange(inputString);
+	},[]);
+	/*
 	const updateAmount = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		const num = tokenDecimalToMantissa(e.target.value, props.asset);
 		if (props.mantissa) {
@@ -75,7 +93,7 @@ export const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 			: props.setMantissa(num);
 		props.onChange && (await props.onChange());
 	};
-
+	
 	const setValue = () => {
 		if (inputString === "") return inputString;
 		if (props.mantissa) {
@@ -105,6 +123,7 @@ export const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 			return "0.0";
 		}
 	};
+	*/
 
 	const styles = () => ({
 		justifyContent: "center",
@@ -184,13 +203,14 @@ export const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 						textAlign: "right",
 					}}
 				>
-					balance: {balance} {props.asset}
+					balance: {balance} {props.assetName}
 				</Typography>
 			</Grid2>
 		</Grid2>
 	);
 };
 
+export const TokenInput = memo(TokenAmountInput);
 /*
 <div>
 	<input

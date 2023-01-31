@@ -2,9 +2,11 @@ import { FC, useState, useEffect, useCallback } from "react";
 
 import { BigNumber } from "bignumber.js";
 import {
-	TokenAmountInput,
+	TokenInput,
 	Slippage,
 } from "../../components/ui/elements/inputs";
+
+import { getAsset } from "../../constants";
 import { TokenAmountOutput } from "../../components/ui/elements/Labels";
 import { useWallet } from "../../hooks/wallet";
 import { useNetwork } from "../../hooks/network";
@@ -83,115 +85,54 @@ export interface ISwapToken {
 }
 
 export const Swap: FC = (props) => {
+
+	const [loading, setLoading] = useState<boolean>(true);
+	const [editing, setEditing] = useState<boolean>(false);
 	const [inputAmountMantissa, setInputAmountMantissa] = useState<
 		BigNumber | number | null
 	>(null);
-	const [slippage, setSlippage] = useState<BigNumber | number>(-0.5);
+
+	const [sendAmount, setSendAmount] = useState(new BigNumber(0));
+	const [receiveAmount, setReceiveAmount] = useState(new BigNumber(0));
+	const [slippage, setSlippage] = useState<number>(-0.5);
 	const [outputAmountMantissa, setOutputAmountMantissa] = useState<
 		BigNumber | number | null
 	>(0);
-	const [outToken, setOutToken] = useState(TokenKind.TzBTC);
-	const [inToken, setInToken] = useState(TokenKind.XTZ);
+
+	const [receiveAsset, setReceiveAsset] = useState(TokenKind.TzBTC);
+	const [sendAsset, setSendAsset] = useState(TokenKind.XTZ);
 	const [swapFields, setSwapFields] = useState<boolean>(true);
 	const walletInfo = useWallet();
-	const networkInfo = useNetwork();
 
 	const transact = async () => {
-		if (inputAmountMantissa && outputAmountMantissa && walletInfo) {
-			switch (inToken) {
-				case TokenKind.XTZ:
-					await xtzToToken(
-						new BigNumber(
-							inputAmountMantissa
-						),
-						networkInfo.addresses.tzbtc.dex
-							.sirius,
-						walletInfo
-					);
-					break;
-				case TokenKind.TzBTC:
-					await tokenToXtz(
-						new BigNumber(
-							inputAmountMantissa
-						),
-						new BigNumber(
-							outputAmountMantissa
-						),
-						networkInfo.addresses.tzbtc.dex
-							.sirius,
-						networkInfo.addresses.tzbtc
-							.address,
-						walletInfo,
-						slippage ? slippage : 0
-					);
-			}
-		}
 	};
 
+
+
+	const updateSlippage = useCallback((value: number) => {
+		setSlippage(value);
+	},[]);
+	const updateSend = useCallback((value: string) => {
+		setSendAmount(new BigNumber(value));
+	},[]);
+	const updateReceive = useCallback((value: string) => {
+		setReceiveAmount(new BigNumber(value));
+	},[]);
+
+	useCallback(() => {
+                   //update transaction on edit change
+	},[inputAmountMantissa,slippage, inputAmountMantissa])
+
 	useEffect(() => {
-		if (swapFields) {
-			if (inToken === TokenKind.XTZ) {
-				setInputAmountMantissa(outputAmountMantissa);
-			}
-			setInToken(TokenKind.TzBTC);
-			setOutToken(TokenKind.XTZ);
-		} else {
-			if (inToken === TokenKind.TzBTC) {
-				setInputAmountMantissa(outputAmountMantissa);
-			}
-			setInToken(TokenKind.XTZ);
-			setOutToken(TokenKind.TzBTC);
-		}
-	}, [inToken, outToken, swapFields, outputAmountMantissa]);
+
+	}, [editing]);
+
+	useEffect(() => {
+		//run always
+	}, []);
 
 
 
-		const estimate = async () => {
-			if (inputAmountMantissa) {
-				console.log(
-					"\n",
-					"inputAmountMantissa : ",
-					inputAmountMantissa.toString(),
-					"\n"
-				);
-			}
-			if (inputAmountMantissa && walletInfo) {
-				switch (inToken) {
-					case TokenKind.XTZ:
-						setOutputAmountMantissa(
-							await estimateTokensFromXtz(
-								new BigNumber(
-									inputAmountMantissa
-								),
-								networkInfo
-									.addresses
-									.tzbtc
-									.dex
-									.sirius,
-								walletInfo
-							)
-						);
-						break;
-					case TokenKind.TzBTC:
-						setOutputAmountMantissa(
-							await estimateXtzFromToken(
-								new BigNumber(
-									inputAmountMantissa
-								),
-								networkInfo
-									.addresses
-									.tzbtc
-									.dex
-									.sirius,
-								walletInfo
-							)
-						);
-						break;
-				}
-			}
-		
-		}
-	const estimateCallback = useCallback(async () => {walletInfo && await walletInfo.walletUser(estimate);},[walletInfo, estimate])
 
 	return (
 		<Grid2 container sx={classes.root}>
@@ -212,18 +153,10 @@ export const Swap: FC = (props) => {
 								top: "10px",
 							}}
 						>
-							<TokenAmountInput
-								asset={inToken}
-								walletInfo={
-									walletInfo
-								}
-								setMantissa={
-									setInputAmountMantissa
-								}
-								mantissa={
-									inputAmountMantissa
-								}
-								onChange={estimateCallback}
+							<TokenInput
+								assetName={sendAsset}
+								onChange={updateSend}
+								value={sendAmount.toString()}
 							/>
 						</Grid2>
 
@@ -253,17 +186,10 @@ export const Swap: FC = (props) => {
 								bottom: "10px",
 							}}
 						>
-							<TokenAmountInput
-								asset={outToken}
-								walletInfo={
-									walletInfo
-								}
-								setMantissa={
-									setOutputAmountMantissa
-								}
-								mantissa={
-									outputAmountMantissa
-								}
+							<TokenInput
+								assetName={receiveAsset}
+								onChange={updateReceive}
+								value={receiveAmount.toString()}
 								readOnly={true}
 							/>
 						</Grid2>
@@ -293,23 +219,13 @@ export const Swap: FC = (props) => {
 							>
 								<Slippage
 									asset={
-										outToken
+										receiveAsset
 									}
-									walletInfo={
-										walletInfo
-									}
-									setslippage={
-										setSlippage
-									}
-									slippage={
+									value={
 										slippage
 									}
-									amountMantissa={
-										new BigNumber(
-											outputAmountMantissa
-												? outputAmountMantissa
-												: 0
-										)
+									onChange={
+										updateSlippage
 									}
 									inverse={
 										true
