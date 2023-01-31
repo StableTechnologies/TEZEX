@@ -135,11 +135,11 @@ export async function getLbContractStorage(
 export async function estimateXtzFromToken(
 	tokenAmountMantissa: BigNumber,
 	lbContractAddress: string,
-	walletInfo: WalletInfo
+	toolkit: TezosToolkit
 ): Promise<number> {
-	if (walletInfo.toolkit) {
+	
 		const lbContractStorage = await getLbContractStorage(
-			walletInfo.toolkit,
+			toolkit,
 			lbContractAddress
 		);
 
@@ -166,22 +166,19 @@ export async function estimateXtzFromToken(
 		} else {
 			return 0;
 		}
-	} else {
-		return 0;
-	}
 }
 
 export async function tokenToXtz(
 	tokenMantissa: BigNumber,
 	xtzAmountInMutez: BigNumber,
+userAddress: string,
 	lbContractAddress: string,
 	tzbtcContractAddress: string,
-	walletInfo: WalletInfo,
+	toolkit: TezosToolkit,
 	slippage: number | BigNumber | string = 0
 ) {
 	try {
-		if (walletInfo.toolkit) {
-			const toolkit = walletInfo.toolkit;
+		
 
 			const lbContract = await toolkit.wallet.at(
 				lbContractAddress
@@ -199,7 +196,7 @@ export async function tokenToXtz(
 				xtzAmountInMutez
 			);
 			let transfer = lbContract.methods.tokenToXtz(
-				walletInfo.address,
+			userAddress,
 				tokenMantissa.integerValue(
 					BigNumber.ROUND_DOWN
 				),
@@ -272,7 +269,7 @@ export async function tokenToXtz(
 				await batchOp.confirmation();
 			}
 
-		}
+		
 	} catch (err) {
 		console.log(`failed in sendDexterBuy ${JSON.stringify(err)}}`);
 	}
@@ -281,11 +278,11 @@ export async function tokenToXtz(
 export async function estimateTokensFromXtz(
 	xtzAmountInMutez: BigNumber,
 	lbContractAddress: string,
-	walletInfo: WalletInfo
+	toolkit: TezosToolkit
 ): Promise<number> {
-	if (walletInfo.toolkit) {
+	
 		const lbContractStorage = await getLbContractStorage(
-			walletInfo.toolkit,
+			toolkit,
 			lbContractAddress
 		);
 
@@ -300,33 +297,26 @@ export async function estimateTokensFromXtz(
 		} else {
 			return 0;
 		}
-	} else {
-		return 0;
-	}
 }
 export async function xtzToToken(
 	xtzAmountInMutez: BigNumber,
+	minTokensBought: BigNumber,
+userAddress: string,
 	lbContractAddress: string,
-	walletInfo: WalletInfo
+	toolkit: TezosToolkit,
 ) {
 	try {
-		if (walletInfo.toolkit) {
-			const toolkit = walletInfo.toolkit;
+		
 			const deadline = new Date(
 				Date.now() + 60000
 			).toISOString();
-			const minTokensBought = await estimateTokensFromXtz(
-				xtzAmountInMutez,
-				lbContractAddress,
-				walletInfo
-			);
 
-			const estimate = await walletInfo.toolkit.wallet
+			const estimate = await toolkit.wallet
 				.at(lbContractAddress)
 				.then((contract) => {
 					return contract.methods
 						.xtzToToken(
-							walletInfo.address,
+						userAddress,
 							minTokensBought,
 							deadline
 						)
@@ -363,12 +353,12 @@ export async function xtzToToken(
 
 			if (estimate) {
 				const lbContract =
-					await walletInfo.toolkit.wallet.at(
+					await toolkit.wallet.at(
 						lbContractAddress
 					);
 				const op = await lbContract.methods
 					.xtzToToken(
-						walletInfo.address,
+					userAddress,
 						minTokensBought,
 						deadline
 					)
@@ -383,7 +373,7 @@ export async function xtzToToken(
 
 				await op.confirmation();
 			}
-		}
+		
 	} catch (err) {
 		console.log(`failed in sendDexterBuy ${JSON.stringify(err)}}`);
 	}
@@ -395,11 +385,11 @@ export async function estimateShares(
 	xtzAmountInMutez: BigNumber,
 	tokenMantissa: BigNumber,
 	lbContractAddress: string,
-	walletInfo: WalletInfo
+	toolkit: TezosToolkit
 ) {
-	if (walletInfo.toolkit) {
+	
 		const dexStorage = await getLbContractStorage(
-			walletInfo.toolkit,
+			toolkit,
 			lbContractAddress
 		);
 		const sharesFromXtz = estimateSharesFromXtz(
@@ -415,7 +405,7 @@ export async function estimateShares(
 			1
 		);
 		return shares;
-	} else return new BigNumber(0);
+	//else return new BigNumber(0);
 }
 export function _estimateShares(
 	xtzAmountInMutez: BigNumber,
@@ -463,13 +453,13 @@ export async function buyLiquidityShares(
 	tokenMantissa: BigNumber,
 	xtzAmountInMutez: BigNumber,
 	slipage: BigNumber,
+userAddress: string,
 	lbContractAddress: string,
 	tzbtcContractAddress: string,
-	walletInfo: WalletInfo
+	toolkit: TezosToolkit
 ) {
 	try {
-		if (walletInfo.toolkit) {
-			const toolkit = walletInfo.toolkit;
+		
 			const deadline = new Date(
 				Date.now() + 60000
 			).toISOString();
@@ -491,7 +481,7 @@ export async function buyLiquidityShares(
 				.integerValue(BigNumber.ROUND_DOWN);
 
 			const lbContractStorage = await getLbContractStorage(
-				walletInfo.toolkit,
+				toolkit,
 				lbContractAddress
 			);
 
@@ -502,7 +492,7 @@ export async function buyLiquidityShares(
 			);
 
 			const addLiquidity = lbContract.methods.addLiquidity(
-				walletInfo.address,
+			userAddress,
 				minLqtMinted
 					.minus(3)
 					.integerValue(BigNumber.ROUND_DOWN),
@@ -597,7 +587,7 @@ export async function buyLiquidityShares(
 				let batchOp = await batch.send();
 				await batchOp.confirmation();
 			}
-		}
+		
 	} catch (err) {}
 }
 
@@ -618,11 +608,11 @@ export function _calcLqtOutput(
 export async function lqtOutput(
 	lqTokens: BigNumber,
 	lbContractAddress: string,
-	walletInfo: WalletInfo
+	toolkit: TezosToolkit
 ) {
-	if (walletInfo.toolkit) {
+	
 		const lbContractStorage = await getLbContractStorage(
-			walletInfo.toolkit,
+			toolkit,
 			lbContractAddress
 		);
 		return _calcLqtOutput(
@@ -631,28 +621,30 @@ export async function lqtOutput(
 			new BigNumber(lbContractStorage.tokenPool),
 			new BigNumber(lbContractStorage.lqtTotal)
 		);
-	} else {
+	/*
+	 else {
 		return {
 			xtz: new BigNumber(0),
 			tzbtc: new BigNumber(0),
 		};
-	}
+	 }
+	*/
 }
 
 export async function removeLiquidity(
 	lqTokens: BigNumber,
+userAddress: string,
 	lbContractAddress: string,
-	walletInfo: WalletInfo
+	toolkit: TezosToolkit
 ) {
 	try {
-		if (walletInfo.toolkit) {
-			const toolkit = walletInfo.toolkit;
+		
 			const deadline = new Date(
 				Date.now() + 60000
 			).toISOString();
 
 			const lbContractStorage = await getLbContractStorage(
-				walletInfo.toolkit,
+				toolkit,
 				lbContractAddress
 			);
 			const { xtz, tzbtc } = _calcLqtOutput(
@@ -662,12 +654,12 @@ export async function removeLiquidity(
 				new BigNumber(lbContractStorage.lqtTotal)
 			);
 
-			const estimate = await walletInfo.toolkit.wallet
+			const estimate = await toolkit.wallet
 				.at(lbContractAddress)
 				.then((contract) => {
 					return contract.methods
 						.removeLiquidity(
-							walletInfo.address,
+						userAddress,
 							lqTokens,
 							xtz.integerValue(
 								BigNumber.ROUND_DOWN
@@ -707,12 +699,12 @@ export async function removeLiquidity(
 
 			if (estimate) {
 				const lbContract =
-					await walletInfo.toolkit.wallet.at(
+					await toolkit.wallet.at(
 						lbContractAddress
 					);
 				const op = await lbContract.methods
 					.removeLiquidity(
-						walletInfo.address,
+					userAddress,
 						lqTokens,
 						xtz.integerValue(
 							BigNumber.ROUND_DOWN
@@ -731,7 +723,7 @@ export async function removeLiquidity(
 
 				await op.confirmation();
 			}
-		}
+		
 	} catch (err) {
 		console.log(
 			`failed in removeLiquidity ${JSON.stringify(err)}}`

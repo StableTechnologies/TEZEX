@@ -1,8 +1,8 @@
 import produce from "immer";
 import React, { useCallback, createContext, useEffect, useState } from "react";
 import { DAppClient } from "@airgap/beacon-sdk";
+import { Transaction, TokenKind, Asset, Balance, Id, TransactionStatus, TransactingComponent, Amount, AssetOrAssetPair } from "../types/general";
 import { TezosToolkit } from "@taquito/taquito";
-import { TokenKind, Asset, Balance } from "../types/general";
 
 import { useNetwork } from "../hooks/network";
 import { NetworkType } from "@airgap/beacon-sdk";
@@ -110,22 +110,6 @@ export interface IWallet {
 }
 
 type AssetType = "Asset" | "AssetPair";
-type LoadAsset = [Asset] | [Asset, Asset];
-type Id = string;
-type Amount = [Balance] | [Balance, Balance];
-export enum Components {
-	SWAP = "Initialised",
-	ADD_LIQUIDITY = "Add Liquidity",
-	REMOVE_LIQUIDITY = "Remove Liquidity",
-}
-export enum TransactionStatus {
-	INITIALISED = "Initialised",
-	MODIFIED = "Modified",
-	INSUFFICIENT_BALANCE = "Insufficient Balance",
-	PENDING = "Pending",
-	COMPLETED = "Completed",
-	FAILED = "Failed",
-}
 
 const canModifyTransaction = (t: Transaction | undefined | null): boolean => {
 	if (
@@ -139,19 +123,6 @@ const canModifyTransaction = (t: Transaction | undefined | null): boolean => {
 };
 const date = new Date();
 
-interface Transaction {
-	id: string;
-	network: NetworkType;
-	component: Components;
-	sendAsset: LoadAsset;
-	sendAmount: Amount;
-	sendAssetBalance: Amount;
-	receiveAsset: LoadAsset;
-	receiveAmount: Amount;
-	receiveAssetBalance: Amount;
-	transactionStatus: TransactionStatus;
-	lastModified: Date;
-}
 
 export const balanceGreaterOrEqualTo = (
 	balance1: Balance,
@@ -214,14 +185,14 @@ export function WalletProvider(props: IWalletProvider) {
 
 	const Initialise = useCallback(
 		(
-			component: Components,
-			sendAsset: LoadAsset,
-			receiveAsset: LoadAsset,
+			component: TransactingComponent,
+			sendAsset: AssetOrAssetPair,
+			receiveAsset: AssetOrAssetPair,
 			sendAmount?: Amount,
 			receiveAmount?: Amount
 		): Id | null => {
 			var id = null;
-			const initBalance = (asset: LoadAsset): Amount => {
+			const initBalance = (asset: AssetOrAssetPair): Amount => {
 				switch (asset.length) {
 					case 1:
 						return [zeroBalance];
@@ -252,7 +223,7 @@ export function WalletProvider(props: IWalletProvider) {
 				receiveAssetBalance: initBalance(receiveAsset),
 				transactionStatus:
 					TransactionStatus.INITIALISED,
-
+                                slippage: 0.5,
 				lastModified: new Date(),
 			};
 			setTransactions(
@@ -367,7 +338,7 @@ export function WalletProvider(props: IWalletProvider) {
 	};
 
 	const getBalanceOfAssets = async (
-		assets: LoadAsset
+		assets: AssetOrAssetPair
 	): Promise<Amount | null> => {
 		if (toolkit && address) {
 			switch (assets.length) {
@@ -433,7 +404,7 @@ export function WalletProvider(props: IWalletProvider) {
 	const updateAmount = useCallback(
 		async (
 			id: string,
-			assets: LoadAsset,
+			assets: AssetOrAssetPair,
 			amountUpdate: Amount,
 			kind: "Send" | "Receive"
 		): Promise<boolean> => {
@@ -494,12 +465,13 @@ export function WalletProvider(props: IWalletProvider) {
 						return null;
 					});
 			}; //
-			return await withTransactionAsync(id, update)
+			withTransactionAsync(id, update)
 			//^^^ MAKE ASYNC...set balance THEN check balance THEN modify transaction
 			//todo create async getBlaance(loadAsset, Amount)
 			//todo create sync checkSufficientBalance(Amount, Amount)
 			// modify transaction with balance and sufficiency check
 			//delete below strategy
+			return false;
 		},
 		[]
 	);
