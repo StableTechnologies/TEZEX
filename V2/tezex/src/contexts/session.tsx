@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState } from "react";
+import { createContext, useCallback, useEffect, useState } from "react";
 import {
 	WalletProvider,
 	WalletContext,
@@ -11,17 +11,35 @@ import { NetworkContext, networkDefaults } from "./network";
 import { TezosToolkit } from "@taquito/taquito";
 import { DAppClient } from "@airgap/beacon-sdk";
 
-import { TokenKind } from "../types/general";
+
+import {
+	Transaction,
+	TokenKind,
+	Asset,
+	Balance,
+	Id,
+	TransactionStatus,
+	TransactingComponent,
+	Amount,
+	AssetOrAssetPair,
+	SendOrRecieve,
+} from "../types/general";
+
 import { getBalance } from "../functions/beacon";
 import { NetworkInfo } from "./network";
 import { useWallet } from "../hooks/wallet";
 import { useNetwork } from "../hooks/network";
 export const SessionContext = createContext<SessionInfo>({
 	isWalletConnected: false,
+	loadComponent: (_) => {},
+	activeComponent: null,
 });
 
 export interface SessionInfo {
 	isWalletConnected: boolean;
+	loadComponent: (comp: TransactingComponent) => void;
+	activeComponent: TransactingComponent | null;
+
 }
 export interface ISession {
 	children:
@@ -33,6 +51,7 @@ export interface ISession {
 }
 
 export function SessionProvider(props: ISession) {
+	const [activeComponent, setActiveComponent] = useState<TransactingComponent | null>(null);
 	const [isWalletConnected, setIsWalletConnected] = useState(false);
 	const [walletStatus, setWalletStatus] = useState(
 		WalletStatus.DISCONNECTED
@@ -59,6 +78,9 @@ export function SessionProvider(props: ISession) {
 	const network = useNetwork();
 	const wallet = useWallet();
 
+	const loadComponent= useCallback((comp: TransactingComponent) => {
+		setActiveComponent(comp)
+	},[])
 	useEffect(() => {
 		const interval = setInterval(() => {
 			console.log("This will run every second!");
@@ -71,6 +93,8 @@ export function SessionProvider(props: ISession) {
 		<SessionContext.Provider
 			value={{
 				isWalletConnected,
+				loadComponent,
+				activeComponent
 			}}
 		>
 			<NetworkContext.Provider value={networkDefaults}>

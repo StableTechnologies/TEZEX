@@ -63,7 +63,7 @@ interface IWallet {
 }
 
 export const Wallet: FC<IWallet> = (props) => {
-	const walletInfo: WalletInfo | null = useWallet();
+	const walletInfo: WalletInfo | undefined = useWallet();
 	const networkInfo = useNetwork();
 	const connect = async () => {
 		if (walletInfo) {

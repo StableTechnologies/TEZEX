@@ -1,14 +1,29 @@
 import { FC, useState, useEffect, useCallback } from "react";
 
-import { BigNumber } from "bignumber.js";
 import {
-	TokenInput,
-	Slippage,
-} from "../../components/ui/elements/inputs";
+	Transaction,
+	TokenKind,
+	Asset,
+	Balance,
+	Id,
+	TransactionStatus,
+	TransactingComponent,
+	Amount,
+	AssetOrAssetPair,
+	SendOrRecieve,
+} from "../../types/general";
+
+import { BigNumber } from "bignumber.js";
+import { TokenInput, Slippage } from "../../components/ui/elements/inputs";
 
 import { getAsset } from "../../constants";
 import { TokenAmountOutput } from "../../components/ui/elements/Labels";
-import { useWallet } from "../../hooks/wallet";
+import { useSession } from "../../hooks/session";
+import {
+	useWallet,
+	useWalletSwapOps,
+	SwapOps,
+} from "../../hooks/wallet";
 import { useNetwork } from "../../hooks/network";
 import {
 	estimateTokensFromXtz,
@@ -18,8 +33,6 @@ import {
 } from "../../functions/liquidityBaking";
 import { Transact } from "../../components/ui/elements/Buttons";
 import { SwapUpDownToggle } from "../../components/ui/elements/Toggles";
-
-import { TokenKind } from "../../types/general";
 
 import Box from "@mui/material/Box";
 import Grid2 from "@mui/material/Unstable_Grid2"; // Grid version 2
@@ -85,6 +98,9 @@ export interface ISwapToken {
 }
 
 export const Swap: FC = (props) => {
+	const walletOperations: SwapOps = useWalletSwapOps();
+	const [transactionId, setTransactionId] = useState<Id | null>(null);
+	const [transaction, setTransaction] = useState<Transaction | null | undefined>(null);
 
 	const [loading, setLoading] = useState<boolean>(true);
 	const [editing, setEditing] = useState<boolean>(false);
@@ -103,36 +119,71 @@ export const Swap: FC = (props) => {
 	const [sendAsset, setSendAsset] = useState(TokenKind.XTZ);
 	const [swapFields, setSwapFields] = useState<boolean>(true);
 	const walletInfo = useWallet();
-
-	const transact = async () => {
-	};
-
-
+	const session = useSession();
+	const transact = async () => {};
 
 	const updateSlippage = useCallback((value: number) => {
 		setSlippage(value);
-	},[]);
+	}, []);
 	const updateSend = useCallback((value: string) => {
 		setSendAmount(new BigNumber(value));
-	},[]);
+	}, []);
 	const updateReceive = useCallback((value: string) => {
 		setReceiveAmount(new BigNumber(value));
-	},[]);
+	}, []);
 
 	useCallback(() => {
-                   //update transaction on edit change
-	},[inputAmountMantissa,slippage, inputAmountMantissa])
+		//update transaction on edit change
+	}, [inputAmountMantissa, slippage, inputAmountMantissa]);
 
+	const newT = useCallback(async () => {
+		if (!transactionId) {
+			setTransactionId(null);
+
+			await walletOperations.initializeSwap(
+				sendAsset,
+				receiveAsset
+			);
+		}
+	}, []);
 	useEffect(() => {
+		const newTransaction = async () => {
+				const transaction = await walletOperations.initializeSwap(
+					sendAsset,
+					receiveAsset
+				).then((id) => {
+					if (id) {
+					setTransactionId(id)
+					return walletOperations.viewTransaction(id)
+					} else return null
+				})
 
-	}, [editing]);
+			setTransaction(transaction);
+		};
+		if (
+			loading &&
+			!transactionId &&
+			session.activeComponent === TransactingComponent.SWAP
+		) {
+			newTransaction();
+			setLoading(false);
+		}
+	}, [loading]);
+
+	useEffect(() => {}, [editing]);
+	useEffect(() => { console.log('\n','transactionId : ', transactionId,'\n'); 
+	}, [transactionId]);
+
+
+	useEffect(() => { console.log('\n','transaction : ', transaction,'\n'); }, [transaction]);
 
 	useEffect(() => {
 		//run always
+		if (session.activeComponent !== TransactingComponent.SWAP) {
+			setLoading(true);
+			session.loadComponent(TransactingComponent.SWAP);
+		}
 	}, []);
-
-
-
 
 	return (
 		<Grid2 container sx={classes.root}>
@@ -141,7 +192,7 @@ export const Swap: FC = (props) => {
 					<CardHeader
 						title={
 							<Typography variant="h6">
-								Swap Tokens
+								{"Swap Tokens"}
 							</Typography>
 						}
 					/>
@@ -154,8 +205,12 @@ export const Swap: FC = (props) => {
 							}}
 						>
 							<TokenInput
-								assetName={sendAsset}
-								onChange={updateSend}
+								assetName={
+									sendAsset
+								}
+								onChange={
+									updateSend
+								}
 								value={sendAmount.toString()}
 							/>
 						</Grid2>
@@ -187,8 +242,12 @@ export const Swap: FC = (props) => {
 							}}
 						>
 							<TokenInput
-								assetName={receiveAsset}
-								onChange={updateReceive}
+								assetName={
+									receiveAsset
+								}
+								onChange={
+									updateReceive
+								}
 								value={receiveAmount.toString()}
 								readOnly={true}
 							/>

@@ -37,7 +37,7 @@ const classes = {
 };
 export const Transact: FC<ITransact> = (props) => {
 	const [disabled, setDisabled] = useState(true);
-	const walletInfo: WalletInfo | null = useWallet();
+	const walletInfo: WalletInfo | undefined = useWallet();
 
 	const transact = async () => {
 		if (walletInfo) {

@@ -22,7 +22,10 @@ import { v4 as uuidv4 } from "uuid";
 import { BigNumber } from "bignumber.js";
 import { getBalance } from "../functions/beacon";
 
-import { tokenMantissaToDecimal } from "../functions/scaling";
+import {
+	tokenDecimalToMantissa,
+	tokenMantissaToDecimal,
+} from "../functions/scaling";
 export enum WalletStatus {
 	ESTIMATING_SIRS = "Estimating Sirs",
 	ESTIMATING_XTZ = "Estimating Tez",
@@ -109,6 +112,7 @@ export interface WalletInfo {
 		receiveAmount?: Amount
 	) => Id | null;
 
+	updateBalance: (id: string) => Promise<boolean>;
 	updateAmount: (
 		id: string,
 		assets: AssetOrAssetPair,
@@ -119,7 +123,7 @@ export interface WalletInfo {
 	fetchTransaction: (id: string) => Transaction | undefined | null;
 }
 
-export const WalletContext = createContext<WalletInfo | null>(null);
+export const WalletContext = createContext<WalletInfo | undefined>(undefined);
 
 export interface IWallet {
 	children:
@@ -151,13 +155,23 @@ export const balanceGreaterOrEqualTo = (
 	return balance1.mantissa.isGreaterThanOrEqualTo(balance2.mantissa);
 };
 
-export const balanceBuilder = (mantissa: BigNumber, asset: Asset): Balance => {
+export const balanceBuilder = (
+	value: BigNumber,
+	asset: Asset,
+	isMantissa?: boolean
+): Balance => {
+	const decimal: BigNumber = isMantissa
+		? tokenMantissaToDecimal(value, asset.name)
+		: value;
+	const mantissa: BigNumber = isMantissa
+		? value
+		: tokenDecimalToMantissa(value, asset.name);
 	const geq = (balance: Balance): boolean => {
 		return mantissa.isGreaterThanOrEqualTo(balance.mantissa);
 	};
 	return {
-		decimal: tokenMantissaToDecimal(mantissa, asset.name),
-		mantissa: mantissa,
+		decimal,
+		mantissa,
 		greaterOrEqualTo: geq,
 	};
 };
@@ -258,7 +272,10 @@ export function WalletProvider(props: IWalletProvider) {
 					) => {
 						if (draft) {
 							draft.push(transaction);
-						} else draft = [transaction];
+						} else {
+
+							draft = [transaction];
+						}
 						id = transaction.id;
 					}
 				)
@@ -267,6 +284,9 @@ export function WalletProvider(props: IWalletProvider) {
 		},
 		[]
 	);
+	useEffect(() => {
+		console.log('\n','transactions : ', transactions,'\n'); 
+	},[transactions])
 
 	type EditTransaction = (transaction: Transaction) => boolean;
 	type EditTransactionAsync = (
@@ -437,6 +457,53 @@ export function WalletProvider(props: IWalletProvider) {
 		| [Amount, MaybeTransaction, boolean]
 		| [null, null, false];
 
+	const updateBalance = useCallback(async (id: string): Promise<boolean> => {
+		var updated = false;
+		withTransactionAsync(
+			id,
+			async (oldTransaction: MaybeTransaction) => {
+				var updated = false;
+				if (oldTransaction) {
+					await getBalanceOfAssets(
+						oldTransaction.sendAsset
+					)
+						.then(
+							(
+								sendAssetBalance: Amount | null
+							) => {
+								if (
+									sendAssetBalance
+								) {
+									oldTransaction.sendAssetBalance =
+										sendAssetBalance;
+									updated =
+										true;
+								}
+								return getBalanceOfAssets(
+									oldTransaction.sendAsset
+								);
+							}
+						)
+						.then(
+							(
+								receiveAssetBalance: Amount | null
+							) => {
+								if (
+									receiveAssetBalance
+								) {
+									oldTransaction.receiveAssetBalance =
+										receiveAssetBalance;
+									updated =
+										true;
+								}
+							}
+						);
+				}
+				return null;
+			}
+		);
+		return updated;
+	}, []);
 	const updateAmount = useCallback(
 		async (
 			id: string,
@@ -564,6 +631,7 @@ export function WalletProvider(props: IWalletProvider) {
 		isReady: isReady(walletStatus),
 		transactions,
 		initialiseTransaction,
+		updateBalance,
 		updateAmount,
 		fetchTransaction,
 		disconnect,
