@@ -1,4 +1,5 @@
 import produce from "immer";
+import { useImmer } from "use-immer";
 import React, { useCallback, createContext, useEffect, useState } from "react";
 import { DAppClient } from "@airgap/beacon-sdk";
 import {
@@ -103,7 +104,7 @@ export interface WalletInfo {
 	) => Promise<void>;
 	isReady: () => boolean;
 	disconnect: () => void;
-	transactions: Transaction[] | null | undefined;
+	transactions: Transaction[] 
 	initialiseTransaction: (
 		component: TransactingComponent,
 		sendAsset: AssetOrAssetPair,
@@ -195,9 +196,8 @@ export function WalletProvider(props: IWalletProvider) {
 	};
 
 	//use Immer
-	const [transactions, setTransactions] = useState<
-		Transaction[] | null | undefined
-	>();
+	const [transactions, setTransactions] = useImmer<Transaction[]>([
+	]);
 
 	const [isWalletConnected, setIsWalletConnected] = useState(false);
 	const [walletStatus, setWalletStatus] = useState(
@@ -263,29 +263,20 @@ export function WalletProvider(props: IWalletProvider) {
 				lastModified: new Date(),
 			};
 			setTransactions(
-				produce(
 					(
-						draft:
-							| Transaction[]
-							| undefined
-							| null
+						draft
 					) => {
-						if (draft) {
-							draft.push(transaction);
-						} else {
 
-							draft = [transaction];
-						}
 						id = transaction.id;
+							draft.push(transaction);
 					}
-				)
 			);
 			return id;
 		},
 		[]
 	);
 	useEffect(() => {
-		console.log('\n','transactions : ', transactions,'\n'); 
+		console.log('\n','....transactions : ', transactions,'\n'); 
 	},[transactions])
 
 	type EditTransaction = (transaction: Transaction) => boolean;
