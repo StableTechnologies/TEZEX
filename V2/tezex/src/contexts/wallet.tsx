@@ -1,6 +1,7 @@
-import produce from "immer";
-import { useImmer } from "use-immer";
 import React, { useCallback, createContext, useEffect, useState } from "react";
+import { produce, Draft } from "immer";
+import { useImmer } from "use-immer";
+
 import { DAppClient } from "@airgap/beacon-sdk";
 import {
 	Transaction,
@@ -16,6 +17,7 @@ import {
 } from "../types/general";
 import { TezosToolkit } from "@taquito/taquito";
 
+import { useSession } from "../hooks/session";
 import { useNetwork } from "../hooks/network";
 import { NetworkType } from "@airgap/beacon-sdk";
 import { NetworkInfo } from "./network";
@@ -54,7 +56,6 @@ export function walletUser(
 		transientStatus: WalletStatus = WalletStatus.BUSY,
 		force?: boolean
 	) => {
-		console.log("\n", " here ", "\n");
 		const setBusy = async () => {
 			setWalletStatus(transientStatus);
 		};
@@ -102,26 +103,36 @@ export interface WalletInfo {
 		op: () => Promise<unknown>,
 		walletStatus?: WalletStatus
 	) => Promise<void>;
+	isWalletConnected: boolean;
 	isReady: () => boolean;
 	disconnect: () => void;
-	transactions: Transaction[] 
+	transactions: Transaction[];
+	swapTransaction: Transaction | undefined;
+	addLiquidityTransaction: Transaction | undefined;
+	removeLiquidityTransaction: Transaction | undefined;
 	initialiseTransaction: (
 		component: TransactingComponent,
 		sendAsset: AssetOrAssetPair,
 		receiveAsset: AssetOrAssetPair,
 		sendAmount?: Amount,
 		receiveAmount?: Amount
-	) => Id | null;
+	) => Transaction;
 
-	updateBalance: (id: string) => Promise<boolean>;
+	updateBalance: (
+		component: TransactingComponent,
+		transaction: Transaction,
+		checkBalances?: boolean
+	) => Promise<boolean>;
 	updateAmount: (
 		id: string,
-		assets: AssetOrAssetPair,
-		kind: SendOrRecieve,
-		amountUpdate?: Amount,
+		amountUpdateSend?: Amount,
+		amountUpdateReceive?: Amount,
 		slippageUpdate?: number
-	) => Promise<boolean>;
-	fetchTransaction: (id: string) => Transaction | undefined | null;
+	) => boolean;
+	getActiveTransaction: (
+		component: TransactingComponent
+	) => Transaction | undefined;
+	fetchTransaction: (id: string) => Transaction | undefined;
 }
 
 export const WalletContext = createContext<WalletInfo | undefined>(undefined);
@@ -137,7 +148,7 @@ export interface IWallet {
 
 type AssetType = "Asset" | "AssetPair";
 
-const canModifyTransaction = (t: Transaction | undefined | null): boolean => {
+const canModifyTransaction = (t: Draft<Transaction> | Transaction): boolean => {
 	if (
 		t &&
 		(t.transactionStatus === TransactionStatus.FAILED ||
@@ -194,10 +205,22 @@ export function WalletProvider(props: IWalletProvider) {
 			);
 		},
 	};
-
+	// session
+	const session = useSession();
 	//use Immer
-	const [transactions, setTransactions] = useImmer<Transaction[]>([
-	]);
+	const [transactions, setTransactions] = useImmer<Transaction[]>([]);
+
+	const [_swapTransaction, set_SwapTransaction] = useState<
+		Transaction | undefined
+	>(undefined);
+	const [swapTransaction, setSwapTransaction] = useImmer<
+		Transaction | undefined
+	>(undefined);
+	const [addLiquidityTransaction, setAddLiquidityTransaction] = useImmer<
+		Transaction | undefined
+	>(undefined);
+	const [removeLiquidityTransaction, setRemoveLiquidityTransaction] =
+		useImmer<Transaction | undefined>(undefined);
 
 	const [isWalletConnected, setIsWalletConnected] = useState(false);
 	const [walletStatus, setWalletStatus] = useState(
@@ -207,6 +230,110 @@ export function WalletProvider(props: IWalletProvider) {
 	const [toolkit, setToolkit] = useState<TezosToolkit | null>(null);
 	const [address, setAddress] = useState<string | null>(null);
 	const [loading, setLoading] = useState(false);
+	useEffect(() => {
+		console.log("\n", "toolkit : ", toolkit, "\n");
+		console.log("\n", "client : ", client, "\n");
+	}, [toolkit, client]);
+	const getActiveTransaction = useCallback(
+		(component: TransactingComponent): Transaction | undefined => {
+			switch (component) {
+				case TransactingComponent.SWAP:
+					const t = swapTransaction;
+					return t;
+				case TransactingComponent.ADD_LIQUIDITY:
+					return addLiquidityTransaction;
+				case TransactingComponent.REMOVE_LIQUIDITY:
+					return removeLiquidityTransaction;
+			}
+		},
+		[
+			swapTransaction,
+			addLiquidityTransaction,
+			removeLiquidityTransaction,
+		]
+	);
+
+	useEffect(() => {
+		const interval = setInterval(() => {
+			/*
+			console.log(
+				"\n",
+				"swap active in context : ",
+				swapTransaction,
+				"\n"
+			);
+			
+			swapTransaction &&
+				console.log(
+					"\n",
+					"swapTransaction.sendAssetBalance[0].decimal : ",
+					swapTransaction.sendAssetBalance[0].decimal.toString(),
+					"\n"
+				);
+			*/
+		}, 5000);
+		return () => clearInterval(interval);
+		//if (isWalletConnected) updateTransactionBalance();
+	}, [swapTransaction]);
+
+	const setActiveTransaction = useCallback(
+		(
+			component: TransactingComponent,
+			transaction?: Transaction,
+			op?: (transaction: Draft<Transaction>) => void
+		): void => {
+			switch (component) {
+				case TransactingComponent.SWAP:
+					if (op && swapTransaction) {
+						setSwapTransaction((draft) =>
+							draft
+								? op(draft)
+								: draft
+						);
+					} else if (transaction)
+						setSwapTransaction(transaction);
+					break;
+				case TransactingComponent.ADD_LIQUIDITY:
+					if (op && addLiquidityTransaction) {
+						setAddLiquidityTransaction(
+							(draft) =>
+								draft
+									? op(
+											draft
+									  )
+									: draft
+						);
+					} else if (transaction)
+						setAddLiquidityTransaction(
+							transaction
+						);
+					break;
+				case TransactingComponent.REMOVE_LIQUIDITY:
+					if (op && removeLiquidityTransaction) {
+						setRemoveLiquidityTransaction(
+							(draft) =>
+								draft
+									? op(
+											draft
+									  )
+									: draft
+						);
+					} else if (transaction)
+						setRemoveLiquidityTransaction(
+							transaction
+						);
+					break;
+			}
+		},
+		[
+			setSwapTransaction,
+			setAddLiquidityTransaction,
+			setRemoveLiquidityTransaction,
+			addLiquidityTransaction,
+			removeLiquidityTransaction,
+			swapTransaction,
+		]
+	);
 
 	const network = useNetwork();
 	useEffect(() => {
@@ -224,7 +351,8 @@ export function WalletProvider(props: IWalletProvider) {
 			receiveAsset: AssetOrAssetPair,
 			sendAmount?: Amount,
 			receiveAmount?: Amount
-		): Id | null => {
+		): Transaction => {
+			console.log("\n", " in initTransaction ", "\n");
 			var id = null;
 			const initBalance = (
 				asset: AssetOrAssetPair
@@ -262,24 +390,26 @@ export function WalletProvider(props: IWalletProvider) {
 				slippage: 0.5,
 				lastModified: new Date(),
 			};
-			setTransactions(
-					(
-						draft
-					) => {
-
-						id = transaction.id;
-							draft.push(transaction);
-					}
-			);
-			return id;
+			setActiveTransaction(component, transaction);
+			return transaction;
 		},
 		[]
 	);
-	useEffect(() => {
-		console.log('\n','....transactions : ', transactions,'\n'); 
-	},[transactions])
 
-	type EditTransaction = (transaction: Transaction) => boolean;
+	useEffect(() => {
+		console.log("\n", "swapTransaction : ", swapTransaction, "\n");
+		swapTransaction &&
+			console.log(
+				"\n",
+				"swapTransaction.sendAssetBalances[0].decimal.toString() : ",
+				swapTransaction.sendAssetBalance[0].decimal.toString(),
+				"\n"
+			);
+	}, [swapTransaction]);
+
+	useEffect(() => {}, [transactions]);
+
+	type EditTransaction = (transaction: Draft<Transaction>) => boolean;
 	type EditTransactionAsync = (
 		transaction: Transaction | undefined | null
 	) => Promise<Transaction | null>;
@@ -289,7 +419,7 @@ export function WalletProvider(props: IWalletProvider) {
 		amount?: Amount,
 		slippage?: number
 	): EditTransaction => {
-		const mod = (transaction: Transaction): boolean => {
+		const mod = (transaction: Draft<Transaction>): boolean => {
 			if (transaction && canModifyTransaction(transaction)) {
 				if (slippage) transaction.slippage = slippage;
 				if (kind === "Send") {
@@ -316,15 +446,8 @@ export function WalletProvider(props: IWalletProvider) {
 		return mod;
 	};
 
-	const fetchTransaction = (
-		id: string
-	): Transaction | undefined | null => {
-		if (transactions) {
-			return transactions.find(
-				(t: Transaction) => t.id === id
-			);
-		}
-		return null;
+	const fetchTransaction = (id: string): Transaction | undefined => {
+		return transactions.find((t: Transaction) => t.id === id);
 	};
 
 	const withTransactionAsync = async (
@@ -336,7 +459,9 @@ export function WalletProvider(props: IWalletProvider) {
 				if (modifiedTransaction) {
 					return withTransaction(
 						id,
-						(transaction: Transaction) => {
+						(
+							transaction: Draft<Transaction>
+						) => {
 							transaction =
 								modifiedTransaction;
 							return true;
@@ -353,22 +478,14 @@ export function WalletProvider(props: IWalletProvider) {
 		edit: EditTransaction
 	): boolean => {
 		var updated = false;
-		setTransactions(
-			produce((draft: Transaction[] | null) => {
-				const transaction:
-					| Transaction
-					| null
-					| undefined =
-					draft &&
-					draft.find(
-						(transaction) =>
-							transaction.id === id
-					);
-				if (transaction) {
-					return edit(transaction);
-				}
-			})
-		);
+		setTransactions((draft) => {
+			const transaction = draft.find(
+				(transaction) => transaction.id === id
+			);
+			if (transaction) {
+				return edit(transaction);
+			}
+		});
 		return updated;
 	};
 	const modifyTransaction = (
@@ -383,44 +500,75 @@ export function WalletProvider(props: IWalletProvider) {
 		);
 	};
 
-	const getBalanceOfAssets = async (
-		assets: AssetOrAssetPair
-	): Promise<Amount | null> => {
-		if (toolkit && address) {
-			switch (assets.length) {
-				case 1:
-					return [
-						await getBalance(
+	const getBalanceOfAssets = useCallback(
+		async (assets: AssetOrAssetPair): Promise<Amount | null> => {
+			if (toolkit && address) {
+				switch (assets.length) {
+					case 1:
+						return await getBalance(
 							toolkit,
 							address,
 							assets[0]
-						),
-					];
-				case 2:
-					return [
-						await getBalance(
+						)
+							.then(
+								(
+									balance: Balance
+								) => {
+									//console.log('\n','assets[0] : ', assets[0],'\n');
+									//console.log('\n','balance : ', balance.decimal.toString(),'\n');
+									return [
+										balance,
+									] as Amount;
+								}
+							)
+							.catch((_) => {
+								console.log('\n',' :failed in getBalanceOfAssets ','\n'); 
+								return null;
+							});
+					case 2:
+						return await getBalance(
 							toolkit,
 							address,
 							assets[0]
-						),
-						await getBalance(
-							toolkit,
-							address,
-							assets[1]
-						),
-					];
+						)
+							.then(
+								(
+									balance: Balance
+								) => {
+									const withSecondAsset =
+										async () => {
+											return [
+												balance,
+												await getBalance(
+													toolkit,
+													address,
+													assets[1]
+												),
+											] as Amount;
+										};
+									return withSecondAsset();
+								}
+							)
+							.catch((_) => {
+								return null;
+							});
+				}
 			}
-		}
-
-		return null;
-	};
+			return null;
+		},
+		[toolkit, address, getActiveTransaction]
+	);
 
 	const checkSufficientBalance = (
 		userBalance: Amount,
 		requiredAmount: Amount
-	): boolean => {
-		if (userBalance.length === requiredAmount.length)
+	): TransactionStatus => {
+		if (userBalance.length !== requiredAmount.length)
+		{
+			console.log('\n','userBalance : ', userBalance,'\n'); 
+			console.log('\n','requiredAmount : ', requiredAmount,'\n'); 
 			throw Error("Error: balance check asset pair mismatch");
+		}
 		const checks: boolean[] = Array.from(
 			userBalance,
 			(assetBalance, index) => {
@@ -431,7 +579,7 @@ export function WalletProvider(props: IWalletProvider) {
 					);
 				} else
 					throw Error(
-						"Balance issue , during suffucientcy check"
+						"Amount indexs don't match / align"
 					);
 			}
 		);
@@ -440,144 +588,172 @@ export function WalletProvider(props: IWalletProvider) {
 				accumulator === currentValue,
 			true
 		);
-
-		return hasSufficientBalance;
+		if (hasSufficientBalance) {
+			return TransactionStatus.SUFFICIENT_BALANCE;
+		} else {
+			return TransactionStatus.INSUFFICIENT_BALANCE;
+		}
 	};
 	type MaybeTransaction = Transaction | undefined | null;
 	type AmountCheck =
 		| [Amount, MaybeTransaction, boolean]
 		| [null, null, false];
 
-	const updateBalance = useCallback(async (id: string): Promise<boolean> => {
-		var updated = false;
-		withTransactionAsync(
-			id,
-			async (oldTransaction: MaybeTransaction) => {
-				var updated = false;
-				if (oldTransaction) {
-					await getBalanceOfAssets(
-						oldTransaction.sendAsset
-					)
-						.then(
-							(
-								sendAssetBalance: Amount | null
-							) => {
-								if (
-									sendAssetBalance
-								) {
-									oldTransaction.sendAssetBalance =
-										sendAssetBalance;
-									updated =
-										true;
-								}
-								return getBalanceOfAssets(
-									oldTransaction.sendAsset
-								);
-							}
-						)
-						.then(
-							(
-								receiveAssetBalance: Amount | null
-							) => {
-								if (
-									receiveAssetBalance
-								) {
-									oldTransaction.receiveAssetBalance =
-										receiveAssetBalance;
-									updated =
-										true;
-								}
-							}
-						);
-				}
-				return null;
-			}
-		);
-		return updated;
-	}, []);
-	const updateAmount = useCallback(
+	//sync
+	/*
+	const transactionModify = (
+		sendAssetBalances,
+		recieveAssetBalances
+	) => {};
+	*/
+
+	const getBalances = useCallback(
 		async (
-			id: string,
-			assets: AssetOrAssetPair,
-			kind: SendOrRecieve,
-			amountUpdate?: Amount,
-			slippageUpdate?: number
-		): Promise<boolean> => {
-			const update: EditTransactionAsync = async (
-				oldTransaction: MaybeTransaction
-			) => {
-				return await getBalanceOfAssets(assets)
-					.then((userBalance: Amount | null) => {
-						if (
-							userBalance &&
-							amountUpdate
-						) {
-							const checkBalance: boolean =
-								kind === "Send"
-									? checkSufficientBalance(
-											userBalance,
-											amountUpdate
-									  )
-									: true;
+			transaction: Transaction,
+			checkBalance?: boolean
+		): Promise<Transaction> => {
+			var userBalanceSend: Amount | undefined;
+			var userBalanceReceive: Amount | undefined;
+			var balanceStatus: TransactionStatus | undefined;
+			const updated: Transaction = await getBalanceOfAssets(
+				transaction.sendAsset
+			)
+				.then((userBalance: Amount | null) => {
 
-							return [
+					        console.log('\n',' got send Balance in get Balances ','\n');  
+					userBalance && console.log('\n','userBalance[0].decimal.toString() : ', userBalance[0].decimal.toString(),'\n'); 
+					if (checkBalance && userBalance) {
+						balanceStatus =
+							checkSufficientBalance(
 								userBalance,
-								fetchTransaction(
-									id
-								),
-								checkBalance,
-							] as AmountCheck;
-						}
-						return [
-							null,
-							null,
-							false,
-						] as AmountCheck;
-					})
-					.then((checkedBalance: AmountCheck) => {
-						if (
-							checkedBalance[0] &&
-							checkedBalance[1] &&
-							amountUpdate
-						) {
-							switch (kind) {
-								case "Send":
-									checkedBalance[1].sendAmount =
-										amountUpdate;
+								transaction.sendAmount
+							);
+					}
+					if (userBalance)
+						userBalanceSend = userBalance;
+					        console.log('\n',' got send Balance in get Balances ','\n');  
+					return getBalanceOfAssets(
+						transaction.receiveAsset
+					);
+				})
+				.then((userBalance: Amount | null) => {
 
-									checkedBalance[1].transactionStatus =
-										checkedBalance[2]
-											? TransactionStatus.PENDING
-											: TransactionStatus.INSUFFICIENT_BALANCE;
-									if (
-										slippageUpdate
-									) {
-										checkedBalance[1].slippage =
-											slippageUpdate;
-										return checkedBalance[1];
-									} else
-										return checkedBalance[1];
-								case "Receive":
-									checkedBalance[1].receiveAmount =
-										amountUpdate;
-									if (
-										slippageUpdate
-									) {
-										checkedBalance[1].slippage =
-											slippageUpdate;
-										return checkedBalance[1];
-									} else
-										return checkedBalance[1];
+					        console.log('\n',' got receive Balance in get Balances ','\n');  
+					userBalance && console.log('\n','receive userBalance[0].decimal.toString() : ', userBalance[0].decimal.toString(),'\n'); 
+					const receiveAssetBalance = userBalance
+						? userBalance
+						: transaction.receiveAssetBalance;
+					const sendAssetBalance: Amount =
+						userBalanceSend
+							? userBalanceSend
+							: transaction.sendAssetBalance;
+					const transactionStatus: TransactionStatus =
+						balanceStatus
+							? balanceStatus
+							: transaction.transactionStatus;
+					return {
+						...transaction,
+						sendAssetBalance,
+						receiveAssetBalance,
+						transactionStatus,
+					};
+				}).catch((e) => {
+					console.log('\n',' failed in getBalances: ','\n'); 
+					console.log('\n','transaction : ', transaction,'\n'); 
+					console.log('\n','e : ', e,'\n'); 
+					throw Error(e)
+				});
+			return updated;
+		},
+		[getBalanceOfAssets]
+	);
+
+	const updateBalance = useCallback(
+		async (
+			component: TransactingComponent,
+			transaction: Transaction,
+			checkBalances: boolean = true
+		): Promise<boolean> => {
+			var updated = false;
+			console.log("\n", " in updateBalance context", "\n");
+
+			await getBalances(transaction, checkBalances)
+				.then((_transaction: Transaction) => {
+					/*
+					setActiveTransaction(
+					
+						component,
+						undefined,
+						(_transaction: Draft<Transaction>) => {
+							_transaction.sendAssetBalance  = transaction.sendAssetBalance
+							_transaction.receiveAssetBalance  = transaction.receiveAssetBalance
+						},
+					
+					);
+					*/
+
+					console.log('\n','transaction : ', transaction,'\n'); 
+					console.log('\n','recieved after getBalance transaction.sendAssetBalance[0].decimal.toString() : ', transaction.sendAssetBalance[0].decimal.toString(),'\n'); 
+					setSwapTransaction(
+						(
+							draft: Draft<
+								| Transaction
+								| undefined
+							>
+						) => {
+							if (draft) {
+								draft.sendAssetBalance =
+									_transaction.sendAssetBalance;
 							}
 						}
+					);
+					updated = true;
+				})
+				.catch((e) => {
+					console.log('\n',' falied update balance ','\n'); 
+					updated = false;
+				});
+			return updated;
+		},
+		[getBalances,setSwapTransaction]
+	);
 
-						return null;
-					})
-					.catch((error) => {
-						return null;
-					});
-			}; //
-			withTransactionAsync(id, update);
+	const updateAmount = useCallback(
+		(
+			id: string,
+			amountUpdateSend?: Amount,
+			amountUpdateReceive?: Amount,
+			slippageUpdate?: number
+		): boolean => {
+			withTransaction(
+				id,
+				(
+					oldTransaction: Draft<Transaction>
+				): boolean => {
+					if (
+						oldTransaction &&
+						(amountUpdateSend ||
+							amountUpdateReceive ||
+							slippageUpdate)
+					) {
+						oldTransaction.sendAmount =
+							amountUpdateSend
+								? amountUpdateSend
+								: oldTransaction.sendAmount;
+						oldTransaction.receiveAmount =
+							amountUpdateReceive
+								? amountUpdateReceive
+								: oldTransaction.receiveAmount;
+						oldTransaction.slippage =
+							slippageUpdate
+								? slippageUpdate
+								: oldTransaction.slippage;
+						return true;
+					}
+					return false;
+				}
+			);
+
 			//^^^ MAKE ASYNC...set balance THEN check balance THEN modify transaction
 			//todo create async getBlaance(loadAsset, Amount)
 			//todo create sync checkSufficientBalance(Amount, Amount)
@@ -587,6 +763,7 @@ export function WalletProvider(props: IWalletProvider) {
 		},
 		[]
 	);
+
 	useEffect(() => {
 		if (client) {
 			setIsWalletConnected(true);
@@ -602,13 +779,6 @@ export function WalletProvider(props: IWalletProvider) {
 		setAddress(null);
 	};
 
-	useEffect(() => {
-		const interval = setInterval(() => {
-			console.log("This will run every second!");
-		}, 5000);
-		return () => clearInterval(interval);
-	}, []);
-
 	const walletInfo: WalletInfo = {
 		client,
 		setClient,
@@ -619,11 +789,16 @@ export function WalletProvider(props: IWalletProvider) {
 		walletStatus,
 		setWalletStatus,
 		walletUser: walletUser(walletStatus, setWalletStatus),
+		isWalletConnected,
 		isReady: isReady(walletStatus),
 		transactions,
+		swapTransaction,
+		addLiquidityTransaction,
+		removeLiquidityTransaction,
 		initialiseTransaction,
 		updateBalance,
 		updateAmount,
+		getActiveTransaction,
 		fetchTransaction,
 		disconnect,
 	};

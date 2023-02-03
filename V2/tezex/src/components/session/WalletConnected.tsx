@@ -1,18 +1,14 @@
 import { FC } from "react";
-import { useSession} from "../../hooks/session";
+import { useWalletConnected } from "../../hooks/wallet";
 
 export interface IConnected {
-  children:
-    | JSX.Element
-    | React.ReactElement
+	children: JSX.Element | React.ReactElement;
 }
 
 export const WalletConnected: FC<IConnected> = (props) => {
-  const session= useSession();
+	if (!useWalletConnected()) {
+		return null;
+	}
 
-  if (!session.isWalletConnected) {
-    return null;
-  }
-
-  return <>{props.children}</>;
+	return <>{props.children}</>;
 };

@@ -1,5 +1,5 @@
 import { FC } from "react";
-import { useSession } from "../../hooks/session";
+import { useWalletConnected } from "../../hooks/wallet";
 
 export interface IDisconnected {
   children:
@@ -8,9 +8,8 @@ export interface IDisconnected {
 
 }
 export const WalletDisconnected: FC<IDisconnected> = (props) => {
-	const session = useSession();
 
-	if (!session.isWalletConnected) {
+	if (!useWalletConnected()){
 		return <>{props.children}</>;
 	}
 

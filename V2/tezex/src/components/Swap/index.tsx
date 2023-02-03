@@ -16,14 +16,11 @@ import {
 import { BigNumber } from "bignumber.js";
 import { TokenInput, Slippage } from "../../components/ui/elements/inputs";
 
+import { useWalletConnected } from "../../hooks/wallet";
 import { getAsset } from "../../constants";
 import { TokenAmountOutput } from "../../components/ui/elements/Labels";
 import { useSession } from "../../hooks/session";
-import {
-	useWallet,
-	useWalletSwapOps,
-	SwapOps,
-} from "../../hooks/wallet";
+import { useWallet, useWalletSwapOps, SwapOps } from "../../hooks/wallet";
 import { useNetwork } from "../../hooks/network";
 import {
 	estimateTokensFromXtz,
@@ -99,8 +96,11 @@ export interface ISwapToken {
 
 export const Swap: FC = (props) => {
 	const walletOperations: SwapOps = useWalletSwapOps();
+	const isWalletConnected = useWalletConnected();
 	const [transactionId, setTransactionId] = useState<Id | null>(null);
-	const [transaction, setTransaction] = useState<Transaction | null | undefined>(null);
+	const [transaction, setTransaction] = useState<
+		Transaction |  undefined
+	>(undefined);
 
 	const [loading, setLoading] = useState<boolean>(true);
 	const [editing, setEditing] = useState<boolean>(false);
@@ -115,10 +115,15 @@ export const Swap: FC = (props) => {
 		BigNumber | number | null
 	>(0);
 
-	const [receiveAsset, setReceiveAsset] = useState(TokenKind.TzBTC);
-	const [sendAsset, setSendAsset] = useState(TokenKind.XTZ);
+	const send = 0;
+	const receive = 1;
+
+	const [assets, setAssets] = useState<[TokenKind, TokenKind]>([
+		TokenKind.XTZ,
+		TokenKind.TzBTC,
+	]);
 	const [swapFields, setSwapFields] = useState<boolean>(true);
-	const walletInfo = useWallet();
+	const wallet = useWallet();
 	const session = useSession();
 	const transact = async () => {};
 
@@ -132,22 +137,16 @@ export const Swap: FC = (props) => {
 		setReceiveAmount(new BigNumber(value));
 	}, []);
 
-	useCallback(() => {
-		//update transaction on edit change
-	}, [inputAmountMantissa, slippage, inputAmountMantissa]);
-
-	const newT = useCallback(async () => {
-		if (!transactionId) {
-			setTransactionId(null);
-
-			await walletOperations.initializeSwap(
-				sendAsset,
-				receiveAsset
-			);
+	useEffect(() => {
+		if(wallet && !transaction) {
+			setTransaction(t => wallet.swapTransaction)
 		}
-	}, []);
+		if (transaction) setTransactionId(transaction.id)
+	},[wallet, transaction])
+	/*
 	useEffect(() => {
 		const newTransaction = async () => {
+			        console.log('\n','newTransaction '); 
 				const transaction = await walletOperations.initializeSwap(
 					sendAsset,
 					receiveAsset
@@ -157,31 +156,119 @@ export const Swap: FC = (props) => {
 					return walletOperations.viewTransaction(id)
 					} else return null
 				})
-
+	
 			setTransaction(transaction);
 		};
 		if (
 			loading &&
-			!transactionId &&
+			!transactionId && 
+			!editing &&
 			session.activeComponent === TransactingComponent.SWAP
 		) {
+			setEditing(true);
 			newTransaction();
+			setEditing(false);
 			setLoading(false);
 		}
-	}, [loading]);
+	}, [loading, editing, receiveAsset,sendAsset, session.activeComponent, transactionId, walletOperations ]);
+	*/
 
+	
+	const activeWallet =  (wallet) ? wallet.getActiveTransaction(
+						TransactingComponent.SWAP
+	) : undefined;
+	const active = walletOperations.getActiveTransaction();
 	useEffect(() => {}, [editing]);
-	useEffect(() => { console.log('\n','transactionId : ', transactionId,'\n'); 
-	}, [transactionId]);
+	useEffect(() => {
+		const updateTransactionBalance = async () => {
+			transaction &&
+				(await walletOperations.updateBalance(
+					transaction
+				));
+		};
+
+		const interval = setInterval(() => {
+			updateTransactionBalance();
 
 
-	useEffect(() => { console.log('\n','transaction : ', transaction,'\n'); }, [transaction]);
+			transaction &&
+				console.log(
+					"\n",
+					"transaction.sendAssetBalance[0].decimal : ",
+					transaction.sendAssetBalance[0].decimal.toString(),
+					"\n"
+				);
+			/*
+			wallet &&
+				console.log(
+					"\n",
+					"wallet.getActiveTransaction(TransactingComponent.SWAP) : ",
+					wallet.getActiveTransaction(
+						TransactingComponent.SWAP
+					),
+					"\n"
+				);
+			active &&
+				console.log(
+					"\n",
+					"active.sendAssetBalance[0].decimal : ",
+					active.sendAssetBalance[0].decimal.toString(),
+					"\n"
+				);
+			transaction &&
+				console.log(
+					"\n",
+					"transaction.sendAssetBalance[0].decimal : ",
+					transaction.sendAssetBalance[0].decimal.toString(),
+					"\n"
+				);
+			*/
+		}, 5000);
+		return () => clearInterval(interval);
+		//if (isWalletConnected) updateTransactionBalance();
+	}, [isWalletConnected, active, transaction, walletOperations]);
+
+	useEffect(() => {}, []);
+	useEffect(() => {
+		console.log("\n", "transaction : ", transaction, "\n");
+		transaction &&
+			console.log(
+				"\n",
+				"transaction.sendAssetBalance[0].decimal : ",
+				transaction.sendAssetBalance[0].decimal.toString(),
+				"\n"
+			);
+	}, [transaction]);
+
+	const newTransaction = useCallback(async () => {
+		if (!transaction && loading) {
+			await walletOperations
+				.initializeSwap(assets[send], assets[receive])
+				.then((transaction) => {
+					setLoading(false);
+				});
+		}
+	}, [assets, transaction,loading, walletOperations]);
+
+	useEffect(() => {
+	}, [loading, transaction, newTransaction]);
 
 	useEffect(() => {
 		//run always
-		if (session.activeComponent !== TransactingComponent.SWAP) {
-			setLoading(true);
-			session.loadComponent(TransactingComponent.SWAP);
+
+		const _newTransaction = async () => {
+			await newTransaction();
+		};
+
+		if (loading && !transaction) _newTransaction();
+		if (loading) {
+			if (
+				session.activeComponent !==
+				TransactingComponent.SWAP
+			)
+				session.loadComponent(
+					TransactingComponent.SWAP
+				);
 		}
 	}, []);
 
@@ -206,7 +293,9 @@ export const Swap: FC = (props) => {
 						>
 							<TokenInput
 								assetName={
-									sendAsset
+									assets[
+										send
+									]
 								}
 								onChange={
 									updateSend
@@ -243,7 +332,9 @@ export const Swap: FC = (props) => {
 						>
 							<TokenInput
 								assetName={
-									receiveAsset
+									assets[
+										receive
+									]
 								}
 								onChange={
 									updateReceive
@@ -278,7 +369,9 @@ export const Swap: FC = (props) => {
 							>
 								<Slippage
 									asset={
-										receiveAsset
+										assets[
+											receive
+										]
 									}
 									value={
 										slippage

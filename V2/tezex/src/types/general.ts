@@ -25,6 +25,7 @@ export enum TransactionStatus {
 	INITIALISED = "Initialised",
 	MODIFIED = "Modified",
 	INSUFFICIENT_BALANCE = "Insufficient Balance",
+	SUFFICIENT_BALANCE = "Sufficient Balance",
 	PENDING = "Pending",
 	COMPLETED = "Completed",
 	FAILED = "Failed",
