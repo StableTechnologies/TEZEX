@@ -136,13 +136,21 @@ export const Swap: FC = (props) => {
 	const updateReceive = useCallback((value: string) => {
 		setReceiveAmount(new BigNumber(value));
 	}, []);
+	
 
+	const [balances, setBalances] = useState<[string ,string]>(["0.0","0.0"]);
 	useEffect(() => {
-		if(wallet && !transaction) {
+
+		if(wallet ) {
 			setTransaction(t => wallet.swapTransaction)
 		}
 		if (transaction) setTransactionId(transaction.id)
-	},[wallet, transaction])
+		if (transactionId && transaction) {
+                                     setBalances([transaction.sendAssetBalance[0].decimal.toString(),transaction.receiveAssetBalance[0].decimal.toString()])
+			
+
+		}
+	},[wallet, transaction, transactionId])
 	/*
 	useEffect(() => {
 		const newTransaction = async () => {
@@ -191,11 +199,19 @@ export const Swap: FC = (props) => {
 			updateTransactionBalance();
 
 
+
 			transaction &&
 				console.log(
 					"\n",
-					"transaction.sendAssetBalance[0].decimal : ",
-					transaction.sendAssetBalance[0].decimal.toString(),
+					"...........transaction.sendAssetBalance[0].mantissa : ",
+					transaction.sendAssetBalance[0].mantissa.toString(),
+					"\n"
+				);
+			transaction &&
+				console.log(
+					"\n",
+					"...........transaction.sendAssetBalance[0].decimal : ",
+					transaction.sendAssetBalance[0].decimal.toNumber(),
 					"\n"
 				);
 			/*
@@ -301,6 +317,7 @@ export const Swap: FC = (props) => {
 									updateSend
 								}
 								value={sendAmount.toString()}
+								balance={balances[0]}
 							/>
 						</Grid2>
 
@@ -341,6 +358,8 @@ export const Swap: FC = (props) => {
 								}
 								value={receiveAmount.toString()}
 								readOnly={true}
+
+								balance={balances[1]}
 							/>
 						</Grid2>
 

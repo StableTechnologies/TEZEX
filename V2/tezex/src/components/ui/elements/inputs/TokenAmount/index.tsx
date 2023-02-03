@@ -35,7 +35,7 @@ import { SvgIcon } from "@mui/material";
 export interface ITokenAmountInput {
 	assetName: TokenKind;
 	onChange: (value: string) => void;
-	balance?: string;
+	balance: string;
 	value?: string;
 	label?: string;
 	readOnly?: boolean;
@@ -49,7 +49,6 @@ const style = {
 
 const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 	const [inputString, setInputString] = useState("0");
-	const [balance, setBalance] = useState("0.0");
 	const net = useNetwork();
 	const wallet = useWallet();
 	const asset: Asset = getAsset(props.assetName);
@@ -203,7 +202,7 @@ props.onChange(inputString);
 						textAlign: "right",
 					}}
 				>
-					balance: {balance} {props.assetName}
+					balance: {props.balance} {props.assetName}
 				</Typography>
 			</Grid2>
 		</Grid2>

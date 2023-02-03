@@ -397,7 +397,7 @@ export function WalletProvider(props: IWalletProvider) {
 	);
 
 	useEffect(() => {
-		console.log("\n", "swapTransaction : ", swapTransaction, "\n");
+		//////console.log("\n", "swapTransaction : ", swapTransaction, "\n");
 		swapTransaction &&
 			console.log(
 				"\n",
@@ -405,6 +405,7 @@ export function WalletProvider(props: IWalletProvider) {
 				swapTransaction.sendAssetBalance[0].decimal.toString(),
 				"\n"
 			);
+		
 	}, [swapTransaction]);
 
 	useEffect(() => {}, [transactions]);
@@ -522,7 +523,7 @@ export function WalletProvider(props: IWalletProvider) {
 								}
 							)
 							.catch((_) => {
-								console.log('\n',' :failed in getBalanceOfAssets ','\n'); 
+								//console.log('\n',' :failed in getBalanceOfAssets ','\n'); 
 								return null;
 							});
 					case 2:
@@ -565,8 +566,8 @@ export function WalletProvider(props: IWalletProvider) {
 	): TransactionStatus => {
 		if (userBalance.length !== requiredAmount.length)
 		{
-			console.log('\n','userBalance : ', userBalance,'\n'); 
-			console.log('\n','requiredAmount : ', requiredAmount,'\n'); 
+			//console.log('\n','userBalance : ', userBalance,'\n'); 
+			//console.log('\n','requiredAmount : ', requiredAmount,'\n'); 
 			throw Error("Error: balance check asset pair mismatch");
 		}
 		const checks: boolean[] = Array.from(
@@ -620,8 +621,8 @@ export function WalletProvider(props: IWalletProvider) {
 			)
 				.then((userBalance: Amount | null) => {
 
-					        console.log('\n',' got send Balance in get Balances ','\n');  
-					userBalance && console.log('\n','userBalance[0].decimal.toString() : ', userBalance[0].decimal.toString(),'\n'); 
+					//console.log('\n',' got send Balance in get Balances ','\n');  
+					//userBalance && console.log('\n','userBalance[0].decimal.toString() : ', userBalance[0].decimal.toString(),'\n'); 
 					if (checkBalance && userBalance) {
 						balanceStatus =
 							checkSufficientBalance(
@@ -631,15 +632,15 @@ export function WalletProvider(props: IWalletProvider) {
 					}
 					if (userBalance)
 						userBalanceSend = userBalance;
-					        console.log('\n',' got send Balance in get Balances ','\n');  
+					//console.log('\n',' got send Balance in get Balances ','\n');  
 					return getBalanceOfAssets(
 						transaction.receiveAsset
 					);
 				})
 				.then((userBalance: Amount | null) => {
 
-					        console.log('\n',' got receive Balance in get Balances ','\n');  
-					userBalance && console.log('\n','receive userBalance[0].decimal.toString() : ', userBalance[0].decimal.toString(),'\n'); 
+					//console.log('\n',' got receive Balance in get Balances ','\n');  
+					//userBalance && console.log('\n','receive userBalance[0].decimal.toString() : ', userBalance[0].decimal.toString(),'\n'); 
 					const receiveAssetBalance = userBalance
 						? userBalance
 						: transaction.receiveAssetBalance;
@@ -658,9 +659,9 @@ export function WalletProvider(props: IWalletProvider) {
 						transactionStatus,
 					};
 				}).catch((e) => {
-					console.log('\n',' failed in getBalances: ','\n'); 
-					console.log('\n','transaction : ', transaction,'\n'); 
-					console.log('\n','e : ', e,'\n'); 
+					//console.log('\n',' failed in getBalances: ','\n'); 
+					//console.log('\n','transaction : ', transaction,'\n'); 
+					//console.log('\n','e : ', e,'\n'); 
 					throw Error(e)
 				});
 			return updated;
@@ -675,10 +676,61 @@ export function WalletProvider(props: IWalletProvider) {
 			checkBalances: boolean = true
 		): Promise<boolean> => {
 			var updated = false;
-			console.log("\n", " in updateBalance context", "\n");
+			//console.log("\n", " in updateBalance context", "\n");
 
 			await getBalances(transaction, checkBalances)
 				.then((_transaction: Transaction) => {
+
+			switch (component) {
+				case TransactingComponent.SWAP:
+					setSwapTransaction(
+						(
+							draft: Draft<
+								| Transaction
+								| undefined
+							>
+						) => {
+							if (draft) {
+								draft.sendAssetBalance =_transaction.sendAssetBalance;
+							        draft.receiveAssetBalance  = _transaction.receiveAssetBalance
+
+							}
+						}
+					);
+					break;
+				case TransactingComponent.ADD_LIQUIDITY:
+						setAddLiquidityTransaction(
+						(
+							draft: Draft<
+								| Transaction
+								| undefined
+							>
+						) => {
+							if (draft) {
+								draft.sendAssetBalance =_transaction.sendAssetBalance;
+							        draft.receiveAssetBalance  = _transaction.receiveAssetBalance
+
+							}
+						}
+					);
+					break;
+				case TransactingComponent.REMOVE_LIQUIDITY:
+						setRemoveLiquidityTransaction(
+						(
+							draft: Draft<
+								| Transaction
+								| undefined
+							>
+						) => {
+							if (draft) {
+								draft.sendAssetBalance =_transaction.sendAssetBalance;
+							        draft.receiveAssetBalance  = _transaction.receiveAssetBalance
+
+							}
+						}
+					);
+					break;
+			}
 					/*
 					setActiveTransaction(
 					
@@ -690,10 +742,11 @@ export function WalletProvider(props: IWalletProvider) {
 						},
 					
 					);
+					
 					*/
-
-					console.log('\n','transaction : ', transaction,'\n'); 
-					console.log('\n','recieved after getBalance transaction.sendAssetBalance[0].decimal.toString() : ', transaction.sendAssetBalance[0].decimal.toString(),'\n'); 
+					//console.log('\n','transaction : ', transaction,'\n'); 
+					//console.log('\n','recieved after getBalance transaction.sendAssetBalance[0].decimal.toString() : ', transaction.sendAssetBalance[0].decimal.toString(),'\n'); 
+					/*
 					setSwapTransaction(
 						(
 							draft: Draft<
@@ -707,10 +760,11 @@ export function WalletProvider(props: IWalletProvider) {
 							}
 						}
 					);
+					*/
 					updated = true;
 				})
 				.catch((e) => {
-					console.log('\n',' falied update balance ','\n'); 
+					//console.log('\n',' falied update balance ','\n'); 
 					updated = false;
 				});
 			return updated;

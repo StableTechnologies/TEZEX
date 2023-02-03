@@ -41,6 +41,32 @@ export function useWalletInitializeSwap(sendAsset,recieveAsset,sendAmount?,slipp
 }
 */
 
+
+export interface RemoveLiquidityOps {
+	initializeSwap: (
+		sendAsset: TokenKind,
+		recieveAsset: TokenKind,
+		sendAmount?: BigNumber, //TODO
+		receiveAmount?: BigNumber, //TODO
+		slippage?: number //TODO
+	) => Promise<Transaction | undefined>;
+	viewTransaction: (id: Id) => Transaction | undefined | null;
+	getActiveTransaction: () => Transaction | undefined ;
+	updateBalance: (transaction: Transaction) => Promise<boolean>;
+}
+
+export interface AddLiquidityOps {
+	initializeSwap: (
+		sendAsset: TokenKind,
+		recieveAsset: TokenKind,
+		sendAmount?: BigNumber, //TODO
+		receiveAmount?: BigNumber, //TODO
+		slippage?: number //TODO
+	) => Promise<Transaction | undefined>;
+	viewTransaction: (id: Id) => Transaction | undefined | null;
+	getActiveTransaction: () => Transaction | undefined ;
+	updateBalance: (transaction: Transaction) => Promise<boolean>;
+}
 export interface SwapOps {
 	initializeSwap: (
 		sendAsset: TokenKind,
@@ -59,6 +85,108 @@ export function useWalletConnected(): boolean {
 	if (wallet) {
 		return wallet.isWalletConnected;
 	} else return false;
+}
+
+
+export function useWalletAddLiquidityOps(): AddLiquidityOps {
+	const wallet = useContext(WalletContext);
+
+	const initializeSwap = async (
+		sendAsset: TokenKind,
+		recieveAsset: TokenKind,
+		sendAmount?: BigNumber, //TODO
+		receiveAmount?: BigNumber, //TODO
+		slippage?: number //TODO
+	): Promise<Transaction | undefined> => {
+		//esitmate receive
+
+		if (wallet) {
+			console.log("\n", " init swap in hook ", "\n");
+			const transaction: Transaction = wallet.initialiseTransaction(
+				TransactingComponent.ADD_LIQUIDITY,
+				[getAsset(sendAsset)],
+				[getAsset(recieveAsset)]
+			);
+			
+			console.log('\n','in init hook transaction : ', transaction,'\n'); 
+			await wallet.updateBalance(TransactingComponent.ADD_LIQUIDITY,transaction);
+			return transaction
+		} else return undefined;
+	};
+
+	const updateBalance = async (transaction: Transaction): Promise<boolean> => {
+		//esitmate receive
+
+		console.log("\n", "balance update : ", "\n");
+		if (wallet) {
+			console.log("\n", "balance update in wallet: ", "\n");
+		return	await wallet.updateBalance(TransactingComponent.ADD_LIQUIDITY, transaction);
+		} else return false;
+	};
+
+	const getActiveTransaction = (): Transaction | undefined => {
+		if (wallet) {
+			return wallet.swapTransaction
+		}
+	};
+	const viewTransaction = (id: Id): Transaction | undefined => {
+		//esitmate receive
+
+		if (wallet) {
+			return wallet.fetchTransaction(id);
+		}
+	};
+	return { initializeSwap, viewTransaction, getActiveTransaction, updateBalance };
+}
+export function useWalletRemoveLiquidityOps(): RemoveLiquidityOps {
+	const wallet = useContext(WalletContext);
+
+	const initializeSwap = async (
+		sendAsset: TokenKind,
+		recieveAsset: TokenKind,
+		sendAmount?: BigNumber, //TODO
+		receiveAmount?: BigNumber, //TODO
+		slippage?: number //TODO
+	): Promise<Transaction | undefined> => {
+		//esitmate receive
+
+		if (wallet) {
+			console.log("\n", " init swap in hook ", "\n");
+			const transaction: Transaction = wallet.initialiseTransaction(
+				TransactingComponent.SWAP,
+				[getAsset(sendAsset)],
+				[getAsset(recieveAsset)]
+			);
+			
+			console.log('\n','in init hook transaction : ', transaction,'\n'); 
+			await wallet.updateBalance(TransactingComponent.SWAP,transaction);
+			return transaction
+		} else return undefined;
+	};
+
+	const updateBalance = async (transaction: Transaction): Promise<boolean> => {
+		//esitmate receive
+
+		console.log("\n", "balance update : ", "\n");
+		if (wallet) {
+			console.log("\n", "balance update in wallet: ", "\n");
+		return	await wallet.updateBalance(TransactingComponent.SWAP, transaction);
+		} else return false;
+	};
+
+	const getActiveTransaction = (): Transaction | undefined => {
+		if (wallet) {
+			return wallet.swapTransaction
+		}
+	};
+	const viewTransaction = (id: Id): Transaction | undefined => {
+		//esitmate receive
+
+		if (wallet) {
+			return wallet.fetchTransaction(id);
+		}
+	};
+	return { initializeSwap, viewTransaction, getActiveTransaction, updateBalance };
 }
 export function useWalletSwapOps(): SwapOps {
 	const wallet = useContext(WalletContext);
