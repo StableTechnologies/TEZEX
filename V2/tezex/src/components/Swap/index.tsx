@@ -146,23 +146,25 @@ export const Swap: FC = (props) => {
 		const timer = setTimeout(() => {
 			if (
 				transaction &&
+			///slow update because of issue here 
 				transaction.sendAmount[0].decimal !== sendAmount
 			) {
 				console.log(
 					"\n",
 					"transaction.sendAmount[0].decimal : ",
-					transaction.sendAmount[0].decimal,
+					transaction.sendAmount[0].decimal.toString(),
 					"\n"
 				);
 				console.log(
 					"",
 					"sendAmount : ",
-					sendAmount,
+					sendAmount.toString(),
 					"\n"
 				);
 				updateTransaction(transaction);
 			}
-		}, 9000);
+			///slow update because of issue here ^^^
+		}, 5000);
 
 		return () => clearTimeout(timer);
 	}, [sendAmount, transaction, walletOperations]);

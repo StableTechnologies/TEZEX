@@ -1,4 +1,11 @@
-import {memo, MemoExoticComponent, FC, useCallback, useState, useEffect } from "react";
+import {
+	memo,
+	MemoExoticComponent,
+	FC,
+	useCallback,
+	useState,
+	useEffect,
+} from "react";
 import { BigNumber } from "bignumber.js";
 
 import { WalletInfo } from "../../../../../contexts/wallet";
@@ -50,37 +57,41 @@ const style = {
 };
 
 const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
-	const [inputString, setInputString] = useState<string>("0");
+	const [inputString, setInputString] = useState<string>(props.value);
 	const net = useNetwork();
 	const wallet = useWallet();
 	const asset: Asset = getAsset(props.assetName);
-        const onChange = props.onChange
-		const callBack = useCallback(async (value: string) => {
-			console.log('\n',' callback ','\n'); 
-				if(onChange) onChange(value);      
-			}
-			,[onChange]) 
+	const onChange = props.onChange;
+	const callBack = useCallback(
+		async (value: string) => {
+			console.log("\n", " callback ", "\n");
+			if (onChange) onChange(value);
+		},
+		[onChange]
+	);
 	useEffect(() => {
-			const timer = setTimeout(
-				() => {
-					if(props.value !== inputString){
-					callBack(inputString);
-					}
-				}   ,
-				 2000
-			);
-			return () => clearTimeout(timer);
-			//if (isWa
-			
-	},[inputString, callBack, props])
+		const timer = setTimeout(() => {
+			if (props.value !== inputString && !props.readOnly) {
+				callBack(inputString);
+			}
+		}, 2000);
+		return () => clearTimeout(timer);
+		//if (isWa
+	}, [inputString, callBack, props]);
+	useEffect(() => {
+		if (props.value !== inputString && props.readOnly) {
+			setInputString(props.value);
+		}
+	}, [props, inputString]);
 
-
-	const updateAmount = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-		   
-		e.preventDefault();
-		setInputString(e.target.value);
-		//if(props.onChange) await props.onChange(inputString);
-	},[]);
+	const updateAmount = useCallback(
+		(e: React.ChangeEvent<HTMLInputElement>) => {
+			e.preventDefault();
+			setInputString(e.target.value);
+			//if(props.onChange) await props.onChange(inputString);
+		},
+		[]
+	);
 	/*
 	useEffect(() => {
 	      if(props.value && props.value !== inputString) setInputString(props.value);	
@@ -223,16 +234,17 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 					variant="standard"
 				/>
 				<WalletConnected>
-				<Typography
-					color="textSecondary"
-					variant="subtitle2"
-					sx={{
-						padding: "0px 16px",
-						textAlign: "right",
-					}}
-				>
-					balance: {props.balance} {props.assetName}
-				</Typography>
+					<Typography
+						color="textSecondary"
+						variant="subtitle2"
+						sx={{
+							padding: "0px 16px",
+							textAlign: "right",
+						}}
+					>
+						balance: {props.balance}{" "}
+						{props.assetName}
+					</Typography>
 				</WalletConnected>
 			</Grid2>
 		</Grid2>
