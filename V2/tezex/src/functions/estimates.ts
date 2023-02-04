@@ -14,6 +14,9 @@ import {
 
 import { TezosToolkit } from "@taquito/taquito";
 import {
+	balanceBuilder,
+} from "../functions/util";
+import {
 	estimateTokensFromXtz,
 	estimateXtzFromToken,
 	xtzToToken,
@@ -41,30 +44,49 @@ const getDex = (
 };
 
 
-export const estimateTokensReceivedSwap = async (
-	sendToken: TokenKind,
-	sendAmount: Balance,
-	receive: TokenKind,
-	toolkit: TezosToolkit
-) => {
-	const dex: string = getDex([getAsset(sendToken)], [getAsset(receive)]);
-
-	switch (sendToken) {
-		case TokenKind.XTZ:
-			await estimateTokensFromXtz(
-				sendAmount.mantissa,
-				dex,
-				toolkit
-			);
-			break;
-		case TokenKind.TzBTC:
-			await estimateXtzFromToken(
-				sendAmount.mantissa,
-				dex,
-				toolkit
-			);
-			break;
+export async function estimate(transaction: Transaction, toolkit: TezosToolkit): Promise<Transaction> {
+	const {sendAmount,sendAsset,receiveAsset} = transaction
+	switch(transaction.component){
+				case TransactingComponent.SWAP:
+			return await estimateTokensReceivedSwap(sendAsset[0],sendAmount[0],receiveAsset[0],toolkit).then((
+				balance: Balance
+			) => { return {...transaction,receiveAmount: [balance] as Amount }}).catch((e)=>{ throw e})
+				case TransactingComponent.ADD_LIQUIDITY:
+					throw Error("todo");
+				case TransactingComponent.REMOVE_LIQUIDITY:
+					throw Error("todo");
+			}
 	}
+	
+export const estimateTokensReceivedSwap = async (
+	sendToken: Asset,
+	sendAmount: Balance,
+	receive: Asset,
+	toolkit: TezosToolkit
+): Promise<Balance> => {
+	const dex: string = getDex([getAsset(sendToken.name)], [getAsset(receive.name)]);
+
+	switch (sendToken.name) {
+		case TokenKind.XTZ:
+			return await estimateTokensFromXtz(
+				sendAmount.mantissa,
+				dex,
+				toolkit
+			).then((amt: number) => {
+				return balanceBuilder(amt,receive,true)
+   
+			}).catch((e) =>{throw e})
+		case TokenKind.TzBTC:
+			return await estimateXtzFromToken(
+				sendAmount.mantissa,
+				dex,
+				toolkit
+			).then((amt: number) => {
+				return balanceBuilder(amt,receive,true)
+			}).catch((e) =>{throw e})
+		default: throw Error("unimplemented swap estimate");
+	}
+}
 	/*
 			if (inputAmountMantissa) {
 				console.log(
@@ -108,4 +130,3 @@ export const estimateTokensReceivedSwap = async (
 						break;
 				}
 			*/
-};

@@ -29,6 +29,7 @@ import {
 	tokenDecimalToMantissa,
 	tokenMantissaToDecimal,
 } from "../functions/scaling";
+import {balanceBuilder} from "../functions/util"
 export enum WalletStatus {
 	ESTIMATING_SIRS = "Estimating Sirs",
 	ESTIMATING_XTZ = "Estimating Tez",
@@ -124,7 +125,7 @@ export interface WalletInfo {
 		checkBalances?: boolean
 	) => Promise<boolean>;
 	updateAmount: (
-		id: string,
+		component: TransactingComponent,
 		amountUpdateSend?: Amount,
 		amountUpdateReceive?: Amount,
 		slippageUpdate?: number
@@ -160,33 +161,6 @@ const canModifyTransaction = (t: Draft<Transaction> | Transaction): boolean => {
 };
 const date = new Date();
 
-export const balanceGreaterOrEqualTo = (
-	balance1: Balance,
-	balance2: Balance
-): boolean => {
-	return balance1.mantissa.isGreaterThanOrEqualTo(balance2.mantissa);
-};
-
-export const balanceBuilder = (
-	value: BigNumber,
-	asset: Asset,
-	isMantissa?: boolean
-): Balance => {
-	const decimal: BigNumber = isMantissa
-		? tokenMantissaToDecimal(value, asset.name)
-		: value;
-	const mantissa: BigNumber = isMantissa
-		? value
-		: tokenDecimalToMantissa(value, asset.name);
-	const geq = (balance: Balance): boolean => {
-		return mantissa.isGreaterThanOrEqualTo(balance.mantissa);
-	};
-	return {
-		decimal,
-		mantissa,
-		greaterOrEqualTo: geq,
-	};
-};
 interface IWalletProvider {
 	children:
 		| JSX.Element[]
@@ -557,7 +531,7 @@ export function WalletProvider(props: IWalletProvider) {
 			}
 			return null;
 		},
-		[toolkit, address, getActiveTransaction]
+		[toolkit, address]
 	);
 
 	const checkSufficientBalance = (
@@ -774,49 +748,73 @@ export function WalletProvider(props: IWalletProvider) {
 
 	const updateAmount = useCallback(
 		(
-			id: string,
+			component: TransactingComponent,
 			amountUpdateSend?: Amount,
 			amountUpdateReceive?: Amount,
 			slippageUpdate?: number
 		): boolean => {
-			withTransaction(
-				id,
-				(
-					oldTransaction: Draft<Transaction>
-				): boolean => {
-					if (
-						oldTransaction &&
-						(amountUpdateSend ||
-							amountUpdateReceive ||
-							slippageUpdate)
-					) {
-						oldTransaction.sendAmount =
-							amountUpdateSend
-								? amountUpdateSend
-								: oldTransaction.sendAmount;
-						oldTransaction.receiveAmount =
-							amountUpdateReceive
-								? amountUpdateReceive
-								: oldTransaction.receiveAmount;
-						oldTransaction.slippage =
-							slippageUpdate
-								? slippageUpdate
-								: oldTransaction.slippage;
-						return true;
-					}
-					return false;
-				}
-			);
+
+			switch (component) {
+				case TransactingComponent.SWAP:
+					setSwapTransaction(
+						(
+							draft: Draft<
+								| Transaction
+								| undefined
+							>
+						) => {
+							if (draft) {
+								 if(amountUpdateSend ) draft.sendAmount =amountUpdateSend
+								 if(amountUpdateReceive ) draft.receiveAmount = amountUpdateReceive
+								 if(slippageUpdate ) draft.slippage =slippageUpdate
+							}
+						}
+					);
+					break;
+				case TransactingComponent.ADD_LIQUIDITY:
+						setAddLiquidityTransaction(
+						(
+							draft: Draft<
+								| Transaction
+								| undefined
+							>
+						) => {
+							if (draft) {
+								 if(amountUpdateSend ) draft.sendAmount =amountUpdateSend
+								 if(amountUpdateReceive ) draft.receiveAmount = amountUpdateReceive
+								 if(slippageUpdate ) draft.slippage =slippageUpdate
+							}
+						}
+					);
+					break;
+				case TransactingComponent.REMOVE_LIQUIDITY:
+						setRemoveLiquidityTransaction(
+						(
+							draft: Draft<
+								| Transaction
+								| undefined
+							>
+						) => {
+							if (draft) {
+								 if(amountUpdateSend ) draft.sendAmount =amountUpdateSend
+								 if(amountUpdateReceive ) draft.receiveAmount = amountUpdateReceive
+								 if(slippageUpdate ) draft.slippage =slippageUpdate
+							}
+						}
+					);
+					break;
+			
+
+
+			}
+if (!amountUpdateSend || !amountUpdateReceive && !slippageUpdate) {return false} else return true
+		} ,[]);
 
 			//^^^ MAKE ASYNC...set balance THEN check balance THEN modify transaction
 			//todo create async getBlaance(loadAsset, Amount)
 			//todo create sync checkSufficientBalance(Amount, Amount)
 			// modify transaction with balance and sufficiency check
 			//delete below strategy
-			return false;
-		},
-		[]
-	);
 
 	useEffect(() => {
 		if (client) {

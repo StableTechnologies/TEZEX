@@ -1,10 +1,13 @@
 import { useContext } from "react";
+import { TezosToolkit} from "@taquito/taquito";
 
 import { getAsset } from "../constants";
 import { BigNumber } from "bignumber.js";
-import { estimateTokensReceivedSwap } from "../functions/estimates";
-import { WalletContext, balanceBuilder, WalletInfo } from "../contexts/wallet";
+import { estimate, estimateTokensReceivedSwap } from "../functions/estimates";
+import { WalletContext, WalletInfo } from "../contexts/wallet";
+import {useNetwork} from "../hooks/network";
 
+import {balanceBuilder} from "../functions/util"
 import {
 	Transaction,
 	TokenKind,
@@ -78,6 +81,7 @@ export interface SwapOps {
 	viewTransaction: (id: Id) => Transaction | undefined | null;
 	getActiveTransaction: () => Transaction | undefined ;
 	updateBalance: (transaction: Transaction) => Promise<boolean>;
+	updateAmount: (transaction: Transaction,sendAmount?: string,slippage?: string)=> Promise<boolean>;
 }
 
 export function useWalletConnected(): boolean {
@@ -190,6 +194,7 @@ export function useWalletRemoveLiquidityOps(): RemoveLiquidityOps {
 }
 export function useWalletSwapOps(): SwapOps {
 	const wallet = useContext(WalletContext);
+	const network = useNetwork();
 
 	const initializeSwap = async (
 		sendAsset: TokenKind,
@@ -200,6 +205,7 @@ export function useWalletSwapOps(): SwapOps {
 	): Promise<Transaction | undefined> => {
 		//esitmate receive
 
+		console.log('\n','wallet : ', wallet,'\n'); 
 		if (wallet) {
 			console.log("\n", " init swap in hook ", "\n");
 			const transaction: Transaction = wallet.initialiseTransaction(
@@ -209,7 +215,7 @@ export function useWalletSwapOps(): SwapOps {
 			);
 			
 			console.log('\n','in init hook transaction : ', transaction,'\n'); 
-			await wallet.updateBalance(TransactingComponent.SWAP,transaction);
+			if(wallet.client)await wallet.updateBalance(TransactingComponent.SWAP,transaction);
 			return transaction
 		} else return undefined;
 	};
@@ -236,7 +242,23 @@ export function useWalletSwapOps(): SwapOps {
 			return wallet.fetchTransaction(id);
 		}
 	};
-	return { initializeSwap, viewTransaction, getActiveTransaction, updateBalance };
+	const updateAmount = async(transaction: Transaction,sendAmount?: string,slippage?: string): Promise<boolean> =>{
+
+		
+		var updated = false
+		if(wallet && sendAmount) wallet.updateAmount(transaction.component,[balanceBuilder(sendAmount, transaction.sendAsset[0], true)]);
+		if(wallet && slippage) wallet.updateAmount(transaction.component,undefined,undefined,new BigNumber(slippage).toNumber())
+
+	        const toolkit = new TezosToolkit(network.tezosServer);
+		if(wallet ) await estimate(transaction, toolkit).then((transaction: Transaction) => {
+			wallet.updateAmount(transaction.component,undefined,transaction.receiveAmount)
+   
+		}).catch((e)=>{console.log('estmation Failed',e);})
+		return updated
+
+
+	}
+	return { initializeSwap, viewTransaction, getActiveTransaction, updateBalance , updateAmount};
 }
 export function useWallet() {
 	const wallet = useContext(WalletContext);

@@ -307,9 +307,6 @@ export const AddLiquidity: FC = (props) => {
 										send
 									]
 								}
-								onChange={
-									updateSend
-								}
 								value={sendAmount.toString()}
 
 								balance={balances[0]}
@@ -347,9 +344,6 @@ export const AddLiquidity: FC = (props) => {
 									assets[
 										receive
 									]
-								}
-								onChange={
-									updateReceive
 								}
 								value={receiveAmount.toString()}
 								readOnly={true}

@@ -1,4 +1,4 @@
-import { WalletInfo, balanceBuilder } from "../contexts/wallet";
+import { WalletInfo} from "../contexts/wallet";
 import { NetworkInfo } from "../contexts/network";
 import { BeaconWallet } from "@taquito/beacon-wallet";
 import { TezosToolkit, MichelCodecPacker } from "@taquito/taquito";
@@ -7,6 +7,7 @@ import { BigNumber } from "bignumber.js";
 import { DAppClient } from "@airgap/beacon-sdk";
 import { TokenKind,Asset, Balance  } from "../types/general";
 import { tokenMantissaToDecimal } from "./scaling";
+import { balanceBuilder } from "./util";
 export function mutezToTez(amount: BigNumber) {
 	return amount.dividedBy(1000000);
 }

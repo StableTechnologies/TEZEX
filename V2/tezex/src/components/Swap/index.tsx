@@ -98,10 +98,11 @@ export const Swap: FC = (props) => {
 	const walletOperations: SwapOps = useWalletSwapOps();
 	const isWalletConnected = useWalletConnected();
 	const [transactionId, setTransactionId] = useState<Id | null>(null);
-	const [transaction, setTransaction] = useState<
-		Transaction |  undefined
-	>(undefined);
+	const [transaction, setTransaction] = useState<Transaction | undefined>(
+		undefined
+	);
 
+	const [loadingBalances, setLoadingBalances] = useState<boolean>(true);
 	const [loading, setLoading] = useState<boolean>(true);
 	const [editing, setEditing] = useState<boolean>(false);
 	const [inputAmountMantissa, setInputAmountMantissa] = useState<
@@ -130,27 +131,61 @@ export const Swap: FC = (props) => {
 	const updateSlippage = useCallback((value: number) => {
 		setSlippage(value);
 	}, []);
-	const updateSend = useCallback((value: string) => {
-		setSendAmount(new BigNumber(value));
-	}, []);
+	const updateSend = useCallback(
+		async (value: string) => {
+			if (transaction){
+				await walletOperations.updateAmount(
+					transaction,
+					value
+				);
+			}
+		},[]
+	);
 	const updateReceive = useCallback((value: string) => {
 		setReceiveAmount(new BigNumber(value));
 	}, []);
-	
 
-	const [balances, setBalances] = useState<[string ,string]>(["0.0","0.0"]);
+	const [balances, setBalances] = useState<[string, string]>([
+		"",
+		"",
+	]);
+
+	const updateBalance = useCallback(async () => 
+		{if (wallet && isWalletConnected) {
+			if(transaction){ 
+				 setLoadingBalances(!(await walletOperations.updateBalance(
+					transaction
+				)))};
+			   
+			   	if (transaction) {
+			   		setBalances([transaction.sendAssetBalance[0].decimal.toString(),
+			   		transaction.receiveAssetBalance[0].decimal.toString()
+			   	]);
+			   	}
+			   }},[transaction, wallet , walletOperations,isWalletConnected])
+
 	useEffect(() => {
-
-		if(wallet ) {
-			setTransaction(t => wallet.swapTransaction)
+                  const update = async () => {
+                    await updateBalance() 
+                  }
+		//	if(isWalletConnected) update()
+	},[isWalletConnected,updateBalance])
+	useEffect(() => {
+		if (wallet) {
+			setTransaction((t) => wallet.swapTransaction);
 		}
-		if (transaction) setTransactionId(transaction.id)
+	}, [wallet, setTransaction]);
+	useEffect(() => {
+		if (transaction )
+			setTransactionId(transaction.id);
 		if (transactionId && transaction) {
-                                     setBalances([transaction.sendAssetBalance[0].decimal.toString(),transaction.receiveAssetBalance[0].decimal.toString()])
-			
-
+			setReceiveAmount(transaction.receiveAmount[0].decimal);
+			setBalances([
+				transaction.sendAssetBalance[0].decimal.toString(),
+				transaction.receiveAssetBalance[0].decimal.toString(),
+			]);
 		}
-	},[wallet, transaction, transactionId])
+	}, [transaction, transactionId]);
 	/*
 	useEffect(() => {
 		const newTransaction = async () => {
@@ -181,25 +216,21 @@ export const Swap: FC = (props) => {
 	}, [loading, editing, receiveAsset,sendAsset, session.activeComponent, transactionId, walletOperations ]);
 	*/
 
-	
-	const activeWallet =  (wallet) ? wallet.getActiveTransaction(
-						TransactingComponent.SWAP
-	) : undefined;
+
+	const activeWallet = wallet
+		? wallet.getActiveTransaction(TransactingComponent.SWAP)
+		: undefined;
 	const active = walletOperations.getActiveTransaction();
 	useEffect(() => {}, [editing]);
 	useEffect(() => {
 		const updateTransactionBalance = async () => {
-			transaction &&
-				(await walletOperations.updateBalance(
-					transaction
-				));
+			await updateBalance()
 		};
 
 		const interval = setInterval(() => {
-			updateTransactionBalance();
-
-
-
+				updateTransactionBalance();
+		                	
+			/*
 			transaction &&
 				console.log(
 					"\n",
@@ -214,6 +245,7 @@ export const Swap: FC = (props) => {
 					transaction.sendAssetBalance[0].decimal.toNumber(),
 					"\n"
 				);
+			*/
 			/*
 			wallet &&
 				console.log(
@@ -239,10 +271,10 @@ export const Swap: FC = (props) => {
 					"\n"
 				);
 			*/
-		}, 5000);
+		}, loadingBalances? 500 : 5000);
 		return () => clearInterval(interval);
 		//if (isWalletConnected) updateTransactionBalance();
-	}, [isWalletConnected, active, transaction, walletOperations]);
+	}, [isWalletConnected, loadingBalances,updateBalance, active, transaction, walletOperations]);
 
 	useEffect(() => {}, []);
 	useEffect(() => {
@@ -257,17 +289,21 @@ export const Swap: FC = (props) => {
 	}, [transaction]);
 
 	const newTransaction = useCallback(async () => {
-		if (!transaction && loading) {
+		if (!transaction && loading && wallet) {
+			const active = walletOperations.getActiveTransaction()
+			console.log('\n','active : ', active,'\n'); 
+			if (active)   setTransaction(active);
 			await walletOperations
 				.initializeSwap(assets[send], assets[receive])
 				.then((transaction) => {
+					console.log('\n','transaction : ', transaction,'\n'); 
+					setTransaction(transaction);
 					setLoading(false);
 				});
 		}
-	}, [assets, transaction,loading, walletOperations]);
+	}, [assets, transaction, loading, wallet, walletOperations]);
 
-	useEffect(() => {
-	}, [loading, transaction, newTransaction]);
+	useEffect(() => {}, [loading, transaction, newTransaction]);
 
 	useEffect(() => {
 		//run always
@@ -276,8 +312,13 @@ export const Swap: FC = (props) => {
 			await newTransaction();
 		};
 
-		if (loading && !transaction) _newTransaction();
+			const active = walletOperations.getActiveTransaction()
+		if (loading && !transaction && !active) _newTransaction();
 		if (loading) {
+			if (active) {
+				setTransaction(active);
+				setLoading(false);
+			}
 			if (
 				session.activeComponent !==
 				TransactingComponent.SWAP
@@ -317,7 +358,9 @@ export const Swap: FC = (props) => {
 									updateSend
 								}
 								value={sendAmount.toString()}
-								balance={balances[0]}
+								balance={
+									loadingBalances? "loading.." : balances[0] 
+								}
 							/>
 						</Grid2>
 
@@ -353,13 +396,11 @@ export const Swap: FC = (props) => {
 										receive
 									]
 								}
-								onChange={
-									updateReceive
-								}
 								value={receiveAmount.toString()}
 								readOnly={true}
-
-								balance={balances[1]}
+								balance={
+									loadingBalances? "loading.." : balances[1] 
+								}
 							/>
 						</Grid2>
 

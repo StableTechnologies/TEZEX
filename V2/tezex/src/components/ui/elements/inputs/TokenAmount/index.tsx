@@ -32,9 +32,11 @@ import TextField from "@mui/material/TextField";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { SvgIcon } from "@mui/material";
+
+import { WalletConnected } from "../../../../session/WalletConnected";
 export interface ITokenAmountInput {
 	assetName: TokenKind;
-	onChange: (value: string) => void;
+	onChange?: (value: string) => Promise<void>;
 	balance: string;
 	value?: string;
 	label?: string;
@@ -69,10 +71,11 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 	}, [inputString, props]);
 	*/
 
-	const updateAmount = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+	const updateAmount = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+		   
 		e.preventDefault();
 		setInputString(e.target.value);
-props.onChange(inputString);
+               if(props.onChange) await props.onChange(inputString);
 	},[]);
 	/*
 	const updateAmount = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -194,6 +197,7 @@ props.onChange(inputString);
 					}}
 					variant="standard"
 				/>
+				<WalletConnected>
 				<Typography
 					color="textSecondary"
 					variant="subtitle2"
@@ -204,6 +208,7 @@ props.onChange(inputString);
 				>
 					balance: {props.balance} {props.assetName}
 				</Typography>
+				</WalletConnected>
 			</Grid2>
 		</Grid2>
 	);
