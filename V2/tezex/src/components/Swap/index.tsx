@@ -105,16 +105,9 @@ export const Swap: FC = (props) => {
 	const [loadingBalances, setLoadingBalances] = useState<boolean>(true);
 	const [loading, setLoading] = useState<boolean>(true);
 	const [editing, setEditing] = useState<boolean>(false);
-	const [inputAmountMantissa, setInputAmountMantissa] = useState<
-		BigNumber | number | null
-	>(null);
-
 	const [sendAmount, setSendAmount] = useState(new BigNumber(0));
 	const [receiveAmount, setReceiveAmount] = useState(new BigNumber(0));
 	const [slippage, setSlippage] = useState<number>(-0.5);
-	const [outputAmountMantissa, setOutputAmountMantissa] = useState<
-		BigNumber | number | null
-	>(0);
 
 	const send = 0;
 	const receive = 1;
@@ -126,58 +119,91 @@ export const Swap: FC = (props) => {
 	const [swapFields, setSwapFields] = useState<boolean>(true);
 	const wallet = useWallet();
 	const session = useSession();
+
 	const transact = async () => {};
 
 	const updateSlippage = useCallback((value: number) => {
 		setSlippage(value);
 	}, []);
 	const updateSend = useCallback(
-		async (value: string) => {
-			if (transaction){
-				await walletOperations.updateAmount(
-					transaction,
-					value
-				);
-			}
-		},[]
+		(value: string) => {
+
+		console.log('\n',':sssend uppdate '); 
+			const amt = new BigNumber(value);
+			if (amt !== sendAmount) setSendAmount(amt);
+		},
+		[sendAmount]
 	);
+
+	useEffect(() => {
+		const updateTransaction = async (transaction: Transaction) => {
+			await walletOperations.updateAmount(
+				transaction,
+				sendAmount.toString()
+			);
+		};
+
+		const timer = setTimeout(() => {
+			if (
+				transaction &&
+				transaction.sendAmount[0].decimal !== sendAmount
+			) {
+				console.log(
+					"\n",
+					"transaction.sendAmount[0].decimal : ",
+					transaction.sendAmount[0].decimal,
+					"\n"
+				);
+				console.log(
+					"",
+					"sendAmount : ",
+					sendAmount,
+					"\n"
+				);
+				updateTransaction(transaction);
+			}
+		}, 9000);
+
+		return () => clearTimeout(timer);
+	}, [sendAmount, transaction, walletOperations]);
 	const updateReceive = useCallback((value: string) => {
 		setReceiveAmount(new BigNumber(value));
 	}, []);
 
-	const [balances, setBalances] = useState<[string, string]>([
-		"",
-		"",
-	]);
+	const [balances, setBalances] = useState<[string, string]>(["", ""]);
 
-	const updateBalance = useCallback(async () => 
-		{if (wallet && isWalletConnected) {
-			if(transaction){ 
-				 setLoadingBalances(!(await walletOperations.updateBalance(
-					transaction
-				)))};
-			   
-			   	if (transaction) {
-			   		setBalances([transaction.sendAssetBalance[0].decimal.toString(),
-			   		transaction.receiveAssetBalance[0].decimal.toString()
-			   	]);
-			   	}
-			   }},[transaction, wallet , walletOperations,isWalletConnected])
+	const updateBalance = useCallback(async () => {
+		if (wallet && isWalletConnected) {
+			if (transaction) {
+				setLoadingBalances(
+					!(await walletOperations.updateBalance(
+						transaction
+					))
+				);
+			}
+
+			if (transaction) {
+				setBalances([
+					transaction.sendAssetBalance[0].decimal.toString(),
+					transaction.receiveAssetBalance[0].decimal.toString(),
+				]);
+			}
+		}
+	}, [transaction, wallet, walletOperations, isWalletConnected]);
 
 	useEffect(() => {
-                  const update = async () => {
-                    await updateBalance() 
-                  }
+		const update = async () => {
+			await updateBalance();
+		};
 		//	if(isWalletConnected) update()
-	},[isWalletConnected,updateBalance])
+	}, [isWalletConnected, updateBalance]);
 	useEffect(() => {
 		if (wallet) {
 			setTransaction((t) => wallet.swapTransaction);
 		}
 	}, [wallet, setTransaction]);
 	useEffect(() => {
-		if (transaction )
-			setTransactionId(transaction.id);
+		if (transaction) setTransactionId(transaction.id);
 		if (transactionId && transaction) {
 			setReceiveAmount(transaction.receiveAmount[0].decimal);
 			setBalances([
@@ -216,7 +242,6 @@ export const Swap: FC = (props) => {
 	}, [loading, editing, receiveAsset,sendAsset, session.activeComponent, transactionId, walletOperations ]);
 	*/
 
-
 	const activeWallet = wallet
 		? wallet.getActiveTransaction(TransactingComponent.SWAP)
 		: undefined;
@@ -224,13 +249,14 @@ export const Swap: FC = (props) => {
 	useEffect(() => {}, [editing]);
 	useEffect(() => {
 		const updateTransactionBalance = async () => {
-			await updateBalance()
+			await updateBalance();
 		};
 
-		const interval = setInterval(() => {
+		const interval = setInterval(
+			() => {
 				updateTransactionBalance();
-		                	
-			/*
+
+				/*
 			transaction &&
 				console.log(
 					"\n",
@@ -246,7 +272,7 @@ export const Swap: FC = (props) => {
 					"\n"
 				);
 			*/
-			/*
+				/*
 			wallet &&
 				console.log(
 					"\n",
@@ -271,10 +297,19 @@ export const Swap: FC = (props) => {
 					"\n"
 				);
 			*/
-		}, loadingBalances? 500 : 5000);
+			},
+			loadingBalances ? 500 : 5000
+		);
 		return () => clearInterval(interval);
 		//if (isWalletConnected) updateTransactionBalance();
-	}, [isWalletConnected, loadingBalances,updateBalance, active, transaction, walletOperations]);
+	}, [
+		isWalletConnected,
+		loadingBalances,
+		updateBalance,
+		active,
+		transaction,
+		walletOperations,
+	]);
 
 	useEffect(() => {}, []);
 	useEffect(() => {
@@ -290,13 +325,18 @@ export const Swap: FC = (props) => {
 
 	const newTransaction = useCallback(async () => {
 		if (!transaction && loading && wallet) {
-			const active = walletOperations.getActiveTransaction()
-			console.log('\n','active : ', active,'\n'); 
-			if (active)   setTransaction(active);
+			const active = walletOperations.getActiveTransaction();
+			console.log("\n", "active : ", active, "\n");
+			if (active) setTransaction(active);
 			await walletOperations
 				.initializeSwap(assets[send], assets[receive])
 				.then((transaction) => {
-					console.log('\n','transaction : ', transaction,'\n'); 
+					console.log(
+						"\n",
+						"transaction : ",
+						transaction,
+						"\n"
+					);
 					setTransaction(transaction);
 					setLoading(false);
 				});
@@ -312,7 +352,7 @@ export const Swap: FC = (props) => {
 			await newTransaction();
 		};
 
-			const active = walletOperations.getActiveTransaction()
+		const active = walletOperations.getActiveTransaction();
 		if (loading && !transaction && !active) _newTransaction();
 		if (loading) {
 			if (active) {
@@ -359,7 +399,9 @@ export const Swap: FC = (props) => {
 								}
 								value={sendAmount.toString()}
 								balance={
-									loadingBalances? "loading.." : balances[0] 
+									loadingBalances
+										? "loading.."
+										: balances[0]
 								}
 							/>
 						</Grid2>
@@ -399,7 +441,9 @@ export const Swap: FC = (props) => {
 								value={receiveAmount.toString()}
 								readOnly={true}
 								balance={
-									loadingBalances? "loading.." : balances[1] 
+									loadingBalances
+										? "loading.."
+										: balances[0]
 								}
 							/>
 						</Grid2>

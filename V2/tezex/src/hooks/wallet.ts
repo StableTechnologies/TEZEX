@@ -245,6 +245,7 @@ export function useWalletSwapOps(): SwapOps {
 	const updateAmount = async(transaction: Transaction,sendAmount?: string,slippage?: string): Promise<boolean> =>{
 
 		
+		console.log('\n',' in updateAmount hook','\n'); 
 		var updated = false
 		if(wallet && sendAmount) wallet.updateAmount(transaction.component,[balanceBuilder(sendAmount, transaction.sendAsset[0], true)]);
 		if(wallet && slippage) wallet.updateAmount(transaction.component,undefined,undefined,new BigNumber(slippage).toNumber())
