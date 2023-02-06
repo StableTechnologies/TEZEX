@@ -65,7 +65,8 @@ const classes = {
 		text: {},
 	},
 	card: {
-		minHeight: "408px",
+
+		minHeight: "30vw",//"408px",
 		minWidth: "440px",
 		borderRadius: "20px",
 		zIndex: 5,
@@ -76,7 +77,9 @@ const classes = {
 		},
 	},
 	paper: {
-		background: "#F9F9F9",
+		background: "blck",//F9F9F9",
+
+		border: "1px solid #E1E1E1",
 		minHeight: "146px",
 		position: "relative",
 		bottom: "10%",
@@ -85,6 +88,7 @@ const classes = {
 		marginBottom: "20px",
 	},
 	root: {
+		display: "flex",
 		position: "relative",
 		justifyContent: "center",
 	},

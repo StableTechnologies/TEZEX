@@ -1,4 +1,8 @@
 import { FC, useState, useEffect, useCallback } from "react";
+import xtzTzbtcIcon from "../../assets/xtzTzbtcIcon.svg";
+import sirsIcon from "../../assets/sirsIcon.svg";
+import rightArrow from "../../assets/rightArrow.svg";
+import plusIcon from "../../assets/plusIcon.svg";
 
 import {
 	Transaction,
@@ -20,7 +24,11 @@ import { useWalletConnected } from "../../hooks/wallet";
 import { getAsset } from "../../constants";
 import { TokenAmountOutput } from "../../components/ui/elements/Labels";
 import { useSession } from "../../hooks/session";
-import { useWallet, useWalletAddLiquidityOps, AddLiquidityOps } from "../../hooks/wallet";
+import {
+	useWallet,
+	useWalletAddLiquidityOps,
+	AddLiquidityOps,
+} from "../../hooks/wallet";
 import { useNetwork } from "../../hooks/network";
 import {
 	estimateTokensFromXtz,
@@ -46,16 +54,28 @@ import Typography from "@mui/material/Typography";
 
 const classes = {
 	cardAction: {
-		justifyContent: "center",
+		justifyContent: "space-between",
+	},
+	input: {
+		"& .MuiFormControl-root": {
+			width: "28.34vw",
+			height: "12.44vh",
+		},
 	},
 	slippageContainer: {
+		display: "flex",
+		width: "100%",
+		alignItems: "center",
+		flexDirection: "row",
+		/*
 		flexDirection: "row",
 		position: "absolute",
 		zIndex: 5,
 		display: "flex",
 		alignItems: "center",
-		minWidth: 408,
-		bottom: "17%",
+		//minWidth: 408,
+		//bottom: "17%",
+		*/
 		"& .MuiGrid2-root": {},
 	},
 
@@ -65,9 +85,20 @@ const classes = {
 	slippage: {
 		text: {},
 	},
+	tokens: {
+		display: "flex",
+	},
+	cardContent: {
+		"&.MuiCardContent-root": {
+			paddingTop: "4vw",
+		},
+		paddingTop: "10vw",
+		alignItems: "center",
+		display: "flex",
+	},
 	card: {
-		minHeight: "408px",
-		minWidth: "440px",
+		minHeight: "46vh",
+		minWidth: "64vw",
 		borderRadius: "20px",
 		zIndex: 5,
 		background: "#FFFFFF",
@@ -98,9 +129,9 @@ export const AddLiquidity: FC = (props) => {
 	const walletOperations: AddLiquidityOps = useWalletAddLiquidityOps();
 	const isWalletConnected = useWalletConnected();
 	const [transactionId, setTransactionId] = useState<Id | null>(null);
-	const [transaction, setTransaction] = useState<
-		Transaction |  undefined
-	>(undefined);
+	const [transaction, setTransaction] = useState<Transaction | undefined>(
+		undefined
+	);
 
 	const [loading, setLoading] = useState<boolean>(true);
 	const [editing, setEditing] = useState<boolean>(false);
@@ -137,48 +168,23 @@ export const AddLiquidity: FC = (props) => {
 		setReceiveAmount(new BigNumber(value));
 	}, []);
 
-	const [balances, setBalances] = useState<[string , string,string]>(["0.0","0.0","0.0"]);
+	const [balances, setBalances] = useState<[string, string, string]>([
+		"0.0",
+		"0.0",
+		"0.0",
+	]);
 	useEffect(() => {
-
-		if(wallet ) {
-			setTransaction(t => wallet.swapTransaction)
+		if (wallet) {
+			setTransaction((t) => wallet.swapTransaction);
 		}
-		if (transaction) setTransactionId(transaction.id)
-	},[wallet, transaction])
-	/*
-	useEffect(() => {
-		const newTransaction = async () => {
-			        console.log('\n','newTransaction '); 
-				const transaction = await walletOperations.initializeSwap(
-					sendAsset,
-					receiveAsset
-				).then((id) => {
-					if (id) {
-					setTransactionId(id)
-					return walletOperations.viewTransaction(id)
-					} else return null
-				})
-	
-			setTransaction(transaction);
-		};
-		if (
-			loading &&
-			!transactionId && 
-			!editing &&
-			session.activeComponent === TransactingComponent.ADD_LIQUIDITY
-		) {
-			setEditing(true);
-			newTransaction();
-			setEditing(false);
-			setLoading(false);
-		}
-	}, [loading, editing, receiveAsset,sendAsset, session.activeComponent, transactionId, walletOperations ]);
-	*/
+		if (transaction) setTransactionId(transaction.id);
+	}, [wallet, transaction]);
 
-	
-	const activeWallet =  (wallet) ? wallet.getActiveTransaction(
-						TransactingComponent.ADD_LIQUIDITY
-	) : undefined;
+	const activeWallet = wallet
+		? wallet.getActiveTransaction(
+				TransactingComponent.ADD_LIQUIDITY
+		  )
+		: undefined;
 	const active = walletOperations.getActiveTransaction();
 	useEffect(() => {}, [editing]);
 	useEffect(() => {
@@ -191,8 +197,6 @@ export const AddLiquidity: FC = (props) => {
 
 		const interval = setInterval(() => {
 			updateTransactionBalance();
-
-
 
 			transaction &&
 				console.log(
@@ -208,31 +212,6 @@ export const AddLiquidity: FC = (props) => {
 					transaction.sendAssetBalance[0].decimal.toNumber(),
 					"\n"
 				);
-			/*
-			wallet &&
-				console.log(
-					"\n",
-					"wallet.getActiveTransaction(TransactingComponent.ADD_LIQUIDITY) : ",
-					wallet.getActiveTransaction(
-						TransactingComponent.ADD_LIQUIDITY
-					),
-					"\n"
-				);
-			active &&
-				console.log(
-					"\n",
-					"active.sendAssetBalance[0].decimal : ",
-					active.sendAssetBalance[0].decimal.toString(),
-					"\n"
-				);
-			transaction &&
-				console.log(
-					"\n",
-					"transaction.sendAssetBalance[0].decimal : ",
-					transaction.sendAssetBalance[0].decimal.toString(),
-					"\n"
-				);
-			*/
 		}, 5000);
 		return () => clearInterval(interval);
 		//if (isWalletConnected) updateTransactionBalance();
@@ -258,10 +237,9 @@ export const AddLiquidity: FC = (props) => {
 					setLoading(false);
 				});
 		}
-	}, [assets, transaction,loading, walletOperations]);
+	}, [assets, transaction, loading, walletOperations]);
 
-	useEffect(() => {
-	}, [loading, transaction, newTransaction]);
+	useEffect(() => {}, [loading, transaction, newTransaction]);
 
 	useEffect(() => {
 		//run always
@@ -286,20 +264,83 @@ export const AddLiquidity: FC = (props) => {
 		<Grid2 container sx={classes.root}>
 			<Grid2>
 				<Card sx={classes.card}>
-					<CardHeader
-						title={
-							<Typography variant="h6">
-								{"Add Liquidty"}
-							</Typography>
-						}
-					/>
-					<CardContent>
+					<Grid2 xs={12}>
+						<CardHeader
+							title={
+								<Typography variant="h6">
+									{
+										"Add Liquidty"
+									}
+								</Typography>
+							}
+						/>
+					</Grid2>
+					<Grid2
+						xs={8}
+						lg={4}
+						sx={classes.tokens}
+					>
+						<Box>
+							<img
+								style={
+									{
+										/*
+												marginLeft: "8px",
+												marginRight:
+													"8px",
+												maxWidth: "30px",
+												width: "30px",
+												height: "30px",
+												*/
+									}
+								}
+								src={
+									xtzTzbtcIcon
+								}
+								alt="xtzTzbtcIcon"
+							/>
+						</Box>
+						<Box>
+							<img
+								style={
+									{
+										/*
+												marginLeft: "8px",
+												marginRight:
+													"8px",
+												maxWidth: "30px",
+												width: "30px",
+												height: "30px",
+												*/
+									}
+								}
+								src={rightArrow}
+								alt="rightArrow"
+							/>
+						</Box>
+						<Box>
+							<img
+								style={
+									{
+										/*
+												marginLeft: "8px",
+												marginRight:
+													"8px",
+												maxWidth: "30px",
+												width: "30px",
+												height: "30px",
+												*/
+									}
+								}
+								src={sirsIcon}
+								alt="sirsIcon"
+							/>
+						</Box>
+					</Grid2>
+					<CardContent sx={classes.cardContent}>
 						<Grid2
-							xs={12}
-							sx={{
-								position: "relative",
-								top: "10px",
-							}}
+							xs={6}
+							sx={classes.input}
 						>
 							<TokenInput
 								assetName={
@@ -308,36 +349,27 @@ export const AddLiquidity: FC = (props) => {
 									]
 								}
 								value={sendAmount.toString()}
-
-								balance={balances[0]}
+								balance={
+									balances[0]
+								}
 							/>
 						</Grid2>
 
 						<Grid2
-							xs={12}
+							xs={0.5}
 							sx={{
 								position: "relative",
-								zIndex: 5,
 							}}
 						>
-							<SwapUpDownToggle
-								toggle={
-									swapFields
-								}
-								setToggle={
-									setSwapFields
-								}
-							>
-								{"swap fields"}
-							</SwapUpDownToggle>
+							<img
+								src={plusIcon}
+								alt="plusIcon"
+							/>
 						</Grid2>
 
 						<Grid2
-							xs={12}
-							sx={{
-								position: "relative",
-								bottom: "10px",
-							}}
+							xs={6}
+							sx={classes.input}
 						>
 							<TokenInput
 								assetName={
@@ -347,61 +379,36 @@ export const AddLiquidity: FC = (props) => {
 								}
 								value={receiveAmount.toString()}
 								readOnly={true}
+								balance={
+									balances[1]
+								}
+							/>
+						</Grid2>
+					</CardContent>
+					<CardActions sx={classes.cardAction}>
+						<Grid2 xs={1}>Slippage</Grid2>
 
-								balance={balances[1]}
+						<Grid2
+							xs={4}
+							sx={
+								classes.slippageComponent
+							}
+						>
+							<Slippage
+								asset={
+									assets[
+										receive
+									]
+								}
+								value={slippage}
+								onChange={
+									updateSlippage
+								}
+								inverse={true}
 							/>
 						</Grid2>
 
-						<Box
-							sx={
-								classes.slippageContainer
-							}
-						>
-							<Grid2
-								xs={2}
-								sm={2}
-								md={2}
-								lg={2}
-							>
-								Slippage
-							</Grid2>
-
-							<Grid2
-								xs={10}
-								sm={10}
-								md={10}
-								lg={10}
-								sx={
-									classes.slippageComponent
-								}
-							>
-								<Slippage
-									asset={
-										assets[
-											receive
-										]
-									}
-									value={
-										slippage
-									}
-									onChange={
-										updateSlippage
-									}
-									inverse={
-										true
-									}
-								/>
-							</Grid2>
-						</Box>
-					</CardContent>
-					<CardActions sx={classes.cardAction}>
-						<Grid2
-							sx={{
-								justifyContent:
-									"center",
-							}}
-							xs={12}
-						>
+						<Grid2 sx={{}} xs={6}>
 							<Transact
 								callback={
 									transact
@@ -412,17 +419,6 @@ export const AddLiquidity: FC = (props) => {
 						</Grid2>
 					</CardActions>
 				</Card>
-
-				<Paper
-					variant="outlined"
-					sx={classes.paper}
-					square
-				>
-					<Grid2
-						container
-						sx={classes.slippageContainer}
-					></Grid2>
-				</Paper>
 			</Grid2>
 		</Grid2>
 	);

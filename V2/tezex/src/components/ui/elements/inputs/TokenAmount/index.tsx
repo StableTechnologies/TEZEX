@@ -186,19 +186,27 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 					label={props.label ? props.label : ""}
 					id="filled-start-adornment"
 					sx={{
-						paddingLeft: "16px",
-						width: "408px",
+						justifyContent:"center",
+						width: "100%",
 						height: "75px",
+
 					}}
 					InputProps={{
 						disableUnderline: true,
 						startAdornment: (
 							<InputAdornment position="start">
-								<div
-									style={
-										style.textAndLogo
-									}
-									flex-direction="row"
+								<Box sx={{display:"block"}}>
+									<Box sx={{
+										fontSize:"max(10px,1.2vw)",
+									}}>
+									    {"Enter Amount"}
+									</Box>
+								<Box
+									sx={{
+										display: "flex",
+									flexDirection:"row",
+									}}
+
 								>
 									<div>
 										<img
@@ -206,9 +214,7 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 												marginLeft: "8px",
 												marginRight:
 													"8px",
-												maxWidth: "30px",
-												width: "30px",
-												height: "30px",
+												height: "23px",
 											}}
 											src={
 												asset.logo
@@ -221,7 +227,8 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 											asset.label
 										}
 									</div>
-								</div>
+								</Box>
+							</Box>
 							</InputAdornment>
 						),
 					}}
@@ -229,6 +236,9 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 						readOnly: props.readOnly,
 						style: {
 							textAlign: "right",
+
+						fontSize: "max(10px,2.2vw)",
+								//		lineHeight: "38.7px",
 						},
 					}}
 					variant="standard"

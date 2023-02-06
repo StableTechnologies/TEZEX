@@ -1,4 +1,11 @@
-import {memo, MemoExoticComponent, FC, useCallback, useState, useEffect } from "react";
+import {
+	memo,
+	MemoExoticComponent,
+	FC,
+	useCallback,
+	useState,
+	useEffect,
+} from "react";
 import { BigNumber } from "bignumber.js";
 
 import { WalletInfo } from "../../../../contexts/wallet";
@@ -18,11 +25,14 @@ import FilledInput from "@mui/material/FilledInput";
 import OutlinedInput from "@mui/material/OutlinedInput";
 import InputLabel from "@mui/material/InputLabel";
 import InputAdornment from "@mui/material/InputAdornment";
+
+import Button from "@mui/material/Button";
 import FormHelperText from "@mui/material/FormHelperText";
 import FormControl from "@mui/material/FormControl";
 import TextField from "@mui/material/TextField";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
+
 
 const classes = {
 	/*
@@ -38,18 +48,17 @@ textAlign: 'right',
 
 	tabInput: {
 		"&.MuiButtonBase-root": {
-			fontFamily: "Inter",
 			fontStyle: "normal",
 			fontWeight: "500",
-			fontSize: "12px",
-			lineHeight: "15px",
+			fontSize: "80%",
+			lineHeight: "1.56vh",
 			display: "inline-flex",
 			justifyContent: "center",
 			textAlign: "center",
-			minHeight: "31px",
-			marginRight: "40px",
-			minWidth: "61px",
-			zIndex: 2,
+			minHeight: "3.03vh",
+			//marginRight: "40px",
+			minWidth: "4.26vw",
+			zIndex: 1,
 			// marginTop: spacing(0.5),
 			color: "palette.text.primary",
 			textTransform: "initial",
@@ -62,22 +71,62 @@ textAlign: 'right',
 		},
 	},
 	tabClasses: {
+		"&.MuiButton-root.Mui-disabled": {
+			"&:after": {
+				zindex: 0,
+				//minHeight: "3.26vh",
+				//marginRight: "40px",
+				//minWidth: "4.26vw",
+				// padding: "",
+				content: '"e"',
+				display: "flex",
+				position: "absolute",
+				top: 0,
+				left: 4,
+				right: 4,
+				bottom: 0,
+				//position: "absolute",
+
+				borderRadius: "8px",
+				backgroundColor: "transparent", //"selectedHomeTab.main", //'#E3F7FF',//'palette.action.selected' ,
+			},
+		},
 		"&.MuiButtonBase-root": {
 			fontFamily: "Inter",
 			fontStyle: "normal",
 			fontWeight: "500",
-			fontSize: "12px",
-			lineHeight: "15px",
+			fontSize: "80%",
+			lineHeight: "1.56vh",
 			display: "inline-flex",
 			justifyContent: "center",
 			textAlign: "center",
-			minHeight: "31px",
-			paddingRight: "3px",
-			minWidth: "61px",
+			minHeight: "3.03vh",
+			//marginRight: "40px",
+			minWidth: "4.26vw",
 			zIndex: 1,
 			// marginTop: spacing(0.5),
 			color: "palette.text.primary",
 			textTransform: "initial",
+
+			"&:after": {
+				//minHeight: "3.26vh",
+				//marginRight: "40px",
+				//minWidth: "4.26vw",
+				// padding: "",
+				content: '"e"',
+				display: "flex",
+				alignItems: "center",
+				justifyContent: "center",
+				position: "absolute",
+				top: 0,
+				left: 4,
+				right: 4,
+				bottom: 0,
+				//position: "absolute",
+
+				borderRadius: "8px",
+				backgroundColor: "selectedHomeTab.main", //'#E3F7FF',//'palette.action.selected' ,
+			},
 		},
 		wrapper: {
 			// zIndex: 2,
@@ -96,8 +145,6 @@ textAlign: 'right',
 			fontFamily: "Inter",
 			fontStyle: "normal",
 			fontWeight: "500",
-			fontSize: "12px",
-			lineHeight: "15px",
 			textAlign: "left",
 		},
 
@@ -109,38 +156,44 @@ textAlign: 'right',
 			display: "inline-flex",
 			justifyContent: "center",
 			textAlign: "center",
-			bottom: "45%",
-			left: "26%",
-			padding: "0px",
+			//bottom: "45%",
+			//	left: "26%",
+			padding: "1px",
 			fontStyle: "normal",
 			fontWeight: "500",
-			fontSize: "12px",
-			lineHeight: "15px",
+			//fontSize: "12px",
+			//lineHeight: "15px",
 
+			fontSize: "1.17vh",
+			lineHeight: "1.56vh",
+			minHeight: "3.03vh",
+			//marginRight: "40px",
+			minWidth: "4.26vw",
 			// marginTop: spacing(0.5),
 			textTransform: "initial",
+			// marginTop: spacing(0.5),
 		},
 
-		"& .MuiInputBase-root": {
+		"&.MuiInputBase-root": {
 			position: "absolute",
 			fontFamily: "Inter",
 
-			right: "1%",
-			left: "6%",
 			padding: "0px",
-			fontStyle: "normal",
-			fontWeight: "500",
-			fontSize: "12px",
-			lineHeight: "15px",
-			maxHeight: 10,
-			minWidth: 40,
+			fontSize: "1.17vh",
+			lineHeight: "1.56vh",
+			display: "inline-flex",
+			justifyContent: "center",
+			textAlign: "center",
+			minHeight: "3.03vh",
+			//marginRight: "40px",
+			minWidth: "4.26vw",
 			// marginTop: spacing(0.5),
 			textTransform: "initial",
 		},
 	},
 	tabs: {
 		"& .MuiTabs-root": {
-			minHeight: 10,
+			//			minHeight: 10,
 		},
 
 		"& .MuiTabs-scroller": {
@@ -149,7 +202,7 @@ textAlign: 'right',
 			display: "flex",
 
 			flexDirection: "row",
-			left: "20%",
+			//			left: "20%",
 			padding: "4px",
 
 			/*
@@ -171,10 +224,11 @@ textAlign: 'right',
 		},
 		"& .MuiTabs-flexContainer": {
 			padding: "1",
-			gap: "4px",
+			//gap: "4px",
+
+			alignItems: "center",
 			justifyContent: "center",
 			position: "absolute",
-			left: "20%",
 			border: "1px solid #EDEDED",
 			borderRadius: "8px",
 		},
@@ -185,13 +239,16 @@ textAlign: 'right',
 			padding: "3px",
 			background: "none",
 			"&:after": {
-				minHeight: "31px",
-				minWidth: "61px",
+				minHeight: "3.26vh",
+				//marginRight: "40px",
+				minWidth: "4.26vw",
 				padding: "",
 
 				content: '""',
 				display: "flex",
-				position: "absolute",
+				justifyContent: "center",
+				//position: "absolute",
+
 				borderRadius: "8px",
 				backgroundColor: "selectedHomeTab.main", //'#E3F7FF',//'palette.action.selected' ,
 			},
@@ -203,11 +260,8 @@ export interface ISlippage {
 	asset: TokenKind;
 	value: BigNumber | number;
 	onChange: (value: number) => void;
-        inverse?: boolean;
+	inverse?: boolean;
 }
-
-
-
 
 const SlippageInput: FC<ISlippage> = (props) => {
 	const [selectedId, setSelectedId] = useState("0");
@@ -218,7 +272,6 @@ const SlippageInput: FC<ISlippage> = (props) => {
 		//		props.setslippage(stringToBigNumber("3"));
 		//props.setSlippage(stringToBigNumber(value));
 	};
-
 
 	const [value, setValue] = useState(0);
 
@@ -232,16 +285,14 @@ const SlippageInput: FC<ISlippage> = (props) => {
 	const [input, setInput] = useState<string>("0.1");
 
 	useEffect(() => {
+		const stringToNumber = (value: string) => {
+			const num = props.inverse
+				? new BigNumber(value).multipliedBy(-1)
+				: new BigNumber(value);
 
-	const stringToNumber = (value: string) => {
-		const num = props.inverse
-			? new BigNumber(value).multipliedBy(-1)
-			: new BigNumber(value);
-
-		return BigNumber(num).toNumber();
-	};
+			return BigNumber(num).toNumber();
+		};
 		props.onChange(stringToNumber(input));
-
 	}, [input, props]);
 
 	interface ISlippageInput {
@@ -252,10 +303,15 @@ const SlippageInput: FC<ISlippage> = (props) => {
 			<TextField
 				autoFocus
 				disabled={prop.disabled}
-				onChange={useCallback((e: React.ChangeEvent<HTMLInputElement>)=> {
-					e.preventDefault();
-					setInput(e.target.value);
-				},[])}
+				onChange={useCallback(
+					(
+						e: React.ChangeEvent<HTMLInputElement>
+					) => {
+						e.preventDefault();
+						setInput(e.target.value);
+					},
+					[]
+				)}
 				sx={classes.textField}
 				InputProps={{
 					disableUnderline: true,
@@ -280,25 +336,91 @@ const SlippageInput: FC<ISlippage> = (props) => {
 	}
 
 	function SlippageTab(props: SlippageTabProps, input?: boolean) {
+
+	const classes =  {
+		"&.MuiButton-root.Mui-disabled": {
+
+			backgroundColor: "transparent", //'#E3F7FF',//'palette.action.selected' ,
+			"&:after": {
+				zindex: 0,
+				//minHeight: "3.26vh",
+				//marginRight: "40px",
+				//minWidth: "4.26vw",
+				// padding: "",
+				display: "flex",
+				position: "absolute",
+				top: 0,
+				left: 4,
+				right: 4,
+				bottom: 0,
+				//position: "absolute",
+
+				borderRadius: "8px",
+				backgroundColor: "transparent", //"selectedHomeTab.main", //'#E3F7FF',//'palette.action.selected' ,
+			},
+		},
+		"&.MuiButtonBase-root": {
+			fontFamily: "Inter",
+			fontStyle: "normal",
+			fontWeight: "500",
+			fontSize: "80%",
+			lineHeight: "1.56vh",
+			display: "inline-flex",
+			justifyContent: "center",
+			textAlign: "center",
+			minHeight: "3.03vh",
+			//marginRight: "40px",
+			minWidth: "4.26vw",
+			zIndex: 1,
+			// marginTop: spacing(0.5),
+
+			backgroundColor: "selectedHomeTab.main", //'#E3F7FF',//'palette.action.selected' ,
+			color: "palette.text.primary",
+			textTransform: "initial",
+
+			"&:after": {
+				//minHeight: "3.26vh",
+				//marginRight: "40px",
+				//minWidth: "4.26vw",
+				// padding: "",
+				display: "flex",
+
+				alignItems: "center",
+				justifyContent: "center",
+				position: "absolute",
+				top: 0,
+				left: 4,
+				right: 4,
+				bottom: 0,
+				//position: "absolute",
+
+				borderRadius: "8px",
+				backgroundColor: "selectedHomeTab.main", //'#E3F7FF',//'palette.action.selected' ,
+			},
+		},
+		wrapper: {
+			// zIndex: 2,
+			// marginTop: spacing(0.5),
+			color: "palette.text.primary",
+			textTransform: "initial",
+		},
+	};
 		return (
-			<Tab
-				label={
-					props.id === "input" ? (
-						<SlippageInput
-							disabled={
-								selectedId !==
-								props.id
-							}
-						/>
-					) : (
-						props.label
-					)
-				}
+			<div
+				onClick={(
+					event
+
+				) => {
+					event.preventDefault();
+					setSelectedId(props.id);
+					setInput(props.amount.toString());
+				}}
+			>
+			<Button
+				disabled={selectedId!==props.id}
 				href=""
 				sx={
-					props.id === "input"
-						? classes.tabInput
-						: classes.tabClasses
+					classes
 				}
 				onClick={(
 					event: React.MouseEvent<
@@ -311,11 +433,46 @@ const SlippageInput: FC<ISlippage> = (props) => {
 					setInput(props.amount.toString());
 				}}
 				{...props}
-			/>
+			>
+					{props.amount.toString()}
+			</Button>
+			</div>
 		);
 	}
 	const SlippageTabs = () => {
 		return (
+			<Grid2 container sx={{
+                                position: "relative",
+				width:"100%",
+
+					justifyContent: "space-between",
+				minHeight: "3.8vh",
+				//marginRight: "40px",
+				maxWidth: "15vw",
+
+			       paddingRight: "0px",
+border: "1px solid #EDEDED",
+			}}> 
+				<Grid2 >
+				<SlippageTab id="0" label="0.5%" amount={0.5} />
+				</Grid2>
+			<Grid2>
+			<SlippageTab id="1" label="1%" amount={1} />
+			</Grid2>
+			<Grid2>
+			<SlippageTab id="input" amount={0} />
+			</Grid2>
+			</Grid2>
+		);
+	};
+
+	// move grid to individual comp swap/add
+	return <SlippageTabs />;
+};
+
+export const Slippage = memo(SlippageInput);
+
+/*
 			<Tabs
 				value={value}
 				sx={classes.tabs}
@@ -326,14 +483,7 @@ const SlippageInput: FC<ISlippage> = (props) => {
 				<SlippageTab id="1" label="1%" amount={1} />
 				<SlippageTab id="input" amount={0}/>
 			</Tabs>
-		);
-	};
-
-	// move grid to individual comp swap/add
-	return <SlippageTabs />;
-};
-
-export const Slippage = memo(SlippageInput);
+			*/
 /*
   
 		<div>
