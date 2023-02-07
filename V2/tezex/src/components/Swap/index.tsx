@@ -44,10 +44,21 @@ import Paper from "@mui/material/Paper";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 const classes = {
+	cardcontent :{
+
+		"&.MuiCardContent-root": {
+		paddingTop:"0px",
+		},
+		"& .MuiFormControl-root": {
+			width: "28.34vw",
+			height: "6.94vw",
+		},
+	},
 	cardAction: {
 		justifyContent: "center",
 	},
 	slippageContainer: {
+		background:"black",
 		flexDirection: "row",
 		position: "absolute",
 		zIndex: 5,
@@ -66,10 +77,12 @@ const classes = {
 	},
 	card: {
 
-		minHeight: "30vw",//"408px",
-		minWidth: "440px",
-		borderRadius: "20px",
-		zIndex: 5,
+						overflow: "hidden",
+		position:"relative",
+		height: "28.49vw",//"408px",
+		width: "30.56vw",
+		borderRadius: "1.38vw",
+		zIndex: 999,
 		background: "#FFFFFF",
 		border: "1px solid #E1E1E1",
 		"& .MuiCardContent-root": {
@@ -77,13 +90,12 @@ const classes = {
 		},
 	},
 	paper: {
-		background: "blck",//F9F9F9",
-
+		background: "#F9F9F9",
+		borderRadius: "20px",
 		border: "1px solid #E1E1E1",
 		minHeight: "146px",
 		position: "relative",
 		bottom: "10%",
-		borderRadius: "20px",
 		zIndex: -1,
 		marginBottom: "20px",
 	},
@@ -134,7 +146,10 @@ export const Swap: FC = (props) => {
 
 		console.log('\n',':sssend uppdate '); 
 			const amt = new BigNumber(value);
-			if (amt !== sendAmount) setSendAmount(amt);
+			if (amt !== sendAmount){ 
+	console.log('\n','sendAmount old value : ', sendAmount,'\n'); 
+				console.log('\n','sendAMount new value : ', amt,'\n'); 
+				setSendAmount(amt)};
 		},
 		[sendAmount]
 	);
@@ -359,10 +374,12 @@ export const Swap: FC = (props) => {
 		};
 
 		const active = walletOperations.getActiveTransaction();
-		if (loading && !transaction && !active) _newTransaction();
-		if (loading) {
+		if (loading && !transaction && !active){ 
+			_newTransaction();} else if (loading) {
 			if (active) {
 				setTransaction(active);
+				updateSend(active.sendAmount[0].decimal.toString());
+				updateSlippage(active.slippage);
 				setLoading(false);
 			}
 			if (
@@ -378,153 +395,169 @@ export const Swap: FC = (props) => {
 	return (
 		<Grid2 container sx={classes.root}>
 			<Grid2>
-				<Card sx={classes.card}>
-					<CardHeader
-						title={
-							<Typography variant="h6">
-								{"Swap Tokens"}
-							</Typography>
-						}
-					/>
-					<CardContent>
-						<Grid2
-							xs={12}
+				<div>
+					<Card sx={classes.card}>
+						<CardHeader
 							sx={{
-								position: "relative",
-								top: "10px",
+							    paddingBottom:"0px",
+                                                                    fontSize:"1vw",
+textAlign: 'left'
 							}}
-						>
-							<TokenInput
-								assetName={
-									assets[
-										send
-									]
-								}
-								onChange={
-									updateSend
-								}
-								value={sendAmount.toString()}
-								balance={
-									loadingBalances
-										? "loading.."
-										: balances[0]
-								}
-							/>
-						</Grid2>
-
-						<Grid2
-							xs={12}
-							sx={{
-								position: "relative",
-								zIndex: 5,
-							}}
-						>
-							<SwapUpDownToggle
-								toggle={
-									swapFields
-								}
-								setToggle={
-									setSwapFields
-								}
-							>
-								{"swap fields"}
-							</SwapUpDownToggle>
-						</Grid2>
-
-						<Grid2
-							xs={12}
-							sx={{
-								position: "relative",
-								bottom: "10px",
-							}}
-						>
-							<TokenInput
-								assetName={
-									assets[
-										receive
-									]
-								}
-								value={receiveAmount.toString()}
-								readOnly={true}
-								balance={
-									loadingBalances
-										? "loading.."
-										: balances[0]
-								}
-							/>
-						</Grid2>
-
-						<Box
-							sx={
-								classes.slippageContainer
+							title={
+								<Typography sx={{
+									fontSize:"1.4vw"
+								}}>
+									{"Swap"}
+								</Typography>
 							}
-						>
+						/>
+						<CardContent sx={classes.cardcontent}>
 							<Grid2
-								xs={2}
-								sm={2}
-								md={2}
-								lg={2}
+								xs={12}
+								sx={{
+									position: "relative",
+									top: "10px",
+								}}
 							>
-								Slippage
+								<TokenInput
+									assetName={
+										assets[
+											send
+										]
+									}
+									onChange={
+										updateSend
+									}
+									value={sendAmount.toString()}
+									balance={
+										loadingBalances
+											? "loading.."
+											: balances[0]
+									}
+									loading={loading}
+								/>
 							</Grid2>
-
+					
 							<Grid2
-								xs={10}
-								sm={10}
-								md={10}
-								lg={10}
-								sx={
-									classes.slippageComponent
-								}
+								xs={12}
+								sx={{
+									position: "relative",
+									zIndex: 5,
+								}}
 							>
-								<Slippage
-									asset={
+								<SwapUpDownToggle
+									toggle={
+										swapFields
+									}
+									setToggle={
+										setSwapFields
+									}
+								>
+									{"swap fields"}
+								</SwapUpDownToggle>
+							</Grid2>
+					
+							<Grid2
+								xs={12}
+								sx={{
+									position: "relative",
+									bottom: "10px",
+								}}
+							>
+								<TokenInput
+									assetName={
 										assets[
 											receive
 										]
 									}
-									value={
-										slippage
-									}
-									onChange={
-										updateSlippage
-									}
-									inverse={
-										true
+									value={receiveAmount.toString()}
+									readOnly={true}
+									balance={
+										loadingBalances
+											? "loading.."
+											: balances[1]
 									}
 								/>
 							</Grid2>
-						</Box>
-					</CardContent>
-					<CardActions sx={classes.cardAction}>
-						<Grid2
-							sx={{
-								justifyContent:
-									"center",
-							}}
-							xs={12}
-						>
-							<Transact
-								callback={
-									transact
-								}
-							>
-								{"Swap Tokens"}
-							</Transact>
-						</Grid2>
-					</CardActions>
-				</Card>
+					
 
-				<Paper
-					variant="outlined"
-					sx={classes.paper}
-					square
-				>
-					<Grid2
-						container
-						sx={classes.slippageContainer}
-					></Grid2>
-				</Paper>
+						</CardContent>
+						<CardActions sx={classes.cardAction}>
+							<Box
+								sx={{
+									width:"28.33vw",
+									height:"4.16vw",
+									justifyContent:
+										"center",
+								}}
+							>
+								<Transact
+									callback={
+										transact
+									}
+								>
+									{"Swap Tokens"}
+								</Transact>
+							</Box>
+						</CardActions>
+					</Card>
+					
+					
+					<Paper
+						variant="outlined"
+						sx={{
+
+						position: "relative",
+						bottom: "5vw",
+						zindex:"-999",
+
+		borderRadius: "1.38vw",
+		background: "#F9F9F9",
+
+								height: "10.14vw",
+						}}
+						square
+					>
+							<Box
+							>
+								<Grid2
+									xs={2}
+									sm={2}
+									md={2}
+									lg={2}
+								>
+									Slippage
+								</Grid2>
+					
+								<Grid2
+									xs={10}
+									sm={10}
+									md={10}
+									lg={10}
+									sx={
+										classes.slippageComponent
+									}
+								>
+									<Slippage
+										asset={
+											assets[
+												receive
+											]
+										}
+										value={
+											slippage
+										}
+										onChange={
+											updateSlippage
+										}
+										inverse={
+											true
+										}
+									/>
+								</Grid2>
+							</Box>
+					</Paper>
+				</div>
 			</Grid2>
 		</Grid2>
 	);

@@ -247,7 +247,7 @@ export function useWalletSwapOps(): SwapOps {
 		
 		console.log('\n',' in updateAmount hook','\n'); 
 		var updated = false
-		if(wallet && sendAmount) wallet.updateAmount(transaction.component,[balanceBuilder(sendAmount, transaction.sendAsset[0], true)]);
+		if(wallet && sendAmount) wallet.updateAmount(transaction.component,[balanceBuilder(sendAmount, transaction.sendAsset[0], false)]);
 		if(wallet && slippage) wallet.updateAmount(transaction.component,undefined,undefined,new BigNumber(slippage).toNumber())
 
 	        const toolkit = new TezosToolkit(network.tezosServer);

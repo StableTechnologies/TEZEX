@@ -59,7 +59,7 @@ const classes = {
 	input: {
 		"& .MuiFormControl-root": {
 			width: "28.34vw",
-			height: "12.44vh",
+			height: "8.61vw",
 		},
 	},
 	slippageContainer: {

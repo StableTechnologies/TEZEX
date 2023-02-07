@@ -36,7 +36,7 @@ export async function getBalance(
 	};
 	
 	const balance = await getBalance();
-	return balanceBuilder(balance, asset)
+	return balanceBuilder(balance, asset,true)
 }
 export async function _getBalance(
 	toolkit: TezosToolkit,

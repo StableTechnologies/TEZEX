@@ -48,6 +48,7 @@ export interface ITokenAmountInput {
 	value: string;
 	label?: string;
 	readOnly?: boolean;
+	loading?: boolean;
 }
 
 const style = {
@@ -62,6 +63,14 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 	const wallet = useWallet();
 	const asset: Asset = getAsset(props.assetName);
 	const onChange = props.onChange;
+	const value = props.value;
+	const loading = props.loading;
+	useEffect(() => {
+
+			setInputString(value);
+
+
+	},[loading,value])
 	const callBack = useCallback(
 		async (value: string) => {
 			console.log("\n", " callback ", "\n");
