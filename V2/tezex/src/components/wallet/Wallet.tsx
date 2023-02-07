@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { FC, useEffect, useState } from "react";
 import connectWallet from "../../functions/beacon";
 import { useWallet } from "../../hooks/wallet";
 import { useNetwork } from "../../hooks/network";
@@ -6,18 +6,54 @@ import { WalletInfo } from "../../contexts/wallet";
 import { WalletConnected } from "../session/WalletConnected";
 import { WalletDisconnected } from "../session/WalletDisconnected";
 
+import {
+	Transaction,
+	TokenKind,
+	Asset,
+	Balance,
+	Id,
+	TransactionStatus,
+	TransactingComponent,
+	Amount,
+	AssetOrAssetPair,
+	SendOrRecieve,
+} from "../../types/general";
 import Button from "@mui/material/Button";
 
 const classes = {
+	transact: {
+		"&.MuiButton-root.Mui-disabled": {
+			color: "white",
+		},
+
+		fontFamily: "Inter",
+		width: "100%",
+		height: "56px",
+		backgroundColor: "#000",
+		color: "white",
+		border: "1px solid black",
+		borderRadius: "16px",
+		fontWeight: "500",
+		fontSize: "24px",
+		lineHeight: "29px",
+		letterSpacing: "0.01em",
+		textTransform: "none",
+		"&:hover": {
+			background: "#000",
+		},
+		"@media (max-width: 600px)": {
+			fontSize: "24px",
+		},
+	},
 	walletDisconnectedHeader: {
 		"&.MuiButton-root.Mui-disabled": {
 			color: "white",
 		},
 		background: "#1E1E1E",
 		color: "white",
-		minHeight: '39px',
-                minWidth: '149px',
-		padding : '10px, 16px, 10px, 16px',
+		minHeight: "39px",
+		minWidth: "149px",
+		padding: "10px, 16px, 10px, 16px",
 		border: "1px solid black",
 		borderRadius: "8px",
 		fontWeight: "500",
@@ -57,14 +93,51 @@ const classes = {
 		},
 	},
 };
- 
+
 interface IWallet {
-         variant?: "header" | "card"
+	transaction?: Transaction;
+	callback?: () => Promise<void>;
+	variant?: "header" | "card";
+	children?: string;
 }
 
 export const Wallet: FC<IWallet> = (props) => {
 	const walletInfo: WalletInfo | undefined = useWallet();
 	const networkInfo = useNetwork();
+	//const transaction
+	const [disabled, setDisabled] = useState(true);
+        const [transactionStatus, setTransactionStatus] = useState<TransactionStatus | undefined>(undefined)
+	useEffect(() => {
+		if(props.transaction){
+
+			setTransactionStatus(props.transaction.transactionStatus);
+		}
+	},[props.transaction])
+	const transact = async () => {
+		if (walletInfo && props.callback) {
+			//await walletInfo.walletUser(props.callback);
+		}
+	};
+
+	const info = (() => {
+		if (walletInfo) {
+			return walletInfo.isReady()
+				? props.children
+				: walletInfo.walletStatus;
+		} else {
+			return "";
+		}
+	})();
+
+	/*
+	useEffect(() => {
+		if (walletInfo) {
+			walletInfo.isReady()
+				? setDisabled(false)
+				: setDisabled(true);
+		}
+	}, [walletInfo]);
+	*/
 	const connect = async () => {
 		if (walletInfo) {
 			await connectWallet(walletInfo, networkInfo);
@@ -75,28 +148,57 @@ export const Wallet: FC<IWallet> = (props) => {
 			walletInfo.disconnect();
 		}
 	};
-	const WalletVariant: FC = (_prop) => {
 
-		if(props.variant && props.variant === "header") {
-				return(<Button size="small" sx={classes.walletDisconnectedHeader} onClick={connect}>
+	const WalletVariantDisconnected: FC = (_prop) => {
+		if (props.variant && props.variant === "header") {
+			return (
+				<Button
+					size="small"
+					sx={classes.walletDisconnectedHeader}
+					onClick={connect}
+				>
 					Connect Wallet
-				</Button>)
-		} else { 
-
-				return(<Button size="large" sx={classes.walletDisconnectedCard} onClick={connect}>
+				</Button>
+			);
+		} else {
+			return (
+				<Button
+					size="large"
+					sx={classes.walletDisconnectedCard}
+					onClick={connect}
+				>
 					Connect Wallet
-				</Button>)
+				</Button>
+			);
 		}
-	}
-	return (
-		<>
-			<WalletDisconnected>
-				<WalletVariant />
-			</WalletDisconnected>
-			<WalletConnected>
+	};
+	const WalletVariantConnected: FC = (_prop) => {
+		if (props.variant && props.variant === "header") {
+			return (
 				<button onClick={disconnect}>
 					{walletInfo ? walletInfo.address : ""}
 				</button>
+			);
+		} else {
+			return (
+				<Button
+					size="large"
+					onClick={transact}
+					sx={classes.transact}
+					disabled={disabled}
+				>
+					{info}
+				</Button>
+			);
+		}
+	};
+	return (
+		<>
+			<WalletDisconnected>
+				<WalletVariantDisconnected />
+			</WalletDisconnected>
+			<WalletConnected>
+				<WalletVariantConnected />
 			</WalletConnected>
 		</>
 	);

@@ -1,4 +1,4 @@
-import { TokenKind, Asset } from "../types/general";
+import { TokenKind, Asset, Transaction } from "../types/general";
 import tzbtcLogo from "../assets/tzbtcLogo.svg";
 import tzlogo from "../assets/tzlogo.svg";
 export const assets: Asset[] = [
@@ -26,6 +26,24 @@ export const XTZ: Asset = assets[0];
 export const TzBTC = assets[1];
 export const SIRS = assets[2];
 
+export const getDex = (
+	transaction: Transaction
+): string => {
+	const sirius = "KT1TxqZ8QtKvLu3V3JH7Gx58n7Co8pgtpQU5";
+	return sirius;
+	//Todo
+	/* 
+	const sendAssets: TokenKind[] = Array.from(send, s => s.name);
+	const reciveAssets: TokenKind[] = Array.from(send, s => s.name);
+	
+	
+	switch (sendAssets) {
+		case [TokenKind.XTZ] : return "";
+		default:
+			throw Error("Dex not found for assets");
+	}
+	*/
+};
 export function getAsset(token: TokenKind): Asset {
 	switch (token) {
 		case TokenKind.TzBTC:

@@ -371,7 +371,7 @@ userAddress: string,
 							estimate.storageLimit,
 					});
 
-				await op.confirmation();
+				return await op.confirmation();
 			}
 		
 	} catch (err) {
