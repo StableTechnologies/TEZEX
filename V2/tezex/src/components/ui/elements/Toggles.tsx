@@ -4,15 +4,10 @@ import swapIcon from "../../../assets/swapIcon.svg";
 
 import Box from "@mui/material/Box";
 export interface IToggle {
-	toggle: boolean;
-	setToggle: React.Dispatch<React.SetStateAction<boolean>>;
-	children: string;
+	toggle: () => void;
 }
 
 export const SwapUpDownToggle: FC<IToggle> = (props) => {
-	const toggle = () => {
-		props.setToggle(props.toggle ? false : true);
-	};
 
 	return (
 		<Box>
@@ -24,7 +19,7 @@ export const SwapUpDownToggle: FC<IToggle> = (props) => {
 					background: "#FFFFFF",
 					borderRadius: "8px",
 				}}
-				onClick={toggle}
+				onClick={props.toggle}
 			>
 				<img
 					style={{
@@ -39,6 +34,7 @@ export const SwapUpDownToggle: FC<IToggle> = (props) => {
 	);
 };
 
+/*
 export const SwapRightLeftToggle: FC<IToggle> = (props) => {
 	const toggle = () => {
 		props.setToggle(props.toggle ? false : true);
@@ -61,3 +57,4 @@ export const Toggle: FC<IToggle> = (props) => {
 		</div>
 	);
 };
+*/

@@ -15,7 +15,7 @@ import {
 
 import { BigNumber } from "bignumber.js";
 import { TokenInput, Slippage } from "../../components/ui/elements/inputs";
-
+import {Wallet} from "../wallet"
 import { useWalletConnected } from "../../hooks/wallet";
 import { getAsset } from "../../constants";
 import { TokenAmountOutput } from "../../components/ui/elements/Labels";
@@ -132,7 +132,7 @@ export const Swap: FC = (props) => {
 		TokenKind.XTZ,
 		TokenKind.TzBTC,
 	]);
-	const [swapFields, setSwapFields] = useState<boolean>(true);
+	const [swapingFields, setSwapingFields] = useState<boolean>(true);
 	const wallet = useWallet();
 	const session = useSession();
 
@@ -141,6 +141,13 @@ export const Swap: FC = (props) => {
 	const updateSlippage = useCallback((value: number) => {
 		setSlippage(value);
 	}, []);
+	const swapFields = useCallback(() => {
+
+		setAssets([assets[1],assets[0]])
+		setSwapingFields(true)
+		setLoading(true)
+
+	},[assets])
 	const updateSend = useCallback(
 		(value: string) => {
 
@@ -345,10 +352,7 @@ export const Swap: FC = (props) => {
 	}, [transaction]);
 
 	const newTransaction = useCallback(async () => {
-		if (!transaction && loading && wallet) {
-			const active = walletOperations.getActiveTransaction();
-			console.log("\n", "active : ", active, "\n");
-			if (active) setTransaction(active);
+		console.log('\n',' :new ','\n'); 
 			await walletOperations
 				.initializeSwap(assets[send], assets[receive])
 				.then((transaction) => {
@@ -359,10 +363,12 @@ export const Swap: FC = (props) => {
 						"\n"
 					);
 					setTransaction(transaction);
+					if(swapingFields) setSwapingFields(false);
 					setLoading(false);
 				});
-		}
-	}, [assets, transaction, loading, wallet, walletOperations]);
+
+		},
+	[swapingFields,assets, walletOperations]);
 
 	useEffect(() => {}, [loading, transaction, newTransaction]);
 
@@ -374,8 +380,16 @@ export const Swap: FC = (props) => {
 		};
 
 		const active = walletOperations.getActiveTransaction();
-		if (loading && !transaction && !active){ 
-			_newTransaction();} else if (loading) {
+
+		
+
+		if(loading && swapingFields){
+		console.log('\n',' :swappuin ','\n'); 
+			_newTransaction();}
+		if (loading && !transaction && !active ){ 
+			console.log('\n',' :call new ','\n'); 
+			_newTransaction();}
+		else if (loading) {
 			if (active) {
 				setTransaction(active);
 				updateSend(active.sendAmount[0].decimal.toString());
@@ -390,7 +404,7 @@ export const Swap: FC = (props) => {
 					TransactingComponent.SWAP
 				);
 		}
-	}, []);
+	}, [swapingFields, loading,transaction, active, newTransaction, session, updateSend, updateSlippage, walletOperations]);
 
 	return (
 		<Grid2 container sx={classes.root}>
@@ -449,12 +463,7 @@ textAlign: 'left'
 									toggle={
 										swapFields
 									}
-									setToggle={
-										setSwapFields
-									}
-								>
-									{"swap fields"}
-								</SwapUpDownToggle>
+								/>
 							</Grid2>
 					
 							<Grid2
@@ -491,13 +500,13 @@ textAlign: 'left'
 										"center",
 								}}
 							>
-								<Transact
+								<Wallet
 									callback={
 										transact
 									}
 								>
 									{"Swap Tokens"}
-								</Transact>
+								</Wallet>
 							</Box>
 						</CardActions>
 					</Card>
