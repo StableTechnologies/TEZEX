@@ -464,8 +464,9 @@ export function estimateSharesFromToken(
 }
 
 export async function buyLiquidityShares(
-	tokenMantissa: BigNumber,
 	xtzAmountInMutez: BigNumber,
+	tokenMantissa: BigNumber,
+	lqtMinted: BigNumber,
 	slipage: BigNumber,
 userAddress: string,
 	lbContractAddress: string,
@@ -486,24 +487,33 @@ userAddress: string,
 				tzbtcContractAddress
 			);
 
-			const maxTokensSold = tokenMantissa
+		const maxTokensSold: BigNumber =    addSlippage(slipage,tokenMantissa)
+
+			/*
+			tokenMantissa
 				.plus(
 					tokenMantissa
 						.multipliedBy(slipage)
 						.div(100)
 				)
 				.integerValue(BigNumber.ROUND_DOWN);
+			*/
+		console.log('\n','maxTokensSold.toString(), xtzAmountInMutez.toString(),lqtMinted.toString() : ', maxTokensSold.toString(), xtzAmountInMutez.toString(),lqtMinted.toString(),'\n'); 
 
 			const lbContractStorage = await getLbContractStorage(
 				toolkit,
 				lbContractAddress
 			);
 
-			const minLqtMinted = _estimateShares(
+		const minLqtMinted: BigNumber = lqtMinted//
+
+			/*
+			_estimateShares(
 				xtzAmountInMutez,
 				tokenMantissa,
 				lbContractStorage
 			);
+			*/
 
 			const addLiquidity = lbContract.methods.addLiquidity(
 			userAddress,

@@ -116,6 +116,7 @@ const addLiquidityTransaction = async (
 				await buyLiquidityShares(
 					transaction.sendAmount[0].mantissa,
 					transaction.sendAmount[1].mantissa,
+					transaction.receiveAmount[0].mantissa,
 					new BigNumber(transaction.slippage),
 					userAddress,
 					dex,
@@ -127,6 +128,7 @@ const addLiquidityTransaction = async (
 				await buyLiquidityShares(
 					transaction.sendAmount[1].mantissa,
 					transaction.sendAmount[0].mantissa,
+					transaction.receiveAmount[0].mantissa,
 					new BigNumber(transaction.slippage),
 					userAddress,
 					dex,

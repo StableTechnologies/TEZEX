@@ -50,43 +50,45 @@ export async function estimate(
 					throw e;
 				});
 		case TransactingComponent.ADD_LIQUIDITY:
-			return await estimateTokensReceivedSwap(
-				sendAsset[0],
-				sendAmount[0],
-				receiveAsset[0],
-				dex,
-				toolkit
-			)
-				.then(async (sencondTokenEstimate: Balance) => {
-					const shares: Balance =
-						await estimateSharesReceivedAddLiqudity(
-							sendAsset,
-							receiveAsset,
-							sendAmount,
-							dex,
-							toolkit
-						);
-					return [
-						sencondTokenEstimate,
-						shares,
-					] as [Balance, Balance];
-				})
-				.then((balances: [Balance, Balance]) => {
-					return {
-						...transaction,
-						sendAmount: [
-							transaction
-								.sendAmount[0],
-							balances[0],
-						] as Amount,
-						receiveAmount: [
-							balances[1],
-						] as Amount,
-					};
-				})
-				.catch((e) => {
-					throw e;
-				});
+			if (sendAsset[1]) {
+				return await estimateTokensReceivedSwap(
+					sendAsset[0],
+					sendAmount[0],
+					sendAsset[1],
+					dex,
+					toolkit
+				)
+					.then(async (secondTokenEstimate: Balance) => {
+						const shares: Balance =
+							await estimateSharesReceivedAddLiqudity(
+								sendAsset,
+								receiveAsset,
+								[sendAmount[0],secondTokenEstimate ],
+								dex,
+								toolkit
+							);
+						return [
+							secondTokenEstimate,
+							shares,
+						] as [Balance, Balance];
+					})
+					.then((balances: [Balance, Balance]) => {
+						return {
+							...transaction,
+							sendAmount: [
+								transaction
+									.sendAmount[0],
+								balances[0],
+							] as Amount,
+							receiveAmount: [
+								balances[1],
+							] as Amount,
+						};
+					})
+					.catch((e) => {
+						throw e;
+					});
+			} else throw Error("second asset not supplied for Add Liquidity");
 		case TransactingComponent.REMOVE_LIQUIDITY:
 			throw Error("todo");
 	}
@@ -133,6 +135,7 @@ export const estimateTokensReceivedSwap = async (
 					throw e;
 				});
 		default:
+			console.log('\n','sendToken.name : ', sendToken.name,'\n'); 
 			throw Error("unimplemented swap estimate");
 	}
 };
@@ -144,9 +147,9 @@ export const estimateSharesReceivedAddLiqudity = async (
 	dex: string,
 	toolkit: TezosToolkit
 ): Promise<Balance> => {
-	if (sendAsset[1] && sendAmount[1]) {
-		switch ([sendAsset[0].name, sendAsset[1].name]) {
-			case [TokenKind.XTZ, TokenKind.TzBTC]:
+	if (sendAsset[0] && sendAmount[1] && sendAsset[1]) {
+		switch ([sendAsset[0].name as string, sendAsset[1].name as string].join(' ')) {
+			case [TokenKind.XTZ as string, TokenKind.TzBTC as string].join(' '):
 				return await estimateShares(
 					sendAmount[0].mantissa,
 					sendAmount[1].mantissa,
@@ -163,10 +166,10 @@ export const estimateSharesReceivedAddLiqudity = async (
 					.catch((e) => {
 						throw e;
 					});
-			case [TokenKind.TzBTC, TokenKind.XTZ]:
+			case [TokenKind.TzBTC as string, TokenKind.XTZ as string].join(' '):
 				return await estimateShares(
-					sendAmount[0].mantissa,
 					sendAmount[1].mantissa,
+					sendAmount[0].mantissa,
 					dex,
 					toolkit
 				)
@@ -181,6 +184,9 @@ export const estimateSharesReceivedAddLiqudity = async (
 						throw e;
 					});
 			default:
+
+			console.log('\n','sendAsset[0].name : ', sendAsset[0].name,'\n'); 
+			console.log('\n','sendAsset[1].name : ', sendAsset[1].name,'\n'); 
 				throw Error("unimplemented swap estimate");
 		}
 	} else

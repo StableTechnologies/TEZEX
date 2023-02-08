@@ -228,26 +228,10 @@ export function WalletProvider(props: IWalletProvider) {
 	);
 
 	useEffect(() => {
-		const interval = setInterval(() => {
-			/*
-			console.log(
-				"\n",
-				"swap active in context : ",
-				swapTransaction,
-				"\n"
-			);
-			
-			swapTransaction &&
-				console.log(
-					"\n",
-					"swapTransaction.sendAssetBalance[0].decimal : ",
-					swapTransaction.sendAssetBalance[0].decimal.toString(),
-					"\n"
-				);
-			*/
-		}, 5000);
-		return () => clearInterval(interval);
-		//if (isWalletConnected) updateTransactionBalance();
+		console.log('\n','tracking addLiquidity transaction : ', addLiquidityTransaction,'\n'); 
+	}, [addLiquidityTransaction]);
+	useEffect(() => {
+		console.log('\n','tracking swapTransaction : ', swapTransaction,'\n'); 
 	}, [swapTransaction]);
 
 	const setActiveTransaction = useCallback(
@@ -764,6 +748,8 @@ export function WalletProvider(props: IWalletProvider) {
 							>
 						) => {
 							if (draft) {
+
+								console.log('\n','draft : ', swapTransaction,'\n'); 
 								 if(amountUpdateSend ) draft.sendAmount =amountUpdateSend
 								 if(amountUpdateReceive ) draft.receiveAmount = amountUpdateReceive
 								 if(slippageUpdate ) draft.slippage =slippageUpdate
@@ -780,9 +766,11 @@ export function WalletProvider(props: IWalletProvider) {
 							>
 						) => {
 							if (draft) {
-								 if(amountUpdateSend ) draft.sendAmount =amountUpdateSend
+								console.log('\n','draft : ', addLiquidityTransaction,'\n'); 
+								console.log('\n',' add liquidity update amountUpdateSend, amountUpdateReceive, slippageUpdate, : ', amountUpdateSend, amountUpdateReceive, slippageUpdate,'\n'); 
+								 if(amountUpdateSend ) draft.sendAmount = amountUpdateSend
 								 if(amountUpdateReceive ) draft.receiveAmount = amountUpdateReceive
-								 if(slippageUpdate ) draft.slippage =slippageUpdate
+								 if(slippageUpdate ) draft.slippage = slippageUpdate
 							}
 						}
 					);

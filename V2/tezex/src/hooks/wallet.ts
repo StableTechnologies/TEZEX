@@ -147,42 +147,101 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
 			var updated = false;
 			if (transaction) {
 				if (wallet && sendAmount) {
-					console.log('\n',' :wallet and sendAmount ','\n'); 
+					console.log(
+						"\n",
+						" :wallet and sendAmount ",
+						"\n"
+					);
 					const toolkit = new TezosToolkit(
 						network.tezosServer
 					);
-						await estimate(
-							{
-								...transaction,
-								sendAmount: [
-									balanceBuilder(
-										sendAmount,
+					const updatedTransaction =
+						(): Transaction => {
+							switch (component) {
+								case TransactingComponent.SWAP:
+									return {
+										...transaction,
+										sendAmount: [
+											balanceBuilder(
+												sendAmount,
+												transaction
+													.sendAsset[0],
+												false
+											),
+										],
+									};
+								case TransactingComponent.ADD_LIQUIDITY:
+									if (
 										transaction
-											.sendAsset[0],
-										false
-									),
-								],
-							},
-							toolkit
-						).then(
-								(
-									_transaction: Transaction
-								) => {
-									console.log('\n','_transaction : ', _transaction,'\n'); 
-									wallet.updateAmount(
-										_transaction.component,
-										_transaction.sendAmount,
-										_transaction.receiveAmount
-									);
-									return true;
-								}
-							)
-							.catch((e) => {
+											.sendAmount[1]
+									) {
+										return {
+											...transaction,
+											sendAmount: [
+												balanceBuilder(
+													sendAmount,
+													transaction
+														.sendAsset[0],
+													false
+												),
+												transaction
+													.sendAmount[1],
+											],
+										};
+									} else {
+										console.log(
+											"\n",
+											"transaction : ",
+											transaction,
+											"\n"
+										);
+										throw Error(
+											"Got single Asset of addLiquidity"
+										);
+									}
+								case TransactingComponent.REMOVE_LIQUIDITY:
+									return {
+										...transaction,
+										sendAmount: [
+											balanceBuilder(
+												sendAmount,
+												transaction
+													.sendAsset[0],
+												false
+											),
+										],
+									};
+							}
+						};
+
+					await estimate(
+						updatedTransaction(),
+						toolkit
+					)
+						.then(
+							(
+								_transaction: Transaction
+							) => {
 								console.log(
-									"estmation Failed",
-									e
+									"\n",
+									"_transaction : ",
+									_transaction,
+									"\n"
 								);
-							});
+								wallet.updateAmount(
+									_transaction.component,
+									_transaction.sendAmount,
+									_transaction.receiveAmount
+								);
+								return true;
+							}
+						)
+						.catch((e) => {
+							console.log(
+								"estmation Failed",
+								e
+							);
+						});
 				} //wallet.updateAmount(component,[balanceBuilder(sendAmount, transaction.sendAsset[0], false)]);
 				if (wallet && slippage)
 					wallet.updateAmount(
