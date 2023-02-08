@@ -20,7 +20,7 @@ import { useWalletConnected } from "../../hooks/wallet";
 import { getAsset } from "../../constants";
 import { TokenAmountOutput } from "../../components/ui/elements/Labels";
 import { useSession } from "../../hooks/session";
-import { useWallet, useWalletSwapOps, SwapOps } from "../../hooks/wallet";
+import { useWallet, useWalletOps, WalletOps, useWalletSwapOps, SwapOps } from "../../hooks/wallet";
 import { useNetwork } from "../../hooks/network";
 import {
 	estimateTokensFromXtz,
@@ -111,7 +111,7 @@ export interface ISwapToken {
 }
 
 export const Swap: FC = (props) => {
-	const walletOperations: SwapOps = useWalletSwapOps();
+	const walletOperations: WalletOps = useWalletOps(TransactingComponent.SWAP);
 	const isWalletConnected = useWalletConnected();
 	const [transactionId, setTransactionId] = useState<Id | null>(null);
 	const [transaction, setTransaction] = useState<Transaction | undefined>(
@@ -128,15 +128,18 @@ export const Swap: FC = (props) => {
 	const send = 0;
 	const receive = 1;
 
-	const [assets, setAssets] = useState<[TokenKind, TokenKind]>([
-		TokenKind.XTZ,
-		TokenKind.TzBTC,
+	const [assets, setAssets] = useState<[Asset, Asset]>([
+		getAsset(TokenKind.XTZ),
+		getAsset(TokenKind.TzBTC),
 	]);
 	const [swapingFields, setSwapingFields] = useState<boolean>(true);
 	const wallet = useWallet();
 	const session = useSession();
 
-	const transact = async () => {};
+	const transact = async () => {
+
+	       await walletOperations.sendTransaction();	
+	};
 
 	const updateSlippage = useCallback((value: number) => {
 		setSlippage(value);
@@ -164,7 +167,6 @@ export const Swap: FC = (props) => {
 	useEffect(() => {
 		const updateTransaction = async (transaction: Transaction) => {
 			await walletOperations.updateAmount(
-				transaction,
 				sendAmount.toString()
 			);
 		};
@@ -205,7 +207,6 @@ export const Swap: FC = (props) => {
 			if (transaction) {
 				setLoadingBalances(
 					!(await walletOperations.updateBalance(
-						transaction
 					))
 				);
 			}
@@ -354,7 +355,7 @@ export const Swap: FC = (props) => {
 	const newTransaction = useCallback(async () => {
 		console.log('\n',' :new ','\n'); 
 			await walletOperations
-				.initializeSwap(assets[send], assets[receive])
+				.initialize([assets[send]], [assets[receive]])
 				.then((transaction) => {
 					console.log(
 						"\n",
@@ -437,7 +438,7 @@ textAlign: 'left'
 									assetName={
 										assets[
 											send
-										]
+										].name
 									}
 									onChange={
 										updateSend
@@ -477,7 +478,7 @@ textAlign: 'left'
 									assetName={
 										assets[
 											receive
-										]
+										].name
 									}
 									value={receiveAmount.toString()}
 									readOnly={true}
@@ -551,7 +552,7 @@ textAlign: 'left'
 										asset={
 											assets[
 												receive
-											]
+											].name
 										}
 										value={
 											slippage

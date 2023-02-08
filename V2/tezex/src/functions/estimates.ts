@@ -26,6 +26,7 @@ export async function estimate(
 	transaction: Transaction,
 	toolkit: TezosToolkit
 ): Promise<Transaction> {
+	console.log('\n','estimate got transaction : ', transaction,'\n'); 
 	const { sendAmount, sendAsset, receiveAsset } = transaction;
 	const dex = getDex(transaction);
 	switch (transaction.component) {

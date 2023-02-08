@@ -105,7 +105,8 @@ export const Wallet: FC<IWallet> = (props) => {
 	const walletInfo: WalletInfo | undefined = useWallet();
 	const networkInfo = useNetwork();
 	//const transaction
-	const [disabled, setDisabled] = useState(true);
+	//todo start with true
+	const [disabled, setDisabled] = useState(false);
         const [transactionStatus, setTransactionStatus] = useState<TransactionStatus | undefined>(undefined)
 	useEffect(() => {
 		if(props.transaction){
@@ -114,7 +115,8 @@ export const Wallet: FC<IWallet> = (props) => {
 		}
 	},[props.transaction])
 	const transact = async () => {
-		if (walletInfo && props.callback) {
+		if (props.callback) {
+			await props.callback();
 			//await walletInfo.walletUser(props.callback);
 		}
 	};

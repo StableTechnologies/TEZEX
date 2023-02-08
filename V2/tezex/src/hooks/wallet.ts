@@ -1,13 +1,14 @@
-import { useContext } from "react";
-import { TezosToolkit} from "@taquito/taquito";
+import { useContext, useCallback, useEffect, useState } from "react";
+import { TezosToolkit } from "@taquito/taquito";
 
 import { getAsset } from "../constants";
 import { BigNumber } from "bignumber.js";
 import { estimate, estimateTokensReceivedSwap } from "../functions/estimates";
+import { processTransaction } from "../functions/transactions";
 import { WalletContext, WalletInfo } from "../contexts/wallet";
-import {useNetwork} from "../hooks/network";
+import { useNetwork } from "../hooks/network";
 
-import {balanceBuilder} from "../functions/util"
+import { balanceBuilder } from "../functions/util";
 import {
 	Transaction,
 	TokenKind,
@@ -21,6 +22,191 @@ import {
 	SendOrRecieve,
 } from "../types/general";
 
+export interface WalletOps {
+	initialize: (
+		sendAsset: AssetOrAssetPair,
+		recieveAsset: AssetOrAssetPair,
+		sendAmount?: BigNumber, //TODO
+		receiveAmount?: BigNumber, //TODO
+		slippage?: number //TODO
+	) => Promise<Transaction | undefined>;
+	viewTransaction: (id: Id) => Transaction | undefined | null;
+	getActiveTransaction: () => Transaction | undefined;
+	updateBalance: () => Promise<boolean>;
+	updateAmount: (
+		sendAmount?: string,
+		slippage?: string
+	) => Promise<boolean>;
+	sendTransaction: () => Promise<void>;
+}
+export function useWalletOps(component: TransactingComponent): WalletOps {
+	const wallet = useContext(WalletContext);
+	const network = useNetwork();
+	const [transaction, setTransaction] = useState<Transaction | undefined>(
+		undefined
+	);
+
+	useEffect(() => {
+		if (wallet) {
+			switch (component) {
+				case TransactingComponent.SWAP:
+					setTransaction(wallet.swapTransaction);
+					break;
+				case TransactingComponent.ADD_LIQUIDITY:
+					setTransaction(
+						wallet.addLiquidityTransaction
+					);
+					break;
+				case TransactingComponent.REMOVE_LIQUIDITY:
+					setTransaction(
+						wallet.removeLiquidityTransaction
+					);
+					break;
+			}
+		}
+	}, [wallet, component]);
+	//const transaction =  useCallback(()=>{if (wallet.swapTransaction) processTransaction(wallet.swapTransaction)},[wallet])
+	const initialize = useCallback(
+		async (
+			sendAsset: AssetOrAssetPair,
+			recieveAsset: AssetOrAssetPair,
+			sendAmount?: BigNumber, //TODO
+			receiveAmount?: BigNumber, //TODO
+			slippage?: number //TODO
+		): Promise<Transaction | undefined> => {
+			//esitmate receive
+
+			console.log("\n", "wallet : ", wallet, "\n");
+			if (wallet) {
+				console.log("\n", " init swap in hook ", "\n");
+				const transaction: Transaction =
+					wallet.initialiseTransaction(
+						component,
+						sendAsset,
+						recieveAsset
+					);
+
+				console.log(
+					"\n",
+					"in init hook transaction : ",
+					transaction,
+					"\n"
+				);
+				if (wallet.client)
+					await wallet.updateBalance(
+						TransactingComponent.SWAP,
+						transaction
+					);
+				return transaction;
+			} else return undefined;
+		},
+		[wallet, component]
+	);
+
+	const updateBalance = useCallback(async (): Promise<boolean> => {
+		//esitmate receive
+
+		console.log("\n", "balance update : ", "\n");
+		if (wallet && transaction) {
+			console.log("\n", "balance update in wallet: ", "\n");
+			return await wallet.updateBalance(
+				component,
+				transaction
+			);
+		} else return false;
+	}, [wallet, component, transaction]);
+
+	const getActiveTransaction = useCallback(():
+		| Transaction
+		| undefined => {
+		return transaction;
+	}, [transaction]);
+	const viewTransaction = (id: Id): Transaction | undefined => {
+		//esitmate receive
+
+		if (wallet) {
+			return wallet.fetchTransaction(id);
+		}
+	};
+	const sendTransaction = useCallback(async () => {
+		if (wallet && transaction && wallet.address && wallet.toolkit) {
+			await processTransaction(
+				transaction,
+				wallet.address,
+				wallet.toolkit
+			);
+		}
+	}, [wallet, transaction]);
+
+	const updateAmount = useCallback(
+		async (
+			sendAmount?: string,
+			slippage?: string
+		): Promise<boolean> => {
+			console.log("\n", " in updateAmount hook", "\n");
+			var updated = false;
+			if (transaction) {
+				if (wallet && sendAmount) {
+					console.log('\n',' :wallet and sendAmount ','\n'); 
+					const toolkit = new TezosToolkit(
+						network.tezosServer
+					);
+						await estimate(
+							{
+								...transaction,
+								sendAmount: [
+									balanceBuilder(
+										sendAmount,
+										transaction
+											.sendAsset[0],
+										false
+									),
+								],
+							},
+							toolkit
+						).then(
+								(
+									_transaction: Transaction
+								) => {
+									console.log('\n','_transaction : ', _transaction,'\n'); 
+									wallet.updateAmount(
+										_transaction.component,
+										_transaction.sendAmount,
+										_transaction.receiveAmount
+									);
+									return true;
+								}
+							)
+							.catch((e) => {
+								console.log(
+									"estmation Failed",
+									e
+								);
+							});
+				} //wallet.updateAmount(component,[balanceBuilder(sendAmount, transaction.sendAsset[0], false)]);
+				if (wallet && slippage)
+					wallet.updateAmount(
+						component,
+						undefined,
+						undefined,
+						new BigNumber(
+							slippage
+						).toNumber()
+					);
+			}
+			return updated;
+		},
+		[transaction, wallet, component, network]
+	);
+	return {
+		initialize,
+		viewTransaction,
+		getActiveTransaction,
+		updateBalance,
+		updateAmount,
+		sendTransaction,
+	};
+}
 /*
 export function useWalletProcessSwapTransaction(id,sendAsset,recieveAsset,sendAmount?,slippage?) {
     const wallet = useContext(WalletContext);
@@ -44,7 +230,6 @@ export function useWalletInitializeSwap(sendAsset,recieveAsset,sendAmount?,slipp
 }
 */
 
-
 export interface RemoveLiquidityOps {
 	initializeSwap: (
 		sendAsset: TokenKind,
@@ -54,7 +239,7 @@ export interface RemoveLiquidityOps {
 		slippage?: number //TODO
 	) => Promise<Transaction | undefined>;
 	viewTransaction: (id: Id) => Transaction | undefined | null;
-	getActiveTransaction: () => Transaction | undefined ;
+	getActiveTransaction: () => Transaction | undefined;
 	updateBalance: (transaction: Transaction) => Promise<boolean>;
 }
 
@@ -67,7 +252,7 @@ export interface AddLiquidityOps {
 		slippage?: number //TODO
 	) => Promise<Transaction | undefined>;
 	viewTransaction: (id: Id) => Transaction | undefined | null;
-	getActiveTransaction: () => Transaction | undefined ;
+	getActiveTransaction: () => Transaction | undefined;
 	updateBalance: (transaction: Transaction) => Promise<boolean>;
 }
 export interface SwapOps {
@@ -79,9 +264,13 @@ export interface SwapOps {
 		slippage?: number //TODO
 	) => Promise<Transaction | undefined>;
 	viewTransaction: (id: Id) => Transaction | undefined | null;
-	getActiveTransaction: () => Transaction | undefined ;
+	getActiveTransaction: () => Transaction | undefined;
 	updateBalance: (transaction: Transaction) => Promise<boolean>;
-	updateAmount: (transaction: Transaction,sendAmount?: string,slippage?: string)=> Promise<boolean>;
+	updateAmount: (
+		transaction: Transaction,
+		sendAmount?: string,
+		slippage?: string
+	) => Promise<boolean>;
 }
 
 export function useWalletConnected(): boolean {
@@ -90,7 +279,6 @@ export function useWalletConnected(): boolean {
 		return wallet.isWalletConnected;
 	} else return false;
 }
-
 
 export function useWalletAddLiquidityOps(): AddLiquidityOps {
 	const wallet = useContext(WalletContext);
@@ -106,31 +294,45 @@ export function useWalletAddLiquidityOps(): AddLiquidityOps {
 
 		if (wallet) {
 			console.log("\n", " init swap in hook ", "\n");
-			const transaction: Transaction = wallet.initialiseTransaction(
-				TransactingComponent.ADD_LIQUIDITY,
-				[getAsset(sendAsset)],
-				[getAsset(recieveAsset)]
+			const transaction: Transaction =
+				wallet.initialiseTransaction(
+					TransactingComponent.ADD_LIQUIDITY,
+					[getAsset(sendAsset)],
+					[getAsset(recieveAsset)]
+				);
+
+			console.log(
+				"\n",
+				"in init hook transaction : ",
+				transaction,
+				"\n"
 			);
-			
-			console.log('\n','in init hook transaction : ', transaction,'\n'); 
-			await wallet.updateBalance(TransactingComponent.ADD_LIQUIDITY,transaction);
-			return transaction
+			await wallet.updateBalance(
+				TransactingComponent.ADD_LIQUIDITY,
+				transaction
+			);
+			return transaction;
 		} else return undefined;
 	};
 
-	const updateBalance = async (transaction: Transaction): Promise<boolean> => {
+	const updateBalance = async (
+		transaction: Transaction
+	): Promise<boolean> => {
 		//esitmate receive
 
 		console.log("\n", "balance update : ", "\n");
 		if (wallet) {
 			console.log("\n", "balance update in wallet: ", "\n");
-		return	await wallet.updateBalance(TransactingComponent.ADD_LIQUIDITY, transaction);
+			return await wallet.updateBalance(
+				TransactingComponent.ADD_LIQUIDITY,
+				transaction
+			);
 		} else return false;
 	};
 
 	const getActiveTransaction = (): Transaction | undefined => {
 		if (wallet) {
-			return wallet.swapTransaction
+			return wallet.swapTransaction;
 		}
 	};
 	const viewTransaction = (id: Id): Transaction | undefined => {
@@ -140,7 +342,12 @@ export function useWalletAddLiquidityOps(): AddLiquidityOps {
 			return wallet.fetchTransaction(id);
 		}
 	};
-	return { initializeSwap, viewTransaction, getActiveTransaction, updateBalance };
+	return {
+		initializeSwap,
+		viewTransaction,
+		getActiveTransaction,
+		updateBalance,
+	};
 }
 export function useWalletRemoveLiquidityOps(): RemoveLiquidityOps {
 	const wallet = useContext(WalletContext);
@@ -156,31 +363,45 @@ export function useWalletRemoveLiquidityOps(): RemoveLiquidityOps {
 
 		if (wallet) {
 			console.log("\n", " init swap in hook ", "\n");
-			const transaction: Transaction = wallet.initialiseTransaction(
-				TransactingComponent.SWAP,
-				[getAsset(sendAsset)],
-				[getAsset(recieveAsset)]
+			const transaction: Transaction =
+				wallet.initialiseTransaction(
+					TransactingComponent.SWAP,
+					[getAsset(sendAsset)],
+					[getAsset(recieveAsset)]
+				);
+
+			console.log(
+				"\n",
+				"in init hook transaction : ",
+				transaction,
+				"\n"
 			);
-			
-			console.log('\n','in init hook transaction : ', transaction,'\n'); 
-			await wallet.updateBalance(TransactingComponent.SWAP,transaction);
-			return transaction
+			await wallet.updateBalance(
+				TransactingComponent.SWAP,
+				transaction
+			);
+			return transaction;
 		} else return undefined;
 	};
 
-	const updateBalance = async (transaction: Transaction): Promise<boolean> => {
+	const updateBalance = async (
+		transaction: Transaction
+	): Promise<boolean> => {
 		//esitmate receive
 
 		console.log("\n", "balance update : ", "\n");
 		if (wallet) {
 			console.log("\n", "balance update in wallet: ", "\n");
-		return	await wallet.updateBalance(TransactingComponent.SWAP, transaction);
+			return await wallet.updateBalance(
+				TransactingComponent.SWAP,
+				transaction
+			);
 		} else return false;
 	};
 
 	const getActiveTransaction = (): Transaction | undefined => {
 		if (wallet) {
-			return wallet.swapTransaction
+			return wallet.swapTransaction;
 		}
 	};
 	const viewTransaction = (id: Id): Transaction | undefined => {
@@ -190,7 +411,12 @@ export function useWalletRemoveLiquidityOps(): RemoveLiquidityOps {
 			return wallet.fetchTransaction(id);
 		}
 	};
-	return { initializeSwap, viewTransaction, getActiveTransaction, updateBalance };
+	return {
+		initializeSwap,
+		viewTransaction,
+		getActiveTransaction,
+		updateBalance,
+	};
 }
 export function useWalletSwapOps(): SwapOps {
 	const wallet = useContext(WalletContext);
@@ -205,34 +431,49 @@ export function useWalletSwapOps(): SwapOps {
 	): Promise<Transaction | undefined> => {
 		//esitmate receive
 
-		console.log('\n','wallet : ', wallet,'\n'); 
+		console.log("\n", "wallet : ", wallet, "\n");
 		if (wallet) {
 			console.log("\n", " init swap in hook ", "\n");
-			const transaction: Transaction = wallet.initialiseTransaction(
-				TransactingComponent.SWAP,
-				[getAsset(sendAsset)],
-				[getAsset(recieveAsset)]
+			const transaction: Transaction =
+				wallet.initialiseTransaction(
+					TransactingComponent.SWAP,
+					[getAsset(sendAsset)],
+					[getAsset(recieveAsset)]
+				);
+
+			console.log(
+				"\n",
+				"in init hook transaction : ",
+				transaction,
+				"\n"
 			);
-			
-			console.log('\n','in init hook transaction : ', transaction,'\n'); 
-			if(wallet.client)await wallet.updateBalance(TransactingComponent.SWAP,transaction);
-			return transaction
+			if (wallet.client)
+				await wallet.updateBalance(
+					TransactingComponent.SWAP,
+					transaction
+				);
+			return transaction;
 		} else return undefined;
 	};
 
-	const updateBalance = async (transaction: Transaction): Promise<boolean> => {
+	const updateBalance = async (
+		transaction: Transaction
+	): Promise<boolean> => {
 		//esitmate receive
 
 		console.log("\n", "balance update : ", "\n");
 		if (wallet) {
 			console.log("\n", "balance update in wallet: ", "\n");
-		return	await wallet.updateBalance(TransactingComponent.SWAP, transaction);
+			return await wallet.updateBalance(
+				TransactingComponent.SWAP,
+				transaction
+			);
 		} else return false;
 	};
 
 	const getActiveTransaction = (): Transaction | undefined => {
 		if (wallet) {
-			return wallet.swapTransaction
+			return wallet.swapTransaction;
 		}
 	};
 	const viewTransaction = (id: Id): Transaction | undefined => {
@@ -242,24 +483,53 @@ export function useWalletSwapOps(): SwapOps {
 			return wallet.fetchTransaction(id);
 		}
 	};
-	const updateAmount = async(transaction: Transaction,sendAmount?: string,slippage?: string): Promise<boolean> =>{
+	//const transaction =  useCallback(()=>{if (wallet.swapTransaction) processTransaction(wallet.swapTransaction)},[wallet])
 
-		
-		console.log('\n',' in updateAmount hook','\n'); 
-		var updated = false
-		if(wallet && sendAmount) wallet.updateAmount(transaction.component,[balanceBuilder(sendAmount, transaction.sendAsset[0], false)]);
-		if(wallet && slippage) wallet.updateAmount(transaction.component,undefined,undefined,new BigNumber(slippage).toNumber())
+	const updateAmount = async (
+		transaction: Transaction,
+		sendAmount?: string,
+		slippage?: string
+	): Promise<boolean> => {
+		console.log("\n", " in updateAmount hook", "\n");
+		var updated = false;
+		if (wallet && sendAmount)
+			wallet.updateAmount(transaction.component, [
+				balanceBuilder(
+					sendAmount,
+					transaction.sendAsset[0],
+					false
+				),
+			]);
+		if (wallet && slippage)
+			wallet.updateAmount(
+				transaction.component,
+				undefined,
+				undefined,
+				new BigNumber(slippage).toNumber()
+			);
 
-	        const toolkit = new TezosToolkit(network.tezosServer);
-		if(wallet ) await estimate(transaction, toolkit).then((transaction: Transaction) => {
-			wallet.updateAmount(transaction.component,undefined,transaction.receiveAmount)
-   
-		}).catch((e)=>{console.log('estmation Failed',e);})
-		return updated
-
-
-	}
-	return { initializeSwap, viewTransaction, getActiveTransaction, updateBalance , updateAmount};
+		const toolkit = new TezosToolkit(network.tezosServer);
+		if (wallet)
+			await estimate(transaction, toolkit)
+				.then((transaction: Transaction) => {
+					wallet.updateAmount(
+						transaction.component,
+						undefined,
+						transaction.receiveAmount
+					);
+				})
+				.catch((e) => {
+					console.log("estmation Failed", e);
+				});
+		return updated;
+	};
+	return {
+		initializeSwap,
+		viewTransaction,
+		getActiveTransaction,
+		updateBalance,
+		updateAmount,
+	};
 }
 export function useWallet() {
 	const wallet = useContext(WalletContext);

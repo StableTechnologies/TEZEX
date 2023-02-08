@@ -3,6 +3,19 @@ import { BigNumber } from "bignumber.js";
 
 import { WalletInfo } from "../contexts/wallet";
 
+
+export function removeSlippage(
+	slippage: BigNumber | number | string | null,
+	tokenMantissa: BigNumber
+) {
+	if (slippage) {
+		return tokenMantissa
+			.minus(tokenMantissa.multipliedBy(slippage).div(100))
+			.integerValue(BigNumber.ROUND_DOWN);
+	} else {
+		return tokenMantissa;
+	}
+}
 export function addSlippage(
 	slippage: BigNumber | number | string | null,
 	tokenMantissa: BigNumber
@@ -191,10 +204,11 @@ userAddress: string,
 				lbContractAddress,
 				tokenMantissa
 			);
-			let minXtzBought = addSlippage(
+			let minXtzBought = removeSlippage(
 				slippage,
 				xtzAmountInMutez
 			);
+		console.log('\n','minXtzBought : ', minXtzBought.toString(),'\n'); 
 			let transfer = lbContract.methods.tokenToXtz(
 			userAddress,
 				tokenMantissa.integerValue(

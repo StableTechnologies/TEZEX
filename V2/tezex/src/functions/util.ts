@@ -17,6 +17,13 @@ import {
 	tokenMantissaToDecimal,
 } from "./scaling";
 
+export function tezToMutez(amount: BigNumber) {
+	return amount.multipliedBy(1000000);
+}
+export function mutezToTez(amount: BigNumber) {
+	return amount.dividedBy(1000000);
+}
+
 export const balanceGreaterOrEqualTo = (
 	balance1: Balance,
 	balance2: Balance
