@@ -1,2 +1,2 @@
 export * from './TokenAmount';
-export * from './Slippage';
+export * from './slippage';
