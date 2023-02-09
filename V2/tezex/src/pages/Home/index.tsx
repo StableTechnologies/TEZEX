@@ -4,7 +4,7 @@ import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import {NavHome} from '../../components/nav'
 import {Swap} from '../../components/Swap'
 import { AddLiquidity  } from "../../components/AddLiquidity";
-import { RemoveLiquidity  } from "../removeLiquidity";
+import { RemoveLiquidity  } from "../../components/removeLiquidity";
 
 import Grid2 from '@mui/material/Unstable_Grid2'; // Grid version 2
 import Button from "@mui/material/Button";

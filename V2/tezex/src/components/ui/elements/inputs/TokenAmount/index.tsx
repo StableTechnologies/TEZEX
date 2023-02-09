@@ -11,7 +11,7 @@ import { BigNumber } from "bignumber.js";
 import { WalletInfo } from "../../../../../contexts/wallet";
 
 import { useWallet } from "../../../../../hooks/wallet";
-import { useNetwork } from "../../../../../hooks/network";
+import { useNetwork } from "../../../../../hooks/network"
 import { TokenKind, Asset } from "../../../../../types/general";
 import { getAsset } from "../../../../../constants";
 import {
@@ -44,7 +44,7 @@ import { WalletConnected } from "../../../../session/WalletConnected";
 export interface ITokenAmountInput {
 	assetName: TokenKind;
 	onChange?: (value: string) => void;
-	balance: string;
+	balance?: string;
 	value: string;
 	label?: string;
 	readOnly?: boolean;
@@ -253,9 +253,10 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 					variant="standard"
 				/>
 				<WalletConnected>
-					<Typography
-						color="textSecondary"
+				<Typography
+					color="textSecondary"
 						variant="subtitle2"
+						hidden={props.balance? false : true}
 						sx={{
 							padding: "0px 16px",
 							textAlign: "right",
@@ -264,6 +265,7 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 						balance: {props.balance}{" "}
 						{props.assetName}
 					</Typography>
+					
 				</WalletConnected>
 			</Grid2>
 		</Grid2>

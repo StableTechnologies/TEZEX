@@ -1,5 +1,7 @@
 import { BigNumber } from "bignumber.js";
 import { getAsset, getDex } from "../constants";
+
+import { lqtOutput } from "./liquidityBaking";
 import {
 	Transaction,
 	TokenKind,
@@ -26,7 +28,7 @@ export async function estimate(
 	transaction: Transaction,
 	toolkit: TezosToolkit
 ): Promise<Transaction> {
-	console.log('\n','estimate got transaction : ', transaction,'\n'); 
+	console.log("\n", "estimate got transaction : ", transaction, "\n");
 	const { sendAmount, sendAsset, receiveAsset } = transaction;
 	const dex = getDex(transaction);
 	switch (transaction.component) {
@@ -58,39 +60,73 @@ export async function estimate(
 					dex,
 					toolkit
 				)
-					.then(async (secondTokenEstimate: Balance) => {
-						const shares: Balance =
-							await estimateSharesReceivedAddLiqudity(
-								sendAsset,
-								receiveAsset,
-								[sendAmount[0],secondTokenEstimate ],
-								dex,
-								toolkit
-							);
-						return [
-							secondTokenEstimate,
-							shares,
-						] as [Balance, Balance];
-					})
-					.then((balances: [Balance, Balance]) => {
-						return {
-							...transaction,
-							sendAmount: [
-								transaction
-									.sendAmount[0],
-								balances[0],
-							] as Amount,
-							receiveAmount: [
-								balances[1],
-							] as Amount,
-						};
-					})
+					.then(
+						async (
+							secondTokenEstimate: Balance
+						) => {
+							const shares: Balance =
+								await estimateSharesReceivedAddLiqudity(
+									sendAsset,
+									receiveAsset,
+									[
+										sendAmount[0],
+										secondTokenEstimate,
+									],
+									dex,
+									toolkit
+								);
+							return [
+								secondTokenEstimate,
+								shares,
+							] as [Balance, Balance];
+						}
+					)
+					.then(
+						(
+							balances: [
+								Balance,
+								Balance
+							]
+						) => {
+							return {
+								...transaction,
+								sendAmount: [
+									transaction
+										.sendAmount[0],
+									balances[0],
+								] as Amount,
+								receiveAmount: [
+									balances[1],
+								] as Amount,
+							};
+						}
+					)
 					.catch((e) => {
 						throw e;
 					});
-			} else throw Error("second asset not supplied for Add Liquidity");
+			} else
+				throw Error(
+					"second asset not supplied for Add Liquidity"
+				);
 		case TransactingComponent.REMOVE_LIQUIDITY:
-			throw Error("todo");
+			return await estimateSharesToTokensRemoveLiquidity(
+				sendAsset,
+				receiveAsset,
+				sendAmount,
+				dex,
+				toolkit
+			).then((balances: [Balance, Balance]) => {
+					return {
+						...transaction,
+						receiveAmount: [
+							balances[0],
+							balances[1],
+						] as Amount,
+					};
+				})
+				.catch((e) => {
+					throw e;
+				});
 	}
 }
 
@@ -135,11 +171,92 @@ export const estimateTokensReceivedSwap = async (
 					throw e;
 				});
 		default:
-			console.log('\n','sendToken.name : ', sendToken.name,'\n'); 
+			console.log(
+				"\n",
+				"sendToken.name : ",
+				sendToken.name,
+				"\n"
+			);
 			throw Error("unimplemented swap estimate");
 	}
 };
 
+export const estimateSharesToTokensRemoveLiquidity = async (
+	sendAsset: AssetOrAssetPair,
+	receive: AssetOrAssetPair,
+	sendAmount: Amount,
+	dex: string,
+	toolkit: TezosToolkit
+): Promise<[Balance, Balance]> => {
+	if (receive[0] && receive[1]) {
+		switch (
+			[
+				receive[0].name as string,
+				receive[1].name as string,
+			].join(" ")
+		) {
+			case [
+				TokenKind.XTZ as string,
+				TokenKind.TzBTC as string,
+			].join(" "):
+				return await lqtOutput(
+					sendAmount[0].mantissa,
+					dex,
+					toolkit
+				)
+					.then(
+						(obj: {
+							xtz: BigNumber;
+							tzbtc: BigNumber;
+						}) => {
+							if (receive[1]) {
+								return [
+									balanceBuilder(
+										obj.xtz,
+										receive[0],
+										true
+									) as Balance,
+									balanceBuilder(
+										obj.tzbtc,
+										receive[1],
+										true
+									) as Balance,
+								] as [
+									Balance,
+									Balance
+								];
+							} else throw Error("");
+						}
+					)
+					.catch((e) => {
+						throw e;
+					});
+			default:
+				console.log(
+					"\n",
+					"sendAsset[0].name : ",
+					sendAsset[0].name,
+					"\n"
+				);
+				console.log(
+					"\n",
+					"receive[0].name : ",
+					receive[0].name,
+					"\n"
+				);
+				console.log(
+					"\n",
+					"receive[1].name : ",
+					receive[1].name,
+					"\n"
+				);
+				throw Error("unimplemented swap estimate");
+		}
+	} else
+		throw Error(
+			"Asset Pair required for Adding liquidity , recieved single asset"
+		);
+};
 export const estimateSharesReceivedAddLiqudity = async (
 	sendAsset: AssetOrAssetPair,
 	receive: AssetOrAssetPair,
@@ -148,8 +265,16 @@ export const estimateSharesReceivedAddLiqudity = async (
 	toolkit: TezosToolkit
 ): Promise<Balance> => {
 	if (sendAsset[0] && sendAmount[1] && sendAsset[1]) {
-		switch ([sendAsset[0].name as string, sendAsset[1].name as string].join(' ')) {
-			case [TokenKind.XTZ as string, TokenKind.TzBTC as string].join(' '):
+		switch (
+			[
+				sendAsset[0].name as string,
+				sendAsset[1].name as string,
+			].join(" ")
+		) {
+			case [
+				TokenKind.XTZ as string,
+				TokenKind.TzBTC as string,
+			].join(" "):
 				return await estimateShares(
 					sendAmount[0].mantissa,
 					sendAmount[1].mantissa,
@@ -166,7 +291,10 @@ export const estimateSharesReceivedAddLiqudity = async (
 					.catch((e) => {
 						throw e;
 					});
-			case [TokenKind.TzBTC as string, TokenKind.XTZ as string].join(' '):
+			case [
+				TokenKind.TzBTC as string,
+				TokenKind.XTZ as string,
+			].join(" "):
 				return await estimateShares(
 					sendAmount[1].mantissa,
 					sendAmount[0].mantissa,
@@ -184,9 +312,18 @@ export const estimateSharesReceivedAddLiqudity = async (
 						throw e;
 					});
 			default:
-
-			console.log('\n','sendAsset[0].name : ', sendAsset[0].name,'\n'); 
-			console.log('\n','sendAsset[1].name : ', sendAsset[1].name,'\n'); 
+				console.log(
+					"\n",
+					"sendAsset[0].name : ",
+					sendAsset[0].name,
+					"\n"
+				);
+				console.log(
+					"\n",
+					"sendAsset[1].name : ",
+					sendAsset[1].name,
+					"\n"
+				);
 				throw Error("unimplemented swap estimate");
 		}
 	} else
