@@ -606,15 +606,18 @@ export function WalletProvider(props: IWalletProvider) {
 						userBalanceSend
 							? userBalanceSend
 							: transaction.sendAssetBalance;
+					/*
 					const transactionStatus: TransactionStatus =
-						balanceStatus
-							? balanceStatus
-							: transaction.transactionStatus;
+						userBalance ? checkSufficientBalance(
+								userBalance,
+								transaction.sendAmount
+							): transaction.transactionStatus;
+					*/
 					return {
 						...transaction,
 						sendAssetBalance,
 						receiveAssetBalance,
-						transactionStatus,
+						//	transactionStatus,
 					};
 				}).catch((e) => {
 					//console.log('\n',' failed in getBalances: ','\n'); 

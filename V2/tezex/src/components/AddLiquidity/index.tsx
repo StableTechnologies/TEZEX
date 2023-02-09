@@ -617,6 +617,7 @@ export const AddLiquidity: FC = (props) => {
 
 						<Grid2 sx={{}} xs={6}>
 								<Wallet
+									transaction={transaction}
 									callback={
 										transact
 									}

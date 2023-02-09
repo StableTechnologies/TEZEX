@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from "react";
+import { FC, useEffect,useCallback, useState } from "react";
 import connectWallet from "../../functions/beacon";
 import { useWallet } from "../../hooks/wallet";
 import { useNetwork } from "../../hooks/network";
@@ -107,13 +107,27 @@ export const Wallet: FC<IWallet> = (props) => {
 	//const transaction
 	//todo start with true
 	const [disabled, setDisabled] = useState(false);
-        const [transactionStatus, setTransactionStatus] = useState<TransactionStatus | undefined>(undefined)
+        const [transactionStatus, setTransactionStatus] = useState<string | undefined>(undefined)
+	const walletText = useCallback((): string | undefined => {
+		if(props.transaction && props.transaction.sendAmount[0].decimal.eq(0)){
+		return "Enter Amount"}else if (props.transaction){
+			const transactionStatus: TransactionStatus =  props.transaction.transactionStatus;
+			switch(transactionStatus){
+				case TransactionStatus.SUFFICIENT_BALANCE :
+				    return  props.children
+                                  default: 
+					setDisabled(true);
+					return transactionStatus as string
+			}
+
+		}
+	},[props.transaction, props.children])
 	useEffect(() => {
 		if(props.transaction){
 
-			setTransactionStatus(props.transaction.transactionStatus);
+			setTransactionStatus(walletText());
 		}
-	},[props.transaction])
+	},[props.transaction, walletText])
 	const transact = async () => {
 		if (props.callback) {
 			await props.callback();
@@ -189,7 +203,7 @@ export const Wallet: FC<IWallet> = (props) => {
 					sx={classes.transact}
 					disabled={disabled}
 				>
-					{info}
+					{transactionStatus}
 				</Button>
 			);
 		}
