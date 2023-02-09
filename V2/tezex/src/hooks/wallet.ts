@@ -143,10 +143,12 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
 			sendAmount?: string,
 			slippage?: string
 		): Promise<boolean> => {
+
 			console.log("\n", " in updateAmount hook", "\n");
 			var updated = false;
 			if (transaction) {
 				if (wallet && sendAmount) {
+					wallet.updateStatus(component, TransactionStatus.MODIFIED);
 					console.log(
 						"\n",
 						" :wallet and sendAmount ",

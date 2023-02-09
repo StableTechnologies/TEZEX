@@ -114,6 +114,7 @@ export const Wallet: FC<IWallet> = (props) => {
 			const transactionStatus: TransactionStatus =  props.transaction.transactionStatus;
 			switch(transactionStatus){
 				case TransactionStatus.SUFFICIENT_BALANCE :
+				    setDisabled(false);
 				    return  props.children
                                   default: 
 					setDisabled(true);

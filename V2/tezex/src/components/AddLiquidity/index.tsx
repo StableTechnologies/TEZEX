@@ -173,9 +173,12 @@ export const AddLiquidity: FC = (props) => {
 	}, [assets]);
 	const updateSend = useCallback(
 		(value: string) => {
+			/*
 			console.log("\n", ":sssend uppdate ");
+			*/
 			const amt = new BigNumber(value);
 			if (amt !== sendAmount) {
+				/*
 				console.log(
 					"\n",
 					"sendAmount old value : ",
@@ -188,6 +191,7 @@ export const AddLiquidity: FC = (props) => {
 					amt,
 					"\n"
 				);
+				*/
 				setSendAmount(amt);
 			}
 		},
@@ -201,11 +205,10 @@ export const AddLiquidity: FC = (props) => {
 			);
 		};
 
-		const timer = setTimeout(() => {
 			if (
 				transaction &&
 				///slow update because of issue here
-				transaction.sendAmount[0].decimal !== sendAmount
+				!transaction.sendAmount[0].decimal.eq(sendAmount)
 			) {
 				console.log(
 					"\n",
@@ -222,9 +225,7 @@ export const AddLiquidity: FC = (props) => {
 				updateTransaction(transaction);
 			}
 			///slow update because of issue here ^^^
-		}, 5000);
 
-		return () => clearTimeout(timer);
 	}, [sendAmount, transaction, walletOperations]);
 	const updateReceive = useCallback((value: string) => {
 		setReceiveAmount(new BigNumber(value));
@@ -376,6 +377,7 @@ export const AddLiquidity: FC = (props) => {
 
 	useEffect(() => {}, []);
 	useEffect(() => {
+		/*
 		console.log("\n", "transaction : ", transaction, "\n");
 		transaction &&
 			console.log(
@@ -384,22 +386,27 @@ export const AddLiquidity: FC = (props) => {
 				transaction.sendAssetBalance[0].decimal.toString(),
 				"\n"
 			);
+		*/
 	}, [transaction]);
 
 	const newTransaction = useCallback(async () => {
+		/*
 		console.log("\n", " :new ", "\n");
+		*/
 		await walletOperations
 			.initialize(
 				[assets[send1], assets[send2]],
 				[assets[receive]]
 			)
 			.then((transaction: Transaction | undefined) => {
+				/*
 				console.log(
 					"\n",
 					"transaction : ",
 					transaction,
 					"\n"
 				);
+				*/
 				if (transaction){ setTransaction(transaction);
 				if (swapingFields) setSwapingFields(false);
 				setLoading(false);}
@@ -422,11 +429,15 @@ export const AddLiquidity: FC = (props) => {
 			_newTransaction();
 		}
 		if (loading && swapingFields) {
+			/*
 			console.log("\n", " :swappuin ", "\n");
+			*/
 			_newTransaction();
 		}
 		if (loading && !transaction && !active) {
+			/*
 			console.log("\n", " :call new ", "\n");
+			*/
 			_newTransaction();
 		} else if (loading) {
 			if (active) {

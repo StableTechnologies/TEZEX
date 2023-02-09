@@ -23,7 +23,7 @@ export interface Asset {
 
 export enum TransactionStatus {
 	INITIALISED = "Initialised",
-	MODIFIED = "Modified",
+	MODIFIED = "Estimating",
 	INSUFFICIENT_BALANCE = "Insufficient Balance",
 	SUFFICIENT_BALANCE = "Sufficient Balance",
 	PENDING = "Pending",
