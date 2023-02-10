@@ -4,7 +4,7 @@ import sirsIcon from "../../assets/sirsIcon.svg";
 import rightArrow from "../../assets/rightArrow.svg";
 import plusIcon from "../../assets/plusIcon.svg";
 
-import {Wallet} from "../wallet"
+import { Wallet } from "../wallet";
 import {
 	Transaction,
 	TokenKind,
@@ -139,6 +139,8 @@ export const AddLiquidity: FC = (props) => {
 	);
 
 	const [loadingBalances, setLoadingBalances] = useState<boolean>(true);
+
+	const [syncing, setSyncing] = useState<boolean>(true);
 	const [loading, setLoading] = useState<boolean>(true);
 	const [editing, setEditing] = useState<boolean>(false);
 	const [sendAmount, setSendAmount] = useState(new BigNumber(0));
@@ -163,9 +165,15 @@ export const AddLiquidity: FC = (props) => {
 		await walletOperations.sendTransaction();
 	};
 
-	const updateSlippage = useCallback((value: number) => {
-		setSlippage(value);
-	}, []);
+	const updateSlippage = useCallback(
+		(value: string) => {
+			const amt = new BigNumber(value).toNumber();
+			if (amt !== slippage) {
+				setSlippage(amt);
+			}
+		},
+		[slippage]
+	);
 	const swapFields = useCallback(() => {
 		setAssets([assets[send2], assets[send1], assets[receive]]);
 		setSwapingFields(true);
@@ -201,31 +209,30 @@ export const AddLiquidity: FC = (props) => {
 	useEffect(() => {
 		const updateTransaction = async (transaction: Transaction) => {
 			await walletOperations.updateAmount(
-				sendAmount.toString()
+				sendAmount.toString(), slippage.toString()
 			);
 		};
 
-			if (
-				transaction &&
-				///slow update because of issue here
-				!transaction.sendAmount[0].decimal.eq(sendAmount)
-			) {
-				console.log(
-					"\n",
-					"transaction.sendAmount[0].decimal : ",
-					transaction.sendAmount[0].decimal.toString(),
-					"\n"
-				);
-				console.log(
-					"",
-					"sendAmount : ",
-					sendAmount.toString(),
-					"\n"
-				);
-				updateTransaction(transaction);
-			}
-			///slow update because of issue here ^^^
-
+		if (
+			transaction &&
+			///slow update because of issue here
+			!transaction.sendAmount[0].decimal.eq(sendAmount)
+		) {
+			console.log(
+				"\n",
+				"transaction.sendAmount[0].decimal : ",
+				transaction.sendAmount[0].decimal.toString(),
+				"\n"
+			);
+			console.log(
+				"",
+				"sendAmount : ",
+				sendAmount.toString(),
+				"\n"
+			);
+			updateTransaction(transaction);
+		}
+		///slow update because of issue here ^^^
 	}, [sendAmount, transaction, walletOperations]);
 	const updateReceive = useCallback((value: string) => {
 		setReceiveAmount(new BigNumber(value));
@@ -257,9 +264,49 @@ export const AddLiquidity: FC = (props) => {
 		//	if(isWalletConnected) update()
 	}, [isWalletConnected, updateBalance]);
 	useEffect(() => {
-			setTransaction((t) => walletOperations.getActiveTransaction());
+		setTransaction((t) => walletOperations.getActiveTransaction());
 	}, [setTransaction, walletOperations]);
 
+	useEffect(() => {
+		if (
+			transactionId &&
+			transaction &&
+			transaction.sendAmount[1] &&
+			transaction.sendAssetBalance[1]
+		) {
+			if (
+				transaction.sendAmount[0].decimal.eq(
+					sendAmount
+				) &&
+				transaction.sendAmount[1].decimal.eq(
+					sendAmount2
+				) &&
+				transaction.receiveAmount[0].decimal.eq(
+					receiveAmount
+				) &&
+				transaction.slippage === slippage &&
+				transaction.sendAssetBalance[0].decimal.toString() ===
+					balances[0] &&
+				transaction.sendAssetBalance[1].decimal.toString() ===
+					balances[1] &&
+				transaction.receiveAmount[0].decimal.eq(
+					receiveAmount
+				)
+			) {
+				setSyncing(false);
+			} else {
+				setSyncing(true);
+			}
+		}
+	}, [
+		transaction,
+		sendAmount2,
+		receiveAmount,
+		sendAmount,
+		slippage,
+		balances,
+		transactionId,
+	]);
 	useEffect(() => {
 		if (transaction) setTransactionId(transaction.id);
 		if (
@@ -407,9 +454,12 @@ export const AddLiquidity: FC = (props) => {
 					"\n"
 				);
 				*/
-				if (transaction){ setTransaction(transaction);
-				if (swapingFields) setSwapingFields(false);
-				setLoading(false);}
+				if (transaction) {
+					setTransaction(transaction);
+					if (swapingFields)
+						setSwapingFields(false);
+					setLoading(false);
+				}
 			});
 	}, [swapingFields, assets, walletOperations]);
 
@@ -424,8 +474,7 @@ export const AddLiquidity: FC = (props) => {
 
 		const active = walletOperations.getActiveTransaction();
 
-
-		if ( !loading && !transaction && !active) {
+		if (!loading && !transaction && !active) {
 			_newTransaction();
 		}
 		if (loading && swapingFields) {
@@ -445,7 +494,7 @@ export const AddLiquidity: FC = (props) => {
 				updateSend(
 					active.sendAmount[0].decimal.toString()
 				);
-				updateSlippage(active.slippage);
+				updateSlippage(active.slippage.toString());
 				setLoading(false);
 			}
 			if (
@@ -565,6 +614,7 @@ export const AddLiquidity: FC = (props) => {
 										? "loading.."
 										: balances[0]
 								}
+								label="Enter Amount"
 								loading={
 									loading
 								}
@@ -600,6 +650,7 @@ export const AddLiquidity: FC = (props) => {
 										? "loading.."
 										: balances[1]
 								}
+								label="Required Amount"
 							/>
 						</Grid2>
 					</CardContent>
@@ -627,14 +678,18 @@ export const AddLiquidity: FC = (props) => {
 						</Grid2>
 
 						<Grid2 sx={{}} xs={6}>
-								<Wallet
-									transaction={transaction}
-									callback={
-										transact
-									}
-								>
-									{"Add Liquidity"}
-								</Wallet>
+							<Wallet
+								transaction={
+									transaction
+								}
+								callback={
+									transact
+								}
+							>
+								{
+									"Add Liquidity"
+								}
+							</Wallet>
 						</Grid2>
 					</CardActions>
 				</Card>

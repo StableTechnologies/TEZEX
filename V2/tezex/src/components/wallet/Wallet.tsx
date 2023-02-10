@@ -28,21 +28,18 @@ const classes = {
 
 		fontFamily: "Inter",
 		width: "100%",
-		height: "56px",
+		//height: "56px",
 		backgroundColor: "#000",
 		color: "white",
 		border: "1px solid black",
 		borderRadius: "16px",
 		fontWeight: "500",
-		fontSize: "24px",
-		lineHeight: "29px",
+		fontSize: "1.66vw",
+		lineHeight: "2.01vw",
 		letterSpacing: "0.01em",
 		textTransform: "none",
 		"&:hover": {
 			background: "#000",
-		},
-		"@media (max-width: 600px)": {
-			fontSize: "24px",
 		},
 	},
 	walletDisconnectedHeader: {

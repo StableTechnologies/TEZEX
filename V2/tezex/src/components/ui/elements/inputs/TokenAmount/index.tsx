@@ -193,7 +193,7 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 				<TextField
 					onChange={updateAmount}
 					value={inputString}
-					label={props.label ? props.label : ""}
+					//label={props.label ? props.label : ""}
 					id="filled-start-adornment"
 					sx={{
 						justifyContent:"center",
@@ -207,9 +207,9 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 							<InputAdornment position="start">
 								<Box sx={{display:"block"}}>
 									<Box sx={{
-										fontSize:"max(10px,1.2vw)",
+										fontSize:"1.2vw",
 									}}>
-									    {"Enter Amount"}
+										{props.label}
 									</Box>
 								<Box
 									sx={{
@@ -247,7 +247,7 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 						style: {
 							textAlign: "right",
 
-						fontSize: "max(10px,2.2vw)",
+						fontSize: "2.2vw",
 								//		lineHeight: "38.7px",
 						},
 					}}
