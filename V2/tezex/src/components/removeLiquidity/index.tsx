@@ -127,7 +127,8 @@ export const RemoveLiquidity: FC = (props) => {
 	const [receiveAmount, setReceiveAmount] = useState(new BigNumber(0));
 	const [slippage, setSlippage] = useState<number>(-0.5);
 	const [balance, setBalance] = useState(new BigNumber(0));
-
+        
+	const [useMax, setUseMax] = useState<boolean>(false);
 	const send = 0;
 	const receive1 = 1;
 	const receive2 = 2;
@@ -155,6 +156,10 @@ export const RemoveLiquidity: FC = (props) => {
 		[slippage]
 	);
 
+	useEffect(() => {
+
+		if (useMax) setSendAmount(balance);
+	},[useMax, balance])
 	const updateSend = useCallback(
 		(value: string) => {
 
@@ -433,7 +438,6 @@ export const RemoveLiquidity: FC = (props) => {
 	return (
 		<Grid2 container sx={classes.root}>
 			<Grid2>
-				<div>
 					<Card sx={classes.card}>
 						<CardHeader
 							sx={{
@@ -450,26 +454,42 @@ textAlign: 'left'
 							}
 						/>
 						<CardContent sx={classes.cardcontent}>
-							<Grid2
-								xs={12}
-								sx={{
-									position: "relative",
-									top: "10px",
-								}}
+							<Box sx={{
+
+								display:"flex",
+								flexDirection:"row",
+							}}>
+							<TokenInput
+								assetName={
+									assets[
+										send
+									].name
+								}
+								readOnly={useMax}
+								onChange={
+									updateSend
+								}
+								value={sendAmount.toString()}
+								loading={loading}
+								variant="LeftInput"
+							/>
+							<Typography
+
+			onClick={(
+				event: React.MouseEvent<
+					HTMLAnchorElement,
+					MouseEvent
+				>
+			) => {
+				event.preventDefault();
+				(useMax)?  setUseMax(false) : setUseMax(true);
+			}}
+							
 							>
-								<TokenInput
-									assetName={
-										assets[
-											send
-										].name
-									}
-									onChange={
-										updateSend
-									}
-									value={sendAmount.toString()}
-									loading={loading}
-								/>
-							</Grid2>
+
+                                                            Use Max
+							</Typography>
+							</Box>
 					
 					
 
@@ -484,6 +504,10 @@ textAlign: 'left'
 								}}
 							>
 								<Wallet
+
+									transaction={
+										transaction
+									}
 									callback={
 										transact
 									}
@@ -493,9 +517,6 @@ textAlign: 'left'
 							</Box>
 						</CardActions>
 					</Card>
-					
-					
-				</div>
 			</Grid2>
 		</Grid2>
 	);

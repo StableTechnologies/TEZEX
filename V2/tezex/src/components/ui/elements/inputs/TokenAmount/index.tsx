@@ -11,7 +11,7 @@ import { BigNumber } from "bignumber.js";
 import { WalletInfo } from "../../../../../contexts/wallet";
 
 import { useWallet } from "../../../../../hooks/wallet";
-import { useNetwork } from "../../../../../hooks/network"
+import { useNetwork } from "../../../../../hooks/network";
 import { TokenKind, Asset } from "../../../../../types/general";
 import { getAsset } from "../../../../../constants";
 import {
@@ -49,6 +49,7 @@ export interface ITokenAmountInput {
 	label?: string;
 	readOnly?: boolean;
 	loading?: boolean;
+	variant?: "LeftInput" | "RightInput";
 }
 
 const style = {
@@ -66,11 +67,8 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 	const value = props.value;
 	const loading = props.loading;
 	useEffect(() => {
-
-			setInputString(value);
-
-
-	},[loading,value])
+		setInputString(value);
+	}, [loading, value]);
 	const callBack = useCallback(
 		async (value: string) => {
 			console.log("\n", " callback ", "\n");
@@ -81,7 +79,12 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 	useEffect(() => {
 		const timer = setTimeout(() => {
 			if (props.value !== inputString && !props.readOnly) {
-				console.log('\n','props.value : ', props.value,'\n'); 
+				console.log(
+					"\n",
+					"props.value : ",
+					props.value,
+					"\n"
+				);
 				callBack(inputString);
 			}
 		}, 2000);
@@ -179,98 +182,247 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 		height: "100px",
 	});
 
-	return (
-		<Grid2 container>
-			<Grid2
-				container
-				sx={{
-					flexDirection: "column",
+	const Variant = () => {
+		switch (props.variant) {
+			case "LeftInput":
+				return (
+					<Grid2 container>
+						<Grid2
+							container
+							sx={{
+								flexDirection:
+									"row",
 
-					borderRadius: "16px",
-					backgroundColor: "background.default",
-				}}
-			>
-				<TextField
-					onChange={updateAmount}
-					value={inputString}
-					//label={props.label ? props.label : ""}
-					id="filled-start-adornment"
-					sx={{
-						justifyContent:"center",
-						width: "100%",
-						height: "75px",
+								borderRadius:
+									"16px",
+								backgroundColor:
+									"background.default",
+							}}
+						>
+							<TextField
+								onChange={
+									updateAmount
+								}
+								value={
+									inputString
+								}
+								//label={props.label ? props.label : ""}
+								id="filled-start-adornment"
+								sx={{
+									justifyContent:
+										"center",
+									width: "100%",
+									height: "75px",
+								}}
+								InputProps={{
+									disableUnderline:
+										true,
+									endAdornment:
+										(
+											<InputAdornment position="end">
+												<Box
+													sx={{
+														display: "block",
+													}}
+												>
+													<Box
+														sx={{
+															fontSize: "1.2vw",
+														}}
+													>
+														{
+															props.label
+														}
+													</Box>
+													<Box
+														sx={{
+															display: "flex",
+															flexDirection:
+																"row",
+														}}
+													>
+														<div>
+															<img
+																style={{
+																	marginLeft: "8px",
+																	marginRight:
+																		"8px",
+																	height: "23px",
+																}}
+																src={
+																	asset.logo
+																}
+																alt="logo"
+															/>
+														</div>
+														<div>
+															{
+																asset.label
+															}
+														</div>
+													</Box>
+												</Box>
+											</InputAdornment>
+										),
+								}}
+								inputProps={{
+									readOnly: props.readOnly,
+									style: {
+										textAlign: "left",
 
-					}}
-					InputProps={{
-						disableUnderline: true,
-						startAdornment: (
-							<InputAdornment position="start">
-								<Box sx={{display:"block"}}>
-									<Box sx={{
-										fontSize:"1.2vw",
-									}}>
-										{props.label}
-									</Box>
-								<Box
+										fontSize: "2.2vw",
+										//		lineHeight: "38.7px",
+									},
+								}}
+								variant="standard"
+							/>
+							<WalletConnected>
+								<Typography
+									color="textSecondary"
+									variant="subtitle2"
+									hidden={
+										props.balance
+											? false
+											: true
+									}
 									sx={{
-										display: "flex",
-									flexDirection:"row",
+										padding: "0px 16px",
+										textAlign: "right",
 									}}
-
 								>
-									<div>
-										<img
-											style={{
-												marginLeft: "8px",
-												marginRight:
-													"8px",
-												height: "23px",
-											}}
-											src={
-												asset.logo
-											}
-											alt="logo"
-										/>
-									</div>
-									<div>
-										{
-											asset.label
-										}
-									</div>
-								</Box>
-							</Box>
-							</InputAdornment>
-						),
-					}}
-					inputProps={{
-						readOnly: props.readOnly,
-						style: {
-							textAlign: "right",
+									balance:{" "}
+									{
+										props.balance
+									}{" "}
+									{
+										props.assetName
+									}
+								</Typography>
+							</WalletConnected>
+						</Grid2>
+					</Grid2>
+				);
+			default:
+				return (
+					<Grid2 container>
+						<Grid2
+							container
+							sx={{
+								flexDirection:
+									"column",
 
-						fontSize: "2.2vw",
-								//		lineHeight: "38.7px",
-						},
-					}}
-					variant="standard"
-				/>
-				<WalletConnected>
-				<Typography
-					color="textSecondary"
-						variant="subtitle2"
-						hidden={props.balance? false : true}
-						sx={{
-							padding: "0px 16px",
-							textAlign: "right",
-						}}
-					>
-						balance: {props.balance}{" "}
-						{props.assetName}
-					</Typography>
-					
-				</WalletConnected>
-			</Grid2>
-		</Grid2>
-	);
+								borderRadius:
+									"16px",
+								backgroundColor:
+									"background.default",
+							}}
+						>
+							<TextField
+								onChange={
+									updateAmount
+								}
+								value={
+									inputString
+								}
+								//label={props.label ? props.label : ""}
+								id="filled-start-adornment"
+								sx={{
+									justifyContent:
+										"center",
+									width: "100%",
+									height: "75px",
+								}}
+								InputProps={{
+									disableUnderline:
+										true,
+									startAdornment:
+										(
+											<InputAdornment position="start">
+												<Box
+													sx={{
+														display: "block",
+													}}
+												>
+													<Box
+														sx={{
+															fontSize: "1.2vw",
+														}}
+													>
+														{
+															props.label
+														}
+													</Box>
+													<Box
+														sx={{
+															display: "flex",
+															flexDirection:
+																"row",
+														}}
+													>
+														<div>
+															<img
+																style={{
+																	marginLeft: "8px",
+																	marginRight:
+																		"8px",
+																	height: "23px",
+																}}
+																src={
+																	asset.logo
+																}
+																alt="logo"
+															/>
+														</div>
+														<div>
+															{
+																asset.label
+															}
+														</div>
+													</Box>
+												</Box>
+											</InputAdornment>
+										),
+								}}
+								inputProps={{
+									readOnly: props.readOnly,
+									style: {
+										textAlign: "right",
+
+										fontSize: "2.2vw",
+										//		lineHeight: "38.7px",
+									},
+								}}
+								variant="standard"
+							/>
+							<WalletConnected>
+								<Typography
+									color="textSecondary"
+									variant="subtitle2"
+									hidden={
+										props.balance
+											? false
+											: true
+									}
+									sx={{
+										padding: "0px 16px",
+										textAlign: "right",
+									}}
+								>
+									balance:{" "}
+									{
+										props.balance
+									}{" "}
+									{
+										props.assetName
+									}
+								</Typography>
+							</WalletConnected>
+						</Grid2>
+					</Grid2>
+				);
+		}
+	};
+	return <Variant />;
 };
 
 export const TokenInput = memo(TokenAmountInput);
