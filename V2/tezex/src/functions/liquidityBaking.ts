@@ -414,10 +414,7 @@ export async function estimateShares(
 			tokenMantissa,
 			dexStorage
 		);
-		const shares = BigNumber.max(
-			BigNumber.min(sharesFromXtz, sharesFromToken),
-			1
-		);
+		const shares = BigNumber.min(sharesFromXtz, sharesFromToken);
 		return shares;
 	//else return new BigNumber(0);
 }
@@ -426,6 +423,7 @@ export function _estimateShares(
 	tokenMantissa: BigNumber,
 	dexStorage: any
 ) {
+	if (xtzAmountInMutez.eq(0)) return new BigNumber(0);
 	const sharesFromXtz = estimateSharesFromXtz(
 		xtzAmountInMutez,
 		dexStorage
@@ -434,10 +432,7 @@ export function _estimateShares(
 		tokenMantissa,
 		dexStorage
 	);
-	const shares = BigNumber.max(
-		BigNumber.min(sharesFromXtz, sharesFromToken),
-		1
-	);
+	const shares = BigNumber.min(sharesFromXtz, sharesFromToken);
 	return shares;
 }
 
