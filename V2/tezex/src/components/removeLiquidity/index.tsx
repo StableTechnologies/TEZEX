@@ -435,6 +435,16 @@ export const RemoveLiquidity: FC = (props) => {
 		}
 	}, [loading,transaction, active, newTransaction, session, updateSend, updateSlippage, walletOperations]);
 
+	useEffect(() => {
+
+			if (
+				session.activeComponent !==
+				TransactingComponent.REMOVE_LIQUIDITY
+			)
+				session.loadComponent(
+					TransactingComponent.REMOVE_LIQUIDITY
+				);
+	})
 	return (
 		<Grid2 container sx={classes.root}>
 			<Grid2>

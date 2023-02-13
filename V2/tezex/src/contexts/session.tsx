@@ -54,6 +54,7 @@ export function SessionProvider(props: ISession) {
 
 
 	const loadComponent= useCallback((comp: TransactingComponent) => {
+		console.log('\n',' Load ComponentCall ','\n'); 
 		setActiveComponent(comp)
 	},[])
 

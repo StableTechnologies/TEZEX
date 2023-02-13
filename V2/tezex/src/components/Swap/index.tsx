@@ -479,6 +479,17 @@ export const Swap: FC = (props) => {
 		walletOperations,
 	]);
 
+
+	useEffect(() => {
+
+			if (
+				session.activeComponent !==
+				TransactingComponent.SWAP
+			)
+				session.loadComponent(
+					TransactingComponent.SWAP
+				);
+	})
 	return (
 		<Grid2 container sx={classes.root}>
 			<Grid2>

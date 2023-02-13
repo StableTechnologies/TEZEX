@@ -354,7 +354,7 @@ export const AddLiquidity: FC = (props) => {
 	*/
 
 	const activeWallet = wallet
-		? wallet.getActiveTransaction(TransactingComponent.SWAP)
+		? wallet.getActiveTransaction(TransactingComponent.ADD_LIQUIDITY)
 		: undefined;
 	const active = walletOperations.getActiveTransaction();
 	useEffect(() => {}, [editing]);
@@ -499,10 +499,10 @@ export const AddLiquidity: FC = (props) => {
 			}
 			if (
 				session.activeComponent !==
-				TransactingComponent.SWAP
+				TransactingComponent.ADD_LIQUIDITY
 			)
 				session.loadComponent(
-					TransactingComponent.SWAP
+					TransactingComponent.ADD_LIQUIDITY
 				);
 		}
 	}, [
@@ -517,6 +517,16 @@ export const AddLiquidity: FC = (props) => {
 		walletOperations,
 	]);
 
+	useEffect(() => {
+
+			if (
+				session.activeComponent !==
+				TransactingComponent.ADD_LIQUIDITY
+			)
+				session.loadComponent(
+					TransactingComponent.ADD_LIQUIDITY
+				);
+	})
 	return (
 		<Grid2 container sx={classes.root}>
 			<Grid2>
