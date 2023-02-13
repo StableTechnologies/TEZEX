@@ -95,13 +95,14 @@ const classes = {
 		"&.MuiCardContent-root": {
 			paddingTop: "4vw",
 		},
+		flexDirection: "column",
 		paddingTop: "10vw",
 		alignItems: "center",
 		display: "flex",
 	},
 	card: {
-		minHeight: "46vh",
-		minWidth: "64vw",
+		minHeight: "32.57vw",
+		minWidth: "63.88vw",
 		borderRadius: "20px",
 		zIndex: 5,
 		background: "#FFFFFF",
@@ -209,7 +210,8 @@ export const AddLiquidity: FC = (props) => {
 	useEffect(() => {
 		const updateTransaction = async (transaction: Transaction) => {
 			await walletOperations.updateAmount(
-				sendAmount.toString(), slippage.toString()
+				sendAmount.toString(),
+				slippage.toString()
 			);
 		};
 
@@ -354,7 +356,9 @@ export const AddLiquidity: FC = (props) => {
 	*/
 
 	const activeWallet = wallet
-		? wallet.getActiveTransaction(TransactingComponent.ADD_LIQUIDITY)
+		? wallet.getActiveTransaction(
+				TransactingComponent.ADD_LIQUIDITY
+		  )
 		: undefined;
 	const active = walletOperations.getActiveTransaction();
 	useEffect(() => {}, [editing]);
@@ -518,15 +522,14 @@ export const AddLiquidity: FC = (props) => {
 	]);
 
 	useEffect(() => {
-
-			if (
-				session.activeComponent !==
+		if (
+			session.activeComponent !==
+			TransactingComponent.ADD_LIQUIDITY
+		)
+			session.loadComponent(
 				TransactingComponent.ADD_LIQUIDITY
-			)
-				session.loadComponent(
-					TransactingComponent.ADD_LIQUIDITY
-				);
-	})
+			);
+	});
 	return (
 		<Grid2 container sx={classes.root}>
 			<Grid2>
@@ -606,62 +609,117 @@ export const AddLiquidity: FC = (props) => {
 					</Grid2>
 					<CardContent sx={classes.cardContent}>
 						<Grid2
-							xs={6}
-							sx={classes.input}
-						>
-							<TokenInput
-								assetName={
-									assets[
-										send1
-									].name
-								}
-								onChange={
-									updateSend
-								}
-								value={sendAmount.toString()}
-								balance={
-									loadingBalances
-										? "loading.."
-										: balances[0]
-								}
-								label="Enter Amount"
-								loading={
-									loading
-								}
-							/>
-						</Grid2>
-
-						<Grid2
-							xs={0.5}
+							xs={12}
 							sx={{
-								position: "relative",
+								display: "flex",
+								flexDirection:
+									"row",
 							}}
 						>
-							<img
-								src={plusIcon}
-								alt="plusIcon"
-							/>
+							<Grid2
+								xs={6}
+								sx={
+									classes.input
+								}
+							>
+								<TokenInput
+									assetName={
+										assets[
+											send1
+										]
+											.name
+									}
+									onChange={
+										updateSend
+									}
+									value={sendAmount.toString()}
+									balance={
+										loadingBalances
+											? "loading.."
+											: balances[0]
+									}
+									label="Enter Amount"
+									loading={
+										loading
+									}
+								/>
+							</Grid2>
+
+							<Grid2
+								xs={0.5}
+								sx={{
+									position: "relative",
+								}}
+							>
+								<img
+									src={
+										plusIcon
+									}
+									alt="plusIcon"
+								/>
+							</Grid2>
+
+							<Grid2
+								xs={6}
+								sx={
+									classes.input
+								}
+							>
+								<TokenInput
+									assetName={
+										assets[
+											send2
+										]
+											.name
+									}
+									value={sendAmount2.toString()}
+									readOnly={
+										true
+									}
+									balance={
+										loadingBalances
+											? "loading.."
+											: balances[1]
+									}
+									label="Required Amount"
+								/>
+							</Grid2>
 						</Grid2>
 
 						<Grid2
-							xs={6}
-							sx={classes.input}
+							xs={12}
+							sx={{
+								flexDirection:
+									"row",
+								display: "inline-flex",
+								alignItems: "flex-start",
+							}}
 						>
-							<TokenInput
-								assetName={
-									assets[
-										send2
-									].name
-								}
-								value={sendAmount2.toString()}
-								readOnly={true}
-								balance={
-									loadingBalances
-										? "loading.."
-										: balances[1]
-								}
-								label="Required Amount"
-							/>
+							<Typography noWrap
+								sx={{
+									display: "inline-flex",
+									fontSize: ".97vw",
+									fontWeight: "400",
+									lineHeight: "1.18vw",
+								}}
+							>
+								You will recieve
+								about {" "}
+								<Typography
+									sx={{
+										marginLeft: ".37vw",
+										marginRight: ".37vw",
+										fontSize: ".97vw",
+										fontWeight: "700",
+										lineHeight: "1.18vw",
+									}}
+								>
+									{" "}{receiveAmount.toString()}{" "}
+									Sirs
+								</Typography>
+								for this
+								deiposit
+							</Typography>
 						</Grid2>
 					</CardContent>
 					<CardActions sx={classes.cardAction}>
