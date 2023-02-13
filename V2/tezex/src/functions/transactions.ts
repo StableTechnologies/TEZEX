@@ -15,10 +15,7 @@ import {
 
 import { TezosToolkit } from "@taquito/taquito";
 
-import {
-	tezToMutez,
-	mutezToTez,
-} from "../functions/util";
+import { tezToMutez, mutezToTez } from "../functions/util";
 
 import {
 	estimateTokensFromXtz,
@@ -77,10 +74,15 @@ const swapTransaction = async (
 			);
 			break;
 		case TokenKind.TzBTC:
-			console.log('\n','transaction.slippage : ', transaction.slippage,'\n'); 
+			console.log(
+				"\n",
+				"transaction.slippage : ",
+				transaction.slippage,
+				"\n"
+			);
 			await tokenToXtz(
 				transaction.sendAmount[0].mantissa,
-			        transaction.receiveAmount[0].mantissa,
+				transaction.receiveAmount[0].mantissa,
 				userAddress,
 				dex,
 				transaction.sendAsset[0].address,
@@ -229,8 +231,9 @@ const transact = async () => {
 */
 export const decimals = {
 	XTZ: 6,
-	TzBTC: 8,
+TzBTC: 8,
 	Sirius: 0,
+	Sirs: 0,
 };
 
 export function tokenMantissaToDecimal(

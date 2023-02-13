@@ -146,6 +146,8 @@ export const Wallet: FC<IWallet> = (props) => {
 			props.transaction &&
 			props.transaction.sendAmount[0].decimal.eq(0)
 		) {
+
+					setSpinner(false);
 			return "Enter Amount";
 		} else if (props.transaction) {
 			const transactionStatus: TransactionStatus =
@@ -223,7 +225,7 @@ export const Wallet: FC<IWallet> = (props) => {
 			return (
 				<Button
 					size="large"
-					sx={classes.walletDisconnectedCard}
+					sx={classes.transactDisabled}
 					onClick={connect}
 				>
 					Connect Wallet

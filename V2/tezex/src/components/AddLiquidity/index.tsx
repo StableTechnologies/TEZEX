@@ -534,17 +534,23 @@ export const AddLiquidity: FC = (props) => {
 		<Grid2 container sx={classes.root}>
 			<Grid2>
 				<Card sx={classes.card}>
-					<Grid2 xs={12}>
 						<CardHeader
+							sx={{
+								paddingBottom:
+									"1vw",
+								fontSize: "1vw",
+								textAlign: "left",
+							}}
 							title={
-								<Typography variant="h6">
-									{
-										"Add Liquidty"
-									}
+								<Typography
+									sx={{
+										fontSize: "1.4vw",
+									}}
+								>
+									{"Add Liquidity"}
 								</Typography>
 							}
 						/>
-					</Grid2>
 					<Grid2
 						xs={8}
 						lg={4}
@@ -612,6 +618,8 @@ export const AddLiquidity: FC = (props) => {
 							xs={12}
 							sx={{
 								display: "flex",
+							        justifyContent: "space-between",
+								alignItems: "center",
 								flexDirection:
 									"row",
 							}}
@@ -646,7 +654,7 @@ export const AddLiquidity: FC = (props) => {
 							</Grid2>
 
 							<Grid2
-								xs={0.5}
+								xs={1}
 								sx={{
 									position: "relative",
 								}}
