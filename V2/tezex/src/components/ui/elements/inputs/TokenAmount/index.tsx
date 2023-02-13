@@ -200,6 +200,7 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 							}}
 						>
 							<TextField
+								autoFocus
 								onChange={
 									updateAmount
 								}
@@ -318,6 +319,8 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 							}}
 						>
 							<TextField
+
+				autoFocus
 								onChange={
 									updateAmount
 								}
