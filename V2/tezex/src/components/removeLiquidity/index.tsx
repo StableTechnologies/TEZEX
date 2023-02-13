@@ -473,11 +473,11 @@ textAlign: 'left'
 								loading={loading}
 								variant="LeftInput"
 							/>
-							<Typography
+							<Button
 
 			onClick={(
 				event: React.MouseEvent<
-					HTMLAnchorElement,
+					HTMLButtonElement,
 					MouseEvent
 				>
 			) => {
@@ -487,8 +487,14 @@ textAlign: 'left'
 							
 							>
 
-                                                            Use Max
+							<Typography
+								sx={{
+									color:(useMax)? "blue" : "black",
+								}}
+							>
+							{"Use Max"}
 							</Typography>
+							</Button>
 							</Box>
 					
 					

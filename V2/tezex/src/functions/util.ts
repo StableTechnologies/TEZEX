@@ -17,6 +17,11 @@ import {
 	tokenMantissaToDecimal,
 } from "./scaling";
 
+
+export const shorten = (first: number, last: number, str: string) => {
+  return str.substring(0, first) + "..." + str.substring(str.length - last);
+};
+
 export function tezToMutez(amount: BigNumber) {
 	return amount.multipliedBy(1000000);
 }
