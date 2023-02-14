@@ -235,7 +235,7 @@ export const AddLiquidity: FC = (props) => {
 			updateTransaction(transaction);
 		}
 		///slow update because of issue here ^^^
-	}, [sendAmount, transaction, walletOperations]);
+	}, [slippage, sendAmount, transaction, walletOperations]);
 	const updateReceive = useCallback((value: string) => {
 		setReceiveAmount(new BigNumber(value));
 	}, []);
@@ -690,6 +690,8 @@ export const AddLiquidity: FC = (props) => {
 											: balances[1]
 									}
 									label="Required Amount"
+									darker={true}
+									swap={swapFields}
 								/>
 							</Grid2>
 						</Grid2>

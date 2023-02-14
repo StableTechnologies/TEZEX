@@ -27,6 +27,8 @@ import Grid2 from "@mui/material/Unstable_Grid2"; // Grid version 2
 //import KeyboardArrowDownIcon from '@mui/material/icons/KeyboardArrowDown';
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
+
+import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import Input from "@mui/material/Input";
 import FilledInput from "@mui/material/FilledInput";
@@ -40,6 +42,8 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { SvgIcon } from "@mui/material";
 
+import liquiditySwapIcon from "../../../../../assets/liquiditySwapIcon.svg";
+
 import { WalletConnected } from "../../../../session/WalletConnected";
 export interface ITokenAmountInput {
 	assetName: TokenKind;
@@ -50,6 +54,8 @@ export interface ITokenAmountInput {
 	readOnly?: boolean;
 	loading?: boolean;
 	variant?: "LeftInput" | "RightInput";
+	darker?: boolean;
+	swap?: () => void;
 }
 
 const style = {
@@ -76,6 +82,9 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 		},
 		[onChange]
 	);
+	const toggle = useCallback(() => {
+		if (props.swap) props.swap();
+	}, [props]);
 	useEffect(() => {
 		const timer = setTimeout(() => {
 			if (props.value !== inputString && !props.readOnly) {
@@ -87,7 +96,7 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 				);
 				callBack(inputString);
 			}
-		}, 2000);
+		}, 3000);
 		return () => clearTimeout(timer);
 		//if (isWa
 	}, [inputString, callBack, props]);
@@ -315,12 +324,13 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 								borderRadius:
 									"16px",
 								backgroundColor:
-									"background.default",
+									props.darker
+										? "#F4F4F4"
+										: "#F9F9F9",
 							}}
 						>
 							<TextField
-
-				autoFocus
+								autoFocus
 								onChange={
 									updateAmount
 								}
@@ -330,10 +340,19 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 								//label={props.label ? props.label : ""}
 								id="filled-start-adornment"
 								sx={{
+									//  .css-1x51dt5-MuiInputBase-input-MuiInput-input
+									"& .MuiInputBase-input":{
+								position: "absolute",
+
+
+										zIndex: 5,
+									width: "100%"
+
+									},
 									justifyContent:
 										"center",
 									width: "100%",
-									height: "75px",
+									//height: "75px",
 								}}
 								InputProps={{
 									disableUnderline:
@@ -343,12 +362,20 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 											<InputAdornment position="start">
 												<Box
 													sx={{
-														display: "block",
+														display: "flex",
+														flexDirection:
+															"column",
 													}}
 												>
 													<Box
 														sx={{
 															fontSize: "1.2vw",
+
+															marginLeft: "1vw",
+															marginRight:
+																"1vw",
+															position: "relative",
+															bottom: "1vw",
 														}}
 													>
 														{
@@ -365,10 +392,10 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 														<div>
 															<img
 																style={{
-																	marginLeft: "8px",
+																	marginLeft: "1vw",
 																	marginRight:
-																		"8px",
-																	height: "23px",
+																		"1vw",
+																	height: "1.61vw",
 																}}
 																src={
 																	asset.logo
@@ -376,12 +403,60 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 																alt="logo"
 															/>
 														</div>
-														<div>
+														<Typography
+															sx={{
+																color: "#1E1E1E",
+																fontWeight: "500",
+																fontSize: "1.25vw",
+															}}
+														>
 															{
 																asset.label
 															}
-														</div>
+														</Typography>
 													</Box>
+												</Box>
+											</InputAdornment>
+										),
+
+									endAdornment:
+										(
+											<InputAdornment
+												position="end"
+												sx={{
+													display: "flex",
+													flexDirection:
+														"column",
+													justifyContent:
+														"flex-start",
+
+														zIndex:0,
+
+													position: "relative",
+													bottom: "3vw",
+												}}
+											>
+												<Box
+													visibility={
+														props.swap
+															? "visible"
+															: "hidden"
+													}
+												>
+													<Button>
+													<img
+														onClick={
+															toggle
+														}
+														style={{
+															maxWidth: "9.6px",
+														}}
+														src={
+															liquiditySwapIcon
+														}
+														alt="logo"
+													/>
+													</Button>
 												</Box>
 											</InputAdornment>
 										),
@@ -398,27 +473,36 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 								variant="standard"
 							/>
 							<WalletConnected>
-								<Typography
-									color="textSecondary"
-									variant="subtitle2"
-									hidden={
-										props.balance
-											? false
-											: true
-									}
+								<Grid2
 									sx={{
-										padding: "0px 16px",
-										textAlign: "right",
+										position: "relative",
+										bottom: "2vw",
 									}}
 								>
-									balance:{" "}
-									{
-										props.balance
-									}{" "}
-									{
-										props.assetName
-									}
-								</Typography>
+									<Typography
+										color="textSecondary"
+										variant="subtitle2"
+										hidden={
+											props.balance
+												? false
+												: true
+										}
+										sx={{
+											color: "#999999",
+											fontWeight: "400",
+											fontSize: ".97vw",
+											textAlign: "right",
+										}}
+									>
+										Balance:{" "}
+										{
+											props.balance
+										}{" "}
+										{
+											props.assetName
+										}
+									</Typography>
+								</Grid2>
 							</WalletConnected>
 						</Grid2>
 					</Grid2>
