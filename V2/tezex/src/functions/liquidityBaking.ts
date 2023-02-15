@@ -470,6 +470,7 @@ userAddress: string,
 ) {
 	try {
 		
+		console.log('\n','xtzAmountInMutez, tokenMantissa : ', xtzAmountInMutez, tokenMantissa,'\n'); 
 			const deadline = new Date(
 				Date.now() + 60000
 			).toISOString();

@@ -378,7 +378,7 @@ export const RemoveLiquidity: FC = (props) => {
 				);
 			*/
 			},
-			loadingBalances ? 500 : 5000
+			loadingBalances ? 2000 : 5000
 		);
 		return () => clearInterval(interval);
 		//if (isWalletConnected) updateTransactionBalance();
