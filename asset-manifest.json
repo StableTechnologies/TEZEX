@@ -1,17 +1,24 @@
 {
   "files": {
-    "main.css": "/TEZEX/static/css/main.b0454de6.css",
-    "main.js": "/TEZEX/static/js/main.253ae675.js",
-    "static/js/792.194f3e1d.chunk.js": "/TEZEX/static/js/792.194f3e1d.chunk.js",
-    "static/js/496.a016e724.chunk.js": "/TEZEX/static/js/496.a016e724.chunk.js",
-    "index.html": "/TEZEX/index.html",
-    "main.b0454de6.css.map": "/TEZEX/static/css/main.b0454de6.css.map",
-    "main.253ae675.js.map": "/TEZEX/static/js/main.253ae675.js.map",
-    "792.194f3e1d.chunk.js.map": "/TEZEX/static/js/792.194f3e1d.chunk.js.map",
-    "496.a016e724.chunk.js.map": "/TEZEX/static/js/496.a016e724.chunk.js.map"
+    "main.css": "./static/css/main.87ed2fca.css",
+    "main.js": "./static/js/main.3e1772a3.js",
+    "static/js/918.ae4c3706.chunk.js": "./static/js/918.ae4c3706.chunk.js",
+    "static/js/522.17d9f18d.chunk.js": "./static/js/522.17d9f18d.chunk.js",
+    "static/media/sirsIcon.svg": "./static/media/sirsIcon.5002a55ace3cfc5d31debece8d9c27fa.svg",
+    "static/media/sirsLogo.svg": "./static/media/sirsLogo.69ec38176e1aeb0354396304521cb678.svg",
+    "static/media/xtzTzbtcIcon.svg": "./static/media/xtzTzbtcIcon.475ffaadd8917d5261494e4dca136899.svg",
+    "static/media/tzlogo.svg": "./static/media/tzlogo.6c4411d2c91539c15f8d7ac95f1bb515.svg",
+    "static/media/TezexLogo.svg": "./static/media/TezexLogo.31a5b14146d93e4acab52211d38fd1a2.svg",
+    "static/media/liquiditySwapIcon.svg": "./static/media/liquiditySwapIcon.8f1e02de3095483209de196f8517490f.svg",
+    "static/media/swapIcon.svg": "./static/media/swapIcon.d8241838b1310217d74263c8853bf23f.svg",
+    "static/media/tzwalletlogo.svg": "./static/media/tzwalletlogo.298ee304ca29eec491be48cb5f4a1231.svg",
+    "static/media/tzbtcLogo.svg": "./static/media/tzbtcLogo.2b6cf59a757ce64552282a9fb704dffe.svg",
+    "static/media/rightArrow.svg": "./static/media/rightArrow.7dcc15c8dbb97c68650723f627f831c8.svg",
+    "index.html": "./index.html",
+    "static/media/plusIcon.svg": "./static/media/plusIcon.dc94d200e3f2bc2295ce02c5485a00ef.svg"
   },
   "entrypoints": [
-    "static/css/main.b0454de6.css",
-    "static/js/main.253ae675.js"
+    "static/css/main.87ed2fca.css",
+    "static/js/main.3e1772a3.js"
   ]
 }
