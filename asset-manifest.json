@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/TEZEX/static/css/main.87ed2fca.css",
-    "main.js": "/TEZEX/static/js/main.11544303.js",
+    "main.js": "/TEZEX/static/js/main.6d14a2e2.js",
     "static/js/918.ae4c3706.chunk.js": "/TEZEX/static/js/918.ae4c3706.chunk.js",
     "static/js/522.17d9f18d.chunk.js": "/TEZEX/static/js/522.17d9f18d.chunk.js",
     "static/media/sirsIcon.svg": "/TEZEX/static/media/sirsIcon.5002a55ace3cfc5d31debece8d9c27fa.svg",
@@ -19,6 +19,6 @@
   },
   "entrypoints": [
     "static/css/main.87ed2fca.css",
-    "static/js/main.11544303.js"
+    "static/js/main.6d14a2e2.js"
   ]
 }
