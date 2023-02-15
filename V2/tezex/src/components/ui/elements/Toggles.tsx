@@ -39,7 +39,7 @@ export const SwapUpDownToggle: FC<IToggle> = (props) => {
 					style={{
 
 
-					          padding: "5vw",
+					           padding: ".2vw",
 				                    width:  "100%",
 				                    height:  "100%",
 				

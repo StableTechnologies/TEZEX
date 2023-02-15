@@ -996,14 +996,18 @@ export function WalletProvider(props: IWalletProvider) {
 							>
 						) => {
 							if (draft) {
+
+									console.log('\n',' :remove update ','\n'); 
+								console.log('\n','amountUpdateSend before condition: ', amountUpdateSend,'\n'); 
 								if (
 									amountUpdateSend &&
 									removeLiquidityTransaction &&
-									removeLiquidityTransaction.sendAmount[0].decimal.eq(
+									!removeLiquidityTransaction.sendAmount[0].decimal.eq(
 										amountUpdateSend[0]
 											.decimal
 									)
 								) {
+									console.log('\n',' :remove update ammount after condition*******************','\n'); 
 									draft.sendAmount =
 										amountUpdateSend;
 									if (
@@ -1018,7 +1022,7 @@ export function WalletProvider(props: IWalletProvider) {
 								if (
 									amountUpdateReceive &&
 									removeLiquidityTransaction &&
-									removeLiquidityTransaction.receiveAmount[0].decimal.eq(
+									!removeLiquidityTransaction.receiveAmount[0].decimal.eq(
 										amountUpdateReceive[0]
 											.decimal
 									)
