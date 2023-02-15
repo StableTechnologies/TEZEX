@@ -330,7 +330,7 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 							}}
 						>
 							<TextField
-								autoFocus
+								autoFocus={props.readOnly? false : true}
 								onChange={
 									updateAmount
 								}
