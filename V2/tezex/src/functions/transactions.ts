@@ -127,6 +127,7 @@ const addLiquidityTransaction = async (
 				);
 				break;
 			case TokenKind.TzBTC:
+				console.log('\n',' :sending transaction tzbtc to add ','\n'); 
 				await buyLiquidityShares(
 					transaction.sendAmount[1].mantissa,
 					transaction.sendAmount[0].mantissa,
@@ -134,7 +135,7 @@ const addLiquidityTransaction = async (
 					new BigNumber(transaction.slippage),
 					userAddress,
 					dex,
-					transaction.sendAsset[1].address,
+					transaction.sendAsset[0].address,
 					toolkit
 				);
 		}
