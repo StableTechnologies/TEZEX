@@ -5,6 +5,7 @@ import { NavApp } from "../../nav";
 import Grid from "@mui/material/Grid";
 
 import Grid2 from "@mui/material/Unstable_Grid2"; // Grid version 2
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardActions from "@mui/material/CardActions";
@@ -27,11 +28,9 @@ const style = {
 	header: {
 		fontSize: "1.5vw",
 		display:"flex",
-
 					alignItems: "center",
-					justifyContent: "flex-start",
-		minWidth: "1440px",
-		minHeight: "72px",
+		width: "100%",
+		minHeight: "5vw",
 		left: "0px",
 		top: "0px",
 		background: "#FFFFFF",
@@ -41,40 +40,32 @@ const style = {
 
 export const Header: FC = () => {
 	return (
-		<Grid2 container sx={style.header}>
-			<Grid2
-				xs={2}
-				sm={2}
-				md={2}
-				sx={{
-					alignContent: "center",
-					justifyContent: "flex-start",
-				}}
+		<Box sx={style.header}>
+			<Box
 			>
-				<img src={logo} alt="Logo" />
-			</Grid2>
+				<img style={{
+					maxWidth: "11.35vw",
+				}}src={logo} alt="Logo" />
+			</Box>
 
-			<Grid2
-				xs={1}
-				sm={3.3}
-				md={5}
-				lg={7}
+			<Box
 				sx={{
 					alignContent: "center",
-					justifyContent: "flex-start",
 				}}
 			>
 				<NavApp />
-			</Grid2>
-			<Grid2 xs={2} sm={2} md={2}  sx={{ 
+			</Box>
+			<Box  sx={{ 
 
+				position: "relative",
+				left: "51vw",
+				justifyContent:"flexend",
 		display:"flex",
 			
-					justifyContent: "flex-start",
 			}} >
 				<Wallet variant={"header"}/>
-			</Grid2>
-		</Grid2>
+			</Box>
+		</Box>
 	);
 };
 export {};

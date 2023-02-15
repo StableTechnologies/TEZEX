@@ -80,21 +80,18 @@ const classes = {
 		},
 		background: "#1E1E1E",
 		color: "white",
-		minHeight: "39px",
-		minWidth: "149px",
-		padding: "10px, 16px, 10px, 16px",
+		minHeight: "2.7vw",
+		minWidth: "10.24vw",
+		//	padding: "10px, 16px, 10px, 16px",
 		border: "1px solid black",
-		borderRadius: "8px",
+		borderRadius: ".55vw",
 		fontWeight: "500",
-		fontSize: "16px",
-		lineHeight: "19.36px",
-		letterSpacing: "0.01em",
+		fontSize: "1.11vw",
+		lineHeight: "1.34vw",
+		//letterSpacing: "0.01em",
 		textTransform: "none",
 		"&:hover": {
 			background: "#000",
-		},
-		"@media (max-width: 600px)": {
-			fontSize: "19px",
 		},
 	},
 	walletDisconnectedCard: {
@@ -117,9 +114,11 @@ const classes = {
 		"&:hover": {
 			background: "#000",
 		},
+		/*
 		"@media (max-width: 600px)": {
 			fontSize: "24px",
 		},
+		*/
 	},
 };
 
