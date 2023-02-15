@@ -23,8 +23,10 @@ import {
 const tabClasses = {
 	'&.MuiButtonBase-root': {
 
-    minHeight: 44,
-    minWidth: 96,
+		fontSize: "1.11vw",
+		minHeight: "1.32vw",
+		minWidth: "3.0vw",
+		padding: "3% 3.9vw",
     zIndex: 2,
     // marginTop: spacing(0.5),
     color: 'palette.text.primary',
@@ -42,7 +44,7 @@ const classes = {
   '.MuiTabs-flexContainer': {
 
     justifyContent: "space-between",
-    minWidth: 440,
+	  //minWidth: 440,
     border: '1px solid #EDEDED',
     borderRadius: 4,
     display: 'inline-flex',
@@ -50,18 +52,26 @@ const classes = {
   },
 	'.MuiTabs-indicator': {
     top: 0,
-    bottom: '12%',
-    right: 3,
-    height: 'auto',
+		//bottom: '12%',
+
+		/*
+		minHeight: "100%",
+		minWidth: "3.0vw",
+		*/
+
+		minHeight: "5vw",
+		//right: 3,
     background: 'none',
     '&:after': {
       content: '""',
       display: 'block',
       position: 'absolute',
-      top: '10%',
-      left: 4,
-      right: 4,
-      bottom: '10%',
+
+
+	top: '.5vw',
+	bottom: '1.5vw',
+      left: '1vw',
+	    right: '1vw',
       borderRadius: 3,
 	    backgroundColor: 'selectedHomeTab.main'//'#E3F7FF',//'palette.action.selected' ,
     }

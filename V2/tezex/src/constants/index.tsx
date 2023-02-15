@@ -1,6 +1,7 @@
 import { TokenKind, Asset, Transaction } from "../types/general";
 import tzbtcLogo from "../assets/tzbtcLogo.svg";
 import tzlogo from "../assets/tzlogo.svg";
+import sirsLogo from "../assets/sirsLogo.svg";
 export const assets: Asset[] = [
 	{
 		name: TokenKind.XTZ,
@@ -17,7 +18,7 @@ export const assets: Asset[] = [
 	{
 		name: TokenKind.Sirius,
 		label: "Sirs",
-		logo: "",
+		logo: sirsLogo,
 		address: "KT1AafHA1C1vk959wvHWBispY9Y2f3fxBUUo",
 	},
 ];

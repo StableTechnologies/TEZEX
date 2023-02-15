@@ -1,6 +1,7 @@
 import { FC} from "react";
 import { Header } from "./Header";
 import { MainWindow } from "./MainWindow";
+import Box from "@mui/material/Box";
 
 export interface ILayout {
   children:
@@ -13,9 +14,11 @@ export interface ILayout {
 
 export const Layout: FC<ILayout> = (props) => {
 	return (
-		<div>
+		<Box sx={{height: "100%"}}>
 			<Header />
+			<Box  sx={{height: "100vh"}}>
 			<MainWindow>{props.children}</MainWindow>
-		</div>
+			</Box>
+		</Box>
 	);
 };

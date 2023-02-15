@@ -34,228 +34,6 @@ import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 
 
-const classes = {
-	/*
-	
-fontFamily: 'Inter',
-fontStyle: 'normal',
-fontWeight: '500',
-fontSize: '12px',
-lineHeight: '15px',
-textAlign: 'right',
-
-	*/
-
-	tabInput: {
-		"&.MuiButtonBase-root": {
-			fontStyle: "normal",
-			fontWeight: "500",
-			fontSize: "80%",
-			lineHeight: "1.56vh",
-			display: "inline-flex",
-			justifyContent: "center",
-			textAlign: "center",
-			minHeight: "3.03vh",
-			//marginRight: "40px",
-			minWidth: "4.26vw",
-			zIndex: 1,
-			// marginTop: spacing(0.5),
-			color: "palette.text.primary",
-			textTransform: "initial",
-		},
-		wrapper: {
-			// zIndex: 2,
-			// marginTop: spacing(0.5),
-			color: "palette.text.primary",
-			textTransform: "initial",
-		},
-	},
-	tabClasses: {
-		"&.MuiButton-root.Mui-disabled": {
-			"&:after": {
-				zindex: 0,
-				//minHeight: "3.26vh",
-				//marginRight: "40px",
-				//minWidth: "4.26vw",
-				// padding: "",
-				content: '"e"',
-				display: "flex",
-				position: "absolute",
-				top: 0,
-				left: 4,
-				right: 4,
-				bottom: 0,
-				//position: "absolute",
-
-				borderRadius: "8px",
-				backgroundColor: "transparent", //"selectedHomeTab.main", //'#E3F7FF',//'palette.action.selected' ,
-			},
-		},
-		"&.MuiButtonBase-root": {
-			fontFamily: "Inter",
-			fontStyle: "normal",
-			fontWeight: "500",
-			fontSize: "80%",
-			lineHeight: "1.56vh",
-			display: "inline-flex",
-			justifyContent: "center",
-			textAlign: "center",
-			minHeight: "3.03vh",
-			//marginRight: "40px",
-			minWidth: "4.26vw",
-			zIndex: 1,
-			// marginTop: spacing(0.5),
-			color: "palette.text.primary",
-			textTransform: "initial",
-
-			"&:after": {
-				//minHeight: "3.26vh",
-				//marginRight: "40px",
-				//minWidth: "4.26vw",
-				// padding: "",
-				content: '"e"',
-				display: "flex",
-				alignItems: "center",
-				justifyContent: "center",
-				position: "absolute",
-				top: 0,
-				left: 4,
-				right: 4,
-				bottom: 0,
-				//position: "absolute",
-
-				borderRadius: "8px",
-				backgroundColor: "selectedHomeTab.main", //'#E3F7FF',//'palette.action.selected' ,
-			},
-		},
-		wrapper: {
-			// zIndex: 2,
-			// marginTop: spacing(0.5),
-			color: "palette.text.primary",
-			textTransform: "initial",
-		},
-	},
-	textField: {
-		"& .MuiButtonBase-root": {
-			zIndex: 3,
-		},
-		"& .MuiInputAdornment-root": {},
-
-		"& .MuiTypography-root": {
-			fontFamily: "Inter",
-			fontStyle: "normal",
-			fontWeight: "500",
-			textAlign: "left",
-		},
-
-		"&.MuiFormControl-root": {
-			position: "absolute",
-			fontFamily: "Inter",
-
-			zIndex: -1,
-			display: "inline-flex",
-			justifyContent: "center",
-			textAlign: "center",
-			//bottom: "45%",
-			//	left: "26%",
-			padding: "1px",
-			fontStyle: "normal",
-			fontWeight: "500",
-			//fontSize: "12px",
-			//lineHeight: "15px",
-
-			fontSize: "1.17vh",
-			lineHeight: "1.56vh",
-			minHeight: "3.03vh",
-			//marginRight: "40px",
-			minWidth: "4.26vw",
-			// marginTop: spacing(0.5),
-			textTransform: "initial",
-			// marginTop: spacing(0.5),
-		},
-
-		"&.MuiInputBase-root": {
-			position: "absolute",
-			fontFamily: "Inter",
-
-			padding: "0px",
-			fontSize: "1.17vh",
-			lineHeight: "1.56vh",
-			display: "inline-flex",
-			justifyContent: "center",
-			textAlign: "center",
-			minHeight: "3.03vh",
-			//marginRight: "40px",
-			minWidth: "4.26vw",
-			// marginTop: spacing(0.5),
-			textTransform: "initial",
-		},
-	},
-	tabs: {
-		"& .MuiTabs-root": {
-			//			minHeight: 10,
-		},
-
-		"& .MuiTabs-scroller": {
-			position: "relative",
-
-			display: "flex",
-
-			flexDirection: "row",
-			//			left: "20%",
-			padding: "4px",
-
-			/*
-		display: "flex",
-		flexDirection: "row",
-		alignItems: "flex-start",
-		padding: "4px",
-		gap: "16px",
-		position: "absolute",
-		left: "46.34%",
-		right: "3.64%",
-		top: "51.37%",
-		bottom: "21.92%",
-		background: "#FFFFFF",
-		border: "1px solid #EDEDED",
-		borderRadius: "8px",
-			
-			*/
-		},
-		"& .MuiTabs-flexContainer": {
-			padding: "1",
-			//gap: "4px",
-
-			alignItems: "center",
-			justifyContent: "center",
-			position: "absolute",
-			border: "1px solid #EDEDED",
-			borderRadius: "8px",
-		},
-		"& .MuiTabs-indicator": {
-			position: "relative",
-
-			top: "5%",
-			padding: "3px",
-			background: "none",
-			"&:after": {
-				minHeight: "3.26vh",
-				//marginRight: "40px",
-				minWidth: "4.26vw",
-				padding: "",
-
-				content: '""',
-				display: "flex",
-				justifyContent: "center",
-				//position: "absolute",
-
-				borderRadius: "8px",
-				backgroundColor: "selectedHomeTab.main", //'#E3F7FF',//'palette.action.selected' ,
-			},
-		},
-	},
-};
-
 export interface ISlippage {
 	asset: TokenKind;
 	value: BigNumber | number;
@@ -307,9 +85,10 @@ const SlippageInput: FC<ISlippage> = (props) => {
 		},
 			"& .MuiInputAdornment-root": {
 
-				//			paddingTop: "1vw",
+				display:'flex',
+				paddingTop: ".5vw",
 
-			paddingRight: ".5vw",
+			paddingRight: "2.5vw",
 			},
 
 		"& .MuiTypography-root": {
@@ -317,7 +96,8 @@ const SlippageInput: FC<ISlippage> = (props) => {
 			fontStyle: "normal",
 			fontWeight: "500",
 
-			fontSize: "80%",
+			fontSize: ".83vw",
+			lineHeight: "1vw",
 			display: "inline-flex",
 			justifyContent: "center",
 			textAlign: "center",
@@ -338,8 +118,8 @@ const SlippageInput: FC<ISlippage> = (props) => {
 			fontFamily: "Inter",
 			fontStyle: "normal",
 			fontWeight: "500",
-			fontSize: "80%",
-			lineHeight: "1.56vh",
+			fontSize: ".83vw",
+			lineHeight: "1vw",
 			display: "inline-flex",
 			justifyContent: "center",
 			textAlign: "center",
@@ -417,14 +197,14 @@ const SlippageInput: FC<ISlippage> = (props) => {
 			fontFamily: "Inter",
 			fontStyle: "normal",
 			fontWeight: "500",
-			fontSize: "80%",
-			lineHeight: "1.56vh",
+			fontSize: ".83vw",
+			lineHeight: "1vw",
 			display: "inline-flex",
 			justifyContent: "center",
 			textAlign: "center",
-			minHeight: "3.03vh",
+			//minHeight: "3.03vh",
 			//marginRight: "40px",
-			minWidth: "4.26vw",
+			minWidth: "4.2vw",
 			zIndex: 1,
 			// marginTop: spacing(0.5),
 
@@ -484,7 +264,7 @@ const SlippageInput: FC<ISlippage> = (props) => {
 				}}
 				{...props}
 			>
-					{props.amount.toString()}
+					{props.amount.toString()}%
 				</Button>);
 
 			}else{
@@ -515,7 +295,7 @@ const SlippageInput: FC<ISlippage> = (props) => {
                                 position: "relative",
 				width:"100%",
 				alignItems: "center",
-				justifyContent: "flex-start",
+				justifyContent: "space-between",
 				minHeight: "3.8vh",
 				//marginRight: "40px",
 				maxWidth: "15vw",

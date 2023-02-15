@@ -13,6 +13,7 @@ export interface IMainWindow {
 export const MainWindow: FC<IMainWindow> = (props) => {
   return (
 	  <Box sx={{
+		  height: "100%",
 		  background: "#F5F5F5",
 	  }}>
       {props.children}

@@ -208,35 +208,18 @@ export const AddLiquidity: FC = (props) => {
 		[sendAmount]
 	);
 
-	useEffect(() => {
-		const updateTransaction = async (transaction: Transaction) => {
+	const updateTransaction = useCallback(async () => {
 			await walletOperations.updateAmount(
 				sendAmount.toString(),
 				slippage.toString()
 			);
-		};
 
-		if (
-			transaction &&
-			///slow update because of issue here
-			!transaction.sendAmount[0].decimal.eq(sendAmount)
-		) {
-			console.log(
-				"\n",
-				"transaction.sendAmount[0].decimal : ",
-				transaction.sendAmount[0].decimal.toString(),
-				"\n"
-			);
-			console.log(
-				"",
-				"sendAmount : ",
-				sendAmount.toString(),
-				"\n"
-			);
-			updateTransaction(transaction);
-		}
+	},[sendAmount, slippage, walletOperations])
+	useEffect(() => {
+
+			updateTransaction();
 		///slow update because of issue here ^^^
-	}, [slippage, sendAmount, transaction, walletOperations]);
+	}, [updateTransaction]);
 	const updateReceive = useCallback((value: string) => {
 		setReceiveAmount(new BigNumber(value));
 	}, []);

@@ -639,7 +639,14 @@ export const Swap: FC = (props) => {
 								paddingTop: "6vw",
 							}}
 						>
-							<div>Slippage</div>
+							<Typography sx={{
+
+								marginLeft: "1vw",
+								fontSize: ".972vw",
+								lineHeighr: "1.176vw",
+							}}>
+							Slippage
+							</Typography>
 
 							<Slippage
 								asset={

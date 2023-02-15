@@ -29,7 +29,7 @@ import {
 	tokenDecimalToMantissa,
 	tokenMantissaToDecimal,
 } from "../functions/scaling";
-import {balanceBuilder} from "../functions/util"
+import { balanceBuilder } from "../functions/util";
 export enum WalletStatus {
 	ESTIMATING_SIRS = "Estimating Sirs",
 	ESTIMATING_XTZ = "Estimating Tez",
@@ -125,10 +125,10 @@ export interface WalletInfo {
 		checkBalances?: boolean
 	) => Promise<boolean>;
 
-	updateStatus : (
-			component: TransactingComponent,
-			transactionStatus: TransactionStatus,
-		) => void ,
+	updateStatus: (
+		component: TransactingComponent,
+		transactionStatus: TransactionStatus
+	) => void;
 	updateAmount: (
 		component: TransactingComponent,
 		amountUpdateSend?: Amount,
@@ -233,10 +233,20 @@ export function WalletProvider(props: IWalletProvider) {
 	);
 
 	useEffect(() => {
-		console.log('\n','tracking addLiquidity transaction : ', addLiquidityTransaction,'\n'); 
+		console.log(
+			"\n",
+			"tracking addLiquidity transaction : ",
+			addLiquidityTransaction,
+			"\n"
+		);
 	}, [addLiquidityTransaction]);
 	useEffect(() => {
-		console.log('\n','tracking swapTransaction : ', swapTransaction,'\n'); 
+		console.log(
+			"\n",
+			"tracking swapTransaction : ",
+			swapTransaction,
+			"\n"
+		);
 	}, [swapTransaction]);
 
 	const setActiveTransaction = useCallback(
@@ -368,7 +378,6 @@ export function WalletProvider(props: IWalletProvider) {
 				swapTransaction.sendAssetBalance[0].decimal.toString(),
 				"\n"
 			);
-		
 	}, [swapTransaction]);
 
 	useEffect(() => {}, [transactions]);
@@ -486,7 +495,7 @@ export function WalletProvider(props: IWalletProvider) {
 								}
 							)
 							.catch((_) => {
-								//console.log('\n',' :failed in getBalanceOfAssets ','\n'); 
+								//console.log('\n',' :failed in getBalanceOfAssets ','\n');
 								return null;
 							});
 					case 2:
@@ -527,13 +536,12 @@ export function WalletProvider(props: IWalletProvider) {
 		userBalance: Amount,
 		requiredAmount: Amount
 	): TransactionStatus => {
-		if (userBalance.length !== requiredAmount.length)
-		{
-			//console.log('\n','userBalance : ', userBalance,'\n'); 
-			//console.log('\n','requiredAmount : ', requiredAmount,'\n'); 
+		if (userBalance.length !== requiredAmount.length) {
+			//console.log('\n','userBalance : ', userBalance,'\n');
+			//console.log('\n','requiredAmount : ', requiredAmount,'\n');
 			throw Error("Error: balance check asset pair mismatch");
 		}
-		console.log('\n',' :check balance call ','\n'); 
+		console.log("\n", " :check balance call ", "\n");
 		const checks: boolean[] = Array.from(
 			userBalance,
 			(assetBalance, index) => {
@@ -548,17 +556,22 @@ export function WalletProvider(props: IWalletProvider) {
 					);
 			}
 		);
-		console.log('\n','checks : ', checks,'\n'); 
-	        console.log('\n','requiredAmount : ', requiredAmount,'\n'); 
+		console.log("\n", "checks : ", checks, "\n");
+		console.log("\n", "requiredAmount : ", requiredAmount, "\n");
 		const hasSufficientBalance: boolean = !checks.includes(false);
-			/*
+		/*
 				checks.reduce(
 				(accumulator, currentValue) =>
 					accumulator === currentValue,
 				true
 			);
 			*/
-		console.log('\n','hasSufficientBalance : ', hasSufficientBalance,'\n'); 
+		console.log(
+			"\n",
+			"hasSufficientBalance : ",
+			hasSufficientBalance,
+			"\n"
+		);
 		if (hasSufficientBalance) {
 			return TransactionStatus.SUFFICIENT_BALANCE;
 		} else {
@@ -590,9 +603,8 @@ export function WalletProvider(props: IWalletProvider) {
 				transaction.sendAsset
 			)
 				.then((userBalance: Amount | null) => {
-
-					//console.log('\n',' got send Balance in get Balances ','\n');  
-					//userBalance && console.log('\n','userBalance[0].decimal.toString() : ', userBalance[0].decimal.toString(),'\n'); 
+					//console.log('\n',' got send Balance in get Balances ','\n');
+					//userBalance && console.log('\n','userBalance[0].decimal.toString() : ', userBalance[0].decimal.toString(),'\n');
 					if (checkBalance && userBalance) {
 						balanceStatus =
 							checkSufficientBalance(
@@ -602,15 +614,14 @@ export function WalletProvider(props: IWalletProvider) {
 					}
 					if (userBalance)
 						userBalanceSend = userBalance;
-					//console.log('\n',' got send Balance in get Balances ','\n');  
+					//console.log('\n',' got send Balance in get Balances ','\n');
 					return getBalanceOfAssets(
 						transaction.receiveAsset
 					);
 				})
 				.then((userBalance: Amount | null) => {
-
-					//console.log('\n',' got receive Balance in get Balances ','\n');  
-					//userBalance && console.log('\n','receive userBalance[0].decimal.toString() : ', userBalance[0].decimal.toString(),'\n'); 
+					//console.log('\n',' got receive Balance in get Balances ','\n');
+					//userBalance && console.log('\n','receive userBalance[0].decimal.toString() : ', userBalance[0].decimal.toString(),'\n');
 					const receiveAssetBalance = userBalance
 						? userBalance
 						: transaction.receiveAssetBalance;
@@ -632,18 +643,26 @@ export function WalletProvider(props: IWalletProvider) {
 								),'\n'); 
 					}
 					*/
-					console.log('\n','balanceStatus : ', balanceStatus,'\n'); 
+					console.log(
+						"\n",
+						"balanceStatus : ",
+						balanceStatus,
+						"\n"
+					);
 					return {
 						...transaction,
 						sendAssetBalance,
 						receiveAssetBalance,
-						transactionstatus: (balanceStatus)? balanceStatus : transaction.transactionStatus,
+						transactionstatus: balanceStatus
+							? balanceStatus
+							: transaction.transactionStatus,
 					};
-				}).catch((e) => {
-					//console.log('\n',' failed in getBalances: ','\n'); 
-					//console.log('\n','transaction : ', transaction,'\n'); 
-					//console.log('\n','e : ', e,'\n'); 
-					throw Error(e)
+				})
+				.catch((e) => {
+					//console.log('\n',' failed in getBalances: ','\n');
+					//console.log('\n','transaction : ', transaction,'\n');
+					//console.log('\n','e : ', e,'\n');
+					throw Error(e);
 				});
 			return updated;
 		},
@@ -661,60 +680,80 @@ export function WalletProvider(props: IWalletProvider) {
 
 			await getBalances(transaction, checkBalances)
 				.then((_transaction: Transaction) => {
-
-			switch (component) {
-				case TransactingComponent.SWAP:
-					setSwapTransaction(
-						(
-							draft: Draft<
-								| Transaction
-								| undefined
-							>
-						) => {
-							if (draft) {
-								draft.sendAssetBalance =_transaction.sendAssetBalance;
-							        draft.receiveAssetBalance  = _transaction.receiveAssetBalance
-								draft.transactionStatus  = checkSufficientBalance(_transaction.sendAssetBalance,_transaction.sendAmount); 
-
-							}
-						}
-					);
-					break;
-				case TransactingComponent.ADD_LIQUIDITY:
-						setAddLiquidityTransaction(
-						(
-							draft: Draft<
-								| Transaction
-								| undefined
-							>
-						) => {
-							if (draft) {
-								draft.sendAssetBalance =_transaction.sendAssetBalance;
-							        draft.receiveAssetBalance  = _transaction.receiveAssetBalance
-								draft.transactionStatus  = checkSufficientBalance(_transaction.sendAssetBalance,_transaction.sendAmount); 
-
-							}
-						}
-					);
-					break;
-				case TransactingComponent.REMOVE_LIQUIDITY:
-						setRemoveLiquidityTransaction(
-						(
-							draft: Draft<
-								| Transaction
-								| undefined
-							>
-						) => {
-							if (draft) {
-								draft.sendAssetBalance =_transaction.sendAssetBalance;
-							        draft.receiveAssetBalance  = _transaction.receiveAssetBalance
-								draft.transactionStatus  = checkSufficientBalance(_transaction.sendAssetBalance,_transaction.sendAmount); 
-
-							}
-						}
-					);
-					break;
-			}
+					switch (component) {
+						case TransactingComponent.SWAP:
+							setSwapTransaction(
+								(
+									draft: Draft<
+										| Transaction
+										| undefined
+									>
+								) => {
+									if (
+										draft
+									) {
+										draft.sendAssetBalance =
+											_transaction.sendAssetBalance;
+										draft.receiveAssetBalance =
+											_transaction.receiveAssetBalance;
+										draft.transactionStatus =
+											checkSufficientBalance(
+												_transaction.sendAssetBalance,
+												_transaction.sendAmount
+											);
+									}
+								}
+							);
+							break;
+						case TransactingComponent.ADD_LIQUIDITY:
+							setAddLiquidityTransaction(
+								(
+									draft: Draft<
+										| Transaction
+										| undefined
+									>
+								) => {
+									if (
+										draft
+									) {
+										draft.sendAssetBalance =
+											_transaction.sendAssetBalance;
+										draft.receiveAssetBalance =
+											_transaction.receiveAssetBalance;
+										draft.transactionStatus =
+											checkSufficientBalance(
+												_transaction.sendAssetBalance,
+												_transaction.sendAmount
+											);
+									}
+								}
+							);
+							break;
+						case TransactingComponent.REMOVE_LIQUIDITY:
+							setRemoveLiquidityTransaction(
+								(
+									draft: Draft<
+										| Transaction
+										| undefined
+									>
+								) => {
+									if (
+										draft
+									) {
+										draft.sendAssetBalance =
+											_transaction.sendAssetBalance;
+										draft.receiveAssetBalance =
+											_transaction.receiveAssetBalance;
+										draft.transactionStatus =
+											checkSufficientBalance(
+												_transaction.sendAssetBalance,
+												_transaction.sendAmount
+											);
+									}
+								}
+							);
+							break;
+					}
 					/*
 					setActiveTransaction(
 					
@@ -728,8 +767,8 @@ export function WalletProvider(props: IWalletProvider) {
 					);
 					
 					*/
-					//console.log('\n','transaction : ', transaction,'\n'); 
-					//console.log('\n','recieved after getBalance transaction.sendAssetBalance[0].decimal.toString() : ', transaction.sendAssetBalance[0].decimal.toString(),'\n'); 
+					//console.log('\n','transaction : ', transaction,'\n');
+					//console.log('\n','recieved after getBalance transaction.sendAssetBalance[0].decimal.toString() : ', transaction.sendAssetBalance[0].decimal.toString(),'\n');
 					/*
 					setSwapTransaction(
 						(
@@ -748,20 +787,19 @@ export function WalletProvider(props: IWalletProvider) {
 					updated = true;
 				})
 				.catch((e) => {
-					//console.log('\n',' falied update balance ','\n'); 
+					//console.log('\n',' falied update balance ','\n');
 					updated = false;
 				});
 			return updated;
 		},
-		[getBalances,setSwapTransaction]
+		[getBalances, setSwapTransaction]
 	);
 
 	const updateStatus = useCallback(
 		(
 			component: TransactingComponent,
-			transactionStatus: TransactionStatus,
+			transactionStatus: TransactionStatus
 		) => {
-
 			switch (component) {
 				case TransactingComponent.SWAP:
 					setSwapTransaction(
@@ -772,13 +810,14 @@ export function WalletProvider(props: IWalletProvider) {
 							>
 						) => {
 							if (draft) {
-								         draft.transactionStatus  =  transactionStatus
+								draft.transactionStatus =
+									transactionStatus;
 							}
 						}
 					);
 					break;
 				case TransactingComponent.ADD_LIQUIDITY:
-						setAddLiquidityTransaction(
+					setAddLiquidityTransaction(
 						(
 							draft: Draft<
 								| Transaction
@@ -786,13 +825,14 @@ export function WalletProvider(props: IWalletProvider) {
 							>
 						) => {
 							if (draft) {
-								         draft.transactionStatus  =  transactionStatus
+								draft.transactionStatus =
+									transactionStatus;
 							}
 						}
 					);
 					break;
 				case TransactingComponent.REMOVE_LIQUIDITY:
-						setRemoveLiquidityTransaction(
+					setRemoveLiquidityTransaction(
 						(
 							draft: Draft<
 								| Transaction
@@ -800,16 +840,20 @@ export function WalletProvider(props: IWalletProvider) {
 							>
 						) => {
 							if (draft) {
-								        draft.transactionStatus  =  transactionStatus
+								draft.transactionStatus =
+									transactionStatus;
 							}
 						}
 					);
 					break;
-			
-
-
 			}
-		} ,[setAddLiquidityTransaction, setSwapTransaction, setRemoveLiquidityTransaction]);
+		},
+		[
+			setAddLiquidityTransaction,
+			setSwapTransaction,
+			setRemoveLiquidityTransaction,
+		]
+	);
 	const updateAmount = useCallback(
 		(
 			component: TransactingComponent,
@@ -817,7 +861,6 @@ export function WalletProvider(props: IWalletProvider) {
 			amountUpdateReceive?: Amount,
 			slippageUpdate?: number
 		): boolean => {
-
 			switch (component) {
 				case TransactingComponent.SWAP:
 					setSwapTransaction(
@@ -828,20 +871,56 @@ export function WalletProvider(props: IWalletProvider) {
 							>
 						) => {
 							if (draft) {
-
-								console.log('\n','draft : ', swapTransaction,'\n'); 
-								if(amountUpdateSend ) {
-									draft.sendAmount =amountUpdateSend
-								         if (swapTransaction) draft.transactionStatus  = checkSufficientBalance(swapTransaction.sendAssetBalance,amountUpdateSend); 
+								console.log(
+									"\n",
+									"draft : ",
+									swapTransaction,
+									"\n"
+								);
+								if (
+									amountUpdateSend &&
+									swapTransaction &&
+									!swapTransaction.sendAmount[0].decimal.eq(
+										amountUpdateSend[0]
+											.decimal
+									)
+								) {
+									draft.sendAmount =
+										amountUpdateSend;
+									if (
+										swapTransaction
+									)
+										draft.transactionStatus =
+											checkSufficientBalance(
+												swapTransaction.sendAssetBalance,
+												amountUpdateSend
+											);
 								}
-								 if(amountUpdateReceive ) draft.receiveAmount = amountUpdateReceive
-								 if(slippageUpdate ) draft.slippage =slippageUpdate
+								if (
+									amountUpdateReceive &&
+									swapTransaction &&
+									!swapTransaction.receiveAmount[0].decimal.eq(
+										amountUpdateReceive[0]
+											.decimal
+									)
+								) {
+									draft.receiveAmount =
+										amountUpdateReceive;
+								}
+								if (
+									slippageUpdate &&
+									swapTransaction &&
+									swapTransaction.slippage !==
+										slippageUpdate
+								)
+									draft.slippage =
+										slippageUpdate;
 							}
 						}
 					);
 					break;
 				case TransactingComponent.ADD_LIQUIDITY:
-						setAddLiquidityTransaction(
+					setAddLiquidityTransaction(
 						(
 							draft: Draft<
 								| Transaction
@@ -849,20 +928,67 @@ export function WalletProvider(props: IWalletProvider) {
 							>
 						) => {
 							if (draft) {
-								console.log('\n','draft : ', addLiquidityTransaction,'\n'); 
-								console.log('\n',' add liquidity update amountUpdateSend, amountUpdateReceive, slippageUpdate, : ', amountUpdateSend, amountUpdateReceive, slippageUpdate,'\n'); 
-								if(amountUpdateSend ) {
-									draft.sendAmount =amountUpdateSend
-								         if (addLiquidityTransaction) draft.transactionStatus  = checkSufficientBalance(addLiquidityTransaction.sendAssetBalance,amountUpdateSend); 
+								console.log(
+									"\n",
+									"addLiquidityTransaction : ",
+									addLiquidityTransaction,
+									"\n"
+								);
+								console.log(
+									"\n",
+									" add liquidity update amountUpdateSend, amountUpdateReceive, slippageUpdate, : ",
+									amountUpdateSend,
+									amountUpdateReceive,
+									slippageUpdate,
+									"\n"
+								);
+								if (
+									amountUpdateSend &&
+									addLiquidityTransaction &&
+									!addLiquidityTransaction.sendAmount[0].decimal.eq(
+										amountUpdateSend[0]
+											.decimal
+									)
+								) {
+									console.log('\n',' send update','\n'); 
+									draft.sendAmount =
+										amountUpdateSend;
+									if (
+										addLiquidityTransaction
+									)
+										draft.transactionStatus =
+											checkSufficientBalance(
+												addLiquidityTransaction.sendAssetBalance,
+												amountUpdateSend
+											);
 								}
-								 if(amountUpdateReceive ) draft.receiveAmount = amountUpdateReceive
-								 if(slippageUpdate ) draft.slippage = slippageUpdate
+								if (
+									amountUpdateReceive &&
+									addLiquidityTransaction &&
+									!addLiquidityTransaction.receiveAmount[0].decimal.eq(
+										amountUpdateReceive[0]
+											.decimal
+									)
+								) {
+
+									console.log('\n',' recieve update','\n'); 
+									draft.receiveAmount =
+										amountUpdateReceive;
+								}
+								if (
+									slippageUpdate &&
+									addLiquidityTransaction &&
+									addLiquidityTransaction.slippage !==
+										slippageUpdate
+								)
+									draft.slippage =
+										slippageUpdate;
 							}
 						}
 					);
 					break;
 				case TransactingComponent.REMOVE_LIQUIDITY:
-						setRemoveLiquidityTransaction(
+					setRemoveLiquidityTransaction(
 						(
 							draft: Draft<
 								| Transaction
@@ -870,28 +996,64 @@ export function WalletProvider(props: IWalletProvider) {
 							>
 						) => {
 							if (draft) {
-								if(amountUpdateSend ) {
-									draft.sendAmount =amountUpdateSend
-								         if (removeLiquidityTransaction) draft.transactionStatus  = checkSufficientBalance(removeLiquidityTransaction.sendAssetBalance,amountUpdateSend); 
+								if (
+									amountUpdateSend &&
+									removeLiquidityTransaction &&
+									removeLiquidityTransaction.sendAmount[0].decimal.eq(
+										amountUpdateSend[0]
+											.decimal
+									)
+								) {
+									draft.sendAmount =
+										amountUpdateSend;
+									if (
+										removeLiquidityTransaction
+									)
+										draft.transactionStatus =
+											checkSufficientBalance(
+												removeLiquidityTransaction.sendAssetBalance,
+												amountUpdateSend
+											);
 								}
-								 if(amountUpdateReceive ) draft.receiveAmount = amountUpdateReceive
-								 if(slippageUpdate ) draft.slippage =slippageUpdate
+								if (
+									amountUpdateReceive &&
+									removeLiquidityTransaction &&
+									removeLiquidityTransaction.receiveAmount[0].decimal.eq(
+										amountUpdateReceive[0]
+											.decimal
+									)
+								) {
+									draft.receiveAmount =
+										amountUpdateReceive;
+								}
+								if (
+									slippageUpdate &&
+									removeLiquidityTransaction &&
+									removeLiquidityTransaction.slippage !==
+										slippageUpdate
+								)
+									draft.slippage =
+										slippageUpdate;
 							}
 						}
 					);
 					break;
-			
-
-
 			}
-if (!amountUpdateSend || !amountUpdateReceive && !slippageUpdate) {return false} else return true
-		} ,[]);
+			if (
+				!amountUpdateSend ||
+				(!amountUpdateReceive && !slippageUpdate)
+			) {
+				return false;
+			} else return true;
+		},
+		[addLiquidityTransaction,removeLiquidityTransaction,swapTransaction,setSwapTransaction, setAddLiquidityTransaction , setRemoveLiquidityTransaction]
+	);
 
-			//^^^ MAKE ASYNC...set balance THEN check balance THEN modify transaction
-			//todo create async getBlaance(loadAsset, Amount)
-			//todo create sync checkSufficientBalance(Amount, Amount)
-			// modify transaction with balance and sufficiency check
-			//delete below strategy
+	//^^^ MAKE ASYNC...set balance THEN check balance THEN modify transaction
+	//todo create async getBlaance(loadAsset, Amount)
+	//todo create sync checkSufficientBalance(Amount, Amount)
+	// modify transaction with balance and sufficiency check
+	//delete below strategy
 
 	useEffect(() => {
 		if (client) {

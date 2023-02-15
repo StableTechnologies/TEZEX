@@ -15,12 +15,18 @@ import {
 
 import { BigNumber } from "bignumber.js";
 import { TokenInput, Slippage } from "../../components/ui/elements/inputs";
-import {Wallet} from "../wallet"
+import { Wallet } from "../wallet";
 import { useWalletConnected } from "../../hooks/wallet";
 import { getAsset } from "../../constants";
 import { TokenAmountOutput } from "../../components/ui/elements/Labels";
 import { useSession } from "../../hooks/session";
-import { useWallet, useWalletOps, WalletOps, useWalletSwapOps, SwapOps } from "../../hooks/wallet";
+import {
+	useWallet,
+	useWalletOps,
+	WalletOps,
+	useWalletSwapOps,
+	SwapOps,
+} from "../../hooks/wallet";
 import { useNetwork } from "../../hooks/network";
 import {
 	estimateTokensFromXtz,
@@ -44,10 +50,9 @@ import Paper from "@mui/material/Paper";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 const classes = {
-	cardcontent :{
-
+	cardcontent: {
 		"&.MuiCardContent-root": {
-		paddingTop:"0px",
+			paddingTop: "0px",
 		},
 		"& .MuiFormControl-root": {
 			width: "28.34vw",
@@ -58,7 +63,7 @@ const classes = {
 		justifyContent: "center",
 	},
 	slippageContainer: {
-		background:"black",
+		background: "black",
 		flexDirection: "row",
 		position: "absolute",
 		zIndex: 5,
@@ -75,11 +80,19 @@ const classes = {
 	slippage: {
 		text: {},
 	},
-	card: {
 
-						overflow: "hidden",
-		position:"relative",
-		height: "28.49vw",//"408px",
+	input1: {
+		position: "relative",
+
+		"& .MuiFormControl-root": {
+			width: "21.45vw",
+			height: "3.8vw",
+		},
+	},
+	card: {
+		overflow: "hidden",
+		position: "relative",
+		height: "26.04vw", //"408px",
 		width: "30.56vw",
 		borderRadius: "1.38vw",
 		zIndex: 999,
@@ -111,7 +124,9 @@ export interface ISwapToken {
 }
 
 export const RemoveLiquidity: FC = (props) => {
-	const walletOperations: WalletOps = useWalletOps(TransactingComponent.REMOVE_LIQUIDITY);
+	const walletOperations: WalletOps = useWalletOps(
+		TransactingComponent.REMOVE_LIQUIDITY
+	);
 	const isWalletConnected = useWalletConnected();
 	const [transactionId, setTransactionId] = useState<Id | null>(null);
 	const [transaction, setTransaction] = useState<Transaction | undefined>(
@@ -127,13 +142,13 @@ export const RemoveLiquidity: FC = (props) => {
 	const [receiveAmount, setReceiveAmount] = useState(new BigNumber(0));
 	const [slippage, setSlippage] = useState<number>(-0.5);
 	const [balance, setBalance] = useState(new BigNumber(0));
-        
+
 	const [useMax, setUseMax] = useState<boolean>(false);
 	const send = 0;
 	const receive1 = 1;
 	const receive2 = 2;
 
-	const [assets, setAssets] = useState<[Asset, Asset,Asset]>([
+	const [assets, setAssets] = useState<[Asset, Asset, Asset]>([
 		getAsset(TokenKind.Sirius),
 		getAsset(TokenKind.XTZ),
 		getAsset(TokenKind.TzBTC),
@@ -142,8 +157,7 @@ export const RemoveLiquidity: FC = (props) => {
 	const session = useSession();
 
 	const transact = async () => {
-
-	       await walletOperations.sendTransaction();	
+		await walletOperations.sendTransaction();
 	};
 
 	const updateSlippage = useCallback(
@@ -157,18 +171,27 @@ export const RemoveLiquidity: FC = (props) => {
 	);
 
 	useEffect(() => {
-
 		if (useMax) setSendAmount(balance);
-	},[useMax, balance])
+	}, [useMax, balance]);
 	const updateSend = useCallback(
 		(value: string) => {
-
-		console.log('\n',':sssend uppdate '); 
+			console.log("\n", ":sssend uppdate ");
 			const amt = new BigNumber(value);
-			if (amt !== sendAmount){ 
-	console.log('\n','sendAmount old value : ', sendAmount,'\n'); 
-				console.log('\n','sendAMount new value : ', amt,'\n'); 
-				setSendAmount(amt)};
+			if (amt !== sendAmount) {
+				console.log(
+					"\n",
+					"sendAmount old value : ",
+					sendAmount,
+					"\n"
+				);
+				console.log(
+					"\n",
+					"sendAMount new value : ",
+					amt,
+					"\n"
+				);
+				setSendAmount(amt);
+			}
 		},
 		[sendAmount]
 	);
@@ -177,30 +200,29 @@ export const RemoveLiquidity: FC = (props) => {
 		const updateTransaction = async (transaction: Transaction) => {
 			await walletOperations.updateAmount(
 				sendAmount.toString(),
-                                 slippage.toString()
+				slippage.toString()
 			);
 		};
-			if (
-				transaction &&
-				///slow update because of issue here
-				!transaction.sendAmount[0].decimal.eq(sendAmount)
-			) {
-				console.log(
-					"\n",
-					"transaction.sendAmount[0].decimal : ",
-					transaction.sendAmount[0].decimal.toString(),
-					"\n"
-				);
-				console.log(
-					"",
-					"sendAmount : ",
-					sendAmount.toString(),
-					"\n"
-				);
-				updateTransaction(transaction);
-			}
+		if (
+			transaction &&
+			///slow update because of issue here
+			!transaction.sendAmount[0].decimal.eq(sendAmount)
+		) {
+			console.log(
+				"\n",
+				"transaction.sendAmount[0].decimal : ",
+				transaction.sendAmount[0].decimal.toString(),
+				"\n"
+			);
+			console.log(
+				"",
+				"sendAmount : ",
+				sendAmount.toString(),
+				"\n"
+			);
+			updateTransaction(transaction);
+		}
 	}, [sendAmount, transaction, walletOperations]);
-
 
 	//const [balances, setBalances] = useState<[string, string]>(["", ""]);
 
@@ -208,8 +230,7 @@ export const RemoveLiquidity: FC = (props) => {
 		if (wallet && isWalletConnected) {
 			if (transaction) {
 				setLoadingBalances(
-					!(await walletOperations.updateBalance(
-					))
+					!(await walletOperations.updateBalance())
 				);
 			}
 
@@ -232,15 +253,14 @@ export const RemoveLiquidity: FC = (props) => {
 	}, [isWalletConnected, updateBalance]);
 	useEffect(() => {
 		if (wallet) {
-			setTransaction((t) => wallet.removeLiquidityTransaction);
+			setTransaction(
+				(t) => wallet.removeLiquidityTransaction
+			);
 		}
 	}, [wallet, setTransaction]);
 
 	useEffect(() => {
-		if (
-			transactionId &&
-			transaction
-		) {
+		if (transactionId && transaction) {
 			if (
 				transaction.sendAmount[0].decimal.eq(
 					sendAmount
@@ -250,7 +270,7 @@ export const RemoveLiquidity: FC = (props) => {
 				) &&
 				transaction.slippage === slippage &&
 				transaction.sendAssetBalance[0].decimal ===
-					balance 
+					balance
 			) {
 				setSyncing(false);
 			} else {
@@ -269,9 +289,7 @@ export const RemoveLiquidity: FC = (props) => {
 		if (transaction) setTransactionId(transaction.id);
 		if (transactionId && transaction) {
 			setReceiveAmount(transaction.receiveAmount[0].decimal);
-			setBalance(
-				transaction.sendAssetBalance[0].decimal,
-			);
+			setBalance(transaction.sendAssetBalance[0].decimal);
 		}
 	}, [transaction, transactionId]);
 	/*
@@ -386,22 +404,23 @@ export const RemoveLiquidity: FC = (props) => {
 	}, [transaction]);
 
 	const newTransaction = useCallback(async () => {
-		console.log('\n',' :new ','\n'); 
-			await walletOperations
-				.initialize([assets[send]], [assets[receive1], assets[receive2]])
-				.then((transaction) => {
-					console.log(
-						"\n",
-						"transaction : ",
-						transaction,
-						"\n"
-					);
-					setTransaction(transaction);
-					setLoading(false);
-				});
-
-		},
-	[assets, walletOperations]);
+		console.log("\n", " :new ", "\n");
+		await walletOperations
+			.initialize(
+				[assets[send]],
+				[assets[receive1], assets[receive2]]
+			)
+			.then((transaction) => {
+				console.log(
+					"\n",
+					"transaction : ",
+					transaction,
+					"\n"
+				);
+				setTransaction(transaction);
+				setLoading(false);
+			});
+	}, [assets, walletOperations]);
 
 	useEffect(() => {}, [loading, transaction, newTransaction]);
 
@@ -414,14 +433,16 @@ export const RemoveLiquidity: FC = (props) => {
 
 		const active = walletOperations.getActiveTransaction();
 
-		console.log('\n',' :swappuin ','\n'); 
-		if (loading && !transaction && !active ){ 
-			console.log('\n',' :call new ','\n'); 
+		console.log("\n", " :swappuin ", "\n");
+		if (loading && !transaction && !active) {
+			console.log("\n", " :call new ", "\n");
 			_newTransaction();
 		} else if (loading) {
 			if (active) {
 				setTransaction(active);
-				updateSend(active.sendAmount[0].decimal.toString());
+				updateSend(
+					active.sendAmount[0].decimal.toString()
+				);
 				//updateSlippage(active.slippage.toString());
 				setLoading(false);
 			}
@@ -433,106 +454,138 @@ export const RemoveLiquidity: FC = (props) => {
 					TransactingComponent.SWAP
 				);
 		}
-	}, [loading,transaction, active, newTransaction, session, updateSend, updateSlippage, walletOperations]);
+	}, [
+		loading,
+		transaction,
+		active,
+		newTransaction,
+		session,
+		updateSend,
+		updateSlippage,
+		walletOperations,
+	]);
 
 	useEffect(() => {
-
-			if (
-				session.activeComponent !==
+		if (
+			session.activeComponent !==
+			TransactingComponent.REMOVE_LIQUIDITY
+		)
+			session.loadComponent(
 				TransactingComponent.REMOVE_LIQUIDITY
-			)
-				session.loadComponent(
-					TransactingComponent.REMOVE_LIQUIDITY
-				);
-	})
+			);
+	});
 	return (
 		<Grid2 container sx={classes.root}>
 			<Grid2>
-					<Card sx={classes.card}>
-						<CardHeader
+				<Card sx={classes.card}>
+					<CardHeader
+						sx={{
+							paddingBottom: "0px",
+							fontSize: "1vw",
+							textAlign: "left",
+						}}
+						title={
+							<Typography
+								sx={{
+									fontSize: "1.4vw",
+								}}
+							>
+								{
+									"Remove Liquidity"
+								}
+							</Typography>
+						}
+					/>
+					<CardContent sx={classes.cardcontent}>
+						<Box
 							sx={{
-							    paddingBottom:"0px",
-                                                                    fontSize:"1vw",
-textAlign: 'left'
-							}}
-							title={
-								<Typography sx={{
-									fontSize:"1.4vw"
-								}}>
-									{"Remove Liquidity"}
-								</Typography>
-							}
-						/>
-						<CardContent sx={classes.cardcontent}>
-							<Box sx={{
+								display: "flex",
 
-								display:"flex",
-								flexDirection:"row",
-							}}>
+									position: "absolute",
+			                                       top: "16.87%",
+								justifyContent: "center",
+									alignItems: "center",
+								flexDirection:
+									"row",
+							}}
+						>
+							<Box sx={classes.input1}>
 							<TokenInput
 								assetName={
 									assets[
 										send
 									].name
 								}
-								readOnly={useMax}
+								readOnly={
+									useMax
+								}
 								onChange={
 									updateSend
 								}
 								value={sendAmount.toString()}
-								loading={loading}
+								loading={
+									loading
+								}
 								variant="LeftInput"
 							/>
+							</Box>
 							<Button
-
-			onClick={(
-				event: React.MouseEvent<
-					HTMLButtonElement,
-					MouseEvent
-				>
-			) => {
-				event.preventDefault();
-				(useMax)?  setUseMax(false) : setUseMax(true);
-			}}
-							
-							>
-
-							<Typography
-								sx={{
-									color:(useMax)? "blue" : "black",
+								onClick={(
+									event: React.MouseEvent<
+										HTMLButtonElement,
+										MouseEvent
+									>
+								) => {
+									event.preventDefault();
+									useMax
+										? setUseMax(
+												false
+										  )
+										: setUseMax(
+												true
+										  );
 								}}
 							>
-							{"Use Max"}
-							</Typography>
-							</Button>
-							</Box>
-					
-					
-
-						</CardContent>
-						<CardActions sx={classes.cardAction}>
-							<Box
-								sx={{
-									width:"28.33vw",
-									height:"4.16vw",
-									justifyContent:
-										"center",
-								}}
-							>
-								<Wallet
-
-									transaction={
-										transaction
-									}
-									callback={
-										transact
-									}
+								<Typography
+									sx={{
+									  fontSize: ".97vw",	
+									 lineHeight: "1.176vw",
+										color: useMax
+											? "#00A0E4"
+											: "#999999;",
+									}}
 								>
-									{"Sell Shares"}
-								</Wallet>
-							</Box>
-						</CardActions>
-					</Card>
+									{
+										"Use Max"
+									}
+								</Typography>
+							</Button>
+						</Box>
+					</CardContent>
+					<CardActions sx={classes.cardAction}>
+						<Box
+							sx={{
+								width: "28.33vw",
+								height: "4.16vw",
+									position: "absolute",
+									top: "79.4%",
+								justifyContent:
+									"center",
+							}}
+						>
+							<Wallet
+								transaction={
+									transaction
+								}
+								callback={
+									transact
+								}
+							>
+								{"Sell Shares"}
+							</Wallet>
+						</Box>
+					</CardActions>
+				</Card>
 			</Grid2>
 		</Grid2>
 	);

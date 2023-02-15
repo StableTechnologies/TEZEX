@@ -204,6 +204,7 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 								flexDirection:
 									"row",
 
+
 								borderRadius:
 									"16px",
 								backgroundColor:
@@ -221,10 +222,10 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 								//label={props.label ? props.label : ""}
 								id="filled-start-adornment"
 								sx={{
+
 									justifyContent:
 										"center",
 									width: "100%",
-									height: "75px",
 								}}
 								InputProps={{
 									disableUnderline:
@@ -239,15 +240,6 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 												>
 													<Box
 														sx={{
-															fontSize: "1.2vw",
-														}}
-													>
-														{
-															props.label
-														}
-													</Box>
-													<Box
-														sx={{
 															display: "flex",
 															flexDirection:
 																"row",
@@ -256,10 +248,10 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 														<div>
 															<img
 																style={{
-																	marginLeft: "8px",
+																	//	marginLeft: "1vw",
 																	marginRight:
-																		"8px",
-																	height: "23px",
+																		"1vw",
+																	height: "1.61vw",
 																}}
 																src={
 																	asset.logo
@@ -268,9 +260,16 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 															/>
 														</div>
 														<div>
+															<Typography sx={{
+																fontSize: "1.11vw",
+
+																	marginRight:
+																		"1vw",
+															}}>
 															{
 																asset.label
 															}
+															</Typography>
 														</div>
 													</Box>
 												</Box>
@@ -282,7 +281,9 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 									style: {
 										textAlign: "left",
 
-										fontSize: "2.2vw",
+											marginLeft: "2vw",
+									fontSize: "1.25vw",
+									lineHeight: "1.51vw",
 										//		lineHeight: "38.7px",
 									},
 								}}
@@ -522,7 +523,7 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 	return <Variant />;
 };
 
-export const TokenInput = TokenAmountInput;
+export const TokenInput = memo(TokenAmountInput);
 /*
 <div>
 	<input

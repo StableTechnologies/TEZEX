@@ -146,7 +146,7 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
 
 			console.log("\n", " in updateAmount hook", "\n");
 			var updated = false;
-			if (transaction) {
+			if (transaction && (sendAmount && !transaction.sendAmount[0].decimal.eq(sendAmount))) {
 				if (wallet && sendAmount) {
 					wallet.updateStatus(component, TransactionStatus.MODIFIED);
 					console.log(
@@ -245,7 +245,7 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
 							);
 						});
 				} //wallet.updateAmount(component,[balanceBuilder(sendAmount, transaction.sendAsset[0], false)]);
-				if (wallet && slippage)
+				if (wallet && slippage && transaction && !(new BigNumber(transaction.slippage).eq(slippage)))
 					wallet.updateAmount(
 						component,
 						undefined,
