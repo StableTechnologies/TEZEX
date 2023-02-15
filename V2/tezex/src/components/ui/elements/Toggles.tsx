@@ -10,27 +10,51 @@ export interface IToggle {
 export const SwapUpDownToggle: FC<IToggle> = (props) => {
 
 	return (
-		<Box>
 			<Button
 				sx={{
-					minWidth: "32px",
-					minHeight: "32px",
-					boxShadow: "0px 4px 20px rgba(181, 181, 181, 0.25)",
+					minWidth: "2.4vw",
+					minHeight: "2.4vw",
+
+					maxWidth: "2.4vw",
+					maxHeight: "2.4vw",
+					boxShadow: "0px 0.28vw 1.38vw rgba(181, 181, 181, 0.25)",
 					background: "#FFFFFF",
-					borderRadius: "8px",
+					borderRadius: ".55vw",
 				}}
 				onClick={props.toggle}
 			>
+				<Box
+
+				sx={{
+					display: "flex",
+					justifyContent: "center",
+
+					minWidth: "2.2vw",
+					minHeight: "2.2vw",
+
+				}}
+
+				>
 				<img
 					style={{
-						width: "19.2px",
-						height: "19.2px",
+
+
+					          padding: "5vw",
+				                    width:  "100%",
+				                    height:  "100%",
+				
+							//	maxWidth: "2.2vw",
+							//maxHeight: "2.2vw",
+						//width: "2.2vw",
+						//	maxHeight: "2.2vw",
+						//	width: "19.2px",
+						//	height: "19.2px",
 					}}
 					src={swapIcon}
 					alt="swapIcon"
 				/>
+				</Box>
 			</Button>
-		</Box>
 	);
 };
 

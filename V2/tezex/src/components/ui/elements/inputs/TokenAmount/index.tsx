@@ -341,14 +341,13 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 								id="filled-start-adornment"
 								sx={{
 									//  .css-1x51dt5-MuiInputBase-input-MuiInput-input
-									"& .MuiInputBase-input":{
-								position: "absolute",
+									"& .MuiInputBase-input":
+										{
+											position: "absolute",
 
-
-										zIndex: 5,
-									width: "100%"
-
-									},
+											zIndex: 5,
+											width: "100%",
+										},
 									justifyContent:
 										"center",
 									width: "100%",
@@ -426,11 +425,12 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 												sx={{
 													display: "flex",
 													flexDirection:
-														"column",
+														"row",
 													justifyContent:
-														"flex-start",
-
-														zIndex:0,
+														"flex-end",
+													width: "100%",
+													padding:0,
+													zIndex: 0,
 
 													position: "relative",
 													bottom: "3vw",
@@ -443,19 +443,26 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 															: "hidden"
 													}
 												>
-													<Button>
-													<img
-														onClick={
-															toggle
-														}
-														style={{
-															maxWidth: "9.6px",
+													<Button
+														sx={{
+
+													justifyContent:
+														"flex-end",
+													width: "100%",
 														}}
-														src={
-															liquiditySwapIcon
-														}
-														alt="logo"
-													/>
+													>
+														<img
+															onClick={
+																toggle
+															}
+															style={{
+																width: ".66vw",
+															}}
+															src={
+																liquiditySwapIcon
+															}
+															alt="logo"
+														/>
 													</Button>
 												</Box>
 											</InputAdornment>

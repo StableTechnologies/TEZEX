@@ -51,16 +51,16 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 const classes = {
 	input1: {
-		position: "relative",
-		top: "1vw",
+		position: "absolute",
+		top: "16.87%",
 		"& .MuiFormControl-root": {
 			width: "28.34vw",
 			height: "6.94vw",
 		},
 	},
 	input2: {
-		position: "relative",
-		bottom: "1vw",
+		position: "absolute",
+		top: "43.27%",
 		"& .MuiFormControl-root": {
 			width: "28.34vw",
 			height: "6.94vw",
@@ -546,8 +546,10 @@ export const Swap: FC = (props) => {
 							<Grid2
 								xs={12}
 								sx={{
-									position: "relative",
+									position: "absolute",
+								        top: "37.4%",
 									zIndex: 5,
+									height: "1vw",
 								}}
 							>
 								<SwapUpDownToggle
@@ -587,6 +589,9 @@ export const Swap: FC = (props) => {
 						>
 							<Box
 								sx={{
+
+									position: "absolute",
+									top: "77.5%",
 									width: "28.33vw",
 									height: "4.16vw",
 									justifyContent:
@@ -612,13 +617,15 @@ export const Swap: FC = (props) => {
 					<Paper
 						variant="outlined"
 						sx={{
-							position: "relative",
-							bottom: "5vw",
+							position: "absolute",
+							top: "89.4%",
 							zindex: "-999",
 
 							borderRadius: "1.38vw",
 							background: "#F9F9F9",
 
+
+			                                width: "30.6vw",
 							height: "10.14vw",
 						}}
 						square
