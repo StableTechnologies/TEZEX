@@ -175,11 +175,12 @@ export const AddLiquidity: FC = (props) => {
 		},
 		[slippage]
 	);
-	const swapFields = () => {
-		setAssets([assets[send2], assets[send1], assets[receive]]);
+	const swapFields = useCallback(() => {
+		setAssets([assets[1], assets[0], assets[receive]]);
+		console.log('\n','assets : ', assets,'\n'); 
 		setSwapingFields(true);
-		setLoading(true);
-	};
+			setLoading(true);
+	}, [assets]);
 	const updateSend = useCallback(
 		(value: string) => {
 			/*

@@ -82,9 +82,11 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 		},
 		[onChange]
 	);
-	const toggle = useCallback(() => {
+	const toggle = ( ) => {
+		//	e.preventDefault();
+		console.log('\n',' : toggle clicked','\n'); 
 		if (props.swap) props.swap();
-	}, [props]);
+	};
 	useEffect(() => {
 		const timer = setTimeout(() => {
 			if (props.value !== inputString && !props.readOnly) {
@@ -444,6 +446,10 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 													}
 												>
 													<Button
+
+															onClick={
+																toggle
+															}
 														sx={{
 
 													justifyContent:
@@ -452,9 +458,6 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 														}}
 													>
 														<img
-															onClick={
-																toggle
-															}
 															style={{
 																width: ".66vw",
 															}}
@@ -519,7 +522,7 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 	return <Variant />;
 };
 
-export const TokenInput = memo(TokenAmountInput);
+export const TokenInput = TokenAmountInput;
 /*
 <div>
 	<input
