@@ -54,13 +54,15 @@ const SlippageInput: FC<ISlippage> = (props) => {
 	const [value, setValue] = useState(0);
 
 	const handleChange = (
-		event: React.SyntheticEvent,
+		e: React.SyntheticEvent,
 		newValue: number
 	) => {
+		e.preventDefault();
+
 		setValue(newValue);
 	};
 
-	const [input, setInput] = useState<string>("0.1");
+	const [input, setInput] = useState<string>("0.5");
 
 	useEffect(() => {
 		/*
@@ -72,6 +74,7 @@ const SlippageInput: FC<ISlippage> = (props) => {
 			return BigNumber(num).toNumber();
 		};
 		*/
+		console.log('\n','input : ', input,'\n'); 
 		props.onChange(input);
 	}, [input, props]);
 

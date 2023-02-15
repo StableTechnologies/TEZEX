@@ -42,6 +42,10 @@ export interface WalletOps {
 export function useWalletOps(component: TransactingComponent): WalletOps {
 	const wallet = useContext(WalletContext);
 	const network = useNetwork();
+
+	const [transacting, setTransacting] = useState<boolean>(
+		false
+	);
 	const [transaction, setTransaction] = useState<Transaction | undefined>(
 		undefined
 	);
@@ -66,6 +70,13 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
 		}
 	}, [wallet, component]);
 	//const transaction =  useCallback(()=>{if (wallet.swapTransaction) processTransaction(wallet.swapTransaction)},[wallet])
+	useEffect(() => {
+
+		if(transacting && transaction && transaction.transactionStatus!==TransactionStatus.PENDING){
+					wallet && wallet.updateStatus(component, TransactionStatus.PENDING);
+
+		}
+	})
 	const initialize = useCallback(
 		async (
 			sendAsset: AssetOrAssetPair,
@@ -107,14 +118,14 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
 		//esitmate receive
 
 		console.log("\n", "balance update : ", "\n");
-		if (wallet && transaction) {
+		if (wallet && transaction && !transacting) {
 			console.log("\n", "balance update in wallet: ", "\n");
 			return await wallet.updateBalance(
 				component,
 				transaction
 			);
 		} else return false;
-	}, [wallet, component, transaction]);
+	}, [wallet, component, transaction, transacting]);
 
 	const getActiveTransaction = useCallback(():
 		| Transaction
@@ -129,12 +140,15 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
 		}
 	};
 	const sendTransaction = useCallback(async () => {
+		setTransacting(true);
 		if (wallet && transaction && wallet.address && wallet.toolkit) {
 			await processTransaction(
 				transaction,
 				wallet.address,
 				wallet.toolkit
 			);
+		setTransacting(false);
+
 		}
 	}, [wallet, transaction]);
 
@@ -146,7 +160,7 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
 
 			console.log("\n", " in updateAmount hook", "\n");
 			var updated = false;
-			if (transaction && (sendAmount && !transaction.sendAmount[0].decimal.eq(sendAmount))) {
+			if (transaction && !transacting && (sendAmount && !transaction.sendAmount[0].decimal.eq(sendAmount))) {
 				if (wallet && sendAmount) {
 					wallet.updateStatus(component, TransactionStatus.MODIFIED);
 					console.log(
@@ -244,9 +258,9 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
 								e
 							);
 						});
-				} //wallet.updateAmount(component,[balanceBuilder(sendAmount, transaction.sendAsset[0], false)]);
-				if (wallet && slippage && transaction && !(new BigNumber(transaction.slippage).eq(slippage)))
-					wallet.updateAmount(
+				}} else if ( slippage && !transacting && transaction  && !(new BigNumber(transaction.slippage).eq(slippage))){
+					console.log('\n','slippagepdateslippagepdate hook condition: ','\n'); 
+					wallet && slippage && wallet.updateAmount(
 						component,
 						undefined,
 						undefined,
@@ -254,10 +268,10 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
 							slippage
 						).toNumber()
 					);
-			}
+				}
 			return updated;
 		},
-		[transaction, wallet, component, network]
+		[transaction, wallet, component, network , transacting]
 	);
 	return {
 		initialize,

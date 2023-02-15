@@ -172,6 +172,7 @@ export const AddLiquidity: FC = (props) => {
 			if (amt !== slippage) {
 				setSlippage(amt);
 			}
+			console.log('\n','changedSlippage : ', '\n'); 
 		},
 		[slippage]
 	);
