@@ -1,7 +1,6 @@
 import { TezosToolkit, OpKind } from "@taquito/taquito";
 import { BigNumber } from "bignumber.js";
 
-import { WalletInfo } from "../contexts/wallet";
 
 
 export function removeSlippage(
@@ -496,10 +495,6 @@ userAddress: string,
 			*/
 		console.log('\n','maxTokensSold.toString(), xtzAmountInMutez.toString(),lqtMinted.toString() : ', maxTokensSold.toString(), xtzAmountInMutez.toString(),lqtMinted.toString(),'\n'); 
 
-			const lbContractStorage = await getLbContractStorage(
-				toolkit,
-				lbContractAddress
-			);
 
 		const minLqtMinted: BigNumber = lqtMinted//
 
