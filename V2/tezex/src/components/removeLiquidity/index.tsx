@@ -118,6 +118,8 @@ export const RemoveLiquidity: FC = (props) => {
 	const [loading, setLoading] = useState<boolean>(true);
 	//const [editing, setEditing] = useState<boolean>(false);
 	const [sendAmount, setSendAmount] = useState(new BigNumber(0));
+
+	// eslint-disable-next-line
 	const [receiveAmount, setReceiveAmount] = useState(new BigNumber(0));
 	const [slippage, setSlippage] = useState<number>(-0.5);
 	const [balance, setBalance] = useState(new BigNumber(0));
@@ -126,7 +128,8 @@ export const RemoveLiquidity: FC = (props) => {
 	const send = 0;
 	const receive1 = 1;
 	const receive2 = 2;
-
+	
+	// eslint-disable-next-line
 	const [assets, setAssets] = useState<[Asset, Asset, Asset]>([
 		getAsset(TokenKind.Sirius),
 		getAsset(TokenKind.XTZ),
