@@ -1,27 +1,14 @@
 import {
 	memo,
-	MemoExoticComponent,
 	FC,
 	useCallback,
 	useState,
 	useEffect,
 } from "react";
-import { BigNumber } from "bignumber.js";
 
-import { WalletInfo } from "../../../../../contexts/wallet";
 
-import { useWallet } from "../../../../../hooks/wallet";
-import { useNetwork } from "../../../../../hooks/network";
 import { TokenKind, Asset } from "../../../../../types/general";
 import { getAsset } from "../../../../../constants";
-import {
-	hasSufficientBalance,
-	getBalance,
-} from "../../../../../functions/beacon";
-import {
-	tokenDecimalToMantissa,
-	tokenMantissaToDecimal,
-} from "../../../../../functions/scaling";
 
 import Grid2 from "@mui/material/Unstable_Grid2"; // Grid version 2
 //import KeyboardArrowDownIcon from '@mui/material/icons/KeyboardArrowDown';
@@ -29,18 +16,8 @@ import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 
 import Button from "@mui/material/Button";
-import IconButton from "@mui/material/IconButton";
-import Input from "@mui/material/Input";
-import FilledInput from "@mui/material/FilledInput";
-import OutlinedInput from "@mui/material/OutlinedInput";
-import InputLabel from "@mui/material/InputLabel";
 import InputAdornment from "@mui/material/InputAdornment";
-import FormHelperText from "@mui/material/FormHelperText";
-import FormControl from "@mui/material/FormControl";
 import TextField from "@mui/material/TextField";
-import Visibility from "@mui/icons-material/Visibility";
-import VisibilityOff from "@mui/icons-material/VisibilityOff";
-import { SvgIcon } from "@mui/material";
 
 import liquiditySwapIcon from "../../../../../assets/liquiditySwapIcon.svg";
 
@@ -58,16 +35,8 @@ export interface ITokenAmountInput {
 	swap?: () => void;
 }
 
-const style = {
-	textAndLogo: {
-		display: "flex",
-	},
-};
-
 const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 	const [inputString, setInputString] = useState<string>(props.value);
-	const net = useNetwork();
-	const wallet = useWallet();
 	const asset: Asset = getAsset(props.assetName);
 	const onChange = props.onChange;
 	const value = props.value;
@@ -77,30 +46,20 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 	}, [loading, value]);
 	const callBack = useCallback(
 		async (value: string) => {
-			console.log("\n", " callback ", "\n");
 			if (onChange) onChange(value);
 		},
 		[onChange]
 	);
 	const toggle = ( ) => {
-		//	e.preventDefault();
-		console.log('\n',' : toggle clicked','\n'); 
 		if (props.swap) props.swap();
 	};
 	useEffect(() => {
 		const timer = setTimeout(() => {
 			if (props.value !== inputString && !props.readOnly) {
-				console.log(
-					"\n",
-					"props.value : ",
-					props.value,
-					"\n"
-				);
 				callBack(inputString);
 			}
 		}, 3000);
 		return () => clearTimeout(timer);
-		//if (isWa
 	}, [inputString, callBack, props]);
 	useEffect(() => {
 		if (props.value !== inputString && props.readOnly) {
@@ -112,86 +71,10 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 		(e: React.ChangeEvent<HTMLInputElement>) => {
 			e.preventDefault();
 			setInputString(e.target.value);
-			//if(props.onChange) await props.onChange(inputString);
 		},
 		[]
 	);
-	/*
-	useEffect(() => {
-	      if(props.value && props.value !== inputString) setInputString(props.value);	
-	}, [inputString, props]);
-	
-	useEffect(() => {
-		const updateParent = async () => {
-			await props.onChange(inputString);
-		};
-	
-		updateParent();
-	
-	}, [inputString, props]);
-	/
 
-	const updateAmount = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-		   
-		e.preventDefault();
-		setInputString(e.target.value);
-		//if(props.onChange) await props.onChange(inputString);
-	},[]);
-	/*
-	const updateAmount = async (e: React.ChangeEvent<HTMLInputElement>) => {
-		const num = tokenDecimalToMantissa(e.target.value, props.asset);
-		if (props.mantissa) {
-			!props.readOnly
-				? setInputString(e.target.value)
-				: setInputString(
-						tokenDecimalToMantissa(
-							props.mantissa.toString(),
-							props.asset
-						).toString()
-				  );
-		}
-		!props.readOnly && num.isNaN()
-			? props.setMantissa(null)
-			: props.setMantissa(num);
-		props.onChange && (await props.onChange());
-	};
-	
-	const setValue = () => {
-		if (inputString === "") return inputString;
-		if (props.mantissa) {
-			if (
-				new BigNumber(props.mantissa).isEqualTo(
-					tokenDecimalToMantissa(
-						new BigNumber(inputString),
-						props.asset
-					)
-				)
-			) {
-				return inputString;
-			} else {
-				console.log(
-					"\n",
-					"props.mantissa, inputString : ",
-					props.mantissa.toString(),
-					inputString,
-					"\n"
-				);
-				return tokenMantissaToDecimal(
-					props.mantissa,
-					props.asset
-				).toString();
-			}
-		} else {
-			return "0.0";
-		}
-	};
-	*/
-
-	const styles = () => ({
-		justifyContent: "center",
-		width: "418px",
-		height: "100px",
-	});
 
 	const Variant = () => {
 		switch (props.variant) {
@@ -524,30 +407,3 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 };
 
 export const TokenInput = memo(TokenAmountInput);
-/*
-<div>
-	<input
-		type="number"
-		id="amountOfCurrency"
-		name="amountOfCurrency"
-		className="input-currency"
-		onChange={updateAmount}
-		value={setValue()}
-	></input>
-
-	<label
-		htmlFor="amountOfCurrency"
-		className="input-currency"
-	>
-		{props.asset as string}
-	</label>
-
-	<label
-		style={{ color: "red" }}
-		className="balance-warning"
-		hidden={sufficientBalance}
-	>
-		{"  Insufficient Balance"}
-	</label>
-</div>
-*/
