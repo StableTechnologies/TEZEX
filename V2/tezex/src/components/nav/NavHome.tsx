@@ -1,24 +1,12 @@
 import { FC, useState, useEffect } from "react";
 
 import { useNavigate } from "react-router-dom";
-import Grid from "@mui/material/Grid";
-import Button from "@mui/material/Button";
-import Box from "@mui/material/Box";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import {useSession} from "../../hooks/session";
 
 import {
-	Transaction,
-	TokenKind,
-	Asset,
-	Balance,
-	Id,
-	TransactionStatus,
 	TransactingComponent,
-	Amount,
-	AssetOrAssetPair,
-	SendOrRecieve,
 } from "../../types/general";
 const tabClasses = {
 	'&.MuiButtonBase-root': {
@@ -112,6 +100,7 @@ export const NavHome: FC = () => {
 		event: React.SyntheticEvent,
 		newValue: number
 	) => {
+		event.preventDefault();
 		setValue(newValue);
 	};
 	useEffect(() => {

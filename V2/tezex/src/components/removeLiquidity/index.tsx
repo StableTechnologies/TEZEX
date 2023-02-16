@@ -4,38 +4,21 @@ import {
 	Transaction,
 	TokenKind,
 	Asset,
-	Balance,
 	Id,
-	TransactionStatus,
 	TransactingComponent,
-	Amount,
-	AssetOrAssetPair,
-	SendOrRecieve,
 } from "../../types/general";
 
 import { BigNumber } from "bignumber.js";
-import { TokenInput, Slippage } from "../../components/ui/elements/inputs";
+import { TokenInput} from "../../components/ui/elements/inputs";
 import { Wallet } from "../wallet";
 import { useWalletConnected } from "../../hooks/wallet";
 import { getAsset } from "../../constants";
-import { TokenAmountOutput } from "../../components/ui/elements/Labels";
 import { useSession } from "../../hooks/session";
 import {
 	useWallet,
 	useWalletOps,
 	WalletOps,
-	useWalletSwapOps,
-	SwapOps,
 } from "../../hooks/wallet";
-import { useNetwork } from "../../hooks/network";
-import {
-	estimateTokensFromXtz,
-	estimateXtzFromToken,
-	xtzToToken,
-	tokenToXtz,
-} from "../../functions/liquidityBaking";
-import { Transact } from "../../components/ui/elements/Buttons";
-import { SwapUpDownToggle } from "../../components/ui/elements/Toggles";
 
 import Box from "@mui/material/Box";
 import Grid2 from "@mui/material/Unstable_Grid2"; // Grid version 2
@@ -44,10 +27,6 @@ import Card from "@mui/material/Card";
 import CardActions from "@mui/material/CardActions";
 import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
-import Grid from "@mui/material/Grid";
-//import KeyboardArrowDownIcon from '@mui/material/icons/KeyboardArrowDown';
-import Paper from "@mui/material/Paper";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 const classes = {
 	cardcontent: {
@@ -135,9 +114,9 @@ export const RemoveLiquidity: FC = (props) => {
 
 	const [loadingBalances, setLoadingBalances] = useState<boolean>(true);
 
-	const [syncing, setSyncing] = useState<boolean>(true);
+	//const [syncing, setSyncing] = useState<boolean>(true);
 	const [loading, setLoading] = useState<boolean>(true);
-	const [editing, setEditing] = useState<boolean>(false);
+	//const [editing, setEditing] = useState<boolean>(false);
 	const [sendAmount, setSendAmount] = useState(new BigNumber(0));
 	const [receiveAmount, setReceiveAmount] = useState(new BigNumber(0));
 	const [slippage, setSlippage] = useState<number>(-0.5);
@@ -156,6 +135,7 @@ export const RemoveLiquidity: FC = (props) => {
 	const wallet = useWallet();
 	const session = useSession();
 
+	const active = walletOperations.getActiveTransaction();
 	const transact = async () => {
 		await walletOperations.sendTransaction();
 	};
@@ -175,21 +155,8 @@ export const RemoveLiquidity: FC = (props) => {
 	}, [useMax, balance]);
 	const updateSend = useCallback(
 		(value: string) => {
-			console.log("\n", ":sssend uppdate ");
 			const amt = new BigNumber(value);
 			if (amt !== sendAmount) {
-				console.log(
-					"\n",
-					"sendAmount old value : ",
-					sendAmount,
-					"\n"
-				);
-				console.log(
-					"\n",
-					"sendAMount new value : ",
-					amt,
-					"\n"
-				);
 				setSendAmount(amt);
 			}
 		},
@@ -197,10 +164,9 @@ export const RemoveLiquidity: FC = (props) => {
 	);
 
 	useEffect(() => {
-		const updateTransaction = async (transaction: Transaction) => {
+		const updateTransaction = async () => {
 			await walletOperations.updateAmount(
 				sendAmount.toString(),
-				slippage.toString()
 			);
 		};
 		if (
@@ -208,23 +174,10 @@ export const RemoveLiquidity: FC = (props) => {
 			///slow update because of issue here
 			!transaction.sendAmount[0].decimal.eq(sendAmount)
 		) {
-			console.log(
-				"\n",
-				"transaction.sendAmount[0].decimal : ",
-				transaction.sendAmount[0].decimal.toString(),
-				"\n"
-			);
-			console.log(
-				"",
-				"sendAmount : ",
-				sendAmount.toString(),
-				"\n"
-			);
-			updateTransaction(transaction);
+			updateTransaction();
 		}
 	}, [sendAmount, transaction, walletOperations]);
 
-	//const [balances, setBalances] = useState<[string, string]>(["", ""]);
 
 	const updateBalance = useCallback(async () => {
 		if (wallet && isWalletConnected) {
@@ -234,31 +187,18 @@ export const RemoveLiquidity: FC = (props) => {
 				);
 			}
 
-			/*
-			if (transaction) {
-				setBalances([
-					transaction.sendAssetBalance[0].decimal.toString(),
-					transaction.receiveAssetBalance[0].decimal.toString(),
-				]);
-			}
-			*/
 		}
 	}, [transaction, wallet, walletOperations, isWalletConnected]);
 
 	useEffect(() => {
-		const update = async () => {
-			await updateBalance();
-		};
-		//	if(isWalletConnected) update()
-	}, [isWalletConnected, updateBalance]);
-	useEffect(() => {
 		if (wallet) {
 			setTransaction(
-				(t) => wallet.removeLiquidityTransaction
+				wallet.removeLiquidityTransaction
 			);
 		}
 	}, [wallet, setTransaction]);
 
+	/*
 	useEffect(() => {
 		if (transactionId && transaction) {
 			if (
@@ -285,6 +225,7 @@ export const RemoveLiquidity: FC = (props) => {
 		balance,
 		transactionId,
 	]);
+	*/
 	useEffect(() => {
 		if (transaction) setTransactionId(transaction.id);
 		if (transactionId && transaction) {
@@ -292,41 +233,7 @@ export const RemoveLiquidity: FC = (props) => {
 			setBalance(transaction.sendAssetBalance[0].decimal);
 		}
 	}, [transaction, transactionId]);
-	/*
-	useEffect(() => {
-		const newTransaction = async () => {
-			        console.log('\n','newTransaction '); 
-				const transaction = await walletOperations.initializeSwap(
-					sendAsset,
-					receiveAsset
-				).then((id) => {
-					if (id) {
-					setTransactionId(id)
-					return walletOperations.viewTransaction(id)
-					} else return null
-				})
-	
-			setTransaction(transaction);
-		};
-		if (
-			loading &&
-			!transactionId && 
-			!editing &&
-			session.activeComponent === TransactingComponent.SWAP
-		) {
-			setEditing(true);
-			newTransaction();
-			setEditing(false);
-			setLoading(false);
-		}
-	}, [loading, editing, receiveAsset,sendAsset, session.activeComponent, transactionId, walletOperations ]);
-	*/
 
-	const activeWallet = wallet
-		? wallet.getActiveTransaction(TransactingComponent.SWAP)
-		: undefined;
-	const active = walletOperations.getActiveTransaction();
-	useEffect(() => {}, [editing]);
 	useEffect(() => {
 		const updateTransactionBalance = async () => {
 			await updateBalance();
@@ -336,47 +243,6 @@ export const RemoveLiquidity: FC = (props) => {
 			() => {
 				updateTransactionBalance();
 
-				/*
-			transaction &&
-				console.log(
-					"\n",
-					"...........transaction.sendAssetBalance[0].mantissa : ",
-					transaction.sendAssetBalance[0].mantissa.toString(),
-					"\n"
-				);
-			transaction &&
-				console.log(
-					"\n",
-					"...........transaction.sendAssetBalance[0].decimal : ",
-					transaction.sendAssetBalance[0].decimal.toNumber(),
-					"\n"
-				);
-			*/
-				/*
-			wallet &&
-				console.log(
-					"\n",
-					"wallet.getActiveTransaction(TransactingComponent.SWAP) : ",
-					wallet.getActiveTransaction(
-						TransactingComponent.SWAP
-					),
-					"\n"
-				);
-			active &&
-				console.log(
-					"\n",
-					"active.sendAssetBalance[0].decimal : ",
-					active.sendAssetBalance[0].decimal.toString(),
-					"\n"
-				);
-			transaction &&
-				console.log(
-					"\n",
-					"transaction.sendAssetBalance[0].decimal : ",
-					transaction.sendAssetBalance[0].decimal.toString(),
-					"\n"
-				);
-			*/
 			},
 			loadingBalances ? 2000 : 5000
 		);
@@ -391,32 +257,14 @@ export const RemoveLiquidity: FC = (props) => {
 		walletOperations,
 	]);
 
-	useEffect(() => {}, []);
-	useEffect(() => {
-		console.log("\n", "transaction : ", transaction, "\n");
-		transaction &&
-			console.log(
-				"\n",
-				"transaction.sendAssetBalance[0].decimal : ",
-				transaction.sendAssetBalance[0].decimal.toString(),
-				"\n"
-			);
-	}, [transaction]);
 
 	const newTransaction = useCallback(async () => {
-		console.log("\n", " :new ", "\n");
 		await walletOperations
 			.initialize(
 				[assets[send]],
 				[assets[receive1], assets[receive2]]
 			)
 			.then((transaction) => {
-				console.log(
-					"\n",
-					"transaction : ",
-					transaction,
-					"\n"
-				);
 				setTransaction(transaction);
 				setLoading(false);
 			});
@@ -433,9 +281,7 @@ export const RemoveLiquidity: FC = (props) => {
 
 		const active = walletOperations.getActiveTransaction();
 
-		console.log("\n", " :swappuin ", "\n");
 		if (loading && !transaction && !active) {
-			console.log("\n", " :call new ", "\n");
 			_newTransaction();
 		} else if (loading) {
 			if (active) {
@@ -443,7 +289,6 @@ export const RemoveLiquidity: FC = (props) => {
 				updateSend(
 					active.sendAmount[0].decimal.toString()
 				);
-				//updateSlippage(active.slippage.toString());
 				setLoading(false);
 			}
 			if (
