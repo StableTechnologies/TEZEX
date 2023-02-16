@@ -1,5 +1,5 @@
 import { BigNumber } from "bignumber.js";
-import { getAsset, getDex } from "../constants";
+import {  getDex } from "../constants";
 
 import { lqtOutput } from "./liquidityBaking";
 import {
@@ -7,8 +7,6 @@ import {
 	TokenKind,
 	Asset,
 	Balance,
-	Id,
-	TransactionStatus,
 	TransactingComponent,
 	Amount,
 	AssetOrAssetPair,
@@ -19,8 +17,6 @@ import { balanceBuilder } from "../functions/util";
 import {
 	estimateTokensFromXtz,
 	estimateXtzFromToken,
-	xtzToToken,
-	tokenToXtz,
 	estimateShares,
 } from "../functions/liquidityBaking";
 
@@ -331,87 +327,4 @@ export const estimateSharesReceivedAddLiqudity = async (
 			"Asset Pair required for Adding liquidity , recieved single asset"
 		);
 };
-/*
-			
 
-
-		const shares = async () => {
-			if (inputAmountMantissa && walletInfo) {
-				switch (inToken) {
-					case TokenKind.XTZ:
-						setShares(
-							await estimateShares(
-								new BigNumber(
-									inputAmountMantissa
-								),
-								new BigNumber(
-									outputAmountMantissa
-								),
-								networkInfo
-									.addresses
-									.tzbtc
-									.dex
-									.sirius,
-								walletInfo
-							)
-						);
-						break;
-					case TokenKind.TzBTC:
-						setShares(
-							await estimateShares(
-								new BigNumber(
-									outputAmountMantissa
-								),
-								new BigNumber(
-									inputAmountMantissa
-								),
-								networkInfo
-									.addresses
-									.tzbtc
-									.dex
-									.sirius,
-								walletInfo
-							)
-						);
-			if (inputAmountMantissa) {
-				console.log(
-					"\n",
-					"inputAmountMantissa : ",
-					inputAmountMantissa.toString(),
-					"\n"
-				);
-			}
-			if (inputAmountMantissa && walletInfo) {
-				switch (inToken) {
-					case TokenKind.XTZ:
-						setOutputAmountMantissa(
-							await estimateTokensFromXtz(
-								new BigNumber(
-									inputAmountMantissa
-								),
-								networkInfo
-									.addresses
-									.tzbtc
-									.dex
-									.sirius,
-								walletInfo
-							)
-						);
-						break;
-					case TokenKind.TzBTC:
-						setOutputAmountMantissa(
-							await estimateXtzFromToken(
-								new BigNumber(
-									inputAmountMantissa
-								),
-								networkInfo
-									.addresses
-									.tzbtc
-									.dex
-									.sirius,
-								walletInfo
-							)
-						);
-						break;
-				}
-			*/
