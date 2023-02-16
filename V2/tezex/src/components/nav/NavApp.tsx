@@ -1,8 +1,5 @@
 import { FC, useState } from "react";
-import { redirect, Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import Grid from "@mui/material/Grid";
-import Button from "@mui/material/Button";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 
@@ -79,7 +76,6 @@ function NavTab(props: NavTabProps) {
 	);
 }
 export const NavApp: FC = () => {
-	const navigate = useNavigate();
 
 	const [value, setValue] = useState(0);
 
@@ -87,6 +83,7 @@ export const NavApp: FC = () => {
 		event: React.SyntheticEvent,
 		newValue: number
 	) => {
+		event.preventDefault();
 		setValue(newValue);
 	};
 	return (
