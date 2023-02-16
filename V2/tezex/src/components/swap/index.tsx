@@ -4,13 +4,8 @@ import {
 	Transaction,
 	TokenKind,
 	Asset,
-	Balance,
 	Id,
-	TransactionStatus,
 	TransactingComponent,
-	Amount,
-	AssetOrAssetPair,
-	SendOrRecieve,
 } from "../../types/general";
 
 import { BigNumber } from "bignumber.js";
@@ -18,36 +13,21 @@ import { TokenInput, Slippage } from "../../components/ui/elements/inputs";
 import { Wallet } from "../wallet";
 import { useWalletConnected } from "../../hooks/wallet";
 import { getAsset } from "../../constants";
-import { TokenAmountOutput } from "../../components/ui/elements/Labels";
 import { useSession } from "../../hooks/session";
 import {
 	useWallet,
 	useWalletOps,
 	WalletOps,
-	useWalletSwapOps,
-	SwapOps,
 } from "../../hooks/wallet";
-import { useNetwork } from "../../hooks/network";
-import {
-	estimateTokensFromXtz,
-	estimateXtzFromToken,
-	xtzToToken,
-	tokenToXtz,
-} from "../../functions/liquidityBaking";
-import { Transact } from "../../components/ui/elements/Buttons";
 import { SwapUpDownToggle } from "../../components/ui/elements/Toggles";
 
 import Box from "@mui/material/Box";
 import Grid2 from "@mui/material/Unstable_Grid2"; // Grid version 2
-import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardActions from "@mui/material/CardActions";
 import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
-import Grid from "@mui/material/Grid";
-//import KeyboardArrowDownIcon from '@mui/material/icons/KeyboardArrowDown';
 import Paper from "@mui/material/Paper";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 const classes = {
 	input1: {
@@ -141,9 +121,9 @@ export const Swap: FC = (props) => {
 	);
 
 	const [loadingBalances, setLoadingBalances] = useState<boolean>(true);
-	const [syncing, setSyncing] = useState<boolean>(true);
+	//const [syncing, setSyncing] = useState<boolean>(true);
 	const [loading, setLoading] = useState<boolean>(true);
-	const [editing, setEditing] = useState<boolean>(false);
+	//	const [editing, setEditing] = useState<boolean>(false);
 	const [sendAmount, setSendAmount] = useState(new BigNumber(0));
 	const [receiveAmount, setReceiveAmount] = useState(new BigNumber(0));
 	const [slippage, setSlippage] = useState<number>(0.5);
@@ -159,6 +139,7 @@ export const Swap: FC = (props) => {
 	const wallet = useWallet();
 	const session = useSession();
 
+	const active = walletOperations.getActiveTransaction();
 	const transact = async () => {
 		await walletOperations.sendTransaction();
 	};
@@ -190,7 +171,7 @@ export const Swap: FC = (props) => {
 	);
 
 	useEffect(() => {
-		const updateTransaction = async (transaction: Transaction) => {
+		const updateTransaction = async () => {
 			await walletOperations.updateAmount(
 				sendAmount.toString(), slippage.toString()
 			);
@@ -198,28 +179,12 @@ export const Swap: FC = (props) => {
 
 		if (
 			transaction &&
-			///slow update because of issue here
 			!transaction.sendAmount[0].decimal.eq(sendAmount)
 		) {
-			console.log(
-				"\n",
-				"transaction.sendAmount[0].decimal : ",
-				transaction.sendAmount[0].decimal.toString(),
-				"\n"
-			);
-			console.log(
-				"",
-				"sendAmount : ",
-				sendAmount.toString(),
-				"\n"
-			);
-			updateTransaction(transaction);
+			updateTransaction();
 		}
 		///slow update because of issue here ^^^
-	}, [sendAmount, transaction, walletOperations]);
-	const updateReceive = useCallback((value: string) => {
-		setReceiveAmount(new BigNumber(value));
-	}, []);
+	}, [sendAmount, slippage,transaction, walletOperations]);
 
 	const [balances, setBalances] = useState<[string, string]>(["", ""]);
 
@@ -241,30 +206,11 @@ export const Swap: FC = (props) => {
 	}, [transaction, wallet, walletOperations, isWalletConnected]);
 
 	useEffect(() => {
-		const update = async () => {
-			await updateBalance();
-		};
-		//	if(isWalletConnected) update()
-	}, [isWalletConnected, updateBalance]);
-	useEffect(() => {
-		if (wallet) {
-			setTransaction((t) => wallet.swapTransaction);
-		}
-	}, [wallet, setTransaction]);
+		setTransaction(walletOperations.getActiveTransaction());
+	}, [setTransaction, walletOperations]);
+
 
 	/*
-	useEffect(() => {
-		if (transaction) setTransactionId(transaction.id);
-		if (transactionId && transaction) {
-			setReceiveAmount(transaction.receiveAmount[0].decimal);
-			setBalances([
-				transaction.sendAssetBalance[0].decimal.toString(),
-				transaction.receiveAssetBalance[0].decimal.toString(),
-			]);
-		}
-	}, [transaction, transactionId]);
-	
-	*/
 	useEffect(() => {
 		if (transactionId && transaction) {
 			if (
@@ -293,6 +239,7 @@ export const Swap: FC = (props) => {
 		balances,
 		transactionId,
 	]);
+	*/
 
 	useEffect(() => {
 		if (transaction) setTransactionId(transaction.id);
@@ -304,41 +251,8 @@ export const Swap: FC = (props) => {
 			]);
 		}
 	}, [transaction, transactionId]);
-	/*
-	useEffect(() => {
-		const newTransaction = async () => {
-			        console.log('\n','newTransaction '); 
-				const transaction = await walletOperations.initializeSwap(
-					sendAsset,
-					receiveAsset
-				).then((id) => {
-					if (id) {
-					setTransactionId(id)
-					return walletOperations.viewTransaction(id)
-					} else return null
-				})
-	
-			setTransaction(transaction);
-		};
-		if (
-			loading &&
-			!transactionId && 
-			!editing &&
-			session.activeComponent === TransactingComponent.SWAP
-		) {
-			setEditing(true);
-			newTransaction();
-			setEditing(false);
-			setLoading(false);
-		}
-	}, [loading, editing, receiveAsset,sendAsset, session.activeComponent, transactionId, walletOperations ]);
-	*/
 
-	const activeWallet = wallet
-		? wallet.getActiveTransaction(TransactingComponent.SWAP)
-		: undefined;
-	const active = walletOperations.getActiveTransaction();
-	useEffect(() => {}, [editing]);
+
 	useEffect(() => {
 		const updateTransactionBalance = async () => {
 			await updateBalance();
@@ -348,47 +262,6 @@ export const Swap: FC = (props) => {
 			() => {
 				updateTransactionBalance();
 
-				/*
-			transaction &&
-				console.log(
-					"\n",
-					"...........transaction.sendAssetBalance[0].mantissa : ",
-					transaction.sendAssetBalance[0].mantissa.toString(),
-					"\n"
-				);
-			transaction &&
-				console.log(
-					"\n",
-					"...........transaction.sendAssetBalance[0].decimal : ",
-					transaction.sendAssetBalance[0].decimal.toNumber(),
-					"\n"
-				);
-			*/
-				/*
-			wallet &&
-				console.log(
-					"\n",
-					"wallet.getActiveTransaction(TransactingComponent.SWAP) : ",
-					wallet.getActiveTransaction(
-						TransactingComponent.SWAP
-					),
-					"\n"
-				);
-			active &&
-				console.log(
-					"\n",
-					"active.sendAssetBalance[0].decimal : ",
-					active.sendAssetBalance[0].decimal.toString(),
-					"\n"
-				);
-			transaction &&
-				console.log(
-					"\n",
-					"transaction.sendAssetBalance[0].decimal : ",
-					transaction.sendAssetBalance[0].decimal.toString(),
-					"\n"
-				);
-			*/
 			},
 			loadingBalances ? 2000 : 5000
 		);
@@ -403,29 +276,11 @@ export const Swap: FC = (props) => {
 		walletOperations,
 	]);
 
-	useEffect(() => {}, []);
-	useEffect(() => {
-		console.log("\n", "transaction : ", transaction, "\n");
-		transaction &&
-			console.log(
-				"\n",
-				"transaction.sendAssetBalance[0].decimal : ",
-				transaction.sendAssetBalance[0].decimal.toString(),
-				"\n"
-			);
-	}, [transaction]);
 
 	const newTransaction = useCallback(async () => {
-		console.log("\n", " :new ", "\n");
 		await walletOperations
 			.initialize([assets[send]], [assets[receive]])
 			.then((transaction) => {
-				console.log(
-					"\n",
-					"transaction : ",
-					transaction,
-					"\n"
-				);
 				setTransaction(transaction);
 				if (swapingFields) setSwapingFields(false);
 				setLoading(false);
@@ -444,11 +299,9 @@ export const Swap: FC = (props) => {
 		const active = walletOperations.getActiveTransaction();
 
 		if (loading && swapingFields) {
-			console.log("\n", " :swappuin ", "\n");
 			_newTransaction();
 		}
 		if (loading && !transaction && !active) {
-			console.log("\n", " :call new ", "\n");
 			_newTransaction();
 		} else if (loading) {
 			if (active) {
