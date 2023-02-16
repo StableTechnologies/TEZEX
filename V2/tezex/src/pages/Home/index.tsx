@@ -2,8 +2,8 @@ import { FC } from "react";
 
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import {NavHome} from '../../components/nav'
-import {Swap} from '../../components/Swap'
-import { AddLiquidity  } from "../../components/AddLiquidity";
+import {Swap} from '../../components/swap'
+import { AddLiquidity  } from "../../components/addLiquidity";
 import { RemoveLiquidity  } from "../../components/removeLiquidity";
 
 import Grid2 from '@mui/material/Unstable_Grid2'; // Grid version 2
