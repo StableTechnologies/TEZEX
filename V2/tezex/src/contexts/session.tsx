@@ -1,34 +1,9 @@
-import { createContext, useCallback, useEffect, useState } from "react";
-import {
-	WalletProvider,
-	WalletContext,
-	WalletInfo,
-	WalletStatus,
-	walletUser,
-	isReady,
-} from "./wallet";
+import { createContext, useCallback, useState } from "react";
+import { WalletProvider } from "./wallet";
 import { NetworkContext, networkDefaults } from "./network";
-import { TezosToolkit } from "@taquito/taquito";
-import { DAppClient } from "@airgap/beacon-sdk";
 
+import { TransactingComponent } from "../types/general";
 
-import {
-	Transaction,
-	TokenKind,
-	Asset,
-	Balance,
-	Id,
-	TransactionStatus,
-	TransactingComponent,
-	Amount,
-	AssetOrAssetPair,
-	SendOrRecieve,
-} from "../types/general";
-
-import { getBalance } from "../functions/beacon";
-import { NetworkInfo } from "./network";
-import { useWallet } from "../hooks/wallet";
-import { useNetwork } from "../hooks/network";
 export const SessionContext = createContext<SessionInfo>({
 	loadComponent: (_) => {},
 	activeComponent: null,
@@ -37,7 +12,6 @@ export const SessionContext = createContext<SessionInfo>({
 export interface SessionInfo {
 	loadComponent: (comp: TransactingComponent) => void;
 	activeComponent: TransactingComponent | null;
-
 }
 export interface ISession {
 	children:
@@ -49,35 +23,23 @@ export interface ISession {
 }
 
 export function SessionProvider(props: ISession) {
-	const [activeComponent, setActiveComponent] = useState<TransactingComponent | null>(null);
+	const [activeComponent, setActiveComponent] =
+		useState<TransactingComponent | null>(null);
 
-
-
-	const loadComponent= useCallback((comp: TransactingComponent) => {
-		console.log('\n',' Load ComponentCall ','\n'); 
-		setActiveComponent(comp)
-	},[])
-
-	/*
-	useEffect(() => {
-		const interval = setInterval(() => {
-			console.log("This will run every second!");
-		}, 5000);
-		return () => clearInterval(interval);
+	const loadComponent = useCallback((comp: TransactingComponent) => {
+		setActiveComponent(comp);
 	}, []);
-	*/
-
 
 	return (
 		<SessionContext.Provider
 			value={{
 				loadComponent,
-				activeComponent
+				activeComponent,
 			}}
 		>
 			<NetworkContext.Provider value={networkDefaults}>
 				<WalletProvider>
-				{props.children}
+					{props.children}
 				</WalletProvider>
 			</NetworkContext.Provider>
 		</SessionContext.Provider>
