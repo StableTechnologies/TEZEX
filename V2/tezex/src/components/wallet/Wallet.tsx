@@ -11,26 +11,13 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import tzwalletlogo from "../../assets/tzwalletlogo.svg";
-import {
-	Transaction,
-	TokenKind,
-	Asset,
-	Balance,
-	Id,
-	TransactionStatus,
-	TransactingComponent,
-	Amount,
-	AssetOrAssetPair,
-	SendOrRecieve,
-} from "../../types/general";
+import { Transaction, TransactionStatus } from "../../types/general";
 import Button from "@mui/material/Button";
 
 const classes = {
 	transactDisabled: {
-
 		"&.MuiButtonBase-root": {
-		display: "flex",
-
+			display: "flex",
 		},
 
 		"&.MuiButton-root.Mui-disabled": {
@@ -132,8 +119,6 @@ interface IWallet {
 export const Wallet: FC<IWallet> = (props) => {
 	const walletInfo: WalletInfo | undefined = useWallet();
 	const networkInfo = useNetwork();
-	//const transaction
-	//todo start with true
 
 	const [spinner, setSpinner] = useState(false);
 	const [disabled, setDisabled] = useState(false);
@@ -145,8 +130,7 @@ export const Wallet: FC<IWallet> = (props) => {
 			props.transaction &&
 			props.transaction.sendAmount[0].decimal.eq(0)
 		) {
-
-					setSpinner(false);
+			setSpinner(false);
 			return "Enter Amount";
 		} else if (props.transaction) {
 			const transactionStatus: TransactionStatus =
@@ -175,29 +159,10 @@ export const Wallet: FC<IWallet> = (props) => {
 	const transact = async () => {
 		if (props.callback) {
 			await props.callback();
-			//await walletInfo.walletUser(props.callback);
 		}
 	};
 
-	const info = (() => {
-		if (walletInfo) {
-			return walletInfo.isReady()
-				? props.children
-				: walletInfo.walletStatus;
-		} else {
-			return "";
-		}
-	})();
 
-	/*
-	useEffect(() => {
-		if (walletInfo) {
-			walletInfo.isReady()
-				? setDisabled(false)
-				: setDisabled(true);
-		}
-	}, [walletInfo]);
-	*/
 	const connect = async () => {
 		if (walletInfo) {
 			await connectWallet(walletInfo, networkInfo);
@@ -300,14 +265,15 @@ export const Wallet: FC<IWallet> = (props) => {
 								}}
 							/>
 						</Box>
-						<Typography sx={{
-
-		fontWeight: "500",
-		fontSize: "1.66vw",
-		lineHeight: "2.01vw",
-						}}>
-				{transactionStatus}
-				</Typography>
+						<Typography
+							sx={{
+								fontWeight: "500",
+								fontSize: "1.66vw",
+								lineHeight: "2.01vw",
+							}}
+						>
+							{transactionStatus}
+						</Typography>
 					</Box>
 				</Button>
 			);
