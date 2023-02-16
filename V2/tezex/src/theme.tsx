@@ -21,7 +21,7 @@ declare module '@mui/material/styles' {
   }
 }
 
-const { palette } = createTheme();
+//const { palette } = createTheme();
 
 const theme = createTheme({
 
