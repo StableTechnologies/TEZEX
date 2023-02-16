@@ -1,15 +1,8 @@
 
 import { BigNumber } from "bignumber.js";
 import {
-	Transaction,
-	TokenKind,
 	Asset,
 	Balance,
-	Id,
-	TransactionStatus,
-	TransactingComponent,
-	Amount,
-	AssetOrAssetPair,
 } from "../types/general";
 
 import {
