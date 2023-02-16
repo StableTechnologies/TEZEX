@@ -1,25 +1,16 @@
 import { BigNumber } from "bignumber.js";
 
-import { getAsset, getDex } from "../constants";
+import {  getDex } from "../constants";
 import {
 	Transaction,
 	TokenKind,
-	Asset,
-	Balance,
-	Id,
-	TransactionStatus,
 	TransactingComponent,
-	Amount,
-	AssetOrAssetPair,
 } from "../types/general";
 
 import { TezosToolkit } from "@taquito/taquito";
 
-import { tezToMutez, mutezToTez } from "../functions/util";
 
 import {
-	estimateTokensFromXtz,
-	estimateXtzFromToken,
 	xtzToToken,
 	tokenToXtz,
 	buyLiquidityShares,
@@ -74,12 +65,6 @@ const swapTransaction = async (
 			);
 			break;
 		case TokenKind.TzBTC:
-			console.log(
-				"\n",
-				"transaction.slippage : ",
-				transaction.slippage,
-				"\n"
-			);
 			await tokenToXtz(
 				transaction.sendAmount[0].mantissa,
 				transaction.receiveAmount[0].mantissa,
@@ -127,7 +112,6 @@ const addLiquidityTransaction = async (
 				);
 				break;
 			case TokenKind.TzBTC:
-				console.log('\n',' :sending transaction tzbtc to add ','\n'); 
 				await buyLiquidityShares(
 					transaction.sendAmount[1].mantissa,
 					transaction.sendAmount[0].mantissa,
@@ -142,94 +126,6 @@ const addLiquidityTransaction = async (
 	}
 };
 
-//
-//const transact = async (component, transaction, ) => {
-/*
-
-	const addLiquidity = async () => {
-		if (inputAmountMantissa && walletInfo) {
-			switch (inToken) {
-				case TokenKind.XTZ:
-					await buyLiquidityShares(
-						new BigNumber(
-							outputAmountMantissa
-						),
-						new BigNumber(
-							inputAmountMantissa
-						),
-						new BigNumber(
-							slippage ? slippage : 0
-						),
-						networkInfo.addresses.tzbtc.dex
-							.sirius,
-						networkInfo.addresses.tzbtc
-							.address,
-						walletInfo
-					);
-					break;
-				case TokenKind.TzBTC:
-					await buyLiquidityShares(
-						new BigNumber(
-							inputAmountMantissa
-						),
-						new BigNumber(
-							outputAmountMantissa
-						),
-						new BigNumber(
-							slippage ? slippage : 0
-						),
-						networkInfo.addresses.tzbtc.dex
-							.sirius,
-						networkInfo.addresses.tzbtc
-							.address,
-						walletInfo
-					);
-			}
-		}
-	};
-
-	const removeLiquidity = async () => {
-		if (inputAmountMantissa && walletInfo) {
-			await removeLiquidity(
-				new BigNumber(inputAmountMantissa),
-				networkInfo.addresses.tzbtc.dex.sirius,
-				walletInfo
-			);
-		}
-	};
-	
-const transact = async () => {
-	if (inputAmountMantissa && outputAmountMantissa && walletInfo) {
-		switch (inToken) {
-			case TokenKind.XTZ:
-				await xtzToToken(
-					new BigNumber(
-						inputAmountMantissa
-					),
-					networkInfo.addresses.tzbtc.dex
-						.sirius,
-					walletInfo
-				);
-				break;
-			case TokenKind.TzBTC:
-				await tokenToXtz(
-					new BigNumber(
-						inputAmountMantissa
-					),
-					new BigNumber(
-						outputAmountMantissa
-					),
-					networkInfo.addresses.tzbtc.dex
-						.sirius,
-					networkInfo.addresses.tzbtc
-						.address,
-					walletInfo,
-					slippage ? slippage : 0
-				);
-		}
-	}
-};
-*/
 export const decimals = {
 	XTZ: 6,
 TzBTC: 8,
