@@ -12,7 +12,6 @@ export interface IHome {
 	path: HomePaths;
 }
 export const Home: FC<IHome> = (props) => {
-	const c = props.path;
 
 	const Comp = (() => {
 		switch (props.path) {
