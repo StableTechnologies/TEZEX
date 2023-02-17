@@ -141,13 +141,13 @@ export const AddLiquidity: FC = (props) => {
 			if (amt !== slippage) {
 				setSlippage(amt);
 			}
-			console.log('\n','changedSlippage : ', '\n'); 
+			 
 		},
 		[slippage]
 	);
 	const swapFields = useCallback(() => {
 		setAssets([assets[1], assets[0], assets[receive]]);
-		console.log('\n','assets : ', assets,'\n'); 
+		 
 		setSwapingFields(true);
 			setLoading(true);
 	}, [assets]);

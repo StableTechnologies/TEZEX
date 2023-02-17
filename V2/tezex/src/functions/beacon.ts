@@ -15,7 +15,7 @@ export async function getBalance(
 	address: string,
 	asset: Asset,
 ): Promise<Balance> {
-	console.log('\n','address in getBlanance beacon: ', address,'\n'); 
+	 
 	const getBalance = async () => {
 			switch (asset.name) {
 				case TokenKind.XTZ:
