@@ -81,9 +81,9 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
 		): Promise<Transaction | undefined> => {
 			//esitmate receive
 
-			console.log("\n", "wallet : ", wallet, "\n");
+			
 			if (wallet) {
-				console.log("\n", " init swap in hook ", "\n");
+				
 				const transaction: Transaction =
 					wallet.initialiseTransaction(
 						component,
@@ -91,12 +91,7 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
 						recieveAsset
 					);
 
-				console.log(
-					"\n",
-					"in init hook transaction : ",
-					transaction,
-					"\n"
-				);
+				
 				if (wallet.client)
 					await wallet.updateBalance(
 						TransactingComponent.SWAP,
@@ -111,9 +106,9 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
 	const updateBalance = useCallback(async (): Promise<boolean> => {
 		//esitmate receive
 
-		console.log("\n", "balance update : ", "\n");
+		
 		if (wallet && transaction && !transacting) {
-			console.log("\n", "balance update in wallet: ", "\n");
+			
 			return await wallet.updateBalance(
 				component,
 				transaction
@@ -152,16 +147,12 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
 			slippage?: string
 		): Promise<boolean> => {
 
-			console.log("\n", " in updateAmount hook", "\n");
+			
 			var updated = false;
 			if (transaction && !transacting && (sendAmount && !transaction.sendAmount[0].decimal.eq(sendAmount))) {
 				if (wallet && sendAmount) {
 					wallet.updateStatus(component, TransactionStatus.MODIFIED);
-					console.log(
-						"\n",
-						" :wallet and sendAmount ",
-						"\n"
-					);
+					
 					const toolkit = new TezosToolkit(
 						network.tezosServer
 					);
@@ -199,12 +190,7 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
 											],
 										};
 									} else {
-										console.log(
-											"\n",
-											"transaction : ",
-											transaction,
-											"\n"
-										);
+										
 										throw Error(
 											"Got single Asset of addLiquidity"
 										);
@@ -232,12 +218,7 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
 							(
 								_transaction: Transaction
 							) => {
-								console.log(
-									"\n",
-									"_transaction : ",
-									_transaction,
-									"\n"
-								);
+								
 								wallet.updateAmount(
 									_transaction.component,
 									_transaction.sendAmount,
@@ -253,7 +234,7 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
 							);
 						});
 				}} else if ( slippage && !transacting && transaction  && !(new BigNumber(transaction.slippage).eq(slippage))){
-					console.log('\n','slippagepdateslippagepdate hook condition: ','\n'); 
+					 
 					wallet && slippage && wallet.updateAmount(
 						component,
 						undefined,
