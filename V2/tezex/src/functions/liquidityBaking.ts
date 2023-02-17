@@ -130,7 +130,7 @@ export async function getLbContractStorage(
 ) {
 	const contract = await tezosToolkit.wallet.at(lbContractAddress);
 	const storage = await contract.storage<any>();
-	console.log("\n", "storage : ", storage, "\n");
+	
 	if (storage) {
 		const xtzPool = new BigNumber(storage.xtzPool);
 		const tokenPool = new BigNumber(storage.tokenPool);
@@ -155,18 +155,8 @@ export async function estimateXtzFromToken(
 			lbContractAddress
 		);
 
-		console.log(
-			"\n",
-			"lbContractStorage : ",
-			lbContractStorage,
-			"\n"
-		);
-		console.log(
-			"\n",
-			"typeof lbContractStorage : ",
-			typeof lbContractStorage.xtzPool,
-			"\n"
-		);
+		
+		
 		const minTokensBought = _calcTokenToXtz({
 			tokenIn: tokenAmountMantissa,
 			xtzPool: lbContractStorage.xtzPool,
@@ -207,7 +197,6 @@ userAddress: string,
 				slippage,
 				xtzAmountInMutez
 			);
-		console.log('\n','minXtzBought : ', minXtzBought.toString(),'\n'); 
 			let transfer = lbContract.methods.tokenToXtz(
 			userAddress,
 				tokenMantissa.integerValue(
@@ -233,12 +222,7 @@ userAddress: string,
 								),
 							},
 						]);
-					console.log(
-						"\n",
-						"estimate1 : ",
-						estimate,
-						"\n"
-					);
+					
 					return estimate;
 				} catch (err) {
 					console.log(
@@ -339,19 +323,11 @@ userAddress: string,
 						});
 				})
 				.then((op) => {
-					console.log(
-						`Estimating the smart contract call : `
-					);
+					
 					return toolkit.estimate.transfer(op);
 				})
 				.then((est) => {
-					console.log(`burnFeeMutez : ${est.burnFeeMutez}, 
-    gasLimit : ${est.gasLimit}, 
-    minimalFeeMutez : ${est.minimalFeeMutez}, 
-    storageLimit : ${est.storageLimit}, 
-    suggestedFeeMutez : ${est.suggestedFeeMutez}, 
-    totalCost : ${est.totalCost}, 
-    usingBaseFeeMutez : ${est.usingBaseFeeMutez}`);
+					
 					return est;
 				})
 				.catch((error) =>
@@ -469,7 +445,6 @@ userAddress: string,
 ) {
 	try {
 		
-		console.log('\n','xtzAmountInMutez, tokenMantissa : ', xtzAmountInMutez, tokenMantissa,'\n'); 
 			const deadline = new Date(
 				Date.now() + 60000
 			).toISOString();
@@ -493,7 +468,7 @@ userAddress: string,
 				)
 				.integerValue(BigNumber.ROUND_DOWN);
 			*/
-		console.log('\n','maxTokensSold.toString(), xtzAmountInMutez.toString(),lqtMinted.toString() : ', maxTokensSold.toString(), xtzAmountInMutez.toString(),lqtMinted.toString(),'\n'); 
+	
 
 
 		const minLqtMinted: BigNumber = lqtMinted//
