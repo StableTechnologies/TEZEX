@@ -24,7 +24,7 @@ export async function estimate(
 	transaction: Transaction,
 	toolkit: TezosToolkit
 ): Promise<Transaction> {
-	console.log("\n", "estimate got transaction : ", transaction, "\n");
+	
 	const { sendAmount, sendAsset, receiveAsset } = transaction;
 	const dex = getDex(transaction);
 	switch (transaction.component) {
@@ -167,12 +167,7 @@ export const estimateTokensReceivedSwap = async (
 					throw e;
 				});
 		default:
-			console.log(
-				"\n",
-				"sendToken.name : ",
-				sendToken.name,
-				"\n"
-			);
+			
 			throw Error("unimplemented swap estimate");
 	}
 };
