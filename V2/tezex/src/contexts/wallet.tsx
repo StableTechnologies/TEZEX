@@ -610,12 +610,7 @@ export function WalletProvider(props: IWalletProvider) {
 							>
 						) => {
 							if (draft) {
-								console.log(
-									"\n",
-									"draft : ",
-									swapTransaction,
-									"\n"
-								);
+								
 								if (
 									amountUpdateSend &&
 									swapTransaction &&
@@ -667,20 +662,8 @@ export function WalletProvider(props: IWalletProvider) {
 							>
 						) => {
 							if (draft) {
-								console.log(
-									"\n",
-									"addLiquidityTransaction : ",
-									addLiquidityTransaction,
-									"\n"
-								);
-								console.log(
-									"\n",
-									" add liquidity update amountUpdateSend, amountUpdateReceive, slippageUpdate, : ",
-									amountUpdateSend,
-									amountUpdateReceive,
-									slippageUpdate,
-									"\n"
-								);
+								
+								
 								if (
 									amountUpdateSend &&
 									addLiquidityTransaction &&
@@ -689,11 +672,7 @@ export function WalletProvider(props: IWalletProvider) {
 											.decimal
 									)
 								) {
-									console.log(
-										"\n",
-										" send update",
-										"\n"
-									);
+									
 									draft.sendAmount =
 										amountUpdateSend;
 									if (
@@ -713,11 +692,7 @@ export function WalletProvider(props: IWalletProvider) {
 											.decimal
 									)
 								) {
-									console.log(
-										"\n",
-										" recieve update",
-										"\n"
-									);
+									
 									draft.receiveAmount =
 										amountUpdateReceive;
 								}
@@ -742,17 +717,8 @@ export function WalletProvider(props: IWalletProvider) {
 							>
 						) => {
 							if (draft) {
-								console.log(
-									"\n",
-									" :remove update ",
-									"\n"
-								);
-								console.log(
-									"\n",
-									"amountUpdateSend before condition: ",
-									amountUpdateSend,
-									"\n"
-								);
+								
+								
 								if (
 									amountUpdateSend &&
 									removeLiquidityTransaction &&
@@ -761,11 +727,7 @@ export function WalletProvider(props: IWalletProvider) {
 											.decimal
 									)
 								) {
-									console.log(
-										"\n",
-										" :remove update ammount after condition*******************",
-										"\n"
-									);
+									
 									draft.sendAmount =
 										amountUpdateSend;
 									if (
