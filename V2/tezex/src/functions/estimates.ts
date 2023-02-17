@@ -228,24 +228,9 @@ export const estimateSharesToTokensRemoveLiquidity = async (
 						throw e;
 					});
 			default:
-				console.log(
-					"\n",
-					"sendAsset[0].name : ",
-					sendAsset[0].name,
-					"\n"
-				);
-				console.log(
-					"\n",
-					"receive[0].name : ",
-					receive[0].name,
-					"\n"
-				);
-				console.log(
-					"\n",
-					"receive[1].name : ",
-					receive[1].name,
-					"\n"
-				);
+				
+				
+				
 				throw Error("unimplemented swap estimate");
 		}
 	} else
@@ -308,18 +293,8 @@ export const estimateSharesReceivedAddLiqudity = async (
 						throw e;
 					});
 			default:
-				console.log(
-					"\n",
-					"sendAsset[0].name : ",
-					sendAsset[0].name,
-					"\n"
-				);
-				console.log(
-					"\n",
-					"sendAsset[1].name : ",
-					sendAsset[1].name,
-					"\n"
-				);
+				
+				
 				throw Error("unimplemented swap estimate");
 		}
 	} else
