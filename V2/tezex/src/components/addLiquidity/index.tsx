@@ -102,12 +102,17 @@ export const AddLiquidity: FC = (props) => {
 	const walletOperations: WalletOps = useWalletOps(
 		TransactingComponent.ADD_LIQUIDITY
 	);
+
 	const isWalletConnected = useWalletConnected();
 	const [transactionId, setTransactionId] = useState<Id | null>(null);
+	/*
 	const [transaction, setTransaction] = useState<Transaction | undefined>(
 		undefined
 	);
+	
+	*/
 
+	const active = walletOperations.getActiveTransaction();
 	const [loadingBalances, setLoadingBalances] = useState<boolean>(true);
 
 	//const [syncing, setSyncing] = useState<boolean>(true);
@@ -122,6 +127,7 @@ export const AddLiquidity: FC = (props) => {
 	const send2 = 1;
 	const receive = 2;
 
+	const [balances, setBalances] = useState<[string, string]>(["", ""]);
 	const [assets, setAssets] = useState<[Asset, Asset, Asset]>([
 		getAsset(TokenKind.XTZ),
 		getAsset(TokenKind.TzBTC),
@@ -141,61 +147,101 @@ export const AddLiquidity: FC = (props) => {
 			if (amt !== slippage) {
 				setSlippage(amt);
 			}
-			 
+
 		},
 		[slippage]
 	);
 	const swapFields = useCallback(() => {
 		setAssets([assets[1], assets[0], assets[receive]]);
-		 
+
+		setLoadingBalances(true);
 		setSwapingFields(true);
-			setLoading(true);
+		setLoading(true);
 	}, [assets]);
+	const updateSend2 = useCallback(
+		(value: string) => {
+			const amt = new BigNumber(value);
+			if (!amt.eq(sendAmount2)) {
+				setSendAmount2(amt);
+			}
+		},
+		[sendAmount2]
+	);
 	const updateSend = useCallback(
 		(value: string) => {
 			const amt = new BigNumber(value);
-			if (amt !== sendAmount) {
+			if (!amt.eq(sendAmount) && !amt.isNaN()) {
 				setSendAmount(amt);
 			}
 		},
 		[sendAmount]
 	);
+	const updateReceive = useCallback(
+		(value: string) => {
+			const amt = new BigNumber(value);
+			if (!amt.eq(receiveAmount)) {
+				setReceiveAmount(amt);
+			}
+		},
+		[receiveAmount]
+	);
 
+	useEffect(() => { }, [active])
 	const updateTransaction = useCallback(async () => {
-			await walletOperations.updateAmount(
-				sendAmount.toString(),
-				slippage.toString()
-			);
 
-	},[sendAmount, slippage, walletOperations])
-	useEffect(() => {
 
-			updateTransaction();
-	}, [updateTransaction]);
+		if (active) {
+			if (
+				!active.sendAmount[0].decimal.eq(sendAmount) ||
+				active.slippage !== slippage
+			) {
+				console.log('\n', ' updating ', '\n');
 
-	const [balances, setBalances] = useState<[string, string]>(["", ""]);
-
-	const updateBalance = useCallback(async () => {
-		if (wallet && isWalletConnected) {
-			if (transaction) {
-				setLoadingBalances(
-					!(await walletOperations.updateBalance())
+				await walletOperations.updateAmount(
+					sendAmount.toString(),
+					slippage.toString()
 				);
 			}
 
-			if (transaction && transaction.sendAssetBalance[1]) {
+		}
+	}, [sendAmount, active, slippage, walletOperations])
+	useEffect(() => {
+
+		updateTransaction();
+	}, [updateTransaction]);
+
+
+
+	const updateBalance = useCallback(async () => {
+		if (isWalletConnected) {
+			/*
+			if (active) {
+			}
+			
+			*/
+			if (active && active.sendAssetBalance[1]) {
+
+				setLoadingBalances(
+					!(await walletOperations.updateBalance())
+				);
+				/*
 				setBalances([
-					transaction.sendAssetBalance[0].decimal.toString(),
-					transaction.sendAssetBalance[1].decimal.toString(),
+					active.sendAssetBalance[0].decimal.toString(),
+					active.sendAssetBalance[1].decimal.toString(),
 				]);
+				*/
 			}
 		}
-	}, [transaction, wallet, walletOperations, isWalletConnected]);
+	}, [active, walletOperations, isWalletConnected]);
 
 	useEffect(() => {
-		setTransaction(walletOperations.getActiveTransaction());
-	}, [setTransaction, walletOperations]);
+				active && active.sendAssetBalance[1] && setBalances([
+					active.sendAssetBalance[0].decimal.toString(),
+					active.sendAssetBalance[1].decimal.toString(),
+				]);
 
+
+	},[active])
 	/*
 	useEffect(() => {
 		if (
@@ -239,23 +285,23 @@ export const AddLiquidity: FC = (props) => {
 	]);
 	*/
 	useEffect(() => {
-		if (transaction) setTransactionId(transaction.id);
 		if (
-			transactionId &&
-			transaction &&
-			transaction.sendAmount[1] &&
-			transaction.sendAssetBalance[1]
+			active &&
+			active.sendAmount[1] &&
+			active.sendAssetBalance[1]
 		) {
-			setReceiveAmount(transaction.receiveAmount[0].decimal);
-			setSendAmount2(transaction.sendAmount[1].decimal);
+			updateReceive(active.receiveAmount[0].decimal.toString());
+			updateSend2(active.sendAmount[1].decimal.toString());
+			/*
 			setBalances([
-				transaction.sendAssetBalance[0].decimal.toString(),
-				transaction.sendAssetBalance[1].decimal.toString(),
+				active.sendAssetBalance[0].decimal.toString(),
+				active.sendAssetBalance[1].decimal.toString(),
 			]);
+			*/
 		}
-	}, [transaction, transactionId]);
+	}, [active, updateSend2, updateReceive]);
 
-	const active = walletOperations.getActiveTransaction();
+
 	useEffect(() => {
 		const updateTransactionBalance = async () => {
 			await updateBalance();
@@ -274,7 +320,6 @@ export const AddLiquidity: FC = (props) => {
 		loadingBalances,
 		updateBalance,
 		active,
-		transaction,
 		walletOperations,
 	]);
 
@@ -285,15 +330,17 @@ export const AddLiquidity: FC = (props) => {
 				[assets[send1], assets[send2]],
 				[assets[receive]]
 			)
-			.then((transaction: Transaction | undefined) => {
+			.then(async (transaction: Transaction | undefined) => {
 				if (transaction) {
-					setTransaction(transaction);
+					await updateBalance().then(()=>{
 					if (swapingFields)
 						setSwapingFields(false);
 					setLoading(false);
+					setLoadingBalances(false);
+					})
 				}
 			});
-	}, [swapingFields, assets, walletOperations]);
+	}, [swapingFields, assets, updateBalance, walletOperations]);
 
 
 	useEffect(() => {
@@ -302,22 +349,24 @@ export const AddLiquidity: FC = (props) => {
 			await newTransaction();
 		};
 
-		const active = walletOperations.getActiveTransaction();
 
-		if (!loading && !transaction && !active) {
+		if (!loading && !active) {
 			_newTransaction();
 		}
 		if (loading && swapingFields) {
 			_newTransaction();
 		}
-		if (loading && !transaction && !active) {
+		if (loading && !active) {
 			_newTransaction();
 		} else if (loading) {
 			if (active) {
-				setTransaction(active);
 				updateSend(
 					active.sendAmount[0].decimal.toString()
 				);
+				active.sendAmount[1] && updateSend2(
+					active.sendAmount[1].decimal.toString()
+				);
+				updateReceive(active.receiveAmount[0].decimal.toString())
 				updateSlippage(active.slippage.toString());
 				setLoading(false);
 			}
@@ -332,12 +381,13 @@ export const AddLiquidity: FC = (props) => {
 	}, [
 		swapingFields,
 		loading,
-		transaction,
 		active,
 		newTransaction,
 		session,
 		updateSend,
+		updateSend2,
 		updateSlippage,
+		updateReceive,
 		walletOperations,
 	]);
 
@@ -354,23 +404,23 @@ export const AddLiquidity: FC = (props) => {
 		<Grid2 container sx={classes.root}>
 			<Grid2>
 				<Card sx={classes.card}>
-						<CardHeader
-							sx={{
-								paddingBottom:
-									"1vw",
-								fontSize: "1vw",
-								textAlign: "left",
-							}}
-							title={
-								<Typography
-									sx={{
-										fontSize: "1.4vw",
-									}}
-								>
-									{"Add Liquidity"}
-								</Typography>
-							}
-						/>
+					<CardHeader
+						sx={{
+							paddingBottom:
+								"1vw",
+							fontSize: "1vw",
+							textAlign: "left",
+						}}
+						title={
+							<Typography
+								sx={{
+									fontSize: "1.4vw",
+								}}
+							>
+								{"Add Liquidity"}
+							</Typography>
+						}
+					/>
 					<Grid2
 						xs={8}
 						lg={4}
@@ -381,7 +431,7 @@ export const AddLiquidity: FC = (props) => {
 								style={
 									{
 
-												width: "7.1vw",
+										width: "7.1vw",
 									}
 								}
 								src={
@@ -395,7 +445,7 @@ export const AddLiquidity: FC = (props) => {
 								style={
 									{
 
-												width: "1.67vw",
+										width: "1.67vw",
 									}
 								}
 								src={rightArrow}
@@ -420,7 +470,7 @@ export const AddLiquidity: FC = (props) => {
 							xs={12}
 							sx={{
 								display: "flex",
-							        justifyContent: "space-between",
+								justifyContent: "space-between",
 								alignItems: "center",
 								flexDirection:
 									"row",
@@ -560,7 +610,7 @@ export const AddLiquidity: FC = (props) => {
 						<Grid2 sx={{}} xs={6}>
 							<Wallet
 								transaction={
-									transaction
+									active
 								}
 								callback={
 									transact

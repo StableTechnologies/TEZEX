@@ -58,7 +58,7 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
 			if (props.value !== inputString && !props.readOnly) {
 				callBack(inputString);
 			}
-		}, 3000);
+		}, 1000);
 		return () => clearTimeout(timer);
 	}, [inputString, callBack, props]);
 	useEffect(() => {
