@@ -363,6 +363,7 @@ export const AddLiquidity: FC = (props) => {
 				updateSend(
 					active.sendAmount[0].decimal.toString()
 				);
+				active.receiveAsset[1] && setAssets([active.sendAsset[0],active.receiveAsset[1],active.receiveAsset[0]]) 
 				active.sendAmount[1] && updateSend2(
 					active.sendAmount[1].decimal.toString()
 				);

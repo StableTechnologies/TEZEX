@@ -455,7 +455,7 @@ export function WalletProvider(props: IWalletProvider) {
 									>
 								) => {
 									if (
-										draft
+										draft &&  transaction.id === draft.id
 									) {
 										draft.sendAssetBalance =
 											_transaction.sendAssetBalance;
@@ -479,7 +479,8 @@ export function WalletProvider(props: IWalletProvider) {
 									>
 								) => {
 									if (
-										draft
+										draft && transaction.id === draft.id
+
 									) {
 										draft.sendAssetBalance =
 											_transaction.sendAssetBalance;
@@ -503,7 +504,7 @@ export function WalletProvider(props: IWalletProvider) {
 									>
 								) => {
 									if (
-										draft
+										draft && transaction.id === draft.id
 									) {
 										draft.sendAssetBalance =
 											_transaction.sendAssetBalance;
