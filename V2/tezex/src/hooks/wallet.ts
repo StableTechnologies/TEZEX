@@ -37,9 +37,14 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
 	const wallet = useContext(WalletContext);
 	const network = useNetwork();
 
+	const [loading, setLoading] = useState<boolean>(
+		true
+	);
+
 	const [transacting, setTransacting] = useState<boolean>(
 		false
 	);
+
 	const [transaction, setTransaction] = useState<Transaction | undefined>(
 		undefined
 	);
@@ -49,16 +54,22 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
 			switch (component) {
 				case TransactingComponent.SWAP:
 					setTransaction(wallet.swapTransaction);
+setLoading(false)
+
 					break;
 				case TransactingComponent.ADD_LIQUIDITY:
 					setTransaction(
 						wallet.addLiquidityTransaction
 					);
+setLoading(false)
+
 					break;
 				case TransactingComponent.REMOVE_LIQUIDITY:
 					setTransaction(
 						wallet.removeLiquidityTransaction
 					);
+setLoading(false)
+
 					break;
 			}
 		}
@@ -67,10 +78,15 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
 	useEffect(() => {
 
 		if(transacting && transaction && transaction.transactionStatus!==TransactionStatus.PENDING){
-					wallet && wallet.updateStatus(component, TransactionStatus.PENDING);
+			setTransacting(false)
+			if (loading) setLoading(false)
 
-		}
-	})
+		}else if(!transacting && transaction && transaction.transactionStatus===TransactionStatus.PENDING){
+			setTransacting(true)
+			if (loading) setLoading(false)
+		} else if (loading && transaction) setLoading(false)
+	},[transacting, transaction, setTransacting, loading])
+
 	const initialize = useCallback(
 		async (
 			sendAsset: AssetOrAssetPair,
@@ -81,8 +97,18 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
 		): Promise<Transaction | undefined> => {
 			//esitmate receive
 
+			/*
+			const checkActive = (transaction: Transaction) => {
+			  if (transaction.transactionStatus === TransactionStatus.PENDING) 
+			}
 			
-			if (wallet) {
+			*/
+
+			if (loading) {
+				return transaction
+			} else if (wallet && !loading && transaction && transaction.transactionStatus===TransactionStatus.PENDING){
+				return transaction
+			} else if (wallet && !loading && !transaction) {
 				
 				const transaction: Transaction =
 					wallet.initialiseTransaction(
@@ -94,20 +120,20 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
 				
 				if (wallet.client)
 					await wallet.updateBalance(
-						TransactingComponent.SWAP,
+						component,
 						transaction
 					);
 				return transaction;
 			} else return undefined;
 		},
-		[wallet, component]
+		[wallet, loading, transaction, component]
 	);
 
 	const updateBalance = useCallback(async (): Promise<boolean> => {
 		//esitmate receive
 
 		
-		if (wallet && transaction && !transacting) {
+		if (wallet && transaction && transaction.transactionStatus!==TransactionStatus.PENDING && !transacting) {
 			
 			return await wallet.updateBalance(
 				component,
@@ -129,17 +155,13 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
 		}
 	};
 	const sendTransaction = useCallback(async () => {
-		setTransacting(true);
+	//	setTransacting(true);
 		if (wallet && transaction && wallet.address && wallet.toolkit) {
-			await processTransaction(
-				transaction,
-				wallet.address,
-				wallet.toolkit
-			);
-		setTransacting(false);
+                      wallet.updateStatus(component, TransactionStatus.PENDING);
+	//	setTransacting(false);
 
 		}
-	}, [wallet, transaction]);
+	}, [wallet,component, transaction]);
 
 	const updateAmount = useCallback(
 		async (
@@ -149,7 +171,7 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
 
 			
 			var updated = false;
-			if (transaction && !transacting && (sendAmount && !transaction.sendAmount[0].decimal.eq(sendAmount))) {
+			if (transaction && transaction.transactionStatus!==TransactionStatus.PENDING && !transacting && (sendAmount && !transaction.sendAmount[0].decimal.eq(sendAmount))) {
 				if (wallet && sendAmount) {
 					wallet.updateStatus(component, TransactionStatus.MODIFIED);
 					

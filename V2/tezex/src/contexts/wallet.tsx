@@ -13,6 +13,7 @@ import {
 } from "../types/general";
 import { TezosToolkit } from "@taquito/taquito";
 
+import { processTransaction } from "../functions/transactions";
 import { useNetwork } from "../hooks/network";
 import { v4 as uuidv4 } from "uuid";
 import { BigNumber } from "bignumber.js";
@@ -172,6 +173,81 @@ export function WalletProvider(props: IWalletProvider) {
 			removeLiquidityTransaction,
 		]
 	);
+	const transact = useCallback(
+		async (transaction: Transaction): Promise<Transaction> => {
+			if (address && toolkit) {
+				if (
+					transaction.transactionStatus ===
+					TransactionStatus.PENDING
+				) {
+					const t: Transaction =
+						await processTransaction(
+							transaction,
+							address,
+							toolkit
+						)
+							.then(() => {
+								return {
+									...transaction,
+									transactionStatus:
+										TransactionStatus.COMPLETED,
+								};
+							})
+							.catch(() => {
+								return {
+									...transaction,
+									transactionStatus:
+										TransactionStatus.FAILED,
+								};
+							});
+					return t;
+				} else {
+					return transaction;
+				}
+			} else throw Error("wallet not Connected");
+		},
+		[address, toolkit]
+	);
+	
+	useEffect(() => {
+		const proc = async () => {
+			swapTransaction &&
+			swapTransaction.transactionStatus ===
+				TransactionStatus.PENDING 
+		   && await transact(swapTransaction).then((transaction: Transaction) =>{
+
+					setSwapTransaction(transaction)
+				})
+		}
+		proc()
+	}, [transact,setSwapTransaction, swapTransaction]);
+
+	useEffect(() => {
+
+		const proc = async () => {
+			addLiquidityTransaction &&
+			addLiquidityTransaction.transactionStatus ===
+				TransactionStatus.PENDING 
+				&& await transact(addLiquidityTransaction).then((transaction: Transaction) =>{
+
+					setAddLiquidityTransaction(transaction)
+				})
+		}
+		proc()
+	}, [transact, setAddLiquidityTransaction, addLiquidityTransaction]);
+
+	useEffect(() => {
+		const proc = async () => {
+			removeLiquidityTransaction &&
+			removeLiquidityTransaction.transactionStatus ===
+				TransactionStatus.PENDING 
+		   && await transact(removeLiquidityTransaction).then((transaction: Transaction) =>{
+					setRemoveLiquidityTransaction(transaction)
+				})
+ 
+		}
+		proc()
+	}, [transact, setRemoveLiquidityTransaction,  removeLiquidityTransaction]);
 
 	const setActiveTransaction = useCallback(
 		(
@@ -455,7 +531,9 @@ export function WalletProvider(props: IWalletProvider) {
 									>
 								) => {
 									if (
-										draft &&  transaction.id === draft.id
+										draft &&
+										transaction.id ===
+											draft.id
 									) {
 										draft.sendAssetBalance =
 											_transaction.sendAssetBalance;
@@ -479,8 +557,9 @@ export function WalletProvider(props: IWalletProvider) {
 									>
 								) => {
 									if (
-										draft && transaction.id === draft.id
-
+										draft &&
+										transaction.id ===
+											draft.id
 									) {
 										draft.sendAssetBalance =
 											_transaction.sendAssetBalance;
@@ -504,7 +583,9 @@ export function WalletProvider(props: IWalletProvider) {
 									>
 								) => {
 									if (
-										draft && transaction.id === draft.id
+										draft &&
+										transaction.id ===
+											draft.id
 									) {
 										draft.sendAssetBalance =
 											_transaction.sendAssetBalance;
@@ -611,7 +692,6 @@ export function WalletProvider(props: IWalletProvider) {
 							>
 						) => {
 							if (draft) {
-								
 								if (
 									amountUpdateSend &&
 									swapTransaction &&
@@ -663,8 +743,6 @@ export function WalletProvider(props: IWalletProvider) {
 							>
 						) => {
 							if (draft) {
-								
-								
 								if (
 									amountUpdateSend &&
 									addLiquidityTransaction &&
@@ -673,7 +751,6 @@ export function WalletProvider(props: IWalletProvider) {
 											.decimal
 									)
 								) {
-									
 									draft.sendAmount =
 										amountUpdateSend;
 									if (
@@ -693,7 +770,6 @@ export function WalletProvider(props: IWalletProvider) {
 											.decimal
 									)
 								) {
-									
 									draft.receiveAmount =
 										amountUpdateReceive;
 								}
@@ -718,8 +794,6 @@ export function WalletProvider(props: IWalletProvider) {
 							>
 						) => {
 							if (draft) {
-								
-								
 								if (
 									amountUpdateSend &&
 									removeLiquidityTransaction &&
@@ -728,7 +802,6 @@ export function WalletProvider(props: IWalletProvider) {
 											.decimal
 									)
 								) {
-									
 									draft.sendAmount =
 										amountUpdateSend;
 									if (
