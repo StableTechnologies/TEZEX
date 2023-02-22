@@ -159,7 +159,6 @@ export const RemoveLiquidity: FC = (props) => {
 			if (
 				!active.sendAmount[0].decimal.eq(sendAmount)
 			) {
-				console.log('\n', ' updating ', '\n');
 
 				await walletOperations.updateAmount(
 					sendAmount.toString()
@@ -289,7 +288,6 @@ export const RemoveLiquidity: FC = (props) => {
 				updateSend(
 					active.sendAmount[0].decimal.toString()
 				);
-				//	setAssets([active.sendAsset[0],active.receiveAsset[0]]) 
 				setLoading(false);
 			}
 			if (
@@ -308,16 +306,6 @@ export const RemoveLiquidity: FC = (props) => {
 		updateSend,
 		walletOperations,
 	]);
-
-	useEffect(() => {
-		if (
-			session.activeComponent !==
-			TransactingComponent.REMOVE_LIQUIDITY
-		)
-			session.loadComponent(
-				TransactingComponent.REMOVE_LIQUIDITY
-			);
-	});
 	return (
 		<Grid2 container sx={classes.root}>
 			<Grid2>

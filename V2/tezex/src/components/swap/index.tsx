@@ -188,7 +188,6 @@ export const Swap: FC = (props) => {
 				!active.sendAmount[0].decimal.eq(sendAmount) ||
 				active.slippage !== slippage
 			) {
-				console.log('\n', ' updating ', '\n');
 
 				await walletOperations.updateAmount(
 					sendAmount.toString(),
@@ -292,7 +291,6 @@ export const Swap: FC = (props) => {
 
 		const interval = setInterval(
 			() => {
-				console.log('\n',' :update call ','\n'); 
 				updateTransactionBalance();
 
 			},

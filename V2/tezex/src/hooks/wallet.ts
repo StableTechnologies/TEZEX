@@ -50,10 +50,6 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
 	);
 
 	useEffect(() => {
-
-		console.log('\n','transaction change in hook: ', transaction,'\n'); 
-	},[transaction])
-	useEffect(() => {
 		if (wallet) {
 			switch (component) {
 				case TransactingComponent.SWAP:
@@ -173,12 +169,9 @@ setLoading(false)
 			slippage?: string
 		): Promise<boolean> => {
 
-	console.log('\n','transaction : ', transaction,'\n'); 
-			console.log('\n','transacting : ', transacting,'\n'); 
 			var updated = false;
 			if (transaction && transaction.transactionStatus!==TransactionStatus.PENDING && !transacting && (sendAmount && !transaction.sendAmount[0].decimal.eq(sendAmount))) {
 				if (wallet && sendAmount) {
-					console.log('\n',' :status uypdate ','\n'); 
 					wallet.updateStatus(component, TransactionStatus.MODIFIED);
 					
 					const toolkit = new TezosToolkit(

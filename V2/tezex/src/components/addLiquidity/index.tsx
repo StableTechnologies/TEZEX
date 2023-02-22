@@ -100,7 +100,7 @@ export const AddLiquidity: FC = (props) => {
 	);
 
 	const isWalletConnected = useWalletConnected();
-	const [transactionId, setTransactionId] = useState<Id | null>(null);
+	//	const [transactionId, setTransactionId] = useState<Id | null>(null);
 	/*
 	const [transaction, setTransaction] = useState<Transaction | undefined>(
 		undefined
@@ -204,7 +204,6 @@ export const AddLiquidity: FC = (props) => {
 				!active.sendAmount[0].decimal.eq(sendAmount) ||
 				active.slippage !== slippage
 			) {
-				console.log("\n", " updating ", "\n");
 
 				await walletOperations.updateAmount(
 					sendAmount.toString(),
