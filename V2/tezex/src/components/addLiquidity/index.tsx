@@ -19,11 +19,7 @@ import { TokenInput, Slippage } from "../../components/ui/elements/inputs";
 import { useWalletConnected } from "../../hooks/wallet";
 import { getAsset } from "../../constants";
 import { useSession } from "../../hooks/session";
-import {
-	useWallet,
-	useWalletOps,
-	WalletOps,
-} from "../../hooks/wallet";
+import { useWallet, useWalletOps, WalletOps } from "../../hooks/wallet";
 
 import Box from "@mui/material/Box";
 import Grid2 from "@mui/material/Unstable_Grid2"; // Grid version 2
@@ -147,7 +143,6 @@ export const AddLiquidity: FC = (props) => {
 			if (amt !== slippage) {
 				setSlippage(amt);
 			}
-
 		},
 		[slippage]
 	);
@@ -186,31 +181,41 @@ export const AddLiquidity: FC = (props) => {
 		[receiveAmount]
 	);
 
-	useEffect(() => { }, [active])
+	useEffect(() => {
+		if (active) {
+			active.sendAssetBalance[1] &&
+				setBalances([
+					active.sendAssetBalance[0].decimal.toString(),
+					active.sendAssetBalance[1].decimal.toString(),
+				]);
+
+			active.sendAsset[1] &&
+				setAssets([
+					active.sendAsset[0],
+					active.sendAsset[1],
+					active.receiveAsset[0],
+				]);
+		}
+	}, [active]);
+	
 	const updateTransaction = useCallback(async () => {
-
-
 		if (active) {
 			if (
 				!active.sendAmount[0].decimal.eq(sendAmount) ||
 				active.slippage !== slippage
 			) {
-				console.log('\n', ' updating ', '\n');
+				console.log("\n", " updating ", "\n");
 
 				await walletOperations.updateAmount(
 					sendAmount.toString(),
 					slippage.toString()
 				);
 			}
-
 		}
-	}, [sendAmount, active, slippage, walletOperations])
+	}, [sendAmount, active, slippage, walletOperations]);
 	useEffect(() => {
-
 		updateTransaction();
 	}, [updateTransaction]);
-
-
 
 	const updateBalance = useCallback(async () => {
 		if (isWalletConnected) {
@@ -220,7 +225,6 @@ export const AddLiquidity: FC = (props) => {
 			
 			*/
 			if (active && active.sendAssetBalance[1]) {
-
 				setLoadingBalances(
 					!(await walletOperations.updateBalance())
 				);
@@ -235,13 +239,13 @@ export const AddLiquidity: FC = (props) => {
 	}, [active, walletOperations, isWalletConnected]);
 
 	useEffect(() => {
-				active && active.sendAssetBalance[1] && setBalances([
-					active.sendAssetBalance[0].decimal.toString(),
-					active.sendAssetBalance[1].decimal.toString(),
-				]);
-
-
-	},[active])
+		active &&
+			active.sendAssetBalance[1] &&
+			setBalances([
+				active.sendAssetBalance[0].decimal.toString(),
+				active.sendAssetBalance[1].decimal.toString(),
+			]);
+	}, [active]);
 	/*
 	useEffect(() => {
 		if (
@@ -290,7 +294,9 @@ export const AddLiquidity: FC = (props) => {
 			active.sendAmount[1] &&
 			active.sendAssetBalance[1]
 		) {
-			updateReceive(active.receiveAmount[0].decimal.toString());
+			updateReceive(
+				active.receiveAmount[0].decimal.toString()
+			);
 			updateSend2(active.sendAmount[1].decimal.toString());
 			/*
 			setBalances([
@@ -301,7 +307,6 @@ export const AddLiquidity: FC = (props) => {
 		}
 	}, [active, updateSend2, updateReceive]);
 
-
 	useEffect(() => {
 		const updateTransactionBalance = async () => {
 			await updateBalance();
@@ -310,19 +315,11 @@ export const AddLiquidity: FC = (props) => {
 		const interval = setInterval(
 			() => {
 				updateTransactionBalance();
-
 			},
 			loadingBalances ? 2000 : 5000
 		);
 		return () => clearInterval(interval);
-	}, [
-		isWalletConnected,
-		loadingBalances,
-		updateBalance,
-		active,
-		walletOperations,
-	]);
-
+	});
 
 	const newTransaction = useCallback(async () => {
 		await walletOperations
@@ -332,23 +329,20 @@ export const AddLiquidity: FC = (props) => {
 			)
 			.then(async (transaction: Transaction | undefined) => {
 				if (transaction) {
-					await updateBalance().then(()=>{
-					if (swapingFields)
-						setSwapingFields(false);
-					setLoading(false);
-					setLoadingBalances(false);
-					})
+					await updateBalance().then(() => {
+						if (swapingFields)
+							setSwapingFields(false);
+						setLoading(false);
+						setLoadingBalances(false);
+					});
 				}
 			});
 	}, [swapingFields, assets, updateBalance, walletOperations]);
 
-
 	useEffect(() => {
-
 		const _newTransaction = async () => {
 			await newTransaction();
 		};
-
 
 		if (!loading && !active) {
 			_newTransaction();
@@ -359,15 +353,23 @@ export const AddLiquidity: FC = (props) => {
 		if (loading && !active) {
 			_newTransaction();
 		} else if (loading) {
-			if (active) {
+			if (active ) {
 				updateSend(
 					active.sendAmount[0].decimal.toString()
 				);
-				active.receiveAsset[1] && setAssets([active.sendAsset[0],active.receiveAsset[1],active.receiveAsset[0]]) 
-				active.sendAmount[1] && updateSend2(
-					active.sendAmount[1].decimal.toString()
+				active.sendAsset[1] &&
+					setAssets([
+						active.sendAsset[0],
+						active.sendAsset[1],
+						active.receiveAsset[0],
+					]);
+				active.sendAmount[1] &&
+					updateSend2(
+						active.sendAmount[1].decimal.toString()
+					);
+				updateReceive(
+					active.receiveAmount[0].decimal.toString()
 				);
-				updateReceive(active.receiveAmount[0].decimal.toString())
 				updateSlippage(active.slippage.toString());
 				setLoading(false);
 			}
@@ -392,23 +394,13 @@ export const AddLiquidity: FC = (props) => {
 		walletOperations,
 	]);
 
-	useEffect(() => {
-		if (
-			session.activeComponent !==
-			TransactingComponent.ADD_LIQUIDITY
-		)
-			session.loadComponent(
-				TransactingComponent.ADD_LIQUIDITY
-			);
-	});
 	return (
 		<Grid2 container sx={classes.root}>
 			<Grid2>
 				<Card sx={classes.card}>
 					<CardHeader
 						sx={{
-							paddingBottom:
-								"1vw",
+							paddingBottom: "1vw",
 							fontSize: "1vw",
 							textAlign: "left",
 						}}
@@ -418,7 +410,9 @@ export const AddLiquidity: FC = (props) => {
 									fontSize: "1.4vw",
 								}}
 							>
-								{"Add Liquidity"}
+								{
+									"Add Liquidity"
+								}
 							</Typography>
 						}
 					/>
@@ -429,12 +423,9 @@ export const AddLiquidity: FC = (props) => {
 					>
 						<Box>
 							<img
-								style={
-									{
-
-										width: "7.1vw",
-									}
-								}
+								style={{
+									width: "7.1vw",
+								}}
 								src={
 									xtzTzbtcIcon
 								}
@@ -443,24 +434,18 @@ export const AddLiquidity: FC = (props) => {
 						</Box>
 						<Box>
 							<img
-								style={
-									{
-
-										width: "1.67vw",
-									}
-								}
+								style={{
+									width: "1.67vw",
+								}}
 								src={rightArrow}
 								alt="rightArrow"
 							/>
 						</Box>
 						<Box>
 							<img
-								style={
-									{
-
-										width: "6.1vw",
-									}
-								}
+								style={{
+									width: "6.1vw",
+								}}
 								src={sirsIcon}
 								alt="sirsIcon"
 							/>
@@ -471,7 +456,8 @@ export const AddLiquidity: FC = (props) => {
 							xs={12}
 							sx={{
 								display: "flex",
-								justifyContent: "space-between",
+								justifyContent:
+									"space-between",
 								alignItems: "center",
 								flexDirection:
 									"row",
@@ -543,8 +529,12 @@ export const AddLiquidity: FC = (props) => {
 											: balances[1]
 									}
 									label="Required Amount"
-									darker={true}
-									swap={swapFields}
+									darker={
+										true
+									}
+									swap={
+										swapFields
+									}
 								/>
 							</Grid2>
 						</Grid2>
@@ -558,7 +548,8 @@ export const AddLiquidity: FC = (props) => {
 								alignItems: "flex-start",
 							}}
 						>
-							<Typography noWrap
+							<Typography
+								noWrap
 								sx={{
 									display: "inline-flex",
 									fontSize: ".97vw",
@@ -567,17 +558,19 @@ export const AddLiquidity: FC = (props) => {
 								}}
 							>
 								You will recieve
-								about {" "}
+								about{" "}
 								<Typography
 									sx={{
 										marginLeft: ".37vw",
-										marginRight: ".37vw",
+										marginRight:
+											".37vw",
 										fontSize: ".97vw",
 										fontWeight: "700",
 										lineHeight: "1.18vw",
 									}}
 								>
-									{" "}{receiveAmount.toString()}{" "}
+									{" "}
+									{receiveAmount.toString()}{" "}
 									Sirs
 								</Typography>
 								for this
