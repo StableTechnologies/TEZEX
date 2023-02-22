@@ -1,4 +1,4 @@
-import { FC, useState } from "react";
+import { FC, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
@@ -77,7 +77,17 @@ function NavTab(props: NavTabProps) {
 }
 export const NavApp: FC = () => {
 
-	const [value, setValue] = useState(0);
+	const [value, setValue] = useState(-1);
+	const [loading, setLoading] = useState(true);
+	const navigate = useNavigate();
+	useEffect(() => {
+		if(loading){
+
+			navigate("home/swap");
+			setValue(0);
+			setLoading(false);
+		} 
+	},[loading, navigate])
 
 	const handleChange = (
 		event: React.SyntheticEvent,

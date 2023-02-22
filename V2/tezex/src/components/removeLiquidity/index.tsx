@@ -4,7 +4,6 @@ import {
 	Transaction,
 	TokenKind,
 	Asset,
-	Id,
 	TransactingComponent,
 } from "../../types/general";
 
@@ -15,7 +14,6 @@ import { useWalletConnected } from "../../hooks/wallet";
 import { getAsset } from "../../constants";
 import { useSession } from "../../hooks/session";
 import {
-	useWallet,
 	useWalletOps,
 	WalletOps,
 } from "../../hooks/wallet";
@@ -130,7 +128,6 @@ export const RemoveLiquidity: FC = (props) => {
 		getAsset(TokenKind.XTZ),
 		getAsset(TokenKind.TzBTC),
 	]);
-	const wallet = useWallet();
 	const session = useSession();
 
 	const active = walletOperations.getActiveTransaction();

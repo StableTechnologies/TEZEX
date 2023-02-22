@@ -4,7 +4,6 @@ import {
 	Transaction,
 	TokenKind,
 	Asset,
-	Id,
 	TransactingComponent,
 } from "../../types/general";
 
@@ -15,7 +14,6 @@ import { useWalletConnected } from "../../hooks/wallet";
 import { getAsset } from "../../constants";
 import { useSession } from "../../hooks/session";
 import {
-	useWallet,
 	useWalletOps,
 	WalletOps,
 } from "../../hooks/wallet";
@@ -115,7 +113,6 @@ export const Swap: FC = (props) => {
 		TransactingComponent.SWAP
 	);
 	const isWalletConnected = useWalletConnected();
-	const [transactionId, setTransactionId] = useState<Id | null>(null);
 
 	const [loadingBalances, setLoadingBalances] = useState<boolean>(true);
 	//const [syncing, setSyncing] = useState<boolean>(true);
@@ -135,7 +132,6 @@ export const Swap: FC = (props) => {
 
 	const [balances, setBalances] = useState<[string, string]>(["", ""]);
 	const [swapingFields, setSwapingFields] = useState<boolean>(true);
-	const wallet = useWallet();
 	const session = useSession();
 
 	const active = walletOperations.getActiveTransaction();

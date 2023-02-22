@@ -3,7 +3,6 @@ import { TezosToolkit } from "@taquito/taquito";
 
 import { BigNumber } from "bignumber.js";
 import { estimate} from "../functions/estimates";
-import { processTransaction } from "../functions/transactions";
 import { WalletContext} from "../contexts/wallet";
 import { useNetwork } from "../hooks/network";
 

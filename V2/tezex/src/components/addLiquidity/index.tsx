@@ -9,7 +9,6 @@ import {
 	Transaction,
 	TokenKind,
 	Asset,
-	Id,
 	TransactingComponent,
 } from "../../types/general";
 
@@ -19,7 +18,7 @@ import { TokenInput, Slippage } from "../../components/ui/elements/inputs";
 import { useWalletConnected } from "../../hooks/wallet";
 import { getAsset } from "../../constants";
 import { useSession } from "../../hooks/session";
-import { useWallet, useWalletOps, WalletOps } from "../../hooks/wallet";
+import {  useWalletOps, WalletOps } from "../../hooks/wallet";
 
 import Box from "@mui/material/Box";
 import Grid2 from "@mui/material/Unstable_Grid2"; // Grid version 2
@@ -130,7 +129,6 @@ export const AddLiquidity: FC = (props) => {
 		getAsset(TokenKind.Sirius),
 	]);
 	const [swapingFields, setSwapingFields] = useState<boolean>(true);
-	const wallet = useWallet();
 	const session = useSession();
 
 	const transact = async () => {
