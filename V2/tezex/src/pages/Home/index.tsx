@@ -34,8 +34,8 @@ export const Home: FC<IHome> = (props) => {
 		>
 			<Grid2
 				sx={{
-					paddingBottom: "32px",
-					paddingTop: "56px",
+					paddingBottom: "2.22vw",
+					paddingTop: "3.88vw",
 				}}
 			>
 				<NavHome />

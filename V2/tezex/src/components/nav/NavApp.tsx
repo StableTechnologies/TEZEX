@@ -77,7 +77,7 @@ function NavTab(props: NavTabProps) {
 }
 export const NavApp: FC = () => {
 
-	const [value, setValue] = useState(-1);
+	const [value, setValue] = useState(0);
 	const [loading, setLoading] = useState(true);
 	const navigate = useNavigate();
 	useEffect(() => {
