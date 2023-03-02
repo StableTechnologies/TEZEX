@@ -66,16 +66,14 @@
   "eslintConfig": {
     "extends": [
       "react-app",
-      "react-app/jest"
+      "react-app/jest",
+      "prettier"
     ]
   },
-    "lint-staged": {
-      "{src,test}/**/*.{js,ts,jsx,tsx}": [
-        "eslint --fix",
-        "prettier --write -u"
-      ],
-      "!**/*.{js,ts,jsx,tsx}": "prettier --write -u"
-    },
+  "lint-staged": {
+    "*.{js,ts,tsx}": "eslint --cache --fix",
+    "*.{js,ts,tsx,css,md}": "prettier --write"
+  },
   "browserslist": {
     "production": [
       ">0.2%",
