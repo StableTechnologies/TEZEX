@@ -19,9 +19,9 @@ export interface WalletOps {
 	initialize: (
 		sendAsset: AssetOrAssetPair,
 		recieveAsset: AssetOrAssetPair,
-		sendAmount?: BigNumber, //TODO
-		receiveAmount?: BigNumber, //TODO
-		slippage?: number //TODO
+		sendAmount?: BigNumber, 
+		receiveAmount?: BigNumber, 
+		slippage?: number 
 	) => Promise<Transaction | undefined>;
 	viewTransaction: (id: Id) => Transaction | undefined | null;
 	getActiveTransaction: () => Transaction | undefined;
@@ -73,7 +73,7 @@ setLoading(false)
 			}
 		}
 	}, [wallet, component]);
-	//const transaction =  useCallback(()=>{if (wallet.swapTransaction) processTransaction(wallet.swapTransaction)},[wallet])
+	
 	useEffect(() => {
 
 		if(transacting && transaction && transaction.transactionStatus!==TransactionStatus.PENDING){
@@ -90,18 +90,12 @@ setLoading(false)
 		async (
 			sendAsset: AssetOrAssetPair,
 			recieveAsset: AssetOrAssetPair,
-			sendAmount?: BigNumber, //TODO
-			receiveAmount?: BigNumber, //TODO
-			slippage?: number //TODO
+			sendAmount?: BigNumber, 
+			receiveAmount?: BigNumber, 
+			slippage?: number 
 		): Promise<Transaction | undefined> => {
-			//esitmate receive
-
-			/*
-			const checkActive = (transaction: Transaction) => {
-			  if (transaction.transactionStatus === TransactionStatus.PENDING) 
-			}
 			
-			*/
+
 
 			if (loading) {
 				return transaction
@@ -129,7 +123,7 @@ setLoading(false)
 	);
 
 	const updateBalance = useCallback(async (): Promise<boolean> => {
-		//esitmate receive
+		
 
 		
 		if (wallet && transaction && transaction.transactionStatus!==TransactionStatus.PENDING && !transacting) {
@@ -147,17 +141,17 @@ setLoading(false)
 		return transaction;
 	}, [transaction]);
 	const viewTransaction = (id: Id): Transaction | undefined => {
-		//esitmate receive
+		
 
 		if (wallet) {
 			return wallet.fetchTransaction(id);
 		}
 	};
 	const sendTransaction = useCallback(async () => {
-	//	setTransacting(true);
+	
 		if (wallet && transaction && wallet.address && wallet.toolkit) {
                       wallet.updateStatus(component, TransactionStatus.PENDING);
-	//	setTransacting(false);
+	
 
 		}
 	}, [wallet,component, transaction]);

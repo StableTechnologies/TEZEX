@@ -85,6 +85,4 @@ export const Transact: FC<ITransact> = (props) => {
 	);
 };
 
-/*
-<Button size="large" className={`${classes.connectwalletbutton + " Element"} ${classes.disabled + " Element"}`} disabled>Swap Tokens</Button>
-*/
+

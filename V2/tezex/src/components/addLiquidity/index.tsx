@@ -21,7 +21,7 @@ import { useSession } from "../../hooks/session";
 import {  useWalletOps, WalletOps } from "../../hooks/wallet";
 
 import Box from "@mui/material/Box";
-import Grid2 from "@mui/material/Unstable_Grid2"; // Grid version 2
+import Grid2 from "@mui/material/Unstable_Grid2"; 
 import Card from "@mui/material/Card";
 import CardActions from "@mui/material/CardActions";
 import CardContent from "@mui/material/CardContent";
@@ -99,20 +99,15 @@ export const AddLiquidity: FC = (props) => {
 	);
 
 	const isWalletConnected = useWalletConnected();
-	//	const [transactionId, setTransactionId] = useState<Id | null>(null);
-	/*
-	const [transaction, setTransaction] = useState<Transaction | undefined>(
-		undefined
-	);
 	
-	*/
+	
 
 	const active = walletOperations.getActiveTransaction();
 	const [loadingBalances, setLoadingBalances] = useState<boolean>(true);
 
-	//const [syncing, setSyncing] = useState<boolean>(true);
+	
 	const [loading, setLoading] = useState<boolean>(true);
-	//const [editing, setEditing] = useState<boolean>(false);
+	
 	const [sendAmount, setSendAmount] = useState(new BigNumber(0));
 	const [sendAmount2, setSendAmount2] = useState(new BigNumber(0));
 	const [receiveAmount, setReceiveAmount] = useState(new BigNumber(0));
@@ -216,21 +211,12 @@ export const AddLiquidity: FC = (props) => {
 
 	const updateBalance = useCallback(async () => {
 		if (isWalletConnected) {
-			/*
-			if (active) {
-			}
 			
-			*/
 			if (active && active.sendAssetBalance[1]) {
 				setLoadingBalances(
 					!(await walletOperations.updateBalance())
 				);
-				/*
-				setBalances([
-					active.sendAssetBalance[0].decimal.toString(),
-					active.sendAssetBalance[1].decimal.toString(),
-				]);
-				*/
+				
 			}
 		}
 	}, [active, walletOperations, isWalletConnected]);
@@ -243,48 +229,7 @@ export const AddLiquidity: FC = (props) => {
 				active.sendAssetBalance[1].decimal.toString(),
 			]);
 	}, [active]);
-	/*
-	useEffect(() => {
-		if (
-			transactionId &&
-			transaction &&
-			transaction.sendAmount[1] &&
-			transaction.sendAssetBalance[1]
-		) {
-			if (
-				transaction.sendAmount[0].decimal.eq(
-					sendAmount
-				) &&
-				transaction.sendAmount[1].decimal.eq(
-					sendAmount2
-				) &&
-				transaction.receiveAmount[0].decimal.eq(
-					receiveAmount
-				) &&
-				transaction.slippage === slippage &&
-				transaction.sendAssetBalance[0].decimal.toString() ===
-					balances[0] &&
-				transaction.sendAssetBalance[1].decimal.toString() ===
-					balances[1] &&
-				transaction.receiveAmount[0].decimal.eq(
-					receiveAmount
-				)
-			) {
-				setSyncing(false);
-			} else {
-				setSyncing(true);
-			}
-		}
-	}, [
-		transaction,
-		sendAmount2,
-		receiveAmount,
-		sendAmount,
-		slippage,
-		balances,
-		transactionId,
-	]);
-	*/
+	
 	useEffect(() => {
 		if (
 			active &&
@@ -295,12 +240,7 @@ export const AddLiquidity: FC = (props) => {
 				active.receiveAmount[0].decimal.toString()
 			);
 			updateSend2(active.sendAmount[1].decimal.toString());
-			/*
-			setBalances([
-				active.sendAssetBalance[0].decimal.toString(),
-				active.sendAssetBalance[1].decimal.toString(),
-			]);
-			*/
+			
 		}
 	}, [active, updateSend2, updateReceive]);
 

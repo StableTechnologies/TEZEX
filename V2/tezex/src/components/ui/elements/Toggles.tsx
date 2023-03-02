@@ -43,12 +43,12 @@ export const SwapUpDownToggle: FC<IToggle> = (props) => {
 				                    width:  "100%",
 				                    height:  "100%",
 				
-							//	maxWidth: "2.2vw",
-							//maxHeight: "2.2vw",
-						//width: "2.2vw",
-						//	maxHeight: "2.2vw",
-						//	width: "19.2px",
-						//	height: "19.2px",
+							
+							
+						
+						
+						
+						
 					}}
 					src={swapIcon}
 					alt="swapIcon"
@@ -58,27 +58,4 @@ export const SwapUpDownToggle: FC<IToggle> = (props) => {
 	);
 };
 
-/*
-export const SwapRightLeftToggle: FC<IToggle> = (props) => {
-	const toggle = () => {
-		props.setToggle(props.toggle ? false : true);
-	};
 
-	return (
-		<div>
-			<button onClick={toggle}>{props.children}</button>
-		</div>
-	);
-};
-export const Toggle: FC<IToggle> = (props) => {
-	const toggle = () => {
-		props.setToggle(props.toggle ? false : true);
-	};
-
-	return (
-		<div>
-			<button onClick={toggle}>{props.children}</button>
-		</div>
-	);
-};
-*/

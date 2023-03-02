@@ -19,7 +19,7 @@ import {
 } from "../../hooks/wallet";
 
 import Box from "@mui/material/Box";
-import Grid2 from "@mui/material/Unstable_Grid2"; // Grid version 2
+import Grid2 from "@mui/material/Unstable_Grid2"; 
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardActions from "@mui/material/CardActions";
@@ -69,7 +69,7 @@ const classes = {
 	card: {
 		overflow: "hidden",
 		position: "relative",
-		height: "26.04vw", //"408px",
+		height: "26.04vw", 
 		width: "30.56vw",
 		borderRadius: "1.38vw",
 		zIndex: 999,
@@ -105,16 +105,16 @@ export const RemoveLiquidity: FC = (props) => {
 		TransactingComponent.REMOVE_LIQUIDITY
 	);
 	const isWalletConnected = useWalletConnected();
-	//const [transactionId, setTransactionId] = useState<Id | null>(null);
+	
 
 	const [loadingBalances, setLoadingBalances] = useState<boolean>(true);
 
-	//const [syncing, setSyncing] = useState<boolean>(true);
+	
 	const [loading, setLoading] = useState<boolean>(true);
-	//const [editing, setEditing] = useState<boolean>(false);
+	
 	const [sendAmount, setSendAmount] = useState(new BigNumber(0));
 
-	//	const [receiveAmount, setReceiveAmount] = useState(new BigNumber(0));
+	
 	const [balance, setBalance] = useState(new BigNumber(0));
 
 	const [useMax, setUseMax] = useState<boolean>(false);
@@ -122,7 +122,7 @@ export const RemoveLiquidity: FC = (props) => {
 	const receive1 = 1;
 	const receive2 = 2;
 	
-	// eslint-disable-next-line
+	
 	const [assets, setAssets] = useState<[Asset, Asset, Asset]>([
 		getAsset(TokenKind.Sirius),
 		getAsset(TokenKind.XTZ),
@@ -173,22 +173,13 @@ export const RemoveLiquidity: FC = (props) => {
 
 	const updateBalance = useCallback(async () => {
 		if (isWalletConnected) {
-			/*
-			if (active) {
-			}
 			
-			*/
 			if (active) {
 
 				setLoadingBalances(
 					!(await walletOperations.updateBalance())
 				);
-				/*
-				setBalances([
-					active.sendAssetBalance[0].decimal.toString(),
-					active.sendAssetBalance[1].decimal.toString(),
-				]);
-				*/
+				
 			}
 		}
 	}, [active, walletOperations, isWalletConnected]);
@@ -204,34 +195,7 @@ export const RemoveLiquidity: FC = (props) => {
 					active.receiveAsset[1] && setAssets([active.sendAsset[0],active.receiveAsset[0],active.receiveAsset[1]]) 
 		}
 	},[active])
-	/*
-	useEffect(() => {
-		if (transactionId && transaction) {
-			if (
-				transaction.sendAmount[0].decimal.eq(
-					sendAmount
-				) &&
-				transaction.receiveAmount[0].decimal.eq(
-					receiveAmount
-				) &&
-				transaction.slippage === slippage &&
-				transaction.sendAssetBalance[0].decimal ===
-					balance
-			) {
-				setSyncing(false);
-			} else {
-				setSyncing(true);
-			}
-		}
-	}, [
-		transaction,
-		receiveAmount,
-		sendAmount,
-		slippage,
-		balance,
-		transactionId,
-	]);
-	*/
+	
 
 	useEffect(() => {
 		const updateTransactionBalance = async () => {
@@ -246,7 +210,7 @@ export const RemoveLiquidity: FC = (props) => {
 			loadingBalances ? 2000 : 5000
 		);
 		return () => clearInterval(interval);
-		//if (isWalletConnected) updateTransactionBalance();
+		
 	} );
 
 
@@ -268,7 +232,7 @@ export const RemoveLiquidity: FC = (props) => {
 
 
 	useEffect(() => {
-		//run always
+		
 
 		const _newTransaction = async () => {
 			await newTransaction();

@@ -27,7 +27,7 @@ const classes = {
 		display: "flex",
 		fontFamily: "Inter",
 		width: "100%",
-		//height: "56px",
+		
 		background: "rgba(45, 45, 45, 0.5)",
 		color: "white",
 		borderRadius: "16px",
@@ -47,7 +47,7 @@ const classes = {
 
 		fontFamily: "Inter",
 		width: "100%",
-		//height: "56px",
+		
 		backgroundColor: "#000",
 		color: "white",
 		border: "1px solid black",
@@ -69,13 +69,13 @@ const classes = {
 		color: "white",
 		minHeight: "2.7vw",
 		minWidth: "10.24vw",
-		//	padding: "10px, 16px, 10px, 16px",
+		
 		border: "1px solid black",
 		borderRadius: ".55vw",
 		fontWeight: "500",
 		fontSize: "1.11vw",
 		lineHeight: "1.34vw",
-		//letterSpacing: "0.01em",
+		
 		textTransform: "none",
 		"&:hover": {
 			background: "#000",
@@ -101,11 +101,7 @@ const classes = {
 		"&:hover": {
 			background: "#000",
 		},
-		/*
-		"@media (max-width: 600px)": {
-			fontSize: "24px",
-		},
-		*/
+		
 	},
 };
 
@@ -205,9 +201,7 @@ export const Wallet: FC<IWallet> = (props) => {
 						sx={{
 							background: "linear-gradient(92.04deg, rgba(171, 240, 255, 0.2) 4.41%, #F9FEFF 84.62%)",
 
-							/*
-							background: "linear-gradient(92.04deg, rgba(171, 240, 255, 0.04) 4.41%, #F9FEFF 84.62%)",
-							*/
+							
 							border: "0.5px solid #C4C4C4",
 							borderRadius: "4px",
 							display: "inline-flex",

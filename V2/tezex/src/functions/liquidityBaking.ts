@@ -459,27 +459,13 @@ userAddress: string,
 
 		const maxTokensSold: BigNumber =    addSlippage(slipage,tokenMantissa)
 
-			/*
-			tokenMantissa
-				.plus(
-					tokenMantissa
-						.multipliedBy(slipage)
-						.div(100)
-				)
-				.integerValue(BigNumber.ROUND_DOWN);
-			*/
+			
 	
 
 
 		const minLqtMinted: BigNumber = lqtMinted//
 
-			/*
-			_estimateShares(
-				xtzAmountInMutez,
-				tokenMantissa,
-				lbContractStorage
-			);
-			*/
+			
 
 			const addLiquidity = lbContract.methods.addLiquidity(
 			userAddress,
@@ -611,14 +597,7 @@ export async function lqtOutput(
 			new BigNumber(lbContractStorage.tokenPool),
 			new BigNumber(lbContractStorage.lqtTotal)
 		);
-	/*
-	 else {
-		return {
-			xtz: new BigNumber(0),
-			tzbtc: new BigNumber(0),
-		};
-	 }
-	*/
+	
 }
 
 export async function removeLiquidity(

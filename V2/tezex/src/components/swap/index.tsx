@@ -20,7 +20,7 @@ import {
 import { SwapUpDownToggle } from "../../components/ui/elements/Toggles";
 
 import Box from "@mui/material/Box";
-import Grid2 from "@mui/material/Unstable_Grid2"; // Grid version 2
+import Grid2 from "@mui/material/Unstable_Grid2";
 import Card from "@mui/material/Card";
 import CardActions from "@mui/material/CardActions";
 import CardContent from "@mui/material/CardContent";
@@ -77,7 +77,7 @@ const classes = {
 	card: {
 		overflow: "hidden",
 		position: "relative",
-		height: "28.49vw", //"408px",
+		height: "28.49vw",
 		width: "30.56vw",
 		borderRadius: "1.38vw",
 		zIndex: 999,
@@ -115,9 +115,9 @@ export const Swap: FC = (props) => {
 	const isWalletConnected = useWalletConnected();
 
 	const [loadingBalances, setLoadingBalances] = useState<boolean>(true);
-	//const [syncing, setSyncing] = useState<boolean>(true);
+
 	const [loading, setLoading] = useState<boolean>(true);
-	//	const [editing, setEditing] = useState<boolean>(false);
+
 	const [sendAmount, setSendAmount] = useState(new BigNumber(0));
 	const [receiveAmount, setReceiveAmount] = useState(new BigNumber(0));
 	const [slippage, setSlippage] = useState<number>(0.5);
@@ -202,83 +202,40 @@ export const Swap: FC = (props) => {
 
 	const updateBalance = useCallback(async () => {
 		if (isWalletConnected) {
-			/*
-			if (active) {
-			}
-			
-			*/
+
 			if (active) {
 
 				setLoadingBalances(
 					!(await walletOperations.updateBalance())
 				);
-				/*
-				setBalances([
-					active.sendAssetBalance[0].decimal.toString(),
-					active.sendAssetBalance[1].decimal.toString(),
-				]);
-				*/
+
 			}
 		}
 	}, [active, walletOperations, isWalletConnected]);
 
 	useEffect(() => {
-		if(active){
+		if (active) {
 			setBalances([
-					active.sendAssetBalance[0].decimal.toString(),
-					active.receiveAssetBalance[0].decimal.toString(),
-				]);
+				active.sendAssetBalance[0].decimal.toString(),
+				active.receiveAssetBalance[0].decimal.toString(),
+			]);
 
 
 
-					setAssets([active.sendAsset[0],active.receiveAsset[0]]) 
+			setAssets([active.sendAsset[0], active.receiveAsset[0]])
 		}
-	},[active])
+	}, [active])
 
-	/*
-	useEffect(() => {
-		if (transactionId && transaction) {
-			if (
-				transaction.sendAmount[0].decimal.eq(
-					sendAmount
-				) &&
-				transaction.receiveAmount[0].decimal.eq(
-					receiveAmount
-				) &&
-				transaction.slippage === slippage &&
-				transaction.sendAssetBalance[0].decimal.toString() ===
-					balances[0] &&
-				transaction.receiveAssetBalance[0].decimal.toString() ===
-					balances[1]
-			) {
-				setSyncing(false);
-			} else {
-				setSyncing(true);
-			}
-		}
-	}, [
-		transaction,
-		receiveAmount,
-		sendAmount,
-		slippage,
-		balances,
-		transactionId,
-	]);
-	*/
+
 
 	useEffect(() => {
 		if (
 			active
 		) {
 			updateReceive(active.receiveAmount[0].decimal.toString());
-			/*
-			setBalances([
-				active.sendAssetBalance[0].decimal.toString(),
-				active.sendAssetBalance[1].decimal.toString(),
-			]);
-			*/
+
 		}
-	}, [active,  updateReceive]);
+	}, [active, updateReceive]);
 
 	useEffect(() => {
 		const updateTransactionBalance = async () => {
@@ -298,15 +255,15 @@ export const Swap: FC = (props) => {
 	const newTransaction = useCallback(async () => {
 		await walletOperations
 			.initialize(
-                          [assets[send]], [assets[receive]]
+				[assets[send]], [assets[receive]]
 			)
 			.then(async (transaction: Transaction | undefined) => {
 				if (transaction) {
-					await updateBalance().then(()=>{
-					if (swapingFields)
-						setSwapingFields(false);
-					setLoading(false);
-					setLoadingBalances(false);
+					await updateBalance().then(() => {
+						if (swapingFields)
+							setSwapingFields(false);
+						setLoading(false);
+						setLoadingBalances(false);
 					})
 				}
 			});
@@ -333,7 +290,7 @@ export const Swap: FC = (props) => {
 				updateSend(
 					active.sendAmount[0].decimal.toString()
 				);
-				//	setAssets([active.sendAsset[0],active.receiveAsset[0]]) 
+
 				updateReceive(active.receiveAmount[0].decimal.toString())
 				updateSlippage(active.slippage.toString());
 				setLoading(false);
@@ -362,13 +319,13 @@ export const Swap: FC = (props) => {
 
 	useEffect(() => {
 
-			if (
-				session.activeComponent !==
+		if (
+			session.activeComponent !==
+			TransactingComponent.SWAP
+		)
+			session.loadComponent(
 				TransactingComponent.SWAP
-			)
-				session.loadComponent(
-					TransactingComponent.SWAP
-				);
+			);
 	})
 	return (
 		<Grid2 container sx={classes.root}>
@@ -427,7 +384,7 @@ export const Swap: FC = (props) => {
 								xs={12}
 								sx={{
 									position: "absolute",
-								        top: "37.4%",
+									top: "37.4%",
 									zIndex: 5,
 									height: "1vw",
 								}}
@@ -505,7 +462,7 @@ export const Swap: FC = (props) => {
 							background: "#F9F9F9",
 
 
-			                                width: "30.6vw",
+							width: "30.6vw",
 							height: "10.14vw",
 						}}
 						square
@@ -525,7 +482,7 @@ export const Swap: FC = (props) => {
 								fontSize: ".972vw",
 								lineHeighr: "1.176vw",
 							}}>
-							Slippage
+								Slippage
 							</Typography>
 
 							<Slippage

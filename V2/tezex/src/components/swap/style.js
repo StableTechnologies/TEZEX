@@ -1,20 +1,6 @@
 
 const classes ={
-/*
-display: 'flex'
-flexDirection: 'row',
-alignItems: 'flex-start',
-padding: '4px',
-gap: '16px',
-position: 'absolute',
-left: '46.34%',
-right: '3.64%',
-top: '51.37%',
-bottom: '21.92%',
-background: '#FFFFFF',
-border: '1px solid #EDEDED',
-border-radius: '8px',
-*/
+
 	slippage : {
 		container: {
 display: 'flex',
