@@ -30,8 +30,6 @@ export const SIRS = assets[2];
 export const getDex = (transaction: Transaction): string => {
   const sirius = "KT1TxqZ8QtKvLu3V3JH7Gx58n7Co8pgtpQU5";
   return sirius;
-  
-  
 };
 export function getAsset(token: TokenKind): Asset {
   switch (token) {
