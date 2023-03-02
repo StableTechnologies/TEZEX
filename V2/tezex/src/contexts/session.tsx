@@ -5,43 +5,41 @@ import { NetworkContext, networkDefaults } from "./network";
 import { TransactingComponent } from "../types/general";
 
 export const SessionContext = createContext<SessionInfo>({
-	loadComponent: (_) => {},
-	activeComponent: null,
+  loadComponent: (_) => {},
+  activeComponent: null,
 });
 
 export interface SessionInfo {
-	loadComponent: (comp: TransactingComponent) => void;
-	activeComponent: TransactingComponent | null;
+  loadComponent: (comp: TransactingComponent) => void;
+  activeComponent: TransactingComponent | null;
 }
 export interface ISession {
-	children:
-		| JSX.Element[]
-		| JSX.Element
-		| React.ReactElement
-		| React.ReactElement[]
-		| string;
+  children:
+    | JSX.Element[]
+    | JSX.Element
+    | React.ReactElement
+    | React.ReactElement[]
+    | string;
 }
 
 export function SessionProvider(props: ISession) {
-	const [activeComponent, setActiveComponent] =
-		useState<TransactingComponent | null>(null);
+  const [activeComponent, setActiveComponent] =
+    useState<TransactingComponent | null>(null);
 
-	const loadComponent = useCallback((comp: TransactingComponent) => {
-		setActiveComponent(comp);
-	}, []);
+  const loadComponent = useCallback((comp: TransactingComponent) => {
+    setActiveComponent(comp);
+  }, []);
 
-	return (
-		<SessionContext.Provider
-			value={{
-				loadComponent,
-				activeComponent,
-			}}
-		>
-			<NetworkContext.Provider value={networkDefaults}>
-				<WalletProvider>
-					{props.children}
-				</WalletProvider>
-			</NetworkContext.Provider>
-		</SessionContext.Provider>
-	);
+  return (
+    <SessionContext.Provider
+      value={{
+        loadComponent,
+        activeComponent,
+      }}
+    >
+      <NetworkContext.Provider value={networkDefaults}>
+        <WalletProvider>{props.children}</WalletProvider>
+      </NetworkContext.Provider>
+    </SessionContext.Provider>
+  );
 }

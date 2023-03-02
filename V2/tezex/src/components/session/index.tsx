@@ -1,2 +1,2 @@
-export * from './WalletConnected';
-export * from './WalletDisconnected';
+export * from "./WalletConnected";
+export * from "./WalletDisconnected";

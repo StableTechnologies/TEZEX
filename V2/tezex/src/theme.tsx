@@ -1,12 +1,11 @@
-import { createTheme } from '@mui/material/styles';
-declare module '@mui/material/styles' {
-
+import { createTheme } from "@mui/material/styles";
+declare module "@mui/material/styles" {
   interface Palette {
-    selectedHomeTab: Palette['primary'];
+    selectedHomeTab: Palette["primary"];
   }
 
   interface PaletteOptions {
-    selectedHomeTab: PaletteOptions['primary'];
+    selectedHomeTab: PaletteOptions["primary"];
   }
 
   interface PaletteColor {
@@ -17,36 +16,33 @@ declare module '@mui/material/styles' {
     darker?: string;
   }
 
-  interface ThemeOptions {
-  }
+  interface ThemeOptions {}
 }
 
 //const { palette } = createTheme();
 
 const theme = createTheme({
-
   typography: {
-		  fontFamily: "Inter",
-   },
+    fontFamily: "Inter",
+  },
   palette: {
-
- selectedHomeTab: {
-      main: '#E3F7FF',
-      contrastText: '#fff',
+    selectedHomeTab: {
+      main: "#E3F7FF",
+      contrastText: "#fff",
     },
     action: {
-      selected: '#E3F7FF',
+      selected: "#E3F7FF",
     },
     primary: {
-      main: '#1E1E1E',
+      main: "#1E1E1E",
     },
     secondary: {
-      main: '#999999',
-      dark: '#00A0E4',
+      main: "#999999",
+      dark: "#00A0E4",
     },
-	  background: {
-		  default: '#F9F9F9',
-	  }
+    background: {
+      default: "#F9F9F9",
+    },
   },
 });
 /*
@@ -95,4 +91,3 @@ const theme: Theme = createTheme({
 
 */
 export default theme;
-

@@ -1,84 +1,80 @@
-
-const classes ={
-
-	slippage : {
-		container: {
-display: 'flex',
-flexDirection: 'row',
-alignItems: 'flex-start',
-padding: '4px',
-gap: '16px',
-position: 'absolute',
-left: '46.34%',
-right: '3.64%',
-top: '51.37%',
-bottom: '21.92%',
-background: '#FFFFFF',
-border: '1px solid #EDEDED',
-borderRadius: '8px',
-		},
-		text: {},
-		component: {}
-	}, 	
+const classes = {
+  slippage: {
+    container: {
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "flex-start",
+      padding: "4px",
+      gap: "16px",
+      position: "absolute",
+      left: "46.34%",
+      right: "3.64%",
+      top: "51.37%",
+      bottom: "21.92%",
+      background: "#FFFFFF",
+      border: "1px solid #EDEDED",
+      borderRadius: "8px",
+    },
+    text: {},
+    component: {},
+  },
   root: {
-		justifyContent: "center",
+    justifyContent: "center",
   },
 
   _root: {
-    '& .MuiButton-text': {
-      '&:hover': {
-        background: 'transparent',
+    "& .MuiButton-text": {
+      "&:hover": {
+        background: "transparent",
       },
     },
 
-    '& .MuiTypography-subtitle2': {
-      fontSize: '0.875rem',
+    "& .MuiTypography-subtitle2": {
+      fontSize: "0.875rem",
 
-      '@media(max-width: 1024px)': {
-        fontSize: '0.75rem',
+      "@media(max-width: 1024px)": {
+        fontSize: "0.75rem",
       },
-      '@media(max-width: 768px)': {
-        fontSize: '0.875rem',
+      "@media(max-width: 768px)": {
+        fontSize: "0.875rem",
       },
-      '@media(max-width: 376px)': {
-        fontSize: '0.85rem',
+      "@media(max-width: 376px)": {
+        fontSize: "0.85rem",
       },
-      '@media(max-width: 320px)': {
-        fontSize: '0.7rem',
+      "@media(max-width: 320px)": {
+        fontSize: "0.7rem",
       },
     },
-    '& .MuiCardContent-root': {
-      padding: '.8rem 1.9rem .5rem',
+    "& .MuiCardContent-root": {
+      padding: ".8rem 1.9rem .5rem",
       // textAlign: 'left'
     },
   },
 
-
-  '@media(max-width: 501px)': {
+  "@media(max-width: 501px)": {
     con: {
       flexDirection: "column-reverse",
-      padding: '0 .5rem'
-    }
+      padding: "0 .5rem",
+    },
   },
   card: {
-    background:' #FFFFFF',
-    border: '1px solid #E1E1E1',
-    borderRadius : (24),
-
+    background: " #FFFFFF",
+    border: "1px solid #E1E1E1",
+    borderRadius: 24,
   },
 
   title: {
     "&.Element": {
-      marginTop: '1rem',
-      padding: '0 2rem',
+      marginTop: "1rem",
+      padding: "0 2rem",
       fontSize: "1.5rem",
       fontStyle: "normal",
       fontWeight: "600",
       lineHeight: "29px",
       letterSpacing: "0em",
       textAlign: "left",
-      color: '#000',
-  }
+      color: "#000",
+    },
   },
   tokeninput: {
     border: "0",
@@ -104,24 +100,24 @@ borderRadius: '8px',
     fontWeight: "500",
     lineHeight: "17px",
     margin: "0.5rem 1.5rem",
-    '@media(max-width: 600px)': {
+    "@media(max-width: 600px)": {
       minWidth: "43px",
       margin: "0.5rem 0.5rem",
     },
-    '&:hover': {
+    "&:hover": {
       background: "#3391F6",
       color: "#fff",
-  },
+    },
   },
   tokenContainer: {
     backgroundColor: "#F8F8F8",
     borderRadius: "8px",
     textAlign: "left",
     marginBottom: "1vh",
-    padding:  ".5rem 1rem",
-    '@media(min-width: 960px)': {
+    padding: ".5rem 1rem",
+    "@media(min-width: 960px)": {
       height: "60px",
-    }
+    },
   },
   balContainer: {
     display: "flex",
@@ -136,13 +132,13 @@ borderRadius: '8px',
     textAlign: "right",
   },
   swapIcon: {
-    margin: '1.5rem 0rem',
-    padding: (1),
+    margin: "1.5rem 0rem",
+    padding: 1,
     minWidth: "0",
     width: "40px",
     height: "40px",
     borderRadius: ".5rem",
-    border: '0.5px solid #E5E5E5',
+    border: "0.5px solid #E5E5E5",
     cursor: "pointer",
   },
 
@@ -151,16 +147,16 @@ borderRadius: '8px',
     maxWidth: "24px",
     width: "24px",
     height: "24px",
-    '& .MuiButton-root': {
-      backgroundColor: "red"
-    }
+    "& .MuiButton-root": {
+      backgroundColor: "red",
+    },
   },
   img: {
     width: "24px",
   },
   swapcontainer: {
     marginTop: "3vh",
-    textAlign: "left"
+    textAlign: "left",
   },
   button: {
     color: "white",
@@ -178,17 +174,18 @@ borderRadius: '8px',
     },
   },
   swaps: {
-    background: "linear-gradient(180deg, rgba(224, 224, 224, 0.7) -26.98%, rgba(255, 255, 255, 0) 176.46%)",
+    background:
+      "linear-gradient(180deg, rgba(224, 224, 224, 0.7) -26.98%, rgba(255, 255, 255, 0) 176.46%)",
     minWidth: "30vw",
     margin: "1.4vw",
     borderRadius: "24px",
     "& h3": {
       fontSize: "2.1vw",
     },
-    '@media(min-width: 1280px)': {
+    "@media(min-width: 1280px)": {
       width: "440px",
       minWidth: "440px",
-    }
+    },
   },
 
   error: {
@@ -223,33 +220,33 @@ borderRadius: '8px',
       fontSize: "1.5rem",
       lineHeight: "29px",
       letterSpacing: "0.01em",
-      textTransform: 'none',
-      '&:hover': {
-        background: '#000',
+      textTransform: "none",
+      "&:hover": {
+        background: "#000",
+      },
+      "@media (max-width: 600px)": {
+        margin: "1rem .2rem",
+        fontSize: "1.2rem",
+      },
     },
-    '@media (max-width: 600px)': {
-      margin: "1rem .2rem",
-      fontSize: "1.2rem",
-    }
   },
-},
   disabled: {
     "&.Element": {
       backgroundColor: "rgba(0, 0, 0, 0.5)",
       border: "0",
-    }
+    },
   },
-    tokentext: {
-      "&.Element": {
-        color: "#000",
-        fontSize: "1em",
-        textTransform: "capitalize",
-  },
+  tokentext: {
+    "&.Element": {
+      color: "#000",
+      fontSize: "1em",
+      textTransform: "capitalize",
+    },
   },
 
   feepaper: {
     "&.Element": {
-      background: 'transparent',
+      background: "transparent",
       padding: "1.2rem",
       color: "#4f4f4f",
       border: "1px solid transparent",
@@ -263,13 +260,13 @@ borderRadius: '8px',
     lineHeight: "19px",
     "& .MuiTypography-body1": {
       fontSize: "1rem",
-      '@media (max-width: 600px)': {
+      "@media (max-width: 600px)": {
         fontSize: ".9rem",
       },
-      '@media (max-width: 376px)': {
+      "@media (max-width: 376px)": {
         fontSize: ".8rem",
-      }
-    }
+      },
+    },
   },
 
   loaderContainer: {
@@ -279,7 +276,7 @@ borderRadius: '8px',
     flexDirection: "row",
     background: "#E0EFFF",
     borderRadius: "8px",
-    padding: '0 1rem',
+    padding: "0 1rem",
   },
   loader: {
     width: "32px",
@@ -289,8 +286,8 @@ borderRadius: '8px',
     textAlign: "center",
     marginBottom: "-.4rem",
     color: "#FF4E4E",
-    '@media (max-width: 600px)': {
-      fontSize: "0.875rem"
+    "@media (max-width: 600px)": {
+      fontSize: "0.875rem",
     },
   },
 
@@ -305,7 +302,7 @@ borderRadius: '8px',
     fontSize: "0.875rem",
     lineHeight: "17px",
     padding: "0.1rem 0",
-    '@media (max-width: 321px)': {
+    "@media (max-width: 321px)": {
       fontSize: "0.75rem",
     },
   },

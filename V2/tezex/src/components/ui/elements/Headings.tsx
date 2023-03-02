@@ -1,13 +1,8 @@
 import { FC } from "react";
 
 export interface IHeading {
-  children: string
+  children: string;
 }
 export const AppTitle: FC<IHeading> = (props) => {
-
-  return (
-    <h1
-    >{props.children}</h1>
-  );
+  return <h1>{props.children}</h1>;
 };
-

@@ -1,8 +1,5 @@
-import { FC} from "react";
+import { FC } from "react";
 
 export const About: FC = (props) => {
-	return (
-		<div>
-		</div>
-	);
+  return <div></div>;
 };

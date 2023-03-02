@@ -6,10 +6,10 @@ import plusIcon from "../../assets/plusIcon.svg";
 
 import { Wallet } from "../wallet";
 import {
-	Transaction,
-	TokenKind,
-	Asset,
-	TransactingComponent,
+  Transaction,
+  TokenKind,
+  Asset,
+  TransactingComponent,
 } from "../../types/general";
 
 import { BigNumber } from "bignumber.js";
@@ -18,10 +18,10 @@ import { TokenInput, Slippage } from "../../components/ui/elements/inputs";
 import { useWalletConnected } from "../../hooks/wallet";
 import { getAsset } from "../../constants";
 import { useSession } from "../../hooks/session";
-import {  useWalletOps, WalletOps } from "../../hooks/wallet";
+import { useWalletOps, WalletOps } from "../../hooks/wallet";
 
 import Box from "@mui/material/Box";
-import Grid2 from "@mui/material/Unstable_Grid2"; 
+import Grid2 from "@mui/material/Unstable_Grid2";
 import Card from "@mui/material/Card";
 import CardActions from "@mui/material/CardActions";
 import CardContent from "@mui/material/CardContent";
@@ -29,532 +29,424 @@ import CardHeader from "@mui/material/CardHeader";
 import Typography from "@mui/material/Typography";
 
 const classes = {
-	cardAction: {
-		justifyContent: "space-between",
-	},
-	input: {
-		"& .MuiFormControl-root": {
-			width: "28.34vw",
-			height: "8.61vw",
-		},
-	},
-	slippageContainer: {
-		display: "flex",
-		width: "100%",
-		alignItems: "center",
-		flexDirection: "row",
-		"& .MuiGrid2-root": {},
-	},
+  cardAction: {
+    justifyContent: "space-between",
+  },
+  input: {
+    "& .MuiFormControl-root": {
+      width: "28.34vw",
+      height: "8.61vw",
+    },
+  },
+  slippageContainer: {
+    display: "flex",
+    width: "100%",
+    alignItems: "center",
+    flexDirection: "row",
+    "& .MuiGrid2-root": {},
+  },
 
-	slippageComponent: {
-		"& .MuiGrid2-root": {},
-	},
-	slippage: {
-		text: {},
-	},
-	tokens: {
-		display: "flex",
-	},
-	cardContent: {
-		"&.MuiCardContent-root": {
-			paddingTop: "4vw",
-		},
-		flexDirection: "column",
-		paddingTop: "10vw",
-		alignItems: "center",
-		display: "flex",
-	},
-	card: {
-		minHeight: "32.57vw",
-		minWidth: "63.88vw",
-		borderRadius: "20px",
-		zIndex: 5,
-		background: "#FFFFFF",
-		border: "1px solid #E1E1E1",
-		"& .MuiCardContent-root": {
-			padding: "8px",
-		},
-	},
-	paper: {
-		background: "#F9F9F9",
-		minHeight: "146px",
-		position: "relative",
-		bottom: "10%",
-		borderRadius: "20px",
-		zIndex: -1,
-		marginBottom: "20px",
-	},
-	root: {
-		position: "relative",
-		justifyContent: "center",
-	},
+  slippageComponent: {
+    "& .MuiGrid2-root": {},
+  },
+  slippage: {
+    text: {},
+  },
+  tokens: {
+    display: "flex",
+  },
+  cardContent: {
+    "&.MuiCardContent-root": {
+      paddingTop: "4vw",
+    },
+    flexDirection: "column",
+    paddingTop: "10vw",
+    alignItems: "center",
+    display: "flex",
+  },
+  card: {
+    minHeight: "32.57vw",
+    minWidth: "63.88vw",
+    borderRadius: "20px",
+    zIndex: 5,
+    background: "#FFFFFF",
+    border: "1px solid #E1E1E1",
+    "& .MuiCardContent-root": {
+      padding: "8px",
+    },
+  },
+  paper: {
+    background: "#F9F9F9",
+    minHeight: "146px",
+    position: "relative",
+    bottom: "10%",
+    borderRadius: "20px",
+    zIndex: -1,
+    marginBottom: "20px",
+  },
+  root: {
+    position: "relative",
+    justifyContent: "center",
+  },
 };
 
 export interface IAddLiquidity {
-	children: null;
+  children: null;
 }
 export const AddLiquidity: FC = (props) => {
-	const walletOperations: WalletOps = useWalletOps(
-		TransactingComponent.ADD_LIQUIDITY
-	);
+  const walletOperations: WalletOps = useWalletOps(
+    TransactingComponent.ADD_LIQUIDITY
+  );
 
-	const isWalletConnected = useWalletConnected();
-	
-	
+  const isWalletConnected = useWalletConnected();
 
-	const active = walletOperations.getActiveTransaction();
-	const [loadingBalances, setLoadingBalances] = useState<boolean>(true);
+  const active = walletOperations.getActiveTransaction();
+  const [loadingBalances, setLoadingBalances] = useState<boolean>(true);
 
-	
-	const [loading, setLoading] = useState<boolean>(true);
-	
-	const [sendAmount, setSendAmount] = useState(new BigNumber(0));
-	const [sendAmount2, setSendAmount2] = useState(new BigNumber(0));
-	const [receiveAmount, setReceiveAmount] = useState(new BigNumber(0));
-	const [slippage, setSlippage] = useState<number>(-0.5);
+  const [loading, setLoading] = useState<boolean>(true);
 
-	const send1 = 0;
-	const send2 = 1;
-	const receive = 2;
+  const [sendAmount, setSendAmount] = useState(new BigNumber(0));
+  const [sendAmount2, setSendAmount2] = useState(new BigNumber(0));
+  const [receiveAmount, setReceiveAmount] = useState(new BigNumber(0));
+  const [slippage, setSlippage] = useState<number>(-0.5);
 
-	const [balances, setBalances] = useState<[string, string]>(["", ""]);
-	const [assets, setAssets] = useState<[Asset, Asset, Asset]>([
-		getAsset(TokenKind.XTZ),
-		getAsset(TokenKind.TzBTC),
-		getAsset(TokenKind.Sirius),
-	]);
-	const [swapingFields, setSwapingFields] = useState<boolean>(true);
-	const session = useSession();
+  const send1 = 0;
+  const send2 = 1;
+  const receive = 2;
 
-	const transact = async () => {
-		await walletOperations.sendTransaction();
-	};
+  const [balances, setBalances] = useState<[string, string]>(["", ""]);
+  const [assets, setAssets] = useState<[Asset, Asset, Asset]>([
+    getAsset(TokenKind.XTZ),
+    getAsset(TokenKind.TzBTC),
+    getAsset(TokenKind.Sirius),
+  ]);
+  const [swapingFields, setSwapingFields] = useState<boolean>(true);
+  const session = useSession();
 
-	const updateSlippage = useCallback(
-		(value: string) => {
-			const amt = new BigNumber(value).toNumber();
-			if (amt !== slippage) {
-				setSlippage(amt);
-			}
-		},
-		[slippage]
-	);
-	const swapFields = useCallback(() => {
-		setAssets([assets[1], assets[0], assets[receive]]);
+  const transact = async () => {
+    await walletOperations.sendTransaction();
+  };
 
-		setLoadingBalances(true);
-		setSwapingFields(true);
-		setLoading(true);
-	}, [assets]);
-	const updateSend2 = useCallback(
-		(value: string) => {
-			const amt = new BigNumber(value);
-			if (!amt.eq(sendAmount2)) {
-				setSendAmount2(amt);
-			}
-		},
-		[sendAmount2]
-	);
-	const updateSend = useCallback(
-		(value: string) => {
-			const amt = new BigNumber(value);
-			if (!amt.eq(sendAmount) && !amt.isNaN()) {
-				setSendAmount(amt);
-			}
-		},
-		[sendAmount]
-	);
-	const updateReceive = useCallback(
-		(value: string) => {
-			const amt = new BigNumber(value);
-			if (!amt.eq(receiveAmount)) {
-				setReceiveAmount(amt);
-			}
-		},
-		[receiveAmount]
-	);
+  const updateSlippage = useCallback(
+    (value: string) => {
+      const amt = new BigNumber(value).toNumber();
+      if (amt !== slippage) {
+        setSlippage(amt);
+      }
+    },
+    [slippage]
+  );
+  const swapFields = useCallback(() => {
+    setAssets([assets[1], assets[0], assets[receive]]);
 
-	useEffect(() => {
-		if (active) {
-			active.sendAssetBalance[1] &&
-				setBalances([
-					active.sendAssetBalance[0].decimal.toString(),
-					active.sendAssetBalance[1].decimal.toString(),
-				]);
+    setLoadingBalances(true);
+    setSwapingFields(true);
+    setLoading(true);
+  }, [assets]);
+  const updateSend2 = useCallback(
+    (value: string) => {
+      const amt = new BigNumber(value);
+      if (!amt.eq(sendAmount2)) {
+        setSendAmount2(amt);
+      }
+    },
+    [sendAmount2]
+  );
+  const updateSend = useCallback(
+    (value: string) => {
+      const amt = new BigNumber(value);
+      if (!amt.eq(sendAmount) && !amt.isNaN()) {
+        setSendAmount(amt);
+      }
+    },
+    [sendAmount]
+  );
+  const updateReceive = useCallback(
+    (value: string) => {
+      const amt = new BigNumber(value);
+      if (!amt.eq(receiveAmount)) {
+        setReceiveAmount(amt);
+      }
+    },
+    [receiveAmount]
+  );
 
-			active.sendAsset[1] &&
-				setAssets([
-					active.sendAsset[0],
-					active.sendAsset[1],
-					active.receiveAsset[0],
-				]);
-		}
-	}, [active]);
-	
-	const updateTransaction = useCallback(async () => {
-		if (active) {
-			if (
-				!active.sendAmount[0].decimal.eq(sendAmount) ||
-				active.slippage !== slippage
-			) {
+  useEffect(() => {
+    if (active) {
+      active.sendAssetBalance[1] &&
+        setBalances([
+          active.sendAssetBalance[0].decimal.toString(),
+          active.sendAssetBalance[1].decimal.toString(),
+        ]);
 
-				await walletOperations.updateAmount(
-					sendAmount.toString(),
-					slippage.toString()
-				);
-			}
-		}
-	}, [sendAmount, active, slippage, walletOperations]);
-	useEffect(() => {
-		updateTransaction();
-	}, [updateTransaction]);
+      active.sendAsset[1] &&
+        setAssets([
+          active.sendAsset[0],
+          active.sendAsset[1],
+          active.receiveAsset[0],
+        ]);
+    }
+  }, [active]);
 
-	const updateBalance = useCallback(async () => {
-		if (isWalletConnected) {
-			
-			if (active && active.sendAssetBalance[1]) {
-				setLoadingBalances(
-					!(await walletOperations.updateBalance())
-				);
-				
-			}
-		}
-	}, [active, walletOperations, isWalletConnected]);
+  const updateTransaction = useCallback(async () => {
+    if (active) {
+      if (
+        !active.sendAmount[0].decimal.eq(sendAmount) ||
+        active.slippage !== slippage
+      ) {
+        await walletOperations.updateAmount(
+          sendAmount.toString(),
+          slippage.toString()
+        );
+      }
+    }
+  }, [sendAmount, active, slippage, walletOperations]);
+  useEffect(() => {
+    updateTransaction();
+  }, [updateTransaction]);
 
-	useEffect(() => {
-		active &&
-			active.sendAssetBalance[1] &&
-			setBalances([
-				active.sendAssetBalance[0].decimal.toString(),
-				active.sendAssetBalance[1].decimal.toString(),
-			]);
-	}, [active]);
-	
-	useEffect(() => {
-		if (
-			active &&
-			active.sendAmount[1] &&
-			active.sendAssetBalance[1]
-		) {
-			updateReceive(
-				active.receiveAmount[0].decimal.toString()
-			);
-			updateSend2(active.sendAmount[1].decimal.toString());
-			
-		}
-	}, [active, updateSend2, updateReceive]);
+  const updateBalance = useCallback(async () => {
+    if (isWalletConnected) {
+      if (active && active.sendAssetBalance[1]) {
+        setLoadingBalances(!(await walletOperations.updateBalance()));
+      }
+    }
+  }, [active, walletOperations, isWalletConnected]);
 
-	useEffect(() => {
-		const updateTransactionBalance = async () => {
-			await updateBalance();
-		};
+  useEffect(() => {
+    active &&
+      active.sendAssetBalance[1] &&
+      setBalances([
+        active.sendAssetBalance[0].decimal.toString(),
+        active.sendAssetBalance[1].decimal.toString(),
+      ]);
+  }, [active]);
 
-		const interval = setInterval(
-			() => {
-				updateTransactionBalance();
-			},
-			loadingBalances ? 2000 : 5000
-		);
-		return () => clearInterval(interval);
-	});
+  useEffect(() => {
+    if (active && active.sendAmount[1] && active.sendAssetBalance[1]) {
+      updateReceive(active.receiveAmount[0].decimal.toString());
+      updateSend2(active.sendAmount[1].decimal.toString());
+    }
+  }, [active, updateSend2, updateReceive]);
 
-	const newTransaction = useCallback(async () => {
-		await walletOperations
-			.initialize(
-				[assets[send1], assets[send2]],
-				[assets[receive]]
-			)
-			.then(async (transaction: Transaction | undefined) => {
-				if (transaction) {
-					await updateBalance().then(() => {
-						if (swapingFields)
-							setSwapingFields(false);
-						setLoading(false);
-						setLoadingBalances(false);
-					});
-				}
-			});
-	}, [swapingFields, assets, updateBalance, walletOperations]);
+  useEffect(() => {
+    const updateTransactionBalance = async () => {
+      await updateBalance();
+    };
 
-	useEffect(() => {
-		const _newTransaction = async () => {
-			await newTransaction();
-		};
+    const interval = setInterval(
+      () => {
+        updateTransactionBalance();
+      },
+      loadingBalances ? 2000 : 5000
+    );
+    return () => clearInterval(interval);
+  });
 
-		if (!loading && !active) {
-			_newTransaction();
-		}
-		if (loading && swapingFields) {
-			_newTransaction();
-		}
-		if (loading && !active) {
-			_newTransaction();
-		} else if (loading) {
-			if (active ) {
-				updateSend(
-					active.sendAmount[0].decimal.toString()
-				);
-				active.sendAsset[1] &&
-					setAssets([
-						active.sendAsset[0],
-						active.sendAsset[1],
-						active.receiveAsset[0],
-					]);
-				active.sendAmount[1] &&
-					updateSend2(
-						active.sendAmount[1].decimal.toString()
-					);
-				updateReceive(
-					active.receiveAmount[0].decimal.toString()
-				);
-				updateSlippage(active.slippage.toString());
-				setLoading(false);
-			}
-			if (
-				session.activeComponent !==
-				TransactingComponent.ADD_LIQUIDITY
-			)
-				session.loadComponent(
-					TransactingComponent.ADD_LIQUIDITY
-				);
-		}
-	}, [
-		swapingFields,
-		loading,
-		active,
-		newTransaction,
-		session,
-		updateSend,
-		updateSend2,
-		updateSlippage,
-		updateReceive,
-		walletOperations,
-	]);
+  const newTransaction = useCallback(async () => {
+    await walletOperations
+      .initialize([assets[send1], assets[send2]], [assets[receive]])
+      .then(async (transaction: Transaction | undefined) => {
+        if (transaction) {
+          await updateBalance().then(() => {
+            if (swapingFields) setSwapingFields(false);
+            setLoading(false);
+            setLoadingBalances(false);
+          });
+        }
+      });
+  }, [swapingFields, assets, updateBalance, walletOperations]);
 
-	return (
-		<Grid2 container sx={classes.root}>
-			<Grid2>
-				<Card sx={classes.card}>
-					<CardHeader
-						sx={{
-							paddingBottom: "1vw",
-							fontSize: "1vw",
-							textAlign: "left",
-						}}
-						title={
-							<Typography
-								sx={{
-									fontSize: "1.4vw",
-								}}
-							>
-								{
-									"Add Liquidity"
-								}
-							</Typography>
-						}
-					/>
-					<Grid2
-						xs={8}
-						lg={4}
-						sx={classes.tokens}
-					>
-						<Box>
-							<img
-								style={{
-									width: "7.1vw",
-								}}
-								src={
-									xtzTzbtcIcon
-								}
-								alt="xtzTzbtcIcon"
-							/>
-						</Box>
-						<Box>
-							<img
-								style={{
-									width: "1.67vw",
-								}}
-								src={rightArrow}
-								alt="rightArrow"
-							/>
-						</Box>
-						<Box>
-							<img
-								style={{
-									width: "6.1vw",
-								}}
-								src={sirsIcon}
-								alt="sirsIcon"
-							/>
-						</Box>
-					</Grid2>
-					<CardContent sx={classes.cardContent}>
-						<Grid2
-							xs={12}
-							sx={{
-								display: "flex",
-								justifyContent:
-									"space-between",
-								alignItems: "center",
-								flexDirection:
-									"row",
-							}}
-						>
-							<Grid2
-								xs={6}
-								sx={
-									classes.input
-								}
-							>
-								<TokenInput
-									assetName={
-										assets[
-											send1
-										]
-											.name
-									}
-									onChange={
-										updateSend
-									}
-									value={sendAmount.toString()}
-									balance={
-										loadingBalances
-											? "loading.."
-											: balances[0]
-									}
-									label="Enter Amount"
-									loading={
-										loading
-									}
-								/>
-							</Grid2>
+  useEffect(() => {
+    const _newTransaction = async () => {
+      await newTransaction();
+    };
 
-							<Grid2
-								xs={1}
-								sx={{
-									position: "relative",
-								}}
-							>
-								<img
-									src={
-										plusIcon
-									}
-									alt="plusIcon"
-								/>
-							</Grid2>
+    if (!loading && !active) {
+      _newTransaction();
+    }
+    if (loading && swapingFields) {
+      _newTransaction();
+    }
+    if (loading && !active) {
+      _newTransaction();
+    } else if (loading) {
+      if (active) {
+        updateSend(active.sendAmount[0].decimal.toString());
+        active.sendAsset[1] &&
+          setAssets([
+            active.sendAsset[0],
+            active.sendAsset[1],
+            active.receiveAsset[0],
+          ]);
+        active.sendAmount[1] &&
+          updateSend2(active.sendAmount[1].decimal.toString());
+        updateReceive(active.receiveAmount[0].decimal.toString());
+        updateSlippage(active.slippage.toString());
+        setLoading(false);
+      }
+      if (session.activeComponent !== TransactingComponent.ADD_LIQUIDITY)
+        session.loadComponent(TransactingComponent.ADD_LIQUIDITY);
+    }
+  }, [
+    swapingFields,
+    loading,
+    active,
+    newTransaction,
+    session,
+    updateSend,
+    updateSend2,
+    updateSlippage,
+    updateReceive,
+    walletOperations,
+  ]);
 
-							<Grid2
-								xs={6}
-								sx={
-									classes.input
-								}
-							>
-								<TokenInput
-									assetName={
-										assets[
-											send2
-										]
-											.name
-									}
-									value={sendAmount2.toString()}
-									readOnly={
-										true
-									}
-									balance={
-										loadingBalances
-											? "loading.."
-											: balances[1]
-									}
-									label="Required Amount"
-									darker={
-										true
-									}
-									swap={
-										swapFields
-									}
-								/>
-							</Grid2>
-						</Grid2>
+  return (
+    <Grid2 container sx={classes.root}>
+      <Grid2>
+        <Card sx={classes.card}>
+          <CardHeader
+            sx={{
+              paddingBottom: "1vw",
+              fontSize: "1vw",
+              textAlign: "left",
+            }}
+            title={
+              <Typography
+                sx={{
+                  fontSize: "1.4vw",
+                }}
+              >
+                {"Add Liquidity"}
+              </Typography>
+            }
+          />
+          <Grid2 xs={8} lg={4} sx={classes.tokens}>
+            <Box>
+              <img
+                style={{
+                  width: "7.1vw",
+                }}
+                src={xtzTzbtcIcon}
+                alt="xtzTzbtcIcon"
+              />
+            </Box>
+            <Box>
+              <img
+                style={{
+                  width: "1.67vw",
+                }}
+                src={rightArrow}
+                alt="rightArrow"
+              />
+            </Box>
+            <Box>
+              <img
+                style={{
+                  width: "6.1vw",
+                }}
+                src={sirsIcon}
+                alt="sirsIcon"
+              />
+            </Box>
+          </Grid2>
+          <CardContent sx={classes.cardContent}>
+            <Grid2
+              xs={12}
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexDirection: "row",
+              }}
+            >
+              <Grid2 xs={6} sx={classes.input}>
+                <TokenInput
+                  assetName={assets[send1].name}
+                  onChange={updateSend}
+                  value={sendAmount.toString()}
+                  balance={loadingBalances ? "loading.." : balances[0]}
+                  label="Enter Amount"
+                  loading={loading}
+                />
+              </Grid2>
 
-						<Grid2
-							xs={12}
-							sx={{
-								flexDirection:
-									"row",
-								display: "inline-flex",
-								alignItems: "flex-start",
-							}}
-						>
-							<Typography
-								noWrap
-								sx={{
-									display: "inline-flex",
-									fontSize: ".97vw",
-									fontWeight: "400",
-									lineHeight: "1.18vw",
-								}}
-							>
-								You will recieve
-								about{" "}
-								<Typography
-									sx={{
-										marginLeft: ".37vw",
-										marginRight:
-											".37vw",
-										fontSize: ".97vw",
-										fontWeight: "700",
-										lineHeight: "1.18vw",
-									}}
-								>
-									{" "}
-									{receiveAmount.toString()}{" "}
-									Sirs
-								</Typography>
-								for this
-								deiposit
-							</Typography>
-						</Grid2>
-					</CardContent>
-					<CardActions sx={classes.cardAction}>
-						<Grid2 xs={1}>Slippage</Grid2>
+              <Grid2
+                xs={1}
+                sx={{
+                  position: "relative",
+                }}
+              >
+                <img src={plusIcon} alt="plusIcon" />
+              </Grid2>
 
-						<Grid2
-							xs={4}
-							sx={
-								classes.slippageComponent
-							}
-						>
-							<Slippage
-								asset={
-									assets[
-										receive
-									].name
-								}
-								value={slippage}
-								onChange={
-									updateSlippage
-								}
-								inverse={true}
-							/>
-						</Grid2>
+              <Grid2 xs={6} sx={classes.input}>
+                <TokenInput
+                  assetName={assets[send2].name}
+                  value={sendAmount2.toString()}
+                  readOnly={true}
+                  balance={loadingBalances ? "loading.." : balances[1]}
+                  label="Required Amount"
+                  darker={true}
+                  swap={swapFields}
+                />
+              </Grid2>
+            </Grid2>
 
-						<Grid2 sx={{}} xs={6}>
-							<Wallet
-								transaction={
-									active
-								}
-								callback={
-									transact
-								}
-							>
-								{
-									"Add Liquidity"
-								}
-							</Wallet>
-						</Grid2>
-					</CardActions>
-				</Card>
-			</Grid2>
-		</Grid2>
-	);
+            <Grid2
+              xs={12}
+              sx={{
+                flexDirection: "row",
+                display: "inline-flex",
+                alignItems: "flex-start",
+              }}
+            >
+              <Typography
+                noWrap
+                sx={{
+                  display: "inline-flex",
+                  fontSize: ".97vw",
+                  fontWeight: "400",
+                  lineHeight: "1.18vw",
+                }}
+              >
+                You will recieve about{" "}
+                <Typography
+                  sx={{
+                    marginLeft: ".37vw",
+                    marginRight: ".37vw",
+                    fontSize: ".97vw",
+                    fontWeight: "700",
+                    lineHeight: "1.18vw",
+                  }}
+                >
+                  {" "}
+                  {receiveAmount.toString()} Sirs
+                </Typography>
+                for this deiposit
+              </Typography>
+            </Grid2>
+          </CardContent>
+          <CardActions sx={classes.cardAction}>
+            <Grid2 xs={1}>Slippage</Grid2>
+
+            <Grid2 xs={4} sx={classes.slippageComponent}>
+              <Slippage
+                asset={assets[receive].name}
+                value={slippage}
+                onChange={updateSlippage}
+                inverse={true}
+              />
+            </Grid2>
+
+            <Grid2 sx={{}} xs={6}>
+              <Wallet transaction={active} callback={transact}>
+                {"Add Liquidity"}
+              </Wallet>
+            </Grid2>
+          </CardActions>
+        </Card>
+      </Grid2>
+    </Grid2>
+  );
 };

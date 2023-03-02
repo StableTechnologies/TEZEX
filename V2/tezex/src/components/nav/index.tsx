@@ -1,2 +1,2 @@
-export * from './NavApp';
-export * from './NavHome';
+export * from "./NavApp";
+export * from "./NavHome";

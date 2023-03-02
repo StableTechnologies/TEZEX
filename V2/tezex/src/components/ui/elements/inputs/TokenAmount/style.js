@@ -1,6 +1,6 @@
 const style = {
-	textAndLogo : {
-		display: "flex",
-		justifyContent: "center",
-	}
-}
+  textAndLogo: {
+    display: "flex",
+    justifyContent: "center",
+  },
+};

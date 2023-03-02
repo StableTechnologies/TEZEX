@@ -3,18 +3,18 @@ import { styled } from "@mui/system";
 const useStyles = styled((theme) => ({
   root: {
     "& .MuiDrawer-paperAnchorRight": {
-       left: "auto",
-       right: "0",
-       top: "60px",
-       width: "284px",
-       height: "auto",
-       margin: "0 .5rem",
-       borderRadius: "4px",
-     },
+      left: "auto",
+      right: "0",
+      top: "60px",
+      width: "284px",
+      height: "auto",
+      margin: "0 .5rem",
+      borderRadius: "4px",
+    },
   },
   header: {
     display: "flex",
-    fontSize: "1.5vw"
+    fontSize: "1.5vw",
   },
   account: {
     padding: "0.6vw",
@@ -33,12 +33,12 @@ const useStyles = styled((theme) => ({
     fontWeight: "bold",
     backgroundColor: "white",
     width: "8vw",
-    '@media (max-width: 768px)': {
+    "@media (max-width: 768px)": {
       fontSize: "1rem",
     },
-    '@media (max-width: 600px)': {
+    "@media (max-width: 600px)": {
       fontSize: ".7rem",
-      width: "auto"
+      width: "auto",
     },
     "&:hover": {
       textDecoration: "underline",
@@ -50,10 +50,10 @@ const useStyles = styled((theme) => ({
 
   btn: {
     "&.Element": {
-    '@media (min-width: 1200px)': {
-      marginRight: "1.3rem",
-      marginLeft: "-2rem",
-    },
+      "@media (min-width: 1200px)": {
+        marginRight: "1.3rem",
+        marginLeft: "-2rem",
+      },
     },
   },
   nav: {
@@ -61,49 +61,51 @@ const useStyles = styled((theme) => ({
   },
   walletbutton: {
     "&.Element": {
-    background: "white",
-    width: "160px",
-    height: "40px",
-    marginRight: ".3rem",
-    marginLeft: ".3rem",
-    border: "1px solid black",
-    textTransform: "none",
-    fontSize: "16px",
-    '@media (max-width: 768px)': {
-      margin: ".2rem",
-      height: "35px",
+      background: "white",
+      width: "160px",
+      height: "40px",
+      marginRight: ".3rem",
+      marginLeft: ".3rem",
+      border: "1px solid black",
+      textTransform: "none",
+      fontSize: "16px",
+      "@media (max-width: 768px)": {
+        margin: ".2rem",
+        height: "35px",
+      },
+      "@media (max-width: 600px)": {
+        marginTop: ".5rem",
+        fontSize: "13px",
+        width: "150px",
+        height: "30px",
+      },
+      "@media (min-width: 1200px)": {
+        margin: "0 .9375rem",
+      },
     },
-    '@media (max-width: 600px)': {
-      marginTop: ".5rem",
-      fontSize: "13px",
-      width: "150px",
-      height: "30px",
-    },
-    '@media (min-width: 1200px)': {
-      margin: "0 .9375rem",
-    }
-  }
   },
   rightwalletbutton: {
     "&.Element": {
-      '@media (min-width: 1200px)': {
+      "@media (min-width: 1200px)": {
         marginRight: "0",
-        marginLeft: "1rem"
+        marginLeft: "1rem",
       },
-    }
+    },
   },
   btnContent: {
-    flexWrap: "nowrap"
+    flexWrap: "nowrap",
   },
   ethButton: {
     "&.Element": {
-      background:"linear-gradient(92.7deg, rgba(206, 143, 255, 0.4) 4.54%, #F9FEFF 98.49%)",
-    }
+      background:
+        "linear-gradient(92.7deg, rgba(206, 143, 255, 0.4) 4.54%, #F9FEFF 98.49%)",
+    },
   },
   tezButton: {
     "&.Element": {
-      background: "linear-gradient(92.04deg, rgba(171, 240, 255, 0.4) 4.41%, #F9FEFF 84.62%)",
-    }
+      background:
+        "linear-gradient(92.04deg, rgba(171, 240, 255, 0.4) 4.41%, #F9FEFF 84.62%)",
+    },
   },
   tezStyle: {
     "&.Element": {
@@ -113,7 +115,8 @@ const useStyles = styled((theme) => ({
       width: "284px",
       left: "1141px",
       top: "65px",
-      background: "linear-gradient(92.04deg, rgba(171, 240, 255, 0.4) 4.41%, #F9FEFF 84.62%)",
+      background:
+        "linear-gradient(92.04deg, rgba(171, 240, 255, 0.4) 4.41%, #F9FEFF 84.62%)",
     },
   },
 }));
