@@ -8,8 +8,6 @@ export interface Addresses {
 export interface NetworkInfo {
   network: NetworkType;
   tezosServer: string;
-  tezosServerForTaquito: string;
-  apiKey: string;
   addresses: Addresses;
 }
 
@@ -24,8 +22,6 @@ export interface INetwork {
 export const mainnet = {
   network: NetworkType.MAINNET,
   tezosServer: "https://mainnet.api.tez.ie",
-  tezosServerForTaquito: "",
-  apiKey: "ab682065-864a-4f11-bc77-0ef4e9493fa1",
   addresses: {
     sirs: {
       address: "KT1AafHA1C1vk959wvHWBispY9Y2f3fxBUUo",
