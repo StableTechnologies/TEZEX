@@ -1,12 +1,14 @@
 import { createContext } from "react";
 import { NetworkType } from "@airgap/beacon-sdk";
+import mainnet from '../config/network/mainnet.json';
 
-export interface Addresses {
-  sirs: { address: string };
-  tzbtc: { address: string; dex: { sirius: string } };
+export interface Address {
+            name:  string,
+	    address: string,
 }
+export type Addresses = Address[];
+
 export interface NetworkInfo {
-  network: NetworkType;
   tezosServer: string;
   addresses: Addresses;
 }
@@ -17,29 +19,26 @@ export type NetworkMap = {
 export interface INetwork {
   selectedNetwork: NetworkType;
   networks: NetworkMap;
+	getAddress: (name: string) => Address;
 }
-
-export const mainnet = {
-  network: NetworkType.MAINNET,
-  tezosServer: "https://mainnet.api.tez.ie",
-  addresses: {
-    sirs: {
-      address: "KT1AafHA1C1vk959wvHWBispY9Y2f3fxBUUo",
-    },
-    tzbtc: {
-      address: "KT1PWx2mnDueood7fEmfbBDKx1D9BAnnXitn",
-      dex: { sirius: "KT1TxqZ8QtKvLu3V3JH7Gx58n7Co8pgtpQU5" },
-    },
-  },
-};
 
 export const networks: NetworkMap = {
   [NetworkType.MAINNET as string]: mainnet,
 };
 
+function getAddress(name: string): Address {
+   const address =	mainnet.addresses.find( address => address.name === name)
+	if(address){
+
+		return address as Address
+	} else throw Error(name + " not found in config");
+}
+
 export const networkDefaults: INetwork = {
   selectedNetwork: NetworkType.MAINNET,
   networks,
+	getAddress
+
 };
 
 export const NetworkContext = createContext<INetwork>(networkDefaults);
