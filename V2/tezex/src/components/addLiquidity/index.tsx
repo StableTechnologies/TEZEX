@@ -1,4 +1,4 @@
-import { FC, useState, useEffect, useCallback } from "react";
+import React, { FC, useState, useEffect, useCallback } from "react";
 import xtzTzbtcIcon from "../../assets/xtzTzbtcIcon.svg";
 import sirsIcon from "../../assets/sirsIcon.svg";
 import rightArrow from "../../assets/rightArrow.svg";
@@ -16,9 +16,9 @@ import { BigNumber } from "bignumber.js";
 import { TokenInput, Slippage } from "../../components/ui/elements/inputs";
 
 import { useWalletConnected } from "../../hooks/wallet";
-import { getAsset } from "../../constants";
 import { useSession } from "../../hooks/session";
 import { useWalletOps, WalletOps } from "../../hooks/wallet";
+import { useNetwork } from "../../hooks/network";
 
 import Box from "@mui/material/Box";
 import Grid2 from "@mui/material/Unstable_Grid2";
@@ -93,7 +93,8 @@ const classes = {
 export interface IAddLiquidity {
   children: null;
 }
-export const AddLiquidity: FC = (props) => {
+export const AddLiquidity: FC = () => {
+  const network = useNetwork();
   const walletOperations: WalletOps = useWalletOps(
     TransactingComponent.ADD_LIQUIDITY
   );
@@ -116,9 +117,9 @@ export const AddLiquidity: FC = (props) => {
 
   const [balances, setBalances] = useState<[string, string]>(["", ""]);
   const [assets, setAssets] = useState<[Asset, Asset, Asset]>([
-    getAsset(TokenKind.XTZ),
-    getAsset(TokenKind.TzBTC),
-    getAsset(TokenKind.Sirius),
+    network.getAsset(TokenKind.XTZ),
+    network.getAsset(TokenKind.TzBTC),
+    network.getAsset(TokenKind.Sirs),
   ]);
   const [swapingFields, setSwapingFields] = useState<boolean>(true);
   const session = useSession();
@@ -362,7 +363,7 @@ export const AddLiquidity: FC = (props) => {
             >
               <Grid2 xs={6} sx={classes.input}>
                 <TokenInput
-                  assetName={assets[send1].name}
+                  asset={assets[send1]}
                   onChange={updateSend}
                   value={sendAmount.toString()}
                   balance={loadingBalances ? "loading.." : balances[0]}
@@ -382,7 +383,7 @@ export const AddLiquidity: FC = (props) => {
 
               <Grid2 xs={6} sx={classes.input}>
                 <TokenInput
-                  assetName={assets[send2].name}
+                  asset={assets[send2]}
                   value={sendAmount2.toString()}
                   readOnly={true}
                   balance={loadingBalances ? "loading.." : balances[1]}

@@ -1,4 +1,4 @@
-import { FC, useState, useEffect, useCallback } from "react";
+import React, { FC, useState, useEffect, useCallback } from "react";
 
 import {
   Transaction,
@@ -11,10 +11,10 @@ import { BigNumber } from "bignumber.js";
 import { TokenInput, Slippage } from "../../components/ui/elements/inputs";
 import { Wallet } from "../wallet";
 import { useWalletConnected } from "../../hooks/wallet";
-import { getAsset } from "../../constants";
 import { useSession } from "../../hooks/session";
 import { useWalletOps, WalletOps } from "../../hooks/wallet";
 import { SwapUpDownToggle } from "../../components/ui/elements/Toggles";
+import { useNetwork } from "../../hooks/network";
 
 import Box from "@mui/material/Box";
 import Grid2 from "@mui/material/Unstable_Grid2";
@@ -105,7 +105,8 @@ export interface ISwapToken {
   children: null;
 }
 
-export const Swap: FC = (props) => {
+export const Swap: FC = () => {
+  const network = useNetwork();
   const walletOperations: WalletOps = useWalletOps(TransactingComponent.SWAP);
   const isWalletConnected = useWalletConnected();
 
@@ -121,8 +122,8 @@ export const Swap: FC = (props) => {
   const receive = 1;
 
   const [assets, setAssets] = useState<[Asset, Asset]>([
-    getAsset(TokenKind.XTZ),
-    getAsset(TokenKind.TzBTC),
+    network.getAsset(TokenKind.XTZ),
+    network.getAsset(TokenKind.TzBTC),
   ]);
 
   const [balances, setBalances] = useState<[string, string]>(["", ""]);
@@ -304,7 +305,7 @@ export const Swap: FC = (props) => {
             <CardContent sx={classes.cardcontent}>
               <Grid2 xs={12} sx={classes.input1}>
                 <TokenInput
-                  assetName={assets[send].name}
+                  asset={assets[send]}
                   onChange={updateSend}
                   value={sendAmount.toString()}
                   balance={loadingBalances ? "loading.." : balances[0]}
@@ -326,7 +327,7 @@ export const Swap: FC = (props) => {
 
               <Grid2 xs={12} sx={classes.input2}>
                 <TokenInput
-                  assetName={assets[receive].name}
+                  asset={assets[receive]}
                   value={receiveAmount.toString()}
                   readOnly={true}
                   balance={loadingBalances ? "loading.." : balances[1]}

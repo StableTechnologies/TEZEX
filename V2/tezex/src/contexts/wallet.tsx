@@ -138,6 +138,8 @@ export function WalletProvider(props: IWalletProvider) {
   // eslint-disable-next-line
   const [transactions, setTransactions] = useImmer<Transaction[]>([]);
 
+  const network = useNetwork();
+
   const [swapTransaction, setSwapTransaction] = useImmer<
     Transaction | undefined
   >(undefined);
@@ -174,6 +176,7 @@ export function WalletProvider(props: IWalletProvider) {
           const t: Transaction = await processTransaction(
             transaction,
             address,
+            network.info.dex.address,
             toolkit
           )
             .then(() => {
@@ -271,8 +274,6 @@ export function WalletProvider(props: IWalletProvider) {
       swapTransaction,
     ]
   );
-
-  const network = useNetwork();
 
   const initialiseTransaction = useCallback(
     (

@@ -1,4 +1,4 @@
-import { FC, useState, useEffect, useCallback } from "react";
+import React, { FC, useState, useEffect, useCallback } from "react";
 
 import {
   Transaction,
@@ -11,8 +11,8 @@ import { BigNumber } from "bignumber.js";
 import { TokenInput } from "../../components/ui/elements/inputs";
 import { Wallet } from "../wallet";
 import { useWalletConnected } from "../../hooks/wallet";
-import { getAsset } from "../../constants";
 import { useSession } from "../../hooks/session";
+import { useNetwork } from "../../hooks/network";
 import { useWalletOps, WalletOps } from "../../hooks/wallet";
 
 import Box from "@mui/material/Box";
@@ -97,7 +97,8 @@ export interface ISwapToken {
   children: null;
 }
 
-export const RemoveLiquidity: FC = (props) => {
+export const RemoveLiquidity: FC = () => {
+  const network = useNetwork();
   const walletOperations: WalletOps = useWalletOps(
     TransactingComponent.REMOVE_LIQUIDITY
   );
@@ -117,9 +118,9 @@ export const RemoveLiquidity: FC = (props) => {
   const receive2 = 2;
 
   const [assets, setAssets] = useState<[Asset, Asset, Asset]>([
-    getAsset(TokenKind.Sirius),
-    getAsset(TokenKind.XTZ),
-    getAsset(TokenKind.TzBTC),
+    network.getAsset(TokenKind.Sirs),
+    network.getAsset(TokenKind.XTZ),
+    network.getAsset(TokenKind.TzBTC),
   ]);
   const session = useSession();
 
@@ -254,7 +255,7 @@ export const RemoveLiquidity: FC = (props) => {
             >
               <Box sx={classes.input1}>
                 <TokenInput
-                  assetName={assets[send].name}
+                  asset={assets[send]}
                   readOnly={useMax}
                   onChange={updateSend}
                   value={sendAmount.toString()}

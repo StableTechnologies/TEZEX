@@ -1,6 +1,5 @@
 import { BigNumber } from "bignumber.js";
 
-import { getDex } from "../constants";
 import { Transaction, TokenKind, TransactingComponent } from "../types/general";
 
 import { TezosToolkit } from "@taquito/taquito";
@@ -15,10 +14,9 @@ import {
 export async function processTransaction(
   transaction: Transaction,
   userAddress: string,
+  dex: string,
   toolkit: TezosToolkit
 ) {
-  const dex = getDex(transaction);
-
   switch (transaction.component) {
     case TransactingComponent.SWAP:
       return await swapTransaction(transaction, userAddress, dex, toolkit);

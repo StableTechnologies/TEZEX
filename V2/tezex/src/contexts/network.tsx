@@ -1,16 +1,21 @@
 import { createContext } from "react";
 import { NetworkType } from "@airgap/beacon-sdk";
 import mainnet from "../config/network/mainnet.json";
+import { Asset } from "../types/general";
 
 export interface Address {
   name: string;
   address: string;
 }
-export type Addresses = Address[];
+export type Assets = Asset[];
 
 export interface NetworkInfo {
   tezosServer: string;
-  addresses: Addresses;
+  dex: {
+    name: string;
+    address: string;
+  };
+  assets: Assets;
 }
 
 export type NetworkMap = {
@@ -19,24 +24,23 @@ export type NetworkMap = {
 export interface INetwork {
   network: NetworkType;
   info: NetworkInfo;
-  getAddress: (name: string) => Address;
+  getAsset: (name: string) => Asset;
 }
-
 export const networks: NetworkMap = {
-  [NetworkType.MAINNET as string]: mainnet,
+  [NetworkType.MAINNET as string]: mainnet as NetworkInfo,
 };
 
-function getAddress(name: string): Address {
-  const address = mainnet.addresses.find((address) => address.name === name);
-  if (address) {
-    return address as Address;
+function getAsset(name: string): Asset {
+  const asset = mainnet.assets.find((address) => address.name === name);
+  if (asset) {
+    return asset as Asset;
   } else throw Error(name + " not found in config");
 }
 
 export const networkDefaults: INetwork = {
   network: NetworkType.MAINNET,
-  info: mainnet,
-  getAddress,
+  info: mainnet as NetworkInfo,
+  getAsset,
 };
 
 export const NetworkContext = createContext<INetwork>(networkDefaults);

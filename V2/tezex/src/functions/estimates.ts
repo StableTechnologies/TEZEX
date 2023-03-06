@@ -1,5 +1,4 @@
 import { BigNumber } from "bignumber.js";
-import { getDex } from "../constants";
 
 import { lqtOutput } from "./liquidityBaking";
 import {
@@ -22,10 +21,10 @@ import {
 
 export async function estimate(
   transaction: Transaction,
+  dex: string,
   toolkit: TezosToolkit
 ): Promise<Transaction> {
   const { sendAmount, sendAsset, receiveAsset } = transaction;
-  const dex = getDex(transaction);
   switch (transaction.component) {
     case TransactingComponent.SWAP:
       return await estimateTokensReceivedSwap(

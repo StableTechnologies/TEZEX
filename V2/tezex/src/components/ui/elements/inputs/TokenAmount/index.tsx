@@ -1,7 +1,6 @@
-import { memo, FC, useCallback, useState, useEffect } from "react";
+import React, { memo, FC, useCallback, useState, useEffect } from "react";
 
-import { TokenKind, Asset } from "../../../../../types/general";
-import { getAsset } from "../../../../../constants";
+import { Asset } from "../../../../../types/general";
 
 import Grid2 from "@mui/material/Unstable_Grid2"; // Grid version 2
 //import KeyboardArrowDownIcon from '@mui/material/icons/KeyboardArrowDown';
@@ -16,7 +15,7 @@ import liquiditySwapIcon from "../../../../../assets/liquiditySwapIcon.svg";
 
 import { WalletConnected } from "../../../../session/WalletConnected";
 export interface ITokenAmountInput {
-  assetName: TokenKind;
+  asset: Asset;
   onChange?: (value: string) => void;
   balance?: string;
   value: string;
@@ -30,7 +29,6 @@ export interface ITokenAmountInput {
 
 const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
   const [inputString, setInputString] = useState<string>(props.value);
-  const asset: Asset = getAsset(props.assetName);
   const onChange = props.onChange;
   const value = props.value;
   const loading = props.loading;
@@ -111,7 +109,7 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
                                 marginRight: "1vw",
                                 height: "1.61vw",
                               }}
-                              src={asset.logo}
+                              src={props.asset.logo}
                               alt="logo"
                             />
                           </div>
@@ -123,7 +121,7 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
                                 marginRight: "1vw",
                               }}
                             >
-                              {asset.label}
+                              {props.asset.label}
                             </Typography>
                           </div>
                         </Box>
@@ -154,7 +152,7 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
                     textAlign: "right",
                   }}
                 >
-                  balance: {props.balance} {props.assetName}
+                  balance: {props.balance} {props.asset.name}
                 </Typography>
               </WalletConnected>
             </Grid2>
@@ -225,7 +223,7 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
                                 marginRight: "1vw",
                                 height: "1.61vw",
                               }}
-                              src={asset.logo}
+                              src={props.asset.logo}
                               alt="logo"
                             />
                           </div>
@@ -236,7 +234,7 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
                               fontSize: "1.25vw",
                             }}
                           >
-                            {asset.label}
+                            {props.asset.label}
                           </Typography>
                         </Box>
                       </Box>
@@ -307,7 +305,7 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
                       textAlign: "right",
                     }}
                   >
-                    Balance: {props.balance} {props.assetName}
+                    Balance: {props.balance} {props.asset.name}
                   </Typography>
                 </Grid2>
               </WalletConnected>

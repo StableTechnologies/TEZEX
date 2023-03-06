@@ -5,7 +5,7 @@ import { NetworkType } from "@airgap/beacon-sdk";
 export enum TokenKind {
   XTZ = "XTZ",
   TzBTC = "TzBTC",
-  Sirius = "Sirius",
+  Sirs = "Sirs",
 }
 
 export interface Balance {
@@ -18,6 +18,7 @@ export interface Asset {
   label: string;
   logo: string;
   address: string;
+  decimals: number;
 }
 
 export enum TransactionStatus {

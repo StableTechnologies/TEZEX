@@ -186,7 +186,11 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
             }
           };
 
-          await estimate(updatedTransaction(), toolkit)
+          await estimate(
+            updatedTransaction(),
+            network.info.dex.address,
+            toolkit
+          )
             .then((_transaction: Transaction) => {
               wallet.updateAmount(
                 _transaction.component,

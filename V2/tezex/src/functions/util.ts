@@ -26,11 +26,11 @@ export const balanceBuilder = (
   isMantissa?: boolean
 ): Balance => {
   const decimal: BigNumber = isMantissa
-    ? tokenMantissaToDecimal(value, asset.name)
+    ? tokenMantissaToDecimal(value, asset)
     : new BigNumber(value);
   const mantissa: BigNumber = isMantissa
     ? new BigNumber(value)
-    : tokenDecimalToMantissa(value, asset.name);
+    : tokenDecimalToMantissa(value, asset);
   const geq = (balance: Balance): boolean => {
     return mantissa.isGreaterThanOrEqualTo(balance.mantissa);
   };
