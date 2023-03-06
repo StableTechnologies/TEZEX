@@ -40,7 +40,7 @@ const _calcTokenToXtz = (p: {
   tokenPool: BigNumber | number;
 }): BigNumber | null => {
   const { tokenIn, xtzPool: _xtzPool, tokenPool } = p;
-  let xtzPool = creditSubsidy(_xtzPool);
+  const xtzPool = creditSubsidy(_xtzPool);
   let tokenIn_ = new BigNumber(0);
   let xtzPool_ = new BigNumber(0);
   let tokenPool_ = new BigNumber(0);
@@ -58,10 +58,10 @@ const _calcTokenToXtz = (p: {
   ) {
     // Includes 0.1% fee and 0.1% burn calculated separatedly:
     // 999/1000 * 999/1000 = 998001/1000000
-    let numerator = new BigNumber(tokenIn)
+    const numerator = new BigNumber(tokenIn)
       .times(new BigNumber(xtzPool))
       .times(new BigNumber(998001));
-    let denominator = new BigNumber(tokenPool)
+    const denominator = new BigNumber(tokenPool)
       .times(new BigNumber(1000000))
       .plus(new BigNumber(tokenIn).times(new BigNumber(999000)));
     return numerator.dividedBy(denominator);
@@ -75,9 +75,9 @@ const _calcXtzToToken = (p: {
   xtzPool: BigNumber | number;
   tokenPool: BigNumber | number;
 }): BigNumber | null => {
-  let { xtzIn, xtzPool: _xtzPool, tokenPool } = p;
+  const { xtzIn, xtzPool: _xtzPool, tokenPool } = p;
 
-  let xtzPool = creditSubsidy(_xtzPool);
+  const xtzPool = creditSubsidy(_xtzPool);
   let xtzIn_ = new BigNumber(0);
   let xtzPool_ = new BigNumber(0);
   let tokenPool_ = new BigNumber(0);
@@ -110,6 +110,7 @@ export async function getStorage(
   contractAddress: string
 ) {
   const contract = await tezosToolkit.wallet.at(contractAddress);
+  // eslint-disable-next-line
   const storage = await contract.storage<any>();
   return storage;
 }
@@ -119,6 +120,7 @@ export async function getLbContractStorage(
   lbContractAddress: string
 ) {
   const contract = await tezosToolkit.wallet.at(lbContractAddress);
+  // eslint-disable-next-line
   const storage = await contract.storage<any>();
 
   if (storage) {
@@ -170,20 +172,20 @@ export async function tokenToXtz(
     const lbContract = await toolkit.wallet.at(lbContractAddress);
     // the deadline value is arbitrary and can be changed
     const tzBtcContract = await toolkit.wallet.at(tzbtcContractAddress);
-    let approve = tzBtcContract.methods.approve(
+    const approve = tzBtcContract.methods.approve(
       lbContractAddress,
       tokenMantissa
     );
-    let minXtzBought = removeSlippage(slippage, xtzAmountInMutez);
-    let transfer = lbContract.methods.tokenToXtz(
+    const minXtzBought = removeSlippage(slippage, xtzAmountInMutez);
+    const transfer = lbContract.methods.tokenToXtz(
       userAddress,
       tokenMantissa.integerValue(BigNumber.ROUND_DOWN),
       minXtzBought,
       new Date(Date.now() + 12000000).toISOString()
     );
-    let est = async () => {
+    const est = async () => {
       try {
-        let estimate = await toolkit.estimate.batch([
+        const estimate = await toolkit.estimate.batch([
           {
             kind: OpKind.TRANSACTION,
             ...approve.toTransferParams({}),
@@ -199,10 +201,10 @@ export async function tokenToXtz(
         console.log(`failed in estimating tokenToXtz ${JSON.stringify(err)}}`);
       }
     };
-    let estimate = await est();
+    const estimate = await est();
 
     if (estimate) {
-      let batch = toolkit.wallet.batch().with([
+      const batch = toolkit.wallet.batch().with([
         {
           kind: OpKind.TRANSACTION,
           ...approve.toTransferParams({
@@ -221,7 +223,7 @@ export async function tokenToXtz(
         },
       ]);
 
-      let batchOp = await batch.send();
+      const batchOp = await batch.send();
       await batchOp.confirmation();
     }
   } catch (err) {
@@ -382,9 +384,9 @@ export async function buyLiquidityShares(
       maxTokensSold
     );
 
-    let est = async () => {
+    const est = async () => {
       try {
-        let estimate = await toolkit.estimate.batch([
+        const estimate = await toolkit.estimate.batch([
           {
             kind: OpKind.TRANSACTION,
             ...approve0.toTransferParams(),
@@ -405,10 +407,10 @@ export async function buyLiquidityShares(
         console.log(`failed in estimating tokenToXtz ${JSON.stringify(err)}}`);
       }
     };
-    let estimate = await est();
+    const estimate = await est();
 
     if (estimate) {
-      let batch = toolkit.wallet.batch().with([
+      const batch = toolkit.wallet.batch().with([
         {
           kind: OpKind.TRANSACTION,
           ...approve0.toTransferParams({
@@ -438,10 +440,12 @@ export async function buyLiquidityShares(
         },
       ]);
 
-      let batchOp = await batch.send();
+      const batchOp = await batch.send();
       await batchOp.confirmation();
     }
-  } catch (err) {}
+  } catch (err) {
+    console.table(`Error: ${JSON.stringify(err, null, 2)}`);
+  }
 }
 
 export function _calcLqtOutput(

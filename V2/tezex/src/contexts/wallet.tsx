@@ -158,8 +158,7 @@ export function WalletProvider(props: IWalletProvider) {
     (component: TransactingComponent): Transaction | undefined => {
       switch (component) {
         case TransactingComponent.SWAP:
-          const t = swapTransaction;
-          return t;
+          return swapTransaction;
         case TransactingComponent.ADD_LIQUIDITY:
           return addLiquidityTransaction;
         case TransactingComponent.REMOVE_LIQUIDITY:
@@ -337,7 +336,8 @@ export function WalletProvider(props: IWalletProvider) {
               .then((balance: Balance) => {
                 return [balance] as Amount;
               })
-              .catch((_) => {
+              .catch((e) => {
+                console.log(e);
                 return null;
               });
           case 2:
@@ -351,7 +351,8 @@ export function WalletProvider(props: IWalletProvider) {
                 };
                 return withSecondAsset();
               })
-              .catch((_) => {
+              .catch((e) => {
+                console.log(e);
                 return null;
               });
         }
@@ -374,7 +375,7 @@ export function WalletProvider(props: IWalletProvider) {
         return assetBalance.greaterOrEqualTo(required);
       } else throw Error("Amount indexs don't match / align");
     });
-    const hasSufficientBalance: boolean = !checks.includes(false);
+    const hasSufficientBalance = !checks.includes(false);
     if (hasSufficientBalance) {
       return TransactionStatus.SUFFICIENT_BALANCE;
     } else {
@@ -387,8 +388,8 @@ export function WalletProvider(props: IWalletProvider) {
       transaction: Transaction,
       checkBalance?: boolean
     ): Promise<Transaction> => {
-      var userBalanceSend: Amount | undefined;
-      var balanceStatus: TransactionStatus | undefined;
+      let userBalanceSend: Amount | undefined;
+      let balanceStatus: TransactionStatus | undefined;
       const updated: Transaction = await getBalanceOfAssets(
         transaction.sendAsset
       )
@@ -430,9 +431,9 @@ export function WalletProvider(props: IWalletProvider) {
     async (
       component: TransactingComponent,
       transaction: Transaction,
-      checkBalances: boolean = true
+      checkBalances = true
     ): Promise<boolean> => {
-      var updated = false;
+      let updated = false;
 
       await getBalances(transaction, checkBalances)
         .then((_transaction: Transaction) => {
@@ -483,6 +484,7 @@ export function WalletProvider(props: IWalletProvider) {
           updated = true;
         })
         .catch((e) => {
+          console.log(e);
           updated = false;
         });
       return updated;

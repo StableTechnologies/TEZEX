@@ -139,7 +139,7 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
 
   const updateAmount = useCallback(
     async (sendAmount?: string, slippage?: string): Promise<boolean> => {
-      var updated = false;
+      const updated = false;
       if (
         transaction &&
         transaction.transactionStatus !== TransactionStatus.PENDING &&
@@ -150,7 +150,7 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
         if (wallet && sendAmount) {
           wallet.updateStatus(component, TransactionStatus.MODIFIED);
 
-          const toolkit = new TezosToolkit(network.tezosServer);
+          const toolkit = new TezosToolkit(network.info.tezosServer);
           const updatedTransaction = (): Transaction => {
             switch (component) {
               case TransactingComponent.SWAP:

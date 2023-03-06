@@ -1,9 +1,7 @@
 import { useContext } from "react";
-import { NetworkContext, NetworkInfo } from "../contexts/network";
+import { NetworkContext, INetwork } from "../contexts/network";
 
-export function useNetwork(): NetworkInfo {
+export function useNetwork(): INetwork {
   const network = useContext(NetworkContext);
-  const netInfo: NetworkInfo =
-    network.networks[network.selectedNetwork as string];
-  return netInfo;
+  return network;
 }

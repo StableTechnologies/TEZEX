@@ -1,10 +1,10 @@
 import { createContext } from "react";
 import { NetworkType } from "@airgap/beacon-sdk";
-import mainnet from '../config/network/mainnet.json';
+import mainnet from "../config/network/mainnet.json";
 
 export interface Address {
-            name:  string,
-	    address: string,
+  name: string;
+  address: string;
 }
 export type Addresses = Address[];
 
@@ -17,9 +17,9 @@ export type NetworkMap = {
   [network: string]: NetworkInfo;
 };
 export interface INetwork {
-  selectedNetwork: NetworkType;
-  networks: NetworkMap;
-	getAddress: (name: string) => Address;
+  network: NetworkType;
+  info: NetworkInfo;
+  getAddress: (name: string) => Address;
 }
 
 export const networks: NetworkMap = {
@@ -27,18 +27,16 @@ export const networks: NetworkMap = {
 };
 
 function getAddress(name: string): Address {
-   const address =	mainnet.addresses.find( address => address.name === name)
-	if(address){
-
-		return address as Address
-	} else throw Error(name + " not found in config");
+  const address = mainnet.addresses.find((address) => address.name === name);
+  if (address) {
+    return address as Address;
+  } else throw Error(name + " not found in config");
 }
 
 export const networkDefaults: INetwork = {
-  selectedNetwork: NetworkType.MAINNET,
-  networks,
-	getAddress
-
+  network: NetworkType.MAINNET,
+  info: mainnet,
+  getAddress,
 };
 
 export const NetworkContext = createContext<INetwork>(networkDefaults);

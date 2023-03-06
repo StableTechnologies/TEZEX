@@ -1,5 +1,5 @@
 import { WalletInfo } from "../contexts/wallet";
-import { NetworkInfo } from "../contexts/network";
+import { INetwork } from "../contexts/network";
 import { BeaconWallet } from "@taquito/beacon-wallet";
 import { TezosToolkit, MichelCodecPacker } from "@taquito/taquito";
 import { BigNumber } from "bignumber.js";
@@ -16,53 +16,24 @@ export async function getBalance(
   asset: Asset
 ): Promise<Balance> {
   const getBalance = async () => {
-    switch (asset.name) {
-      case TokenKind.XTZ:
-        return await toolkit.tz.getBalance(address);
-      default:
-        const contract = await toolkit.wallet.at(asset.address);
-        return await contract.views.getBalance(address).read();
+    if (asset.name === TokenKind.XTZ) {
+      return await toolkit.tz.getBalance(address);
+    } else {
+      const contract = await toolkit.wallet.at(asset.address);
+      return await contract.views.getBalance(address).read();
     }
   };
 
   const balance = await getBalance();
   return balanceBuilder(balance, asset, true);
 }
-export async function _getBalance(
-  toolkit: TezosToolkit,
-  address: string,
-  netInfo: NetworkInfo,
-  asset: Asset
-): Promise<Balance> {
-  const getBalance = async () => {
-    switch (asset.name) {
-      case TokenKind.XTZ:
-        return await toolkit.tz.getBalance(address);
-      case TokenKind.TzBTC:
-        const tzBtcContract = await toolkit.wallet.at(
-          netInfo.addresses.tzbtc.address
-        );
-        return await tzBtcContract.views.getBalance(address).read();
-      case TokenKind.Sirius:
-        const siriusContract = await toolkit.wallet.at(
-          netInfo.addresses.sirs.address
-        );
-        return await siriusContract.views.getBalance(address).read();
-    }
-  };
-
-  const balance = await getBalance();
-
-  return balanceBuilder(balance, asset);
-}
 
 export async function hasSufficientBalance(
   minimumBalance: BigNumber,
   toolkit: TezosToolkit,
   address: string,
-  netInfo: NetworkInfo,
   asset: Asset,
-  mantissa: boolean = false
+  mantissa = false
 ): Promise<boolean> {
   const balance = await getBalance(toolkit, address, asset);
   if (!mantissa) {
@@ -74,15 +45,15 @@ export async function hasSufficientBalance(
 
 export default async function connectWallet(
   walletInfo: WalletInfo,
-  network: NetworkInfo
+  network: INetwork
 ) {
   const beaconWallet = new BeaconWallet({
     name: "Tezex",
     preferredNetwork: network.network,
   });
 
-  const tezos = new TezosToolkit(network.tezosServer);
-  var err = false;
+  const tezos = new TezosToolkit(network.info.tezosServer);
+  let err = false;
   try {
     await beaconWallet.requestPermissions({
       network: { type: network.network },
