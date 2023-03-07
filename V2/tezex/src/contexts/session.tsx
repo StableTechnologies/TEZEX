@@ -1,11 +1,14 @@
-import { createContext, useCallback, useState } from "react";
+import React, { createContext, useCallback, useState } from "react";
 import { WalletProvider } from "./wallet";
 import { NetworkContext, networkDefaults } from "./network";
 
 import { TransactingComponent } from "../types/general";
+const emptyLoad = (_: TransactingComponent) => {
+  null;
+};
 
 export const SessionContext = createContext<SessionInfo>({
-  loadComponent: (_) => {},
+  loadComponent: emptyLoad,
   activeComponent: null,
 });
 

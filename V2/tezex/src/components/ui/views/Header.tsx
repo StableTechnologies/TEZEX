@@ -1,4 +1,4 @@
-import { FC } from "react";
+import React, { FC } from "react";
 import { Wallet } from "../../wallet/Wallet";
 import { NavApp } from "../../nav";
 

@@ -1,4 +1,4 @@
-import { memo, FC, useCallback, useState, useEffect } from "react";
+import React, { memo, FC, useCallback, useState, useEffect } from "react";
 import { BigNumber } from "bignumber.js";
 
 import { TokenKind } from "../../../../types/general";
@@ -108,7 +108,7 @@ const SlippageInput: FC<ISlippage> = (props) => {
     amount: number;
   }
 
-  function SlippageTab(props: SlippageTabProps, input?: boolean) {
+  function SlippageTab(p: SlippageTabProps) {
     const classes = {
       "&.MuiButton-root.Mui-disabled": {
         backgroundColor: "transparent", //'#E3F7FF',//'palette.action.selected' ,
@@ -178,26 +178,26 @@ const SlippageInput: FC<ISlippage> = (props) => {
     };
 
     const ButtonOrInput = () => {
-      if (!(props.id === "input")) {
+      if (!(p.id === "input")) {
         return (
           <Button
-            disabled={selectedId !== props.id}
+            disabled={selectedId !== p.id}
             href=""
             sx={classes}
             onClick={(
               event: React.MouseEvent<HTMLAnchorElement, MouseEvent>
             ) => {
               event.preventDefault();
-              setSelectedId(props.id);
-              setInput(props.amount.toString());
+              setSelectedId(p.id);
+              setInput(p.amount.toString());
             }}
-            {...props}
+            {...p}
           >
-            {props.amount.toString()}%
+            {p.amount.toString()}%
           </Button>
         );
       } else {
-        return <SlippageInput disabled={selectedId !== props.id} />;
+        return <SlippageInput disabled={selectedId !== p.id} />;
       }
     };
 
@@ -205,8 +205,8 @@ const SlippageInput: FC<ISlippage> = (props) => {
       <Box
         onClick={(event) => {
           event.preventDefault();
-          setSelectedId(props.id);
-          setInput(props.amount.toString());
+          setSelectedId(p.id);
+          setInput(p.amount.toString());
         }}
       >
         <ButtonOrInput />

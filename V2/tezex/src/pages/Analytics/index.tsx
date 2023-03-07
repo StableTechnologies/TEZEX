@@ -1,4 +1,4 @@
-import { FC } from "react";
+import React, { FC } from "react";
 
 export const Analytics: FC = (props) => {
   return <div></div>;

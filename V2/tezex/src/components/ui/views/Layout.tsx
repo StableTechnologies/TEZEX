@@ -1,4 +1,4 @@
-import { FC } from "react";
+import React, { FC } from "react";
 import { Header } from "./Header";
 import { MainWindow } from "./MainWindow";
 import Box from "@mui/material/Box";

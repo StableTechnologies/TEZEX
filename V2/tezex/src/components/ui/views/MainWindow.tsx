@@ -1,4 +1,4 @@
-import { FC } from "react";
+import React, { FC } from "react";
 import { Box } from "@mui/system";
 
 export interface IMainWindow {

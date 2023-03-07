@@ -15,8 +15,6 @@ declare module "@mui/material/styles" {
   interface SimplePaletteColorOptions {
     darker?: string;
   }
-
-  interface ThemeOptions {}
 }
 
 //const { palette } = createTheme();

@@ -1,4 +1,4 @@
-import { FC, useEffect, useCallback, useState } from "react";
+import React, { FC, useEffect, useCallback, useState } from "react";
 import connectWallet from "../../functions/beacon";
 import { useWallet } from "../../hooks/wallet";
 import { useNetwork } from "../../hooks/network";

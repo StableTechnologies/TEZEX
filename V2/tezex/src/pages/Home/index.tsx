@@ -1,4 +1,4 @@
-import { FC } from "react";
+import React, { FC } from "react";
 
 import { NavHome } from "../../components/nav";
 import { Swap } from "../../components/swap";
