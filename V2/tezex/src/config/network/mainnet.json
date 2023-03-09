@@ -21,7 +21,7 @@
     },
     {
       "name": "TzBTC",
-      "label": "",
+      "label": "TzBTC",
       "logo": "../assets/tzbtclogo.svg",
       "address": "KT1PWx2mnDueood7fEmfbBDKx1D9BAnnXitn",
       "decimals": 8
