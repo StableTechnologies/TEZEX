@@ -1,5 +1,5 @@
 import React, { FC } from "react";
 
-export const Analytics: FC = (props) => {
+export const Analytics: FC = () => {
   return <div></div>;
 };

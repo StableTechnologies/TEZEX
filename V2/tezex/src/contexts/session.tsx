@@ -3,12 +3,12 @@ import { WalletProvider } from "./wallet";
 import { NetworkContext, networkDefaults } from "./network";
 
 import { TransactingComponent } from "../types/general";
-const emptyLoad = (_: TransactingComponent) => {
-  null;
-};
 
 export const SessionContext = createContext<SessionInfo>({
-  loadComponent: emptyLoad,
+  loadComponent: (_: TransactingComponent) => {
+    _;
+    null;
+  },
   activeComponent: null,
 });
 

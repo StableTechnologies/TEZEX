@@ -165,7 +165,7 @@ export const Wallet: FC<IWallet> = (props) => {
     }
   };
 
-  const WalletVariantDisconnected: FC = (_prop) => {
+  const WalletVariantDisconnected: FC = () => {
     if (props.variant && props.variant === "header") {
       return (
         <Button
@@ -184,7 +184,7 @@ export const Wallet: FC<IWallet> = (props) => {
       );
     }
   };
-  const WalletVariantConnected: FC = (_prop) => {
+  const WalletVariantConnected: FC = () => {
     if (props.variant && props.variant === "header") {
       return (
         <Button onClick={disconnect}>

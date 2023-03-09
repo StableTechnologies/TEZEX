@@ -317,21 +317,11 @@ export async function estimateShares(
   return shares;
   //else return new BigNumber(0);
 }
-export function _estimateShares(
-  xtzAmountInMutez: BigNumber,
-  tokenMantissa: BigNumber,
-  dexStorage: any
-) {
-  if (xtzAmountInMutez.eq(0)) return new BigNumber(0);
-  const sharesFromXtz = estimateSharesFromXtz(xtzAmountInMutez, dexStorage);
-  const sharesFromToken = estimateSharesFromToken(tokenMantissa, dexStorage);
-  const shares = BigNumber.min(sharesFromXtz, sharesFromToken);
-  return shares;
-}
 
 export function estimateSharesFromXtz(
   xtzAmountInMutez: BigNumber,
-  dexStorage: any
+  // eslint-disable-next-line
+  dexStorage: any //TODO : any to explicit type
 ) {
   return xtzAmountInMutez
     .integerValue(BigNumber.ROUND_DOWN)
@@ -342,7 +332,8 @@ export function estimateSharesFromXtz(
 
 export function estimateSharesFromToken(
   tokenMantissa: BigNumber,
-  dexStorage: any
+  // eslint-disable-next-line
+  dexStorage: any //TODO : any to explicit type
 ) {
   return tokenMantissa
     .integerValue(BigNumber.ROUND_DOWN)

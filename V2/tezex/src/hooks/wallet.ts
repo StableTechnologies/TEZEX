@@ -84,10 +84,7 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
   const initialize = useCallback(
     async (
       sendAsset: AssetOrAssetPair,
-      recieveAsset: AssetOrAssetPair,
-      sendAmount?: BigNumber,
-      receiveAmount?: BigNumber,
-      slippage?: number
+      recieveAsset: AssetOrAssetPair
     ): Promise<Transaction | undefined> => {
       if (loading) {
         return transaction;

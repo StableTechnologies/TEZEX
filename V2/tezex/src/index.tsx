@@ -44,8 +44,7 @@ const router = createBrowserRouter(
   ],
   { basename: process.env.PUBLIC_URL }
 );
-const container = document.getElementById("root");
-const root = ReactDOM.createRoot(container!); // createRoot(container!) if you use TypeScript
+const root = ReactDOM.createRoot(document.getElementById("root") as Element);
 
 root.render(
   <React.StrictMode>
