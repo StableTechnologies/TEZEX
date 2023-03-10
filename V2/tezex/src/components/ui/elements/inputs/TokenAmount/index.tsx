@@ -67,95 +67,87 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
     switch (props.variant) {
       case "LeftInput":
         return (
-          <Grid2 container>
-            <Grid2
-              container
-              sx={{
-                flexDirection: "row",
+          <Grid2
+            container
+            sx={{
+              flexDirection: "row",
 
-                borderRadius: "16px",
-                backgroundColor: "background.default",
+              borderRadius: "16px",
+              backgroundColor: "background.default",
+            }}
+          >
+            <TextField
+              autoFocus
+              onChange={updateAmount}
+              value={inputString}
+              //label={props.label ? props.label : ""}
+              id="filled-start-adornment"
+              sx={{
+                justifyContent: "center",
+                width: "100%",
               }}
-            >
-              <TextField
-                autoFocus
-                onChange={updateAmount}
-                value={inputString}
-                //label={props.label ? props.label : ""}
-                id="filled-start-adornment"
-                sx={{
-                  justifyContent: "center",
-                  width: "100%",
-                }}
-                InputProps={{
-                  disableUnderline: true,
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <Box
-                        sx={{
-                          display: "block",
-                        }}
-                      >
-                        <Box
+              InputProps={{
+                disableUnderline: true,
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "row",
+                      }}
+                    >
+                      <div>
+                        <img
+                          style={{
+                            //	marginLeft: "1vw",
+                            marginRight: "1vw",
+                            height: "1.61vw",
+                          }}
+                          src={props.asset.logo}
+                          alt="logo"
+                        />
+                      </div>
+                      <div>
+                        <Typography
                           sx={{
-                            display: "flex",
-                            flexDirection: "row",
+                            fontSize: "1.11vw",
+
+                            marginRight: "1vw",
                           }}
                         >
-                          <div>
-                            <img
-                              style={{
-                                //	marginLeft: "1vw",
-                                marginRight: "1vw",
-                                height: "1.61vw",
-                              }}
-                              src={props.asset.logo}
-                              alt="logo"
-                            />
-                          </div>
-                          <div>
-                            <Typography
-                              sx={{
-                                fontSize: "1.11vw",
+                          {props.asset.label}
+                        </Typography>
+                      </div>
+                    </Box>
+                  </InputAdornment>
+                ),
+              }}
+              inputProps={{
+                readOnly: props.readOnly,
+                style: {
+                  textAlign: "left",
 
-                                marginRight: "1vw",
-                              }}
-                            >
-                              {props.asset.label}
-                            </Typography>
-                          </div>
-                        </Box>
-                      </Box>
-                    </InputAdornment>
-                  ),
+                  marginLeft: "2vw",
+                  fontSize: "1.25vw",
+                  lineHeight: "1.51vw",
+                  //		lineHeight: "38.7px",
+                },
+              }}
+              variant="standard"
+            />
+            <WalletConnected>
+              <Typography
+                color="textSecondary"
+                variant="subtitle2"
+                hidden={props.balance ? false : true}
+                sx={{
+                  padding: "0px 16px",
+                  textAlign: "right",
                 }}
-                inputProps={{
-                  readOnly: props.readOnly,
-                  style: {
-                    textAlign: "left",
-
-                    marginLeft: "2vw",
-                    fontSize: "1.25vw",
-                    lineHeight: "1.51vw",
-                    //		lineHeight: "38.7px",
-                  },
-                }}
-                variant="standard"
-              />
-              <WalletConnected>
-                <Typography
-                  color="textSecondary"
-                  variant="subtitle2"
-                  hidden={props.balance ? false : true}
-                  sx={{
-                    padding: "0px 16px",
-                    textAlign: "right",
-                  }}
-                >
-                  balance: {props.balance} {props.asset.name}
-                </Typography>
-              </WalletConnected>
-            </Grid2>
+              >
+                balance: {props.balance} {props.asset.name}
+              </Typography>
+            </WalletConnected>
           </Grid2>
         );
       default:
