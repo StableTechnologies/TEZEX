@@ -14,6 +14,9 @@ import TextField from "@mui/material/TextField";
 import liquiditySwapIcon from "../../../../../assets/liquiditySwapIcon.svg";
 
 import { WalletConnected } from "../../../../session/WalletConnected";
+
+import { style } from "./style";
+
 export interface ITokenAmountInput {
   asset: Asset;
   onChange?: (value: string) => void;
@@ -67,53 +70,29 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
     switch (props.variant) {
       case "LeftInput":
         return (
-          <Grid2
-            container
-            sx={{
-              flexDirection: "row",
-
-              borderRadius: "16px",
-              backgroundColor: "background.default",
-            }}
-          >
+          <Grid2 container sx={style.leftInput.gridContainter}>
             <TextField
               autoFocus
               onChange={updateAmount}
               value={inputString}
               //label={props.label ? props.label : ""}
               id="filled-start-adornment"
-              sx={{
-                justifyContent: "center",
-                width: "100%",
-              }}
+              sx={style.leftInput.textField}
               InputProps={{
                 disableUnderline: true,
                 endAdornment: (
                   <InputAdornment position="end">
-                    <Box
-                      sx={{
-                        display: "flex",
-                        flexDirection: "row",
-                      }}
-                    >
+                    <Box sx={style.leftInput.inputAdornment.box}>
                       <div>
                         <img
-                          style={{
-                            //	marginLeft: "1vw",
-                            marginRight: "1vw",
-                            height: "1.61vw",
-                          }}
+                          style={style.leftInput.inputAdornment.img}
                           src={props.asset.logo}
                           alt="logo"
                         />
                       </div>
                       <div>
                         <Typography
-                          sx={{
-                            fontSize: "1.11vw",
-
-                            marginRight: "1vw",
-                          }}
+                          sx={style.leftInput.inputAdornment.typography}
                         >
                           {props.asset.label}
                         </Typography>
@@ -125,12 +104,7 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
               inputProps={{
                 readOnly: props.readOnly,
                 style: {
-                  textAlign: "left",
-
-                  marginLeft: "2vw",
-                  fontSize: "1.25vw",
-                  lineHeight: "1.51vw",
-                  //		lineHeight: "38.7px",
+                  ...style.leftInput.input,
                 },
               }}
               variant="standard"
@@ -140,10 +114,7 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
                 color="textSecondary"
                 variant="subtitle2"
                 hidden={props.balance ? false : true}
-                sx={{
-                  padding: "0px 16px",
-                  textAlign: "right",
-                }}
+                sx={style.leftInput.balanceTypography}
               >
                 balance: {props.balance} {props.asset.name}
               </Typography>

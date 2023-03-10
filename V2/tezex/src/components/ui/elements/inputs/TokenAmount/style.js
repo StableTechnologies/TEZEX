@@ -28,7 +28,7 @@ export const style = {
       textAlign: "right",
     },
     input: {
-      textAlign: "left",
+      //textAlign: "left",
       marginLeft: "2vw",
       fontSize: "1.25vw",
       lineHeight: "1.51vw",
