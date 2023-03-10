@@ -123,7 +123,7 @@ export const style = {
       },
     },
     input: {
-      textAlign: "right",
+      //textAlign: "right",
       fontSize: "2.2vw",
     },
   },

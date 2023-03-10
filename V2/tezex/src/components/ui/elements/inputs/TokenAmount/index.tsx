@@ -126,12 +126,11 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
           <Grid2 container>
             <Grid2
               container
-              sx={{
-                flexDirection: "column",
-
-                borderRadius: "16px",
-                backgroundColor: props.darker ? "#F4F4F4" : "#F9F9F9",
-              }}
+              sx={
+                props.darker
+                  ? style.rightInput.gridContainter.darker
+                  : style.rightInput.gridContainter.lighter
+              }
             >
               <TextField
                 autoFocus={props.readOnly ? false : true}
@@ -139,63 +138,25 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
                 value={inputString}
                 //label={props.label ? props.label : ""}
                 id="filled-start-adornment"
-                sx={{
-                  //  .css-1x51dt5-MuiInputBase-input-MuiInput-input
-                  "& .MuiInputBase-input": {
-                    position: "absolute",
-
-                    zIndex: 5,
-                    width: "100%",
-                  },
-                  justifyContent: "center",
-                  width: "100%",
-                  //height: "75px",
-                }}
+                sx={style.rightInput.textField}
                 InputProps={{
                   disableUnderline: true,
                   startAdornment: (
                     <InputAdornment position="start">
-                      <Box
-                        sx={{
-                          display: "flex",
-                          flexDirection: "column",
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            fontSize: "1.2vw",
-
-                            marginLeft: "1vw",
-                            marginRight: "1vw",
-                            position: "relative",
-                            bottom: "1vw",
-                          }}
-                        >
+                      <Box sx={style.rightInput.inputAdornmentStart.box}>
+                        <Box sx={style.rightInput.inputAdornmentStart.boxLabel}>
                           {props.label}
                         </Box>
-                        <Box
-                          sx={{
-                            display: "flex",
-                            flexDirection: "row",
-                          }}
-                        >
+                        <Box sx={style.rightInput.inputAdornmentStart.boxToken}>
                           <div>
                             <img
-                              style={{
-                                marginLeft: "1vw",
-                                marginRight: "1vw",
-                                height: "1.61vw",
-                              }}
+                              style={style.rightInput.inputAdornmentStart.img}
                               src={props.asset.logo}
                               alt="logo"
                             />
                           </div>
                           <Typography
-                            sx={{
-                              color: "#1E1E1E",
-                              fontWeight: "500",
-                              fontSize: "1.25vw",
-                            }}
+                            sx={style.rightInput.inputAdornmentStart.typography}
                           >
                             {props.asset.label}
                           </Typography>
@@ -207,30 +168,15 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
                   endAdornment: (
                     <InputAdornment
                       position="end"
-                      sx={{
-                        display: "flex",
-                        flexDirection: "row",
-                        justifyContent: "flex-end",
-                        width: "100%",
-                        padding: 0,
-                        zIndex: 0,
-
-                        position: "relative",
-                        bottom: "3vw",
-                      }}
+                      sx={style.rightInput.inputAdornmentEnd.adornment}
                     >
                       <Box visibility={props.swap ? "visible" : "hidden"}>
                         <Button
                           onClick={toggle}
-                          sx={{
-                            justifyContent: "flex-end",
-                            width: "100%",
-                          }}
+                          sx={style.rightInput.inputAdornmentEnd.button}
                         >
                           <img
-                            style={{
-                              width: ".66vw",
-                            }}
+                            style={style.rightInput.inputAdornmentEnd.img}
                             src={liquiditySwapIcon}
                             alt="logo"
                           />
@@ -242,31 +188,20 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
                 inputProps={{
                   readOnly: props.readOnly,
                   style: {
+                    // compiler complains when moving textAlign to style
                     textAlign: "right",
-
-                    fontSize: "2.2vw",
-                    //		lineHeight: "38.7px",
+                    ...style.rightInput.input,
                   },
                 }}
                 variant="standard"
               />
               <WalletConnected>
-                <Grid2
-                  sx={{
-                    position: "relative",
-                    bottom: "2vw",
-                  }}
-                >
+                <Grid2 sx={style.rightInput.balance.grid}>
                   <Typography
                     color="textSecondary"
                     variant="subtitle2"
                     hidden={props.balance ? false : true}
-                    sx={{
-                      color: "#999999",
-                      fontWeight: "400",
-                      fontSize: ".97vw",
-                      textAlign: "right",
-                    }}
+                    sx={style.rightInput.balance.typography}
                   >
                     Balance: {props.balance} {props.asset.name}
                   </Typography>
