@@ -13,7 +13,7 @@ import {
 } from "../../types/general";
 
 import { BigNumber } from "bignumber.js";
-import { TokenInput, Slippage } from "../../components/ui/elements/inputs";
+import { UserAmountField, Slippage } from "../../components/ui/elements/inputs";
 
 import { useWalletConnected } from "../../hooks/wallet";
 import { useSession } from "../../hooks/session";
@@ -362,7 +362,7 @@ export const AddLiquidity: FC = () => {
               }}
             >
               <Grid2 xs={6} sx={classes.input}>
-                <TokenInput
+                <UserAmountField
                   asset={assets[send1]}
                   onChange={updateSend}
                   value={sendAmount.toString()}
@@ -382,7 +382,7 @@ export const AddLiquidity: FC = () => {
               </Grid2>
 
               <Grid2 xs={6} sx={classes.input}>
-                <TokenInput
+                <UserAmountField
                   asset={assets[send2]}
                   value={sendAmount2.toString()}
                   readOnly={true}

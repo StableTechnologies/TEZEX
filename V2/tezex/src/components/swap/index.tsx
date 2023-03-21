@@ -8,7 +8,7 @@ import {
 } from "../../types/general";
 
 import { BigNumber } from "bignumber.js";
-import { TokenInput, Slippage } from "../../components/ui/elements/inputs";
+import { UserAmountField, Slippage } from "../../components/ui/elements/inputs";
 import { Wallet } from "../wallet";
 import { useWalletConnected } from "../../hooks/wallet";
 import { useSession } from "../../hooks/session";
@@ -304,7 +304,7 @@ export const Swap: FC = () => {
             />
             <CardContent sx={classes.cardcontent}>
               <Grid2 xs={12} sx={classes.input1}>
-                <TokenInput
+                <UserAmountField
                   asset={assets[send]}
                   onChange={updateSend}
                   value={sendAmount.toString()}
@@ -326,7 +326,7 @@ export const Swap: FC = () => {
               </Grid2>
 
               <Grid2 xs={12} sx={classes.input2}>
-                <TokenInput
+                <UserAmountField
                   asset={assets[receive]}
                   value={receiveAmount.toString()}
                   readOnly={true}

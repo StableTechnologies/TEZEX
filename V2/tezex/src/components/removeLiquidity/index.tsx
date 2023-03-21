@@ -8,7 +8,7 @@ import {
 } from "../../types/general";
 
 import { BigNumber } from "bignumber.js";
-import { TokenInput } from "../../components/ui/elements/inputs";
+import { UserAmountField } from "../../components/ui/elements/inputs";
 import { Wallet } from "../wallet";
 import { useWalletConnected } from "../../hooks/wallet";
 import { useSession } from "../../hooks/session";
@@ -254,7 +254,7 @@ export const RemoveLiquidity: FC = () => {
               }}
             >
               <Box sx={classes.input1}>
-                <TokenInput
+                <UserAmountField
                   asset={assets[send]}
                   readOnly={useMax}
                   onChange={updateSend}

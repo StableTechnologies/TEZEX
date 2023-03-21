@@ -17,7 +17,7 @@ import { WalletConnected } from "../../../../session/WalletConnected";
 
 import { style } from "./style";
 
-export interface ITokenAmountInput {
+export interface IAmountField {
   asset: Asset;
   onChange?: (value: string) => void;
   balance?: string;
@@ -30,7 +30,7 @@ export interface ITokenAmountInput {
   swap?: () => void;
 }
 
-const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
+const AmountField: FC<IAmountField> = (props) => {
   const [inputString, setInputString] = useState<string>(props.value);
   const onChange = props.onChange;
   const value = props.value;
@@ -215,4 +215,4 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
   return <Variant />;
 };
 
-export const TokenInput = memo(TokenAmountInput);
+export const UserAmountField = memo(AmountField);
