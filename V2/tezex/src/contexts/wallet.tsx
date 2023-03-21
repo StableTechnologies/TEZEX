@@ -169,23 +169,27 @@ export function WalletProvider(props: IWalletProvider) {
     })
   );
 
+  const updateBalances = useCallback(async () => {
+    if (address && toolkit && client) {
+      const _assetBalances: AssetBalance[] = await Promise.all(
+        assetBalances.map(async (assetBalance: AssetBalance) => {
+          return {
+            balance: await getBalance(toolkit, address, assetBalance.asset),
+            asset: assetBalance.asset,
+          };
+        })
+      );
+      setAssetBalances(_assetBalances);
+    }
+  }, [address, toolkit, client]);
+
   useEffect(() => {
-    const updateBalance = async () => {
-      if (address && toolkit && client) {
-        const _assetBalances: AssetBalance[] = await Promise.all(
-          assetBalances.map(async (assetBalance: AssetBalance) => {
-            return {
-              balance: await getBalance(toolkit, address, assetBalance.asset),
-              asset: assetBalance.asset,
-            };
-          })
-        );
-        setAssetBalances(_assetBalances);
-      }
+    const _updateBalances = async () => {
+      await updateBalances();
     };
 
     const interval = setInterval(() => {
-      updateBalance();
+      _updateBalances();
     }, 5000);
     return () => clearInterval(interval);
   });
