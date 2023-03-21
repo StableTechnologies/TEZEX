@@ -1,2 +1,2 @@
-export * from "./TokenAmount";
+export * from "./UserAmount";
 export * from "./slippage";
