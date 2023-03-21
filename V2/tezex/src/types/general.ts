@@ -26,6 +26,7 @@ export interface AssetBalance {
   balance: Balance | undefined;
   asset: Asset;
 }
+
 export enum TransactionStatus {
   INITIALISED = "Initialised",
   MODIFIED = "Estimating",
@@ -47,6 +48,11 @@ export type Id = string;
 export type SendOrRecieve = "Send" | "Receive";
 export type Amount = [Balance] | [Balance, Balance];
 export type AssetOrAssetPair = [Asset] | [Asset, Asset];
+
+export enum Assets {
+  ASSET = 1,
+  PAIR = 2,
+}
 
 export interface Transaction {
   id: Id;

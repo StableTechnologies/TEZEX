@@ -5,7 +5,7 @@ import { useImmer } from "use-immer";
 import { DAppClient } from "@airgap/beacon-sdk";
 import {
   Transaction,
-  Asset,
+  Assets,
   AssetBalance,
   Balance,
   TransactionStatus,
@@ -382,7 +382,7 @@ export function WalletProvider(props: IWalletProvider) {
     async (assets: AssetOrAssetPair): Promise<Amount | null> => {
       if (toolkit && address) {
         switch (assets.length) {
-          case 1:
+          case Assets.ASSET:
             return await getBalance(toolkit, address, assets[0])
               .then((balance: Balance) => {
                 return [balance] as Amount;
@@ -391,7 +391,7 @@ export function WalletProvider(props: IWalletProvider) {
                 console.log(e);
                 return null;
               });
-          case 2:
+          case Assets.PAIR:
             return await getBalance(toolkit, address, assets[0])
               .then((balance: Balance) => {
                 const withSecondAsset = async () => {
