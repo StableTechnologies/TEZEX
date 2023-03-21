@@ -13,6 +13,7 @@ export interface Balance {
   mantissa: BigNumber;
   greaterOrEqualTo: (balance: Balance) => boolean;
 }
+
 export interface Asset {
   name: TokenKind;
   label: string;
@@ -21,6 +22,10 @@ export interface Asset {
   decimals: number;
 }
 
+export interface AssetBalance {
+  balance: Balance | undefined;
+  asset: Asset;
+}
 export enum TransactionStatus {
   INITIALISED = "Initialised",
   MODIFIED = "Estimating",

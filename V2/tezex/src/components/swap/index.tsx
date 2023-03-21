@@ -218,12 +218,9 @@ export const Swap: FC = () => {
       await updateBalance();
     };
 
-    const interval = setInterval(
-      () => {
-        updateTransactionBalance();
-      },
-      loadingBalances ? 2000 : 5000
-    );
+    const interval = setInterval(() => {
+      updateTransactionBalance();
+    }, 5000);
     return () => clearInterval(interval);
   });
 
@@ -246,6 +243,10 @@ export const Swap: FC = () => {
       await newTransaction();
     };
 
+    const updateTransactionBalance = async () => {
+      await updateBalance();
+    };
+
     if (!loading && !active) {
       _newTransaction();
     }
@@ -260,6 +261,7 @@ export const Swap: FC = () => {
 
         updateReceive(active.receiveAmount[0].decimal.toString());
         updateSlippage(active.slippage.toString());
+        updateTransactionBalance();
         setLoading(false);
       }
       if (session.activeComponent !== TransactingComponent.SWAP)
