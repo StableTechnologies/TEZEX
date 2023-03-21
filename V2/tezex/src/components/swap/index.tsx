@@ -24,82 +24,7 @@ import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
-const classes = {
-  input1: {
-    position: "absolute",
-    top: "16.87%",
-    "& .MuiFormControl-root": {
-      width: "28.34vw",
-      height: "6.94vw",
-    },
-  },
-  input2: {
-    position: "absolute",
-    top: "43.27%",
-    "& .MuiFormControl-root": {
-      width: "28.34vw",
-      height: "6.94vw",
-    },
-  },
-  cardcontent: {
-    "&.MuiCardContent-root": {
-      paddingTop: "0px",
-    },
-    "& .MuiFormControl-root": {
-      width: "28.34vw",
-      height: "6.94vw",
-    },
-  },
-  cardAction: {
-    justifyContent: "center",
-  },
-  slippageContainer: {
-    background: "black",
-    flexDirection: "row",
-    position: "absolute",
-    zIndex: 5,
-    display: "flex",
-    alignItems: "center",
-    minWidth: 408,
-    bottom: "17%",
-    "& .MuiGrid2-root": {},
-  },
-
-  slippageComponent: {
-    "& .MuiGrid2-root": {},
-  },
-  slippage: {
-    text: {},
-  },
-  card: {
-    overflow: "hidden",
-    position: "relative",
-    height: "28.49vw",
-    width: "30.56vw",
-    borderRadius: "1.38vw",
-    zIndex: 999,
-    background: "#FFFFFF",
-    border: "1px solid #E1E1E1",
-    "& .MuiCardContent-root": {
-      padding: "8px",
-    },
-  },
-  paper: {
-    background: "#F9F9F9",
-    borderRadius: "20px",
-    border: "1px solid #E1E1E1",
-    minHeight: "146px",
-    position: "relative",
-    bottom: "10%",
-    zIndex: -1,
-    marginBottom: "20px",
-  },
-  root: {
-    display: "flex",
-    position: "relative",
-    justifyContent: "center",
-  },
-};
+import style from "./style";
 
 export interface ISwapToken {
   children: null;
@@ -282,28 +207,20 @@ export const Swap: FC = () => {
       session.loadComponent(TransactingComponent.SWAP);
   });
   return (
-    <Grid2 container sx={classes.root}>
+    <Grid2 container sx={style.root}>
       <Grid2>
         <div>
-          <Card sx={classes.card}>
+          <Card sx={style.card}>
             <CardHeader
-              sx={{
-                paddingBottom: "0px",
-                fontSize: "1vw",
-                textAlign: "left",
-              }}
+              sx={style.cardHeader}
               title={
-                <Typography
-                  sx={{
-                    fontSize: "1.4vw",
-                  }}
-                >
+                <Typography sx={style.cardHeaderTypography}>
                   {"Swap"}
                 </Typography>
               }
             />
-            <CardContent sx={classes.cardcontent}>
-              <Grid2 xs={12} sx={classes.input1}>
+            <CardContent sx={style.cardcontent}>
+              <Grid2 xs={12} sx={style.input1}>
                 <UserAmountField
                   asset={assets[send]}
                   onChange={updateSend}
@@ -313,19 +230,11 @@ export const Swap: FC = () => {
                 />
               </Grid2>
 
-              <Grid2
-                xs={12}
-                sx={{
-                  position: "absolute",
-                  top: "37.4%",
-                  zIndex: 5,
-                  height: "1vw",
-                }}
-              >
+              <Grid2 xs={12} sx={style.swapToggle}>
                 <SwapUpDownToggle toggle={swapFields} />
               </Grid2>
 
-              <Grid2 xs={12} sx={classes.input2}>
+              <Grid2 xs={12} sx={style.input2}>
                 <UserAmountField
                   asset={assets[receive]}
                   value={receiveAmount.toString()}
@@ -334,16 +243,8 @@ export const Swap: FC = () => {
                 />
               </Grid2>
             </CardContent>
-            <CardActions sx={classes.cardAction}>
-              <Box
-                sx={{
-                  position: "absolute",
-                  top: "77.5%",
-                  width: "28.33vw",
-                  height: "4.16vw",
-                  justifyContent: "center",
-                }}
-              >
+            <CardActions sx={style.cardAction}>
+              <Box sx={style.transact}>
                 <Wallet transaction={active} callback={transact}>
                   {"Swap Tokens"}
                 </Wallet>
@@ -351,38 +252,9 @@ export const Swap: FC = () => {
             </CardActions>
           </Card>
 
-          <Paper
-            variant="outlined"
-            sx={{
-              position: "absolute",
-              top: "89.4%",
-              zindex: "-999",
-
-              borderRadius: "1.38vw",
-              background: "#F9F9F9",
-
-              width: "30.6vw",
-              height: "10.14vw",
-            }}
-            square
-          >
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                paddingTop: "6vw",
-              }}
-            >
-              <Typography
-                sx={{
-                  marginLeft: "1vw",
-                  fontSize: ".972vw",
-                  lineHeighr: "1.176vw",
-                }}
-              >
-                Slippage
-              </Typography>
+          <Paper variant="outlined" sx={style.paper} square>
+            <Box sx={style.paperBox}>
+              <Typography sx={style.paperTypography}>Slippage</Typography>
 
               <Slippage
                 asset={assets[receive].name}
