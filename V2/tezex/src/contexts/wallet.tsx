@@ -5,6 +5,8 @@ import { useImmer } from "use-immer";
 import { DAppClient } from "@airgap/beacon-sdk";
 import {
   Transaction,
+  Asset,
+  AssetBalance,
   Balance,
   TransactionStatus,
   TransactingComponent,
@@ -160,13 +162,34 @@ export function WalletProvider(props: IWalletProvider) {
   useEffect(() => {
     console.log("\n", "isWalletConnected : ", isWalletConnected, "\n");
   }, [isWalletConnected]);
-  const [assetBalances, setAssetBalances] = useState(
+  const [assetBalances, setAssetBalances] = useState<AssetBalance[]>(
     network.info.assets.map((asset) => {
       //console.log("\n", "asset.name : ", asset.name, "\n");
-      return { balance: undefined, ...asset };
+      return { balance: undefined, asset: asset };
     })
   );
 
+  useEffect(() => {
+    const updateBalance = async () => {
+      if (address && toolkit && client) {
+        const _assetBalances: AssetBalance[] = await Promise.all(
+          assetBalances.map(async (assetBalance: AssetBalance) => {
+            return {
+              balance: await getBalance(toolkit, address, assetBalance.asset),
+              asset: assetBalance.asset,
+            };
+          })
+        );
+        setAssetBalances(_assetBalances);
+      }
+    };
+
+    const interval = setInterval(() => {
+      updateBalance();
+    }, 5000);
+    return () => clearInterval(interval);
+  });
+  //
   //console.log("\n", "assetBalances : ", assetBalances, "\n");
   const getActiveTransaction = useCallback(
     (component: TransactingComponent): Transaction | undefined => {
