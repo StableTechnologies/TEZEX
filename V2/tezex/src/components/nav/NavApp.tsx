@@ -3,53 +3,11 @@ import { useNavigate } from "react-router-dom";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 
+import style from "./style";
+
 export interface INav {
   children: string;
 }
-
-const classes = {
-  root: {
-    backgroundColor: "red",
-  },
-  right: {
-    justifyContent: "center",
-    alignContent: "center",
-  },
-  nav: {
-    "&.MuiButton-root.Mui-disabled": {
-      color: "#999999",
-    },
-
-    "& .MuiButtonBase-root": {
-      "&.Mui-selected": {
-        color: "#000000",
-      },
-      fontFamily: "Inter",
-      fontStyle: "normal",
-      fontWeight: "500",
-      fontSize: "1.11vw",
-      lineHeight: "1.34vw",
-      display: "inline-flex",
-      justifyContent: "center",
-      textAlign: "center",
-      //minHeight: "16",
-      //marginRight: "40px",
-      minWidth: "3.7vw",
-      maxWidth: "7.7vw",
-      // marginTop: spacing(0.5),
-      padding: "0px 4vw ",
-      color: "#999999",
-      background: "white",
-      textTransform: "initial",
-    },
-
-    padding: 0,
-    //idth: "12.7vw",
-    display: "flex",
-    fontSize: "1.5vw",
-    justifyContent: "center",
-  },
-};
 
 interface NavTabProps {
   label: string;
@@ -88,7 +46,7 @@ export const NavApp: FC = () => {
   return (
     <Tabs
       value={value}
-      sx={classes.nav}
+      sx={style.navApp}
       onChange={handleChange}
       aria-label="nav tabs "
       TabIndicatorProps={{
