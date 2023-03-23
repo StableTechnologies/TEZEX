@@ -1,7 +1,7 @@
 import React, { memo, FC, useCallback, useState, useEffect } from "react";
 import { BigNumber } from "bignumber.js";
 
-import { TokenKind } from "../../../../types/general";
+import { Token } from "../../../../types/general";
 
 import Box from "@mui/material/Box";
 import InputAdornment from "@mui/material/InputAdornment";
@@ -10,7 +10,7 @@ import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 
 export interface ISlippage {
-  asset: TokenKind;
+  asset: Token;
   value: BigNumber | number;
   onChange: (value: string) => void;
   inverse?: boolean;

@@ -2,7 +2,7 @@ import React, { FC, useState, useEffect, useCallback } from "react";
 
 import {
   Transaction,
-  TokenKind,
+  Token,
   Asset,
   TransactingComponent,
 } from "../../types/general";
@@ -118,9 +118,9 @@ export const RemoveLiquidity: FC = () => {
   const receive2 = 2;
 
   const [assets, setAssets] = useState<[Asset, Asset, Asset]>([
-    network.getAsset(TokenKind.Sirs),
-    network.getAsset(TokenKind.XTZ),
-    network.getAsset(TokenKind.TzBTC),
+    network.getAsset(Token.Sirs),
+    network.getAsset(Token.XTZ),
+    network.getAsset(Token.TzBTC),
   ]);
   const session = useSession();
 

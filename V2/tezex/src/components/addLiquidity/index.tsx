@@ -7,7 +7,7 @@ import plusIcon from "../../assets/plusIcon.svg";
 import { Wallet } from "../wallet";
 import {
   Transaction,
-  TokenKind,
+  Token,
   Asset,
   TransactingComponent,
 } from "../../types/general";
@@ -117,9 +117,9 @@ export const AddLiquidity: FC = () => {
 
   const [balances, setBalances] = useState<[string, string]>(["", ""]);
   const [assets, setAssets] = useState<[Asset, Asset, Asset]>([
-    network.getAsset(TokenKind.XTZ),
-    network.getAsset(TokenKind.TzBTC),
-    network.getAsset(TokenKind.Sirs),
+    network.getAsset(Token.XTZ),
+    network.getAsset(Token.TzBTC),
+    network.getAsset(Token.Sirs),
   ]);
   const [swapingFields, setSwapingFields] = useState<boolean>(true);
   const session = useSession();

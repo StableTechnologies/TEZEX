@@ -1,6 +1,6 @@
 import { BigNumber } from "bignumber.js";
 
-import { Transaction, TokenKind, TransactingComponent } from "../types/general";
+import { Transaction, Token, TransactingComponent } from "../types/general";
 
 import { TezosToolkit } from "@taquito/taquito";
 
@@ -43,7 +43,7 @@ const swapTransaction = async (
   toolkit: TezosToolkit
 ) => {
   switch (transaction.sendAsset[0].name) {
-    case TokenKind.XTZ:
+    case Token.XTZ:
       await xtzToToken(
         transaction.sendAmount[0].mantissa,
         transaction.receiveAmount[0].mantissa,
@@ -52,7 +52,7 @@ const swapTransaction = async (
         toolkit
       );
       break;
-    case TokenKind.TzBTC:
+    case Token.TzBTC:
       await tokenToXtz(
         transaction.sendAmount[0].mantissa,
         transaction.receiveAmount[0].mantissa,
@@ -87,7 +87,7 @@ const addLiquidityTransaction = async (
 ) => {
   if (transaction.sendAmount[1] && transaction.sendAsset[1]) {
     switch (transaction.sendAsset[0].name) {
-      case TokenKind.XTZ:
+      case Token.XTZ:
         await buyLiquidityShares(
           transaction.sendAmount[0].mantissa,
           transaction.sendAmount[1].mantissa,
@@ -99,7 +99,7 @@ const addLiquidityTransaction = async (
           toolkit
         );
         break;
-      case TokenKind.TzBTC:
+      case Token.TzBTC:
         await buyLiquidityShares(
           transaction.sendAmount[1].mantissa,
           transaction.sendAmount[0].mantissa,
@@ -123,7 +123,7 @@ export const decimals = {
 
 export function tokenMantissaToDecimal(
   mantissa: BigNumber | number | string,
-  asset: TokenKind
+  asset: Token
 ) {
   const decimal = new BigNumber(mantissa).div(
     new BigNumber(10).pow(decimals[asset])
@@ -133,7 +133,7 @@ export function tokenMantissaToDecimal(
 }
 export function tokenDecimalToMantissa(
   decimalAmount: BigNumber | number | string,
-  asset: TokenKind
+  asset: Token
 ) {
   const mantissa = new BigNumber(10)
     .pow(decimals[asset])

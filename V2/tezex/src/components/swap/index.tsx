@@ -2,7 +2,7 @@ import React, { FC, useState, useEffect, useCallback } from "react";
 
 import {
   Transaction,
-  TokenKind,
+  Token,
   Asset,
   TransactingComponent,
 } from "../../types/general";
@@ -122,8 +122,8 @@ export const Swap: FC = () => {
   const receive = 1;
 
   const [assets, setAssets] = useState<[Asset, Asset]>([
-    network.getAsset(TokenKind.XTZ),
-    network.getAsset(TokenKind.TzBTC),
+    network.getAsset(Token.XTZ),
+    network.getAsset(Token.TzBTC),
   ]);
 
   const [balances, setBalances] = useState<[string, string]>(["", ""]);

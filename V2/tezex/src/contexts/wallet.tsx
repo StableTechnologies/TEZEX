@@ -333,7 +333,7 @@ export function WalletProvider(props: IWalletProvider) {
       sendAmount?: Amount,
       receiveAmount?: Amount
     ): Transaction => {
-      const zeroBalance = {
+      const zeroBalance: Balance = {
         decimal: new BigNumber(0),
         mantissa: new BigNumber(0),
         greaterOrEqualTo: (balance: Balance): boolean => {

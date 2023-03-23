@@ -2,7 +2,7 @@ import { BigNumber } from "bignumber.js";
 
 import { NetworkType } from "@airgap/beacon-sdk";
 
-export enum TokenKind {
+export enum Token {
   XTZ = "XTZ",
   TzBTC = "TzBTC",
   Sirs = "Sirs",
@@ -15,7 +15,7 @@ export interface Balance {
 }
 
 export interface Asset {
-  name: TokenKind;
+  name: Token;
   label: string;
   logo: string;
   address: string;

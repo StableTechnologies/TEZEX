@@ -4,7 +4,7 @@ import { BeaconWallet } from "@taquito/beacon-wallet";
 import { TezosToolkit, MichelCodecPacker } from "@taquito/taquito";
 import { BigNumber } from "bignumber.js";
 
-import { TokenKind, Asset, Balance } from "../types/general";
+import { Token, Asset, Balance } from "../types/general";
 import { balanceBuilder } from "./util";
 export function mutezToTez(amount: BigNumber) {
   return amount.dividedBy(1000000);
@@ -16,7 +16,7 @@ export async function getBalance(
   asset: Asset
 ): Promise<Balance> {
   const getBalance = async () => {
-    if (asset.name === TokenKind.XTZ) {
+    if (asset.name === Token.XTZ) {
       return await toolkit.tz.getBalance(address);
     } else {
       const contract = await toolkit.wallet.at(asset.address);

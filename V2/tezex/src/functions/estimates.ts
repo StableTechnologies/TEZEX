@@ -3,7 +3,7 @@ import { BigNumber } from "bignumber.js";
 import { lqtOutput } from "./liquidityBaking";
 import {
   Transaction,
-  TokenKind,
+  Token,
   Asset,
   Balance,
   TransactingComponent,
@@ -101,7 +101,7 @@ export const estimateTokensReceivedSwap = async (
   toolkit: TezosToolkit
 ): Promise<Balance> => {
   switch (sendToken.name) {
-    case TokenKind.XTZ:
+    case Token.XTZ:
       return await estimateTokensFromXtz(sendAmount.mantissa, dex, toolkit)
         .then((amt: number) => {
           return balanceBuilder(amt, receive, true);
@@ -109,7 +109,7 @@ export const estimateTokensReceivedSwap = async (
         .catch((e) => {
           throw e;
         });
-    case TokenKind.TzBTC:
+    case Token.TzBTC:
       return await estimateXtzFromToken(sendAmount.mantissa, dex, toolkit)
         .then((amt: number) => {
           return balanceBuilder(amt, receive, true);
@@ -131,7 +131,7 @@ export const estimateSharesToTokensRemoveLiquidity = async (
 ): Promise<[Balance, Balance]> => {
   if (receive[0] && receive[1]) {
     switch ([receive[0].name as string, receive[1].name as string].join(" ")) {
-      case [TokenKind.XTZ as string, TokenKind.TzBTC as string].join(" "):
+      case [Token.XTZ as string, Token.TzBTC as string].join(" "):
         return await lqtOutput(sendAmount[0].mantissa, dex, toolkit)
           .then((obj: { xtz: BigNumber; tzbtc: BigNumber }) => {
             if (receive[1]) {
@@ -163,7 +163,7 @@ export const estimateSharesReceivedAddLiqudity = async (
     switch (
       [sendAsset[0].name as string, sendAsset[1].name as string].join(" ")
     ) {
-      case [TokenKind.XTZ as string, TokenKind.TzBTC as string].join(" "):
+      case [Token.XTZ as string, Token.TzBTC as string].join(" "):
         return await estimateShares(
           sendAmount[0].mantissa,
           sendAmount[1].mantissa,
@@ -176,7 +176,7 @@ export const estimateSharesReceivedAddLiqudity = async (
           .catch((e) => {
             throw e;
           });
-      case [TokenKind.TzBTC as string, TokenKind.XTZ as string].join(" "):
+      case [Token.TzBTC as string, Token.XTZ as string].join(" "):
         return await estimateShares(
           sendAmount[1].mantissa,
           sendAmount[0].mantissa,
