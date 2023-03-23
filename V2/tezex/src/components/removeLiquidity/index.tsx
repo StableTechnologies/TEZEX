@@ -23,6 +23,9 @@ import CardActions from "@mui/material/CardActions";
 import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
 import Typography from "@mui/material/Typography";
+
+import style from "./style";
+
 const classes = {
   cardcontent: {
     "&.MuiCardContent-root": {
@@ -222,38 +225,20 @@ export const RemoveLiquidity: FC = () => {
     }
   }, [loading, active, newTransaction, session, updateSend, walletOperations]);
   return (
-    <Grid2 container sx={classes.root}>
+    <Grid2 container sx={style.root}>
       <Grid2>
-        <Card sx={classes.card}>
+        <Card sx={style.card}>
           <CardHeader
-            sx={{
-              paddingBottom: "0px",
-              fontSize: "1vw",
-              textAlign: "left",
-            }}
+            sx={style.cardHeader}
             title={
-              <Typography
-                sx={{
-                  fontSize: "1.4vw",
-                }}
-              >
+              <Typography sx={style.headerTypography}>
                 {"Remove Liquidity"}
               </Typography>
             }
           />
-          <CardContent sx={classes.cardcontent}>
-            <Box
-              sx={{
-                display: "flex",
-
-                position: "absolute",
-                top: "16.87%",
-                justifyContent: "center",
-                alignItems: "center",
-                flexDirection: "row",
-              }}
-            >
-              <Box sx={classes.input1}>
+          <CardContent sx={style.cardcontent}>
+            <Box sx={style.cardContentBox}>
+              <Box sx={style.input1}>
                 <UserAmountField
                   asset={assets[send]}
                   readOnly={useMax}
@@ -272,27 +257,19 @@ export const RemoveLiquidity: FC = () => {
                 }}
               >
                 <Typography
-                  sx={{
-                    fontSize: ".97vw",
-                    lineHeight: "1.176vw",
-                    color: useMax ? "#00A0E4" : "#999999;",
-                  }}
+                  sx={
+                    useMax
+                      ? style.useMaxTypographyEnabled
+                      : style.useMaxTypographyEnabled
+                  }
                 >
                   {"Use Max"}
                 </Typography>
               </Button>
             </Box>
           </CardContent>
-          <CardActions sx={classes.cardAction}>
-            <Box
-              sx={{
-                width: "28.33vw",
-                height: "4.16vw",
-                position: "absolute",
-                top: "79.4%",
-                justifyContent: "center",
-              }}
-            >
+          <CardActions sx={style.cardAction}>
+            <Box sx={style.wallet}>
               <Wallet transaction={active} callback={transact}>
                 {"Sell Shares"}
               </Wallet>
