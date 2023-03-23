@@ -452,50 +452,25 @@ export function WalletProvider(props: IWalletProvider) {
     }
   };
 
-  const getBalances = useCallback(
-    async (
-      transaction: Transaction,
-      checkBalance?: boolean
-    ): Promise<Transaction> => {
+  const updateBalanceTransaction = useCallback(
+    (transaction: Transaction, checkBalance?: boolean): Transaction => {
       //console.log('\n',' : getBalancesCall ','\n');
-      let userBalanceSend: Amount | undefined;
-      let balanceStatus: TransactionStatus | undefined;
-      const updated: Transaction = await getBalanceOfAssets(
+      const sendAssetBalance: Amount = getBalancesOfAssets(
         transaction.sendAsset
-      )
-        .then((userBalance: Amount | null) => {
-          if (checkBalance && userBalance) {
-            balanceStatus = checkSufficientBalance(
-              userBalance,
-              transaction.sendAmount
-            );
-          }
-          if (userBalance) userBalanceSend = userBalance;
-          return getBalanceOfAssets(transaction.receiveAsset);
-        })
-        .then((userBalance: Amount | null) => {
-          //console.log('\n',' : update userBalance in getBalancesCall','\n');
-          //console.log('\n','userBalance : ', userBalance,'\n');
-          userBalance; //&& console.log('\n','userBalance not null : ', userBalance[0].decimal.toString(),'\n');
-          const receiveAssetBalance = userBalance
-            ? userBalance
-            : transaction.receiveAssetBalance;
-          const sendAssetBalance: Amount = userBalanceSend
-            ? userBalanceSend
-            : transaction.sendAssetBalance;
-          return {
-            ...transaction,
-            sendAssetBalance,
-            receiveAssetBalance,
-            transactionstatus: balanceStatus
-              ? balanceStatus
-              : transaction.transactionStatus,
-          };
-        })
-        .catch((e) => {
-          throw Error(e);
-        });
-      return updated;
+      );
+      const receiveAssetBalance: Amount = getBalancesOfAssets(
+        transaction.receiveAsset
+      );
+      const balanceStatus = checkSufficientBalance(
+        sendAssetBalance,
+        transaction.sendAmount
+      );
+      return {
+        ...transaction,
+        sendAssetBalance,
+        receiveAssetBalance,
+        transactionStatus: balanceStatus,
+      };
     },
     [getBalanceOfAssets]
   );
@@ -506,56 +481,49 @@ export function WalletProvider(props: IWalletProvider) {
       transaction: Transaction,
       checkBalances = true
     ): Promise<boolean> => {
-      let updated = false;
       //console.log('\n',' : UPDATE balance call ','\n');
 
-      await getBalances(transaction, checkBalances)
-        .then((_transaction: Transaction) => {
-          switch (component) {
-            case TransactingComponent.SWAP:
-              setSwapTransaction((draft: Draft<Transaction | undefined>) => {
-                if (draft && transaction.id === draft.id) {
-                  draft.sendAssetBalance = _transaction.sendAssetBalance;
-                  draft.receiveAssetBalance = _transaction.receiveAssetBalance;
-                  draft.transactionStatus = _transaction.transactionStatus;
-                }
-              });
-              break;
-            case TransactingComponent.ADD_LIQUIDITY:
-              setAddLiquidityTransaction(
-                (draft: Draft<Transaction | undefined>) => {
-                  if (draft && transaction.id === draft.id) {
-                    draft.sendAssetBalance = _transaction.sendAssetBalance;
-                    draft.receiveAssetBalance =
-                      _transaction.receiveAssetBalance;
-                    draft.transactionStatus = _transaction.transactionStatus;
-                  }
-                }
-              );
-              break;
-            case TransactingComponent.REMOVE_LIQUIDITY:
-              setRemoveLiquidityTransaction(
-                (draft: Draft<Transaction | undefined>) => {
-                  if (draft && transaction.id === draft.id) {
-                    draft.sendAssetBalance = _transaction.sendAssetBalance;
-                    draft.receiveAssetBalance =
-                      _transaction.receiveAssetBalance;
-                    draft.transactionStatus = _transaction.transactionStatus;
-                  }
-                }
-              );
-              break;
-          }
-          updated = true;
-        })
-        .catch((e) => {
-          console.log(e);
-          updated = false;
-        });
-      return updated;
+      const _transaction: Transaction = updateBalanceTransaction(
+        transaction,
+        checkBalances
+      );
+      switch (component) {
+        case TransactingComponent.SWAP:
+          setSwapTransaction((draft: Draft<Transaction | undefined>) => {
+            if (draft && transaction.id === draft.id) {
+              draft.sendAssetBalance = _transaction.sendAssetBalance;
+              draft.receiveAssetBalance = _transaction.receiveAssetBalance;
+              draft.transactionStatus = _transaction.transactionStatus;
+            }
+          });
+          break;
+        case TransactingComponent.ADD_LIQUIDITY:
+          setAddLiquidityTransaction(
+            (draft: Draft<Transaction | undefined>) => {
+              if (draft && transaction.id === draft.id) {
+                draft.sendAssetBalance = _transaction.sendAssetBalance;
+                draft.receiveAssetBalance = _transaction.receiveAssetBalance;
+                draft.transactionStatus = _transaction.transactionStatus;
+              }
+            }
+          );
+          break;
+        case TransactingComponent.REMOVE_LIQUIDITY:
+          setRemoveLiquidityTransaction(
+            (draft: Draft<Transaction | undefined>) => {
+              if (draft && transaction.id === draft.id) {
+                draft.sendAssetBalance = _transaction.sendAssetBalance;
+                draft.receiveAssetBalance = _transaction.receiveAssetBalance;
+                draft.transactionStatus = _transaction.transactionStatus;
+              }
+            }
+          );
+          break;
+      }
+      return true;
     },
     [
-      getBalances,
+      updateBalanceTransaction,
       setAddLiquidityTransaction,
       setRemoveLiquidityTransaction,
       setSwapTransaction,
