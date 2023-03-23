@@ -5,6 +5,7 @@ import { useImmer } from "use-immer";
 import { DAppClient } from "@airgap/beacon-sdk";
 import {
   Transaction,
+  Asset,
   Assets,
   AssetBalance,
   Balance,
@@ -159,9 +160,6 @@ export function WalletProvider(props: IWalletProvider) {
   const [toolkit, setToolkit] = useState<TezosToolkit | null>(null);
   const [address, setAddress] = useState<string | null>(null);
 
-  useEffect(() => {
-    console.log("\n", "isWalletConnected : ", isWalletConnected, "\n");
-  }, [isWalletConnected]);
   const [assetBalances, setAssetBalances] = useState<AssetBalance[]>(
     network.info.assets.map((asset) => {
       //console.log("\n", "asset.name : ", asset.name, "\n");
@@ -169,6 +167,28 @@ export function WalletProvider(props: IWalletProvider) {
     })
   );
 
+  const zeroBalance: Balance = {
+    decimal: new BigNumber(0),
+    mantissa: new BigNumber(0),
+    greaterOrEqualTo: (balance: Balance): boolean => {
+      return new BigNumber(0).isGreaterThanOrEqualTo(balance.mantissa);
+    },
+  };
+  const findAssetBalance = (asset: Asset): Balance => {
+    const found = assetBalances.find((assetBalance: AssetBalance) => {
+      assetBalance.asset.name === asset.name;
+    });
+    if (found) {
+      if (found.balance) return found.balance as Balance;
+      return zeroBalance;
+    } else throw Error("Asset not found in Config");
+  };
+  const getBalancesOfAssets = (assets: AssetOrAssetPair): Amount => {
+    const amount: Amount = assets.map((asset: Asset) => {
+      return findAssetBalance(asset);
+    }) as Amount;
+    return amount;
+  };
   const updateBalances = useCallback(async () => {
     if (address && toolkit && client) {
       const _assetBalances: AssetBalance[] = await Promise.all(
@@ -182,6 +202,10 @@ export function WalletProvider(props: IWalletProvider) {
       setAssetBalances(_assetBalances);
     }
   }, [address, toolkit, client]);
+
+  useEffect(() => {
+    updateBalances();
+  }, [isWalletConnected]);
 
   useEffect(() => {
     const _updateBalances = async () => {
