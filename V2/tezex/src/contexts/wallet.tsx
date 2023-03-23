@@ -333,13 +333,6 @@ export function WalletProvider(props: IWalletProvider) {
       sendAmount?: Amount,
       receiveAmount?: Amount
     ): Transaction => {
-      const zeroBalance: Balance = {
-        decimal: new BigNumber(0),
-        mantissa: new BigNumber(0),
-        greaterOrEqualTo: (balance: Balance): boolean => {
-          return new BigNumber(0).isGreaterThanOrEqualTo(balance.mantissa);
-        },
-      };
       const initBalance = (asset: AssetOrAssetPair): Amount => {
         switch (asset.length) {
           case 1:
