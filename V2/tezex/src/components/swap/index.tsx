@@ -249,7 +249,7 @@ export const Swap: FC = () => {
 
         updateReceive(active.receiveAmount[0].decimal.toString());
         updateSlippage(active.slippage.toString());
-        updateBalance;
+        updateBalance();
         setLoading(false);
       }
       if (session.activeComponent !== TransactingComponent.SWAP)
@@ -263,6 +263,7 @@ export const Swap: FC = () => {
     session,
     updateSend,
     updateSlippage,
+    updateBalance,
     updateReceive,
     walletOperations,
   ]);

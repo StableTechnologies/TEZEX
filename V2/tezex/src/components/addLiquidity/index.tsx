@@ -206,10 +206,10 @@ export const AddLiquidity: FC = () => {
     updateTransaction();
   }, [updateTransaction]);
 
-  const updateBalance = useCallback(async () => {
+  const updateBalance = useCallback(() => {
     if (isWalletConnected) {
       if (active && active.sendAssetBalance[1]) {
-        setLoadingBalances(!(await walletOperations.updateBalance()));
+        setLoadingBalances(!walletOperations.updateTransactionBalance());
       }
     }
   }, [active, walletOperations, isWalletConnected]);
@@ -231,46 +231,34 @@ export const AddLiquidity: FC = () => {
   }, [active, updateSend2, updateReceive]);
 
   useEffect(() => {
-    const updateTransactionBalance = async () => {
-      await updateBalance();
-    };
-
-    const interval = setInterval(
-      () => {
-        updateTransactionBalance();
-      },
-      loadingBalances ? 2000 : 5000
-    );
+    const interval = setInterval(() => {
+      updateBalance();
+    }, 2000);
     return () => clearInterval(interval);
   });
 
   const newTransaction = useCallback(async () => {
-    await walletOperations
-      .initialize([assets[send1], assets[send2]], [assets[receive]])
-      .then(async (transaction: Transaction | undefined) => {
-        if (transaction) {
-          await updateBalance().then(() => {
-            if (swapingFields) setSwapingFields(false);
-            setLoading(false);
-            setLoadingBalances(false);
-          });
-        }
-      });
+    const transaction = walletOperations.initialize(
+      [assets[send1], assets[send2]],
+      [assets[receive]]
+    );
+    if (transaction) {
+      updateBalance();
+      if (swapingFields) setSwapingFields(false);
+      setLoading(false);
+      setLoadingBalances(false);
+    }
   }, [swapingFields, assets, updateBalance, walletOperations]);
 
   useEffect(() => {
-    const _newTransaction = async () => {
-      await newTransaction();
-    };
-
     if (!loading && !active) {
-      _newTransaction();
+      newTransaction();
     }
     if (loading && swapingFields) {
-      _newTransaction();
+      newTransaction();
     }
     if (loading && !active) {
-      _newTransaction();
+      newTransaction();
     } else if (loading) {
       if (active) {
         updateSend(active.sendAmount[0].decimal.toString());
@@ -284,6 +272,7 @@ export const AddLiquidity: FC = () => {
           updateSend2(active.sendAmount[1].decimal.toString());
         updateReceive(active.receiveAmount[0].decimal.toString());
         updateSlippage(active.slippage.toString());
+        updateBalance();
         setLoading(false);
       }
       if (session.activeComponent !== TransactingComponent.ADD_LIQUIDITY)
