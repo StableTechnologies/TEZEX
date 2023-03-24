@@ -154,10 +154,10 @@ export const RemoveLiquidity: FC = () => {
     updateTransaction();
   }, [updateTransaction]);
 
-  const updateBalance = useCallback(async () => {
+  const updateBalance = useCallback(() => {
     if (isWalletConnected) {
       if (active) {
-        setLoadingBalances(!(await walletOperations.updateBalance()));
+        setLoadingBalances(!walletOperations.updateTransactionBalance());
       }
     }
   }, [active, walletOperations, isWalletConnected]);
@@ -176,45 +176,34 @@ export const RemoveLiquidity: FC = () => {
   }, [active]);
 
   useEffect(() => {
-    const updateTransactionBalance = async () => {
-      await updateBalance();
-    };
-
-    const interval = setInterval(
-      () => {
-        updateTransactionBalance();
-      },
-      loadingBalances ? 2000 : 5000
-    );
+    const interval = setInterval(() => {
+      updateBalance();
+    }, 2000);
     return () => clearInterval(interval);
   });
 
   const newTransaction = useCallback(async () => {
-    await walletOperations
-      .initialize([assets[send]], [assets[receive1], assets[receive2]])
-      .then(async (transaction: Transaction | undefined) => {
-        if (transaction) {
-          await updateBalance().then(() => {
-            setLoading(false);
-            setLoadingBalances(false);
-          });
-        }
-      });
+    const transaction = walletOperations.initialize(
+      [assets[send]],
+      [assets[receive1], assets[receive2]]
+    );
+    if (transaction) {
+      updateBalance();
+      setLoading(false);
+      setLoadingBalances(false);
+    }
   }, [assets, updateBalance, walletOperations]);
 
   useEffect(() => {
-    const _newTransaction = async () => {
-      await newTransaction();
-    };
-
     if (!loading && !active) {
-      _newTransaction();
+      newTransaction();
     }
     if (loading && !active) {
-      _newTransaction();
+      newTransaction();
     } else if (loading) {
       if (active) {
         updateSend(active.sendAmount[0].decimal.toString());
+        updateBalance();
         setLoading(false);
       }
       if (session.activeComponent !== TransactingComponent.REMOVE_LIQUIDITY)
