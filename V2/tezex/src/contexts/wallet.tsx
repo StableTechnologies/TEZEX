@@ -96,11 +96,11 @@ export interface WalletInfo {
     receiveAmount?: Amount
   ) => Transaction;
 
-  updateBalance: (
+  updateTransactionBalance: (
     component: TransactingComponent,
     transaction: Transaction,
     checkBalances?: boolean
-  ) => Promise<boolean>;
+  ) => void;
 
   updateStatus: (
     component: TransactingComponent,
@@ -242,6 +242,9 @@ export function WalletProvider(props: IWalletProvider) {
             network.info.dex.address,
             toolkit
           )
+            .then(() => {
+              return updateBalances();
+            })
             .then(() => {
               return {
                 ...transaction,
@@ -395,41 +398,6 @@ export function WalletProvider(props: IWalletProvider) {
     return transactions.find((t: Transaction) => t.id === id);
   };
 
-  const getBalanceOfAssets = useCallback(
-    async (assets: AssetOrAssetPair): Promise<Amount | null> => {
-      if (toolkit && address) {
-        switch (assets.length) {
-          case Assets.ASSET:
-            return await getBalance(toolkit, address, assets[0])
-              .then((balance: Balance) => {
-                return [balance] as Amount;
-              })
-              .catch((e) => {
-                console.log(e);
-                return null;
-              });
-          case Assets.PAIR:
-            return await getBalance(toolkit, address, assets[0])
-              .then((balance: Balance) => {
-                const withSecondAsset = async () => {
-                  return [
-                    balance,
-                    await getBalance(toolkit, address, assets[1]),
-                  ] as Amount;
-                };
-                return withSecondAsset();
-              })
-              .catch((e) => {
-                console.log(e);
-                return null;
-              });
-        }
-      }
-      return null;
-    },
-    [toolkit, address]
-  );
-
   const checkSufficientBalance = (
     userBalance: Amount,
     requiredAmount: Amount
@@ -472,15 +440,15 @@ export function WalletProvider(props: IWalletProvider) {
         transactionStatus: balanceStatus,
       };
     },
-    [getBalanceOfAssets]
+    [getBalancesOfAssets]
   );
 
-  const updateBalance = useCallback(
-    async (
+  const updateTransactionBalance = useCallback(
+    (
       component: TransactingComponent,
       transaction: Transaction,
       checkBalances = true
-    ): Promise<boolean> => {
+    ) => {
       //console.log('\n',' : UPDATE balance call ','\n');
 
       const _transaction: Transaction = updateBalanceTransaction(
@@ -731,7 +699,7 @@ export function WalletProvider(props: IWalletProvider) {
     removeLiquidityTransaction,
     initialiseTransaction,
     updateStatus,
-    updateBalance,
+    updateTransactionBalance,
     updateAmount,
     getActiveTransaction,
     fetchTransaction,

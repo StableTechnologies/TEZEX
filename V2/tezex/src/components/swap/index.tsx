@@ -188,10 +188,10 @@ export const Swap: FC = () => {
     updateTransaction();
   }, [updateTransaction]);
 
-  const updateBalance = useCallback(async () => {
+  const updateBalance = useCallback(() => {
     if (isWalletConnected) {
       if (active) {
-        setLoadingBalances(!(await walletOperations.updateBalance()));
+        setLoadingBalances(!walletOperations.updateTransactionBalance());
       }
     }
   }, [active, walletOperations, isWalletConnected]);
@@ -214,54 +214,42 @@ export const Swap: FC = () => {
   }, [active, updateReceive]);
 
   useEffect(() => {
-    const updateTransactionBalance = async () => {
-      await updateBalance();
-    };
-
     const interval = setInterval(() => {
-      updateTransactionBalance();
-    }, 5000);
+      updateBalance();
+    }, 2000);
     return () => clearInterval(interval);
   });
 
   const newTransaction = useCallback(async () => {
-    await walletOperations
-      .initialize([assets[send]], [assets[receive]])
-      .then(async (transaction: Transaction | undefined) => {
-        if (transaction) {
-          await updateBalance().then(() => {
-            if (swapingFields) setSwapingFields(false);
-            setLoading(false);
-            setLoadingBalances(false);
-          });
-        }
-      });
+    const transaction = walletOperations.initialize(
+      [assets[send]],
+      [assets[receive]]
+    );
+
+    if (transaction) {
+      updateBalance();
+      if (swapingFields) setSwapingFields(false);
+      setLoading(false);
+      setLoadingBalances(false);
+    }
   }, [swapingFields, assets, updateBalance, walletOperations]);
 
   useEffect(() => {
-    const _newTransaction = async () => {
-      await newTransaction();
-    };
-
-    const updateTransactionBalance = async () => {
-      await updateBalance();
-    };
-
     if (!loading && !active) {
-      _newTransaction();
+      newTransaction();
     }
     if (loading && swapingFields) {
-      _newTransaction();
+      newTransaction();
     }
     if (loading && !active) {
-      _newTransaction();
+      newTransaction();
     } else if (loading) {
       if (active) {
         updateSend(active.sendAmount[0].decimal.toString());
 
         updateReceive(active.receiveAmount[0].decimal.toString());
         updateSlippage(active.slippage.toString());
-        updateTransactionBalance();
+        updateBalance;
         setLoading(false);
       }
       if (session.activeComponent !== TransactingComponent.SWAP)

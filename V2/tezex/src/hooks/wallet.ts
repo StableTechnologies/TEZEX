@@ -22,10 +22,10 @@ export interface WalletOps {
     sendAmount?: BigNumber,
     receiveAmount?: BigNumber,
     slippage?: number
-  ) => Promise<Transaction | undefined>;
+  ) => Transaction | undefined;
   viewTransaction: (id: Id) => Transaction | undefined | null;
   getActiveTransaction: () => Transaction | undefined;
-  updateBalance: () => Promise<boolean>;
+  updateTransactionBalance: () => boolean;
   updateAmount: (sendAmount?: string, slippage?: string) => Promise<boolean>;
   sendTransaction: () => Promise<void>;
 }
@@ -82,10 +82,10 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
   }, [transacting, transaction, setTransacting, loading]);
 
   const initialize = useCallback(
-    async (
+    (
       sendAsset: AssetOrAssetPair,
       recieveAsset: AssetOrAssetPair
-    ): Promise<Transaction | undefined> => {
+    ): Transaction | undefined => {
       if (loading) {
         return transaction;
       } else if (
@@ -102,21 +102,23 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
           recieveAsset
         );
 
-        if (wallet.client) await wallet.updateBalance(component, transaction);
+        if (wallet.client)
+          wallet.updateTransactionBalance(component, transaction);
         return transaction;
       } else return undefined;
     },
     [wallet, loading, transaction, component]
   );
 
-  const updateBalance = useCallback(async (): Promise<boolean> => {
+  const updateTransactionBalance = useCallback((): boolean => {
     if (
       wallet &&
       transaction &&
       transaction.transactionStatus !== TransactionStatus.PENDING &&
       !transacting
     ) {
-      return await wallet.updateBalance(component, transaction);
+      wallet.updateTransactionBalance(component, transaction);
+      return true;
     } else return false;
   }, [wallet, component, transaction, transacting]);
 
@@ -223,7 +225,7 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
     initialize,
     viewTransaction,
     getActiveTransaction,
-    updateBalance,
+    updateTransactionBalance,
     updateAmount,
     sendTransaction,
   };
