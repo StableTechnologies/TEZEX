@@ -1,11 +1,6 @@
 import React, { FC, useState, useEffect, useCallback } from "react";
 
-import {
-  Transaction,
-  Token,
-  Asset,
-  TransactingComponent,
-} from "../../types/general";
+import { Token, Asset, TransactingComponent } from "../../types/general";
 
 import { BigNumber } from "bignumber.js";
 import { TokenInput } from "../../components/ui/elements/inputs";
@@ -104,8 +99,6 @@ export const RemoveLiquidity: FC = () => {
   );
   const isWalletConnected = useWalletConnected();
 
-  const [loadingBalances, setLoadingBalances] = useState<boolean>(true);
-
   const [loading, setLoading] = useState<boolean>(true);
 
   const [sendAmount, setSendAmount] = useState(new BigNumber(0));
@@ -157,7 +150,7 @@ export const RemoveLiquidity: FC = () => {
   const updateBalance = useCallback(() => {
     if (isWalletConnected) {
       if (active) {
-        setLoadingBalances(!walletOperations.updateTransactionBalance());
+        walletOperations.updateTransactionBalance();
       }
     }
   }, [active, walletOperations, isWalletConnected]);
@@ -190,7 +183,6 @@ export const RemoveLiquidity: FC = () => {
     if (transaction) {
       updateBalance();
       setLoading(false);
-      setLoadingBalances(false);
     }
   }, [assets, updateBalance, walletOperations]);
 

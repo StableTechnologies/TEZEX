@@ -1,11 +1,6 @@
 import React, { FC, useState, useEffect, useCallback } from "react";
 
-import {
-  Transaction,
-  Token,
-  Asset,
-  TransactingComponent,
-} from "../../types/general";
+import { Token, Asset, TransactingComponent } from "../../types/general";
 
 import { BigNumber } from "bignumber.js";
 import { TokenInput, Slippage } from "../../components/ui/elements/inputs";
@@ -110,8 +105,6 @@ export const Swap: FC = () => {
   const walletOperations: WalletOps = useWalletOps(TransactingComponent.SWAP);
   const isWalletConnected = useWalletConnected();
 
-  const [loadingBalances, setLoadingBalances] = useState<boolean>(true);
-
   const [loading, setLoading] = useState<boolean>(true);
 
   const [sendAmount, setSendAmount] = useState(new BigNumber(0));
@@ -155,7 +148,6 @@ export const Swap: FC = () => {
     [slippage]
   );
   const swapFields = useCallback(() => {
-    setLoadingBalances(true);
     setAssets([assets[1], assets[0]]);
     setSwapingFields(true);
     setLoading(true);
@@ -191,7 +183,7 @@ export const Swap: FC = () => {
   const updateBalance = useCallback(() => {
     if (isWalletConnected) {
       if (active) {
-        setLoadingBalances(!walletOperations.updateTransactionBalance());
+        walletOperations.updateTransactionBalance();
       }
     }
   }, [active, walletOperations, isWalletConnected]);
@@ -230,7 +222,6 @@ export const Swap: FC = () => {
       updateBalance();
       if (swapingFields) setSwapingFields(false);
       setLoading(false);
-      setLoadingBalances(false);
     }
   }, [swapingFields, assets, updateBalance, walletOperations]);
 
@@ -299,7 +290,7 @@ export const Swap: FC = () => {
                   asset={assets[send]}
                   onChange={updateSend}
                   value={sendAmount.toString()}
-                  balance={loadingBalances ? "loading.." : balances[0]}
+                  balance={balances[0]}
                   loading={loading}
                 />
               </Grid2>
@@ -321,7 +312,7 @@ export const Swap: FC = () => {
                   asset={assets[receive]}
                   value={receiveAmount.toString()}
                   readOnly={true}
-                  balance={loadingBalances ? "loading.." : balances[1]}
+                  balance={balances[1]}
                 />
               </Grid2>
             </CardContent>

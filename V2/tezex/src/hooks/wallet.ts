@@ -9,7 +9,6 @@ import { useNetwork } from "../hooks/network";
 import { balanceBuilder } from "../functions/util";
 import {
   Transaction,
-  Id,
   TransactionStatus,
   TransactingComponent,
   AssetOrAssetPair,
@@ -23,7 +22,6 @@ export interface WalletOps {
     receiveAmount?: BigNumber,
     slippage?: number
   ) => Transaction | undefined;
-  viewTransaction: (id: Id) => Transaction | undefined | null;
   getActiveTransaction: () => Transaction | undefined;
   updateTransactionBalance: () => boolean;
   updateAmount: (sendAmount?: string, slippage?: string) => Promise<boolean>;
@@ -125,11 +123,6 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
   const getActiveTransaction = useCallback((): Transaction | undefined => {
     return transaction;
   }, [transaction]);
-  const viewTransaction = (id: Id): Transaction | undefined => {
-    if (wallet) {
-      return wallet.fetchTransaction(id);
-    }
-  };
   const sendTransaction = useCallback(async () => {
     if (wallet && transaction && wallet.address && wallet.toolkit) {
       wallet.updateStatus(component, TransactionStatus.PENDING);
@@ -223,7 +216,6 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
   );
   return {
     initialize,
-    viewTransaction,
     getActiveTransaction,
     updateTransactionBalance,
     updateAmount,

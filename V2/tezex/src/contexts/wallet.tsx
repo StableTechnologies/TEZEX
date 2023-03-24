@@ -6,7 +6,6 @@ import { DAppClient } from "@airgap/beacon-sdk";
 import {
   Transaction,
   Asset,
-  Assets,
   AssetBalance,
   Balance,
   TransactionStatus,
@@ -84,7 +83,6 @@ export interface WalletInfo {
   isWalletConnected: boolean;
   isReady: () => boolean;
   disconnect: () => void;
-  transactions: Transaction[];
   swapTransaction: Transaction | undefined;
   addLiquidityTransaction: Transaction | undefined;
   removeLiquidityTransaction: Transaction | undefined;
@@ -98,8 +96,7 @@ export interface WalletInfo {
 
   updateTransactionBalance: (
     component: TransactingComponent,
-    transaction: Transaction,
-    checkBalances?: boolean
+    transaction: Transaction
   ) => void;
 
   updateStatus: (
@@ -115,7 +112,6 @@ export interface WalletInfo {
   getActiveTransaction: (
     component: TransactingComponent
   ) => Transaction | undefined;
-  fetchTransaction: (id: string) => Transaction | undefined;
 }
 
 export const WalletContext = createContext<WalletInfo | undefined>(undefined);
@@ -139,8 +135,6 @@ interface IWalletProvider {
 }
 export function WalletProvider(props: IWalletProvider) {
   // eslint-disable-next-line
-
-  const [transactions, setTransactions] = useImmer<Transaction[]>([]);
 
   const network = useNetwork();
 
@@ -394,10 +388,6 @@ export function WalletProvider(props: IWalletProvider) {
     [network.network, setActiveTransaction]
   );
 
-  const fetchTransaction = (id: string): Transaction | undefined => {
-    return transactions.find((t: Transaction) => t.id === id);
-  };
-
   const checkSufficientBalance = (
     userBalance: Amount,
     requiredAmount: Amount
@@ -421,7 +411,7 @@ export function WalletProvider(props: IWalletProvider) {
   };
 
   const updateBalanceTransaction = useCallback(
-    (transaction: Transaction, checkBalance?: boolean): Transaction => {
+    (transaction: Transaction): Transaction => {
       //console.log('\n',' : getBalancesCall ','\n');
       const sendAssetBalance: Amount = getBalancesOfAssets(
         transaction.sendAsset
@@ -444,17 +434,10 @@ export function WalletProvider(props: IWalletProvider) {
   );
 
   const updateTransactionBalance = useCallback(
-    (
-      component: TransactingComponent,
-      transaction: Transaction,
-      checkBalances = true
-    ) => {
+    (component: TransactingComponent, transaction: Transaction) => {
       //console.log('\n',' : UPDATE balance call ','\n');
 
-      const _transaction: Transaction = updateBalanceTransaction(
-        transaction,
-        checkBalances
-      );
+      const _transaction: Transaction = updateBalanceTransaction(transaction);
       switch (component) {
         case TransactingComponent.SWAP:
           setSwapTransaction((draft: Draft<Transaction | undefined>) => {
@@ -693,7 +676,6 @@ export function WalletProvider(props: IWalletProvider) {
     walletUser: walletUser(walletStatus, setWalletStatus),
     isWalletConnected,
     isReady: isReady(walletStatus),
-    transactions,
     swapTransaction,
     addLiquidityTransaction,
     removeLiquidityTransaction,
@@ -702,7 +684,6 @@ export function WalletProvider(props: IWalletProvider) {
     updateTransactionBalance,
     updateAmount,
     getActiveTransaction,
-    fetchTransaction,
     disconnect,
   };
 

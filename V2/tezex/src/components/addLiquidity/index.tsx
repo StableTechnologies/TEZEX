@@ -5,12 +5,7 @@ import rightArrow from "../../assets/rightArrow.svg";
 import plusIcon from "../../assets/plusIcon.svg";
 
 import { Wallet } from "../wallet";
-import {
-  Transaction,
-  Token,
-  Asset,
-  TransactingComponent,
-} from "../../types/general";
+import { Token, Asset, TransactingComponent } from "../../types/general";
 
 import { BigNumber } from "bignumber.js";
 import { TokenInput, Slippage } from "../../components/ui/elements/inputs";
@@ -102,7 +97,6 @@ export const AddLiquidity: FC = () => {
   const isWalletConnected = useWalletConnected();
 
   const active = walletOperations.getActiveTransaction();
-  const [loadingBalances, setLoadingBalances] = useState<boolean>(true);
 
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -140,7 +134,6 @@ export const AddLiquidity: FC = () => {
   const swapFields = useCallback(() => {
     setAssets([assets[1], assets[0], assets[receive]]);
 
-    setLoadingBalances(true);
     setSwapingFields(true);
     setLoading(true);
   }, [assets]);
@@ -209,7 +202,7 @@ export const AddLiquidity: FC = () => {
   const updateBalance = useCallback(() => {
     if (isWalletConnected) {
       if (active && active.sendAssetBalance[1]) {
-        setLoadingBalances(!walletOperations.updateTransactionBalance());
+        walletOperations.updateTransactionBalance();
       }
     }
   }, [active, walletOperations, isWalletConnected]);
@@ -246,7 +239,6 @@ export const AddLiquidity: FC = () => {
       updateBalance();
       if (swapingFields) setSwapingFields(false);
       setLoading(false);
-      setLoadingBalances(false);
     }
   }, [swapingFields, assets, updateBalance, walletOperations]);
 
@@ -355,7 +347,7 @@ export const AddLiquidity: FC = () => {
                   asset={assets[send1]}
                   onChange={updateSend}
                   value={sendAmount.toString()}
-                  balance={loadingBalances ? "loading.." : balances[0]}
+                  balance={balances[0]}
                   label="Enter Amount"
                   loading={loading}
                 />
@@ -375,7 +367,7 @@ export const AddLiquidity: FC = () => {
                   asset={assets[send2]}
                   value={sendAmount2.toString()}
                   readOnly={true}
-                  balance={loadingBalances ? "loading.." : balances[1]}
+                  balance={balances[1]}
                   label="Required Amount"
                   darker={true}
                   swap={swapFields}
