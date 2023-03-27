@@ -199,9 +199,7 @@ export function WalletProvider(props: IWalletProvider) {
 
   useEffect(() => {
     const _updateBalances = async () => {
-      await updateBalances().then(() => {
-        console.log("\n", "assetBalances : ", assetBalances, "\n");
-      });
+      await updateBalances();
     };
     _updateBalances();
   }, [isWalletConnected]);
