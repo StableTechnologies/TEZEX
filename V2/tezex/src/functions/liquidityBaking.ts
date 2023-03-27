@@ -172,20 +172,27 @@ export async function tokenToXtz(
     const lbContract = await toolkit.wallet.at(lbContractAddress);
     // the deadline value is arbitrary and can be changed
     const tzBtcContract = await toolkit.wallet.at(tzbtcContractAddress);
+    const approve0 = tzBtcContract.methods.approve(lbContractAddress, 0);
     const approve = tzBtcContract.methods.approve(
       lbContractAddress,
-      tokenMantissa
+      tokenMantissa.integerValue(BigNumber.ROUND_DOWN)
     );
+    //TEMP remove reinsert slippage
     const minXtzBought = removeSlippage(slippage, xtzAmountInMutez);
+    //const minXtzBought = removeSlippage(slippage, xtzAmountInMutez);
     const transfer = lbContract.methods.tokenToXtz(
       userAddress,
       tokenMantissa.integerValue(BigNumber.ROUND_DOWN),
       minXtzBought,
-      new Date(Date.now() + 12000000).toISOString()
+      new Date(Date.now() + 60000).toISOString()
     );
     const est = async () => {
       try {
         const estimate = await toolkit.estimate.batch([
+          {
+            kind: OpKind.TRANSACTION,
+            ...approve0.toTransferParams({}),
+          },
           {
             kind: OpKind.TRANSACTION,
             ...approve.toTransferParams({}),
@@ -198,7 +205,9 @@ export async function tokenToXtz(
 
         return estimate;
       } catch (err) {
-        console.log(`failed in estimating tokenToXtz ${JSON.stringify(err)}}`);
+        console.log(
+          `failed in estimating gas tokenToXtz ${JSON.stringify(err)}}`
+        );
       }
     };
     const estimate = await est();
@@ -207,7 +216,7 @@ export async function tokenToXtz(
       const batch = toolkit.wallet.batch().with([
         {
           kind: OpKind.TRANSACTION,
-          ...approve.toTransferParams({
+          ...approve0.toTransferParams({
             fee: estimate[0].suggestedFeeMutez,
             gasLimit: estimate[0].gasLimit,
             storageLimit: estimate[0].storageLimit,
@@ -215,10 +224,18 @@ export async function tokenToXtz(
         },
         {
           kind: OpKind.TRANSACTION,
-          ...transfer.toTransferParams({
+          ...approve.toTransferParams({
             fee: estimate[1].suggestedFeeMutez,
             gasLimit: estimate[1].gasLimit,
             storageLimit: estimate[1].storageLimit,
+          }),
+        },
+        {
+          kind: OpKind.TRANSACTION,
+          ...transfer.toTransferParams({
+            fee: estimate[2].suggestedFeeMutez,
+            gasLimit: estimate[2].gasLimit,
+            storageLimit: estimate[2].storageLimit,
           }),
         },
       ]);
