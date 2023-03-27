@@ -170,12 +170,12 @@ export function WalletProvider(props: IWalletProvider) {
   };
   const findAssetBalance = (asset: Asset): Balance => {
     const found = assetBalances.find((assetBalance: AssetBalance) => {
-      assetBalance.asset.name === asset.name;
+      return (assetBalance.asset.name as string) === (asset.name as string);
     });
     if (found) {
       if (found.balance) return found.balance as Balance;
       return zeroBalance;
-    } else throw Error("Asset not found in Config");
+    } else throw Error("Asset : " + asset.name + " not found in Config");
   };
   const getBalancesOfAssets = (assets: AssetOrAssetPair): Amount => {
     const amount: Amount = assets.map((asset: Asset) => {
@@ -198,7 +198,12 @@ export function WalletProvider(props: IWalletProvider) {
   }, [address, toolkit, client]);
 
   useEffect(() => {
-    updateBalances();
+    const _updateBalances = async () => {
+      await updateBalances().then(() => {
+        console.log("\n", "assetBalances : ", assetBalances, "\n");
+      });
+    };
+    _updateBalances();
   }, [isWalletConnected]);
 
   useEffect(() => {
