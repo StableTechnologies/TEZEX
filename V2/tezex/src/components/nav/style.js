@@ -1,124 +1,85 @@
-import { styled } from "@mui/system";
-
-const useStyles = styled((theme) => ({
-  root: {
-    "& .MuiDrawer-paperAnchorRight": {
-      left: "auto",
-      right: "0",
-      top: "60px",
-      width: "284px",
-      height: "auto",
-      margin: "0 .5rem",
-      borderRadius: "4px",
+const style = {
+  navApp: {
+    "&.MuiButton-root.Mui-disabled": {
+      color: "#999999",
     },
-  },
-  header: {
+
+    "& .MuiButtonBase-root": {
+      "&.Mui-selected": {
+        color: "#000000",
+      },
+      fontFamily: "Inter",
+      fontStyle: "normal",
+      fontWeight: "500",
+      fontSize: "1.11vw",
+      lineHeight: "1.34vw",
+      display: "inline-flex",
+      justifyContent: "center",
+      textAlign: "center",
+      //minHeight: "16",
+      //marginRight: "40px",
+      minWidth: "3.7vw",
+      maxWidth: "7.7vw",
+      // marginTop: spacing(0.5),
+      padding: "0px 4vw ",
+      color: "#999999",
+      background: "white",
+      textTransform: "initial",
+    },
+
+    padding: 0,
+    //idth: "12.7vw",
     display: "flex",
     fontSize: "1.5vw",
+    justifyContent: "center",
   },
-  account: {
-    padding: "0.6vw",
-    border: "0.2vw black solid",
-    borderRadius: "2vw",
-    height: "fit-content",
-    width: "28vw",
-    marginTop: "1vw",
-  },
-  button: {
-    color: "black",
-    border: "0",
-    cursor: "pointer",
-    margin: "1.5vw 0.7vw",
-    fontSize: "1.125rem",
-    fontWeight: "bold",
-    backgroundColor: "white",
-    width: "8vw",
-    "@media (max-width: 768px)": {
-      fontSize: "1rem",
-    },
-    "@media (max-width: 600px)": {
-      fontSize: ".7rem",
-      width: "auto",
-    },
-    "&:hover": {
-      textDecoration: "underline",
-    },
-    "&:active": {
-      textDecoration: "underline",
-    },
-  },
+  navHome: {
+    root: {
+      ".MuiTabs-flexContainer": {
+        justifyContent: "space-between",
 
-  btn: {
-    "&.Element": {
-      "@media (min-width: 1200px)": {
-        marginRight: "1.3rem",
-        marginLeft: "-2rem",
+        border: "1px solid #EDEDED",
+        borderRadius: 4,
+        display: "inline-flex",
+        position: "relative",
       },
-    },
-  },
-  nav: {
-    width: "100%",
-  },
-  walletbutton: {
-    "&.Element": {
-      background: "white",
-      width: "160px",
-      height: "40px",
-      marginRight: ".3rem",
-      marginLeft: ".3rem",
-      border: "1px solid black",
-      textTransform: "none",
-      fontSize: "16px",
-      "@media (max-width: 768px)": {
-        margin: ".2rem",
-        height: "35px",
-      },
-      "@media (max-width: 600px)": {
-        marginTop: ".5rem",
-        fontSize: "13px",
-        width: "150px",
-        height: "30px",
-      },
-      "@media (min-width: 1200px)": {
-        margin: "0 .9375rem",
-      },
-    },
-  },
-  rightwalletbutton: {
-    "&.Element": {
-      "@media (min-width: 1200px)": {
-        marginRight: "0",
-        marginLeft: "1rem",
-      },
-    },
-  },
-  btnContent: {
-    flexWrap: "nowrap",
-  },
-  ethButton: {
-    "&.Element": {
-      background:
-        "linear-gradient(92.7deg, rgba(206, 143, 255, 0.4) 4.54%, #F9FEFF 98.49%)",
-    },
-  },
-  tezButton: {
-    "&.Element": {
-      background:
-        "linear-gradient(92.04deg, rgba(171, 240, 255, 0.4) 4.41%, #F9FEFF 84.62%)",
-    },
-  },
-  tezStyle: {
-    "&.Element": {
-      position: "absolute",
-      borderRadius: "4px",
-      height: "auto",
-      width: "284px",
-      left: "1141px",
-      top: "65px",
-      background:
-        "linear-gradient(92.04deg, rgba(171, 240, 255, 0.4) 4.41%, #F9FEFF 84.62%)",
-    },
-  },
-}));
+      ".MuiTabs-indicator": {
+        top: 0,
 
-export default useStyles;
+        minHeight: "5vw",
+
+        background: "none",
+        "&:after": {
+          content: '""',
+          display: "block",
+          position: "absolute",
+
+          top: ".5vw",
+          bottom: "1.5vw",
+          left: "1vw",
+          right: "1vw",
+          borderRadius: 3,
+          backgroundColor: "selectedHomeTab.main",
+        },
+      },
+    },
+    tab: {
+      "&.MuiButtonBase-root": {
+        fontSize: "1.11vw",
+        minHeight: "1.32vw",
+        minWidth: "3.0vw",
+        padding: "3% 3.9vw",
+        zIndex: 2,
+
+        color: "palette.text.primary",
+        textTransform: "initial",
+      },
+      wrapper: {
+        color: "palette.text.primary",
+        textTransform: "initial",
+      },
+    },
+  },
+};
+
+export default style;

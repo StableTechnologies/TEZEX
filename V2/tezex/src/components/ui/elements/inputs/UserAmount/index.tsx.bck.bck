@@ -215,4 +215,4 @@ const TokenAmountInput: FC<ITokenAmountInput> = (props) => {
   return <Variant />;
 };
 
-export const TokenInput = memo(TokenAmountInput);
+export const UserAmountField = memo(TokenAmountInput);

@@ -3,7 +3,7 @@ import React, { FC, useState, useEffect, useCallback } from "react";
 import { Token, Asset, TransactingComponent } from "../../types/general";
 
 import { BigNumber } from "bignumber.js";
-import { TokenInput } from "../../components/ui/elements/inputs";
+import { UserAmountField } from "../../components/ui/elements/inputs";
 import { Wallet } from "../wallet";
 import { useWalletConnected } from "../../hooks/wallet";
 import { useSession } from "../../hooks/session";
@@ -18,75 +18,8 @@ import CardActions from "@mui/material/CardActions";
 import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
 import Typography from "@mui/material/Typography";
-const classes = {
-  cardcontent: {
-    "&.MuiCardContent-root": {
-      paddingTop: "0px",
-    },
-    "& .MuiFormControl-root": {
-      width: "28.34vw",
-      height: "6.94vw",
-    },
-  },
-  cardAction: {
-    justifyContent: "center",
-  },
-  slippageContainer: {
-    background: "black",
-    flexDirection: "row",
-    position: "absolute",
-    zIndex: 5,
-    display: "flex",
-    alignItems: "center",
-    minWidth: 408,
-    bottom: "17%",
-    "& .MuiGrid2-root": {},
-  },
 
-  slippageComponent: {
-    "& .MuiGrid2-root": {},
-  },
-  slippage: {
-    text: {},
-  },
-
-  input1: {
-    position: "relative",
-
-    "& .MuiFormControl-root": {
-      width: "21.45vw",
-      height: "3.8vw",
-    },
-  },
-  card: {
-    overflow: "hidden",
-    position: "relative",
-    height: "26.04vw",
-    width: "30.56vw",
-    borderRadius: "1.38vw",
-    zIndex: 999,
-    background: "#FFFFFF",
-    border: "1px solid #E1E1E1",
-    "& .MuiCardContent-root": {
-      padding: "8px",
-    },
-  },
-  paper: {
-    background: "#F9F9F9",
-    borderRadius: "20px",
-    border: "1px solid #E1E1E1",
-    minHeight: "146px",
-    position: "relative",
-    bottom: "10%",
-    zIndex: -1,
-    marginBottom: "20px",
-  },
-  root: {
-    display: "flex",
-    position: "relative",
-    justifyContent: "center",
-  },
-};
+import style from "./style";
 
 export interface ISwapToken {
   children: null;
@@ -203,39 +136,21 @@ export const RemoveLiquidity: FC = () => {
     }
   }, [loading, active, newTransaction, session, updateSend, walletOperations]);
   return (
-    <Grid2 container sx={classes.root}>
+    <Grid2 container sx={style.root}>
       <Grid2>
-        <Card sx={classes.card}>
+        <Card sx={style.card}>
           <CardHeader
-            sx={{
-              paddingBottom: "0px",
-              fontSize: "1vw",
-              textAlign: "left",
-            }}
+            sx={style.cardHeader}
             title={
-              <Typography
-                sx={{
-                  fontSize: "1.4vw",
-                }}
-              >
+              <Typography sx={style.headerTypography}>
                 {"Remove Liquidity"}
               </Typography>
             }
           />
-          <CardContent sx={classes.cardcontent}>
-            <Box
-              sx={{
-                display: "flex",
-
-                position: "absolute",
-                top: "16.87%",
-                justifyContent: "center",
-                alignItems: "center",
-                flexDirection: "row",
-              }}
-            >
-              <Box sx={classes.input1}>
-                <TokenInput
+          <CardContent sx={style.cardcontent}>
+            <Box sx={style.cardContentBox}>
+              <Box sx={style.input1}>
+                <UserAmountField
                   asset={assets[send]}
                   readOnly={useMax}
                   onChange={updateSend}
@@ -253,27 +168,19 @@ export const RemoveLiquidity: FC = () => {
                 }}
               >
                 <Typography
-                  sx={{
-                    fontSize: ".97vw",
-                    lineHeight: "1.176vw",
-                    color: useMax ? "#00A0E4" : "#999999;",
-                  }}
+                  sx={
+                    useMax
+                      ? style.useMaxTypographyEnabled
+                      : style.useMaxTypographyEnabled
+                  }
                 >
                   {"Use Max"}
                 </Typography>
               </Button>
             </Box>
           </CardContent>
-          <CardActions sx={classes.cardAction}>
-            <Box
-              sx={{
-                width: "28.33vw",
-                height: "4.16vw",
-                position: "absolute",
-                top: "79.4%",
-                justifyContent: "center",
-              }}
-            >
+          <CardActions sx={style.cardAction}>
+            <Box sx={style.wallet}>
               <Wallet transaction={active} callback={transact}>
                 {"Sell Shares"}
               </Wallet>

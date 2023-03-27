@@ -8,7 +8,7 @@ import { Wallet } from "../wallet";
 import { Token, Asset, TransactingComponent } from "../../types/general";
 
 import { BigNumber } from "bignumber.js";
-import { TokenInput, Slippage } from "../../components/ui/elements/inputs";
+import { UserAmountField, Slippage } from "../../components/ui/elements/inputs";
 
 import { useWalletConnected } from "../../hooks/wallet";
 import { useSession } from "../../hooks/session";
@@ -22,68 +22,7 @@ import CardActions from "@mui/material/CardActions";
 import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
 import Typography from "@mui/material/Typography";
-
-const classes = {
-  cardAction: {
-    justifyContent: "space-between",
-  },
-  input: {
-    "& .MuiFormControl-root": {
-      width: "28.34vw",
-      height: "8.61vw",
-    },
-  },
-  slippageContainer: {
-    display: "flex",
-    width: "100%",
-    alignItems: "center",
-    flexDirection: "row",
-    "& .MuiGrid2-root": {},
-  },
-
-  slippageComponent: {
-    "& .MuiGrid2-root": {},
-  },
-  slippage: {
-    text: {},
-  },
-  tokens: {
-    display: "flex",
-  },
-  cardContent: {
-    "&.MuiCardContent-root": {
-      paddingTop: "4vw",
-    },
-    flexDirection: "column",
-    paddingTop: "10vw",
-    alignItems: "center",
-    display: "flex",
-  },
-  card: {
-    minHeight: "32.57vw",
-    minWidth: "63.88vw",
-    borderRadius: "20px",
-    zIndex: 5,
-    background: "#FFFFFF",
-    border: "1px solid #E1E1E1",
-    "& .MuiCardContent-root": {
-      padding: "8px",
-    },
-  },
-  paper: {
-    background: "#F9F9F9",
-    minHeight: "146px",
-    position: "relative",
-    bottom: "10%",
-    borderRadius: "20px",
-    zIndex: -1,
-    marginBottom: "20px",
-  },
-  root: {
-    position: "relative",
-    justifyContent: "center",
-  },
-};
+import style from "./style";
 
 export interface IAddLiquidity {
   children: null;
@@ -284,66 +223,40 @@ export const AddLiquidity: FC = () => {
   ]);
 
   return (
-    <Grid2 container sx={classes.root}>
+    <Grid2 container sx={style.root}>
       <Grid2>
-        <Card sx={classes.card}>
+        <Card sx={style.card}>
           <CardHeader
-            sx={{
-              paddingBottom: "1vw",
-              fontSize: "1vw",
-              textAlign: "left",
-            }}
+            sx={style.cardHeader}
             title={
-              <Typography
-                sx={{
-                  fontSize: "1.4vw",
-                }}
-              >
+              <Typography sx={style.cardHeaderTypography}>
                 {"Add Liquidity"}
               </Typography>
             }
           />
-          <Grid2 xs={8} lg={4} sx={classes.tokens}>
+          <Grid2 xs={8} lg={4} sx={style.tokens}>
             <Box>
               <img
-                style={{
-                  width: "7.1vw",
-                }}
+                style={style.sendAssetsIcon}
                 src={xtzTzbtcIcon}
                 alt="xtzTzbtcIcon"
               />
             </Box>
             <Box>
-              <img
-                style={{
-                  width: "1.67vw",
-                }}
-                src={rightArrow}
-                alt="rightArrow"
-              />
+              <img style={style.rightArrow} src={rightArrow} alt="rightArrow" />
             </Box>
             <Box>
               <img
-                style={{
-                  width: "6.1vw",
-                }}
+                style={style.recieveAssetIcon}
                 src={sirsIcon}
                 alt="sirsIcon"
               />
             </Box>
           </Grid2>
-          <CardContent sx={classes.cardContent}>
-            <Grid2
-              xs={12}
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                flexDirection: "row",
-              }}
-            >
-              <Grid2 xs={6} sx={classes.input}>
-                <TokenInput
+          <CardContent sx={style.cardContent}>
+            <Grid2 xs={12} sx={style.cardContendGrid}>
+              <Grid2 xs={6} sx={style.input}>
+                <UserAmountField
                   asset={assets[send1]}
                   onChange={updateSend}
                   value={sendAmount.toString()}
@@ -353,17 +266,12 @@ export const AddLiquidity: FC = () => {
                 />
               </Grid2>
 
-              <Grid2
-                xs={1}
-                sx={{
-                  position: "relative",
-                }}
-              >
+              <Grid2 xs={1} sx={style.plusIcon}>
                 <img src={plusIcon} alt="plusIcon" />
               </Grid2>
 
-              <Grid2 xs={6} sx={classes.input}>
-                <TokenInput
+              <Grid2 xs={6} sx={style.input}>
+                <UserAmountField
                   asset={assets[send2]}
                   value={sendAmount2.toString()}
                   readOnly={true}
@@ -375,33 +283,10 @@ export const AddLiquidity: FC = () => {
               </Grid2>
             </Grid2>
 
-            <Grid2
-              xs={12}
-              sx={{
-                flexDirection: "row",
-                display: "inline-flex",
-                alignItems: "flex-start",
-              }}
-            >
-              <Typography
-                noWrap
-                sx={{
-                  display: "inline-flex",
-                  fontSize: ".97vw",
-                  fontWeight: "400",
-                  lineHeight: "1.18vw",
-                }}
-              >
+            <Grid2 xs={12} sx={style.infoGrid}>
+              <Typography noWrap sx={style.infoText}>
                 You will recieve about{" "}
-                <Typography
-                  sx={{
-                    marginLeft: ".37vw",
-                    marginRight: ".37vw",
-                    fontSize: ".97vw",
-                    fontWeight: "700",
-                    lineHeight: "1.18vw",
-                  }}
-                >
+                <Typography sx={style.infoRecieve}>
                   {" "}
                   {receiveAmount.toString()} Sirs
                 </Typography>
@@ -409,10 +294,10 @@ export const AddLiquidity: FC = () => {
               </Typography>
             </Grid2>
           </CardContent>
-          <CardActions sx={classes.cardAction}>
+          <CardActions sx={style.cardAction}>
             <Grid2 xs={1}>Slippage</Grid2>
 
-            <Grid2 xs={4} sx={classes.slippageComponent}>
+            <Grid2 xs={4} sx={style.slippageComponent}>
               <Slippage
                 asset={assets[receive].name}
                 value={slippage}
