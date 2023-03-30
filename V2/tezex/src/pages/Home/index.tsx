@@ -6,6 +6,9 @@ import { AddLiquidity } from "../../components/addLiquidity";
 import { RemoveLiquidity } from "../../components/removeLiquidity";
 
 import Grid2 from "@mui/material/Unstable_Grid2"; // Grid version 2
+
+import style from "./style";
+
 type HomePaths = "swap" | "add" | "remove";
 
 export interface IHome {
@@ -24,19 +27,8 @@ export const Home: FC<IHome> = (props) => {
   })();
 
   return (
-    <Grid2
-      sx={{
-        flexDirection: "column",
-        justifyContent: "center",
-      }}
-      container
-    >
-      <Grid2
-        sx={{
-          paddingBottom: "2.22vw",
-          paddingTop: "3.88vw",
-        }}
-      >
+    <Grid2 sx={style.homeContainer} container>
+      <Grid2 sx={style.nav}>
         <NavHome />
       </Grid2>
       <Grid2>
