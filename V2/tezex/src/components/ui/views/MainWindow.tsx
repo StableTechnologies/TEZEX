@@ -1,6 +1,8 @@
 import React, { FC } from "react";
 import { Box } from "@mui/system";
 
+import style from "./style";
+
 export interface IMainWindow {
   children:
     | JSX.Element[]
@@ -11,14 +13,5 @@ export interface IMainWindow {
 }
 
 export const MainWindow: FC<IMainWindow> = (props) => {
-  return (
-    <Box
-      sx={{
-        height: "100%",
-        background: "#F5F5F5",
-      }}
-    >
-      {props.children}
-    </Box>
-  );
+  return <Box sx={style.mainWindow}>{props.children}</Box>;
 };
