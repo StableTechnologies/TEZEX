@@ -14,95 +14,7 @@ import tzwalletlogo from "../../assets/tzwalletlogo.svg";
 import { Transaction, TransactionStatus } from "../../types/general";
 import Button from "@mui/material/Button";
 
-const classes = {
-  transactDisabled: {
-    "&.MuiButtonBase-root": {
-      display: "flex",
-    },
-
-    "&.MuiButton-root.Mui-disabled": {
-      color: "white",
-    },
-
-    display: "flex",
-    fontFamily: "Inter",
-    width: "100%",
-
-    background: "rgba(45, 45, 45, 0.5)",
-    color: "white",
-    borderRadius: "16px",
-    fontWeight: "500",
-    fontSize: "1.66vw",
-    lineHeight: "2.01vw",
-    letterSpacing: "0.01em",
-    textTransform: "none",
-    "&:hover": {
-      background: "rgba(45, 45, 45, 0.5)",
-    },
-  },
-  transact: {
-    "&.MuiButton-root.Mui-disabled": {
-      color: "white",
-    },
-
-    fontFamily: "Inter",
-    width: "100%",
-
-    backgroundColor: "#000",
-    color: "white",
-    border: "1px solid black",
-    borderRadius: "16px",
-    fontWeight: "500",
-    fontSize: "1.66vw",
-    lineHeight: "2.01vw",
-    letterSpacing: "0.01em",
-    textTransform: "none",
-    "&:hover": {
-      background: "#000",
-    },
-  },
-  walletDisconnectedHeader: {
-    "&.MuiButton-root.Mui-disabled": {
-      color: "white",
-    },
-    background: "#1E1E1E",
-    color: "white",
-    minHeight: "2.7vw",
-    minWidth: "10.24vw",
-
-    border: "1px solid black",
-    borderRadius: ".55vw",
-    fontWeight: "500",
-    fontSize: "1.11vw",
-    lineHeight: "1.34vw",
-
-    textTransform: "none",
-    "&:hover": {
-      background: "#000",
-    },
-  },
-  walletDisconnectedCard: {
-    "&.MuiButton-root.Mui-disabled": {
-      color: "white",
-    },
-
-    opacity: "0.5",
-    height: "56px",
-    width: "100%",
-    backgroundColor: "#000",
-    color: "white",
-    border: "1px solid black",
-    borderRadius: "16px",
-    fontWeight: "500",
-    fontSize: "24px",
-    lineHeight: "29px",
-    letterSpacing: "0.01em",
-    textTransform: "none",
-    "&:hover": {
-      background: "#000",
-    },
-  },
-};
+import style from "./style";
 
 interface IWallet {
   transaction?: Transaction;
@@ -170,7 +82,7 @@ export const Wallet: FC<IWallet> = (props) => {
       return (
         <Button
           size="small"
-          sx={classes.walletDisconnectedHeader}
+          sx={style.walletDisconnectedHeader}
           onClick={connect}
         >
           Connect Wallet
@@ -178,7 +90,7 @@ export const Wallet: FC<IWallet> = (props) => {
       );
     } else {
       return (
-        <Button size="large" sx={classes.transactDisabled} onClick={connect}>
+        <Button size="large" sx={style.transactDisabled} onClick={connect}>
           Connect Wallet
         </Button>
       );
@@ -188,17 +100,7 @@ export const Wallet: FC<IWallet> = (props) => {
     if (props.variant && props.variant === "header") {
       return (
         <Button onClick={disconnect}>
-          <Box
-            sx={{
-              background:
-                "linear-gradient(92.04deg, rgba(171, 240, 255, 0.2) 4.41%, #F9FEFF 84.62%)",
-
-              border: "0.5px solid #C4C4C4",
-              borderRadius: "4px",
-              display: "inline-flex",
-              alignItems: "center",
-            }}
-          >
+          <Box sx={style.walletConnectedHeader}>
             <img src={tzwalletlogo} alt="tz " />
             {walletInfo &&
               walletInfo.address &&
@@ -211,34 +113,14 @@ export const Wallet: FC<IWallet> = (props) => {
         <Button
           size="large"
           onClick={transact}
-          sx={disabled ? classes.transactDisabled : classes.transact}
+          sx={disabled ? style.transactDisabled : style.transact}
           disabled={disabled}
         >
-          <Box
-            sx={{
-              width: "100%",
-              display: "flex",
-              flexDirection: "row",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
+          <Box sx={style.walletBox}>
             <Box visibility={spinner ? "visible" : "hidden"}>
-              <CircularProgress
-                sx={{
-                  maxWidth: "1.85vw",
-                  maxHeight: "1.85vw",
-                  color: "#A1E3FF",
-                }}
-              />
+              <CircularProgress sx={style.spinner} />
             </Box>
-            <Typography
-              sx={{
-                fontWeight: "500",
-                fontSize: "1.66vw",
-                lineHeight: "2.01vw",
-              }}
-            >
+            <Typography sx={style.transactionStatus}>
               {transactionStatus}
             </Typography>
           </Box>
