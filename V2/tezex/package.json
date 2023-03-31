@@ -5,6 +5,7 @@
   "private": true,
   "dependencies": {
     "@airgap/beacon-sdk": "^3.1.0",
+    "@emotion/css": "^11.10.6",
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
     "@ledgerhq/hw-app-tezos": "^6.27.1",
