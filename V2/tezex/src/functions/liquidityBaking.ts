@@ -382,7 +382,7 @@ export async function buyLiquidityShares(
 
     const addLiquidity = lbContract.methods.addLiquidity(
       userAddress,
-      minLqtMinted.minus(3).integerValue(BigNumber.ROUND_DOWN),
+      minLqtMinted.integerValue(BigNumber.ROUND_DOWN),
       maxTokensSold,
       deadline
     );
@@ -409,10 +409,18 @@ export async function buyLiquidityShares(
             amount: xtzAmountInMutez.toNumber(),
             mutez: true,
           },
+          {
+            kind: OpKind.TRANSACTION,
+            ...approve0.toTransferParams(),
+          },
         ]);
         return estimate;
       } catch (err) {
-        console.log(`failed in estimating tokenToXtz ${JSON.stringify(err)}}`);
+        console.log(
+          `failed in estimating gas for buyLiquidityShares ${JSON.stringify(
+            err
+          )}}`
+        );
       }
     };
     const estimate = await est();
@@ -440,11 +448,19 @@ export async function buyLiquidityShares(
           ...addLiquidity.toTransferParams({
             fee: estimate[2].suggestedFeeMutez,
             gasLimit: estimate[2].gasLimit,
-            storageLimit: estimate[1].storageLimit,
+            storageLimit: estimate[2].storageLimit,
           }),
 
           amount: xtzAmountInMutez.toNumber(),
           mutez: true,
+        },
+        {
+          kind: OpKind.TRANSACTION,
+          ...approve0.toTransferParams({
+            fee: estimate[3].suggestedFeeMutez,
+            gasLimit: estimate[3].gasLimit,
+            storageLimit: estimate[3].storageLimit,
+          }),
         },
       ]);
 
