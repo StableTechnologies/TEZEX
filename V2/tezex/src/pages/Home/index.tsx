@@ -8,6 +8,7 @@ import { RemoveLiquidity } from "../../components/removeLiquidity";
 import Grid2 from "@mui/material/Unstable_Grid2"; // Grid version 2
 
 import style from "./style";
+import useStyles from "../../hooks/styles";
 
 type HomePaths = "swap" | "add" | "remove";
 
@@ -15,6 +16,7 @@ export interface IHome {
   path: HomePaths;
 }
 export const Home: FC<IHome> = (props) => {
+  const styles = useStyles(style);
   const Comp = (() => {
     switch (props.path) {
       case "add":
@@ -27,8 +29,8 @@ export const Home: FC<IHome> = (props) => {
   })();
 
   return (
-    <Grid2 sx={style.homeContainer} container>
-      <Grid2 sx={style.nav}>
+    <Grid2 sx={styles.homeContainer} container>
+      <Grid2 sx={styles.nav}>
         <NavHome />
       </Grid2>
       <Grid2>
