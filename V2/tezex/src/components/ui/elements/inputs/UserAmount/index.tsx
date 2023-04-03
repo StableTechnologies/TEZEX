@@ -76,7 +76,6 @@ const AmountField: FC<IAmountField> = (props) => {
               autoFocus
               onChange={updateAmount}
               value={inputString}
-              //label={props.label ? props.label : ""}
               id="filled-start-adornment"
               sx={styles.leftInput.textField}
               InputProps={{
@@ -137,7 +136,6 @@ const AmountField: FC<IAmountField> = (props) => {
                 autoFocus={props.readOnly ? false : true}
                 onChange={updateAmount}
                 value={inputString}
-                label={props.label ? props.label : ""}
                 id="filled-start-adornment"
                 sx={styles.rightInput.textField}
                 InputProps={{
