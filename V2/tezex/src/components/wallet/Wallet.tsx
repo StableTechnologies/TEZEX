@@ -15,6 +15,7 @@ import { Transaction, TransactionStatus } from "../../types/general";
 import Button from "@mui/material/Button";
 
 import style from "./style";
+import useStyles from "../../hooks/styles";
 
 interface IWallet {
   transaction?: Transaction;
@@ -24,6 +25,7 @@ interface IWallet {
 }
 
 export const Wallet: FC<IWallet> = (props) => {
+  const styles = useStyles(style);
   const walletInfo: WalletInfo | undefined = useWallet();
   const networkInfo = useNetwork();
 
@@ -82,7 +84,7 @@ export const Wallet: FC<IWallet> = (props) => {
       return (
         <Button
           size="small"
-          sx={style.walletDisconnectedHeader}
+          sx={styles.walletDisconnectedHeader}
           onClick={connect}
         >
           Connect Wallet
@@ -90,8 +92,8 @@ export const Wallet: FC<IWallet> = (props) => {
       );
     } else {
       return (
-        <Button size="large" sx={style.transactDisabled} onClick={connect}>
-          Connect Wallet
+        <Button size="large" sx={styles.transactDisabled} onClick={connect}>
+          connect Wallet
         </Button>
       );
     }
@@ -100,7 +102,7 @@ export const Wallet: FC<IWallet> = (props) => {
     if (props.variant && props.variant === "header") {
       return (
         <Button onClick={disconnect}>
-          <Box sx={style.walletConnectedHeader}>
+          <Box sx={styles.walletConnectedHeader}>
             <img src={tzwalletlogo} alt="tz " />
             {walletInfo &&
               walletInfo.address &&
@@ -113,14 +115,14 @@ export const Wallet: FC<IWallet> = (props) => {
         <Button
           size="large"
           onClick={transact}
-          sx={disabled ? style.transactDisabled : style.transact}
+          sx={disabled ? styles.transactDisabled : styles.transact}
           disabled={disabled}
         >
-          <Box sx={style.walletBox}>
+          <Box sx={styles.walletBox}>
             <Box visibility={spinner ? "visible" : "hidden"}>
-              <CircularProgress sx={style.spinner} />
+              <CircularProgress sx={styles.spinner} />
             </Box>
-            <Typography sx={style.transactionStatus}>
+            <Typography sx={styles.transactionStatus}>
               {transactionStatus}
             </Typography>
           </Box>
