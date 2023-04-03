@@ -10,6 +10,7 @@ import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 
 import style from "./style";
+import useStyles from "../../../../hooks/styles";
 
 export interface ISlippage {
   asset: Token;
@@ -19,6 +20,7 @@ export interface ISlippage {
 }
 
 const SlippageInput: FC<ISlippage> = (props) => {
+  const styles = useStyles(style);
   const [selectedId, setSelectedId] = useState("0");
 
   const [input, setInput] = useState<string>("0.5");
@@ -40,7 +42,7 @@ const SlippageInput: FC<ISlippage> = (props) => {
           setInput(e.target.value);
         }, [])}
         value={input}
-        sx={style.slippageInput}
+        sx={styles.slippageInput}
         InputProps={{
           disableUnderline: true,
           endAdornment: <InputAdornment position="start">%</InputAdornment>,
@@ -66,7 +68,7 @@ const SlippageInput: FC<ISlippage> = (props) => {
           <Button
             disabled={selectedId !== p.id}
             href=""
-            sx={style.slippageTab}
+            sx={styles.slippageTab}
             onClick={(
               event: React.MouseEvent<HTMLAnchorElement, MouseEvent>
             ) => {
@@ -98,7 +100,7 @@ const SlippageInput: FC<ISlippage> = (props) => {
   }
   const SlippageTabs = () => {
     return (
-      <Box sx={style.slippageTabsRoot}>
+      <Box sx={styles.slippageTabsRoot}>
         <SlippageTab id="0" label="0.5%" amount={0.5} />
         <SlippageTab id="1" label="1%" amount={1} />
         <SlippageTab id="input" amount={0} />
