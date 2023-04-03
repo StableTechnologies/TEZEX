@@ -6,18 +6,20 @@ import Box from "@mui/material/Box";
 import logo from "../../../assets/TezexLogo.svg";
 
 import style from "./style";
+import useStyles from "../../../hooks/styles";
 
 export const Header: FC = () => {
+  const styles = useStyles(style);
   return (
-    <Box sx={style.header.headerBox}>
+    <Box sx={styles.header.headerBox}>
       <Box>
-        <img style={style.header.logo} src={logo} alt="Logo" />
+        <img style={styles.header.logo} src={logo} alt="Logo" />
       </Box>
 
-      <Box sx={style.header.nav}>
+      <Box sx={styles.header.nav}>
         <NavApp />
       </Box>
-      <Box sx={style.header.wallet}>
+      <Box sx={styles.header.wallet}>
         <Wallet variant={"header"} />
       </Box>
     </Box>

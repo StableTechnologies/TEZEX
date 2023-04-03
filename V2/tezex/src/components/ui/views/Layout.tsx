@@ -3,6 +3,8 @@ import { Header } from "./Header";
 import { MainWindow } from "./MainWindow";
 import Box from "@mui/material/Box";
 
+import style from "./style";
+import useStyles from "../../../hooks/styles";
 export interface ILayout {
   children:
     | JSX.Element[]
@@ -13,10 +15,11 @@ export interface ILayout {
 }
 
 export const Layout: FC<ILayout> = (props) => {
+  const styles = useStyles(style);
   return (
-    <Box sx={{ height: "100%" }}>
+    <Box sx={styles.layoutBox}>
       <Header />
-      <Box sx={{ height: "100vh" }}>
+      <Box sx={styles.layoutMainwindow}>
         <MainWindow>{props.children}</MainWindow>
       </Box>
     </Box>

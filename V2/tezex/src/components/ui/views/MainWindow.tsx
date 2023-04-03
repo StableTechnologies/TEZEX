@@ -2,6 +2,7 @@ import React, { FC } from "react";
 import { Box } from "@mui/system";
 
 import style from "./style";
+import useStyles from "../../../hooks/styles";
 
 export interface IMainWindow {
   children:
@@ -13,5 +14,6 @@ export interface IMainWindow {
 }
 
 export const MainWindow: FC<IMainWindow> = (props) => {
-  return <Box sx={style.mainWindow}>{props.children}</Box>;
+  const styles = useStyles(style);
+  return <Box sx={styles.mainWindow}>{props.children}</Box>;
 };
