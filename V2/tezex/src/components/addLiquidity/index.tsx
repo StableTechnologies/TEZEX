@@ -23,11 +23,13 @@ import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
 import Typography from "@mui/material/Typography";
 import style from "./style";
+import useStyles from "../../hooks/styles";
 
 export interface IAddLiquidity {
   children: null;
 }
 export const AddLiquidity: FC = () => {
+  const styles = useStyles(style);
   const network = useNetwork();
   const walletOperations: WalletOps = useWalletOps(
     TransactingComponent.ADD_LIQUIDITY
@@ -223,39 +225,43 @@ export const AddLiquidity: FC = () => {
   ]);
 
   return (
-    <Grid2 container sx={style.root}>
+    <Grid2 container sx={styles.root}>
       <Grid2>
-        <Card sx={style.card}>
+        <Card sx={styles.card}>
           <CardHeader
-            sx={style.cardHeader}
+            sx={styles.cardHeader}
             title={
-              <Typography sx={style.cardHeaderTypography}>
+              <Typography sx={styles.cardHeaderTypography}>
                 {"Add Liquidity"}
               </Typography>
             }
           />
-          <Grid2 xs={8} lg={4} sx={style.tokens}>
+          <Grid2 xs={8} lg={4} sx={styles.tokens}>
             <Box>
               <img
-                style={style.sendAssetsIcon}
+                style={styles.sendAssetsIcon}
                 src={xtzTzbtcIcon}
                 alt="xtzTzbtcIcon"
               />
             </Box>
             <Box>
-              <img style={style.rightArrow} src={rightArrow} alt="rightArrow" />
+              <img
+                style={styles.rightArrow}
+                src={rightArrow}
+                alt="rightArrow"
+              />
             </Box>
             <Box>
               <img
-                style={style.recieveAssetIcon}
+                style={styles.recieveAssetIcon}
                 src={sirsIcon}
                 alt="sirsIcon"
               />
             </Box>
           </Grid2>
-          <CardContent sx={style.cardContent}>
-            <Grid2 xs={12} sx={style.cardContendGrid}>
-              <Grid2 xs={6} sx={style.input}>
+          <CardContent sx={styles.cardContent}>
+            <Grid2 xs={12} sx={styles.cardContendGrid}>
+              <Grid2 xs={6} sx={styles.input}>
                 <UserAmountField
                   asset={assets[send1]}
                   onChange={updateSend}
@@ -266,11 +272,11 @@ export const AddLiquidity: FC = () => {
                 />
               </Grid2>
 
-              <Grid2 xs={1} sx={style.plusIcon}>
+              <Grid2 xs={1} sx={styles.plusIcon}>
                 <img src={plusIcon} alt="plusIcon" />
               </Grid2>
 
-              <Grid2 xs={6} sx={style.input}>
+              <Grid2 xs={6} sx={styles.input}>
                 <UserAmountField
                   asset={assets[send2]}
                   value={sendAmount2.toString()}
@@ -283,10 +289,10 @@ export const AddLiquidity: FC = () => {
               </Grid2>
             </Grid2>
 
-            <Grid2 xs={12} sx={style.infoGrid}>
-              <Typography noWrap sx={style.infoText}>
+            <Grid2 xs={12} sx={styles.infoGrid}>
+              <Typography noWrap sx={styles.infoText}>
                 You will recieve about{" "}
-                <Typography sx={style.infoRecieve}>
+                <Typography sx={styles.infoRecieve}>
                   {" "}
                   {receiveAmount.toString()} Sirs
                 </Typography>
@@ -294,10 +300,10 @@ export const AddLiquidity: FC = () => {
               </Typography>
             </Grid2>
           </CardContent>
-          <CardActions sx={style.cardAction}>
+          <CardActions sx={styles.cardAction}>
             <Grid2 xs={1}>Slippage</Grid2>
 
-            <Grid2 xs={4} sx={style.slippageComponent}>
+            <Grid2 xs={4} sx={styles.slippageComponent}>
               <Slippage
                 asset={assets[receive].name}
                 value={slippage}

@@ -20,12 +20,14 @@ import CardHeader from "@mui/material/CardHeader";
 import Typography from "@mui/material/Typography";
 
 import style from "./style";
+import useStyles from "../../hooks/styles";
 
 export interface ISwapToken {
   children: null;
 }
 
 export const RemoveLiquidity: FC = () => {
+  const styles = useStyles(style);
   const network = useNetwork();
   const walletOperations: WalletOps = useWalletOps(
     TransactingComponent.REMOVE_LIQUIDITY
@@ -136,20 +138,20 @@ export const RemoveLiquidity: FC = () => {
     }
   }, [loading, active, newTransaction, session, updateSend, walletOperations]);
   return (
-    <Grid2 container sx={style.root}>
+    <Grid2 container sx={styles.root}>
       <Grid2>
-        <Card sx={style.card}>
+        <Card sx={styles.card}>
           <CardHeader
-            sx={style.cardHeader}
+            sx={styles.cardHeader}
             title={
-              <Typography sx={style.headerTypography}>
+              <Typography sx={styles.headerTypography}>
                 {"Remove Liquidity"}
               </Typography>
             }
           />
-          <CardContent sx={style.cardcontent}>
-            <Box sx={style.cardContentBox}>
-              <Box sx={style.input1}>
+          <CardContent sx={styles.cardcontent}>
+            <Box sx={styles.cardContentBox}>
+              <Box sx={styles.input1}>
                 <UserAmountField
                   asset={assets[send]}
                   readOnly={useMax}
@@ -170,8 +172,8 @@ export const RemoveLiquidity: FC = () => {
                 <Typography
                   sx={
                     useMax
-                      ? style.useMaxTypographyEnabled
-                      : style.useMaxTypographyEnabled
+                      ? styles.useMaxTypographyEnabled
+                      : styles.useMaxTypographyEnabled
                   }
                 >
                   {"Use Max"}
@@ -179,8 +181,8 @@ export const RemoveLiquidity: FC = () => {
               </Button>
             </Box>
           </CardContent>
-          <CardActions sx={style.cardAction}>
-            <Box sx={style.wallet}>
+          <CardActions sx={styles.cardAction}>
+            <Box sx={styles.wallet}>
               <Wallet transaction={active} callback={transact}>
                 {"Sell Shares"}
               </Wallet>
