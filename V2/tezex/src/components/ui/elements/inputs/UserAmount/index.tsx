@@ -2,8 +2,7 @@ import React, { memo, FC, useCallback, useState, useEffect } from "react";
 
 import { Asset } from "../../../../../types/general";
 
-import Grid2 from "@mui/material/Unstable_Grid2"; // Grid version 2
-//import KeyboardArrowDownIcon from '@mui/material/icons/KeyboardArrowDown';
+import Grid2 from "@mui/material/Unstable_Grid2";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 
@@ -16,6 +15,7 @@ import liquiditySwapIcon from "../../../../../assets/liquiditySwapIcon.svg";
 import { WalletConnected } from "../../../../session/WalletConnected";
 
 import { style } from "./style";
+import useStyles from "../../../../../hooks/styles";
 
 export interface IAmountField {
   asset: Asset;
@@ -31,6 +31,7 @@ export interface IAmountField {
 }
 
 const AmountField: FC<IAmountField> = (props) => {
+  const styles = useStyles(style);
   const [inputString, setInputString] = useState<string>(props.value);
   const onChange = props.onChange;
   const value = props.value;
@@ -70,29 +71,29 @@ const AmountField: FC<IAmountField> = (props) => {
     switch (props.variant) {
       case "LeftInput":
         return (
-          <Grid2 container sx={style.leftInput.gridContainter}>
+          <Grid2 container sx={styles.leftInput.gridContainter}>
             <TextField
               autoFocus
               onChange={updateAmount}
               value={inputString}
               //label={props.label ? props.label : ""}
               id="filled-start-adornment"
-              sx={style.leftInput.textField}
+              sx={styles.leftInput.textField}
               InputProps={{
                 disableUnderline: true,
                 endAdornment: (
                   <InputAdornment position="end">
-                    <Box sx={style.leftInput.inputAdornment.box}>
+                    <Box sx={styles.leftInput.inputAdornment.box}>
                       <div>
                         <img
-                          style={style.leftInput.inputAdornment.img}
+                          style={styles.leftInput.inputAdornment.img}
                           src={props.asset.logo}
                           alt="logo"
                         />
                       </div>
                       <div>
                         <Typography
-                          sx={style.leftInput.inputAdornment.typography}
+                          sx={styles.leftInput.inputAdornment.typography}
                         >
                           {props.asset.label}
                         </Typography>
@@ -104,7 +105,7 @@ const AmountField: FC<IAmountField> = (props) => {
               inputProps={{
                 readOnly: props.readOnly,
                 style: {
-                  ...style.leftInput.input,
+                  ...styles.leftInput.input,
                 },
               }}
               variant="standard"
@@ -114,7 +115,7 @@ const AmountField: FC<IAmountField> = (props) => {
                 color="textSecondary"
                 variant="subtitle2"
                 hidden={props.balance ? false : true}
-                sx={style.leftInput.balanceTypography}
+                sx={styles.leftInput.balanceTypography}
               >
                 balance: {props.balance} {props.asset.name}
               </Typography>
@@ -128,35 +129,41 @@ const AmountField: FC<IAmountField> = (props) => {
               container
               sx={
                 props.darker
-                  ? style.rightInput.gridContainter.darker
-                  : style.rightInput.gridContainter.lighter
+                  ? styles.rightInput.gridContainter.darker
+                  : styles.rightInput.gridContainter.lighter
               }
             >
               <TextField
                 autoFocus={props.readOnly ? false : true}
                 onChange={updateAmount}
                 value={inputString}
-                //label={props.label ? props.label : ""}
+                label={props.label ? props.label : ""}
                 id="filled-start-adornment"
-                sx={style.rightInput.textField}
+                sx={styles.rightInput.textField}
                 InputProps={{
                   disableUnderline: true,
                   startAdornment: (
                     <InputAdornment position="start">
-                      <Box sx={style.rightInput.inputAdornmentStart.box}>
-                        <Box sx={style.rightInput.inputAdornmentStart.boxLabel}>
+                      <Box sx={styles.rightInput.inputAdornmentStart.box}>
+                        <Box
+                          sx={styles.rightInput.inputAdornmentStart.boxLabel}
+                        >
                           {props.label}
                         </Box>
-                        <Box sx={style.rightInput.inputAdornmentStart.boxToken}>
+                        <Box
+                          sx={styles.rightInput.inputAdornmentStart.boxToken}
+                        >
                           <div>
                             <img
-                              style={style.rightInput.inputAdornmentStart.img}
+                              style={styles.rightInput.inputAdornmentStart.img}
                               src={props.asset.logo}
                               alt="logo"
                             />
                           </div>
                           <Typography
-                            sx={style.rightInput.inputAdornmentStart.typography}
+                            sx={
+                              styles.rightInput.inputAdornmentStart.typography
+                            }
                           >
                             {props.asset.label}
                           </Typography>
@@ -168,15 +175,15 @@ const AmountField: FC<IAmountField> = (props) => {
                   endAdornment: (
                     <InputAdornment
                       position="end"
-                      sx={style.rightInput.inputAdornmentEnd.adornment}
+                      sx={styles.rightInput.inputAdornmentEnd.adornment}
                     >
                       <Box visibility={props.swap ? "visible" : "hidden"}>
                         <Button
                           onClick={toggle}
-                          sx={style.rightInput.inputAdornmentEnd.button}
+                          sx={styles.rightInput.inputAdornmentEnd.button}
                         >
                           <img
-                            style={style.rightInput.inputAdornmentEnd.img}
+                            style={styles.rightInput.inputAdornmentEnd.img}
                             src={liquiditySwapIcon}
                             alt="logo"
                           />
@@ -188,20 +195,18 @@ const AmountField: FC<IAmountField> = (props) => {
                 inputProps={{
                   readOnly: props.readOnly,
                   style: {
-                    // compiler complains when moving textAlign to style
-                    textAlign: "right",
-                    ...style.rightInput.input,
+                    ...styles.rightInput.input,
                   },
                 }}
                 variant="standard"
               />
               <WalletConnected>
-                <Grid2 sx={style.rightInput.balance.grid}>
+                <Grid2 sx={styles.rightInput.balance.grid}>
                   <Typography
                     color="textSecondary"
                     variant="subtitle2"
                     hidden={props.balance ? false : true}
-                    sx={style.rightInput.balance.typography}
+                    sx={styles.rightInput.balance.typography}
                   >
                     Balance: {props.balance} {props.asset.name}
                   </Typography>
