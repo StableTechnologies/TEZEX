@@ -8,6 +8,7 @@ import { useSession } from "../../hooks/session";
 import { TransactingComponent } from "../../types/general";
 
 import style from "./style";
+import useStyles from "../../hooks/styles";
 
 interface NavTabProps {
   label: string;
@@ -16,9 +17,11 @@ interface NavTabProps {
 
 function NavTab(props: NavTabProps) {
   const navigate = useNavigate();
+
+  const styles = useStyles(style);
   return (
     <Tab
-      sx={style.navHome.tab}
+      sx={styles.navHome.tab}
       onClick={(event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
         event.preventDefault();
         navigate(props.href);
@@ -32,6 +35,7 @@ export interface INavHome {
   children: string;
 }
 export const NavHome: FC = () => {
+  const styles = useStyles(style);
   const [value, setValue] = useState(0);
   const sessionInfo = useSession();
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -55,7 +59,7 @@ export const NavHome: FC = () => {
   return (
     <Tabs
       value={value}
-      sx={style.navHome.root}
+      sx={styles.navHome.root}
       onChange={handleChange}
       aria-label="nav tabs example"
     >

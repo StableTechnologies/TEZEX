@@ -4,6 +4,7 @@ import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 
 import style from "./style";
+import useStyles from "../../hooks/styles";
 
 export interface INav {
   children: string;
@@ -28,6 +29,7 @@ function NavTab(props: NavTabProps) {
   );
 }
 export const NavApp: FC = () => {
+  const styles = useStyles(style);
   const [value, setValue] = useState(0);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -46,7 +48,7 @@ export const NavApp: FC = () => {
   return (
     <Tabs
       value={value}
-      sx={style.navApp}
+      sx={styles.navApp}
       onChange={handleChange}
       aria-label="nav tabs "
       TabIndicatorProps={{
