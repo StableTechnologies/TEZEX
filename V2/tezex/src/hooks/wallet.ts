@@ -43,19 +43,24 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
     if (wallet) {
       switch (component) {
         case TransactingComponent.SWAP:
-          setTransaction(wallet.swapTransaction);
-          setLoading(false);
+          if (wallet.lbContractStorage) {
+            setTransaction(wallet.swapTransaction);
+            setLoading(false);
+          }
 
           break;
         case TransactingComponent.ADD_LIQUIDITY:
-          setTransaction(wallet.addLiquidityTransaction);
-          setLoading(false);
+          if (wallet.lbContractStorage) {
+            setTransaction(wallet.addLiquidityTransaction);
+            setLoading(false);
+          }
 
           break;
         case TransactingComponent.REMOVE_LIQUIDITY:
-          setTransaction(wallet.removeLiquidityTransaction);
-          setLoading(false);
-
+          if (wallet.lbContractStorage) {
+            setTransaction(wallet.removeLiquidityTransaction);
+            setLoading(false);
+          }
           break;
       }
     }

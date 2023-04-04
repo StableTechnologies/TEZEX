@@ -74,6 +74,7 @@ export interface WalletInfo {
   toolkit: TezosToolkit | null;
   setToolkit: React.Dispatch<React.SetStateAction<TezosToolkit | null>>;
   address: string | null;
+  lbContractStorage: LiquidityBakingStorageXTZ | undefined;
   setAddress: React.Dispatch<React.SetStateAction<string | null>>;
   walletStatus: WalletStatus;
   setWalletStatus: React.Dispatch<React.SetStateAction<WalletStatus>>;
@@ -693,6 +694,7 @@ export function WalletProvider(props: IWalletProvider) {
     toolkit,
     setToolkit,
     address,
+    lbContractStorage,
     setAddress,
     walletStatus,
     setWalletStatus,
