@@ -6,9 +6,6 @@ import { BigNumber } from "bignumber.js";
 
 import { Token, Asset, Balance } from "../types/general";
 import { balanceBuilder } from "./util";
-export function mutezToTez(amount: BigNumber) {
-  return amount.dividedBy(1000000);
-}
 
 export async function getBalance(
   toolkit: TezosToolkit,
