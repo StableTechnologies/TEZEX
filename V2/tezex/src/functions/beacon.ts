@@ -67,9 +67,8 @@ export default async function connectWallet(
     } else {
       walletInfo.setAddress(activeAccount.address);
     }
-
-    // signer provider ??
   } catch (error) {
+    console.log("\n", "Error encountered in connectWallet : ", error, "\n");
     err = true;
   } finally {
     if (err) {
