@@ -12,6 +12,7 @@ import {
   TransactingComponent,
   Amount,
   AssetOrAssetPair,
+  LiquidityBakingStorageXTZ,
 } from "../types/general";
 import { TezosToolkit } from "@taquito/taquito";
 
@@ -20,6 +21,8 @@ import { useNetwork } from "../hooks/network";
 import { v4 as uuidv4 } from "uuid";
 import { BigNumber } from "bignumber.js";
 import { getBalance } from "../functions/beacon";
+
+import { getLbContractStorage } from "../functions/liquidityBaking";
 
 export enum WalletStatus {
   ESTIMATING_SIRS = "Estimating Sirs",
@@ -147,13 +150,15 @@ export function WalletProvider(props: IWalletProvider) {
   const [removeLiquidityTransaction, setRemoveLiquidityTransaction] = useImmer<
     Transaction | undefined
   >(undefined);
-
+  const [loading, setLoading] = useState(true);
   const [isWalletConnected, setIsWalletConnected] = useState(false);
   const [walletStatus, setWalletStatus] = useState(WalletStatus.DISCONNECTED);
   const [client, setClient] = useState<DAppClient | null>(null);
   const [toolkit, setToolkit] = useState<TezosToolkit | null>(null);
   const [address, setAddress] = useState<string | null>(null);
-
+  const [lbContractStorage, setLbContractStroage] = useState<
+    LiquidityBakingStorageXTZ | undefined
+  >(undefined);
   const [assetBalances, setAssetBalances] = useState<AssetBalance[]>(
     network.info.assets.map((asset) => {
       //console.log("\n", "asset.name : ", asset.name, "\n");
@@ -197,6 +202,20 @@ export function WalletProvider(props: IWalletProvider) {
     }
   }, [address, toolkit, client]);
 
+  const updateStorage = useCallback(async () => {
+    setLbContractStroage(await network.getDexStorage());
+  }, [network]);
+
+  useEffect(() => {
+    const loadStorage = async () => {
+      await updateStorage();
+      setLoading(false);
+    };
+    if (loading) {
+      loadStorage;
+    }
+  }, [loading]);
+
   useEffect(() => {
     const _updateBalances = async () => {
       await updateBalances();
@@ -205,12 +224,36 @@ export function WalletProvider(props: IWalletProvider) {
   }, [isWalletConnected]);
 
   useEffect(() => {
+    console.log("\n", "lbContractStorage : ", lbContractStorage, "\n");
+  }, [lbContractStorage]);
+
+  useEffect(() => {
+    const _updateStorage = async () => {
+      await updateStorage();
+    };
+    if (!lbContractStorage) {
+      const interval = setInterval(() => {
+        _updateStorage();
+      }, 1000);
+      return () => clearInterval(interval);
+    } else {
+      const interval = setInterval(() => {
+        _updateStorage();
+      }, 60000);
+      return () => clearInterval(interval);
+    }
+  });
+  useEffect(() => {
+    const _updateStorage = async () => {
+      await updateStorage();
+    };
     const _updateBalances = async () => {
       await updateBalances();
     };
 
     const interval = setInterval(() => {
       _updateBalances();
+      _updateStorage();
     }, 5000);
     return () => clearInterval(interval);
   });
