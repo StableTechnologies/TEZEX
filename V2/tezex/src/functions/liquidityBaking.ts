@@ -1,5 +1,6 @@
 import { TezosToolkit, OpKind } from "@taquito/taquito";
 import { BigNumber } from "bignumber.js";
+import { LiquidityBakingStorageXTZ } from "../types/general";
 
 export function removeSlippage(
   slippage: BigNumber | number | string | null,
@@ -118,7 +119,7 @@ export async function getStorage(
 export async function getLbContractStorage(
   tezosToolkit: TezosToolkit,
   lbContractAddress: string
-) {
+): Promise<LiquidityBakingStorageXTZ> {
   const contract = await tezosToolkit.wallet.at(lbContractAddress);
   // eslint-disable-next-line
   const storage = await contract.storage<any>();

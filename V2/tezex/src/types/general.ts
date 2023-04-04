@@ -68,3 +68,9 @@ export interface Transaction {
   transactionStatus: TransactionStatus;
   lastModified: Date;
 }
+
+export interface LiquidityBakingStorageXTZ {
+  xtzPool: BigNumber;
+  tokenPool: BigNumber;
+  lqtTotal: BigNumber;
+}
