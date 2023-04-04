@@ -12,6 +12,7 @@ import {
   TransactionStatus,
   TransactingComponent,
   AssetOrAssetPair,
+  LiquidityBakingStorageXTZ,
 } from "../types/general";
 
 export interface WalletOps {
@@ -24,7 +25,7 @@ export interface WalletOps {
   ) => Transaction | undefined;
   getActiveTransaction: () => Transaction | undefined;
   updateTransactionBalance: () => boolean;
-  updateAmount: (sendAmount?: string, slippage?: string) => Promise<boolean>;
+  updateAmount: (sendAmount?: string, slippage?: string) => boolean;
   sendTransaction: () => Promise<void>;
 }
 export function useWalletOps(component: TransactingComponent): WalletOps {
@@ -135,7 +136,7 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
   }, [wallet, component, transaction]);
 
   const updateAmount = useCallback(
-    async (sendAmount?: string, slippage?: string): Promise<boolean> => {
+    (sendAmount?: string, slippage?: string): boolean => {
       const updated = false;
       if (
         transaction &&
@@ -144,10 +145,9 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
         sendAmount &&
         !transaction.sendAmount[0].decimal.eq(sendAmount)
       ) {
-        if (wallet && sendAmount) {
+        if (wallet && wallet.lbContractStorage && sendAmount) {
           wallet.updateStatus(component, TransactionStatus.MODIFIED);
 
-          const toolkit = new TezosToolkit(network.info.tezosServer);
           const updatedTransaction = (): Transaction => {
             switch (component) {
               case TransactingComponent.SWAP:
@@ -183,22 +183,16 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
             }
           };
 
-          await estimate(
+          const _transaction = estimate(
             updatedTransaction(),
-            network.info.dex.address,
-            toolkit
-          )
-            .then((_transaction: Transaction) => {
-              wallet.updateAmount(
-                _transaction.component,
-                _transaction.sendAmount,
-                _transaction.receiveAmount
-              );
-              return true;
-            })
-            .catch((e) => {
-              console.log("estmation Failed", e);
-            });
+            wallet.lbContractStorage as LiquidityBakingStorageXTZ
+          );
+          wallet.updateAmount(
+            _transaction.component,
+            _transaction.sendAmount,
+            _transaction.receiveAmount
+          );
+          return true;
         }
       } else if (
         slippage &&

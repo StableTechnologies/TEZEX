@@ -1,6 +1,7 @@
 import { BigNumber } from "bignumber.js";
 
-import { lqtOutput } from "./liquidityBaking";
+import { LiquidityBakingStorageXTZ } from "../types/general";
+
 import {
   Transaction,
   Token,
@@ -12,138 +13,110 @@ import {
 } from "../types/general";
 
 import { TezosToolkit } from "@taquito/taquito";
-import { balanceBuilder } from "../functions/util";
+import { balanceBuilder } from "./util";
 import {
   estimateTokensFromXtz,
   estimateXtzFromToken,
   estimateShares,
-} from "../functions/liquidityBaking";
+  lqtOutput,
+} from "./liquidityBaking";
 
-export async function estimate(
+export function estimate(
   transaction: Transaction,
-  dex: string,
-  toolkit: TezosToolkit
-): Promise<Transaction> {
+  lbContractStorage: LiquidityBakingStorageXTZ
+): Transaction {
   const { sendAmount, sendAsset, receiveAsset } = transaction;
   switch (transaction.component) {
     case TransactingComponent.SWAP:
-      return await estimateTokensReceivedSwap(
-        sendAsset[0],
-        sendAmount[0],
-        receiveAsset[0],
-        dex,
-        toolkit
-      )
-        .then((balance: Balance) => {
-          return {
-            ...transaction,
-            receiveAmount: [balance] as Amount,
-          };
-        })
-        .catch((e) => {
-          throw e;
-        });
+      return {
+        ...transaction,
+        receiveAmount: [
+          estimateTokensReceivedSwap(
+            sendAsset[0],
+            sendAmount[0],
+            receiveAsset[0],
+            lbContractStorage
+          ),
+        ] as Amount,
+      };
     case TransactingComponent.ADD_LIQUIDITY:
       if (sendAsset[1]) {
-        return await estimateTokensReceivedSwap(
+        const tokenEstimate: Balance = estimateTokensReceivedSwap(
           sendAsset[0],
           sendAmount[0],
           sendAsset[1],
-          dex,
-          toolkit
-        )
-          .then(async (secondTokenEstimate: Balance) => {
-            const shares: Balance = await estimateSharesReceivedAddLiqudity(
-              sendAsset,
-              receiveAsset,
-              [sendAmount[0], secondTokenEstimate],
-              dex,
-              toolkit
-            );
-            return [secondTokenEstimate, shares] as [Balance, Balance];
-          })
-          .then((balances: [Balance, Balance]) => {
-            return {
-              ...transaction,
-              sendAmount: [transaction.sendAmount[0], balances[0]] as Amount,
-              receiveAmount: [balances[1]] as Amount,
-            };
-          })
-          .catch((e) => {
-            throw e;
-          });
+          lbContractStorage
+        );
+        const shares: Balance = estimateSharesReceivedAddLiqudity(
+          sendAsset,
+          receiveAsset,
+          [sendAmount[0], tokenEstimate],
+          lbContractStorage
+        );
+        return {
+          ...transaction,
+          sendAmount: [transaction.sendAmount[0], tokenEstimate] as Amount,
+          receiveAmount: [shares] as Amount,
+        };
       } else throw Error("second asset not supplied for Add Liquidity");
     case TransactingComponent.REMOVE_LIQUIDITY:
-      return await estimateSharesToTokensRemoveLiquidity(
-        sendAsset,
-        receiveAsset,
-        sendAmount,
-        dex,
-        toolkit
-      )
-        .then((balances: [Balance, Balance]) => {
-          return {
-            ...transaction,
-            receiveAmount: [balances[0], balances[1]] as Amount,
-          };
-        })
-        .catch((e) => {
-          throw e;
-        });
+      return {
+        ...transaction,
+        receiveAmount: estimateSharesToTokensRemoveLiquidity(
+          sendAsset,
+          receiveAsset,
+          sendAmount,
+          lbContractStorage
+        ) as Amount,
+      };
   }
 }
 
-export const estimateTokensReceivedSwap = async (
+export const estimateTokensReceivedSwap = (
   sendToken: Asset,
   sendAmount: Balance,
   receive: Asset,
-  dex: string,
-  toolkit: TezosToolkit
-): Promise<Balance> => {
+  lbContractStorage: LiquidityBakingStorageXTZ
+): Balance => {
   switch (sendToken.name) {
     case Token.XTZ:
-      return await estimateTokensFromXtz(sendAmount.mantissa, dex, toolkit)
-        .then((amt: number) => {
-          return balanceBuilder(amt, receive, true);
-        })
-        .catch((e) => {
-          throw e;
-        });
+      return balanceBuilder(
+        estimateTokensFromXtz(sendAmount.mantissa, lbContractStorage),
+        receive,
+        true
+      );
     case Token.TzBTC:
-      return await estimateXtzFromToken(sendAmount.mantissa, dex, toolkit)
-        .then((amt: number) => {
-          return balanceBuilder(amt, receive, true);
-        })
-        .catch((e) => {
-          throw e;
-        });
+      return balanceBuilder(
+        estimateXtzFromToken(sendAmount.mantissa, lbContractStorage),
+        receive,
+        true
+      );
     default:
       throw Error("unimplemented swap estimate");
   }
 };
 
-export const estimateSharesToTokensRemoveLiquidity = async (
+export const estimateSharesToTokensRemoveLiquidity = (
   sendAsset: AssetOrAssetPair,
   receive: AssetOrAssetPair,
   sendAmount: Amount,
-  dex: string,
-  toolkit: TezosToolkit
-): Promise<[Balance, Balance]> => {
+  lbContractStorage: LiquidityBakingStorageXTZ
+): [Balance, Balance] => {
   if (receive[0] && receive[1]) {
     switch ([receive[0].name as string, receive[1].name as string].join(" ")) {
       case [Token.XTZ as string, Token.TzBTC as string].join(" "):
-        return await lqtOutput(sendAmount[0].mantissa, dex, toolkit)
-          .then((obj: { xtz: BigNumber; tzbtc: BigNumber }) => {
-            if (receive[1]) {
-              return [
-                balanceBuilder(obj.xtz, receive[0], true) as Balance,
-                balanceBuilder(obj.tzbtc, receive[1], true) as Balance,
-              ] as [Balance, Balance];
-            } else throw Error("");
-          })
-          .catch((e) => {
-            throw e;
-          });
+        return [
+          balanceBuilder(
+            lqtOutput(sendAmount[0].mantissa, lbContractStorage).xtz,
+            receive[0],
+            true
+          ) as Balance,
+          balanceBuilder(
+            lqtOutput(sendAmount[0].mantissa, lbContractStorage).tzbtc,
+            receive[1],
+            true
+          ) as Balance,
+        ] as [Balance, Balance];
       default:
         throw Error("unimplemented swap estimate");
     }
@@ -152,43 +125,36 @@ export const estimateSharesToTokensRemoveLiquidity = async (
       "Asset Pair required for Adding liquidity , recieved single asset"
     );
 };
-export const estimateSharesReceivedAddLiqudity = async (
+export const estimateSharesReceivedAddLiqudity = (
   sendAsset: AssetOrAssetPair,
   receive: AssetOrAssetPair,
   sendAmount: Amount,
-  dex: string,
-  toolkit: TezosToolkit
-): Promise<Balance> => {
+  lbContractStorage: LiquidityBakingStorageXTZ
+): Balance => {
   if (sendAsset[0] && sendAmount[1] && sendAsset[1]) {
     switch (
       [sendAsset[0].name as string, sendAsset[1].name as string].join(" ")
     ) {
       case [Token.XTZ as string, Token.TzBTC as string].join(" "):
-        return await estimateShares(
-          sendAmount[0].mantissa,
-          sendAmount[1].mantissa,
-          dex,
-          toolkit
-        )
-          .then((amt: BigNumber) => {
-            return balanceBuilder(amt, receive[0], true);
-          })
-          .catch((e) => {
-            throw e;
-          });
+        return balanceBuilder(
+          estimateShares(
+            sendAmount[0].mantissa,
+            sendAmount[1].mantissa,
+            lbContractStorage
+          ),
+          receive[0],
+          true
+        );
       case [Token.TzBTC as string, Token.XTZ as string].join(" "):
-        return await estimateShares(
-          sendAmount[1].mantissa,
-          sendAmount[0].mantissa,
-          dex,
-          toolkit
-        )
-          .then((amt: BigNumber) => {
-            return balanceBuilder(amt, receive[0], true);
-          })
-          .catch((e) => {
-            throw e;
-          });
+        return balanceBuilder(
+          estimateShares(
+            sendAmount[1].mantissa,
+            sendAmount[0].mantissa,
+            lbContractStorage
+          ),
+          receive[0],
+          true
+        );
       default:
         throw Error("unimplemented swap estimate");
     }

@@ -53,7 +53,7 @@ const AmountField: FC<IAmountField> = (props) => {
       if (props.value !== inputString && !props.readOnly) {
         callBack(inputString);
       }
-    }, 1000);
+    }, 1500);
     return () => clearTimeout(timer);
   }, [inputString, callBack, props]);
   useEffect(() => {

@@ -137,16 +137,10 @@ export async function getLbContractStorage(
   }
 }
 
-export async function estimateXtzFromToken(
+export function estimateXtzFromToken(
   tokenAmountMantissa: BigNumber,
-  lbContractAddress: string,
-  toolkit: TezosToolkit
-): Promise<number> {
-  const lbContractStorage = await getLbContractStorage(
-    toolkit,
-    lbContractAddress
-  );
-
+  lbContractStorage: LiquidityBakingStorageXTZ
+): number {
   const minTokensBought = _calcTokenToXtz({
     tokenIn: tokenAmountMantissa,
     xtzPool: lbContractStorage.xtzPool,
@@ -249,16 +243,10 @@ export async function tokenToXtz(
   }
 }
 
-export async function estimateTokensFromXtz(
+export function estimateTokensFromXtz(
   xtzAmountInMutez: BigNumber,
-  lbContractAddress: string,
-  toolkit: TezosToolkit
-): Promise<number> {
-  const lbContractStorage = await getLbContractStorage(
-    toolkit,
-    lbContractAddress
-  );
-
+  lbContractStorage: LiquidityBakingStorageXTZ
+): number {
   const minTokensBought = _calcXtzToToken({
     xtzIn: xtzAmountInMutez,
     xtzPool: lbContractStorage.xtzPool,
@@ -322,13 +310,11 @@ export async function xtzToToken(
 
 // add Liquidity
 
-export async function estimateShares(
+export function estimateShares(
   xtzAmountInMutez: BigNumber,
   tokenMantissa: BigNumber,
-  lbContractAddress: string,
-  toolkit: TezosToolkit
+  dexStorage: LiquidityBakingStorageXTZ
 ) {
-  const dexStorage = await getLbContractStorage(toolkit, lbContractAddress);
   const sharesFromXtz = estimateSharesFromXtz(xtzAmountInMutez, dexStorage);
   const sharesFromToken = estimateSharesFromToken(tokenMantissa, dexStorage);
   const shares = BigNumber.min(sharesFromXtz, sharesFromToken);
@@ -487,15 +473,10 @@ export function _calcLqtOutput(
   };
 }
 
-export async function lqtOutput(
+export function lqtOutput(
   lqTokens: BigNumber,
-  lbContractAddress: string,
-  toolkit: TezosToolkit
+  lbContractStorage: LiquidityBakingStorageXTZ
 ) {
-  const lbContractStorage = await getLbContractStorage(
-    toolkit,
-    lbContractAddress
-  );
   return _calcLqtOutput(
     lqTokens,
     new BigNumber(lbContractStorage.xtzPool),

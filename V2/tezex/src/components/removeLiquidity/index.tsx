@@ -70,10 +70,10 @@ export const RemoveLiquidity: FC = () => {
     [sendAmount]
   );
 
-  const updateTransaction = useCallback(async () => {
+  const updateTransaction = useCallback(() => {
     if (active) {
       if (!active.sendAmount[0].decimal.eq(sendAmount)) {
-        await walletOperations.updateAmount(sendAmount.toString());
+        walletOperations.updateAmount(sendAmount.toString());
       }
     }
   }, [sendAmount, active, walletOperations]);

@@ -89,13 +89,13 @@ export const Swap: FC = () => {
     },
     [sendAmount]
   );
-  const updateTransaction = useCallback(async () => {
+  const updateTransaction = useCallback(() => {
     if (active) {
       if (
         !active.sendAmount[0].decimal.eq(sendAmount) ||
         active.slippage !== slippage
       ) {
-        await walletOperations.updateAmount(
+        walletOperations.updateAmount(
           sendAmount.toString(),
           slippage.toString()
         );
