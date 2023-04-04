@@ -22,8 +22,6 @@ import { v4 as uuidv4 } from "uuid";
 import { BigNumber } from "bignumber.js";
 import { getBalance } from "../functions/beacon";
 
-import { getLbContractStorage } from "../functions/liquidityBaking";
-
 export enum WalletStatus {
   ESTIMATING_SIRS = "Estimating Sirs",
   ESTIMATING_XTZ = "Estimating Tez",
@@ -161,7 +159,6 @@ export function WalletProvider(props: IWalletProvider) {
   >(undefined);
   const [assetBalances, setAssetBalances] = useState<AssetBalance[]>(
     network.info.assets.map((asset) => {
-      //console.log("\n", "asset.name : ", asset.name, "\n");
       return { balance: undefined, asset: asset };
     })
   );
@@ -224,10 +221,6 @@ export function WalletProvider(props: IWalletProvider) {
   }, [isWalletConnected]);
 
   useEffect(() => {
-    console.log("\n", "lbContractStorage : ", lbContractStorage, "\n");
-  }, [lbContractStorage]);
-
-  useEffect(() => {
     const _updateStorage = async () => {
       await updateStorage();
     };
@@ -258,7 +251,6 @@ export function WalletProvider(props: IWalletProvider) {
     return () => clearInterval(interval);
   });
   //
-  //console.log("\n", "assetBalances : ", assetBalances, "\n");
   const getActiveTransaction = useCallback(
     (component: TransactingComponent): Transaction | undefined => {
       switch (component) {
@@ -317,17 +309,6 @@ export function WalletProvider(props: IWalletProvider) {
     proc();
   }, [transact, setSwapTransaction, swapTransaction]);
 
-  /* TEMP
-	  useEffect(() => {
-	    const balanceUpdate = async () => {
-	      swapTransaction &&
-	        swapTransaction.transactionStatus !== TransactionStatus.PENDING &&
-			    await updateBalance(TransactingComponent.SWAP, swapTransaction); 
-	    };
-	    balanceUpdate();
-	  }, [ setSwapTransaction, swapTransaction]);
-	
-	*/
   useEffect(() => {
     const proc = async () => {
       addLiquidityTransaction &&
@@ -441,7 +422,6 @@ export function WalletProvider(props: IWalletProvider) {
     if (userBalance.length !== requiredAmount.length) {
       throw Error("Error: balance check asset pair mismatch");
     }
-    //console.log('\n','userBalance[0].decimal.toString(), requiredAmount[0].decimal.toString() : ', userBalance[0].decimal.toString(), requiredAmount[0].decimal.toString(),'\n');
     const checks: boolean[] = Array.from(userBalance, (assetBalance, index) => {
       const required = requiredAmount[index];
       if (required) {
@@ -458,7 +438,6 @@ export function WalletProvider(props: IWalletProvider) {
 
   const updateBalanceTransaction = useCallback(
     (transaction: Transaction): Transaction => {
-      //console.log('\n',' : getBalancesCall ','\n');
       const sendAssetBalance: Amount = getBalancesOfAssets(
         transaction.sendAsset
       );
@@ -481,8 +460,6 @@ export function WalletProvider(props: IWalletProvider) {
 
   const updateTransactionBalance = useCallback(
     (component: TransactingComponent, transaction: Transaction) => {
-      //console.log('\n',' : UPDATE balance call ','\n');
-
       const _transaction: Transaction = updateBalanceTransaction(transaction);
       switch (component) {
         case TransactingComponent.SWAP:
