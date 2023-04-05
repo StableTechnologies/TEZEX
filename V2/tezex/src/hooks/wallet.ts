@@ -1,5 +1,4 @@
 import { useContext, useCallback, useEffect, useState } from "react";
-import { TezosToolkit } from "@taquito/taquito";
 
 import { BigNumber } from "bignumber.js";
 import { estimate } from "../functions/estimates";
