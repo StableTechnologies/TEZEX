@@ -8,7 +8,7 @@
     {
       "name": "XTZ",
       "label": "XTZ",
-      "logo": "assets/tzlogo.svg",
+      "logo": "/assets/tzlogo.svg",
       "address": "",
       "decimals": 6
     },
