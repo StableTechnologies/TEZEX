@@ -1,24 +1,25 @@
 {
   "files": {
-    "main.css": "/TEZEX/static/css/main.87ed2fca.css",
-    "main.js": "/TEZEX/static/js/main.dead245d.js",
-    "static/js/918.ae4c3706.chunk.js": "/TEZEX/static/js/918.ae4c3706.chunk.js",
-    "static/js/522.17d9f18d.chunk.js": "/TEZEX/static/js/522.17d9f18d.chunk.js",
+    "main.css": "/TEZEX/static/css/main.bd64a0ac.css",
+    "main.js": "/TEZEX/static/js/main.b8da43ae.js",
+    "static/js/792.e43debd3.chunk.js": "/TEZEX/static/js/792.e43debd3.chunk.js",
+    "static/js/496.a016e724.chunk.js": "/TEZEX/static/js/496.a016e724.chunk.js",
     "static/media/sirsIcon.svg": "/TEZEX/static/media/sirsIcon.5002a55ace3cfc5d31debece8d9c27fa.svg",
-    "static/media/sirsLogo.svg": "/TEZEX/static/media/sirsLogo.69ec38176e1aeb0354396304521cb678.svg",
     "static/media/xtzTzbtcIcon.svg": "/TEZEX/static/media/xtzTzbtcIcon.475ffaadd8917d5261494e4dca136899.svg",
-    "static/media/tzlogo.svg": "/TEZEX/static/media/tzlogo.6c4411d2c91539c15f8d7ac95f1bb515.svg",
     "static/media/TezexLogo.svg": "/TEZEX/static/media/TezexLogo.31a5b14146d93e4acab52211d38fd1a2.svg",
     "static/media/liquiditySwapIcon.svg": "/TEZEX/static/media/liquiditySwapIcon.8f1e02de3095483209de196f8517490f.svg",
     "static/media/swapIcon.svg": "/TEZEX/static/media/swapIcon.d8241838b1310217d74263c8853bf23f.svg",
     "static/media/tzwalletlogo.svg": "/TEZEX/static/media/tzwalletlogo.298ee304ca29eec491be48cb5f4a1231.svg",
-    "static/media/tzbtcLogo.svg": "/TEZEX/static/media/tzbtcLogo.2b6cf59a757ce64552282a9fb704dffe.svg",
     "static/media/rightArrow.svg": "/TEZEX/static/media/rightArrow.7dcc15c8dbb97c68650723f627f831c8.svg",
     "index.html": "/TEZEX/index.html",
-    "static/media/plusIcon.svg": "/TEZEX/static/media/plusIcon.dc94d200e3f2bc2295ce02c5485a00ef.svg"
+    "static/media/plusIcon.svg": "/TEZEX/static/media/plusIcon.dc94d200e3f2bc2295ce02c5485a00ef.svg",
+    "main.bd64a0ac.css.map": "/TEZEX/static/css/main.bd64a0ac.css.map",
+    "main.b8da43ae.js.map": "/TEZEX/static/js/main.b8da43ae.js.map",
+    "792.e43debd3.chunk.js.map": "/TEZEX/static/js/792.e43debd3.chunk.js.map",
+    "496.a016e724.chunk.js.map": "/TEZEX/static/js/496.a016e724.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.87ed2fca.css",
-    "static/js/main.dead245d.js"
+    "static/css/main.bd64a0ac.css",
+    "static/js/main.b8da43ae.js"
   ]
 }
