@@ -1,3 +1,4 @@
+// eslint-disable-next-line
 export const style = (theme) => {
   return {
     leftInput: {
@@ -57,7 +58,7 @@ export const style = (theme) => {
         },
         justifyContent: "center",
         width: "100%",
-        //height: "75px",
+        height: "75px",
       },
       inputAdornmentStart: {
         box: {

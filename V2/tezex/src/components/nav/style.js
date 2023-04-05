@@ -1,3 +1,4 @@
+// eslint-disable-next-line
 const style = (theme) => {
   return {
     navApp: {
@@ -17,11 +18,10 @@ const style = (theme) => {
         display: "inline-flex",
         justifyContent: "center",
         textAlign: "center",
-        //minHeight: "16",
-        //marginRight: "40px",
+
         minWidth: "3.7vw",
         maxWidth: "7.7vw",
-        // marginTop: spacing(0.5),
+
         padding: "0px 4vw ",
         color: "#999999",
         background: "white",
@@ -29,7 +29,7 @@ const style = (theme) => {
       },
 
       padding: 0,
-      //idth: "12.7vw",
+
       display: "flex",
       fontSize: "1.5vw",
       justifyContent: "center",

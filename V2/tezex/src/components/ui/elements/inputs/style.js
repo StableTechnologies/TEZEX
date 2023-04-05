@@ -1,3 +1,4 @@
+// eslint-disable-next-line
 const style = (theme) => {
   return {
     slippageTabsRoot: {
@@ -7,30 +8,26 @@ const style = (theme) => {
       alignItems: "center",
       justifyContent: "space-between",
       minHeight: "3.8vh",
-      //marginRight: "40px",
+
       maxWidth: "15vw",
       paddingRight: "0px",
       border: "1px solid #EDEDED",
     },
     slippageTab: {
       "&.MuiButton-root.Mui-disabled": {
-        backgroundColor: "transparent", //'#E3F7FF',//'palette.action.selected' ,
+        backgroundColor: "transparent",
         "&:after": {
           zindex: 0,
-          //minHeight: "3.26vh",
-          //marginRight: "40px",
-          //minWidth: "4.26vw",
-          // padding: "",
+
           display: "flex",
           position: "absolute",
           top: 0,
           left: 4,
           right: 4,
           bottom: 0,
-          //position: "absolute",
 
           borderRadius: "8px",
-          backgroundColor: "transparent", //"selectedHomeTab.main", //'#E3F7FF',//'palette.action.selected' ,
+          backgroundColor: "transparent",
         },
       },
       "&.MuiButtonBase-root": {
@@ -42,21 +39,15 @@ const style = (theme) => {
         display: "inline-flex",
         justifyContent: "center",
         textAlign: "center",
-        //minHeight: "3.03vh",
-        //marginRight: "40px",
+
         minWidth: "4.2vw",
         zIndex: 1,
-        // marginTop: spacing(0.5),
 
-        backgroundColor: "selectedHomeTab.main", //'#E3F7FF',//'palette.action.selected' ,
+        backgroundColor: "selectedHomeTab.main",
         color: "palette.text.primary",
         textTransform: "initial",
 
         "&:after": {
-          //minHeight: "3.26vh",
-          //marginRight: "40px",
-          //minWidth: "4.26vw",
-          // padding: "",
           display: "flex",
 
           alignItems: "center",
@@ -66,15 +57,12 @@ const style = (theme) => {
           left: 4,
           right: 4,
           bottom: 0,
-          //position: "absolute",
 
           borderRadius: "8px",
-          backgroundColor: "selectedHomeTab.main", //'#E3F7FF',//'palette.action.selected' ,
+          backgroundColor: "selectedHomeTab.main",
         },
       },
       wrapper: {
-        // zIndex: 2,
-        // marginTop: spacing(0.5),
         color: "palette.text.primary",
         textTransform: "initial",
       },
@@ -123,10 +111,10 @@ const style = (theme) => {
         justifyContent: "center",
         textAlign: "center",
         minHeight: "3.03vh",
-        //marginRight: "40px",
+
         minWidth: "4.26vw",
         zIndex: 1,
-        // marginTop: spacing(0.5),
+
         color: "palette.text.primary",
         textTransform: "initial",
       },

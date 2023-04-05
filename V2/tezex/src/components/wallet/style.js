@@ -1,3 +1,4 @@
+// eslint-disable-next-line
 const style = (theme) => {
   return {
     transactionStatus: {
