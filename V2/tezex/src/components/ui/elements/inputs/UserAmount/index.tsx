@@ -86,7 +86,7 @@ const AmountField: FC<IAmountField> = (props) => {
                       <div>
                         <img
                           style={styles.leftInput.inputAdornment.img}
-                          src={process.env.PUBLIC_URL + props.asset.logo}
+                          src={props.asset.logo}
                           alt="logo"
                         />
                       </div>
@@ -154,7 +154,7 @@ const AmountField: FC<IAmountField> = (props) => {
                           <div>
                             <img
                               style={styles.rightInput.inputAdornmentStart.img}
-                              src={process.env.PUBLIC_URL + props.asset.logo}
+                              src={props.asset.logo}
                               alt="logo"
                             />
                           </div>
