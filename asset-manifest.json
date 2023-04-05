@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/TEZEX/static/css/main.bd64a0ac.css",
-    "main.js": "/TEZEX/static/js/main.acaac869.js",
+    "main.js": "/TEZEX/static/js/main.5571060d.js",
     "static/js/792.e43debd3.chunk.js": "/TEZEX/static/js/792.e43debd3.chunk.js",
     "static/js/496.a016e724.chunk.js": "/TEZEX/static/js/496.a016e724.chunk.js",
     "static/media/sirsIcon.svg": "/TEZEX/static/media/sirsIcon.5002a55ace3cfc5d31debece8d9c27fa.svg",
@@ -14,12 +14,12 @@
     "index.html": "/TEZEX/index.html",
     "static/media/plusIcon.svg": "/TEZEX/static/media/plusIcon.dc94d200e3f2bc2295ce02c5485a00ef.svg",
     "main.bd64a0ac.css.map": "/TEZEX/static/css/main.bd64a0ac.css.map",
-    "main.acaac869.js.map": "/TEZEX/static/js/main.acaac869.js.map",
+    "main.5571060d.js.map": "/TEZEX/static/js/main.5571060d.js.map",
     "792.e43debd3.chunk.js.map": "/TEZEX/static/js/792.e43debd3.chunk.js.map",
     "496.a016e724.chunk.js.map": "/TEZEX/static/js/496.a016e724.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.bd64a0ac.css",
-    "static/js/main.acaac869.js"
+    "static/js/main.5571060d.js"
   ]
 }
