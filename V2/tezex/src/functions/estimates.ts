@@ -1,5 +1,3 @@
-import { BigNumber } from "bignumber.js";
-
 import { LiquidityBakingStorageXTZ } from "../types/general";
 
 import {
@@ -12,7 +10,6 @@ import {
   AssetOrAssetPair,
 } from "../types/general";
 
-import { TezosToolkit } from "@taquito/taquito";
 import { balanceBuilder } from "./util";
 import {
   estimateTokensFromXtz,
@@ -63,7 +60,6 @@ export function estimate(
       return {
         ...transaction,
         receiveAmount: estimateSharesToTokensRemoveLiquidity(
-          sendAsset,
           receiveAsset,
           sendAmount,
           lbContractStorage
@@ -97,7 +93,6 @@ export const estimateTokensReceivedSwap = (
 };
 
 export const estimateSharesToTokensRemoveLiquidity = (
-  sendAsset: AssetOrAssetPair,
   receive: AssetOrAssetPair,
   sendAmount: Amount,
   lbContractStorage: LiquidityBakingStorageXTZ
