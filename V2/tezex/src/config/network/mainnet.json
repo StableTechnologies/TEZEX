@@ -15,14 +15,14 @@
     {
       "name": "Sirs",
       "label": "Sirs",
-      "logo": "assets/sirslogo.svg",
+      "logo": "/assets/sirsLogo.svg",
       "address": "KT1AafHA1C1vk959wvHWBispY9Y2f3fxBUUo",
       "decimals": 0
     },
     {
       "name": "TzBTC",
       "label": "TzBTC",
-      "logo": "assets/tzbtclogo.svg",
+      "logo": "/assets/tzbtcLogo.svg",
       "address": "KT1PWx2mnDueood7fEmfbBDKx1D9BAnnXitn",
       "decimals": 8
     }
