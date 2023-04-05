@@ -70,6 +70,7 @@ const _calcTokenToXtz = (p: {
     return null;
   }
 };
+
 // outputs the amount of tzBTC tokens for a given amount of XTZ
 const _calcXtzToToken = (p: {
   xtzIn: BigNumber | number;
@@ -172,9 +173,7 @@ export async function tokenToXtz(
       lbContractAddress,
       tokenMantissa.integerValue(BigNumber.ROUND_DOWN)
     );
-    //TEMP remove reinsert slippage
     const minXtzBought = removeSlippage(slippage, xtzAmountInMutez);
-    //const minXtzBought = removeSlippage(slippage, xtzAmountInMutez);
     const transfer = lbContract.methods.tokenToXtz(
       userAddress,
       tokenMantissa.integerValue(BigNumber.ROUND_DOWN),
@@ -308,8 +307,6 @@ export async function xtzToToken(
   }
 }
 
-// add Liquidity
-
 export function estimateShares(
   xtzAmountInMutez: BigNumber,
   tokenMantissa: BigNumber,
@@ -319,13 +316,11 @@ export function estimateShares(
   const sharesFromToken = estimateSharesFromToken(tokenMantissa, dexStorage);
   const shares = BigNumber.min(sharesFromXtz, sharesFromToken);
   return shares;
-  //else return new BigNumber(0);
 }
 
 export function estimateSharesFromXtz(
   xtzAmountInMutez: BigNumber,
-  // eslint-disable-next-line
-  dexStorage: any //TODO : any to explicit type
+  dexStorage: LiquidityBakingStorageXTZ
 ) {
   return xtzAmountInMutez
     .integerValue(BigNumber.ROUND_DOWN)
@@ -336,8 +331,7 @@ export function estimateSharesFromXtz(
 
 export function estimateSharesFromToken(
   tokenMantissa: BigNumber,
-  // eslint-disable-next-line
-  dexStorage: any //TODO : any to explicit type
+  dexStorage: LiquidityBakingStorageXTZ
 ) {
   return tokenMantissa
     .integerValue(BigNumber.ROUND_DOWN)
@@ -360,12 +354,11 @@ export async function buyLiquidityShares(
     const deadline = new Date(Date.now() + 60000).toISOString();
 
     const lbContract = await toolkit.wallet.at(lbContractAddress);
-    // the deadline value is arbitrary and can be changed
     const tzBtcContract = await toolkit.wallet.at(tzbtcContractAddress);
 
     const maxTokensSold: BigNumber = addSlippage(slipage, tokenMantissa);
 
-    const minLqtMinted: BigNumber = lqtMinted; //
+    const minLqtMinted: BigNumber = lqtMinted;
 
     const addLiquidity = lbContract.methods.addLiquidity(
       userAddress,
