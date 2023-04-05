@@ -34,40 +34,6 @@ export enum WalletStatus {
   LOADING = "Loading",
 }
 
-export function isReady(walletStatus: WalletStatus) {
-  const ready = (): boolean => {
-    return walletStatus === WalletStatus.READY;
-  };
-  return ready;
-}
-export function walletUser(
-  walletStatus: WalletStatus,
-  setWalletStatus: React.Dispatch<React.SetStateAction<WalletStatus>>
-) {
-  const useWallet = async (
-    op: () => Promise<unknown>,
-    transientStatus: WalletStatus = WalletStatus.BUSY,
-    force?: boolean
-  ) => {
-    const setBusy = async () => {
-      setWalletStatus(transientStatus);
-    };
-    const setReady = async () => {
-      setWalletStatus(WalletStatus.READY);
-    };
-    if (!force && walletStatus === WalletStatus.READY) {
-      await setBusy();
-      await op();
-      await setReady();
-    } else if (force) {
-      await setBusy();
-      await op();
-    }
-  };
-
-  return useWallet;
-}
-
 export interface WalletInfo {
   client: DAppClient | null;
   setClient: React.Dispatch<React.SetStateAction<DAppClient | null>>;
@@ -76,14 +42,7 @@ export interface WalletInfo {
   address: string | null;
   lbContractStorage: LiquidityBakingStorageXTZ | undefined;
   setAddress: React.Dispatch<React.SetStateAction<string | null>>;
-  walletStatus: WalletStatus;
-  setWalletStatus: React.Dispatch<React.SetStateAction<WalletStatus>>;
-  walletUser: (
-    op: () => Promise<unknown>,
-    walletStatus?: WalletStatus
-  ) => Promise<void>;
   isWalletConnected: boolean;
-  isReady: () => boolean;
   disconnect: () => void;
   swapTransaction: Transaction | undefined;
   addLiquidityTransaction: Transaction | undefined;
@@ -151,7 +110,6 @@ export function WalletProvider(props: IWalletProvider) {
   >(undefined);
   const [loading, setLoading] = useState(true);
   const [isWalletConnected, setIsWalletConnected] = useState(false);
-  const [walletStatus, setWalletStatus] = useState(WalletStatus.DISCONNECTED);
   const [client, setClient] = useState<DAppClient | null>(null);
   const [toolkit, setToolkit] = useState<TezosToolkit | null>(null);
   const [address, setAddress] = useState<string | null>(null);
@@ -676,10 +634,8 @@ export function WalletProvider(props: IWalletProvider) {
   useEffect(() => {
     if (client) {
       setIsWalletConnected(true);
-      setWalletStatus(WalletStatus.READY);
     } else {
       setIsWalletConnected(false);
-      setWalletStatus(WalletStatus.BUSY);
     }
   }, [client]);
 
@@ -696,11 +652,7 @@ export function WalletProvider(props: IWalletProvider) {
     address,
     lbContractStorage,
     setAddress,
-    walletStatus,
-    setWalletStatus,
-    walletUser: walletUser(walletStatus, setWalletStatus),
     isWalletConnected,
-    isReady: isReady(walletStatus),
     swapTransaction,
     addLiquidityTransaction,
     removeLiquidityTransaction,
