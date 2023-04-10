@@ -18,9 +18,10 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
+import Typography from "@mui/material/Typography";
 
 export interface IAlert {
-  completionRecord: CompletionRecord;
+  completionRecord: CompletionRecord | undefined;
   toggle: () => void;
 }
 
@@ -32,25 +33,63 @@ export interface IErrorAlert {
 }
 
 const SuccessAlert: FC<ISuccessAlert> = (props) => {
-  return <Box></Box>;
+  return (
+    <DialogContent>
+      <DialogContentText id="alert-dialog-description">
+        <Typography>
+          Operation Hash : {props.successRecord.opHash as string}
+        </Typography>
+      </DialogContentText>
+    </DialogContent>
+  );
 };
 
 const ErrorAlert: FC<IErrorAlert> = (props) => {
-  return <Box></Box>;
-};
-export const TransactionAlert: FC<IAlert> = (props) => {
-  const styles = useStyles(style);
-  const dialogContent = () => {
-    switch (props.completionRecord[0]) {
-      case CompletionState.SUCCESS:
-        return <SuccessAlert successRecord={props.completionRecord[1]} />;
-      case CompletionState.FAILED:
-        return <ErrorAlert failureRecord={props.completionRecord[1]} />;
-    }
-  };
   return (
-    <Button sx={styles.button} onClick={props.toggle}>
-      <Box sx={styles.box}></Box>
-    </Button>
+    <DialogContent>
+      <DialogContentText id="alert-dialog-description">
+        <Typography>{props.failureRecord.reason as string}</Typography>
+      </DialogContentText>
+    </DialogContent>
+  );
+};
+export const Alert: FC<IAlert> = (props) => {
+  const styles = useStyles(style);
+  const [open, setOpen] = React.useState(props.completionRecord ? true : false);
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  const AlertContent = () => {
+    if (props.completionRecord) {
+      switch (props.completionRecord[0]) {
+        case CompletionState.SUCCESS:
+          return <SuccessAlert successRecord={props.completionRecord[1]} />;
+        case CompletionState.FAILED:
+          return <ErrorAlert failureRecord={props.completionRecord[1]} />;
+      }
+    } else return <Box></Box>;
+  };
+
+  return (
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      aria-labelledby="alert-dialog-title"
+      aria-describedby="alert-dialog-description"
+    >
+      <DialogTitle id="alert-dialog-title">
+        <Typography>
+          {props.completionRecord && (props.completionRecord[0] as string)}
+        </Typography>
+      </DialogTitle>
+      <AlertContent />
+      <DialogActions>
+        <Button onClick={handleClose}>Disagree</Button>
+        <Button onClick={handleClose} autoFocus>
+          Agree
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 };
