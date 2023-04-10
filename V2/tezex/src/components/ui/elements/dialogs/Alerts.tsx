@@ -22,7 +22,7 @@ import Typography from "@mui/material/Typography";
 
 export interface IAlert {
   completionRecord: CompletionRecord | undefined;
-  toggle: () => void;
+  clear: () => void;
 }
 
 export interface ISuccessAlert {
@@ -58,6 +58,7 @@ export const Alert: FC<IAlert> = (props) => {
   const [open, setOpen] = React.useState(props.completionRecord ? true : false);
   const handleClose = () => {
     setOpen(false);
+    props.clear();
   };
 
   const AlertContent = () => {

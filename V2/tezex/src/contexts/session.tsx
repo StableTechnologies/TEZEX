@@ -19,7 +19,7 @@ export const SessionContext = createContext<SessionInfo>({
 export interface SessionInfo {
   loadComponent: (comp: TransactingComponent) => void;
   activeComponent: TransactingComponent | null;
-  setAlert: (record: CompletionRecord) => void;
+  setAlert: (record: CompletionRecord, force?: boolean) => void;
 }
 export interface ISession {
   children:
@@ -34,14 +34,14 @@ export function SessionProvider(props: ISession) {
   const [activeComponent, setActiveComponent] =
     useState<TransactingComponent | null>(null);
 
-  const [alerts, setAlerts] = useState<CompletionRecord | undefined>(undefined);
+  const [_alert, setAlert] = useState<CompletionRecord | undefined>(undefined);
 
   const clearAlert = useCallback(() => {
-    setAlerts(undefined);
+    setAlert(undefined);
   }, []);
 
-  const setAlert = useCallback((record: CompletionRecord) => {
-    setAlert(record);
+  const setRecord = useCallback((record: CompletionRecord, force?: boolean) => {
+    if (!_alert || force) setAlert(record);
   }, []);
 
   const loadComponent = useCallback((comp: TransactingComponent) => {
@@ -53,12 +53,12 @@ export function SessionProvider(props: ISession) {
       value={{
         loadComponent,
         activeComponent,
-        setAlert,
+        setAlert: setRecord,
       }}
     >
       <NetworkContext.Provider value={networkDefaults}>
         <WalletProvider>{props.children}</WalletProvider>
-        <Alert completionRecord={alerts} toggle={clearAlert} />
+        <Alert completionRecord={_alert} clear={clearAlert} />
       </NetworkContext.Provider>
     </SessionContext.Provider>
   );
