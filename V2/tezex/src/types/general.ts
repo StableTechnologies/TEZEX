@@ -49,6 +49,26 @@ export type SendOrRecieve = "Send" | "Receive";
 export type Amount = [Balance] | [Balance, Balance];
 export type AssetOrAssetPair = [Asset] | [Asset, Asset];
 
+export enum CompletionState {
+  SUCCESS = "Transaction Complete!",
+  FAILED = "Error",
+}
+
+export enum Errors {
+  GENERAL = " An error occurred that prevented the transaction from completing. Please try again. ",
+  SLIPPAGE = " This transaction will not succeed due to the network price movement. You can try increasing your slippage percentage.",
+}
+export interface FailedRecord {
+  reason: Errors;
+}
+
+export interface SuccessRecord {
+  opHash: string;
+}
+export type CompletionRecord =
+  | [CompletionState.FAILED, FailedRecord]
+  | [CompletionState.SUCCESS, SuccessRecord];
+
 export enum Assets {
   ASSET = 1,
   PAIR = 2,
