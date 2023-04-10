@@ -10,8 +10,6 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import "./index.css";
 
 import { Home } from "./pages/Home";
-import { Analytics } from "./pages/Analytics";
-import { About } from "./pages/About";
 
 const router = createBrowserRouter(
   [
@@ -33,11 +31,11 @@ const router = createBrowserRouter(
         },
         {
           path: "analytics",
-          element: <Analytics />,
+          element: <Home path="swap" />,
         },
         {
           path: "about",
-          element: <About />,
+          element: <Home path="swap" />,
         },
       ],
     },
