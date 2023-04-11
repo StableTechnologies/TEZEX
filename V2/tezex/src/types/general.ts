@@ -57,7 +57,9 @@ export enum CompletionState {
 export enum Errors {
   GENERAL = " An error occurred that prevented the transaction from completing. Please try again. ",
   SLIPPAGE = " This transaction will not succeed due to the network price movement. You can try increasing your slippage percentage.",
+  LB_CONTRACT_STORAGE = "An error was encountered when Querying Dex Storage",
 }
+
 export interface FailedRecord {
   reason: Errors;
 }

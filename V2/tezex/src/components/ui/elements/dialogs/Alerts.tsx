@@ -1,4 +1,4 @@
-import React, { FC } from "react";
+import React, { FC, useEffect } from "react";
 
 import Box from "@mui/material/Box";
 
@@ -60,6 +60,10 @@ export const Alert: FC<IAlert> = (props) => {
     setOpen(false);
     props.clear();
   };
+
+  useEffect(() => {
+    props.completionRecord && setOpen(true);
+  }, [props.completionRecord]);
 
   const AlertContent = () => {
     if (props.completionRecord) {

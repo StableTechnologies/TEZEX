@@ -1,8 +1,13 @@
-import React, { createContext, useCallback, useState } from "react";
+import React, { createContext, useEffect, useCallback, useState } from "react";
 import { WalletProvider } from "./wallet";
 import { NetworkContext, networkDefaults } from "./network";
 import { Alert } from "../components/ui/elements/dialogs/Alerts";
-import { TransactingComponent, CompletionRecord } from "../types/general";
+import {
+  TransactingComponent,
+  CompletionRecord,
+  CompletionState,
+  Errors,
+} from "../types/general";
 
 export const SessionContext = createContext<SessionInfo>({
   loadComponent: (_: TransactingComponent) => {
@@ -34,11 +39,15 @@ export function SessionProvider(props: ISession) {
   const [activeComponent, setActiveComponent] =
     useState<TransactingComponent | null>(null);
 
-  const [_alert, setAlert] = useState<CompletionRecord | undefined>(undefined);
+  const [_alert, setAlert] = useState<CompletionRecord | undefined>(undefined); //[CompletionState.FAILED, { reason : Errors.GENERAL}]);
 
   const clearAlert = useCallback(() => {
     setAlert(undefined);
   }, []);
+
+  useEffect(() => {
+    console.log("\n", "_alert : ", _alert, "\n");
+  }, [_alert]);
 
   const setRecord = useCallback((record: CompletionRecord, force?: boolean) => {
     if (!_alert || force) setAlert(record);

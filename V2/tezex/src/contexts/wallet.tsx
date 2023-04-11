@@ -13,14 +13,17 @@ import {
   Amount,
   AssetOrAssetPair,
   LiquidityBakingStorageXTZ,
+  Errors,
 } from "../types/general";
 import { TezosToolkit } from "@taquito/taquito";
 
 import { processTransaction } from "../functions/transactions";
 import { useNetwork } from "../hooks/network";
+import { useSession } from "../hooks/session";
 import { v4 as uuidv4 } from "uuid";
 import { BigNumber } from "bignumber.js";
 import { getBalance } from "../functions/beacon";
+import { toAlertableError } from "../functions/util";
 
 export enum WalletStatus {
   ESTIMATING_SIRS = "Estimating Sirs",
@@ -98,6 +101,7 @@ export function WalletProvider(props: IWalletProvider) {
   // eslint-disable-next-line
 
   const network = useNetwork();
+  const session = useSession();
 
   const [swapTransaction, setSwapTransaction] = useImmer<
     Transaction | undefined
@@ -159,7 +163,12 @@ export function WalletProvider(props: IWalletProvider) {
   }, [address, toolkit, client]);
 
   const updateStorage = useCallback(async () => {
-    setLbContractStroage(await network.getDexStorage());
+    setLbContractStroage(
+      await network.getDexStorage().catch((e) => {
+        session.setAlert(toAlertableError(e as Errors));
+        return undefined;
+      })
+    );
   }, [network]);
 
   useEffect(() => {
