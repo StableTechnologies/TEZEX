@@ -39,7 +39,10 @@ export function SessionProvider(props: ISession) {
   const [activeComponent, setActiveComponent] =
     useState<TransactingComponent | null>(null);
 
-  const [_alert, setAlert] = useState<CompletionRecord | undefined>(undefined); //[CompletionState.FAILED, { reason : Errors.GENERAL}]);
+  const [_alert, setAlert] = useState<CompletionRecord | undefined>([
+    CompletionState.FAILED,
+    { reason: Errors.GENERAL },
+  ]);
 
   const clearAlert = useCallback(() => {
     setAlert(undefined);

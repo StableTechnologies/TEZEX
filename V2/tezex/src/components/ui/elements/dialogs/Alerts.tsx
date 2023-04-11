@@ -1,4 +1,4 @@
-import React, { FC, useEffect } from "react";
+import React, { FC } from "react";
 
 import Box from "@mui/material/Box";
 
@@ -19,7 +19,8 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import Typography from "@mui/material/Typography";
-
+import alertIcon from "../../../../assets/alert.svg";
+import closeIcon from "../../../../assets/closeIcon.svg";
 export interface IAlert {
   completionRecord: CompletionRecord | undefined;
   clear: () => void;
@@ -45,11 +46,24 @@ const SuccessAlert: FC<ISuccessAlert> = (props) => {
 };
 
 const ErrorAlert: FC<IErrorAlert> = (props) => {
+  const styles = useStyles(style);
   return (
-    <DialogContent>
-      <DialogContentText id="alert-dialog-description">
-        <Typography>{props.failureRecord.reason as string}</Typography>
-      </DialogContentText>
+    <DialogContent sx={styles.dialogContent}>
+      <Box sx={styles.errorContentBox}>
+        <Box sx={styles.alertIconBox}>
+          <img style={styles.alertIcon} src={alertIcon} alt="Alert Icon" />
+        </Box>
+        <DialogContentText
+          sx={styles.errorContentBox}
+          id="alert-dialog-description"
+        >
+          <Box sx={styles.errorContentBox}>
+            <Typography align="center" sx={styles.errorText}>
+              {props.failureRecord.reason as string}
+            </Typography>
+          </Box>
+        </DialogContentText>
+      </Box>
     </DialogContent>
   );
 };
@@ -60,10 +74,6 @@ export const Alert: FC<IAlert> = (props) => {
     setOpen(false);
     props.clear();
   };
-
-  useEffect(() => {
-    props.completionRecord && setOpen(true);
-  }, [props.completionRecord]);
 
   const AlertContent = () => {
     if (props.completionRecord) {
@@ -78,16 +88,23 @@ export const Alert: FC<IAlert> = (props) => {
 
   return (
     <Dialog
+      sx={styles.dialog}
       open={open}
       onClose={handleClose}
       aria-labelledby="alert-dialog-title"
       aria-describedby="alert-dialog-description"
     >
-      <DialogTitle id="alert-dialog-title">
-        <Typography>
-          {props.completionRecord && (props.completionRecord[0] as string)}
-        </Typography>
-      </DialogTitle>
+      <Box sx={styles.titleBox}>
+        <DialogTitle sx={styles.title} id="alert-dialog-title">
+          <Typography sx={styles.title}>
+            {props.completionRecord && (props.completionRecord[0] as string)}
+          </Typography>
+        </DialogTitle>
+
+        <Button onClick={handleClose}>
+          <img style={styles.closeIcon} src={closeIcon} alt="Alert Icon" />
+        </Button>
+      </Box>
       <AlertContent />
       <DialogActions>
         <Button onClick={handleClose}>Disagree</Button>
