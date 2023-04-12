@@ -88,7 +88,7 @@ export const Swap: FC = () => {
         setSendAmount(amt);
       }
     },
-    [sendAmount]
+    [sendAmount, swapingFields]
   );
   const updateTransaction = useCallback(() => {
     if (active) {

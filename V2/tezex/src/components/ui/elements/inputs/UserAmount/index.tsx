@@ -34,10 +34,9 @@ const AmountField: FC<IAmountField> = (props) => {
   const styles = useStyles(style);
   const [inputString, setInputString] = useState<string>(props.value);
   const onChange = props.onChange;
-  const value = props.value;
-  const loading = props.loading;
+
   useEffect(() => {
-    setInputString(props.value);
+    props.loading && setInputString(props.value);
   }, [props.loading, props.value]);
   const callBack = useCallback(
     async (value: string) => {
@@ -45,9 +44,9 @@ const AmountField: FC<IAmountField> = (props) => {
     },
     [onChange]
   );
-  const toggle = () => {
+  const toggle = useCallback(() => {
     if (props.swap) props.swap();
-  };
+  }, [props.swap]);
   useEffect(() => {
     const timer = setTimeout(() => {
       if (props.value !== inputString && !props.readOnly && !props.loading) {

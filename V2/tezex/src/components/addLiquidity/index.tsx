@@ -56,7 +56,7 @@ export const AddLiquidity: FC = () => {
     network.getAsset(Token.TzBTC),
     network.getAsset(Token.Sirs),
   ]);
-  const [swapingFields, setSwapingFields] = useState<boolean>(true);
+  const [swapingFields, setSwapingFields] = useState<boolean>(false);
   const session = useSession();
 
   const transact = async () => {
@@ -73,11 +73,13 @@ export const AddLiquidity: FC = () => {
     [slippage]
   );
   const swapFields = useCallback(() => {
+    const send = sendAmount2;
+    setLoading(true);
     setAssets([assets[1], assets[0], assets[receive]]);
 
     setSwapingFields(true);
-    setLoading(true);
-  }, [assets]);
+    setSendAmount(send);
+  }, [assets, sendAmount2]);
   const updateSend2 = useCallback(
     (value: string) => {
       const amt = new BigNumber(value);
@@ -90,11 +92,11 @@ export const AddLiquidity: FC = () => {
   const updateSend = useCallback(
     (value: string) => {
       const amt = new BigNumber(value);
-      if (!amt.eq(sendAmount) && !amt.isNaN()) {
+      if (!amt.eq(sendAmount) && !amt.isNaN() && !swapingFields) {
         setSendAmount(amt);
       }
     },
-    [sendAmount]
+    [sendAmount, swapingFields]
   );
   const updateReceive = useCallback(
     (value: string) => {
@@ -105,9 +107,11 @@ export const AddLiquidity: FC = () => {
     },
     [receiveAmount]
   );
-
   useEffect(() => {
-    if (active) {
+    console.log("\n", "sendAmount : ", sendAmount, "\n");
+  }, [sendAmount]);
+  useEffect(() => {
+    if (active && !swapingFields) {
       active.sendAssetBalance[1] &&
         setBalances([
           active.sendAssetBalance[0].decimal.toString(),
@@ -124,7 +128,7 @@ export const AddLiquidity: FC = () => {
   }, [active]);
 
   const updateTransaction = useCallback(() => {
-    if (active) {
+    if (active && !swapingFields) {
       if (
         !active.sendAmount[0].decimal.eq(sendAmount) ||
         active.slippage !== slippage
@@ -189,8 +193,7 @@ export const AddLiquidity: FC = () => {
     }
     if (loading && swapingFields) {
       newTransaction();
-    }
-    if (loading && !active) {
+    } else if (loading && !active) {
       newTransaction();
     } else if (loading) {
       if (active) {
