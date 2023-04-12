@@ -37,8 +37,8 @@ const AmountField: FC<IAmountField> = (props) => {
   const value = props.value;
   const loading = props.loading;
   useEffect(() => {
-    setInputString(value);
-  }, [loading, value]);
+    setInputString(props.value);
+  }, [props.loading, props.value]);
   const callBack = useCallback(
     async (value: string) => {
       if (onChange) onChange(value);
@@ -50,7 +50,7 @@ const AmountField: FC<IAmountField> = (props) => {
   };
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (props.value !== inputString && !props.readOnly) {
+      if (props.value !== inputString && !props.readOnly && !props.loading) {
         callBack(inputString);
       }
     }, 1500);

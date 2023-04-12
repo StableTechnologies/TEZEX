@@ -47,7 +47,7 @@ export const Swap: FC = () => {
   ]);
 
   const [balances, setBalances] = useState<[string, string]>(["", ""]);
-  const [swapingFields, setSwapingFields] = useState<boolean>(true);
+  const [swapingFields, setSwapingFields] = useState<boolean>(false);
   const session = useSession();
 
   const active = walletOperations.getActiveTransaction();
@@ -75,15 +75,16 @@ export const Swap: FC = () => {
     [slippage]
   );
   const swapFields = useCallback(() => {
+    setLoading(true);
     setAssets([assets[1], assets[0]]);
     setSwapingFields(true);
-    setLoading(true);
+    setSendAmount(receiveAmount);
   }, [assets]);
 
   const updateSend = useCallback(
     (value: string) => {
       const amt = new BigNumber(value);
-      if (amt !== sendAmount) {
+      if (amt !== sendAmount && !swapingFields) {
         setSendAmount(amt);
       }
     },
