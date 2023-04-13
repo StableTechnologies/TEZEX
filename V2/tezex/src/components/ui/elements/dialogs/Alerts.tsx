@@ -40,24 +40,22 @@ export interface IErrorAlert {
 const SuccessAlert: FC<ISuccessAlert> = (props) => {
   const styles = useStyles(style);
   return (
-    <DialogContent sx={styles.dialogContent}>
-      <Box sx={styles.errorContentBox}>
+    <DialogContent sx={styles.dialogContentSuccess}>
+      <Box sx={styles.successContentBox}>
         <Box sx={styles.alertIconBox}>
           <img style={styles.tickIcon} src={tick} alt="Check Mark" />
         </Box>
         <DialogContentText
-          sx={styles.successContentBox}
+          sx={styles.successContenTextBox}
           id="alert-dialog-description"
         >
-          <Box sx={styles.successContentBox}>
-            <Typography align="center" sx={styles.successText}>
-              Operation Hash :{" "}
-              {shorten(5, 5, props.successRecord.opHash) as string}
-            </Typography>
-            <Button>
+          <Typography sx={styles.successText}>
+            Operation Hash :{" "}
+            {shorten(5, 5, props.successRecord.opHash) as string}
+            <Button sx={styles.copyButton}>
               <img style={styles.copyIcon} src={copyIcon} alt="Copy Icon" />
             </Button>
-          </Box>
+          </Typography>
         </DialogContentText>
       </Box>
     </DialogContent>
