@@ -2,7 +2,6 @@ import React, { FC } from "react";
 
 import Box from "@mui/material/Box";
 
-import style from "./style";
 import useStyles from "../../../../hooks/styles";
 import {
   CompletionState,
@@ -12,6 +11,7 @@ import {
   SuccessRecord,
 } from "../../../../types/general";
 
+import { shorten } from "../../../../functions/util";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
@@ -21,6 +21,10 @@ import DialogTitle from "@mui/material/DialogTitle";
 import Typography from "@mui/material/Typography";
 import alertIcon from "../../../../assets/alert.svg";
 import closeIcon from "../../../../assets/closeIcon.svg";
+import tick from "../../../../assets/tick.svg";
+import copyIcon from "../../../../assets/copyIcon.svg";
+
+import style from "./style";
 export interface IAlert {
   completionRecord: CompletionRecord | undefined;
   clear: () => void;
@@ -34,13 +38,28 @@ export interface IErrorAlert {
 }
 
 const SuccessAlert: FC<ISuccessAlert> = (props) => {
+  const styles = useStyles(style);
   return (
-    <DialogContent>
-      <DialogContentText id="alert-dialog-description">
-        <Typography>
-          Operation Hash : {props.successRecord.opHash as string}
-        </Typography>
-      </DialogContentText>
+    <DialogContent sx={styles.dialogContent}>
+      <Box sx={styles.errorContentBox}>
+        <Box sx={styles.alertIconBox}>
+          <img style={styles.tickIcon} src={tick} alt="Check Mark" />
+        </Box>
+        <DialogContentText
+          sx={styles.successContentBox}
+          id="alert-dialog-description"
+        >
+          <Box sx={styles.successContentBox}>
+            <Typography align="center" sx={styles.successText}>
+              Operation Hash :{" "}
+              {shorten(5, 5, props.successRecord.opHash) as string}
+            </Typography>
+            <Button>
+              <img style={styles.copyIcon} src={copyIcon} alt="Copy Icon" />
+            </Button>
+          </Box>
+        </DialogContentText>
+      </Box>
     </DialogContent>
   );
 };

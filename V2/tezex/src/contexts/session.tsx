@@ -40,8 +40,8 @@ export function SessionProvider(props: ISession) {
     useState<TransactingComponent | null>(null);
 
   const [_alert, setAlert] = useState<CompletionRecord | undefined>([
-    CompletionState.FAILED,
-    { reason: Errors.GENERAL },
+    CompletionState.SUCCESS, // CompletionState.FAILED,
+    { opHash: "xxxxxxxxxxxxxxxxxxxxxx" }, // { reason: Errors.GENERAL },
   ]);
 
   const clearAlert = useCallback(() => {
