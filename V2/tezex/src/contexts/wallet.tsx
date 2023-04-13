@@ -4,6 +4,7 @@ import { useImmer } from "use-immer";
 
 import { DAppClient } from "@airgap/beacon-sdk";
 import {
+  CompletionState,
   Transaction,
   Asset,
   AssetBalance,
@@ -242,7 +243,8 @@ export function WalletProvider(props: IWalletProvider) {
             network.info.dex.address,
             toolkit
           )
-            .then(() => {
+            .then((successRecord) => {
+              session.setAlert([CompletionState.SUCCESS, successRecord]);
               return updateBalances();
             })
             .then(() => {
@@ -251,7 +253,8 @@ export function WalletProvider(props: IWalletProvider) {
                 transactionStatus: TransactionStatus.COMPLETED,
               };
             })
-            .catch(() => {
+            .catch((e) => {
+              session.setAlert(toAlertableError(e as Errors));
               return {
                 ...transaction,
                 transactionStatus: TransactionStatus.FAILED,
@@ -271,7 +274,9 @@ export function WalletProvider(props: IWalletProvider) {
       swapTransaction &&
         swapTransaction.transactionStatus === TransactionStatus.PENDING &&
         (await transact(swapTransaction).then((transaction: Transaction) => {
-          setSwapTransaction(transaction);
+          transaction.transactionStatus === TransactionStatus.FAILED
+            ? setSwapTransaction(transaction)
+            : setSwapTransaction(undefined);
         }));
     };
     proc();
@@ -284,7 +289,9 @@ export function WalletProvider(props: IWalletProvider) {
           TransactionStatus.PENDING &&
         (await transact(addLiquidityTransaction).then(
           (transaction: Transaction) => {
-            setAddLiquidityTransaction(transaction);
+            transaction.transactionStatus === TransactionStatus.FAILED
+              ? setAddLiquidityTransaction(transaction)
+              : setAddLiquidityTransaction(undefined);
           }
         ));
     };
@@ -298,7 +305,9 @@ export function WalletProvider(props: IWalletProvider) {
           TransactionStatus.PENDING &&
         (await transact(removeLiquidityTransaction).then(
           (transaction: Transaction) => {
-            setRemoveLiquidityTransaction(transaction);
+            transaction.transactionStatus === TransactionStatus.FAILED
+              ? setRemoveLiquidityTransaction(transaction)
+              : setRemoveLiquidityTransaction(undefined);
           }
         ));
     };
