@@ -52,7 +52,12 @@ const SuccessAlert: FC<ISuccessAlert> = (props) => {
           <Typography sx={styles.successText}>
             Operation Hash :{" "}
             {shorten(5, 5, props.successRecord.opHash) as string}
-            <Button sx={styles.copyButton}>
+            <Button
+              sx={styles.copyButton}
+              onClick={() =>
+                navigator.clipboard.writeText(props.successRecord.opHash)
+              }
+            >
               <img style={styles.copyIcon} src={copyIcon} alt="Copy Icon" />
             </Button>
           </Typography>

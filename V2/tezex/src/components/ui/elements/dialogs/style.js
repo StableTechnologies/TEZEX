@@ -44,11 +44,12 @@ const style = (theme) => {
         zindex: "3",
         alignItems: "center",
         justifyContent: "center",
-        padding: "0 0 2.78vw 0",
+        padding: "0 0 4vw 0",
         display: "flex",
         alignText: "center",
       },
     },
+    successIconBox: {},
     alertIconBox: {},
 
     successContentBox: {
@@ -60,6 +61,9 @@ const style = (theme) => {
       textAlign: "center",
     },
     successContentTextBox: {
+      "& .MuiDialogContent-root": {
+        padding: "0 0 60px 0",
+      },
       flexDirection: "row",
       display: "flex",
       alignItems: "center",
@@ -71,7 +75,7 @@ const style = (theme) => {
         position: "absolute",
         display: "flex",
         left: "0px",
-        padding: "1vw 1vw 1.1vw 2vw",
+        padding: "2vw 1vw 0 2vw ",
         fontFamily: "Inter",
         color: "#000000",
         fontSize: " 1.11vw",
@@ -79,6 +83,7 @@ const style = (theme) => {
         lineHeight: "1.319vw",
         letterSpacing: "0em",
         textalign: "right",
+        alignText: "center",
         alignItems: "center",
         justifyContent: "flex-start",
       },
@@ -126,6 +131,7 @@ const style = (theme) => {
       padding: "0px 0px 0px 0px",
       "&.MuiTypography-root": {
         padding: "0px 0px 0px 0px",
+        color: "#000000",
         fontFamily: "Inter",
         fontSize: " 1.66vw",
         fontWeight: "500",
@@ -140,17 +146,12 @@ const style = (theme) => {
       height: " 4.16vw",
       alignItems: "center",
       width: " 4.16vw",
-      left: " .37vw",
-      top: " .60vw",
     },
     copyButton: {
       marginLeft: ".42vw",
       "&.MuiButtonBase-root": {
-        padding: "0",
         minHeight: " .79vw",
         minWidth: " .92vw",
-        maxHeight: " .79vw",
-        maxWidth: " .92vw",
       },
       maxHeight: " .79vw",
       maxWidth: " .92vw",
@@ -159,6 +160,7 @@ const style = (theme) => {
       alignItems: "center",
     },
     copyIcon: {
+      marginTop: ".2vw",
       height: " .79vw",
       width: " .92vw",
       alignItems: "center",
