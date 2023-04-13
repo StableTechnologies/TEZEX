@@ -96,7 +96,7 @@ export const Alert: FC<IAlert> = (props) => {
     >
       <Box sx={styles.titleBox}>
         <DialogTitle sx={styles.title} id="alert-dialog-title">
-          <Typography sx={styles.title}>
+          <Typography sx={styles.titleTypography}>
             {props.completionRecord && (props.completionRecord[0] as string)}
           </Typography>
         </DialogTitle>
@@ -106,10 +106,9 @@ export const Alert: FC<IAlert> = (props) => {
         </Button>
       </Box>
       <AlertContent />
-      <DialogActions>
-        <Button onClick={handleClose}>Disagree</Button>
-        <Button onClick={handleClose} autoFocus>
-          Agree
+      <DialogActions sx={styles.action}>
+        <Button size="small" sx={styles.button} onClick={handleClose}>
+          Ok, go back
         </Button>
       </DialogActions>
     </Dialog>

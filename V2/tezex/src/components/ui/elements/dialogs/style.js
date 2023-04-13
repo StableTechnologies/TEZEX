@@ -33,9 +33,11 @@ const style = (theme) => {
     },
     dialogContent: {
       "&.MuiDialogContent-root": {
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "0 0 0 0",
         display: "flex",
         alignText: "center",
-        alignItems: "center",
       },
     },
     alertIconBox: {},
@@ -44,12 +46,14 @@ const style = (theme) => {
       display: "flex",
       alignItems: "center",
 
+      justifyContent: "center",
       textalign: "center",
     },
     errorText: {
       "&.MuiTypography-root": {
         display: "flex",
-
+        //t right bot left
+        padding: "1vw 6.3vw 3.19vw 5.3vw ",
         fontFamily: "Inter",
         fontSize: " 1.11vw",
         fontWeight: "400vw",
@@ -59,13 +63,36 @@ const style = (theme) => {
       },
     },
     titleBox: {
+      // padding: "1.9vw 0 0 2.5vw",
+      // paddingLeft: "3.2vw",
+      //paddingRight: "1.9vw",
       display: "flex",
       justifyContent: "space-between",
       alignItems: "center",
-      width: "80%",
+      width: "100%",
+
+      "& .MuiTypography-root": {
+        padding: "1.9vw 2vw",
+        fontFamily: "Inter",
+        fontSize: " 1.66vw",
+        fontWeight: "500",
+        lineHeight: "2vw",
+      },
     },
     title: {
+      //minWidth: "100%",
+      justifyContent: "space-between",
+      display: "flex",
+      flexDirection: "row",
+      // paddingLeft: "2.2vw", // 0 0 2.5vw",
+      //:paddingRight: "1.9vw", // 0 0 2.5vw",
+
+      //	    padding: "0 0 0 0",
+    },
+    titleTypography: {
+      padding: "0px 0px 0px 0px",
       "&.MuiTypography-root": {
+        padding: "0px 0px 0px 0px",
         fontFamily: "Inter",
         fontSize: " 1.66vw",
         fontWeight: "500",
@@ -87,7 +114,40 @@ const style = (theme) => {
 
       left: " .37vw",
 
-      top: " .60vw",
+      //top: " .60vw",
+    },
+
+    button: {
+      height: "2.70vw",
+
+      width: "8.54vw",
+
+      // left  :"10.48vw",
+
+      // top  :"16.11vw",
+
+      borderRadius: ".55vw",
+
+      //padding  :".69vw 1.11vw  .69vw 1.11vw",
+
+      "&.MuiButton-root.Mui-disabled": {
+        color: "white",
+      },
+      background: "#1E1E1E",
+      color: "white",
+
+      //border: "1px solid black",
+      fontWeight: "500",
+      fontSize: "1.11vw",
+      lineHeight: "1.34vw",
+
+      textTransform: "none",
+      "&:hover": {
+        background: "#000",
+      },
+    },
+    action: {
+      paddingBottom: "2.22vw",
     },
   };
 };
