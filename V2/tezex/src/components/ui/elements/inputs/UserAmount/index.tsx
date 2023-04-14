@@ -25,7 +25,6 @@ export interface IAmountField {
   label?: string;
   readOnly?: boolean;
   loading?: boolean;
-  swapping?: boolean;
   variant?: "LeftInput" | "RightInput";
   darker?: boolean;
   swap?: () => void;
