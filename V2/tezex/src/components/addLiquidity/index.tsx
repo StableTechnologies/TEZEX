@@ -189,7 +189,7 @@ export const AddLiquidity: FC = () => {
 
   useEffect(() => {
     if (!loading && !active) {
-      newTransaction();
+      setLoading(true);
     }
     if (loading && swapingFields) {
       newTransaction();

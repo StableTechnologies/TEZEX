@@ -155,7 +155,7 @@ export const Swap: FC = () => {
 
   useEffect(() => {
     if (!loading && !active) {
-      newTransaction();
+      setLoading(true); // newTransaction();
     }
     if (loading && swappingFileds) {
       newTransaction();

@@ -25,6 +25,7 @@ export interface IAmountField {
   label?: string;
   readOnly?: boolean;
   loading?: boolean;
+  swapping?: boolean;
   variant?: "LeftInput" | "RightInput";
   darker?: boolean;
   swap?: () => void;
@@ -36,8 +37,9 @@ const AmountField: FC<IAmountField> = (props) => {
   const onChange = props.onChange;
 
   useEffect(() => {
-    props.loading && setInputString(props.value);
+    setInputString(props.value);
   }, [props.loading, props.value]);
+
   const callBack = useCallback(
     async (value: string) => {
       if (onChange) onChange(value);

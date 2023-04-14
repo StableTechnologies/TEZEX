@@ -123,7 +123,7 @@ export const RemoveLiquidity: FC = () => {
 
   useEffect(() => {
     if (!loading && !active) {
-      newTransaction();
+      setLoading(true);
     }
     if (loading && !active) {
       newTransaction();
