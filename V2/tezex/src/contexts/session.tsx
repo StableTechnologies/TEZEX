@@ -1,13 +1,8 @@
-import React, { createContext, useEffect, useCallback, useState } from "react";
+import React, { createContext, useCallback, useState } from "react";
 import { WalletProvider } from "./wallet";
 import { NetworkContext, networkDefaults } from "./network";
 import { Alert } from "../components/ui/elements/dialogs/Alerts";
-import {
-  TransactingComponent,
-  CompletionRecord,
-  CompletionState,
-  Errors,
-} from "../types/general";
+import { TransactingComponent, CompletionRecord } from "../types/general";
 
 export const SessionContext = createContext<SessionInfo>({
   loadComponent: (_: TransactingComponent) => {
@@ -15,7 +10,7 @@ export const SessionContext = createContext<SessionInfo>({
     null;
   },
   activeComponent: null,
-  setAlert: (_: CompletionRecord) => {
+  setAlert: (_: CompletionRecord | undefined) => {
     _;
     null;
   },
@@ -24,7 +19,7 @@ export const SessionContext = createContext<SessionInfo>({
 export interface SessionInfo {
   loadComponent: (comp: TransactingComponent) => void;
   activeComponent: TransactingComponent | null;
-  setAlert: (record: CompletionRecord, force?: boolean) => void;
+  setAlert: (record: CompletionRecord | undefined, force?: boolean) => void;
 }
 export interface ISession {
   children:
@@ -39,22 +34,18 @@ export function SessionProvider(props: ISession) {
   const [activeComponent, setActiveComponent] =
     useState<TransactingComponent | null>(null);
 
-  const [_alert, setAlert] = useState<CompletionRecord | undefined>([
-    CompletionState.SUCCESS, // CompletionState.FAILED,
-    { opHash: "xxxxxxxxxxxxxxxxxxxxxx" }, // { reason: Errors.GENERAL },
-  ]);
+  const [_alert, setAlert] = useState<CompletionRecord | undefined>(undefined);
 
   const clearAlert = useCallback(() => {
     setAlert(undefined);
   }, []);
 
-  useEffect(() => {
-    console.log("\n", "_alert : ", _alert, "\n");
-  }, [_alert]);
-
-  const setRecord = useCallback((record: CompletionRecord, force?: boolean) => {
-    if (!_alert || force) setAlert(record);
-  }, []);
+  const setRecord = useCallback(
+    (record: CompletionRecord | undefined, force?: boolean) => {
+      if (!_alert || force) setAlert(record);
+    },
+    []
+  );
 
   const loadComponent = useCallback((comp: TransactingComponent) => {
     setActiveComponent(comp);

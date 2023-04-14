@@ -244,7 +244,7 @@ export function WalletProvider(props: IWalletProvider) {
             toolkit
           )
             .then((successRecord) => {
-              session.setAlert([CompletionState.SUCCESS, successRecord]);
+              session.setAlert([CompletionState.SUCCESS, successRecord], true);
               return updateBalances();
             })
             .then(() => {

@@ -47,15 +47,16 @@ export const balanceBuilder = (
   };
 };
 
-export function toAlertableError(e: Errors): CompletionRecord {
-  console.log("\n", "toAlertable e : ", e, "\n");
+export function toAlertableError(e: Errors): CompletionRecord | undefined {
   switch (e) {
-    case Errors.SLIPPAGE:
+    case Errors.TRANSACTION_FAILED:
       return [CompletionState.FAILED, { reason: e }] as CompletionRecord;
-    default:
+    case Errors.GAS_ESTIMATION:
       return [
         CompletionState.FAILED,
-        { reason: Errors.GENERAL },
+        { reason: Errors.TRANSACTION_FAILED },
       ] as CompletionRecord;
+    default:
+      return undefined;
   }
 }

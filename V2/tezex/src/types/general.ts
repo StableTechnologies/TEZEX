@@ -55,6 +55,7 @@ export enum CompletionState {
 }
 
 export enum Errors {
+  GAS_ESTIMATION = "Failed during estimating fee, gas and storage limit.",
   GENERAL = "Network Issues",
   TRANSACTION_FAILED = "An error occurred that prevented the transaction from completing. Please try again. ",
   SLIPPAGE = " This transaction will not succeed due to the network price movement. You can try increasing your slippage percentage.",

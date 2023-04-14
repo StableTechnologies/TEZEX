@@ -245,14 +245,14 @@ export async function tokenToXtz(
     return {
       opHash: await batchOp
         .confirmation()
-        .then((obj) => {
-          return obj.block.hash;
+        .then(() => {
+          return batchOp.opHash;
         })
         .catch(() => {
           throw Errors.TRANSACTION_FAILED;
         }),
     };
-  } else throw Errors.SLIPPAGE;
+  } else throw Errors.GAS_ESTIMATION;
 }
 
 export function estimateTokensFromXtz(
@@ -319,14 +319,14 @@ export async function xtzToToken(
     return {
       opHash: await op
         .confirmation()
-        .then((obj) => {
-          return obj.block.hash;
+        .then(() => {
+          return op.opHash;
         })
         .catch(() => {
           throw Errors.TRANSACTION_FAILED;
         }),
     };
-  } else throw Errors.SLIPPAGE;
+  } else throw Errors.GAS_ESTIMATION;
 }
 
 export function estimateShares(
@@ -472,14 +472,14 @@ export async function buyLiquidityShares(
     return {
       opHash: await batchOp
         .confirmation()
-        .then((obj) => {
-          return obj.block.hash;
+        .then(() => {
+          return batchOp.opHash;
         })
         .catch(() => {
           throw Errors.TRANSACTION_FAILED;
         }),
     };
-  } else throw Errors.SLIPPAGE;
+  } else throw Errors.GAS_ESTIMATION;
 }
 
 export function _calcLqtOutput(
@@ -577,13 +577,13 @@ export async function removeLiquidity(
     return {
       opHash: await op
         .confirmation()
-        .then((obj) => {
-          return obj.block.hash;
+        .then(() => {
+          return op.opHash;
         })
         .catch((err) => {
           console.log(`failed in xtzToToken ${JSON.stringify(err)}}`);
           throw Errors.TRANSACTION_FAILED;
         }),
     };
-  } else throw Errors.SLIPPAGE;
+  } else throw Errors.GAS_ESTIMATION;
 }
