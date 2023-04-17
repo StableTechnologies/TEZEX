@@ -47,7 +47,7 @@ export const Swap: FC = () => {
   ]);
 
   const [balances, setBalances] = useState<[string, string]>(["", ""]);
-  const [swapingFields, setSwapingFields] = useState<boolean>(true);
+  const [swappingFileds, setSwappingFileds] = useState<boolean>(false);
   const session = useSession();
 
   const active = walletOperations.getActiveTransaction();
@@ -75,19 +75,20 @@ export const Swap: FC = () => {
     [slippage]
   );
   const swapFields = useCallback(() => {
-    setAssets([assets[1], assets[0]]);
-    setSwapingFields(true);
     setLoading(true);
+    setAssets([assets[1], assets[0]]);
+    setSwappingFileds(true);
+    setSendAmount(receiveAmount);
   }, [assets]);
 
   const updateSend = useCallback(
     (value: string) => {
       const amt = new BigNumber(value);
-      if (amt !== sendAmount) {
+      if (amt !== sendAmount && !swappingFileds) {
         setSendAmount(amt);
       }
     },
-    [sendAmount]
+    [sendAmount, swappingFileds]
   );
   const updateTransaction = useCallback(() => {
     if (active) {
@@ -147,16 +148,16 @@ export const Swap: FC = () => {
 
     if (transaction) {
       updateBalance();
-      if (swapingFields) setSwapingFields(false);
+      if (swappingFileds) setSwappingFileds(false);
       setLoading(false);
     }
-  }, [swapingFields, assets, updateBalance, walletOperations]);
+  }, [swappingFileds, assets, updateBalance, walletOperations]);
 
   useEffect(() => {
     if (!loading && !active) {
-      newTransaction();
+      setLoading(true); // newTransaction();
     }
-    if (loading && swapingFields) {
+    if (loading && swappingFileds) {
       newTransaction();
     }
     if (loading && !active) {
@@ -174,7 +175,7 @@ export const Swap: FC = () => {
         session.loadComponent(TransactingComponent.SWAP);
     }
   }, [
-    swapingFields,
+    swappingFileds,
     loading,
     active,
     newTransaction,

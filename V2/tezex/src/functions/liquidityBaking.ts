@@ -1,6 +1,10 @@
 import { TezosToolkit, OpKind } from "@taquito/taquito";
 import { BigNumber } from "bignumber.js";
-import { LiquidityBakingStorageXTZ } from "../types/general";
+import {
+  Errors,
+  LiquidityBakingStorageXTZ,
+  SuccessRecord,
+} from "../types/general";
 
 export function removeSlippage(
   slippage: BigNumber | number | string | null,
@@ -163,83 +167,92 @@ export async function tokenToXtz(
   tzbtcContractAddress: string,
   toolkit: TezosToolkit,
   slippage: number | BigNumber | string = 0
-) {
-  try {
-    const lbContract = await toolkit.wallet.at(lbContractAddress);
-    // the deadline value is arbitrary and can be changed
-    const tzBtcContract = await toolkit.wallet.at(tzbtcContractAddress);
-    const approve0 = tzBtcContract.methods.approve(lbContractAddress, 0);
-    const approve = tzBtcContract.methods.approve(
-      lbContractAddress,
-      tokenMantissa.integerValue(BigNumber.ROUND_DOWN)
-    );
-    const minXtzBought = removeSlippage(slippage, xtzAmountInMutez);
-    const transfer = lbContract.methods.tokenToXtz(
-      userAddress,
-      tokenMantissa.integerValue(BigNumber.ROUND_DOWN),
-      minXtzBought,
-      new Date(Date.now() + 60000).toISOString()
-    );
-    const est = async () => {
-      try {
-        const estimate = await toolkit.estimate.batch([
-          {
-            kind: OpKind.TRANSACTION,
-            ...approve0.toTransferParams({}),
-          },
-          {
-            kind: OpKind.TRANSACTION,
-            ...approve.toTransferParams({}),
-          },
-          {
-            kind: OpKind.TRANSACTION,
-            ...transfer.toTransferParams({}),
-          },
-        ]);
-
-        return estimate;
-      } catch (err) {
-        console.log(
-          `failed in estimating gas tokenToXtz ${JSON.stringify(err)}}`
-        );
-      }
-    };
-    const estimate = await est();
-
-    if (estimate) {
-      const batch = toolkit.wallet.batch().with([
+): Promise<SuccessRecord> {
+  const lbContract = await toolkit.wallet.at(lbContractAddress);
+  // the deadline value is arbitrary and can be changed
+  const tzBtcContract = await toolkit.wallet.at(tzbtcContractAddress);
+  const approve0 = tzBtcContract.methods.approve(lbContractAddress, 0);
+  const approve = tzBtcContract.methods.approve(
+    lbContractAddress,
+    tokenMantissa.integerValue(BigNumber.ROUND_DOWN)
+  );
+  const minXtzBought = removeSlippage(slippage, xtzAmountInMutez);
+  const transfer = lbContract.methods.tokenToXtz(
+    userAddress,
+    tokenMantissa.integerValue(BigNumber.ROUND_DOWN),
+    minXtzBought,
+    new Date(Date.now() + 60000).toISOString()
+  );
+  const est = async () => {
+    try {
+      const estimate = await toolkit.estimate.batch([
         {
           kind: OpKind.TRANSACTION,
-          ...approve0.toTransferParams({
-            fee: estimate[0].suggestedFeeMutez,
-            gasLimit: estimate[0].gasLimit,
-            storageLimit: estimate[0].storageLimit,
-          }),
+          ...approve0.toTransferParams({}),
         },
         {
           kind: OpKind.TRANSACTION,
-          ...approve.toTransferParams({
-            fee: estimate[1].suggestedFeeMutez,
-            gasLimit: estimate[1].gasLimit,
-            storageLimit: estimate[1].storageLimit,
-          }),
+          ...approve.toTransferParams({}),
         },
         {
           kind: OpKind.TRANSACTION,
-          ...transfer.toTransferParams({
-            fee: estimate[2].suggestedFeeMutez,
-            gasLimit: estimate[2].gasLimit,
-            storageLimit: estimate[2].storageLimit,
-          }),
+          ...transfer.toTransferParams({}),
         },
       ]);
 
-      const batchOp = await batch.send();
-      await batchOp.confirmation();
+      return estimate;
+    } catch (err) {
+      console.log(
+        `failed in estimating gas tokenToXtz ${JSON.stringify(err)}}`
+      );
     }
-  } catch (err) {
-    console.log(`failed in sendDexterBuy ${JSON.stringify(err)}}`);
-  }
+  };
+  const estimate = await est();
+
+  if (estimate) {
+    const batch = toolkit.wallet.batch().with([
+      {
+        kind: OpKind.TRANSACTION,
+        ...approve0.toTransferParams({
+          fee: estimate[0].suggestedFeeMutez,
+          gasLimit: estimate[0].gasLimit,
+          storageLimit: estimate[0].storageLimit,
+        }),
+      },
+      {
+        kind: OpKind.TRANSACTION,
+        ...approve.toTransferParams({
+          fee: estimate[1].suggestedFeeMutez,
+          gasLimit: estimate[1].gasLimit,
+          storageLimit: estimate[1].storageLimit,
+        }),
+      },
+      {
+        kind: OpKind.TRANSACTION,
+        ...transfer.toTransferParams({
+          fee: estimate[2].suggestedFeeMutez,
+          gasLimit: estimate[2].gasLimit,
+          storageLimit: estimate[2].storageLimit,
+        }),
+      },
+    ]);
+
+    const batchOp = await batch.send().catch((err) => {
+      console.log(`failed in tokenToXtz ${JSON.stringify(err)}}`);
+      throw Errors.TRANSACTION_FAILED;
+    });
+
+    return {
+      opHash: await batchOp
+        .confirmation()
+        .then(() => {
+          return batchOp.opHash;
+        })
+        .catch(() => {
+          throw Errors.TRANSACTION_FAILED;
+        }),
+    };
+  } else throw Errors.GAS_ESTIMATION;
 }
 
 export function estimateTokensFromXtz(
@@ -264,47 +277,56 @@ export async function xtzToToken(
   userAddress: string,
   lbContractAddress: string,
   toolkit: TezosToolkit
-) {
-  try {
-    const deadline = new Date(Date.now() + 60000).toISOString();
+): Promise<SuccessRecord> {
+  const deadline = new Date(Date.now() + 60000).toISOString();
 
-    const estimate = await toolkit.wallet
-      .at(lbContractAddress)
-      .then((contract) => {
-        return contract.methods
-          .xtzToToken(userAddress, minTokensBought, deadline)
-          .toTransferParams({
-            amount: xtzAmountInMutez.toNumber(),
-            mutez: true,
-          });
-      })
-      .then((op) => {
-        return toolkit.estimate.transfer(op);
-      })
-      .then((est) => {
-        return est;
-      })
-      .catch((error) =>
-        console.table(`Error: ${JSON.stringify(error, null, 2)}`)
-      );
-
-    if (estimate) {
-      const lbContract = await toolkit.wallet.at(lbContractAddress);
-      const op = await lbContract.methods
+  const estimate = await toolkit.wallet
+    .at(lbContractAddress)
+    .then((contract) => {
+      return contract.methods
         .xtzToToken(userAddress, minTokensBought, deadline)
-        .send({
+        .toTransferParams({
           amount: xtzAmountInMutez.toNumber(),
           mutez: true,
-          fee: estimate.suggestedFeeMutez,
-          gasLimit: estimate.gasLimit,
-          storageLimit: estimate.storageLimit,
         });
+    })
+    .then((op) => {
+      return toolkit.estimate.transfer(op);
+    })
+    .then((est) => {
+      return est;
+    })
+    .catch((error) =>
+      console.table(`Error: ${JSON.stringify(error, null, 2)}`)
+    );
 
-      return await op.confirmation();
-    }
-  } catch (err) {
-    console.log(`failed in sendDexterBuy ${JSON.stringify(err)}}`);
-  }
+  if (estimate) {
+    const lbContract = await toolkit.wallet.at(lbContractAddress);
+    const op = await lbContract.methods
+      .xtzToToken(userAddress, minTokensBought, deadline)
+      .send({
+        amount: xtzAmountInMutez.toNumber(),
+        mutez: true,
+        fee: estimate.suggestedFeeMutez,
+        gasLimit: estimate.gasLimit,
+        storageLimit: estimate.storageLimit,
+      })
+      .catch((err) => {
+        console.log(`failed in xtzToToken ${JSON.stringify(err)}}`);
+        throw Errors.TRANSACTION_FAILED;
+      });
+
+    return {
+      opHash: await op
+        .confirmation()
+        .then(() => {
+          return op.opHash;
+        })
+        .catch(() => {
+          throw Errors.TRANSACTION_FAILED;
+        }),
+    };
+  } else throw Errors.GAS_ESTIMATION;
 }
 
 export function estimateShares(
@@ -349,107 +371,115 @@ export async function buyLiquidityShares(
   lbContractAddress: string,
   tzbtcContractAddress: string,
   toolkit: TezosToolkit
-) {
-  try {
-    const deadline = new Date(Date.now() + 60000).toISOString();
+): Promise<SuccessRecord> {
+  const deadline = new Date(Date.now() + 60000).toISOString();
 
-    const lbContract = await toolkit.wallet.at(lbContractAddress);
-    const tzBtcContract = await toolkit.wallet.at(tzbtcContractAddress);
+  const lbContract = await toolkit.wallet.at(lbContractAddress);
+  const tzBtcContract = await toolkit.wallet.at(tzbtcContractAddress);
 
-    const maxTokensSold: BigNumber = addSlippage(slipage, tokenMantissa);
+  const maxTokensSold: BigNumber = addSlippage(slipage, tokenMantissa);
 
-    const minLqtMinted: BigNumber = lqtMinted;
+  const minLqtMinted: BigNumber = lqtMinted;
 
-    const addLiquidity = lbContract.methods.addLiquidity(
-      userAddress,
-      minLqtMinted.integerValue(BigNumber.ROUND_DOWN),
-      maxTokensSold,
-      deadline
-    );
-    const approve0 = tzBtcContract.methods.approve(lbContractAddress, 0);
-    const approve1 = tzBtcContract.methods.approve(
-      lbContractAddress,
-      maxTokensSold
-    );
+  const addLiquidity = lbContract.methods.addLiquidity(
+    userAddress,
+    minLqtMinted.integerValue(BigNumber.ROUND_DOWN),
+    maxTokensSold,
+    deadline
+  );
+  const approve0 = tzBtcContract.methods.approve(lbContractAddress, 0);
+  const approve1 = tzBtcContract.methods.approve(
+    lbContractAddress,
+    maxTokensSold
+  );
 
-    const est = async () => {
-      try {
-        const estimate = await toolkit.estimate.batch([
-          {
-            kind: OpKind.TRANSACTION,
-            ...approve0.toTransferParams(),
-          },
-          {
-            kind: OpKind.TRANSACTION,
-            ...approve1.toTransferParams(),
-          },
-          {
-            kind: OpKind.TRANSACTION,
-            ...addLiquidity.toTransferParams(),
-            amount: xtzAmountInMutez.toNumber(),
-            mutez: true,
-          },
-          {
-            kind: OpKind.TRANSACTION,
-            ...approve0.toTransferParams(),
-          },
-        ]);
-        return estimate;
-      } catch (err) {
-        console.log(
-          `failed in estimating gas for buyLiquidityShares ${JSON.stringify(
-            err
-          )}}`
-        );
-      }
-    };
-    const estimate = await est();
-
-    if (estimate) {
-      const batch = toolkit.wallet.batch().with([
+  const est = async () => {
+    try {
+      const estimate = await toolkit.estimate.batch([
         {
           kind: OpKind.TRANSACTION,
-          ...approve0.toTransferParams({
-            fee: estimate[0].suggestedFeeMutez,
-            gasLimit: estimate[0].gasLimit,
-            storageLimit: estimate[0].storageLimit,
-          }),
+          ...approve0.toTransferParams(),
         },
         {
           kind: OpKind.TRANSACTION,
-          ...approve1.toTransferParams({
-            fee: estimate[1].suggestedFeeMutez,
-            gasLimit: estimate[1].gasLimit,
-            storageLimit: estimate[1].storageLimit,
-          }),
+          ...approve1.toTransferParams(),
         },
         {
           kind: OpKind.TRANSACTION,
-          ...addLiquidity.toTransferParams({
-            fee: estimate[2].suggestedFeeMutez,
-            gasLimit: estimate[2].gasLimit,
-            storageLimit: estimate[2].storageLimit,
-          }),
-
+          ...addLiquidity.toTransferParams(),
           amount: xtzAmountInMutez.toNumber(),
           mutez: true,
         },
         {
           kind: OpKind.TRANSACTION,
-          ...approve0.toTransferParams({
-            fee: estimate[3].suggestedFeeMutez,
-            gasLimit: estimate[3].gasLimit,
-            storageLimit: estimate[3].storageLimit,
-          }),
+          ...approve0.toTransferParams(),
         },
       ]);
-
-      const batchOp = await batch.send();
-      await batchOp.confirmation();
+      return estimate;
+    } catch (err) {
+      console.log(
+        `failed in estimating gas for buyLiquidityShares ${JSON.stringify(
+          err
+        )}}`
+      );
     }
-  } catch (err) {
-    console.table(`Error: ${JSON.stringify(err, null, 2)}`);
-  }
+  };
+  const estimate = await est();
+
+  if (estimate) {
+    const batch = toolkit.wallet.batch().with([
+      {
+        kind: OpKind.TRANSACTION,
+        ...approve0.toTransferParams({
+          fee: estimate[0].suggestedFeeMutez,
+          gasLimit: estimate[0].gasLimit,
+          storageLimit: estimate[0].storageLimit,
+        }),
+      },
+      {
+        kind: OpKind.TRANSACTION,
+        ...approve1.toTransferParams({
+          fee: estimate[1].suggestedFeeMutez,
+          gasLimit: estimate[1].gasLimit,
+          storageLimit: estimate[1].storageLimit,
+        }),
+      },
+      {
+        kind: OpKind.TRANSACTION,
+        ...addLiquidity.toTransferParams({
+          fee: estimate[2].suggestedFeeMutez,
+          gasLimit: estimate[2].gasLimit,
+          storageLimit: estimate[2].storageLimit,
+        }),
+
+        amount: xtzAmountInMutez.toNumber(),
+        mutez: true,
+      },
+      {
+        kind: OpKind.TRANSACTION,
+        ...approve0.toTransferParams({
+          fee: estimate[3].suggestedFeeMutez,
+          gasLimit: estimate[3].gasLimit,
+          storageLimit: estimate[3].storageLimit,
+        }),
+      },
+    ]);
+
+    const batchOp = await batch.send().catch((err) => {
+      console.log(`failed in xtzToToken ${JSON.stringify(err)}}`);
+      throw Errors.TRANSACTION_FAILED;
+    });
+    return {
+      opHash: await batchOp
+        .confirmation()
+        .then(() => {
+          return batchOp.opHash;
+        })
+        .catch(() => {
+          throw Errors.TRANSACTION_FAILED;
+        }),
+    };
+  } else throw Errors.GAS_ESTIMATION;
 }
 
 export function _calcLqtOutput(
@@ -483,55 +513,24 @@ export async function removeLiquidity(
   userAddress: string,
   lbContractAddress: string,
   toolkit: TezosToolkit
-) {
-  try {
-    const deadline = new Date(Date.now() + 60000).toISOString();
+): Promise<SuccessRecord> {
+  const deadline = new Date(Date.now() + 60000).toISOString();
 
-    const lbContractStorage = await getLbContractStorage(
-      toolkit,
-      lbContractAddress
-    );
-    const { xtz, tzbtc } = _calcLqtOutput(
-      lqTokens,
-      new BigNumber(lbContractStorage.xtzPool),
-      new BigNumber(lbContractStorage.tokenPool),
-      new BigNumber(lbContractStorage.lqtTotal)
-    );
+  const lbContractStorage = await getLbContractStorage(
+    toolkit,
+    lbContractAddress
+  );
+  const { xtz, tzbtc } = _calcLqtOutput(
+    lqTokens,
+    new BigNumber(lbContractStorage.xtzPool),
+    new BigNumber(lbContractStorage.tokenPool),
+    new BigNumber(lbContractStorage.lqtTotal)
+  );
 
-    const estimate = await toolkit.wallet
-      .at(lbContractAddress)
-      .then((contract) => {
-        return contract.methods
-          .removeLiquidity(
-            userAddress,
-            lqTokens,
-            xtz.integerValue(BigNumber.ROUND_DOWN),
-            tzbtc.integerValue(BigNumber.ROUND_DOWN),
-            deadline
-          )
-          .toTransferParams();
-      })
-      .then((op) => {
-        console.log(`Estimating the smart contract call : `);
-        return toolkit.estimate.transfer(op);
-      })
-      .then((est) => {
-        console.log(`burnFeeMutez : ${est.burnFeeMutez}, 
-    gasLimit : ${est.gasLimit}, 
-    minimalFeeMutez : ${est.minimalFeeMutez}, 
-    storageLimit : ${est.storageLimit}, 
-    suggestedFeeMutez : ${est.suggestedFeeMutez}, 
-    totalCost : ${est.totalCost}, 
-    usingBaseFeeMutez : ${est.usingBaseFeeMutez}`);
-        return est;
-      })
-      .catch((error) =>
-        console.table(`Error: ${JSON.stringify(error, null, 2)}`)
-      );
-
-    if (estimate) {
-      const lbContract = await toolkit.wallet.at(lbContractAddress);
-      const op = await lbContract.methods
+  const estimate = await toolkit.wallet
+    .at(lbContractAddress)
+    .then((contract) => {
+      return contract.methods
         .removeLiquidity(
           userAddress,
           lqTokens,
@@ -539,15 +538,52 @@ export async function removeLiquidity(
           tzbtc.integerValue(BigNumber.ROUND_DOWN),
           deadline
         )
-        .send({
-          fee: estimate.suggestedFeeMutez,
-          gasLimit: estimate.gasLimit,
-          storageLimit: estimate.storageLimit,
-        });
+        .toTransferParams();
+    })
+    .then((op) => {
+      console.log(`Estimating the smart contract call : `);
+      return toolkit.estimate.transfer(op);
+    })
+    .then((est) => {
+      console.log(`burnFeeMutez : ${est.burnFeeMutez}, 
+    gasLimit : ${est.gasLimit}, 
+    minimalFeeMutez : ${est.minimalFeeMutez}, 
+    storageLimit : ${est.storageLimit}, 
+    suggestedFeeMutez : ${est.suggestedFeeMutez}, 
+    totalCost : ${est.totalCost}, 
+    usingBaseFeeMutez : ${est.usingBaseFeeMutez}`);
+      return est;
+    })
+    .catch((error) =>
+      console.table(`Error: ${JSON.stringify(error, null, 2)}`)
+    );
 
-      await op.confirmation();
-    }
-  } catch (err) {
-    console.log(`failed in removeLiquidity ${JSON.stringify(err)}}`);
-  }
+  if (estimate) {
+    const lbContract = await toolkit.wallet.at(lbContractAddress);
+    const op = await lbContract.methods
+      .removeLiquidity(
+        userAddress,
+        lqTokens,
+        xtz.integerValue(BigNumber.ROUND_DOWN),
+        tzbtc.integerValue(BigNumber.ROUND_DOWN),
+        deadline
+      )
+      .send({
+        fee: estimate.suggestedFeeMutez,
+        gasLimit: estimate.gasLimit,
+        storageLimit: estimate.storageLimit,
+      });
+
+    return {
+      opHash: await op
+        .confirmation()
+        .then(() => {
+          return op.opHash;
+        })
+        .catch((err) => {
+          console.log(`failed in xtzToToken ${JSON.stringify(err)}}`);
+          throw Errors.TRANSACTION_FAILED;
+        }),
+    };
+  } else throw Errors.GAS_ESTIMATION;
 }

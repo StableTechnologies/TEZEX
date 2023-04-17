@@ -1,6 +1,12 @@
 import { BigNumber } from "bignumber.js";
 
-import { Transaction, Token, TransactingComponent } from "../types/general";
+import {
+  Errors,
+  SuccessRecord,
+  Transaction,
+  Token,
+  TransactingComponent,
+} from "../types/general";
 
 import { TezosToolkit } from "@taquito/taquito";
 
@@ -16,7 +22,7 @@ export async function processTransaction(
   userAddress: string,
   dex: string,
   toolkit: TezosToolkit
-) {
+): Promise<SuccessRecord> {
   switch (transaction.component) {
     case TransactingComponent.SWAP:
       return await swapTransaction(transaction, userAddress, dex, toolkit);
@@ -41,19 +47,18 @@ const swapTransaction = async (
   userAddress: string,
   dex: string,
   toolkit: TezosToolkit
-) => {
+): Promise<SuccessRecord> => {
   switch (transaction.sendAsset[0].name) {
     case Token.XTZ:
-      await xtzToToken(
+      return await xtzToToken(
         transaction.sendAmount[0].mantissa,
         transaction.receiveAmount[0].mantissa,
         userAddress,
         dex,
         toolkit
       );
-      break;
     case Token.TzBTC:
-      await tokenToXtz(
+      return await tokenToXtz(
         transaction.sendAmount[0].mantissa,
         transaction.receiveAmount[0].mantissa,
         userAddress,
@@ -62,7 +67,10 @@ const swapTransaction = async (
         toolkit,
         transaction.slippage
       );
-      break;
+
+    default:
+      console.log("Unimplemented swap asset :", transaction.sendAsset[0].name);
+      throw Errors.INTERNAL;
   }
 };
 
@@ -71,8 +79,8 @@ const removeLiquidityTransaction = async (
   userAddress: string,
   dex: string,
   toolkit: TezosToolkit
-) => {
-  await removeLiquidity(
+): Promise<SuccessRecord> => {
+  return await removeLiquidity(
     transaction.sendAmount[0].mantissa,
     userAddress,
     dex,
@@ -84,11 +92,11 @@ const addLiquidityTransaction = async (
   userAddress: string,
   dex: string,
   toolkit: TezosToolkit
-) => {
+): Promise<SuccessRecord> => {
   if (transaction.sendAmount[1] && transaction.sendAsset[1]) {
     switch (transaction.sendAsset[0].name) {
       case Token.XTZ:
-        await buyLiquidityShares(
+        return await buyLiquidityShares(
           transaction.sendAmount[0].mantissa,
           transaction.sendAmount[1].mantissa,
           transaction.receiveAmount[0].mantissa,
@@ -98,9 +106,8 @@ const addLiquidityTransaction = async (
           transaction.sendAsset[1].address,
           toolkit
         );
-        break;
       case Token.TzBTC:
-        await buyLiquidityShares(
+        return await buyLiquidityShares(
           transaction.sendAmount[1].mantissa,
           transaction.sendAmount[0].mantissa,
           transaction.receiveAmount[0].mantissa,
@@ -110,7 +117,16 @@ const addLiquidityTransaction = async (
           transaction.sendAsset[0].address,
           toolkit
         );
+      default:
+        console.log(
+          "Unimplemented addLiquidtiy asset :",
+          transaction.sendAsset[0].name
+        );
+        throw Errors.INTERNAL;
     }
+  } else {
+    console.log(" addLiquidity requires send Pair");
+    throw Errors.INTERNAL;
   }
 };
 

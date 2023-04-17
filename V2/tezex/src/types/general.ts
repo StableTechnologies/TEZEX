@@ -49,6 +49,31 @@ export type SendOrRecieve = "Send" | "Receive";
 export type Amount = [Balance] | [Balance, Balance];
 export type AssetOrAssetPair = [Asset] | [Asset, Asset];
 
+export enum CompletionState {
+  SUCCESS = "Transaction Complete!",
+  FAILED = "Error",
+}
+
+export enum Errors {
+  GAS_ESTIMATION = "Failed during estimating fee, gas and storage limit.",
+  GENERAL = "Network Issues",
+  TRANSACTION_FAILED = "An error occurred that prevented the transaction from completing. Please try again. ",
+  SLIPPAGE = " This transaction will not succeed due to the network price movement. You can try increasing your slippage percentage.",
+  LB_CONTRACT_STORAGE = "An error was encountered when Querying Dex Storage",
+  INTERNAL = "Internal Error",
+}
+
+export interface FailedRecord {
+  reason: Errors;
+}
+
+export interface SuccessRecord {
+  opHash: string;
+}
+export type CompletionRecord =
+  | [CompletionState.FAILED, FailedRecord]
+  | [CompletionState.SUCCESS, SuccessRecord];
+
 export enum Assets {
   ASSET = 1,
   PAIR = 2,

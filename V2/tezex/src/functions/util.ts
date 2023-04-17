@@ -1,5 +1,11 @@
 import { BigNumber } from "bignumber.js";
-import { Asset, Balance } from "../types/general";
+import {
+  Asset,
+  Balance,
+  Errors,
+  CompletionRecord,
+  CompletionState,
+} from "../types/general";
 
 import { tokenDecimalToMantissa, tokenMantissaToDecimal } from "./scaling";
 
@@ -40,3 +46,17 @@ export const balanceBuilder = (
     greaterOrEqualTo: geq,
   };
 };
+
+export function toAlertableError(e: Errors): CompletionRecord | undefined {
+  switch (e) {
+    case Errors.TRANSACTION_FAILED:
+      return [CompletionState.FAILED, { reason: e }] as CompletionRecord;
+    case Errors.GAS_ESTIMATION:
+      return [
+        CompletionState.FAILED,
+        { reason: Errors.TRANSACTION_FAILED },
+      ] as CompletionRecord;
+    default:
+      return undefined;
+  }
+}

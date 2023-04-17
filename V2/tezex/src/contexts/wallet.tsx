@@ -4,6 +4,7 @@ import { useImmer } from "use-immer";
 
 import { DAppClient } from "@airgap/beacon-sdk";
 import {
+  CompletionState,
   Transaction,
   Asset,
   AssetBalance,
@@ -13,14 +14,17 @@ import {
   Amount,
   AssetOrAssetPair,
   LiquidityBakingStorageXTZ,
+  Errors,
 } from "../types/general";
 import { TezosToolkit } from "@taquito/taquito";
 
 import { processTransaction } from "../functions/transactions";
 import { useNetwork } from "../hooks/network";
+import { useSession } from "../hooks/session";
 import { v4 as uuidv4 } from "uuid";
 import { BigNumber } from "bignumber.js";
 import { getBalance } from "../functions/beacon";
+import { toAlertableError } from "../functions/util";
 
 export enum WalletStatus {
   ESTIMATING_SIRS = "Estimating Sirs",
@@ -98,6 +102,7 @@ export function WalletProvider(props: IWalletProvider) {
   // eslint-disable-next-line
 
   const network = useNetwork();
+  const session = useSession();
 
   const [swapTransaction, setSwapTransaction] = useImmer<
     Transaction | undefined
@@ -159,7 +164,12 @@ export function WalletProvider(props: IWalletProvider) {
   }, [address, toolkit, client]);
 
   const updateStorage = useCallback(async () => {
-    setLbContractStroage(await network.getDexStorage());
+    setLbContractStroage(
+      await network.getDexStorage().catch((e) => {
+        session.setAlert(toAlertableError(e as Errors));
+        return undefined;
+      })
+    );
   }, [network]);
 
   useEffect(() => {
@@ -233,7 +243,8 @@ export function WalletProvider(props: IWalletProvider) {
             network.info.dex.address,
             toolkit
           )
-            .then(() => {
+            .then((successRecord) => {
+              session.setAlert([CompletionState.SUCCESS, successRecord], true);
               return updateBalances();
             })
             .then(() => {
@@ -242,7 +253,8 @@ export function WalletProvider(props: IWalletProvider) {
                 transactionStatus: TransactionStatus.COMPLETED,
               };
             })
-            .catch(() => {
+            .catch((e) => {
+              session.setAlert(toAlertableError(e as Errors));
               return {
                 ...transaction,
                 transactionStatus: TransactionStatus.FAILED,
@@ -262,7 +274,9 @@ export function WalletProvider(props: IWalletProvider) {
       swapTransaction &&
         swapTransaction.transactionStatus === TransactionStatus.PENDING &&
         (await transact(swapTransaction).then((transaction: Transaction) => {
-          setSwapTransaction(transaction);
+          transaction.transactionStatus === TransactionStatus.FAILED
+            ? setSwapTransaction(transaction)
+            : setSwapTransaction(undefined);
         }));
     };
     proc();
@@ -275,7 +289,9 @@ export function WalletProvider(props: IWalletProvider) {
           TransactionStatus.PENDING &&
         (await transact(addLiquidityTransaction).then(
           (transaction: Transaction) => {
-            setAddLiquidityTransaction(transaction);
+            transaction.transactionStatus === TransactionStatus.FAILED
+              ? setAddLiquidityTransaction(transaction)
+              : setAddLiquidityTransaction(undefined);
           }
         ));
     };
@@ -289,7 +305,9 @@ export function WalletProvider(props: IWalletProvider) {
           TransactionStatus.PENDING &&
         (await transact(removeLiquidityTransaction).then(
           (transaction: Transaction) => {
-            setRemoveLiquidityTransaction(transaction);
+            transaction.transactionStatus === TransactionStatus.FAILED
+              ? setRemoveLiquidityTransaction(transaction)
+              : setRemoveLiquidityTransaction(undefined);
           }
         ));
     };
