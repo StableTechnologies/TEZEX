@@ -115,6 +115,7 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
 
         if (wallet.client)
           wallet.updateTransactionBalance(component, transaction);
+        setTransaction(transaction);
         return transaction;
       } else return undefined;
     },
