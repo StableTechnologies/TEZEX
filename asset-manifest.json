@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/TEZEX/static/css/main.bd64a0ac.css",
-    "main.js": "/TEZEX/static/js/main.7db591d5.js",
+    "main.js": "/TEZEX/static/js/main.e847df33.js",
     "static/js/792.e43debd3.chunk.js": "/TEZEX/static/js/792.e43debd3.chunk.js",
     "static/js/496.a016e724.chunk.js": "/TEZEX/static/js/496.a016e724.chunk.js",
     "static/media/sirsIcon.svg": "/TEZEX/static/media/sirsIcon.5002a55ace3cfc5d31debece8d9c27fa.svg",
@@ -10,16 +10,20 @@
     "static/media/liquiditySwapIcon.svg": "/TEZEX/static/media/liquiditySwapIcon.8f1e02de3095483209de196f8517490f.svg",
     "static/media/swapIcon.svg": "/TEZEX/static/media/swapIcon.d8241838b1310217d74263c8853bf23f.svg",
     "static/media/tzwalletlogo.svg": "/TEZEX/static/media/tzwalletlogo.298ee304ca29eec491be48cb5f4a1231.svg",
+    "static/media/closeIcon.svg": "/TEZEX/static/media/closeIcon.7c1291738b4e26b9a045b4984d45081d.svg",
     "static/media/rightArrow.svg": "/TEZEX/static/media/rightArrow.7dcc15c8dbb97c68650723f627f831c8.svg",
+    "static/media/copyIcon.svg": "/TEZEX/static/media/copyIcon.33a1802d976cc4a100936132200a4e17.svg",
+    "static/media/alert.svg": "/TEZEX/static/media/alert.6cae5ab1e588979d597a9fd45c8bab01.svg",
     "index.html": "/TEZEX/index.html",
+    "static/media/tick.svg": "/TEZEX/static/media/tick.d076760eef5bddd337afda379a56c965.svg",
     "static/media/plusIcon.svg": "/TEZEX/static/media/plusIcon.dc94d200e3f2bc2295ce02c5485a00ef.svg",
     "main.bd64a0ac.css.map": "/TEZEX/static/css/main.bd64a0ac.css.map",
-    "main.7db591d5.js.map": "/TEZEX/static/js/main.7db591d5.js.map",
+    "main.e847df33.js.map": "/TEZEX/static/js/main.e847df33.js.map",
     "792.e43debd3.chunk.js.map": "/TEZEX/static/js/792.e43debd3.chunk.js.map",
     "496.a016e724.chunk.js.map": "/TEZEX/static/js/496.a016e724.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.bd64a0ac.css",
-    "static/js/main.7db591d5.js"
+    "static/js/main.e847df33.js"
   ]
 }
