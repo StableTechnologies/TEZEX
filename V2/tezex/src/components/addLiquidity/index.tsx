@@ -107,9 +107,7 @@ export const AddLiquidity: FC = () => {
     },
     [receiveAmount]
   );
-  useEffect(() => {
-    console.log("\n", "sendAmount : ", sendAmount, "\n");
-  }, [sendAmount]);
+
   useEffect(() => {
     if (active && !swapingFields) {
       active.sendAssetBalance[1] &&
