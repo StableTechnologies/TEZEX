@@ -44,7 +44,8 @@ const AmountField: FC<IAmountField> = (props) => {
   }, [props.value]);
 
   useEffect(() => {
-    display();
+    !editing && display();
+    props.loading && display();
   }, [props.loading, props.value]);
 
   const callBack = useCallback(
@@ -77,12 +78,9 @@ const AmountField: FC<IAmountField> = (props) => {
     (e: React.ChangeEvent<HTMLInputElement>) => {
       e.preventDefault();
       const val = e.target.value;
-      console.log("\n", "re.test(val) : ", re.test(val), "\n");
-      //console.log('\n','e.target : ', e.target,'\n');
 
       re.test(val) && setInputString(val);
       if (val.trim() === "") {
-        console.log("\n", "val.trim() : ", val.trim(), "\n");
         setInputString("0.00");
         setEditing(false);
       }
@@ -93,16 +91,12 @@ const AmountField: FC<IAmountField> = (props) => {
   const onKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
       e.preventDefault();
-
-      console.log("\n", "keydown e : ", e.key, "\n");
-
       if (inputString === "0.00" && re.test(e.key)) setInputString(e.key);
       setEditing(true);
-      //parse keystrokes
-      //e.key === '.' && setInputString(inputString + ".0" );
     },
     [inputString]
   );
+
   const Variant = () => {
     switch (props.variant) {
       case "LeftInput":
@@ -117,6 +111,12 @@ const AmountField: FC<IAmountField> = (props) => {
               InputProps={{
                 disableUnderline: true,
 
+                onKeyDown:
+                  inputString === "0.00" && !editing
+                    ? onKeyDown
+                    : (_) => {
+                        null;
+                      },
                 endAdornment: (
                   <InputAdornment position="end">
                     <Box sx={styles.leftInput.inputAdornment.box}>
