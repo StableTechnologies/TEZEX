@@ -33,10 +33,19 @@ export interface IAmountField {
 const AmountField: FC<IAmountField> = (props) => {
   const styles = useStyles(style);
   const [inputString, setInputString] = useState<string>(props.value);
+  const [editing, setEditing] = useState<boolean>(false);
   const onChange = props.onChange;
+  const re = /^\d*\.?\d*$/;
+
+  const display = useCallback(() => {
+    if (isNaN(parseFloat(props.value)) || props.value === "0") {
+      setInputString("0.00");
+    } else setInputString(props.value);
+  }, [props.value]);
 
   useEffect(() => {
-    setInputString(props.value);
+    !editing && display();
+    props.loading && display();
   }, [props.loading, props.value]);
 
   const callBack = useCallback(
@@ -52,20 +61,41 @@ const AmountField: FC<IAmountField> = (props) => {
     const timer = setTimeout(() => {
       if (props.value !== inputString && !props.readOnly && !props.loading) {
         callBack(inputString);
+      } else if (props.value === inputString && editing) {
+        setEditing(false);
       }
     }, 1500);
     return () => clearTimeout(timer);
   }, [inputString, callBack, props]);
+
   useEffect(() => {
     if (props.value !== inputString && props.readOnly) {
-      setInputString(props.value);
+      display();
     }
   }, [props, inputString]);
 
-  const updateAmount = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    setInputString(e.target.value);
-  }, []);
+  const updateAmount = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      e.preventDefault();
+      const val = e.target.value;
+
+      re.test(val) && setInputString(val);
+      if (val.trim() === "") {
+        setInputString("0.00");
+        setEditing(false);
+      }
+    },
+    [setInputString]
+  );
+
+  const onKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      e.preventDefault();
+      if (inputString === "0.00" && re.test(e.key)) setInputString(e.key);
+      setEditing(true);
+    },
+    [inputString]
+  );
 
   const Variant = () => {
     switch (props.variant) {
@@ -80,6 +110,13 @@ const AmountField: FC<IAmountField> = (props) => {
               sx={styles.leftInput.textField}
               InputProps={{
                 disableUnderline: true,
+
+                onKeyDown:
+                  inputString === "0.00" && !editing
+                    ? onKeyDown
+                    : (_) => {
+                        null;
+                      },
                 endAdornment: (
                   <InputAdornment position="end">
                     <Box sx={styles.leftInput.inputAdornment.box}>
@@ -103,6 +140,7 @@ const AmountField: FC<IAmountField> = (props) => {
               }}
               inputProps={{
                 readOnly: props.readOnly,
+
                 style: {
                   ...styles.leftInput.input,
                 },
@@ -140,6 +178,12 @@ const AmountField: FC<IAmountField> = (props) => {
                 sx={styles.rightInput.textField}
                 InputProps={{
                   disableUnderline: true,
+                  onKeyDown:
+                    inputString === "0.00" && !editing
+                      ? onKeyDown
+                      : (_) => {
+                          null;
+                        },
                   startAdornment: (
                     <InputAdornment position="start">
                       <Box sx={styles.rightInput.inputAdornmentStart.box}>
