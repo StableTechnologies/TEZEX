@@ -119,7 +119,7 @@ const AmountField: FC<IAmountField> = (props) => {
                 onKeyDown:
                   inputString === "0.00" && !editing
                     ? onKeyDown
-                    : (_) => {
+                    : () => {
                         null;
                       },
                 endAdornment: (
@@ -186,7 +186,7 @@ const AmountField: FC<IAmountField> = (props) => {
                   onKeyDown:
                     inputString === "0.00" && !editing
                       ? onKeyDown
-                      : (_) => {
+                      : () => {
                           null;
                         },
                   startAdornment: (

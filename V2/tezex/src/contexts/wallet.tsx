@@ -4,7 +4,6 @@ import { useImmer } from "use-immer";
 
 import { DAppClient } from "@airgap/beacon-sdk";
 import {
-  CompletionState,
   Transaction,
   Asset,
   AssetBalance,

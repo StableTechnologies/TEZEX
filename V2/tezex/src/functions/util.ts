@@ -75,19 +75,3 @@ export function showAlert(
     }
   } else return record;
 }
-
-export function toAlertableError(
-  e: Errors | undefined
-): CompletionRecord | undefined {
-  switch (e) {
-    case Errors.TRANSACTION_FAILED:
-      return [CompletionState.FAILED, { reason: e }] as CompletionRecord;
-    case Errors.GAS_ESTIMATION:
-      return [
-        CompletionState.FAILED,
-        { reason: Errors.TRANSACTION_FAILED },
-      ] as CompletionRecord;
-    default:
-      return undefined;
-  }
-}
