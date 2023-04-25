@@ -17,6 +17,7 @@ import { WalletConnected } from "../../../../session/WalletConnected";
 import { style } from "./style";
 import useStyles from "../../../../../hooks/styles";
 
+import { BigNumber } from "bignumber.js";
 export interface IAmountField {
   asset: Asset;
   onChange?: (value: string) => void;
@@ -59,9 +60,13 @@ const AmountField: FC<IAmountField> = (props) => {
   }, [props.swap]);
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (props.value !== inputString && !props.readOnly && !props.loading) {
+      if (
+        !new BigNumber(props.value).isEqualTo(inputString) &&
+        !props.readOnly &&
+        !props.loading
+      ) {
         callBack(inputString);
-      } else if (props.value === inputString && editing) {
+      } else if (new BigNumber(props.value).isEqualTo(inputString) && editing) {
         setEditing(false);
       }
     }, 1500);
@@ -114,7 +119,7 @@ const AmountField: FC<IAmountField> = (props) => {
                 onKeyDown:
                   inputString === "0.00" && !editing
                     ? onKeyDown
-                    : (_) => {
+                    : () => {
                         null;
                       },
                 endAdornment: (
@@ -181,7 +186,7 @@ const AmountField: FC<IAmountField> = (props) => {
                   onKeyDown:
                     inputString === "0.00" && !editing
                       ? onKeyDown
-                      : (_) => {
+                      : () => {
                           null;
                         },
                   startAdornment: (
