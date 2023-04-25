@@ -24,7 +24,10 @@ import { useSession } from "../hooks/session";
 import { v4 as uuidv4 } from "uuid";
 import { BigNumber } from "bignumber.js";
 import { getBalance } from "../functions/beacon";
-import { toAlertableError } from "../functions/util";
+import {
+  completionRecordFailed,
+  completionRecordSuccess,
+} from "../functions/util";
 
 export enum WalletStatus {
   ESTIMATING_SIRS = "Estimating Sirs",
@@ -166,7 +169,7 @@ export function WalletProvider(props: IWalletProvider) {
   const updateStorage = useCallback(async () => {
     setLbContractStroage(
       await network.getDexStorage().catch((e) => {
-        session.setAlert(toAlertableError(e as Errors));
+        session.setAlert(completionRecordFailed(e as Errors));
         return undefined;
       })
     );
@@ -243,8 +246,8 @@ export function WalletProvider(props: IWalletProvider) {
             network.info.dex.address,
             toolkit
           )
-            .then((successRecord) => {
-              session.setAlert([CompletionState.SUCCESS, successRecord], true);
+            .then((success) => {
+              session.setAlert(completionRecordSuccess(success), true);
               return updateBalances();
             })
             .then(() => {
@@ -254,7 +257,7 @@ export function WalletProvider(props: IWalletProvider) {
               };
             })
             .catch((e) => {
-              session.setAlert(toAlertableError(e as Errors));
+              session.setAlert(completionRecordFailed(e as Errors), true);
               return {
                 ...transaction,
                 transactionStatus: TransactionStatus.FAILED,

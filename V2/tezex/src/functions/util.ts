@@ -4,6 +4,7 @@ import {
   Balance,
   Errors,
   CompletionRecord,
+  SuccessRecord,
   CompletionState,
 } from "../types/general";
 
@@ -47,7 +48,37 @@ export const balanceBuilder = (
   };
 };
 
-export function toAlertableError(e: Errors): CompletionRecord | undefined {
+export function completionRecordSuccess(
+  success: SuccessRecord
+): CompletionRecord {
+  return [CompletionState.SUCCESS, success] as CompletionRecord;
+}
+
+export function completionRecordFailed(e: Errors): CompletionRecord {
+  return [CompletionState.FAILED, { reason: e }] as CompletionRecord;
+}
+
+export function showAlert(
+  record: CompletionRecord | undefined
+): CompletionRecord | undefined {
+  if (record && record[0] === CompletionState.FAILED) {
+    switch (record[1].reason) {
+      case Errors.TRANSACTION_FAILED:
+        return record;
+      case Errors.GAS_ESTIMATION:
+        return [
+          CompletionState.FAILED,
+          { reason: Errors.TRANSACTION_FAILED },
+        ] as CompletionRecord;
+      default:
+        return undefined;
+    }
+  } else return record;
+}
+
+export function toAlertableError(
+  e: Errors | undefined
+): CompletionRecord | undefined {
   switch (e) {
     case Errors.TRANSACTION_FAILED:
       return [CompletionState.FAILED, { reason: e }] as CompletionRecord;

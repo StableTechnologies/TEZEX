@@ -3,6 +3,7 @@ import { WalletProvider } from "./wallet";
 import { NetworkContext, networkDefaults } from "./network";
 import { Alert } from "../components/ui/elements/dialogs/Alerts";
 import { TransactingComponent, CompletionRecord } from "../types/general";
+import { showAlert } from "../functions/util";
 
 export const SessionContext = createContext<SessionInfo>({
   loadComponent: (_: TransactingComponent) => {
@@ -61,7 +62,7 @@ export function SessionProvider(props: ISession) {
     >
       <NetworkContext.Provider value={networkDefaults}>
         <WalletProvider>{props.children}</WalletProvider>
-        <Alert completionRecord={_alert} clear={clearAlert} />
+        <Alert completionRecord={showAlert(_alert)} clear={clearAlert} />
       </NetworkContext.Provider>
     </SessionContext.Provider>
   );
