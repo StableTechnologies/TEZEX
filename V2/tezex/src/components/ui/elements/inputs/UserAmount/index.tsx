@@ -97,7 +97,9 @@ const AmountField: FC<IAmountField> = (props) => {
     (e: React.KeyboardEvent<HTMLInputElement>) => {
       e.preventDefault();
       if (inputString === "0.00" && re.test(e.key)) {
-        setInputString(e.key);
+        if (!editing) {
+          setInputString(e.key);
+        } else setInputString("0.00" + e.key);
         setEditing(true);
       }
     },
