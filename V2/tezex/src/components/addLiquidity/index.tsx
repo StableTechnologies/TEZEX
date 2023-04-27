@@ -112,8 +112,8 @@ export const AddLiquidity: FC = () => {
     if (active && !swapingFields) {
       active.sendAssetBalance[1] &&
         setBalances([
-          active.sendAssetBalance[0].decimal.toString(),
-          active.sendAssetBalance[1].decimal.toString(),
+          active.sendAssetBalance[0].decimal.toFixed(),
+          active.sendAssetBalance[1].decimal.toFixed(),
         ]);
 
       active.sendAsset[1] &&
@@ -132,7 +132,7 @@ export const AddLiquidity: FC = () => {
         active.slippage !== slippage
       ) {
         walletOperations.updateAmount(
-          sendAmount.toString(),
+          sendAmount.toFixed(),
           slippage.toString()
         );
       }
@@ -154,15 +154,15 @@ export const AddLiquidity: FC = () => {
     active &&
       active.sendAssetBalance[1] &&
       setBalances([
-        active.sendAssetBalance[0].decimal.toString(),
-        active.sendAssetBalance[1].decimal.toString(),
+        active.sendAssetBalance[0].decimal.toFixed(),
+        active.sendAssetBalance[1].decimal.toFixed(),
       ]);
   }, [active]);
 
   useEffect(() => {
     if (active && active.sendAmount[1] && active.sendAssetBalance[1]) {
-      updateReceive(active.receiveAmount[0].decimal.toString());
-      updateSend2(active.sendAmount[1].decimal.toString());
+      updateReceive(active.receiveAmount[0].decimal.toFixed());
+      updateSend2(active.sendAmount[1].decimal.toFixed());
     }
   }, [active, updateSend2, updateReceive]);
 
@@ -195,7 +195,7 @@ export const AddLiquidity: FC = () => {
       newTransaction();
     } else if (loading) {
       if (active) {
-        updateSend(active.sendAmount[0].decimal.toString());
+        updateSend(active.sendAmount[0].decimal.toFixed());
         active.sendAsset[1] &&
           setAssets([
             active.sendAsset[0],
@@ -203,8 +203,8 @@ export const AddLiquidity: FC = () => {
             active.receiveAsset[0],
           ]);
         active.sendAmount[1] &&
-          updateSend2(active.sendAmount[1].decimal.toString());
-        updateReceive(active.receiveAmount[0].decimal.toString());
+          updateSend2(active.sendAmount[1].decimal.toFixed());
+        updateReceive(active.receiveAmount[0].decimal.toFixed());
         updateSlippage(active.slippage.toString());
         updateBalance();
         setLoading(false);
@@ -266,7 +266,7 @@ export const AddLiquidity: FC = () => {
                 <UserAmountField
                   asset={assets[send1]}
                   onChange={updateSend}
-                  value={sendAmount.toString()}
+                  value={sendAmount.toFixed()}
                   balance={balances[0]}
                   label="Enter Amount"
                   loading={loading}
@@ -280,7 +280,7 @@ export const AddLiquidity: FC = () => {
               <Grid2 xs={6} sx={styles.input}>
                 <UserAmountField
                   asset={assets[send2]}
-                  value={sendAmount2.toString()}
+                  value={sendAmount2.toFixed()}
                   readOnly={true}
                   balance={balances[1]}
                   label="Required Amount"
@@ -295,7 +295,7 @@ export const AddLiquidity: FC = () => {
                 You will recieve about{" "}
                 <Typography sx={styles.infoRecieve}>
                   {" "}
-                  {receiveAmount.toString()} Sirs
+                  {receiveAmount.toFixed()} Sirs
                 </Typography>
                 for this deiposit
               </Typography>

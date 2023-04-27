@@ -97,7 +97,7 @@ export const Swap: FC = () => {
         active.slippage !== slippage
       ) {
         walletOperations.updateAmount(
-          sendAmount.toString(),
+          sendAmount.toFixed(),
           slippage.toString()
         );
       }
@@ -119,8 +119,8 @@ export const Swap: FC = () => {
   useEffect(() => {
     if (active) {
       setBalances([
-        active.sendAssetBalance[0].decimal.toString(),
-        active.receiveAssetBalance[0].decimal.toString(),
+        active.sendAssetBalance[0].decimal.toFixed(),
+        active.receiveAssetBalance[0].decimal.toFixed(),
       ]);
 
       setAssets([active.sendAsset[0], active.receiveAsset[0]]);
@@ -129,7 +129,7 @@ export const Swap: FC = () => {
 
   useEffect(() => {
     if (active) {
-      updateReceive(active.receiveAmount[0].decimal.toString());
+      updateReceive(active.receiveAmount[0].decimal.toFixed());
     }
   }, [active, updateReceive]);
 
@@ -164,9 +164,9 @@ export const Swap: FC = () => {
       newTransaction();
     } else if (loading) {
       if (active) {
-        updateSend(active.sendAmount[0].decimal.toString());
+        updateSend(active.sendAmount[0].decimal.toFixed());
 
-        updateReceive(active.receiveAmount[0].decimal.toString());
+        updateReceive(active.receiveAmount[0].decimal.toFixed());
         updateSlippage(active.slippage.toString());
         updateBalance();
         setLoading(false);
@@ -208,7 +208,7 @@ export const Swap: FC = () => {
               <UserAmountField
                 asset={assets[send]}
                 onChange={updateSend}
-                value={sendAmount.toString()}
+                value={sendAmount.toFixed()}
                 balance={balances[0]}
                 loading={loading}
               />
@@ -221,7 +221,7 @@ export const Swap: FC = () => {
             <Grid2 xs={12} sx={classes.input2}>
               <UserAmountField
                 asset={assets[receive]}
-                value={receiveAmount.toString()}
+                value={receiveAmount.toFixed()}
                 readOnly={true}
                 balance={balances[1]}
               />
