@@ -96,8 +96,10 @@ const AmountField: FC<IAmountField> = (props) => {
   const onKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
       e.preventDefault();
-      if (inputString === "0.00" && re.test(e.key)) setInputString(e.key);
-      setEditing(true);
+      if (inputString === "0.00" && re.test(e.key)) {
+        setInputString(e.key);
+        setEditing(true);
+      }
     },
     [inputString]
   );
