@@ -73,7 +73,7 @@ export const RemoveLiquidity: FC = () => {
   const updateTransaction = useCallback(() => {
     if (active) {
       if (!active.sendAmount[0].decimal.eq(sendAmount)) {
-        walletOperations.updateAmount(sendAmount.toString());
+        walletOperations.updateAmount(sendAmount.toFixed());
       }
     }
   }, [sendAmount, active, walletOperations]);
@@ -129,7 +129,7 @@ export const RemoveLiquidity: FC = () => {
       newTransaction();
     } else if (loading) {
       if (active) {
-        updateSend(active.sendAmount[0].decimal.toString());
+        updateSend(active.sendAmount[0].decimal.toFixed());
         updateBalance();
         setLoading(false);
       }
@@ -156,7 +156,7 @@ export const RemoveLiquidity: FC = () => {
                   asset={assets[send]}
                   readOnly={useMax}
                   onChange={updateSend}
-                  value={sendAmount.toString()}
+                  value={sendAmount.toFixed()}
                   loading={loading}
                   variant="LeftInput"
                 />
