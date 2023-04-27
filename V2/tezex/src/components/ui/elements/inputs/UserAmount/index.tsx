@@ -34,6 +34,7 @@ export interface IAmountField {
 const AmountField: FC<IAmountField> = (props) => {
   const styles = useStyles(style);
   const [inputString, setInputString] = useState<string>(props.value);
+  const [lastString, setLastString] = useState<string>("");
   const [editing, setEditing] = useState<boolean>(false);
   const onChange = props.onChange;
   const re = /^\d*\.?\d*$/;
@@ -71,7 +72,7 @@ const AmountField: FC<IAmountField> = (props) => {
       }
     }, 1500);
     return () => clearTimeout(timer);
-  }, [inputString, callBack, props]);
+  }, [inputString, callBack, props, editing]);
 
   useEffect(() => {
     if (props.value !== inputString && props.readOnly) {
@@ -84,7 +85,10 @@ const AmountField: FC<IAmountField> = (props) => {
       e.preventDefault();
       const val = e.target.value;
 
-      re.test(val) && setInputString(val);
+      if (re.test(val)) {
+        setInputString(val);
+        setLastString(val);
+      }
       if (val.trim() === "") {
         setInputString("0.00");
         setEditing(false);
@@ -96,14 +100,22 @@ const AmountField: FC<IAmountField> = (props) => {
   const onKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
       e.preventDefault();
-      if (inputString === "0.00" && re.test(e.key)) {
-        if (!editing) {
+      if (
+        e.key !== "Backspace" &&
+        inputString === "0.00" &&
+        re.test(e.key) &&
+        !editing
+      ) {
+        if (lastString !== "0.00") {
           setInputString(e.key);
-        } else setInputString("0.00" + e.key);
+        } else {
+          setInputString(inputString + e.key);
+        }
+
         setEditing(true);
-      }
+      } else if (e.key === "Backspace" && !editing) setEditing(true);
     },
-    [inputString]
+    [inputString, editing]
   );
 
   const Variant = () => {
@@ -121,7 +133,7 @@ const AmountField: FC<IAmountField> = (props) => {
                 disableUnderline: true,
 
                 onKeyDown:
-                  inputString === "0.00" && !editing
+                  !editing && inputString === "0.00"
                     ? onKeyDown
                     : () => {
                         null;
@@ -188,7 +200,7 @@ const AmountField: FC<IAmountField> = (props) => {
                 InputProps={{
                   disableUnderline: true,
                   onKeyDown:
-                    inputString === "0.00" && !editing
+                    !editing && inputString === "0.00"
                       ? onKeyDown
                       : () => {
                           null;
