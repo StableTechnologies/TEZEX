@@ -37,8 +37,8 @@ const style = (theme) => {
     },
 
     mainWindow: {
-      height: "100%",
-      background: "#F5F5F5",
+      height: "100vh",
+      background: "#FEFEFE",
     },
   };
 };
