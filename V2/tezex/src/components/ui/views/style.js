@@ -11,7 +11,8 @@ const style = (theme) => {
         left: "0px",
         top: "0px",
         background: "#FFFFFF",
-        boxShadow: "4px 4px 4px rgba(204, 204, 204, 0.25)",
+        marginBottom: ".28vw",
+        boxShadow: ".28vw .28vw .28vw rgba(204, 204, 204, 0.25)",
       },
 
       logo: {
