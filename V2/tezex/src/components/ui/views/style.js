@@ -16,8 +16,10 @@ const style = (theme) => {
       },
 
       logo: {
+        position: "relative",
         maxWidth: "11.35vw",
         marginLeft: "1.39vw",
+        top: ".17vw",
       },
 
       nav: {
@@ -27,7 +29,7 @@ const style = (theme) => {
       wallet: {
         position: "relative",
         left: "51vw",
-        justifyContent: "flexend",
+        justifyContent: "lefflexend",
         display: "flex",
       },
     },
