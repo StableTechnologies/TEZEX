@@ -21,8 +21,13 @@ const style = (theme) => {
 
         minWidth: "3.7vw",
         maxWidth: "7.7vw",
+        "&:not(first-child)": {
+          padding: "0px 4vw ",
+        },
+        "&:first-child": {
+          paddingLeft: "0px 3.1vw ",
+        },
 
-        padding: "0px 4vw ",
         color: "#999999",
         background: "white",
         textTransform: "initial",
