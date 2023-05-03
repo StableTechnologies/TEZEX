@@ -11,7 +11,7 @@
     "@testing-library/react": "^9.3.2",
     "@testing-library/user-event": "^7.1.2",
     "aos": "^2.3.4",
-    "async-mutex": "^0.2.6",
+    "async-mutex": "^0.4.0",
     "bignumber.js": "^9.0.1",
     "conseiljs": "5.0.9-beta.3",
     "conseiljs-softsigner": "^5.0.3",
