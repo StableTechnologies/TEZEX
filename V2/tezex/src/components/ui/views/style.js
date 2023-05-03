@@ -17,6 +17,7 @@ const style = (theme) => {
 
       logo: {
         maxWidth: "11.35vw",
+        marginLeft: "1.39vw",
       },
 
       nav: {
