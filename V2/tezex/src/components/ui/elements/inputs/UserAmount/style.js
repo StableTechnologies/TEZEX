@@ -4,7 +4,7 @@ export const style = (theme) => {
     leftInput: {
       gridContainter: {
         flexDirection: "row",
-        borderRadius: "16px",
+        borderRadius: "1.11vw",
         backgroundColor: "background.default",
       },
       textField: {
@@ -26,7 +26,7 @@ export const style = (theme) => {
         },
       },
       balanceTypography: {
-        padding: "0px 16px",
+        padding: "0px 1.11vw",
         textAlign: "right",
       },
       input: {
@@ -41,15 +41,38 @@ export const style = (theme) => {
       gridContainter: {
         darker: {
           flexDirection: "row",
-          borderRadius: "16px",
+          borderRadius: "1.11vw",
           backgroundColor: "#F4F4F4",
         },
         lighter: {
-          display: "flex",
-          flexDirection: "row",
-          borderRadius: "16px",
+          flexDirection: "column",
+          borderRadius: "1.11vw",
           backgroundColor: "#F9F9F9",
         },
+      },
+      label: {
+        color: "#828282",
+        fontWeight: "500",
+        fontSize: ".97vw",
+        textAlign: "right",
+      },
+      textFieldTextAbove: {
+        "& .MuiInputBase-input": {
+          position: "absolute",
+          zIndex: 5,
+          width: "100%",
+          right: "1vw",
+
+          //marginTop: "10px",
+        },
+
+        //	bottom: "1.5vw",
+
+        top: ".5vw",
+        //	right: "2vw",
+        justifyContent: "center",
+        width: "80%",
+        // height: "75px",
       },
       textField: {
         "& .MuiInputBase-input": {
@@ -58,10 +81,12 @@ export const style = (theme) => {
           width: "100%",
         },
 
+        position: "relative",
+        bottom: "1.5vw",
         paddingRight: "1vw",
         justifyContent: "center",
         width: "100%",
-        height: "75px",
+        //	height: "75px",
       },
       inputAdornmentStart: {
         box: {
@@ -69,15 +94,28 @@ export const style = (theme) => {
           flexDirection: "column",
         },
         boxLabel: {
+          "&.MuiBox-root": {
+            display: "flex",
+            position: "absolute",
+            paddingTop: "1.1vw",
+
+            // width: "100%",
+          },
+
           fontSize: "1.2vw",
-          marginLeft: "1vw",
-          marginRight: "1vw",
-          position: "relative",
-          bottom: "1vw",
+          //marginLeft: "1vw",
+          //marginRight: "1vw",
+
+          //marginBottom: "10vw",
+          //	marginTop: "1.56vh",
+          paddingBottom: ".1vh",
+          //position: "relative",
+          //bottom: "1vw",
         },
         boxToken: {
           display: "flex",
           flexDirection: "row",
+          paddingTop: "0px",
         },
         img: {
           marginLeft: "1vw",
@@ -91,6 +129,18 @@ export const style = (theme) => {
         },
       },
       inputAdornmentEnd: {
+        adornmentLabelAbove: {
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "flex-end",
+          width: "100%",
+          padding: 0,
+          zIndex: 0,
+          right: "1vw",
+
+          position: "relative",
+          bottom: "3vw",
+        },
         adornment: {
           display: "flex",
           flexDirection: "row",
@@ -98,6 +148,7 @@ export const style = (theme) => {
           width: "100%",
           padding: 0,
           zIndex: 0,
+          //right: "1vw",
 
           position: "relative",
           bottom: "3vw",
@@ -122,8 +173,10 @@ export const style = (theme) => {
           justifyContent: "flex-end",
           width: "100%",
           height: "100%",
+
           position: "relative",
           top: "4vw",
+          //right: "1vw",
         },
         typography: {
           color: "#999999",
@@ -132,6 +185,7 @@ export const style = (theme) => {
           textAlign: "right",
         },
       },
+
       input: {
         textAlign: "right",
         fontSize: "2.2vw",
