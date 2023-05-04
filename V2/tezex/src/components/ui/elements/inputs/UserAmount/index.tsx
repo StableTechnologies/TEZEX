@@ -182,64 +182,58 @@ const AmountField: FC<IAmountField> = (props) => {
         );
       default:
         return (
-          <Grid2 container>
-            <Grid2
-              container
-              sx={
-                props.darker
-                  ? styles.rightInput.gridContainter.darker
-                  : styles.rightInput.gridContainter.lighter
-              }
-            >
-              <TextField
-                autoFocus={props.readOnly ? false : true}
-                onChange={updateAmount}
-                value={inputString}
-                id="filled-start-adornment"
-                sx={styles.rightInput.textField}
-                InputProps={{
-                  disableUnderline: true,
-                  onKeyDown:
-                    !editing && inputString === "0.00"
-                      ? onKeyDown
-                      : () => {
-                          null;
-                        },
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Box sx={styles.rightInput.inputAdornmentStart.box}>
-                        <Box
-                          sx={styles.rightInput.inputAdornmentStart.boxLabel}
-                        >
-                          {props.label}
-                        </Box>
-                        <Box
-                          sx={styles.rightInput.inputAdornmentStart.boxToken}
-                        >
-                          <div>
-                            <img
-                              style={styles.rightInput.inputAdornmentStart.img}
-                              src={process.env.PUBLIC_URL + props.asset.logo}
-                              alt="logo"
-                            />
-                          </div>
-                          <Typography
-                            sx={
-                              styles.rightInput.inputAdornmentStart.typography
-                            }
-                          >
-                            {props.asset.label}
-                          </Typography>
-                        </Box>
+          <Grid2
+            container
+            sx={
+              props.darker
+                ? styles.rightInput.gridContainter.darker
+                : styles.rightInput.gridContainter.lighter
+            }
+          >
+            <TextField
+              autoFocus={props.readOnly ? false : true}
+              onChange={updateAmount}
+              value={inputString}
+              id="filled-start-adornment"
+              sx={styles.rightInput.textField}
+              InputProps={{
+                disableUnderline: true,
+                onKeyDown:
+                  !editing && inputString === "0.00"
+                    ? onKeyDown
+                    : () => {
+                        null;
+                      },
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Box sx={styles.rightInput.inputAdornmentStart.box}>
+                      <Box sx={styles.rightInput.inputAdornmentStart.boxLabel}>
+                        {props.label}
                       </Box>
-                    </InputAdornment>
-                  ),
+                      <Box sx={styles.rightInput.inputAdornmentStart.boxToken}>
+                        <div>
+                          <img
+                            style={styles.rightInput.inputAdornmentStart.img}
+                            src={process.env.PUBLIC_URL + props.asset.logo}
+                            alt="logo"
+                          />
+                        </div>
+                        <Typography
+                          sx={styles.rightInput.inputAdornmentStart.typography}
+                        >
+                          {props.asset.label}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </InputAdornment>
+                ),
 
-                  endAdornment: (
-                    <InputAdornment
-                      position="end"
-                      sx={styles.rightInput.inputAdornmentEnd.adornment}
-                    >
+                endAdornment: (
+                  <InputAdornment
+                    position="end"
+                    sx={styles.rightInput.inputAdornmentEnd.adornment}
+                  >
+                    <Box>
                       <Box visibility={props.swap ? "visible" : "hidden"}>
                         <Button
                           onClick={toggle}
@@ -252,30 +246,31 @@ const AmountField: FC<IAmountField> = (props) => {
                           />
                         </Button>
                       </Box>
-                    </InputAdornment>
-                  ),
-                }}
-                inputProps={{
-                  readOnly: props.readOnly,
-                  style: {
-                    ...styles.rightInput.input,
-                  },
-                }}
-                variant="standard"
-              />
-              <WalletConnected>
-                <Grid2 sx={styles.rightInput.balance.grid}>
-                  <Typography
-                    color="textSecondary"
-                    variant="subtitle2"
-                    hidden={props.balance ? false : true}
-                    sx={styles.rightInput.balance.typography}
-                  >
-                    Balance: {props.balance} {props.asset.name}
-                  </Typography>
-                </Grid2>
-              </WalletConnected>
-            </Grid2>
+
+                      <WalletConnected>
+                        <Box sx={styles.rightInput.balance.grid}>
+                          <Typography
+                            color="textSecondary"
+                            variant="subtitle2"
+                            hidden={props.balance ? false : true}
+                            sx={styles.rightInput.balance.typography}
+                          >
+                            Balance: {props.balance} {props.asset.name}
+                          </Typography>
+                        </Box>
+                      </WalletConnected>
+                    </Box>
+                  </InputAdornment>
+                ),
+              }}
+              inputProps={{
+                readOnly: props.readOnly,
+                style: {
+                  ...styles.rightInput.input,
+                },
+              }}
+              variant="standard"
+            />
           </Grid2>
         );
     }

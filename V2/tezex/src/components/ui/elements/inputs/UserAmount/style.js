@@ -45,6 +45,7 @@ export const style = (theme) => {
           backgroundColor: "#F4F4F4",
         },
         lighter: {
+          display: "flex",
           flexDirection: "row",
           borderRadius: "16px",
           backgroundColor: "#F9F9F9",
@@ -56,6 +57,8 @@ export const style = (theme) => {
           zIndex: 5,
           width: "100%",
         },
+
+        paddingRight: "1vw",
         justifyContent: "center",
         width: "100%",
         height: "75px",
@@ -114,8 +117,13 @@ export const style = (theme) => {
       },
       balance: {
         grid: {
+          padding: "0px, 0px",
+          display: "flex",
+          justifyContent: "flex-end",
+          width: "100%",
+          height: "100%",
           position: "relative",
-          bottom: "2vw",
+          top: "4vw",
         },
         typography: {
           color: "#999999",
