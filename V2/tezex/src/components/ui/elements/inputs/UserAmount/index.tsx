@@ -223,7 +223,11 @@ const AmountField: FC<IAmountField> = (props) => {
                     <InputAdornment position="start">
                       <Box sx={styles.rightInput.inputAdornmentStart.boxToken}>
                         <img
-                          style={styles.rightInput.inputAdornmentStart.img}
+                          style={
+                            props.label
+                              ? styles.rightInput.inputAdornmentStart.img
+                              : styles.rightInput.inputAdornmentStart.imgLarger
+                          }
                           src={process.env.PUBLIC_URL + props.asset.logo}
                           alt="logo"
                         />
@@ -243,7 +247,8 @@ const AmountField: FC<IAmountField> = (props) => {
                         props.label
                           ? styles.rightInput.inputAdornmentEnd
                               .adornmentLabelAbove
-                          : styles.rightInput.inputAdornmentEnd.adornment
+                          : styles.rightInput.inputAdornmentEnd
+                              .adornmentLabelAbove
                       }
                     >
                       <Box>

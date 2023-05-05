@@ -79,14 +79,12 @@ export const style = (theme) => {
         "& .MuiInputBase-input": {
           position: "absolute",
           zIndex: 5,
-          width: "100%",
+          width: "80%",
+          right: "1vw",
         },
 
-        position: "relative",
         bottom: "1.5vw",
-        paddingRight: "1vw",
         justifyContent: "center",
-        width: "100%",
         //	height: "75px",
       },
       inputAdornmentStart: {
@@ -113,6 +111,11 @@ export const style = (theme) => {
           display: "flex",
           flexDirection: "row",
           paddingTop: "0px",
+        },
+        imgLarger: {
+          marginLeft: "1vw",
+          marginRight: "1vw",
+          height: "2.22vw",
         },
         img: {
           marginLeft: "1vw",
