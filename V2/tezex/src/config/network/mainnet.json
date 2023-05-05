@@ -1,5 +1,5 @@
 {
-  "tezosServer": "https://tezos-prod.cryptonomic-infra.tech:443",
+  "tezosServer": "https://mainnet.api.tez.ie",
   "dex": {
     "name": "Sirius",
     "address": "KT1TxqZ8QtKvLu3V3JH7Gx58n7Co8pgtpQU5"
@@ -7,7 +7,7 @@
   "assets": [
     {
       "name": "XTZ",
-      "label": "XTZ",
+      "label": "Tez",
       "logo": "/assets/tzlogo.svg",
       "address": "",
       "decimals": 6
@@ -21,7 +21,7 @@
     },
     {
       "name": "TzBTC",
-      "label": "TzBTC",
+      "label": "tzBTC",
       "logo": "/assets/tzbtcLogo.svg",
       "address": "KT1PWx2mnDueood7fEmfbBDKx1D9BAnnXitn",
       "decimals": 8
