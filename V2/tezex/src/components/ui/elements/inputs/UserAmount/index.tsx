@@ -221,23 +221,17 @@ const AmountField: FC<IAmountField> = (props) => {
                         },
                   startAdornment: (
                     <InputAdornment position="start">
-                      <Box sx={styles.rightInput.inputAdornmentStart.box}>
-                        <Box
-                          sx={styles.rightInput.inputAdornmentStart.boxToken}
+                      <Box sx={styles.rightInput.inputAdornmentStart.boxToken}>
+                        <img
+                          style={styles.rightInput.inputAdornmentStart.img}
+                          src={process.env.PUBLIC_URL + props.asset.logo}
+                          alt="logo"
+                        />
+                        <Typography
+                          sx={styles.rightInput.inputAdornmentStart.typography}
                         >
-                          <img
-                            style={styles.rightInput.inputAdornmentStart.img}
-                            src={process.env.PUBLIC_URL + props.asset.logo}
-                            alt="logo"
-                          />
-                          <Typography
-                            sx={
-                              styles.rightInput.inputAdornmentStart.typography
-                            }
-                          >
-                            {props.asset.label}
-                          </Typography>
-                        </Box>
+                          {props.asset.label}
+                        </Typography>
                       </Box>
                     </InputAdornment>
                   ),

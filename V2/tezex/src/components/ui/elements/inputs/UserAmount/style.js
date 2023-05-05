@@ -55,6 +55,7 @@ export const style = (theme) => {
         fontWeight: "500",
         fontSize: ".97vw",
         textAlign: "right",
+        marginLeft: "1vw",
       },
       textFieldTextAbove: {
         "& .MuiInputBase-input": {
@@ -89,10 +90,6 @@ export const style = (theme) => {
         //	height: "75px",
       },
       inputAdornmentStart: {
-        box: {
-          display: "flex",
-          flexDirection: "column",
-        },
         boxLabel: {
           "&.MuiBox-root": {
             display: "flex",
