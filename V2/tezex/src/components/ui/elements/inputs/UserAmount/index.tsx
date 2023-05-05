@@ -79,6 +79,10 @@ const AmountField: FC<IAmountField> = (props) => {
     }
   }, [props, inputString]);
 
+  const amountNotEntered: () => boolean = useCallback(() => {
+    return inputString === "0.00" && lastString !== "0.00";
+  }, [inputString, lastString]);
+
   const updateAmount = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       e.preventDefault();
@@ -208,7 +212,11 @@ const AmountField: FC<IAmountField> = (props) => {
                 id="filled-start-adornment"
                 sx={
                   props.label
-                    ? styles.rightInput.textFieldTextAbove
+                    ? amountNotEntered()
+                      ? styles.rightInput.textFieldTextAboveGrey
+                      : styles.rightInput.textFieldTextAbove
+                    : amountNotEntered()
+                    ? styles.rightInput.textFieldGrey
                     : styles.rightInput.textField
                 }
                 InputProps={{

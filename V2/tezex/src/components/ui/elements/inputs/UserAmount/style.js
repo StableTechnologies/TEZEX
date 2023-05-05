@@ -57,6 +57,24 @@ export const style = (theme) => {
         textAlign: "right",
         marginLeft: "1vw",
       },
+      textFieldTextAboveGrey: {
+        "& .MuiInputBase-input": {
+          position: "absolute",
+          zIndex: 5,
+          width: "100%",
+          right: "1vw",
+          color: "#999999",
+          //marginTop: "10px",
+        },
+
+        //	bottom: "1.5vw",
+
+        top: "0vw",
+        //	right: "2vw",
+        justifyContent: "center",
+        width: "80%",
+        // height: "75px",
+      },
       textFieldTextAbove: {
         "& .MuiInputBase-input": {
           position: "absolute",
@@ -69,11 +87,25 @@ export const style = (theme) => {
 
         //	bottom: "1.5vw",
 
-        top: ".5vw",
+        top: "0vw",
         //	right: "2vw",
         justifyContent: "center",
         width: "80%",
         // height: "75px",
+      },
+      textFieldGrey: {
+        "& .MuiInputBase-input": {
+          position: "absolute",
+          zIndex: 5,
+          width: "80%",
+          right: "1vw",
+
+          color: "#999999",
+        },
+
+        bottom: ".8vw",
+        justifyContent: "center",
+        //	height: "75px",
       },
       textField: {
         "& .MuiInputBase-input": {
@@ -83,7 +115,7 @@ export const style = (theme) => {
           right: "1vw",
         },
 
-        bottom: "1vw",
+        bottom: ".8vw",
         justifyContent: "center",
         //	height: "75px",
       },
