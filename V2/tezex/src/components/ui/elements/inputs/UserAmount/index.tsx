@@ -231,11 +231,19 @@ const AmountField: FC<IAmountField> = (props) => {
                           src={process.env.PUBLIC_URL + props.asset.logo}
                           alt="logo"
                         />
-                        <Typography
-                          sx={styles.rightInput.inputAdornmentStart.typography}
-                        >
-                          {props.asset.label}
-                        </Typography>
+                        <Box sx={{ marginTop: "0px" }}>
+                          <Typography
+                            sx={
+                              props.label
+                                ? styles.rightInput.inputAdornmentStart
+                                    .typography
+                                : styles.rightInput.inputAdornmentStart
+                                    .typographyForLargerLogo
+                            }
+                          >
+                            {props.asset.label}
+                          </Typography>
+                        </Box>
                       </Box>
                     </InputAdornment>
                   ),

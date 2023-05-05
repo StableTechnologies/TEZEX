@@ -83,7 +83,7 @@ export const style = (theme) => {
           right: "1vw",
         },
 
-        bottom: "1.5vw",
+        bottom: "1vw",
         justifyContent: "center",
         //	height: "75px",
       },
@@ -121,11 +121,20 @@ export const style = (theme) => {
           marginLeft: "1vw",
           marginRight: "1vw",
           height: "1.61vw",
+
+          marginTop: ".1vw",
+        },
+        typographyForLargerLogo: {
+          color: "#1E1E1E",
+          fontWeight: "500",
+          fontSize: "1.25vw",
+          marginTop: ".15vw",
         },
         typography: {
           color: "#1E1E1E",
           fontWeight: "500",
           fontSize: "1.25vw",
+          //	paddingBottom: "1vw",
         },
       },
       inputAdornmentEnd: {
