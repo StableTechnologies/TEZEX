@@ -70,7 +70,7 @@ export const RightInput: FC<IRigthInput> = (props) => {
           InputProps={{
             disableUnderline: true,
             onKeyDown:
-              !props.noUserActionCheck && props.inputString === "0.00"
+              !props.editing && props.inputString === "0.00"
                 ? props.onKeyDown
                 : () => {
                     null;
