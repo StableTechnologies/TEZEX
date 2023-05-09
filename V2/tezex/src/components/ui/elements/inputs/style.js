@@ -2,30 +2,28 @@
 const style = (theme) => {
   return {
     slippageTabsRoot: {
-      display: "inline-flex",
-      position: "relative",
-      width: "100%",
-      alignItems: "center",
-      justifyContent: "space-between",
-
+      "&.MuiBox-root": {
+        background: "#FFFFFF",
+        display: "flex",
+        position: "relative",
+        flexDirection: "row",
+        height: "3vw",
+        alignItems: "center",
+        justifyContent: "space-between",
+        width: "15.2vw",
+        maxHeight: "3.8vh",
+        minHeight: "3.8vh",
+        borderRadius: ".55vw",
+      },
       // maxWidth: "15vw",
+      //
       paddingRight: "0px",
       border: "1px solid #EDEDED",
     },
     slippageTab: {
       "&.MuiButton-root.Mui-disabled": {
         backgroundColor: "transparent",
-        "&:after": {
-          zindex: 0,
 
-          display: "flex",
-          position: "relative",
-
-          borderRadius: "8px",
-          backgroundColor: "transparent",
-        },
-      },
-      "&.MuiButtonBase-root": {
         fontFamily: "Inter",
         fontStyle: "normal",
         fontWeight: "500",
@@ -34,40 +32,64 @@ const style = (theme) => {
         display: "inline-flex",
         justifyContent: "center",
         textAlign: "center",
+        //paddingTop: "2px",
 
+        minHeight: "2.2vw",
+        maxHeight: "2.2vw",
+        // minWidth: "4.2vw",
+        // maxWidth: "4.2vw",
+        zIndex: 1,
+      },
+      "&.MuiButtonBase-root": {
+        position: "relative",
+        top: "0px",
+        fontFamily: "Inter",
+        fontStyle: "normal",
+        fontWeight: "500",
+        fontSize: ".83vw",
+        lineHeight: "1vw",
+        display: "inline-flex",
+        justifyContent: "center",
+        textAlign: "center",
+        minHeight: "2.2vw",
+        maxHeight: "2.2vw",
+        // minWidth: "4.2vw",
+        // maxWidth: "4.2vw",
         minWidth: "4.2vw",
+        maxWidth: "4.2vw",
         zIndex: 1,
 
         backgroundColor: "selectedHomeTab.main",
-        color: "palette.text.primary",
         textTransform: "initial",
-
-        "&:after": {
-          display: "flex",
-
-          alignItems: "center",
-          justifyContent: "center",
-          position: "relative",
-
-          borderRadius: "8px",
-          backgroundColor: "selectedHomeTab.main",
-        },
       },
       wrapper: {
-        color: "palette.text.primary",
         textTransform: "initial",
       },
     },
 
     slippageInput: {
+      box: {
+        "&.MuiBox-root": {
+          paddingTop: ".5vw",
+          display: "flex",
+          position: "relative",
+          flexDirection: "row",
+          width: "2.3ch",
+          alignItems: "center",
+          justifyContent: "space-between",
+        },
+      },
       "& .MuiButtonBase-root": {
         zIndex: 3,
       },
       "& .MuiInputAdornment-root": {
         display: "flex",
-        paddingTop: ".5vw",
+        alignItems: "center",
+        justifyContent: "center",
+        position: "relative",
+        bottom: ".2vw",
 
-        paddingRight: "2.5vw",
+        paddingRight: "0vw",
       },
 
       "& .MuiTypography-root": {
@@ -80,29 +102,28 @@ const style = (theme) => {
         display: "inline-flex",
         justifyContent: "center",
         textAlign: "center",
-        minHeight: "3.03vh",
       },
 
       "& .MuiFormControl-root": {
-        display: "inline-flex",
+        display: "flex",
 
         alignItems: "center",
         justifyContent: "center",
       },
 
       "& .MuiInputBase-root": {
-        paddingTop: ".5vw",
-        paddingLeft: "1vw",
+        // top: ".5vw",
+        //paddingTop: ".5vw",
+        // paddingLeft: "1vw",
         fontFamily: "Inter",
         fontStyle: "normal",
         fontWeight: "500",
         fontSize: ".83vw",
         lineHeight: "1vw",
-        display: "inline-flex",
+        display: "flex",
         justifyContent: "center",
         textAlign: "center",
         //minHeight: "3.03vh",
-        width: "4px",
         paddingRight: "0px",
         //minWidth: "4.26vw",
         zIndex: 1,

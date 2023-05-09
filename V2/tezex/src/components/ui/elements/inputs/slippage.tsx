@@ -34,23 +34,41 @@ const SlippageInput: FC<ISlippage> = (props) => {
   }
   const SlippageInput = (prop: ISlippageInput) => {
     return (
-      <TextField
-        autoFocus
-        disabled={prop.disabled}
-        onChange={useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-          e.preventDefault();
-          setInput(e.target.value);
-        }, [])}
-        value={input}
-        sx={styles.slippageInput}
-        InputProps={{
-          disableUnderline: true,
-          endAdornment: <InputAdornment position="start">%</InputAdornment>,
-        }}
-        inputProps={{}}
-        size="small"
-        variant="standard"
-      />
+      <Box sx={styles.slippageInput.box}>
+        <TextField
+          autoFocus
+          disabled={prop.disabled}
+          onChange={useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+            e.preventDefault();
+            setInput(e.target.value);
+          }, [])}
+          value={input}
+          sx={styles.slippageInput}
+          InputProps={{
+            disableUnderline: true,
+            endAdornment: (
+              <InputAdornment
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+                position="start"
+              >
+                %
+              </InputAdornment>
+            ),
+            sx: {
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            },
+          }}
+          inputProps={{}}
+          size="small"
+          variant="standard"
+        />
+      </Box>
     );
   };
 
