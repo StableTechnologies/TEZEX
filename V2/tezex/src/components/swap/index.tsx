@@ -204,7 +204,7 @@ export const Swap: FC = () => {
             }
           />
           <CardContent sx={classes.cardcontent}>
-            <Grid2 xs={11.5} sx={classes.input1}>
+            <Grid2 xs={11.2} sx={classes.input1}>
               <UserAmountField
                 asset={assets[send]}
                 onChange={updateSend}
@@ -218,7 +218,7 @@ export const Swap: FC = () => {
               <SwapUpDownToggle toggle={swapFields} />
             </Grid2>
 
-            <Grid2 xs={11.5} sx={classes.input2}>
+            <Grid2 xs={11.2} sx={classes.input2}>
               <UserAmountField
                 asset={assets[receive]}
                 value={receiveAmount.toFixed()}

@@ -7,9 +7,8 @@ const style = (theme) => {
       width: "100%",
       alignItems: "center",
       justifyContent: "space-between",
-      minHeight: "3.8vh",
 
-      maxWidth: "15vw",
+      // maxWidth: "15vw",
       paddingRight: "0px",
       border: "1px solid #EDEDED",
     },
@@ -20,11 +19,7 @@ const style = (theme) => {
           zindex: 0,
 
           display: "flex",
-          position: "absolute",
-          top: 0,
-          left: 4,
-          right: 4,
-          bottom: 0,
+          position: "relative",
 
           borderRadius: "8px",
           backgroundColor: "transparent",
@@ -52,11 +47,7 @@ const style = (theme) => {
 
           alignItems: "center",
           justifyContent: "center",
-          position: "absolute",
-          top: 0,
-          left: 4,
-          right: 4,
-          bottom: 0,
+          position: "relative",
 
           borderRadius: "8px",
           backgroundColor: "selectedHomeTab.main",
@@ -110,9 +101,10 @@ const style = (theme) => {
         display: "inline-flex",
         justifyContent: "center",
         textAlign: "center",
-        minHeight: "3.03vh",
-
-        minWidth: "4.26vw",
+        //minHeight: "3.03vh",
+        width: "4px",
+        paddingRight: "0px",
+        //minWidth: "4.26vw",
         zIndex: 1,
 
         color: "palette.text.primary",
