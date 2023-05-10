@@ -19,15 +19,18 @@ import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
+import Tooltip from "@mui/material/Tooltip";
+
 import style from "./style";
 import useStyles from "../../hooks/styles";
 
+import infoIcon from "../../assets/infoIcon.svg";
 export interface ISwapToken {
   children: null;
 }
 
 export const Swap: FC = () => {
-  const classes = useStyles(style);
+  const styles = useStyles(style);
   const network = useNetwork();
   const walletOperations: WalletOps = useWalletOps(TransactingComponent.SWAP);
   const isWalletConnected = useWalletConnected();
@@ -192,19 +195,17 @@ export const Swap: FC = () => {
       session.loadComponent(TransactingComponent.SWAP);
   });
   return (
-    <Grid2 container sx={classes.root}>
+    <Grid2 container sx={styles.root}>
       <Grid2>
-        <Card sx={classes.card}>
+        <Card sx={styles.card}>
           <CardHeader
-            sx={classes.cardHeader}
+            sx={styles.cardHeader}
             title={
-              <Typography sx={classes.cardHeaderTypography}>
-                {"Swap"}
-              </Typography>
+              <Typography sx={styles.cardHeaderTypography}>{"Swap"}</Typography>
             }
           />
-          <CardContent sx={classes.cardcontent}>
-            <Grid2 xs={11.2} sx={classes.input1}>
+          <CardContent sx={styles.cardcontent}>
+            <Grid2 xs={11.2} sx={styles.input1}>
               <UserAmountField
                 asset={assets[send]}
                 onChange={updateSend}
@@ -214,11 +215,11 @@ export const Swap: FC = () => {
               />
             </Grid2>
 
-            <Grid2 xs={12} sx={classes.swapToggle}>
+            <Grid2 xs={12} sx={styles.swapToggle}>
               <SwapUpDownToggle toggle={swapFields} />
             </Grid2>
 
-            <Grid2 xs={11.2} sx={classes.input2}>
+            <Grid2 xs={11.2} sx={styles.input2}>
               <UserAmountField
                 asset={assets[receive]}
                 value={receiveAmount.toFixed()}
@@ -227,8 +228,8 @@ export const Swap: FC = () => {
               />
             </Grid2>
           </CardContent>
-          <CardActions sx={classes.cardAction}>
-            <Box sx={classes.transact}>
+          <CardActions sx={styles.cardAction}>
+            <Box sx={styles.transact}>
               <Wallet transaction={active} callback={transact}>
                 {"Swap Tokens"}
               </Wallet>
@@ -236,10 +237,32 @@ export const Swap: FC = () => {
           </CardActions>
         </Card>
 
-        <Paper variant="outlined" sx={classes.paper} square>
-          <Box sx={classes.paperBox}>
+        <Paper variant="outlined" sx={styles.paper} square>
+          <Box sx={styles.paperBox}>
             <Grid2 xs={4}>
-              <Typography sx={classes.paperTypography}>Slippage</Typography>
+              <Typography sx={styles.paperTypography}>Slippage</Typography>
+            </Grid2>
+            <Grid2 xs={1}>
+              <Tooltip
+                title={
+                  <div>
+                    {" "}
+                    Slippage limits how much your trade <br /> price can vary
+                    from your desired price.
+                  </div>
+                }
+                componentsProps={{
+                  tooltip: {
+                    sx: styles.slippageInfo.tooltip,
+                  },
+                }}
+              >
+                <img
+                  style={styles.slippageInfo.icon}
+                  src={infoIcon}
+                  alt="Logo"
+                />
+              </Tooltip>
             </Grid2>
 
             <Grid2 xs={7}>

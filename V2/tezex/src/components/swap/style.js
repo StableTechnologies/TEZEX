@@ -87,6 +87,33 @@ const style = (theme) => {
     slippage: {
       text: {},
     },
+    slippageInfo: {
+      icon: {
+        height: ".925vw",
+        width: ".925vw",
+      },
+      tooltip: {
+        color: "#1E1E1E",
+        backgroundColor: "#FFFFFF",
+        padding: "0px 0px 0px 0px ",
+        fontSize: ".83vw",
+        lineHeight: "1.25vw",
+
+        display: "flex",
+        alignItems: "center",
+
+        textAlign: "center",
+        justifyContent: "center",
+
+        border: "0.069vw solid #E1E1E1",
+        "&.MuiTooltip-tooltip": {
+          minWidth: "17.22vw",
+          maxWidth: "17.22vw",
+          minHeight: "4.166vw",
+          maxHeight: "4.166vw",
+        },
+      },
+    },
     card: {
       overflow: "hidden",
       position: "relative",

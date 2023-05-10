@@ -22,9 +22,11 @@ import CardActions from "@mui/material/CardActions";
 import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
 import Typography from "@mui/material/Typography";
+import Tooltip from "@mui/material/Tooltip";
 import style from "./style";
 import useStyles from "../../hooks/styles";
 
+import infoIcon from "../../assets/infoIcon.svg";
 export interface IAddLiquidity {
   children: null;
 }
@@ -304,6 +306,28 @@ export const AddLiquidity: FC = () => {
           <CardActions sx={styles.cardAction}>
             <Grid2 xs={2}>Slippage</Grid2>
 
+            <Grid2 xs={1}>
+              <Tooltip
+                title={
+                  <div>
+                    {" "}
+                    Slippage limits how much your trade <br /> price can vary
+                    from your desired price.
+                  </div>
+                }
+                componentsProps={{
+                  tooltip: {
+                    sx: styles.slippageInfo.tooltip,
+                  },
+                }}
+              >
+                <img
+                  style={styles.slippageInfo.icon}
+                  src={infoIcon}
+                  alt="Logo"
+                />
+              </Tooltip>
+            </Grid2>
             <Grid2 xs={4} sx={styles.slippageComponent}>
               <Slippage
                 asset={assets[receive].name}
