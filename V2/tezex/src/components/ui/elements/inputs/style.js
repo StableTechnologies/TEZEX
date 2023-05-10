@@ -14,13 +14,26 @@ const style = (theme) => {
         maxHeight: "2.7vw",
         minHeight: "2.7vw",
         borderRadius: ".55vw",
+
+        "&:first-child": {
+          paddingLeft: ".28vw ",
+        },
       },
-      // maxWidth: "15vw",
-      //
-      paddingRight: "0px",
-      border: "1px solid #EDEDED",
+      border: "0.07vw solid #EDEDED",
     },
     slippageTab: {
+      box: {
+        "&.MuiBox-root": {
+          background: "#FFFFFF",
+          display: "flex",
+          position: "relative",
+          alignItems: "center",
+          justifyContent: "center",
+
+          minWidth: "4.2vw",
+          maxWidth: "4.2vw",
+        },
+      },
       "&.MuiButton-root.Mui-disabled": {
         backgroundColor: "transparent",
 
@@ -42,7 +55,7 @@ const style = (theme) => {
       },
       "&.MuiButtonBase-root": {
         position: "relative",
-        top: "0px",
+        //top: "0px",
         fontFamily: "Inter",
         fontStyle: "normal",
         fontWeight: "500",
@@ -87,7 +100,7 @@ const style = (theme) => {
         alignItems: "center",
         justifyContent: "center",
         position: "relative",
-        bottom: ".2vw",
+        bottom: ".22vw",
 
         paddingRight: "0vw",
       },
@@ -124,7 +137,6 @@ const style = (theme) => {
         justifyContent: "center",
         textAlign: "center",
         //minHeight: "3.03vh",
-        paddingRight: "0px",
         //minWidth: "4.26vw",
         zIndex: 1,
 

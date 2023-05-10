@@ -106,6 +106,7 @@ const SlippageInput: FC<ISlippage> = (props) => {
 
     return (
       <Box
+        sx={styles.slippageTab.box}
         onClick={(event) => {
           event.preventDefault();
           setSelectedId(p.id);
