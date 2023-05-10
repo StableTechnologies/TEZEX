@@ -238,14 +238,18 @@ export const Swap: FC = () => {
 
         <Paper variant="outlined" sx={classes.paper} square>
           <Box sx={classes.paperBox}>
-            <Typography sx={classes.paperTypography}>Slippage</Typography>
+            <Grid2 xs={4}>
+              <Typography sx={classes.paperTypography}>Slippage</Typography>
+            </Grid2>
 
-            <Slippage
-              asset={assets[receive].name}
-              value={slippage}
-              onChange={updateSlippage}
-              inverse={true}
-            />
+            <Grid2 xs={7}>
+              <Slippage
+                asset={assets[receive].name}
+                value={slippage}
+                onChange={updateSlippage}
+                inverse={true}
+              />
+            </Grid2>
           </Box>
         </Paper>
       </Grid2>

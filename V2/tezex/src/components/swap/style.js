@@ -20,7 +20,7 @@ const style = (theme) => {
       borderRadius: "1.38vw",
       background: "#F9F9F9",
 
-      width: "30.6vw",
+      width: "30.4vw",
       height: "10.14vw",
     },
     transact: {
@@ -40,7 +40,6 @@ const style = (theme) => {
       fontSize: "1.4vw",
     },
     cardHeader: {
-      paddingBottom: "0px",
       fontSize: "1vw",
       textAlign: "left",
     },
@@ -61,9 +60,7 @@ const style = (theme) => {
       },
     },
     cardcontent: {
-      "&.MuiCardContent-root": {
-        paddingTop: "0px",
-      },
+      "&.MuiCardContent-root": {},
       "& .MuiFormControl-root": {
         width: "28.34vw",
         height: "6.94vw",
@@ -98,9 +95,11 @@ const style = (theme) => {
       borderRadius: "1.38vw",
       zIndex: 999,
       background: "#FFFFFF",
-      border: "1px solid #E1E1E1",
+      border: "0.069vw solid #E1E1E1",
       "& .MuiCardContent-root": {
-        padding: "8px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
       },
     },
     root: {
