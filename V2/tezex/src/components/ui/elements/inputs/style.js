@@ -83,11 +83,11 @@ const style = (theme) => {
     slippageInput: {
       box: {
         "&.MuiBox-root": {
-          paddingTop: ".5vw",
+          paddingTop: ".28vw",
           display: "flex",
           position: "relative",
           flexDirection: "row",
-          width: "2.3ch",
+          width: "3ch",
           alignItems: "center",
           justifyContent: "space-between",
         },
@@ -100,7 +100,7 @@ const style = (theme) => {
         alignItems: "center",
         justifyContent: "center",
         position: "relative",
-        bottom: ".22vw",
+        bottom: ".13vw",
 
         paddingRight: "0vw",
       },
