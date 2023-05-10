@@ -20,7 +20,7 @@ const style = (theme) => {
       borderRadius: "1.38vw",
       background: "#F9F9F9",
 
-      width: "30.4vw",
+      width: "30.5vw",
       height: "10.14vw",
     },
     transact: {
