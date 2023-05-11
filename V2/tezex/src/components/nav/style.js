@@ -108,30 +108,31 @@ const style = (theme) => {
     },
     navHome: {
       root: {
-        ".MuiTabs-flexContainer": {
+        "& .MuiTabs-flexContainer": {
           justifyContent: "space-between",
-
+          minWidth: "15.34vw",
+          maxWidth: "15.34vw",
           border: "0.07vw solid #EDEDED",
           borderRadius: ".28vw",
-          display: "inline-flex",
+          display: "flex",
           position: "relative",
         },
         ".MuiTabs-indicator": {
           top: 0,
 
-          minHeight: "5vw",
+          minHeight: "2.91vw",
 
           background: "none",
           "&:after": {
             content: '""',
-            display: "block",
+            display: "flex",
             position: "absolute",
 
-            top: ".5vw",
-            bottom: "1.5vw",
-            left: "1vw",
-            right: "1vw",
-            borderRadius: ".28vw",
+            top: "0.28vw",
+            bottom: "0.28vw",
+            left: ".28vw",
+            right: ".28vw",
+            borderRadius: ".48vw",
             backgroundColor: "selectedHomeTab.main",
           },
         },
@@ -139,9 +140,9 @@ const style = (theme) => {
       tab: {
         "&.MuiButtonBase-root": {
           fontSize: "1.11vw",
-          minHeight: "1.32vw",
+          minHeight: "2.91vw",
           minWidth: "3.0vw",
-          padding: "3% 3.9vw",
+          padding: ".56vw 1.66vw .56vw 1.66vw ",
           zIndex: 2,
 
           color: "palette.text.primary",
