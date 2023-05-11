@@ -5,6 +5,7 @@ import { Token, Asset, TransactingComponent } from "../../types/general";
 import { BigNumber } from "bignumber.js";
 import { UserAmountField } from "../../components/ui/elements/inputs";
 import { Wallet } from "../wallet";
+import { NavLiquidity } from "../nav/NavLiquidity";
 import { useWalletConnected } from "../../hooks/wallet";
 import { useSession } from "../../hooks/session";
 import { useNetwork } from "../../hooks/network";
@@ -141,14 +142,7 @@ export const RemoveLiquidity: FC = () => {
     <Grid2 container sx={styles.root}>
       <Grid2>
         <Card sx={styles.card}>
-          <CardHeader
-            sx={styles.cardHeader}
-            title={
-              <Typography sx={styles.headerTypography}>
-                {"Remove Liquidity"}
-              </Typography>
-            }
-          />
+          <CardHeader sx={styles.cardHeader} title={<NavLiquidity />} />
           <CardContent sx={styles.cardcontent}>
             <Box sx={styles.cardContentBox}>
               <Box sx={styles.input1}>

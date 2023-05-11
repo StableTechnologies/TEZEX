@@ -41,7 +41,8 @@ const style = (theme) => {
       fontSize: "1.4vw",
     },
     cardHeader: {
-      paddingBottom: "1vw",
+      paddingTop: "2.22vw",
+      paddingRight: "2.22vw",
       fontSize: "1vw",
       textAlign: "left",
     },
@@ -102,6 +103,8 @@ const style = (theme) => {
     cardContent: {
       "&.MuiCardContent-root": {
         paddingTop: "4vw",
+
+        paddingLeft: "2.22vw",
       },
       flexDirection: "column",
       paddingTop: "10vw",

@@ -5,6 +5,7 @@ import rightArrow from "../../assets/rightArrow.svg";
 import plusIcon from "../../assets/plusIcon.svg";
 
 import { Wallet } from "../wallet";
+import { NavLiquidity } from "../nav/NavLiquidity";
 import { Token, Asset, TransactingComponent } from "../../types/general";
 
 import { BigNumber } from "bignumber.js";
@@ -227,18 +228,16 @@ export const AddLiquidity: FC = () => {
     walletOperations,
   ]);
 
+  /*
+	<Typography sx={styles.cardHeaderTypography}>
+	  {"Add Liquidity"}
+	</Typography>
+	*/
   return (
     <Grid2 container sx={styles.root}>
       <Grid2>
         <Card sx={styles.card}>
-          <CardHeader
-            sx={styles.cardHeader}
-            title={
-              <Typography sx={styles.cardHeaderTypography}>
-                {"Add Liquidity"}
-              </Typography>
-            }
-          />
+          <CardHeader sx={styles.cardHeader} title={<NavLiquidity />} />
           <Grid2 xs={8} lg={4} sx={styles.tokens}>
             <Box>
               <img

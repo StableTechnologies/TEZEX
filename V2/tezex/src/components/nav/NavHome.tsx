@@ -1,4 +1,4 @@
-import React, { FC, useState, useEffect } from "react";
+import React, { FC, useState, useEffect, useCallback } from "react";
 
 import { useNavigate } from "react-router-dom";
 import Tabs from "@mui/material/Tabs";
@@ -51,9 +51,15 @@ export const NavHome: FC = () => {
         setValue(1);
         break;
       case TransactingComponent.REMOVE_LIQUIDITY:
-        setValue(2);
+        setValue(1);
         break;
     }
+  }, [sessionInfo]);
+
+  const liquidityHref: () => string = useCallback(() => {
+    if (sessionInfo.activeComponent === TransactingComponent.REMOVE_LIQUIDITY) {
+      return "/home/remove";
+    } else return "/home/add";
   }, [sessionInfo]);
 
   return (
@@ -61,11 +67,10 @@ export const NavHome: FC = () => {
       value={value}
       sx={styles.navHome.root}
       onChange={handleChange}
-      aria-label="nav tabs example"
+      aria-label="nav-home-tabs"
     >
       <NavTab label="Swap" href="/home/swap" />
-      <NavTab label="Add Liquidity" href="/home/add" />
-      <NavTab label="Remove Liquidity" href="/home/remove" />
+      <NavTab label="Liquidity" href={liquidityHref()} />
     </Tabs>
   );
 };

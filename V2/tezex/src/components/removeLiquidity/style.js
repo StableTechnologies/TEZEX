@@ -21,8 +21,9 @@ const style = (theme) => {
     cardContentBox: {
       display: "flex",
 
+      marginLeft: "2.22vw",
       position: "absolute",
-      top: "16.87%",
+      top: "33%",
       justifyContent: "center",
       alignItems: "center",
       flexDirection: "row",
@@ -31,13 +32,13 @@ const style = (theme) => {
       fontSize: "1.4vw",
     },
     cardHeader: {
-      paddingBottom: "0px",
+      paddingTop: "2.22vw",
       fontSize: "1vw",
       textAlign: "left",
     },
     cardcontent: {
       "&.MuiCardContent-root": {
-        paddingTop: "0px",
+        //paddingTop: "0px",
       },
       "& .MuiFormControl-root": {
         width: "28.34vw",
