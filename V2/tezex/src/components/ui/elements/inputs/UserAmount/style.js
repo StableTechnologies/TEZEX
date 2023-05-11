@@ -4,7 +4,7 @@ export const style = (theme) => {
     leftInput: {
       gridContainter: {
         flexDirection: "row",
-        borderRadius: "1.11vw",
+        borderRadius: "0.55vw",
         backgroundColor: "background.default",
       },
       textField: {
