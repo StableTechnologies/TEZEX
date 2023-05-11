@@ -93,7 +93,7 @@ export const Wallet: FC<IWallet> = (props) => {
     } else {
       return (
         <Button size="large" sx={styles.transactDisabled} onClick={connect}>
-          connect Wallet
+          Connect Wallet
         </Button>
       );
     }

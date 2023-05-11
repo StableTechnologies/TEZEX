@@ -45,7 +45,7 @@ const style = (theme) => {
 
       background: "rgba(45, 45, 45, 0.5)",
       color: "white",
-      borderRadius: "16px",
+      borderRadius: "1.11vw",
       fontWeight: "500",
       fontSize: "1.66vw",
       lineHeight: "2.01vw",
