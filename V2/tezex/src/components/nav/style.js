@@ -73,6 +73,21 @@ const style = (theme) => {
         color: "#999999",
       },
 
+      "&.MuiTabs-root": {
+        display: "flex",
+        justifiyContent: "center",
+        alignItems: "center",
+        //padding: "0px 0px 0px 0px ",
+        height: "2.6vw",
+      },
+      "& .MuiTabs-scroller": {
+        display: "flex",
+        justifiyContent: "center",
+        alignItems: "center",
+        //padding: "0px 0px 0px 0px ",
+        height: "2.6vw",
+      },
+
       "& .MuiButtonBase-root": {
         "&.Mui-selected": {
           color: "#000000",
@@ -85,14 +100,17 @@ const style = (theme) => {
         display: "inline-flex",
         justifyContent: "center",
         textAlign: "center",
-
+        minHeight: "4vw",
+        maxHeight: "4vw",
         minWidth: "3.7vw",
         maxWidth: "7.7vw",
+        paddingTop: "0vw",
+        paddingBottom: "0vw",
         "&:not(first-child)": {
-          padding: "0px 4vw ",
+          //padding: "4vw ",
         },
         "&:first-child": {
-          paddingLeft: "0px 3.1vw ",
+          paddingLeft: "3.1vw ",
         },
 
         color: "#999999",

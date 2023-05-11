@@ -8,6 +8,7 @@ const style = (theme) => {
         alignItems: "center",
         width: "100%",
         minHeight: "5vw",
+        maxHeight: "5vw",
         left: "0px",
         top: "0px",
         background: "#FFFFFF",
