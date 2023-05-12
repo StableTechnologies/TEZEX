@@ -27,7 +27,6 @@ const style = (theme) => {
       position: "absolute",
       top: "77.5%",
       width: "28.33vw",
-      height: "4.16vw",
       justifyContent: "center",
     },
     swapToggle: {

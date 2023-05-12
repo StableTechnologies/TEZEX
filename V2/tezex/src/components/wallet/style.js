@@ -42,7 +42,7 @@ const style = (theme) => {
       display: "flex",
       fontFamily: "Inter",
       width: "100%",
-
+      height: "4.16vw",
       background: "rgba(45, 45, 45, 0.5)",
       color: "white",
       borderRadius: "1.11vw",
@@ -63,6 +63,7 @@ const style = (theme) => {
       fontFamily: "Inter",
       width: "100%",
 
+      height: "4.16vw",
       backgroundColor: "#000",
       color: "white",
       border: "1px solid black",
