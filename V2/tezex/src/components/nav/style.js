@@ -135,6 +135,11 @@ const style = (theme) => {
           display: "flex",
           position: "relative",
         },
+
+        "&.MuiTabs-root": {
+          minHeight: "2.91vw",
+          maxHeight: "2.91vw",
+        },
         ".MuiTabs-indicator": {
           top: 0,
 
