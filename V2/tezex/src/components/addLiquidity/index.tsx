@@ -10,7 +10,7 @@ import { Token, Asset, TransactingComponent } from "../../types/general";
 
 import { BigNumber } from "bignumber.js";
 import { UserAmountField, Slippage } from "../../components/ui/elements/inputs";
-
+import { SlippageLabel } from "../../components/ui/elements/Labels";
 import { useWalletConnected } from "../../hooks/wallet";
 import { useSession } from "../../hooks/session";
 import { useWalletOps, WalletOps } from "../../hooks/wallet";
@@ -23,11 +23,9 @@ import CardActions from "@mui/material/CardActions";
 import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
 import Typography from "@mui/material/Typography";
-import Tooltip from "@mui/material/Tooltip";
 import style from "./style";
 import useStyles from "../../hooks/styles";
 
-import infoIcon from "../../assets/infoIcon.svg";
 export interface IAddLiquidity {
   children: null;
 }
@@ -303,31 +301,10 @@ export const AddLiquidity: FC = () => {
             </Grid2>
           </CardContent>
           <CardActions sx={styles.cardAction}>
-            <Grid2 xs={2}>Slippage</Grid2>
-
-            <Grid2 xs={1}>
-              <Tooltip
-                title={
-                  <div>
-                    {" "}
-                    Slippage limits how much your trade <br /> price can vary
-                    from your desired price.
-                  </div>
-                }
-                componentsProps={{
-                  tooltip: {
-                    sx: styles.slippageInfo.tooltip,
-                  },
-                }}
-              >
-                <img
-                  style={styles.slippageInfo.icon}
-                  src={infoIcon}
-                  alt="Logo"
-                />
-              </Tooltip>
+            <Grid2 xs={1.3}>
+              <SlippageLabel />
             </Grid2>
-            <Grid2 xs={4} sx={styles.slippageComponent}>
+            <Grid2 xs={5.5} sx={styles.slippageComponent}>
               <Slippage
                 asset={assets[receive].name}
                 value={slippage}

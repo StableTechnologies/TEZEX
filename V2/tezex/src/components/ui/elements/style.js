@@ -1,6 +1,50 @@
 // eslint-disable-next-line
 const style = (theme) => {
   return {
+    slippageLabel: {
+      typography: {
+        marginLeft: "1vw",
+        fontSize: ".972vw",
+        lineHeighr: "1.176vw",
+      },
+      box: {
+        "&.MuiBox-root": {
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "flex-start",
+          alignItems: "center",
+        },
+      },
+      info: {
+        icon: {
+          height: ".925vw",
+          width: ".925vw",
+          paddingLeft: ".21vw",
+          paddingBottom: ".35vw",
+        },
+        tooltip: {
+          color: "#1E1E1E",
+          backgroundColor: "#FFFFFF",
+          padding: "0px 0px 0px 0px ",
+          fontSize: ".83vw",
+          lineHeight: "1.25vw",
+
+          display: "flex",
+          alignItems: "center",
+
+          textAlign: "center",
+          justifyContent: "center",
+
+          border: "0.069vw solid #E1E1E1",
+          "&.MuiTooltip-tooltip": {
+            minWidth: "17.22vw",
+            maxWidth: "17.22vw",
+            minHeight: "4.166vw",
+            maxHeight: "4.166vw",
+          },
+        },
+      },
+    },
     icon: {
       padding: ".2vw",
       width: "100%",

@@ -9,6 +9,7 @@ import { useWalletConnected } from "../../hooks/wallet";
 import { useSession } from "../../hooks/session";
 import { useWalletOps, WalletOps } from "../../hooks/wallet";
 import { SwapUpDownToggle } from "../../components/ui/elements/Toggles";
+import { SlippageLabel } from "../../components/ui/elements/Labels";
 import { useNetwork } from "../../hooks/network";
 
 import Box from "@mui/material/Box";
@@ -240,29 +241,7 @@ export const Swap: FC = () => {
         <Paper variant="outlined" sx={styles.paper} square>
           <Box sx={styles.paperBox}>
             <Grid2 xs={4}>
-              <Typography sx={styles.paperTypography}>Slippage</Typography>
-            </Grid2>
-            <Grid2 xs={1}>
-              <Tooltip
-                title={
-                  <div>
-                    {" "}
-                    Slippage limits how much your trade <br /> price can vary
-                    from your desired price.
-                  </div>
-                }
-                componentsProps={{
-                  tooltip: {
-                    sx: styles.slippageInfo.tooltip,
-                  },
-                }}
-              >
-                <img
-                  style={styles.slippageInfo.icon}
-                  src={infoIcon}
-                  alt="Logo"
-                />
-              </Tooltip>
+              <SlippageLabel />
             </Grid2>
 
             <Grid2 xs={7}>
