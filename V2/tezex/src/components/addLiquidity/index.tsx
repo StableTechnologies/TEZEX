@@ -187,6 +187,11 @@ export const AddLiquidity: FC = () => {
   }, [swapingFields, assets, updateBalance, walletOperations]);
 
   useEffect(() => {
+    if (session.activeComponent !== TransactingComponent.ADD_LIQUIDITY)
+      session.loadComponent(TransactingComponent.ADD_LIQUIDITY);
+  });
+
+  useEffect(() => {
     if (!loading && !active) {
       setLoading(true);
     }
@@ -210,8 +215,6 @@ export const AddLiquidity: FC = () => {
         updateBalance();
         setLoading(false);
       }
-      if (session.activeComponent !== TransactingComponent.ADD_LIQUIDITY)
-        session.loadComponent(TransactingComponent.ADD_LIQUIDITY);
     }
   }, [
     swapingFields,

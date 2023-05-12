@@ -123,6 +123,10 @@ export const RemoveLiquidity: FC = () => {
   }, [assets, updateBalance, walletOperations]);
 
   useEffect(() => {
+    if (session.activeComponent !== TransactingComponent.REMOVE_LIQUIDITY)
+      session.loadComponent(TransactingComponent.REMOVE_LIQUIDITY);
+  });
+  useEffect(() => {
     if (!loading && !active) {
       setLoading(true);
     }
@@ -134,8 +138,6 @@ export const RemoveLiquidity: FC = () => {
         updateBalance();
         setLoading(false);
       }
-      if (session.activeComponent !== TransactingComponent.REMOVE_LIQUIDITY)
-        session.loadComponent(TransactingComponent.REMOVE_LIQUIDITY);
     }
   }, [loading, active, newTransaction, session, updateSend, walletOperations]);
   return (

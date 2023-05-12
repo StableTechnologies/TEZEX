@@ -158,6 +158,10 @@ export const Swap: FC = () => {
   }, [swappingFileds, assets, updateBalance, walletOperations]);
 
   useEffect(() => {
+    if (session.activeComponent !== TransactingComponent.SWAP)
+      session.loadComponent(TransactingComponent.SWAP);
+  });
+  useEffect(() => {
     if (!loading && !active) {
       setLoading(true); // newTransaction();
     }
@@ -175,8 +179,6 @@ export const Swap: FC = () => {
         updateBalance();
         setLoading(false);
       }
-      if (session.activeComponent !== TransactingComponent.SWAP)
-        session.loadComponent(TransactingComponent.SWAP);
     }
   }, [
     swappingFileds,
