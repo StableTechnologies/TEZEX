@@ -15,7 +15,7 @@ export const SlippageLabel: FC = () => {
       <Box>
         <Typography sx={styles.slippageLabel.typography}>Slippage</Typography>
       </Box>
-      <Box>
+      <Box sx={styles.slippageLabel.box}>
         <Tooltip
           title={
             <div>

@@ -13,6 +13,8 @@ const style = (theme) => {
           flexDirection: "row",
           justifyContent: "flex-start",
           alignItems: "center",
+          alignContent: "center",
+          height: "2vw",
         },
       },
       info: {
@@ -20,7 +22,6 @@ const style = (theme) => {
           height: ".925vw",
           width: ".925vw",
           paddingLeft: ".21vw",
-          paddingBottom: ".35vw",
         },
         tooltip: {
           color: "#1E1E1E",
