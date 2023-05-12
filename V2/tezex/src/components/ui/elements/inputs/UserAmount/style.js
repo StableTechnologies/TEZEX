@@ -58,6 +58,11 @@ export const style = (theme) => {
         marginLeft: "1vw",
       },
       textFieldTextAboveGrey: {
+        "&.MuiFormControl-root": {
+          display: "flex",
+          width: "100%",
+          //marginTop: "10px",
+        },
         "& .MuiInputBase-input": {
           position: "absolute",
           zIndex: 5,
@@ -94,6 +99,11 @@ export const style = (theme) => {
         // height: "75px",
       },
       textFieldGrey: {
+        "&.MuiFormControl-root": {
+          display: "flex",
+          width: "100%",
+          //marginTop: "10px",
+        },
         "& .MuiInputBase-input": {
           position: "absolute",
           zIndex: 5,
@@ -109,7 +119,7 @@ export const style = (theme) => {
       },
       textField: {
         "& .MuiInputBase-input": {
-          position: "absolute",
+          position: "relative",
           zIndex: 5,
           width: "80%",
           right: "1vw",
