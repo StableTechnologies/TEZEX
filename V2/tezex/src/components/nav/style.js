@@ -128,17 +128,17 @@ const style = (theme) => {
       root: {
         "& .MuiTabs-flexContainer": {
           justifyContent: "space-between",
+          height: "2.98vw",
           minWidth: "15.34vw",
           maxWidth: "15.34vw",
           border: "0.07vw solid #EDEDED",
-          borderRadius: ".28vw",
+          borderRadius: ".48vw",
           display: "flex",
           position: "relative",
         },
 
         "&.MuiTabs-root": {
-          minHeight: "2.91vw",
-          maxHeight: "2.91vw",
+          minHeight: "3.2vw",
         },
         ".MuiTabs-indicator": {
           top: 0,
@@ -152,7 +152,7 @@ const style = (theme) => {
             position: "absolute",
 
             top: "0.28vw",
-            bottom: "0.28vw",
+            bottom: "0.1vw",
             left: ".28vw",
             right: ".28vw",
             borderRadius: ".48vw",
@@ -162,10 +162,13 @@ const style = (theme) => {
       },
       tab: {
         "&.MuiButtonBase-root": {
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
           fontSize: "1.11vw",
           minHeight: "2.91vw",
           minWidth: "3.0vw",
-          padding: ".56vw 1.66vw .56vw 1.66vw ",
+          padding: ".0vw 1.66vw .0vw 1.66vw ",
           zIndex: 2,
 
           color: "palette.text.primary",
