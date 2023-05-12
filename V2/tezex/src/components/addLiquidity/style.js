@@ -50,6 +50,8 @@ const style = (theme) => {
       justifyContent: "space-between",
     },
     input: {
+      width: "28.34vw",
+      height: "8.61vw",
       "& .MuiFormControl-root": {
         width: "28.34vw",
         height: "8.61vw",
@@ -105,6 +107,7 @@ const style = (theme) => {
         paddingTop: "4vw",
 
         paddingLeft: "2.22vw",
+        paddingRight: "2.22vw",
       },
       flexDirection: "column",
       paddingTop: "10vw",
@@ -112,24 +115,19 @@ const style = (theme) => {
       display: "flex",
     },
     card: {
+      display: "block",
       minHeight: "32.57vw",
+      maxHeight: "32.57vw",
       minWidth: "63.88vw",
-      borderRadius: "20px",
+      maxWidth: "63.88vw",
+      borderRadius: "1.38vw",
       zIndex: 5,
       background: "#FFFFFF",
-      border: ".28vw solid #E1E1E1",
-      "& .MuiCardContent-root": {
-        padding: "8px",
+      border: ".069vw solid #E1E1E1",
+      "&.MuiPaper-root": {
+        boxShadow: "0",
       },
-    },
-    paper: {
-      background: "#F9F9F9",
-      minHeight: "146px",
-      position: "relative",
-      bottom: "10%",
-      borderRadius: "20px",
-      zIndex: -1,
-      marginBottom: "20px",
+      "& .MuiCardContent-root": {},
     },
     root: {
       position: "relative",

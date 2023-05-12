@@ -83,7 +83,11 @@ const style = (theme) => {
       borderRadius: "1.38vw",
       zIndex: 999,
       background: "#FFFFFF",
-      border: "1px solid #E1E1E1",
+      border: "0.07vw solid #E1E1E1",
+
+      "&.MuiPaper-root": {
+        boxShadow: "0",
+      },
       "& .MuiCardContent-root": {
         padding: "8px",
       },

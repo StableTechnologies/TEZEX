@@ -17,6 +17,10 @@ const style = (theme) => {
       top: "89.4%",
       zindex: "-999",
 
+      "&.MuiPaper-root": {
+        boxShadow: "0",
+        border: "0px",
+      },
       borderRadius: "1.38vw",
       background: "#F9F9F9",
 
@@ -122,6 +126,10 @@ const style = (theme) => {
       zIndex: 999,
       background: "#FFFFFF",
       border: "0.069vw solid #E1E1E1",
+
+      "&.MuiPaper-root": {
+        boxShadow: "0",
+      },
       "& .MuiCardContent-root": {
         display: "flex",
         alignItems: "center",
