@@ -46,6 +46,9 @@ const style = (theme) => {
 
       "&.MuiCardActions-root": {
         paddingTop: "3.54vw",
+
+        paddingRight: "2.22vw",
+        paddingLeft: "2.22vw",
       },
     },
     input: {

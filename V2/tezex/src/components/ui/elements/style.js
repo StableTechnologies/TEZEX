@@ -23,7 +23,7 @@ const style = (theme) => {
     },
     slippageLabel: {
       typography: {
-        marginLeft: "1vw",
+        //   marginLeft: "1vw",
         fontSize: ".972vw",
         lineHeighr: "1.176vw",
       },
