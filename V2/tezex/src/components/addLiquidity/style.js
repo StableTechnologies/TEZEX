@@ -42,12 +42,17 @@ const style = (theme) => {
     },
     cardHeader: {
       paddingTop: "2.22vw",
+      paddingBottom: "0vw",
       paddingRight: "2.22vw",
       fontSize: "1vw",
       textAlign: "left",
     },
     cardAction: {
       justifyContent: "space-between",
+
+      "&.MuiCardActions-root": {
+        paddingTop: "3.54vw",
+      },
     },
     input: {
       width: "28.34vw",
@@ -101,10 +106,13 @@ const style = (theme) => {
     },
     tokens: {
       display: "flex",
+
+      paddingTop: "1.16vw",
     },
     cardContent: {
       "&.MuiCardContent-root": {
-        paddingTop: "4vw",
+        paddingTop: "2.22vw",
+        paddingBottom: "0vw",
 
         paddingLeft: "2.22vw",
         paddingRight: "2.22vw",
