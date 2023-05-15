@@ -1,7 +1,4 @@
 import React, { FC, useState, useEffect, useCallback } from "react";
-import xtzTzbtcIcon from "../../assets/xtzTzbtcIcon.svg";
-import sirsIcon from "../../assets/sirsIcon.svg";
-import rightArrow from "../../assets/rightArrow.svg";
 import plusIcon from "../../assets/plusIcon.svg";
 
 import { Wallet } from "../wallet";
@@ -10,7 +7,10 @@ import { Token, Asset, TransactingComponent } from "../../types/general";
 
 import { BigNumber } from "bignumber.js";
 import { UserAmountField, Slippage } from "../../components/ui/elements/inputs";
-import { SlippageLabel } from "../../components/ui/elements/Labels";
+import {
+  SlippageLabel,
+  AddliquidityTokens,
+} from "../../components/ui/elements/Labels";
 import { useWalletConnected } from "../../hooks/wallet";
 import { useSession } from "../../hooks/session";
 import { useWalletOps, WalletOps } from "../../hooks/wallet";
@@ -239,28 +239,8 @@ export const AddLiquidity: FC = () => {
       <Grid2>
         <Card sx={styles.card}>
           <CardHeader sx={styles.cardHeader} title={<NavLiquidity />} />
-          <Grid2 xs={8} lg={4} sx={styles.tokens}>
-            <Box>
-              <img
-                style={styles.sendAssetsIcon}
-                src={xtzTzbtcIcon}
-                alt="xtzTzbtcIcon"
-              />
-            </Box>
-            <Box>
-              <img
-                style={styles.rightArrow}
-                src={rightArrow}
-                alt="rightArrow"
-              />
-            </Box>
-            <Box>
-              <img
-                style={styles.recieveAssetIcon}
-                src={sirsIcon}
-                alt="sirsIcon"
-              />
-            </Box>
+          <Grid2 sx={styles.tokens}>
+            <AddliquidityTokens />
           </Grid2>
           <CardContent sx={styles.cardContent}>
             <Grid2 xs={12} sx={styles.cardContendGrid}>
@@ -275,8 +255,8 @@ export const AddLiquidity: FC = () => {
                 />
               </Grid2>
 
-              <Grid2 xs={1} sx={styles.plusIcon}>
-                <img src={plusIcon} alt="plusIcon" />
+              <Grid2 xs={1} sx={styles.plusIconGrid}>
+                <img src={plusIcon} style={styles.plusIcon} alt="plusIcon" />
               </Grid2>
 
               <Grid2 xs={5} sx={styles.input}>

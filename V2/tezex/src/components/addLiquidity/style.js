@@ -20,6 +20,9 @@ const style = (theme) => {
       alignItems: "flex-start",
     },
     plusIcon: {
+      width: ".97vw",
+    },
+    plusIconGrid: {
       position: "relative",
     },
     cardContendGrid: {
@@ -27,15 +30,6 @@ const style = (theme) => {
       justifyContent: "space-between",
       alignItems: "center",
       flexDirection: "row",
-    },
-    recieveAssetIcon: {
-      width: "6.1vw",
-    },
-    rightArrow: {
-      width: "1.67vw",
-    },
-    sendAssetsIcon: {
-      width: "7.1vw",
     },
     cardHeaderTypography: {
       fontSize: "1.4vw",
@@ -106,8 +100,9 @@ const style = (theme) => {
     },
     tokens: {
       display: "flex",
-
+      width: "100%",
       paddingTop: "1.16vw",
+      paddingLeft: "2.22vw",
     },
     cardContent: {
       "&.MuiCardContent-root": {
