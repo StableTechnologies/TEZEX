@@ -1,6 +1,26 @@
 // eslint-disable-next-line
 const style = (theme) => {
   return {
+    addLiquidityTokens: {
+      "&.MuiBox-root": {
+        width: "18.9vw",
+        alignContent: "center",
+        display: "flex",
+        flexDirection: "row",
+        justifyContent: "space-between",
+      },
+      recieveAssetIcon: {
+        width: "6.1vw",
+      },
+      rightArrow: {
+        position: "relative",
+        width: "1.67vw",
+        bottom: "0.7vw",
+      },
+      sendAssetsIcon: {
+        width: "7.1vw",
+      },
+    },
     slippageLabel: {
       typography: {
         marginLeft: "1vw",

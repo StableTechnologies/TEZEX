@@ -8,6 +8,10 @@ import Typography from "@mui/material/Typography";
 import Tooltip from "@mui/material/Tooltip";
 import infoIcon from "../../../assets/infoIcon.svg";
 
+import xtzTzbtcIcon from "../../../assets/xtzTzbtcIcon.svg";
+import sirsIcon from "../../../assets/sirsIcon.svg";
+import rightArrow from "../../../assets/rightArrow.svg";
+
 export const SlippageLabel: FC = () => {
   const styles = useStyles(style);
   return (
@@ -37,6 +41,28 @@ export const SlippageLabel: FC = () => {
           />
         </Tooltip>
       </Box>
+    </Box>
+  );
+};
+export const AddliquidityTokens: FC = () => {
+  const styles = useStyles(style);
+  return (
+    <Box sx={styles.addLiquidityTokens}>
+      <img
+        style={styles.addLiquidityTokens.sendAssetsIcon}
+        src={xtzTzbtcIcon}
+        alt="xtzTzbtcIcon"
+      />
+      <img
+        style={styles.addLiquidityTokens.rightArrow}
+        src={rightArrow}
+        alt="rightArrow"
+      />
+      <img
+        style={styles.addLiquidityTokens.recieveAssetIcon}
+        src={sirsIcon}
+        alt="sirsIcon"
+      />
     </Box>
   );
 };
