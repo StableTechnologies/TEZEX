@@ -37,7 +37,7 @@ const style = (theme) => {
     cardHeader: {
       paddingTop: "2.22vw",
       paddingBottom: "0vw",
-      paddingRight: "2.22vw",
+      paddingLeft: "2.22vw",
       fontSize: "1vw",
       textAlign: "left",
     },
