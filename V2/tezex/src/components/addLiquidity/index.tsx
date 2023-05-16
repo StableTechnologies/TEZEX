@@ -284,7 +284,7 @@ export const AddLiquidity: FC = () => {
             </Grid2>
           </CardContent>
           <CardActions sx={styles.cardAction}>
-            <Grid2 xs={1.3}>
+            <Grid2 xs={1.3} sx={styles.slippageComponent}>
               <SlippageLabel />
             </Grid2>
             <Grid2 xs={5.5} sx={styles.slippageComponent}>

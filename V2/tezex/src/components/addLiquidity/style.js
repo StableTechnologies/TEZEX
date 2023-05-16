@@ -15,6 +15,7 @@ const style = (theme) => {
       lineHeight: "1.18vw",
     },
     infoGrid: {
+      marginTop: "0.694vw",
       flexDirection: "row",
       display: "inline-flex",
       alignItems: "flex-start",
@@ -59,16 +60,16 @@ const style = (theme) => {
         height: "8.61vw",
       },
     },
-    slippageContainer: {
-      display: "flex",
-      width: "100%",
-      alignItems: "center",
-      flexDirection: "row",
+    slippageBox: {
       "& .MuiGrid2-root": {},
     },
 
     slippageComponent: {
-      "& .MuiGrid2-root": {},
+      "&.MuiGrid2-root": {
+        position: "relative",
+        paddingTop: "1.46vw",
+      },
+      // paddingTop: "10px",
     },
     slippage: {
       text: {},
