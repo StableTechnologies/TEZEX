@@ -46,7 +46,7 @@ export const LeftInput: FC<ILeftInput> = (props) => {
           endAdornment: (
             <InputAdornment position="end">
               <Box sx={styles.leftInput.inputAdornment.box}>
-                <Box>
+                <Box sx={styles.leftInput.inputAdornment.box}>
                   <img
                     style={styles.leftInput.inputAdornment.img}
                     src={process.env.PUBLIC_URL + props.asset.logo}
