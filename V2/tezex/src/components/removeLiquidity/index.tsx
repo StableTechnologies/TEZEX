@@ -158,6 +158,7 @@ export const RemoveLiquidity: FC = () => {
                 />
               </Box>
               <Button
+                sx={styles.useMax}
                 onClick={(
                   event: React.MouseEvent<HTMLButtonElement, MouseEvent>
                 ) => {
@@ -169,7 +170,7 @@ export const RemoveLiquidity: FC = () => {
                   sx={
                     useMax
                       ? styles.useMaxTypographyEnabled
-                      : styles.useMaxTypographyEnabled
+                      : styles.useMaxTypographyDisabled
                   }
                 >
                   {"Use Max"}

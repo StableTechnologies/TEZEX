@@ -4,9 +4,22 @@ const style = (theme) => {
     wallet: {
       width: "28.33vw",
       height: "4.16vw",
+
       position: "absolute",
-      top: "79.4%",
+      bottom: "0%",
       justifyContent: "center",
+      paddingBottom: "2.22vw",
+    },
+    useMax: {
+      "&.MuiButtonBase-root": {
+        marginLeft: "0px",
+
+        justifyContent: "flex-start",
+        paddingLeft: "1.11vw",
+      },
+      "&.MuiTouchRipple-root": {
+        width: "2vw",
+      },
     },
     useMaxTypographyDisabled: {
       fontSize: ".97vw",
@@ -21,28 +34,37 @@ const style = (theme) => {
     cardContentBox: {
       display: "flex",
 
-      marginLeft: "2.22vw",
+      paddingLeft: "0vw",
       position: "absolute",
       top: "33%",
-      justifyContent: "center",
+      justifyContent: "flex-start",
       alignItems: "center",
       flexDirection: "row",
+      "&.MuiBox-root": {
+        justifyContent: "flex-start",
+        alignItems: "center",
+        flexDirection: "row",
+      },
     },
     headerTypography: {
       fontSize: "1.4vw",
     },
     cardHeader: {
+      paddingLeft: "2.22vw",
       paddingTop: "2.22vw",
       fontSize: "1vw",
       textAlign: "left",
     },
     cardcontent: {
       "&.MuiCardContent-root": {
+        display: "flex",
+        justifyContent: "flex-start",
+        paddingLeft: "2.22vw",
         //paddingTop: "0px",
       },
       "& .MuiFormControl-root": {
-        width: "28.34vw",
-        height: "6.94vw",
+        // width: "28.34vw",
+        //  height: "6.94vw",
       },
     },
     cardAction: {
