@@ -15,9 +15,10 @@ export const style = (theme) => {
         box: {
           display: "flex",
           flexDirection: "row",
+          alignItems: "center",
         },
         img: {
-          marginRight: "1vw",
+          marginRight: "0.28vw",
           height: "1.61vw",
         },
         typography: {
