@@ -32,7 +32,7 @@ export const style = (theme) => {
       },
       input: {
         textAlign: "left",
-        marginLeft: "2vw",
+        marginLeft: "1.11vw",
         fontSize: "1.25vw",
         lineHeight: "1.51vw",
       },
