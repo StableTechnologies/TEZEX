@@ -7,13 +7,18 @@ const style = (theme) => {
       lineHeight: "2.01vw",
     },
 
+    spinnerBox: {
+      position: "absolute",
+      left: "3.38vw",
+      top: "1.11vw",
+    },
     spinner: {
       maxWidth: "1.85vw",
       maxHeight: "1.85vw",
       color: "#A1E3FF",
     },
     walletBox: {
-      width: "100%",
+      width: "20vw",
       display: "flex",
       flexDirection: "row",
       justifyContent: "center",

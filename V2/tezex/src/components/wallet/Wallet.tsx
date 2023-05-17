@@ -124,7 +124,10 @@ export const Wallet: FC<IWallet> = (props) => {
           disabled={disabled}
         >
           <Box sx={styles.walletBox}>
-            <Box visibility={spinner ? "visible" : "hidden"}>
+            <Box
+              sx={styles.spinnerBox}
+              visibility={spinner ? "visible" : "hidden"}
+            >
               <CircularProgress sx={styles.spinner} />
             </Box>
             <Typography sx={styles.transactionStatus}>
