@@ -12,6 +12,7 @@ import TextField from "@mui/material/TextField";
 import liquiditySwapIcon from "../../../../../assets/liquiditySwapIcon.svg";
 
 import { WalletConnected } from "../../../../session/WalletConnected";
+import { WalletDisconnected } from "../../../../session/WalletDisconnected";
 
 import { style } from "./style";
 import useStyles from "../../../../../hooks/styles";
@@ -45,14 +46,7 @@ export const RightInput: FC<IRigthInput> = (props) => {
       <Box sx={styles.rightInput.inputAdornmentStart.boxLabel}>
         <Typography sx={styles.rightInput.label}>{props.label}</Typography>
       </Box>
-      <Box
-        sx={{
-          "&.MuiBox-root": {
-            marginBottom: "0px",
-            marginTop: props.label ? "0px" : "0px",
-          },
-        }}
-      >
+      <Box sx={{}}>
         <TextField
           autoFocus={props.readOnly ? false : true}
           onChange={props.updateAmount}
@@ -112,7 +106,7 @@ export const RightInput: FC<IRigthInput> = (props) => {
                     : styles.rightInput.inputAdornmentEnd.adornmentLabelAbove
                 }
               >
-                <Box>
+                <WalletDisconnected>
                   <Box visibility={props.swap ? "visible" : "hidden"}>
                     <Button
                       onClick={props.toggle}
@@ -125,8 +119,23 @@ export const RightInput: FC<IRigthInput> = (props) => {
                       />
                     </Button>
                   </Box>
+                </WalletDisconnected>
 
-                  <WalletConnected>
+                <WalletConnected>
+                  <Box>
+                    <Box visibility={props.swap ? "visible" : "hidden"}>
+                      <Button
+                        onClick={props.toggle}
+                        sx={styles.rightInput.inputAdornmentEnd.button}
+                      >
+                        <img
+                          style={styles.rightInput.inputAdornmentEnd.img}
+                          src={liquiditySwapIcon}
+                          alt="logo"
+                        />
+                      </Button>
+                    </Box>
+
                     <Box sx={styles.rightInput.balance.grid}>
                       <Typography
                         color="textSecondary"
@@ -137,8 +146,8 @@ export const RightInput: FC<IRigthInput> = (props) => {
                         Balance: {props.balance} {props.asset.name}
                       </Typography>
                     </Box>
-                  </WalletConnected>
-                </Box>
+                  </Box>
+                </WalletConnected>
               </InputAdornment>
             ),
           }}
