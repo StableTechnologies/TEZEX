@@ -25,7 +25,7 @@ import CardHeader from "@mui/material/CardHeader";
 import Typography from "@mui/material/Typography";
 import style from "./style";
 import useStyles from "../../hooks/styles";
-
+import sirsSmall from "../../assets/sirsSmall.svg";
 export interface IAddLiquidity {
   children: null;
 }
@@ -275,6 +275,11 @@ export const AddLiquidity: FC = () => {
             <Grid2 xs={12} sx={styles.infoGrid}>
               <Typography noWrap sx={styles.infoText}>
                 You will recieve about{" "}
+                <img
+                  style={styles.infoTextIcon}
+                  src={sirsSmall}
+                  alt="SirsLogo"
+                />
                 <Typography sx={styles.infoRecieve}>
                   {" "}
                   {receiveAmount.toFixed()} Sirs

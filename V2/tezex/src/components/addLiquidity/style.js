@@ -2,11 +2,16 @@
 const style = (theme) => {
   return {
     infoRecieve: {
-      marginLeft: ".37vw",
+      // marginLeft: ".37vw",
       marginRight: ".37vw",
       fontSize: ".97vw",
       fontWeight: "700",
       lineHeight: "1.18vw",
+    },
+    infoTextIcon: {
+      width: "1.11vw",
+      marginLeft: ".27vw",
+      marginRight: ".27vw",
     },
     infoText: {
       display: "inline-flex",
