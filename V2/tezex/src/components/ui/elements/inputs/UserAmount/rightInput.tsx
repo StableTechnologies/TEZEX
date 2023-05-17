@@ -100,13 +100,9 @@ export const RightInput: FC<IRigthInput> = (props) => {
             endAdornment: (
               <InputAdornment
                 position="end"
-                sx={
-                  props.label
-                    ? styles.rightInput.inputAdornmentEnd.adornmentLabelAbove
-                    : styles.rightInput.inputAdornmentEnd.adornmentLabelAbove
-                }
+                sx={styles.rightInput.inputAdornmentEnd.adornmentLabelAbove}
               >
-                <WalletDisconnected>
+                <Box>
                   <Box visibility={props.swap ? "visible" : "hidden"}>
                     <Button
                       onClick={props.toggle}
@@ -119,24 +115,9 @@ export const RightInput: FC<IRigthInput> = (props) => {
                       />
                     </Button>
                   </Box>
-                </WalletDisconnected>
 
-                <WalletConnected>
-                  <Box>
-                    <Box visibility={props.swap ? "visible" : "hidden"}>
-                      <Button
-                        onClick={props.toggle}
-                        sx={styles.rightInput.inputAdornmentEnd.button}
-                      >
-                        <img
-                          style={styles.rightInput.inputAdornmentEnd.img}
-                          src={liquiditySwapIcon}
-                          alt="logo"
-                        />
-                      </Button>
-                    </Box>
-
-                    <Box sx={styles.rightInput.balance.grid}>
+                  <Box sx={styles.rightInput.balance.grid}>
+                    <WalletConnected>
                       <Typography
                         color="textSecondary"
                         variant="subtitle2"
@@ -145,9 +126,9 @@ export const RightInput: FC<IRigthInput> = (props) => {
                       >
                         Balance: {props.balance} {props.asset.name}
                       </Typography>
-                    </Box>
+                    </WalletConnected>
                   </Box>
-                </WalletConnected>
+                </Box>
               </InputAdornment>
             ),
           }}

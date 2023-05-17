@@ -182,16 +182,22 @@ export const style = (theme) => {
       },
       inputAdornmentEnd: {
         adornmentLabelAbove: {
-          display: "flex",
+          display: "block",
           flexDirection: "row",
           justifyContent: "flex-end",
           width: "100%",
+          bottom: "4.1vw",
           padding: 0,
           zIndex: 0,
           right: "1vw",
 
-          position: "relative",
-          bottom: "3vw",
+          "& .MuiBox-root": {
+            minHeight: "2vw",
+            maxHeight: "2vw",
+          },
+          "&.MuiInputAdornment-root": {
+            position: "absolute",
+          },
         },
         adornment: {
           display: "flex",
@@ -205,7 +211,12 @@ export const style = (theme) => {
           position: "relative",
           bottom: "3vw",
         },
+
         button: {
+          padding: "0px 0px 0px 0px",
+          position: "absolute",
+          top: "1.11vw",
+          right: ".3vw",
           justifyContent: "flex-end",
           width: "100%",
         },
