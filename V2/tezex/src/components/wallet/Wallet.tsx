@@ -48,8 +48,8 @@ export const Wallet: FC<IWallet> = (props) => {
           setSpinner(false);
           return transactionStatus as string;
         case TransactionStatus.MODIFIED:
-          setDisabled(false);
-          setSpinner(false);
+          setDisabled(true);
+          setSpinner(true);
           return props.children;
         case TransactionStatus.SUFFICIENT_BALANCE:
           setDisabled(false);
