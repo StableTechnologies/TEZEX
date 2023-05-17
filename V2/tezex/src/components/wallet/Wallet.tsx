@@ -36,6 +36,7 @@ export const Wallet: FC<IWallet> = (props) => {
   >(undefined);
   const walletText = useCallback((): string | undefined => {
     if (props.transaction && props.transaction.sendAmount[0].decimal.eq(0)) {
+      setDisabled(true);
       setSpinner(false);
       return "Enter Amount";
     } else if (props.transaction) {
@@ -46,6 +47,10 @@ export const Wallet: FC<IWallet> = (props) => {
           setDisabled(true);
           setSpinner(false);
           return transactionStatus as string;
+        case TransactionStatus.MODIFIED:
+          setDisabled(false);
+          setSpinner(false);
+          return props.children;
         case TransactionStatus.SUFFICIENT_BALANCE:
           setDisabled(false);
           setSpinner(false);
@@ -53,7 +58,7 @@ export const Wallet: FC<IWallet> = (props) => {
         default:
           setDisabled(true);
           setSpinner(true);
-          return props.children;
+          return transactionStatus as string;
       }
     }
   }, [props.transaction, props.children]);
