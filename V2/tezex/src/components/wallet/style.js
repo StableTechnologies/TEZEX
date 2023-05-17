@@ -66,8 +66,8 @@ const style = (theme) => {
       height: "4.16vw",
       backgroundColor: "#000",
       color: "white",
-      border: "1px solid black",
-      borderRadius: "16px",
+
+      borderRadius: "1.11vw",
       fontWeight: "500",
       fontSize: "1.66vw",
       lineHeight: "2.01vw",
