@@ -10,7 +10,9 @@ const style = (theme) => {
       display: "flex",
       justifyContent: "space-between",
       alignItems: "center",
-      paddingTop: "6vw",
+      paddingTop: "5.2vw",
+      paddingLeft: "1.6vw",
+      paddingRight: "1.11vw",
     },
     paper: {
       position: "absolute",
