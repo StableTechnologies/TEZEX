@@ -41,8 +41,18 @@ const style = (theme) => {
       },
     },
 
+    mainWindowBackground: {
+      position: "absolute",
+      zindex: "-1",
+      top: "6.9vw",
+      display: "flex",
+      maxHeight: "51.66vw",
+      minHeight: "51.66vw",
+      marginLeft: "2.05vw",
+    },
     mainWindow: {
       height: "100vh",
+      width: "100%",
       background: "#FEFEFE",
     },
   };
