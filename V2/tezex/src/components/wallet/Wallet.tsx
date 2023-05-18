@@ -108,7 +108,11 @@ export const Wallet: FC<IWallet> = (props) => {
       return (
         <Button onClick={disconnect}>
           <Box sx={styles.walletConnectedHeader}>
-            <img src={tzwalletlogo} alt="tz " />
+            <img
+              src={tzwalletlogo}
+              style={styles.walletConnectedHeader.logo}
+              alt="tz "
+            />
             {walletInfo &&
               walletInfo.address &&
               shorten(5, 5, walletInfo.address)}

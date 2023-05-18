@@ -26,13 +26,27 @@ const style = (theme) => {
     },
 
     walletConnectedHeader: {
+      logo: {
+        minHeight: "1.39vw",
+        maxHeight: "1.39vw",
+      },
       background:
         "linear-gradient(92.04deg, rgba(171, 240, 255, 0.2) 4.41%, #F9FEFF 84.62%)",
 
-      border: "0.5px solid #C4C4C4",
-      borderRadius: "4px",
-      display: "inline-flex",
+      border: "0.035vw solid #C4C4C4",
+      display: "flex",
       alignItems: "center",
+      justifyContent: "space-around",
+
+      minHeight: "2.7vw",
+      minWidth: "10.24vw",
+
+      borderRadius: ".55vw",
+      fontWeight: "500",
+      fontSize: "1.11vw",
+      lineHeight: "1.34vw",
+
+      textTransform: "none",
     },
 
     transactDisabled: {
