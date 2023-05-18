@@ -53,8 +53,8 @@ const style = (theme) => {
       "&.MuiCardActions-root": {
         paddingTop: "3.54vw",
 
-        paddingRight: "2.22vw",
-        paddingLeft: "2.22vw",
+        paddingRight: "1.597vw",
+        paddingLeft: "1.597vw",
       },
     },
     input: {
@@ -118,8 +118,8 @@ const style = (theme) => {
         paddingTop: "2.22vw",
         paddingBottom: "0vw",
 
-        paddingLeft: "2.22vw",
-        paddingRight: "2.22vw",
+        paddingLeft: "1.597vw",
+        paddingRight: "1.597vw",
       },
       flexDirection: "column",
       paddingTop: "10vw",
