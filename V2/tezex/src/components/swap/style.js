@@ -46,6 +46,9 @@ const style = (theme) => {
       fontSize: "1.4vw",
     },
     cardHeader: {
+      paddingTop: "1.59vw",
+      paddingBottom: "0vw",
+      paddingLeft: "1.59vw",
       fontSize: "1vw",
       textAlign: "left",
     },
