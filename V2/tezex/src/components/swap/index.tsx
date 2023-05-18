@@ -218,9 +218,9 @@ export const Swap: FC = () => {
               />
             </Grid2>
 
-            <Grid2 xs={12} sx={styles.swapToggle}>
+            <Box sx={styles.swapToggle}>
               <SwapUpDownToggle toggle={swapFields} />
-            </Grid2>
+            </Box>
 
             <Grid2 xs={11.2} sx={styles.input2}>
               <UserAmountField

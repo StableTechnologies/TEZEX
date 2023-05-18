@@ -67,25 +67,25 @@ const style = (theme) => {
       },
     },
     icon: {
-      padding: ".2vw",
-      width: "100%",
-      height: "100%",
+      padding: "0vw",
+      height: "1.33vw",
     },
 
     box: {
       display: "flex",
       justifyContent: "center",
 
-      minWidth: "2.2vw",
-      minHeight: "2.2vw",
+      minWidth: "2.22vw",
+      minHeight: "2.22vw",
     },
 
     button: {
-      minWidth: "2.4vw",
-      minHeight: "2.4vw",
+      minWidth: "2.22vw",
+      minHeight: "2.22vw",
+      padding: "0px 0px 0px 0px ",
 
-      maxWidth: "2.4vw",
-      maxHeight: "2.4vw",
+      maxWidth: "2.22vw",
+      maxHeight: "2.22vw",
       boxShadow: "0px 0.28vw 1.38vw rgba(181, 181, 181, 0.25)",
       background: "#FFFFFF",
       borderRadius: ".55vw",

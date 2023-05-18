@@ -36,8 +36,9 @@ const style = (theme) => {
       justifyContent: "center",
     },
     swapToggle: {
+      display: "flex",
       position: "absolute",
-      top: "37.4%",
+      top: "38.3%",
       zIndex: 5,
       height: "1vw",
     },

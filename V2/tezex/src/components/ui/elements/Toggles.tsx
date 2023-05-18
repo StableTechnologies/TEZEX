@@ -15,9 +15,7 @@ export const SwapUpDownToggle: FC<IToggle> = (props) => {
   const styles = useStyles(style);
   return (
     <Button sx={styles.button} onClick={props.toggle}>
-      <Box sx={styles.box}>
-        <img style={styles.icon} src={swapIcon} alt="swapIcon" />
-      </Box>
+      <img style={styles.icon} src={swapIcon} alt="swapIcon" />
     </Button>
   );
 };
