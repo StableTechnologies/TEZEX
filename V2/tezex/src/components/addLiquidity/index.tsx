@@ -16,7 +16,6 @@ import { useSession } from "../../hooks/session";
 import { useWalletOps, WalletOps } from "../../hooks/wallet";
 import { useNetwork } from "../../hooks/network";
 
-import Box from "@mui/material/Box";
 import Grid2 from "@mui/material/Unstable_Grid2";
 import Card from "@mui/material/Card";
 import CardActions from "@mui/material/CardActions";

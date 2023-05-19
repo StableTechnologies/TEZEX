@@ -20,12 +20,10 @@ import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
-import Tooltip from "@mui/material/Tooltip";
 
 import style from "./style";
 import useStyles from "../../hooks/styles";
 
-import infoIcon from "../../assets/infoIcon.svg";
 export interface ISwapToken {
   children: null;
 }

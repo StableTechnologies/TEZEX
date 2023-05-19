@@ -2,8 +2,6 @@ import React, { FC } from "react";
 import Button from "@mui/material/Button";
 import swapIcon from "../../../assets/swapIcon.svg";
 
-import Box from "@mui/material/Box";
-
 import style from "./style";
 import useStyles from "../../../hooks/styles";
 
