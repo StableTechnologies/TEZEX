@@ -12,7 +12,6 @@ import TextField from "@mui/material/TextField";
 import liquiditySwapIcon from "../../../../../assets/liquiditySwapIcon.svg";
 
 import { WalletConnected } from "../../../../session/WalletConnected";
-import { WalletDisconnected } from "../../../../session/WalletDisconnected";
 
 import { style } from "./style";
 import useStyles from "../../../../../hooks/styles";

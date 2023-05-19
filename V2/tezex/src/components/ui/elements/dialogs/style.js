@@ -7,10 +7,12 @@ const style = (theme) => {
         alignItems: "center",
       },
       "& .MuiPaper-root": {
-        position: "absolute",
+        position: "relative",
         display: "flex",
         borderRadius: "1.38vw",
         alignItems: "center",
+        alignContent: "center",
+        justifyContent: "space-around",
         height: "21.04vw",
         width: "29.51vw",
         minHeight: "21.04vw",
