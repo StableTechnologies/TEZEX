@@ -5,6 +5,7 @@ import { Token, Asset, TransactingComponent } from "../../types/general";
 import { BigNumber } from "bignumber.js";
 import { UserAmountField } from "../../components/ui/elements/inputs";
 import { Wallet } from "../wallet";
+import { NavLiquidity } from "../nav/NavLiquidity";
 import { useWalletConnected } from "../../hooks/wallet";
 import { useSession } from "../../hooks/session";
 import { useNetwork } from "../../hooks/network";
@@ -122,6 +123,10 @@ export const RemoveLiquidity: FC = () => {
   }, [assets, updateBalance, walletOperations]);
 
   useEffect(() => {
+    if (session.activeComponent !== TransactingComponent.REMOVE_LIQUIDITY)
+      session.loadComponent(TransactingComponent.REMOVE_LIQUIDITY);
+  });
+  useEffect(() => {
     if (!loading && !active) {
       setLoading(true);
     }
@@ -133,22 +138,13 @@ export const RemoveLiquidity: FC = () => {
         updateBalance();
         setLoading(false);
       }
-      if (session.activeComponent !== TransactingComponent.REMOVE_LIQUIDITY)
-        session.loadComponent(TransactingComponent.REMOVE_LIQUIDITY);
     }
   }, [loading, active, newTransaction, session, updateSend, walletOperations]);
   return (
     <Grid2 container sx={styles.root}>
       <Grid2>
         <Card sx={styles.card}>
-          <CardHeader
-            sx={styles.cardHeader}
-            title={
-              <Typography sx={styles.headerTypography}>
-                {"Remove Liquidity"}
-              </Typography>
-            }
-          />
+          <CardHeader sx={styles.cardHeader} title={<NavLiquidity />} />
           <CardContent sx={styles.cardcontent}>
             <Box sx={styles.cardContentBox}>
               <Box sx={styles.input1}>
@@ -162,6 +158,7 @@ export const RemoveLiquidity: FC = () => {
                 />
               </Box>
               <Button
+                sx={styles.useMax}
                 onClick={(
                   event: React.MouseEvent<HTMLButtonElement, MouseEvent>
                 ) => {
@@ -173,7 +170,7 @@ export const RemoveLiquidity: FC = () => {
                   sx={
                     useMax
                       ? styles.useMaxTypographyEnabled
-                      : styles.useMaxTypographyEnabled
+                      : styles.useMaxTypographyDisabled
                   }
                 >
                   {"Use Max"}

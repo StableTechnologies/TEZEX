@@ -2,22 +2,10 @@ import React, { memo, FC, useCallback, useState, useEffect } from "react";
 
 import { Asset } from "../../../../../types/general";
 
-import Grid2 from "@mui/material/Unstable_Grid2";
-import Typography from "@mui/material/Typography";
-import Box from "@mui/material/Box";
-
-import Button from "@mui/material/Button";
-import InputAdornment from "@mui/material/InputAdornment";
-import TextField from "@mui/material/TextField";
-
-import liquiditySwapIcon from "../../../../../assets/liquiditySwapIcon.svg";
-
-import { WalletConnected } from "../../../../session/WalletConnected";
-
-import { style } from "./style";
-import useStyles from "../../../../../hooks/styles";
-
 import { BigNumber } from "bignumber.js";
+import { LeftInput } from "./leftInput";
+import { RightInput } from "./rightInput";
+
 export interface IAmountField {
   asset: Asset;
   onChange?: (value: string) => void;
@@ -32,7 +20,6 @@ export interface IAmountField {
 }
 
 const AmountField: FC<IAmountField> = (props) => {
-  const styles = useStyles(style);
   const [inputString, setInputString] = useState<string>(props.value);
   const [lastString, setLastString] = useState<string>("");
   const [editing, setEditing] = useState<boolean>(false);
@@ -80,6 +67,10 @@ const AmountField: FC<IAmountField> = (props) => {
     }
   }, [props, inputString]);
 
+  const amountNotEntered: () => boolean = useCallback(() => {
+    return inputString === "0.00" && lastString !== "0.00";
+  }, [inputString, lastString]);
+
   const updateAmount = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       e.preventDefault();
@@ -122,161 +113,31 @@ const AmountField: FC<IAmountField> = (props) => {
     switch (props.variant) {
       case "LeftInput":
         return (
-          <Grid2 container sx={styles.leftInput.gridContainter}>
-            <TextField
-              autoFocus
-              onChange={updateAmount}
-              value={inputString}
-              id="filled-start-adornment"
-              sx={styles.leftInput.textField}
-              InputProps={{
-                disableUnderline: true,
-
-                onKeyDown:
-                  !editing && inputString === "0.00"
-                    ? onKeyDown
-                    : () => {
-                        null;
-                      },
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <Box sx={styles.leftInput.inputAdornment.box}>
-                      <div>
-                        <img
-                          style={styles.leftInput.inputAdornment.img}
-                          src={process.env.PUBLIC_URL + props.asset.logo}
-                          alt="logo"
-                        />
-                      </div>
-                      <div>
-                        <Typography
-                          sx={styles.leftInput.inputAdornment.typography}
-                        >
-                          {props.asset.label}
-                        </Typography>
-                      </div>
-                    </Box>
-                  </InputAdornment>
-                ),
-              }}
-              inputProps={{
-                readOnly: props.readOnly,
-
-                style: {
-                  ...styles.leftInput.input,
-                },
-              }}
-              variant="standard"
-            />
-            <WalletConnected>
-              <Typography
-                color="textSecondary"
-                variant="subtitle2"
-                hidden={props.balance ? false : true}
-                sx={styles.leftInput.balanceTypography}
-              >
-                balance: {props.balance} {props.asset.name}
-              </Typography>
-            </WalletConnected>
-          </Grid2>
+          <LeftInput
+            asset={props.asset}
+            balance={props.balance}
+            readOnly={props.readOnly}
+            updateAmount={updateAmount}
+            onKeyDown={onKeyDown}
+            inputString={inputString}
+            editing={editing}
+          />
         );
       default:
         return (
-          <Grid2 container>
-            <Grid2
-              container
-              sx={
-                props.darker
-                  ? styles.rightInput.gridContainter.darker
-                  : styles.rightInput.gridContainter.lighter
-              }
-            >
-              <TextField
-                autoFocus={props.readOnly ? false : true}
-                onChange={updateAmount}
-                value={inputString}
-                id="filled-start-adornment"
-                sx={styles.rightInput.textField}
-                InputProps={{
-                  disableUnderline: true,
-                  onKeyDown:
-                    !editing && inputString === "0.00"
-                      ? onKeyDown
-                      : () => {
-                          null;
-                        },
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Box sx={styles.rightInput.inputAdornmentStart.box}>
-                        <Box
-                          sx={styles.rightInput.inputAdornmentStart.boxLabel}
-                        >
-                          {props.label}
-                        </Box>
-                        <Box
-                          sx={styles.rightInput.inputAdornmentStart.boxToken}
-                        >
-                          <div>
-                            <img
-                              style={styles.rightInput.inputAdornmentStart.img}
-                              src={process.env.PUBLIC_URL + props.asset.logo}
-                              alt="logo"
-                            />
-                          </div>
-                          <Typography
-                            sx={
-                              styles.rightInput.inputAdornmentStart.typography
-                            }
-                          >
-                            {props.asset.label}
-                          </Typography>
-                        </Box>
-                      </Box>
-                    </InputAdornment>
-                  ),
-
-                  endAdornment: (
-                    <InputAdornment
-                      position="end"
-                      sx={styles.rightInput.inputAdornmentEnd.adornment}
-                    >
-                      <Box visibility={props.swap ? "visible" : "hidden"}>
-                        <Button
-                          onClick={toggle}
-                          sx={styles.rightInput.inputAdornmentEnd.button}
-                        >
-                          <img
-                            style={styles.rightInput.inputAdornmentEnd.img}
-                            src={liquiditySwapIcon}
-                            alt="logo"
-                          />
-                        </Button>
-                      </Box>
-                    </InputAdornment>
-                  ),
-                }}
-                inputProps={{
-                  readOnly: props.readOnly,
-                  style: {
-                    ...styles.rightInput.input,
-                  },
-                }}
-                variant="standard"
-              />
-              <WalletConnected>
-                <Grid2 sx={styles.rightInput.balance.grid}>
-                  <Typography
-                    color="textSecondary"
-                    variant="subtitle2"
-                    hidden={props.balance ? false : true}
-                    sx={styles.rightInput.balance.typography}
-                  >
-                    Balance: {props.balance} {props.asset.name}
-                  </Typography>
-                </Grid2>
-              </WalletConnected>
-            </Grid2>
-          </Grid2>
+          <RightInput
+            asset={props.asset}
+            balance={props.balance}
+            readOnly={props.readOnly}
+            updateAmount={updateAmount}
+            onKeyDown={onKeyDown}
+            inputString={inputString}
+            noUserActionCheck={amountNotEntered}
+            toggle={toggle}
+            swap={props.swap}
+            editing={editing}
+            label={props.label}
+          />
         );
     }
   };

@@ -9,6 +9,7 @@ import { useWalletConnected } from "../../hooks/wallet";
 import { useSession } from "../../hooks/session";
 import { useWalletOps, WalletOps } from "../../hooks/wallet";
 import { SwapUpDownToggle } from "../../components/ui/elements/Toggles";
+import { SlippageLabel } from "../../components/ui/elements/Labels";
 import { useNetwork } from "../../hooks/network";
 
 import Box from "@mui/material/Box";
@@ -19,15 +20,18 @@ import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
+import Tooltip from "@mui/material/Tooltip";
+
 import style from "./style";
 import useStyles from "../../hooks/styles";
 
+import infoIcon from "../../assets/infoIcon.svg";
 export interface ISwapToken {
   children: null;
 }
 
 export const Swap: FC = () => {
-  const classes = useStyles(style);
+  const styles = useStyles(style);
   const network = useNetwork();
   const walletOperations: WalletOps = useWalletOps(TransactingComponent.SWAP);
   const isWalletConnected = useWalletConnected();
@@ -154,6 +158,10 @@ export const Swap: FC = () => {
   }, [swappingFileds, assets, updateBalance, walletOperations]);
 
   useEffect(() => {
+    if (session.activeComponent !== TransactingComponent.SWAP)
+      session.loadComponent(TransactingComponent.SWAP);
+  });
+  useEffect(() => {
     if (!loading && !active) {
       setLoading(true); // newTransaction();
     }
@@ -171,8 +179,6 @@ export const Swap: FC = () => {
         updateBalance();
         setLoading(false);
       }
-      if (session.activeComponent !== TransactingComponent.SWAP)
-        session.loadComponent(TransactingComponent.SWAP);
     }
   }, [
     swappingFileds,
@@ -192,19 +198,17 @@ export const Swap: FC = () => {
       session.loadComponent(TransactingComponent.SWAP);
   });
   return (
-    <Grid2 container sx={classes.root}>
+    <Grid2 container sx={styles.root}>
       <Grid2>
-        <Card sx={classes.card}>
+        <Card sx={styles.card}>
           <CardHeader
-            sx={classes.cardHeader}
+            sx={styles.cardHeader}
             title={
-              <Typography sx={classes.cardHeaderTypography}>
-                {"Swap"}
-              </Typography>
+              <Typography sx={styles.cardHeaderTypography}>{"Swap"}</Typography>
             }
           />
-          <CardContent sx={classes.cardcontent}>
-            <Grid2 xs={12} sx={classes.input1}>
+          <CardContent sx={styles.cardcontent}>
+            <Grid2 xs={11.2} sx={styles.input1}>
               <UserAmountField
                 asset={assets[send]}
                 onChange={updateSend}
@@ -214,11 +218,11 @@ export const Swap: FC = () => {
               />
             </Grid2>
 
-            <Grid2 xs={12} sx={classes.swapToggle}>
+            <Box sx={styles.swapToggle}>
               <SwapUpDownToggle toggle={swapFields} />
-            </Grid2>
+            </Box>
 
-            <Grid2 xs={12} sx={classes.input2}>
+            <Grid2 xs={11.2} sx={styles.input2}>
               <UserAmountField
                 asset={assets[receive]}
                 value={receiveAmount.toFixed()}
@@ -227,8 +231,8 @@ export const Swap: FC = () => {
               />
             </Grid2>
           </CardContent>
-          <CardActions sx={classes.cardAction}>
-            <Box sx={classes.transact}>
+          <CardActions sx={styles.cardAction}>
+            <Box sx={styles.transact}>
               <Wallet transaction={active} callback={transact}>
                 {"Swap Tokens"}
               </Wallet>
@@ -236,16 +240,20 @@ export const Swap: FC = () => {
           </CardActions>
         </Card>
 
-        <Paper variant="outlined" sx={classes.paper} square>
-          <Box sx={classes.paperBox}>
-            <Typography sx={classes.paperTypography}>Slippage</Typography>
+        <Paper variant="outlined" sx={styles.paper} square>
+          <Box sx={styles.paperBox}>
+            <Grid2 xs={4}>
+              <SlippageLabel />
+            </Grid2>
 
-            <Slippage
-              asset={assets[receive].name}
-              value={slippage}
-              onChange={updateSlippage}
-              inverse={true}
-            />
+            <Grid2 xs={7}>
+              <Slippage
+                asset={assets[receive].name}
+                value={slippage}
+                onChange={updateSlippage}
+                inverse={true}
+              />
+            </Grid2>
           </Box>
         </Paper>
       </Grid2>

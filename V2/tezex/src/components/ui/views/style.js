@@ -8,14 +8,19 @@ const style = (theme) => {
         alignItems: "center",
         width: "100%",
         minHeight: "5vw",
+        maxHeight: "5vw",
         left: "0px",
         top: "0px",
         background: "#FFFFFF",
-        boxShadow: "4px 4px 4px rgba(204, 204, 204, 0.25)",
+        marginBottom: ".28vw",
+        boxShadow: ".28vw .28vw .28vw rgba(204, 204, 204, 0.25)",
       },
 
       logo: {
+        position: "relative",
         maxWidth: "11.35vw",
+        marginLeft: "1.39vw",
+        top: ".17vw",
       },
 
       nav: {
@@ -25,7 +30,7 @@ const style = (theme) => {
       wallet: {
         position: "relative",
         left: "51vw",
-        justifyContent: "flexend",
+        justifyContent: "lefflexend",
         display: "flex",
       },
     },
@@ -36,9 +41,19 @@ const style = (theme) => {
       },
     },
 
+    mainWindowBackground: {
+      position: "absolute",
+      zindex: "-1",
+      top: "6.9vw",
+      display: "flex",
+      maxHeight: "51.66vw",
+      minHeight: "51.66vw",
+      marginLeft: "2.05vw",
+    },
     mainWindow: {
-      height: "100%",
-      background: "#F5F5F5",
+      height: "100vh",
+      width: "100%",
+      background: "#FEFEFE",
     },
   };
 };

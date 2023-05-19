@@ -1,15 +1,16 @@
 import React, { FC, useState, useEffect, useCallback } from "react";
-import xtzTzbtcIcon from "../../assets/xtzTzbtcIcon.svg";
-import sirsIcon from "../../assets/sirsIcon.svg";
-import rightArrow from "../../assets/rightArrow.svg";
 import plusIcon from "../../assets/plusIcon.svg";
 
 import { Wallet } from "../wallet";
+import { NavLiquidity } from "../nav/NavLiquidity";
 import { Token, Asset, TransactingComponent } from "../../types/general";
 
 import { BigNumber } from "bignumber.js";
 import { UserAmountField, Slippage } from "../../components/ui/elements/inputs";
-
+import {
+  SlippageLabel,
+  AddliquidityTokens,
+} from "../../components/ui/elements/Labels";
 import { useWalletConnected } from "../../hooks/wallet";
 import { useSession } from "../../hooks/session";
 import { useWalletOps, WalletOps } from "../../hooks/wallet";
@@ -24,7 +25,7 @@ import CardHeader from "@mui/material/CardHeader";
 import Typography from "@mui/material/Typography";
 import style from "./style";
 import useStyles from "../../hooks/styles";
-
+import sirsSmall from "../../assets/sirsSmall.svg";
 export interface IAddLiquidity {
   children: null;
 }
@@ -186,6 +187,11 @@ export const AddLiquidity: FC = () => {
   }, [swapingFields, assets, updateBalance, walletOperations]);
 
   useEffect(() => {
+    if (session.activeComponent !== TransactingComponent.ADD_LIQUIDITY)
+      session.loadComponent(TransactingComponent.ADD_LIQUIDITY);
+  });
+
+  useEffect(() => {
     if (!loading && !active) {
       setLoading(true);
     }
@@ -209,8 +215,6 @@ export const AddLiquidity: FC = () => {
         updateBalance();
         setLoading(false);
       }
-      if (session.activeComponent !== TransactingComponent.ADD_LIQUIDITY)
-        session.loadComponent(TransactingComponent.ADD_LIQUIDITY);
     }
   }, [
     swapingFields,
@@ -225,44 +229,22 @@ export const AddLiquidity: FC = () => {
     walletOperations,
   ]);
 
+  /*
+	<Typography sx={styles.cardHeaderTypography}>
+	  {"Add Liquidity"}
+	</Typography>
+	*/
   return (
     <Grid2 container sx={styles.root}>
       <Grid2>
         <Card sx={styles.card}>
-          <CardHeader
-            sx={styles.cardHeader}
-            title={
-              <Typography sx={styles.cardHeaderTypography}>
-                {"Add Liquidity"}
-              </Typography>
-            }
-          />
-          <Grid2 xs={8} lg={4} sx={styles.tokens}>
-            <Box>
-              <img
-                style={styles.sendAssetsIcon}
-                src={xtzTzbtcIcon}
-                alt="xtzTzbtcIcon"
-              />
-            </Box>
-            <Box>
-              <img
-                style={styles.rightArrow}
-                src={rightArrow}
-                alt="rightArrow"
-              />
-            </Box>
-            <Box>
-              <img
-                style={styles.recieveAssetIcon}
-                src={sirsIcon}
-                alt="sirsIcon"
-              />
-            </Box>
+          <CardHeader sx={styles.cardHeader} title={<NavLiquidity />} />
+          <Grid2 sx={styles.tokens}>
+            <AddliquidityTokens />
           </Grid2>
           <CardContent sx={styles.cardContent}>
             <Grid2 xs={12} sx={styles.cardContendGrid}>
-              <Grid2 xs={6} sx={styles.input}>
+              <Grid2 xs={5} sx={styles.input}>
                 <UserAmountField
                   asset={assets[send1]}
                   onChange={updateSend}
@@ -273,17 +255,17 @@ export const AddLiquidity: FC = () => {
                 />
               </Grid2>
 
-              <Grid2 xs={1} sx={styles.plusIcon}>
-                <img src={plusIcon} alt="plusIcon" />
+              <Grid2 xs={1} sx={styles.plusIconGrid}>
+                <img src={plusIcon} style={styles.plusIcon} alt="plusIcon" />
               </Grid2>
 
-              <Grid2 xs={6} sx={styles.input}>
+              <Grid2 xs={5} sx={styles.input}>
                 <UserAmountField
                   asset={assets[send2]}
                   value={sendAmount2.toFixed()}
                   readOnly={true}
                   balance={balances[1]}
-                  label="Required Amount"
+                  label="Required Deposit"
                   darker={true}
                   swap={swapFields}
                 />
@@ -293,6 +275,11 @@ export const AddLiquidity: FC = () => {
             <Grid2 xs={12} sx={styles.infoGrid}>
               <Typography noWrap sx={styles.infoText}>
                 You will recieve about{" "}
+                <img
+                  style={styles.infoTextIcon}
+                  src={sirsSmall}
+                  alt="SirsLogo"
+                />
                 <Typography sx={styles.infoRecieve}>
                   {" "}
                   {receiveAmount.toFixed()} Sirs
@@ -302,9 +289,10 @@ export const AddLiquidity: FC = () => {
             </Grid2>
           </CardContent>
           <CardActions sx={styles.cardAction}>
-            <Grid2 xs={1}>Slippage</Grid2>
-
-            <Grid2 xs={4} sx={styles.slippageComponent}>
+            <Grid2 xs={1.3} sx={styles.slippageComponent}>
+              <SlippageLabel />
+            </Grid2>
+            <Grid2 xs={5.5} sx={styles.slippageComponent}>
               <Slippage
                 asset={assets[receive].name}
                 value={slippage}
