@@ -227,7 +227,14 @@ export const style = (theme) => {
           top: "1.11vw",
           right: ".3vw",
           justifyContent: "flex-end",
-          width: "100%",
+
+          "&.MuiButtonBase-root": {
+            "&:hover": {
+              backgroundColor: "transparent",
+            },
+            minWidth: "3vw",
+            maxWidth: "3vw",
+          },
         },
         img: {
           width: ".66vw",
