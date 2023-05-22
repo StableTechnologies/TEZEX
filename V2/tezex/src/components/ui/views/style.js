@@ -30,7 +30,7 @@ const style = (theme) => {
       wallet: {
         position: "relative",
         left: "51vw",
-        justifyContent: "lefflexend",
+        justifyContent: "flexend",
         display: "flex",
       },
     },
@@ -46,6 +46,8 @@ const style = (theme) => {
       zindex: "-1",
       top: "6.9vw",
       display: "flex",
+      maxWidth: "1vw",
+      minWidth: "1vw",
       maxHeight: "51.66vw",
       minHeight: "51.66vw",
       marginLeft: "2.05vw",
