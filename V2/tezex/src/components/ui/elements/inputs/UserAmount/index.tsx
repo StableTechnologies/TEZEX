@@ -5,16 +5,17 @@ import { Asset } from "../../../../../types/general";
 import { BigNumber } from "bignumber.js";
 import { LeftInput } from "./leftInput";
 import { RightInput } from "./rightInput";
+import { SlippageInput } from "./slippageInput";
 
 export interface IAmountField {
-  asset: Asset;
+  asset?: Asset;
   onChange?: (value: string) => void;
   balance?: string;
   value: string;
   label?: string;
   readOnly?: boolean;
   loading?: boolean;
-  variant?: "LeftInput" | "RightInput";
+  variant?: "SlippageInput" | "LeftInput" | "RightInput";
   darker?: boolean;
   swap?: () => void;
 }
@@ -111,6 +112,17 @@ const AmountField: FC<IAmountField> = (props) => {
 
   const Variant = () => {
     switch (props.variant) {
+      case "SlippageInput":
+        return (
+          <SlippageInput
+            balance={props.balance}
+            readOnly={props.readOnly}
+            updateAmount={updateAmount}
+            onKeyDown={onKeyDown}
+            inputString={inputString}
+            editing={editing}
+          />
+        );
       case "LeftInput":
         return (
           <LeftInput

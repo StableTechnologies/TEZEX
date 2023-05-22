@@ -17,7 +17,7 @@ import { style } from "./style";
 import useStyles from "../../../../../hooks/styles";
 
 export interface IRigthInput {
-  asset: Asset;
+  asset?: Asset;
 
   balance?: string;
   label?: string;
@@ -77,7 +77,9 @@ export const RightInput: FC<IRigthInput> = (props) => {
                         ? styles.rightInput.inputAdornmentStart.img
                         : styles.rightInput.inputAdornmentStart.imgLarger
                     }
-                    src={process.env.PUBLIC_URL + props.asset.logo}
+                    src={
+                      props.asset && process.env.PUBLIC_URL + props.asset.logo
+                    }
                     alt="logo"
                   />
                   <Box sx={{ marginTop: "0px" }}>
@@ -89,7 +91,7 @@ export const RightInput: FC<IRigthInput> = (props) => {
                               .typographyForLargerLogo
                       }
                     >
-                      {props.asset.label}
+                      {props.asset && props.asset.label}
                     </Typography>
                   </Box>
                 </Box>
@@ -123,7 +125,8 @@ export const RightInput: FC<IRigthInput> = (props) => {
                         hidden={props.balance ? false : true}
                         sx={styles.rightInput.balance.typography}
                       >
-                        Balance: {props.balance} {props.asset.name}
+                        Balance: {props.balance}{" "}
+                        {props.asset && props.asset.name}
                       </Typography>
                     </WalletConnected>
                   </Box>

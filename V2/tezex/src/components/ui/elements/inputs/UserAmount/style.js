@@ -270,5 +270,70 @@ export const style = (theme) => {
         fontSize: "2.2vw",
       },
     },
+
+    slippageInput: {
+      box: {
+        "&.MuiBox-root": {
+          paddingTop: ".28vw",
+          display: "flex",
+          position: "relative",
+          flexDirection: "row",
+          width: "3ch",
+          alignItems: "center",
+          justifyContent: "space-between",
+        },
+      },
+      "& .MuiButtonBase-root": {
+        zIndex: 3,
+      },
+      "& .MuiInputAdornment-root": {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        position: "relative",
+        bottom: ".13vw",
+
+        paddingRight: "0vw",
+      },
+
+      "& .MuiTypography-root": {
+        fontFamily: "Inter",
+        fontStyle: "normal",
+        fontWeight: "500",
+
+        fontSize: ".83vw",
+        lineHeight: "1vw",
+        display: "inline-flex",
+        justifyContent: "center",
+        textAlign: "center",
+      },
+
+      "& .MuiFormControl-root": {
+        display: "flex",
+
+        alignItems: "center",
+        justifyContent: "center",
+      },
+
+      "& .MuiInputBase-root": {
+        // top: ".5vw",
+        //paddingTop: ".5vw",
+        // paddingLeft: "1vw",
+        fontFamily: "Inter",
+        fontStyle: "normal",
+        fontWeight: "500",
+        fontSize: ".83vw",
+        lineHeight: "1vw",
+        display: "flex",
+        justifyContent: "center",
+        textAlign: "center",
+        //minHeight: "3.03vh",
+        //minWidth: "4.26vw",
+        zIndex: 1,
+
+        color: "palette.text.primary",
+        textTransform: "initial",
+      },
+    },
   };
 };

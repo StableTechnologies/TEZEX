@@ -14,7 +14,7 @@ import { style } from "./style";
 import useStyles from "../../../../../hooks/styles";
 
 export interface ILeftInput {
-  asset: Asset;
+  asset?: Asset;
   balance?: string;
   label?: string;
   readOnly?: boolean;
@@ -49,13 +49,15 @@ export const LeftInput: FC<ILeftInput> = (props) => {
                 <Box sx={styles.leftInput.inputAdornment.box}>
                   <img
                     style={styles.leftInput.inputAdornment.img}
-                    src={process.env.PUBLIC_URL + props.asset.logo}
+                    src={
+                      props.asset && process.env.PUBLIC_URL + props.asset.logo
+                    }
                     alt="logo"
                   />
                 </Box>
                 <Box>
                   <Typography sx={styles.leftInput.inputAdornment.typography}>
-                    {props.asset.label}
+                    {props.asset && props.asset.label}
                   </Typography>
                 </Box>
               </Box>
@@ -78,7 +80,7 @@ export const LeftInput: FC<ILeftInput> = (props) => {
           hidden={props.balance ? false : true}
           sx={styles.leftInput.balanceTypography}
         >
-          balance: {props.balance} {props.asset.name}
+          balance: {props.balance} {props.asset && props.asset.name}
         </Typography>
       </WalletConnected>
     </Box>

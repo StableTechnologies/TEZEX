@@ -11,7 +11,7 @@ import Button from "@mui/material/Button";
 
 import style from "./style";
 import useStyles from "../../../../hooks/styles";
-
+import { UserAmountField } from "./UserAmount";
 export interface ISlippage {
   asset: Token;
   value: BigNumber | number;
@@ -28,49 +28,6 @@ const SlippageInput: FC<ISlippage> = (props) => {
   useEffect(() => {
     props.onChange(input);
   }, [input, props]);
-
-  interface ISlippageInput {
-    disabled?: boolean;
-  }
-  const SlippageInput = (prop: ISlippageInput) => {
-    return (
-      <Box sx={styles.slippageInput.box}>
-        <TextField
-          autoFocus
-          disabled={prop.disabled}
-          onChange={useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-            e.preventDefault();
-            setInput(e.target.value);
-          }, [])}
-          value={input}
-          sx={styles.slippageInput}
-          InputProps={{
-            disableUnderline: true,
-            endAdornment: (
-              <InputAdornment
-                sx={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-                position="start"
-              >
-                %
-              </InputAdornment>
-            ),
-            sx: {
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-            },
-          }}
-          inputProps={{}}
-          size="small"
-          variant="standard"
-        />
-      </Box>
-    );
-  };
 
   interface SlippageTabProps {
     id: string;
@@ -100,7 +57,13 @@ const SlippageInput: FC<ISlippage> = (props) => {
           </Button>
         );
       } else {
-        return <SlippageInput disabled={selectedId !== p.id} />;
+        return (
+          <UserAmountField
+            variant="SlippageInput"
+            value={input}
+            readOnly={selectedId !== p.id}
+          />
+        );
       }
     };
 
