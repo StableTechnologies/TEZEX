@@ -1,21 +1,17 @@
 import React, { FC } from "react";
-import './App.css';
+import "./App.css";
 
 import { Layout } from "./components/ui/views/Layout";
+import { Outlet } from "react-router-dom";
 
 export const App: FC = () => {
   return (
     <div className="App">
-      <header className="App-header">
-        <p>
-		<Layout>
-			{''}
-		</Layout>
-        </p>
-      </header>
-
+      <Layout>
+        <Outlet />
+      </Layout>
     </div>
   );
-}
+};
 
 export default App;

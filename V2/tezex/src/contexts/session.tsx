@@ -1,12 +1,20 @@
-import {  createContext, useEffect, useState } from "react";
-import { WalletContext, WalletInfo } from "./wallet";
+import React, { createContext, useCallback, useState } from "react";
+import { WalletProvider } from "./wallet";
+import { NetworkContext, networkDefaults } from "./network";
 
-import { DAppClient } from '@airgap/beacon-sdk';
+import { TransactingComponent } from "../types/general";
 
-export const SessionContext = createContext<SessionInfo>({ isWalletConnected: false});
+export const SessionContext = createContext<SessionInfo>({
+  loadComponent: (_: TransactingComponent) => {
+    _;
+    null;
+  },
+  activeComponent: null,
+});
 
 export interface SessionInfo {
-	isWalletConnected: boolean
+  loadComponent: (comp: TransactingComponent) => void;
+  activeComponent: TransactingComponent | null;
 }
 export interface ISession {
   children:
@@ -14,42 +22,27 @@ export interface ISession {
     | JSX.Element
     | React.ReactElement
     | React.ReactElement[]
-    | string
+    | string;
 }
 
 export function SessionProvider(props: ISession) {
-	const [isWalletConnected, setIsWalletConnected] = useState(false);
-	const [client, setClient] = useState<DAppClient | null>(null);
-	const [address, setAddress] = useState<string | null>(null);
+  const [activeComponent, setActiveComponent] =
+    useState<TransactingComponent | null>(null);
 
-	useEffect(() => {
-		client
-			? setIsWalletConnected(true)
-			: setIsWalletConnected(false);
-	}, [client]);
+  const loadComponent = useCallback((comp: TransactingComponent) => {
+    setActiveComponent(comp);
+  }, []);
 
-	const disconnect = () => {
-		setClient(null);
-		setAddress(null);
-	};
-
-	const walletInfo: WalletInfo = {
-		client,
-		setClient,
-		address,
-		setAddress,
-		disconnect,
-	};
-
-	return (
-		<SessionContext.Provider
-			value={{
-				isWalletConnected,
-			}}
-		>
-			<WalletContext.Provider value={walletInfo}>
-				{props.children}
-			</WalletContext.Provider>
-		</SessionContext.Provider>
-	);
+  return (
+    <SessionContext.Provider
+      value={{
+        loadComponent,
+        activeComponent,
+      }}
+    >
+      <NetworkContext.Provider value={networkDefaults}>
+        <WalletProvider>{props.children}</WalletProvider>
+      </NetworkContext.Provider>
+    </SessionContext.Provider>
+  );
 }

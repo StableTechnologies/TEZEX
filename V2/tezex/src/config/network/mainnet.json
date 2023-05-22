@@ -1,0 +1,30 @@
+{
+  "tezosServer": "https://tezos-prod.cryptonomic-infra.tech:443",
+  "dex": {
+    "name": "Sirius",
+    "address": "KT1TxqZ8QtKvLu3V3JH7Gx58n7Co8pgtpQU5"
+  },
+  "assets": [
+    {
+      "name": "XTZ",
+      "label": "XTZ",
+      "logo": "/assets/tzlogo.svg",
+      "address": "",
+      "decimals": 6
+    },
+    {
+      "name": "Sirs",
+      "label": "Sirs",
+      "logo": "/assets/sirsLogo.svg",
+      "address": "KT1AafHA1C1vk959wvHWBispY9Y2f3fxBUUo",
+      "decimals": 0
+    },
+    {
+      "name": "TzBTC",
+      "label": "TzBTC",
+      "logo": "/assets/tzbtcLogo.svg",
+      "address": "KT1PWx2mnDueood7fEmfbBDKx1D9BAnnXitn",
+      "decimals": 8
+    }
+  ]
+}

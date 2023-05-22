@@ -1,4 +1,8 @@
-import { FC } from "react";
+import React, { FC } from "react";
+import { Box } from "@mui/system";
+
+import style from "./style";
+import useStyles from "../../../hooks/styles";
 
 export interface IMainWindow {
   children:
@@ -6,13 +10,10 @@ export interface IMainWindow {
     | JSX.Element
     | React.ReactElement
     | React.ReactElement[]
-    | string
+    | string;
 }
 
 export const MainWindow: FC<IMainWindow> = (props) => {
-  return (
-    <div>
-      {props.children}
-    </div>
-  );
+  const styles = useStyles(style);
+  return <Box sx={styles.mainWindow}>{props.children}</Box>;
 };

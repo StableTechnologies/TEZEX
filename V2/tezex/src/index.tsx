@@ -1,16 +1,59 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
-import { SessionProvider } from './contexts/session';
-ReactDOM.render(
+import React from "react";
+import "./index.css";
+import { Box, ThemeProvider } from "@mui/system";
+import theme from "./theme";
+import App from "./App";
+import reportWebVitals from "./reportWebVitals";
+import { SessionProvider } from "./contexts/session";
+import ReactDOM from "react-dom/client";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import "./index.css";
+
+import { Home } from "./pages/Home";
+
+const router = createBrowserRouter(
+  [
+    {
+      path: "/",
+      element: <App />,
+      children: [
+        {
+          path: "home/swap",
+          element: <Home path="swap" />,
+        },
+        {
+          path: "home/add",
+          element: <Home path="add" />,
+        },
+        {
+          path: "home/remove",
+          element: <Home path="remove" />,
+        },
+        {
+          path: "analytics",
+          element: <Home path="swap" />,
+        },
+        {
+          path: "about",
+          element: <Home path="swap" />,
+        },
+      ],
+    },
+  ],
+  { basename: process.env.PUBLIC_URL }
+);
+const root = ReactDOM.createRoot(document.getElementById("root") as Element);
+
+root.render(
   <React.StrictMode>
     <SessionProvider>
-    <App />
+      <ThemeProvider theme={theme}>
+        <Box>
+          <RouterProvider router={router} />
+        </Box>
+      </ThemeProvider>
     </SessionProvider>
-  </React.StrictMode>,
-  document.getElementById('root')
+  </React.StrictMode>
 );
 
 // If you want to start measuring performance in your app, pass a function
