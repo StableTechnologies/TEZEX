@@ -126,15 +126,13 @@ const SlippageInput: FC<ISlippage> = (props) => {
     );
   }
   const SlippageTabs = () => {
-    if (!loading) {
-      return (
-        <Box sx={styles.slippageTabsRoot}>
-          <SlippageTab id="0" label="0.5%" amount={0.5} />
-          <SlippageTab id="1" label="1%" amount={1} />
-          <SlippageTab id="input" amount={0} />
-        </Box>
-      );
-    } else return <div> </div>;
+    return (
+      <Box sx={styles.slippageTabsRoot}>
+        <SlippageTab id="0" label="0.5%" amount={0.5} />
+        <SlippageTab id="1" label="1%" amount={1} />
+        <SlippageTab id="input" amount={0} />
+      </Box>
+    );
   };
 
   return <SlippageTabs />;
