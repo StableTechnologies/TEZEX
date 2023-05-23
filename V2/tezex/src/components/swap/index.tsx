@@ -71,6 +71,7 @@ export const Swap: FC = () => {
     (value: string) => {
       const amt = new BigNumber(value).toNumber();
       if (amt !== slippage) {
+        console.log("\n", " slippage set in swap to amt : ", amt, "\n");
         setSlippage(amt);
       }
     },
@@ -250,6 +251,7 @@ export const Swap: FC = () => {
                 value={slippage}
                 onChange={updateSlippage}
                 inverse={true}
+                loading={loading}
               />
             </Grid2>
           </Box>

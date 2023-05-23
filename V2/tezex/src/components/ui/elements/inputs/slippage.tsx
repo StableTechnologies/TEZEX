@@ -1,76 +1,47 @@
-import React, { memo, FC, useCallback, useState, useEffect } from "react";
+import React, { memo, FC, useState, useEffect } from "react";
 import { BigNumber } from "bignumber.js";
 
 import { Token } from "../../../../types/general";
 
 import Box from "@mui/material/Box";
-import InputAdornment from "@mui/material/InputAdornment";
-
-import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 
 import style from "./style";
 import useStyles from "../../../../hooks/styles";
-
+import { UserAmountField } from "./UserAmount";
 export interface ISlippage {
   asset: Token;
   value: BigNumber | number;
   onChange: (value: string) => void;
   inverse?: boolean;
+  loading?: boolean;
 }
 
 const SlippageInput: FC<ISlippage> = (props) => {
   const styles = useStyles(style);
   const [selectedId, setSelectedId] = useState("0");
-
+  const [loading, setLoading] = useState(true);
   const [input, setInput] = useState<string>("0.5");
 
   useEffect(() => {
-    props.onChange(input);
-  }, [input, props]);
+    if (!props.loading) {
+      setInput(props.value.toString());
 
-  interface ISlippageInput {
-    disabled?: boolean;
-  }
-  const SlippageInput = (prop: ISlippageInput) => {
-    return (
-      <Box sx={styles.slippageInput.box}>
-        <TextField
-          autoFocus
-          disabled={prop.disabled}
-          onChange={useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-            e.preventDefault();
-            setInput(e.target.value);
-          }, [])}
-          value={input}
-          sx={styles.slippageInput}
-          InputProps={{
-            disableUnderline: true,
-            endAdornment: (
-              <InputAdornment
-                sx={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-                position="start"
-              >
-                %
-              </InputAdornment>
-            ),
-            sx: {
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-            },
-          }}
-          inputProps={{}}
-          size="small"
-          variant="standard"
-        />
-      </Box>
-    );
-  };
+      if (props.value.toString() === "0.5") {
+        setSelectedId("0");
+      } else if (props.value.toString() === "1") {
+        setSelectedId("1");
+      } else {
+        setSelectedId("input");
+      }
+      setLoading(false);
+    }
+  }, [props.value, props.loading]);
+  useEffect(() => {
+    if ((input === "0.5" || input === "1") && !loading) {
+      props.onChange(input);
+    }
+  }, [input]);
 
   interface SlippageTabProps {
     id: string;
@@ -100,7 +71,14 @@ const SlippageInput: FC<ISlippage> = (props) => {
           </Button>
         );
       } else {
-        return <SlippageInput disabled={selectedId !== p.id} />;
+        return (
+          <UserAmountField
+            variant="SlippageInput"
+            onChange={props.onChange}
+            value={props.value.toString()}
+            readOnly={selectedId !== p.id}
+          />
+        );
       }
     };
 

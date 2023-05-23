@@ -64,8 +64,10 @@ export const AddLiquidity: FC = () => {
   };
 
   const updateSlippage = useCallback(
-    (value: string) => {
-      const amt = new BigNumber(value).toNumber();
+    (value: string, inverse = true) => {
+      const amt = new BigNumber(value)
+        .multipliedBy(inverse ? -1 : 1)
+        .toNumber();
       if (amt !== slippage) {
         setSlippage(amt);
       }
@@ -210,7 +212,7 @@ export const AddLiquidity: FC = () => {
         active.sendAmount[1] &&
           updateSend2(active.sendAmount[1].decimal.toFixed());
         updateReceive(active.receiveAmount[0].decimal.toFixed());
-        updateSlippage(active.slippage.toString());
+        updateSlippage(active.slippage.toString(), false);
         updateBalance();
         setLoading(false);
       }
@@ -294,9 +296,10 @@ export const AddLiquidity: FC = () => {
             <Grid2 xs={5.5} sx={styles.slippageComponent}>
               <Slippage
                 asset={assets[receive].name}
-                value={slippage}
+                value={slippage * -1}
                 onChange={updateSlippage}
                 inverse={true}
+                loading={loading}
               />
             </Grid2>
 

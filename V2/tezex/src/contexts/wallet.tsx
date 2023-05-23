@@ -101,8 +101,6 @@ interface IWalletProvider {
     | string;
 }
 export function WalletProvider(props: IWalletProvider) {
-  // eslint-disable-next-line
-
   const network = useNetwork();
   const session = useSession();
 

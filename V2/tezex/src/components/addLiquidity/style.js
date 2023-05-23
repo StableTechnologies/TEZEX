@@ -2,7 +2,6 @@
 const style = (theme) => {
   return {
     infoRecieve: {
-      // marginLeft: ".37vw",
       marginRight: ".37vw",
       fontSize: ".97vw",
       fontWeight: "700",
@@ -74,7 +73,6 @@ const style = (theme) => {
         position: "relative",
         paddingTop: "1.46vw",
       },
-      // paddingTop: "10px",
     },
     slippage: {
       text: {},

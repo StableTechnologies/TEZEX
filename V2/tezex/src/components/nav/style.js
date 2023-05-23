@@ -9,13 +9,11 @@ const style = (theme) => {
         backgroundColor: "transparent",
       },
       "& .MuiTabs-indicatorSpan-add": {
-        // maxWidth: 40,
         height: ".1vw",
         width: "7.92vw",
         backgroundColor: "#000000",
       },
       "& .MuiTabs-indicatorSpan-remove": {
-        // maxWidth: 40,
         height: ".1vw",
         width: "10vw",
         backgroundColor: "#000000",
@@ -56,12 +54,8 @@ const style = (theme) => {
         lineHeight: "1.52vw",
         minWidth: "11vw",
         maxWidth: "11vw",
-        "&:not(first-child)": {
-          // padding: "0px 4vw ",
-        },
-        "&:first-child": {
-          // paddingLeft: "0px 3.1vw ",
-        },
+        "&:not(first-child)": {},
+        "&:first-child": {},
 
         color: "#999999",
         background: "white",
@@ -77,14 +71,14 @@ const style = (theme) => {
         display: "flex",
         justifiyContent: "center",
         alignItems: "center",
-        //padding: "0px 0px 0px 0px ",
+
         height: "2.6vw",
       },
       "& .MuiTabs-scroller": {
         display: "flex",
         justifiyContent: "center",
         alignItems: "center",
-        //padding: "0px 0px 0px 0px ",
+
         height: "2.6vw",
       },
 
@@ -106,9 +100,7 @@ const style = (theme) => {
         maxWidth: "7.7vw",
         paddingTop: "0vw",
         paddingBottom: "0vw",
-        "&:not(first-child)": {
-          //padding: "4vw ",
-        },
+        "&:not(first-child)": {},
         "&:first-child": {
           paddingLeft: "3.1vw ",
         },

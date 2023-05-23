@@ -45,17 +45,15 @@ const style = (theme) => {
         display: "inline-flex",
         justifyContent: "center",
         textAlign: "center",
-        //paddingTop: "2px",
 
         minHeight: "2.2vw",
         maxHeight: "2.2vw",
-        // minWidth: "4.2vw",
-        // maxWidth: "4.2vw",
+
         zIndex: 1,
       },
       "&.MuiButtonBase-root": {
         position: "relative",
-        //top: "0px",
+
         fontFamily: "Inter",
         fontStyle: "normal",
         fontWeight: "500",
@@ -66,8 +64,7 @@ const style = (theme) => {
         textAlign: "center",
         minHeight: "2.2vw",
         maxHeight: "2.2vw",
-        // minWidth: "4.2vw",
-        // maxWidth: "4.2vw",
+
         minWidth: "4.2vw",
         maxWidth: "4.2vw",
         zIndex: 1,
@@ -125,9 +122,6 @@ const style = (theme) => {
       },
 
       "& .MuiInputBase-root": {
-        // top: ".5vw",
-        //paddingTop: ".5vw",
-        // paddingLeft: "1vw",
         fontFamily: "Inter",
         fontStyle: "normal",
         fontWeight: "500",
@@ -136,8 +130,7 @@ const style = (theme) => {
         display: "flex",
         justifyContent: "center",
         textAlign: "center",
-        //minHeight: "3.03vh",
-        //minWidth: "4.26vw",
+
         zIndex: 1,
 
         color: "palette.text.primary",

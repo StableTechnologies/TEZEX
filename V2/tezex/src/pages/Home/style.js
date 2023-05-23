@@ -11,9 +11,6 @@ const style = (theme) => {
         alignItems: "center",
         padding: "0px 0px 0px 0px ",
       },
-
-      // paddingBottom: "2.22vw",
-      // paddingTop: "3.88vw",
     },
 
     homeContainer: {

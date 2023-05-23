@@ -62,7 +62,6 @@ export const style = (theme) => {
         "&.MuiFormControl-root": {
           display: "flex",
           width: "100%",
-          //marginTop: "10px",
         },
         "& .MuiInputBase-input": {
           position: "absolute",
@@ -70,44 +69,34 @@ export const style = (theme) => {
           width: "100%",
           right: "1vw",
           color: "#999999",
-          //marginTop: "10px",
         },
 
-        //	bottom: "1.5vw",
-
         top: "0vw",
-        //	right: "2vw",
+
         justifyContent: "center",
         width: "80%",
-        // height: "75px",
       },
       textFieldTextAbove: {
         "&.MuiFormControl-root": {
           display: "flex",
           width: "100%",
-          //marginTop: "10px",
         },
         "& .MuiInputBase-input": {
           position: "absolute",
           zIndex: 5,
           width: "100%",
           right: "1vw",
-          //marginTop: "10px",
         },
 
-        //	bottom: "1.5vw",
-
         top: "0vw",
-        //	right: "2vw",
+
         justifyContent: "center",
         width: "80%",
-        // height: "75px",
       },
       textFieldGrey: {
         "&.MuiFormControl-root": {
           display: "flex",
           width: "100%",
-          //marginTop: "10px",
         },
         "& .MuiInputBase-input": {
           position: "absolute",
@@ -120,13 +109,11 @@ export const style = (theme) => {
 
         bottom: ".8vw",
         justifyContent: "center",
-        //	height: "75px",
       },
       textField: {
         "&.MuiFormControl-root": {
           display: "flex",
           width: "100%",
-          //marginTop: "10px",
         },
         "& .MuiInputBase-input": {
           position: "absolute",
@@ -137,7 +124,6 @@ export const style = (theme) => {
 
         bottom: ".8vw",
         justifyContent: "center",
-        //	height: "75px",
       },
       inputAdornmentStart: {
         boxLabel: {
@@ -145,19 +131,11 @@ export const style = (theme) => {
             display: "flex",
             position: "absolute",
             paddingTop: "1.1vw",
-
-            // width: "100%",
           },
 
           fontSize: "1.2vw",
-          //marginLeft: "1vw",
-          //marginRight: "1vw",
 
-          //marginBottom: "10vw",
-          //	marginTop: "1.56vh",
           paddingBottom: ".1vh",
-          //position: "relative",
-          //bottom: "1vw",
         },
         boxToken: {
           display: "flex",
@@ -186,7 +164,6 @@ export const style = (theme) => {
           color: "#1E1E1E",
           fontWeight: "500",
           fontSize: "1.25vw",
-          //	paddingBottom: "1vw",
         },
       },
       inputAdornmentEnd: {
@@ -215,7 +192,6 @@ export const style = (theme) => {
           width: "100%",
           padding: 0,
           zIndex: 0,
-          //right: "1vw",
 
           position: "relative",
           bottom: "3vw",
@@ -227,7 +203,14 @@ export const style = (theme) => {
           top: "1.11vw",
           right: ".3vw",
           justifyContent: "flex-end",
-          width: "100%",
+
+          "&.MuiButtonBase-root": {
+            "&:hover": {
+              backgroundColor: "transparent",
+            },
+            minWidth: "3vw",
+            maxWidth: "3vw",
+          },
         },
         img: {
           width: ".66vw",
@@ -248,7 +231,6 @@ export const style = (theme) => {
 
           position: "relative",
           top: "4vw",
-          //right: "1vw",
         },
         typography: {
           color: "#999999",
@@ -261,6 +243,67 @@ export const style = (theme) => {
       input: {
         textAlign: "right",
         fontSize: "2.2vw",
+      },
+    },
+
+    slippageInput: {
+      box: {
+        "&.MuiBox-root": {
+          paddingTop: ".28vw",
+          display: "flex",
+          position: "relative",
+          flexDirection: "row",
+          width: "3ch",
+          alignItems: "center",
+          justifyContent: "space-between",
+        },
+      },
+      "& .MuiButtonBase-root": {
+        zIndex: 3,
+      },
+      "& .MuiInputAdornment-root": {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        position: "relative",
+        bottom: ".13vw",
+
+        paddingRight: "0vw",
+      },
+
+      "& .MuiTypography-root": {
+        fontFamily: "Inter",
+        fontStyle: "normal",
+        fontWeight: "500",
+
+        fontSize: ".83vw",
+        lineHeight: "1vw",
+        display: "inline-flex",
+        justifyContent: "center",
+        textAlign: "center",
+      },
+
+      "& .MuiFormControl-root": {
+        display: "flex",
+
+        alignItems: "center",
+        justifyContent: "center",
+      },
+
+      "& .MuiInputBase-root": {
+        fontFamily: "Inter",
+        fontStyle: "normal",
+        fontWeight: "500",
+        fontSize: ".83vw",
+        lineHeight: "1vw",
+        display: "flex",
+        justifyContent: "center",
+        textAlign: "center",
+
+        zIndex: 1,
+
+        color: "palette.text.primary",
+        textTransform: "initial",
       },
     },
   };
