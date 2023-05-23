@@ -1,12 +1,9 @@
-import React, { memo, FC, useCallback, useState, useEffect } from "react";
+import React, { memo, FC, useState, useEffect } from "react";
 import { BigNumber } from "bignumber.js";
 
 import { Token } from "../../../../types/general";
 
 import Box from "@mui/material/Box";
-import InputAdornment from "@mui/material/InputAdornment";
-
-import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 
 import style from "./style";
@@ -27,45 +24,18 @@ const SlippageInput: FC<ISlippage> = (props) => {
   const [input, setInput] = useState<string>("0.5");
 
   useEffect(() => {
-    console.log("\n", "selectedId : ", selectedId, "\n");
-  }, [selectedId]);
-
-  useEffect(() => {
-    console.log(
-      "\n",
-      "props.value.toString()  : ",
-      props.value.toString(),
-      "\n"
-    );
-  }, [props.value]);
-  useEffect(() => {
-    console.log(
-      "\n",
-      "props.value.toString()  : ",
-      props.value.toString(),
-      "\n"
-    );
     if (!props.loading) {
       setInput(props.value.toString());
 
       if (props.value.toString() === "0.5") {
-        console.log("0.5 match");
         setSelectedId("0");
       } else if (props.value.toString() === "1") {
-        console.log("1 match");
         setSelectedId("1");
       } else {
-        console.log(
-          "\n",
-          "input match props.value.toString() : ",
-          props.value.toString(),
-          "\n"
-        );
         setSelectedId("input");
       }
       setLoading(false);
     }
-    console.log("\n", "loading : ", loading, "\n");
   }, [props.value, props.loading]);
   useEffect(() => {
     if ((input === "0.5" || input === "1") && !loading) {

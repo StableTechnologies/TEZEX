@@ -29,7 +29,6 @@ const AmountField: FC<IAmountField> = (props) => {
 
   const display = useCallback(() => {
     if (isNaN(parseFloat(props.value)) || props.value === "0") {
-      console.log("\n", "in display props.value : ", props.value, "\n");
       setInputString("0.00");
     } else setInputString(props.value);
   }, [props.value]);

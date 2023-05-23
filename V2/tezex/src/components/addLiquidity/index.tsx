@@ -62,9 +62,6 @@ export const AddLiquidity: FC = () => {
   const transact = async () => {
     await walletOperations.sendTransaction();
   };
-  useEffect(() => {
-    console.log("\n", "addliquidity slippage : ", slippage, "\n");
-  }, [slippage]);
 
   const updateSlippage = useCallback(
     (value: string, inverse = true) => {
