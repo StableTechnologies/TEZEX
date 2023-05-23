@@ -60,12 +60,8 @@ const style = (theme) => {
         display: "flex",
         justifyContent: "flex-start",
         paddingLeft: "2.22vw",
-        //paddingTop: "0px",
       },
-      "& .MuiFormControl-root": {
-        // width: "28.34vw",
-        //  height: "6.94vw",
-      },
+      "& .MuiFormControl-root": {},
     },
     cardAction: {
       justifyContent: "center",
