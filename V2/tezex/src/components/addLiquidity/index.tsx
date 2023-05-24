@@ -67,6 +67,7 @@ export const AddLiquidity: FC = () => {
     (value: string, inverse = true) => {
       const amt = new BigNumber(value)
         .multipliedBy(inverse ? -1 : 1)
+        .dp(1)
         .toNumber();
       if (amt !== slippage) {
         setSlippage(amt);
