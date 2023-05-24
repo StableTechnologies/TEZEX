@@ -69,7 +69,7 @@ export const Swap: FC = () => {
 
   const updateSlippage = useCallback(
     (value: string) => {
-      const amt = new BigNumber(value).toNumber();
+      const amt = new BigNumber(value).dp(1).toNumber();
       if (amt !== slippage) {
         console.log("\n", " slippage set in swap to amt : ", amt, "\n");
         setSlippage(amt);
