@@ -250,10 +250,13 @@ export const style = (theme) => {
       box: {
         "&.MuiBox-root": {
           paddingTop: ".28vw",
+          paddingRight: "0vw",
+          paddingLeft: "0vw",
+
           display: "flex",
           position: "relative",
           flexDirection: "row",
-          width: "3ch",
+          width: "4.5ch",
           alignItems: "center",
           justifyContent: "space-between",
         },
