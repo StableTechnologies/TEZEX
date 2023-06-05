@@ -67,6 +67,14 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
   }, [wallet, component]);
 
   useEffect(() => {
+    if (transaction && wallet) {
+      if (transaction.transactionStatus === TransactionStatus.COMPLETED) {
+        setTransaction(undefined);
+      }
+    }
+  }, [transaction]);
+
+  useEffect(() => {
     if (
       transacting &&
       transaction &&
@@ -107,6 +115,7 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
 
         if (wallet.client)
           wallet.updateTransactionBalance(component, transaction);
+        setTransaction(transaction);
         return transaction;
       } else return undefined;
     },

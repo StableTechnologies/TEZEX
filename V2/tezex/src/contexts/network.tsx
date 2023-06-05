@@ -1,7 +1,7 @@
 import { createContext } from "react";
 import { NetworkType } from "@airgap/beacon-sdk";
 import mainnet from "../config/network/mainnet.json";
-import { Asset, LiquidityBakingStorageXTZ } from "../types/general";
+import { Asset, Errors, LiquidityBakingStorageXTZ } from "../types/general";
 import { getLbContractStorage } from "../functions/liquidityBaking";
 
 import { TezosToolkit } from "@taquito/taquito";
@@ -38,7 +38,10 @@ async function getDexStorage(): Promise<LiquidityBakingStorageXTZ> {
   const dexAddress: string = (mainnet as NetworkInfo).dex.address;
   const toolkit = new TezosToolkit((mainnet as NetworkInfo).tezosServer);
 
-  return await getLbContractStorage(toolkit, dexAddress);
+  return await getLbContractStorage(toolkit, dexAddress).catch((e) => {
+    console.log("\n", "Error while querying storage : ", e, "\n");
+    throw Errors.LB_CONTRACT_STORAGE;
+  });
 }
 function getAsset(name: string): Asset {
   const asset = mainnet.assets.find((address) => address.name === name);

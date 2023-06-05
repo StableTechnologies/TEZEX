@@ -36,6 +36,7 @@ export const Wallet: FC<IWallet> = (props) => {
   >(undefined);
   const walletText = useCallback((): string | undefined => {
     if (props.transaction && props.transaction.sendAmount[0].decimal.eq(0)) {
+      setDisabled(true);
       setSpinner(false);
       return "Enter Amount";
     } else if (props.transaction) {
@@ -46,6 +47,10 @@ export const Wallet: FC<IWallet> = (props) => {
           setDisabled(true);
           setSpinner(false);
           return transactionStatus as string;
+        case TransactionStatus.MODIFIED:
+          setDisabled(true);
+          setSpinner(true);
+          return props.children;
         case TransactionStatus.SUFFICIENT_BALANCE:
           setDisabled(false);
           setSpinner(false);
@@ -53,7 +58,7 @@ export const Wallet: FC<IWallet> = (props) => {
         default:
           setDisabled(true);
           setSpinner(true);
-          return props.children;
+          return transactionStatus as string;
       }
     }
   }, [props.transaction, props.children]);
@@ -93,7 +98,7 @@ export const Wallet: FC<IWallet> = (props) => {
     } else {
       return (
         <Button size="large" sx={styles.transactDisabled} onClick={connect}>
-          connect Wallet
+          Connect Wallet
         </Button>
       );
     }
@@ -103,7 +108,11 @@ export const Wallet: FC<IWallet> = (props) => {
       return (
         <Button onClick={disconnect}>
           <Box sx={styles.walletConnectedHeader}>
-            <img src={tzwalletlogo} alt="tz " />
+            <img
+              src={tzwalletlogo}
+              style={styles.walletConnectedHeader.logo}
+              alt="tz "
+            />
             {walletInfo &&
               walletInfo.address &&
               shorten(5, 5, walletInfo.address)}
@@ -119,7 +128,10 @@ export const Wallet: FC<IWallet> = (props) => {
           disabled={disabled}
         >
           <Box sx={styles.walletBox}>
-            <Box visibility={spinner ? "visible" : "hidden"}>
+            <Box
+              sx={styles.spinnerBox}
+              visibility={spinner ? "visible" : "hidden"}
+            >
               <CircularProgress sx={styles.spinner} />
             </Box>
             <Typography sx={styles.transactionStatus}>

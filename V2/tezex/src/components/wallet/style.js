@@ -7,13 +7,18 @@ const style = (theme) => {
       lineHeight: "2.01vw",
     },
 
+    spinnerBox: {
+      position: "absolute",
+      left: "3.38vw",
+      top: "1.11vw",
+    },
     spinner: {
       maxWidth: "1.85vw",
       maxHeight: "1.85vw",
       color: "#A1E3FF",
     },
     walletBox: {
-      width: "100%",
+      width: "20vw",
       display: "flex",
       flexDirection: "row",
       justifyContent: "center",
@@ -21,13 +26,27 @@ const style = (theme) => {
     },
 
     walletConnectedHeader: {
+      logo: {
+        minHeight: "1.39vw",
+        maxHeight: "1.39vw",
+      },
       background:
         "linear-gradient(92.04deg, rgba(171, 240, 255, 0.2) 4.41%, #F9FEFF 84.62%)",
 
-      border: "0.5px solid #C4C4C4",
-      borderRadius: "4px",
-      display: "inline-flex",
+      border: "0.035vw solid #C4C4C4",
+      display: "flex",
       alignItems: "center",
+      justifyContent: "space-around",
+
+      minHeight: "2.7vw",
+      minWidth: "10.24vw",
+
+      borderRadius: ".55vw",
+      fontWeight: "500",
+      fontSize: "1.11vw",
+      lineHeight: "1.34vw",
+
+      textTransform: "none",
     },
 
     transactDisabled: {
@@ -42,10 +61,10 @@ const style = (theme) => {
       display: "flex",
       fontFamily: "Inter",
       width: "100%",
-
+      height: "4.16vw",
       background: "rgba(45, 45, 45, 0.5)",
       color: "white",
-      borderRadius: "16px",
+      borderRadius: "1.11vw",
       fontWeight: "500",
       fontSize: "1.66vw",
       lineHeight: "2.01vw",
@@ -63,10 +82,11 @@ const style = (theme) => {
       fontFamily: "Inter",
       width: "100%",
 
+      height: "4.16vw",
       backgroundColor: "#000",
       color: "white",
-      border: "1px solid black",
-      borderRadius: "16px",
+
+      borderRadius: "1.11vw",
       fontWeight: "500",
       fontSize: "1.66vw",
       lineHeight: "2.01vw",

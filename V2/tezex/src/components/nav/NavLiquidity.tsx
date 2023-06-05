@@ -1,14 +1,17 @@
-import React, { FC, useState, useEffect, useCallback } from "react";
-
+import React, { FC, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
+
 import { useSession } from "../../hooks/session";
 
 import { TransactingComponent } from "../../types/general";
-
 import style from "./style";
 import useStyles from "../../hooks/styles";
+
+export interface INav {
+  children: string;
+}
 
 interface NavTabProps {
   label: string;
@@ -17,11 +20,9 @@ interface NavTabProps {
 
 function NavTab(props: NavTabProps) {
   const navigate = useNavigate();
-
-  const styles = useStyles(style);
   return (
     <Tab
-      sx={styles.navHome.tab}
+      sx={{}}
       onClick={(event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
         event.preventDefault();
         navigate(props.href);
@@ -30,47 +31,58 @@ function NavTab(props: NavTabProps) {
     />
   );
 }
-
-export interface INavHome {
-  children: string;
-}
-export const NavHome: FC = () => {
+export const NavLiquidity: FC = () => {
   const styles = useStyles(style);
   const [value, setValue] = useState(0);
+
   const sessionInfo = useSession();
-  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
-    event.preventDefault();
-    setValue(newValue);
-  };
   useEffect(() => {
     switch (sessionInfo.activeComponent) {
       case TransactingComponent.SWAP:
         setValue(0);
         break;
       case TransactingComponent.ADD_LIQUIDITY:
-        setValue(1);
+        setValue(0);
         break;
       case TransactingComponent.REMOVE_LIQUIDITY:
         setValue(1);
         break;
     }
   }, [sessionInfo]);
+  /*
+	useEffect(() => {
+	  if (loading) {
+	    navigate("home/swap");
+	    setValue(0);
+	    setLoading(false);
+	  }
+	}, [loading, navigate]);
+	*/
 
-  const liquidityHref: () => string = useCallback(() => {
-    if (sessionInfo.activeComponent === TransactingComponent.REMOVE_LIQUIDITY) {
-      return "/home/remove";
-    } else return "/home/add";
-  }, [sessionInfo]);
-
+  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
+    event.preventDefault();
+    setValue(newValue);
+  };
   return (
     <Tabs
       value={value}
-      sx={styles.navHome.root}
+      sx={styles.navLiquidity}
       onChange={handleChange}
-      aria-label="nav-home-tabs"
+      aria-label=" "
+      TabIndicatorProps={{
+        children: (
+          <span
+            className={
+              value === 0
+                ? "MuiTabs-indicatorSpan-add"
+                : "MuiTabs-indicatorSpan-remove"
+            }
+          />
+        ),
+      }}
     >
-      <NavTab label="Swap" href="/home/swap" />
-      <NavTab label="Liquidity" href={liquidityHref()} />
+      <NavTab label="Add Liquidity" href="/home/add" />
+      <NavTab label="Remove Liquidity" href="/home/remove" />
     </Tabs>
   );
 };
