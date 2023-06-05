@@ -163,7 +163,7 @@ export const RemoveLiquidity: FC = () => {
                   event: React.MouseEvent<HTMLButtonElement, MouseEvent>
                 ) => {
                   event.preventDefault();
-                  useMax ? setUseMax(false) : setUseMax(true);
+                  setUseMax((prev: boolean) => !prev);
                 }}
               >
                 <Typography
