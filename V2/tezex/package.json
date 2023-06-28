@@ -1,7 +1,7 @@
 {
   "name": "Tezex",
   "version": "0.1.0",
-  "homepage": "https://stabletechnologies.github.io/TEZEX/",
+  "homepage": "https://stabletechnologies.github.io",
   "private": false,
   "dependencies": {
     "@airgap/beacon-sdk": "^3.1.0",
