@@ -6,42 +6,39 @@ import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import { SessionProvider } from "./contexts/session";
 import ReactDOM from "react-dom/client";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createHashRouter, RouterProvider } from "react-router-dom";
 import "./index.css";
 
 import { Home } from "./pages/Home";
 
-const router = createBrowserRouter(
-  [
-    {
-      path: "/",
-      element: <App />,
-      children: [
-        {
-          path: "home/swap",
-          element: <Home path="swap" />,
-        },
-        {
-          path: "home/add",
-          element: <Home path="add" />,
-        },
-        {
-          path: "home/remove",
-          element: <Home path="remove" />,
-        },
-        {
-          path: "analytics",
-          element: <Home path="swap" />,
-        },
-        {
-          path: "about",
-          element: <Home path="swap" />,
-        },
-      ],
-    },
-  ],
-  { basename: process.env.PUBLIC_URL }
-);
+const router = createHashRouter([
+  {
+    path: "/",
+    element: <App />,
+    children: [
+      {
+        path: "home/swap",
+        element: <Home path="swap" />,
+      },
+      {
+        path: "home/add",
+        element: <Home path="add" />,
+      },
+      {
+        path: "home/remove",
+        element: <Home path="remove" />,
+      },
+      {
+        path: "analytics",
+        element: <Home path="swap" />,
+      },
+      {
+        path: "about",
+        element: <Home path="swap" />,
+      },
+    ],
+  },
+]);
 const root = ReactDOM.createRoot(document.getElementById("root") as Element);
 
 root.render(
