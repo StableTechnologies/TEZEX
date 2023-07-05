@@ -1,3 +1,4 @@
+import 'react-app-polyfill/stable';
 import React from "react";
 import "./index.css";
 import { Box, ThemeProvider } from "@mui/system";
