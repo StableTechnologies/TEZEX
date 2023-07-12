@@ -44,7 +44,7 @@ export const AddLiquidity: FC = () => {
   const [sendAmount, setSendAmount] = useState(new BigNumber(0));
   const [sendAmount2, setSendAmount2] = useState(new BigNumber(0));
   const [receiveAmount, setReceiveAmount] = useState(new BigNumber(0));
-  const [slippage, setSlippage] = useState<number>(0.5);
+  const [slippage, setSlippage] = useState<number>(1);
 
   const send1 = 0;
   const send2 = 1;
