@@ -1,4 +1,4 @@
-import { TezosToolkit, OpKind } from "@taquito/taquito";
+import { TezosToolkit, OpKind, ParamsWithKind } from "@taquito/taquito";
 import { BigNumber } from "bignumber.js";
 import {
   Errors,
@@ -378,13 +378,12 @@ export async function buyLiquidityShares(
   const tzBtcContract = await toolkit.wallet.at(tzbtcContractAddress);
 
   const maxTokensSold: BigNumber = addSlippage(slipage, tokenMantissa);
-
   const minLqtMinted: BigNumber = lqtMinted;
 
   const addLiquidity = lbContract.methods.addLiquidity(
     userAddress,
-    minLqtMinted.integerValue(BigNumber.ROUND_DOWN),
-    maxTokensSold,
+    minLqtMinted.integerValue(BigNumber.ROUND_DOWN).toNumber(),
+    maxTokensSold.toNumber(),
     deadline
   );
   const approve0 = tzBtcContract.methods.approve(lbContractAddress, 0);
@@ -395,7 +394,7 @@ export async function buyLiquidityShares(
 
   const est = async () => {
     try {
-      const estimate = await toolkit.estimate.batch([
+      const ops: ParamsWithKind[] = [
         {
           kind: OpKind.TRANSACTION,
           ...approve0.toTransferParams(),
@@ -414,7 +413,8 @@ export async function buyLiquidityShares(
           kind: OpKind.TRANSACTION,
           ...approve0.toTransferParams(),
         },
-      ]);
+      ];
+      const estimate = await toolkit.estimate.batch(ops);
       return estimate;
     } catch (err) {
       console.log(

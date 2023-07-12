@@ -2,7 +2,7 @@ import React, { useCallback, createContext, useEffect, useState } from "react";
 import { Draft } from "immer";
 import { useImmer } from "use-immer";
 
-import { DAppClient } from "@airgap/beacon-sdk";
+import { DAppClient } from "@airgap/beacon-dapp";
 import {
   Transaction,
   Asset,
