@@ -10,8 +10,8 @@
   "license": "MIT",
   "dependencies": {
     "big-integer": "^1.6.48",
-    "conseiljs": "5.0.8-1",
-    "conseiljs-softsigner": "5.0.4-1",
+    "conseiljs": "5.0.8",
+    "conseiljs-softsigner": "5.0.4",
     "ethereumjs-tx": "^2.1.2",
     "jsonpath-plus": "^4.0.0",
     "loglevel": "^1.6.8",
