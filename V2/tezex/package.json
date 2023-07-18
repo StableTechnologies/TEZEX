@@ -9,7 +9,7 @@
     "@emotion/css": "^11.10.6",
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
-    "@ledgerhq/hw-app-tezos": "^6.27.1",
+    "@ledgerhq/hw-app-tezos": "^6.27.16",
     "@ledgerhq/hw-transport-webhid": "^6.27.1",
     "@ledgerhq/logs": "^6.10.0",
     "@mui/icons-material": "^5.11.0",
