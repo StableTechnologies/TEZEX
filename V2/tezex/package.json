@@ -28,6 +28,7 @@
     "bignumber.js": "^9.1.0",
     "conseiljs": "^5.2.3",
     "gh-pages": "^4.0.0",
+    "gitbook-api": "^3.0.2",
     "immer": "^9.0.19",
     "jsonpath-plus": "^7.2.0",
     "react": "^18.2.0",
