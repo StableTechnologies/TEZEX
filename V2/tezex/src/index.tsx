@@ -12,7 +12,6 @@ import "./index.css";
 import { AppConfig } from "./types/general";
 import appConfig from "./config/app.json";
 import { Home } from "./pages/Home";
-import { About } from "./pages/About";
 
 const router = createBrowserRouter(
   [
@@ -35,10 +34,6 @@ const router = createBrowserRouter(
         {
           path: "analytics",
           element: <Home path="swap" />,
-        },
-        {
-          path: "about",
-          element: <About />,
         },
       ],
     },
