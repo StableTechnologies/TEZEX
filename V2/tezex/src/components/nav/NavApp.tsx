@@ -6,6 +6,7 @@ import Tab from "@mui/material/Tab";
 import style from "./style";
 import useStyles from "../../hooks/styles";
 
+import { useSession } from "../../hooks/session";
 export interface INav {
   children: string;
 }
@@ -13,26 +14,49 @@ export interface INav {
 interface NavTabProps {
   label: string;
   href: string;
+  external?: boolean;
 }
 
 function NavTab(props: NavTabProps) {
   const navigate = useNavigate();
-  return (
-    <Tab
-      sx={{}}
-      onClick={(event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
-        event.preventDefault();
-        navigate(props.href);
-      }}
-      {...props}
-    />
-  );
+  if (props.external) {
+    return (
+      <Tab
+        sx={{}}
+        onClick={(event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
+          event.preventDefault();
+          window.open(props.href, "_blank");
+        }}
+        {...props}
+      />
+    );
+  } else {
+    return (
+      <Tab
+        sx={{}}
+        onClick={(event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
+          event.preventDefault();
+          navigate(props.href);
+        }}
+        {...props}
+      />
+    );
+  }
 }
+
 export const NavApp: FC = () => {
   const styles = useStyles(style);
   const [value, setValue] = useState(0);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const pageId = {
+    home: 0,
+    analytics: 1,
+    about: 2,
+  };
+
+  const aboutRedirectUrl = useSession().appConfig.aboutRedirectUrl;
+
   useEffect(() => {
     if (loading) {
       navigate("home/swap");
@@ -43,8 +67,9 @@ export const NavApp: FC = () => {
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     event.preventDefault();
-    setValue(newValue);
+    if (newValue !== pageId.about) setValue(newValue);
   };
+
   return (
     <Tabs
       value={value}
@@ -57,7 +82,7 @@ export const NavApp: FC = () => {
     >
       <NavTab label="Home" href="/home/swap" />
       <NavTab label="Analytics" href="/Analytics" />
-      <NavTab label="About" href="/About" />
+      <NavTab label="About" href={aboutRedirectUrl} external={true} />
     </Tabs>
   );
 };
