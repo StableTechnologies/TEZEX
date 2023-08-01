@@ -2,8 +2,13 @@ import React, { createContext, useCallback, useState } from "react";
 import { WalletProvider } from "./wallet";
 import { NetworkContext, networkDefaults } from "./network";
 import { Alert } from "../components/ui/elements/dialogs/Alerts";
-import { TransactingComponent, CompletionRecord } from "../types/general";
+import {
+  AppConfig,
+  TransactingComponent,
+  CompletionRecord,
+} from "../types/general";
 import { showAlert } from "../functions/util";
+import appConfig from "../config/app.json";
 
 export const SessionContext = createContext<SessionInfo>({
   loadComponent: (_: TransactingComponent) => {
@@ -15,14 +20,17 @@ export const SessionContext = createContext<SessionInfo>({
     _;
     null;
   },
+  appConfig: appConfig as AppConfig,
 });
 
 export interface SessionInfo {
   loadComponent: (comp: TransactingComponent) => void;
   activeComponent: TransactingComponent | null;
   setAlert: (record: CompletionRecord | undefined, force?: boolean) => void;
+  appConfig: AppConfig;
 }
 export interface ISession {
+  config: AppConfig;
   children:
     | JSX.Element[]
     | JSX.Element
@@ -58,6 +66,7 @@ export function SessionProvider(props: ISession) {
         loadComponent,
         activeComponent,
         setAlert: setRecord,
+        appConfig: props.config,
       }}
     >
       <NetworkContext.Provider value={networkDefaults}>

@@ -9,6 +9,8 @@ import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import "./index.css";
 
+import { AppConfig } from "./types/general";
+import appConfig from "./config/app.json";
 import { Home } from "./pages/Home";
 import { About } from "./pages/About";
 
@@ -47,7 +49,7 @@ const root = ReactDOM.createRoot(document.getElementById("root") as Element);
 
 root.render(
   <React.StrictMode>
-    <SessionProvider>
+    <SessionProvider config={appConfig as AppConfig}>
       <ThemeProvider theme={theme}>
         <Box>
           <RouterProvider router={router} />
