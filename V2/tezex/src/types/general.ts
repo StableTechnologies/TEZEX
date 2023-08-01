@@ -2,6 +2,10 @@ import { BigNumber } from "bignumber.js";
 
 import { NetworkType } from "@airgap/beacon-sdk";
 
+export interface AppConfig {
+  aboutRedirectUrl: string;
+}
+
 export enum Token {
   XTZ = "XTZ",
   TzBTC = "TzBTC",
