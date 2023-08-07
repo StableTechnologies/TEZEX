@@ -19,7 +19,7 @@ declare module "@mui/material/styles" {
 
 //const { palette } = createTheme();
 
-const theme = createTheme({
+export const theme = createTheme({
   typography: {
     fontFamily: "Inter",
   },
@@ -45,11 +45,11 @@ const theme = createTheme({
 });
 /*
 const theme: Theme = createTheme({
-	palette: {
-		grey: {
+  palette: {
+    grey: {
       main: purple[500],
-		}
-	},
+    }
+  },
   typography: {
     fontFamily: "Inter",
    },
