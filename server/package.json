@@ -10,7 +10,7 @@
   "license": "MIT",
   "dependencies": {
     "async-mutex": "^0.3.0",
-    "bignumber.js": "^9.0.1",
+    "bignumber.js": "^9.1.1",
     "conseiljs": "5.0.7",
     "cors": "^2.8.5",
     "express": "^4.17.1",
