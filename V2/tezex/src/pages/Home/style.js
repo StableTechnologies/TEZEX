@@ -10,6 +10,10 @@ const style = (theme) => {
         justifyContent: "center",
         alignItems: "center",
         padding: "0px 0px 0px 0px ",
+
+        [theme.breakpoints.down("sm")]: {
+          display: "none",
+        },
       },
     },
 

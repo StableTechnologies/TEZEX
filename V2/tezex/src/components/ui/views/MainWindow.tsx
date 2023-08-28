@@ -16,6 +16,16 @@ export interface IMainWindow {
 export const MainWindow: FC<IMainWindow> = (props) => {
   const styles = useStyles(style);
   return (
+    <Box
+      sx={{
+        width: "100%",
+      }}
+    >
+      {props.children}
+    </Box>
+  );
+};
+/* return (
     <Box sx={styles.mainWindow}>
       <Box sx={styles.mainWindowBackground}>
         {" "}
@@ -24,5 +34,4 @@ export const MainWindow: FC<IMainWindow> = (props) => {
 
       {props.children}
     </Box>
-  );
-};
+  );*/

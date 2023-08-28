@@ -7,38 +7,53 @@ const style = (theme) => {
         display: "flex",
         alignItems: "center",
         width: "100%",
-        minHeight: "5vw",
-        maxHeight: "5vw",
+        height: "5vw",
         left: "0px",
         top: "0px",
         background: "#FFFFFF",
         marginBottom: ".28vw",
         boxShadow: ".28vw .28vw .28vw rgba(204, 204, 204, 0.25)",
+        [theme.breakpoints.down("sm")]: {
+          boxShadow: "0px 0px 0px 0px",
+        },
       },
 
       logo: {
         position: "relative",
-        maxWidth: "11.35vw",
-        marginLeft: "1.39vw",
-        top: ".17vw",
+        [theme.breakpoints.up("md")]: {
+          width: "11.35vw",
+          marginLeft: "11.39vw",
+          top: ".17vw",
+          boxShadow: "0px 0px 0px 0px",
+        },
+        [theme.breakpoints.down("sm")]: {},
       },
 
       nav: {
+        [theme.breakpoints.down("md")]: {
+          display: "none",
+        },
+
         alignContent: "center",
       },
 
       wallet: {
+        display: { sm: "none", md: "flex" },
         position: "relative",
-        left: "51vw",
-        justifyContent: "flexend",
-        display: "flex",
+        //left: "51vw",
+        alignContent: "end",
+        justifyContent: "flex-end",
       },
     },
     layout: {
-      layoutBox: { height: "100%" },
-      layoutMainwindow: {
-        height: "100vh",
+      layoutBox: {
+        height: "100%",
+        alignContent: "space-between",
+
+        justifyContent: "space-between",
+        display: "flex",
       },
+      layoutMainwindow: {},
     },
 
     mainWindowBackground: {
@@ -53,7 +68,7 @@ const style = (theme) => {
       marginLeft: "2.05vw",
     },
     mainWindow: {
-      height: "100vh",
+      height: "100%",
       width: "100%",
       background: "#FEFEFE",
     },

@@ -49,7 +49,7 @@ export const Header: FC = () => {
   };
 
   /* return (
-    <Grid2 sx={styles.header.headerBox}>
+    <Grid2 sx={styles.header.headerbox}>
       <Grid2 style={styles.header.logo}>
         <img src={logo} alt="Logo" />
       </Grid2>
@@ -64,27 +64,31 @@ export const Header: FC = () => {
   ); */
 
   return (
-    <AppBar position="static">
-      <Container maxWidth="xl">
+    //<AppBar sx={styles.header.headerbox} position="static">
+    <AppBar sx={{}} color="transparent" position="static">
+      <Container sx={styles.header.headerbox} maxWidth="xl">
         <Toolbar disableGutters>
-          <Typography
-            variant="h6"
-            noWrap
-            component="a"
-            href="/"
-            sx={{
-              mr: 2,
-              display: { xs: "none", md: "flex" },
-              fontFamily: "monospace",
-              fontWeight: 700,
-              letterSpacing: ".3rem",
-              color: "inherit",
-              textDecoration: "none",
-            }}
-          >
-            Tezex Large
-          </Typography>
+          <Grid2 style={styles.header.logo}>
+            <img src={logo} alt="Logo" />
+          </Grid2>
 
+          <Grid2 sx={styles.header.nav}>
+            <NavApp />
+          </Grid2>
+          <Box sx={{ width: "60%" }}>
+            <span></span>
+          </Box>
+          <Grid2 md={2} sx={styles.header.wallet}>
+            <Wallet variant={"header"} />
+          </Grid2>
+        </Toolbar>
+      </Container>
+    </AppBar>
+  );
+};
+/* 
+ *
+ * ik
           <Box sx={{ flexGrow: 1, display: { xs: "flex", md: "none" } }}>
             <IconButton
               size="large"
@@ -137,22 +141,19 @@ export const Header: FC = () => {
               textDecoration: "none",
             }}
           >
-            Tezex Logo
+            Tezex small
           </Typography>
           <Box sx={{ flexGrow: 1, display: { xs: "none", md: "flex" } }}>
+
             {pages.map((page) => (
               <Button
                 key={page}
                 onClick={handleCloseNavMenu}
-                sx={{ my: 2, color: "white", display: "block" }}
+                sx={{ my: 2, color: "black", display: "block" }}
               >
                 {page}
               </Button>
             ))}
           </Box>
-        </Toolbar>
-      </Container>
-    </AppBar>
-  );
-};
+ * */
 export {};
