@@ -22,41 +22,52 @@ export interface ILayout {
 export const Layout: FC<ILayout> = (props) => {
   const styles = useStyles(style);
   return (
-    <Box sx={styles.layout.layoutBox}>
-      <Box sx={{ display: "flex" }}>
-        <Header />
-      </Box>
+    <Box
+      sx={{
+        display: "flex",
+        width: "100vw",
+        justifyContent: "space-between",
+        flexDirection: "row",
+      }}
+    >
+      <Box sx={styles.layout.layoutBox}>
+        <Box sx={{ display: "flex" }}>
+          <Header />
+        </Box>
 
-      <Box
-        sx={{
-          height: "100%",
-          position: "relative",
-          alignContent: "space-between",
-          flexDirection: "column",
-          justifyContent: "space-between",
-          display: "flex",
-        }}
-      >
         <Box
           sx={{
-            position: "relative",
+            height: "100%",
             width: "100%",
-            alignContent: "flex-start",
-
-            flexDirection: "row",
+            position: "relative",
+            alignContent: "space-between",
+            flexDirection: "column",
             justifyContent: "space-between",
             display: "flex",
           }}
         >
-          <MainWindow>{props.children}</MainWindow>
+          <Box
+            sx={{
+              position: "relative",
+              alignContent: "flex-start",
 
-          <SideBar />
-        </Box>
+              flexDirection: "row",
+              justifyContent: "space-between",
+              display: "flex",
+            }}
+          >
+            <MainWindow>{props.children}</MainWindow>
 
-        <Box sx={{}}>
-          <ResponsiveAppBar />
+            <SideBar />
+          </Box>
+
+          <Box sx={{}}>
+            <ResponsiveAppBar />
+          </Box>
         </Box>
       </Box>
+
+      <SideBar />
     </Box>
   );
 };

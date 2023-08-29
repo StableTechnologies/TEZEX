@@ -47,7 +47,8 @@ const style = (theme) => {
     },
     layout: {
       layoutBox: {
-        height: "100%",
+        height: "100vh",
+        width: "100%",
         alignContent: "flex-start",
         flexDirection: "column",
         justifyContent: "flex-start",
