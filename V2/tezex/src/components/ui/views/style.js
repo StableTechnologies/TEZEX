@@ -48,9 +48,9 @@ const style = (theme) => {
     layout: {
       layoutBox: {
         height: "100%",
-        alignContent: "space-between",
-
-        justifyContent: "space-between",
+        alignContent: "flex-start",
+        flexDirection: "column",
+        justifyContent: "flex-start",
         display: "flex",
       },
       layoutMainwindow: {},

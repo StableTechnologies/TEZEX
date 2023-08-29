@@ -18,6 +18,7 @@ export const MainWindow: FC<IMainWindow> = (props) => {
   return (
     <Box
       sx={{
+        height: "100%",
         width: "100%",
       }}
     >

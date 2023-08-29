@@ -110,7 +110,7 @@ const style = (theme) => {
       color: "white",
       //minHeight: "2.7vw",
       //minWidth: "10.24vw",
-      width: "100%",
+      minWidth: "144px",
 
       border: "1px solid black",
       borderRadius: ".55vw",
