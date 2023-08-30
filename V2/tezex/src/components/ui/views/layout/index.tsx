@@ -1,14 +1,14 @@
 import React, { FC } from "react";
-import { Header } from "./Header";
-import ResponsiveAppBar from "../../app-bar-example/";
+import { Header } from "../header";
+import ResponsiveAppBar from "../../../app-bar-example/";
 
 // } from "../../../app-bar-exa ";
-import { MainWindow } from "./MainWindow";
-import { SideBar } from "./sidebar";
+import { MainWindow } from "../main-window";
+import { SideBar } from "../sidebar";
 import Box from "@mui/material/Box";
 
 import style from "./style";
-import useStyles from "../../../hooks/styles";
+import useStyles from "../../../../hooks/styles";
 import Grid2 from "@mui/material/Unstable_Grid2/Grid2";
 export interface ILayout {
   children:
@@ -26,6 +26,7 @@ export const Layout: FC<ILayout> = (props) => {
       sx={{
         display: "flex",
         width: "100vw",
+        height: "100%",
         justifyContent: "space-between",
         flexDirection: "row",
       }}
@@ -46,24 +47,16 @@ export const Layout: FC<ILayout> = (props) => {
             display: "flex",
           }}
         >
+          <MainWindow>{props.children}</MainWindow>
+
           <Box
             sx={{
-              position: "relative",
-              alignContent: "flex-start",
-
-              flexDirection: "row",
-              justifyContent: "space-between",
+              position: "absolute",
               display: "flex",
+              bottom: "0%",
+              width: "100%",
             }}
-          >
-            <MainWindow>{props.children}</MainWindow>
-
-            <SideBar />
-          </Box>
-
-          <Box sx={{}}>
-            <ResponsiveAppBar />
-          </Box>
+          ></Box>
         </Box>
       </Box>
 

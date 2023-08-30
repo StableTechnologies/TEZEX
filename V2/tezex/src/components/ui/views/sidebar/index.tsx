@@ -1,89 +1,48 @@
 import React, { FC } from "react";
-import { Wallet } from "../../wallet/Wallet";
-import { NavApp } from "../../nav";
+import { Wallet } from "../../../wallet/Wallet";
+import { NavApp } from "../../../nav";
 
 import Grid2 from "@mui/material/Unstable_Grid2"; // Grid version 2
 import Box from "@mui/material/Box";
-import logo from "../../../assets/TezexLogo.svg";
+import logo from "../../../../assets/TezexLogo.svg";
 
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
-import Menu from "@mui/material/Menu";
 import MenuIcon from "@mui/icons-material/Menu";
 import Container from "@mui/material/Container";
 import Avatar from "@mui/material/Avatar";
 import Button from "@mui/material/Button";
 import Tooltip from "@mui/material/Tooltip";
-import MenuItem from "@mui/material/MenuItem";
+import useStyles from "../../../../hooks/styles";
 import style from "./style";
-import useStyles from "../../../hooks/styles";
+import { Sidebar, Menu, MenuItem } from "react-pro-sidebar";
+import { Link } from "react-router-dom";
 
 const pages = ["Home", "Analytics", "About"];
 
 const settings = [""];
-export const Header: FC = () => {
-  const styles = useStyles(style);
-
-  const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(
-    null
-  );
-  const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(
-    null
-  );
-
-  const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorElNav(event.currentTarget);
-  };
-  const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorElUser(event.currentTarget);
-  };
-
-  const handleCloseNavMenu = () => {
-    setAnchorElNav(null);
-  };
-
-  const handleCloseUserMenu = () => {
-    setAnchorElUser(null);
-  };
-
-  /* return (
-    <Grid2 sx={styles.header.headerbox}>
-      <Grid2 style={styles.header.logo}>
-        <img src={logo} alt="Logo" />
-      </Grid2>
-
-      <Grid2 sx={styles.header.nav}>
-        <NavApp />
-      </Grid2>
-      <Grid2 sx={styles.header.wallet}>
-        <Wallet variant={"header"} />
-      </Grid2>
-    </Grid2>
-  ); */
-
+export const SideBar: FC = () => {
   return (
-    //<AppBar sx={styles.header.headerbox} position="static">
-    <AppBar sx={{}} color="transparent" position="static">
-      <Container sx={styles.header.headerbox} maxWidth="xl">
-        <Toolbar disableGutters>
-          <Grid2 style={styles.header.logo}>
-            <img src={logo} alt="Logo" />
-          </Grid2>
-
-          <Grid2 sx={styles.header.nav}>
-            <NavApp />
-          </Grid2>
-          <Box sx={{ width: "60%" }}>
-            <span></span>
-          </Box>
-          <Grid2 md={2} sx={styles.header.wallet}>
-            <Wallet variant={"header"} />
-          </Grid2>
-        </Toolbar>
-      </Container>
-    </AppBar>
+    <Sidebar>
+      <Menu
+        menuItemStyles={{
+          button: {
+            // the active class will be added automatically by react router
+            // so we can use it to style the active menu item
+            [`&.active`]: {
+              backgroundColor: "#13395e",
+              color: "#b6c8d9",
+            },
+          },
+        }}
+      >
+        <MenuItem component={<Link to="/Home" />}> Home</MenuItem>
+        <MenuItem component={<Link to="/Analytics" />}> Analytics</MenuItem>
+        <MenuItem component={<Link to="/About" />}> About</MenuItem>
+      </Menu>
+    </Sidebar>
   );
 };
 /* 
@@ -156,4 +115,3 @@ export const Header: FC = () => {
             ))}
           </Box>
  * */
-export {};
