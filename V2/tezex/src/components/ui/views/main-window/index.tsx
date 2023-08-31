@@ -44,6 +44,10 @@ export const MainWindow: FC<IMainWindow> = (props) => {
           "@media (max-width: 900px) and (orientation: landscape)": {
             display: "none",
           },
+
+          "@media screen and (max-width: 768px)": {
+            display: "none",
+          },
         }}
       >
         {" "}
