@@ -40,6 +40,10 @@ export const MainWindow: FC<IMainWindow> = (props) => {
           alignItems: "flex-start",
           left: "2%",
           top: "2%",
+
+          "@media (max-width: 900px) and (orientation: landscape)": {
+            display: "none",
+          },
         }}
       >
         {" "}
