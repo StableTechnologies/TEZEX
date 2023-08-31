@@ -32,16 +32,18 @@ export const Layout: FC<ILayout> = (props) => {
       }}
     >
       <Box sx={styles.layout.layoutBox}>
-        <Box
-          sx={{
-            display: "flex",
-            "@media (max-width: 900px) and (orientation: landscape)": {
-              display: "none",
-            },
-          }}
-        >
-          <Header />
-        </Box>
+        <header>
+          <Box
+            sx={{
+              display: "flex",
+              "@media (max-width: 900px) and (orientation: landscape)": {
+                display: "none",
+              },
+            }}
+          >
+            <Header />
+          </Box>
+        </header>
 
         <Box
           sx={{
