@@ -67,7 +67,16 @@ export const Layout: FC<ILayout> = (props) => {
         </Box>
       </Box>
 
-      <SideBar />
+      <Box
+        sx={{
+          display: "none",
+          "@media (max-width: 900px) and (orientation: landscape)": {
+            display: "flex",
+          },
+        }}
+      >
+        <SideBar />
+      </Box>
     </Box>
   );
 };
