@@ -19,36 +19,68 @@ import useStyles from "../../../../hooks/styles";
 import style from "./style";
 import { Sidebar, Menu, MenuItem } from "react-pro-sidebar";
 import { Link } from "react-router-dom";
-
+import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
+import CloseIcon from "@mui/icons-material/Close";
+import { useTheme } from "@mui/material";
 const pages = ["Home", "Analytics", "About"];
 
 const settings = [""];
 export const SideBar: FC = () => {
+  const [collapsed, setCollapsed] = React.useState(true);
   return (
-    <Sidebar
-      backgroundColor="#FFFFFF"
-      rootStyles={{
-        //boxShadow: "20px 20px 25px 20px rgba(0, 0, 0, 0.1)",
-        boxShadow: "0px 0px 10px 1px rgba(0,0,0,0.15)",
+    <Box
+      sx={{
+        width: " 100%",
+        display: "flex",
       }}
     >
-      <Menu
-        menuItemStyles={{
-          button: {
-            // the active class will be added automatically by react router
-            // so we can use it to style the active menu item
-            [`&.active`]: {
-              backgroundColor: "#FFFFFF",
-              color: "#b6c8d9",
-            },
-          },
+      <Sidebar
+        backgroundColor="#FFFFFF"
+        collapsed={collapsed}
+        onBackdropClick={() => setCollapsed(false)}
+        rtl={true}
+        rootStyles={{
+          //boxShadow: "20px 20px 25px 20px rgba(0, 0, 0, 0.1)",
+          fontSize: collapsed ? "0px" : "13px",
+          boxShadow: "0px 0px 10px 0px rgba(0,0,0,0.15)",
+          borderRight: "0px",
         }}
       >
-        <MenuItem component={<Link to="/home/swap" />}> Home</MenuItem>
-        <MenuItem component={<Link to="/Analytics" />}> Analytics</MenuItem>
-        <MenuItem component={<Link to="/About" />}> About</MenuItem>
-      </Menu>
-    </Sidebar>
+        <Box
+          sx={{
+            display: "flex",
+          }}
+        >
+          <Menu
+            menuItemStyles={{
+              button: {
+                // the active class will be added automatically by react router
+                // so we can use it to style the active menu item
+                [`&.active`]: {
+                  backgroundColor: "#FFFFFF",
+                  color: "#b6c8d9",
+                },
+              },
+            }}
+          >
+            <MenuItem
+              icon={
+                collapsed ? (
+                  <MenuOutlinedIcon onClick={() => setCollapsed(false)} />
+                ) : (
+                  <CloseIcon onClick={() => setCollapsed(true)} />
+                )
+              }
+            >
+              {" "}
+            </MenuItem>
+            <MenuItem component={<Link to="/home/swap" />}> Home</MenuItem>
+            <MenuItem component={<Link to="/Analytics" />}> Analytics</MenuItem>
+            <MenuItem component={<Link to="/About" />}> About</MenuItem>
+          </Menu>
+        </Box>
+      </Sidebar>
+    </Box>
   );
 };
 /* 

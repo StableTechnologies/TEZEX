@@ -25,7 +25,7 @@ export const Layout: FC<ILayout> = (props) => {
     <Box
       sx={{
         display: "flex",
-        width: "100vw",
+        width: "100%",
         height: "100%",
         justifyContent: "space-between",
         flexDirection: "row",
@@ -74,6 +74,10 @@ export const Layout: FC<ILayout> = (props) => {
           display: "none",
           "@media (max-width: 900px) and (orientation: landscape)": {
             display: "flex",
+            height: "100%",
+            position: "absolute",
+            right: "-30px",
+            zIndex: 1000,
           },
         }}
       >
