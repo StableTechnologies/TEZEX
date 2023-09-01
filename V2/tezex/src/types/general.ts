@@ -6,6 +6,14 @@ export interface AppConfig {
   aboutRedirectUrl: string;
 }
 
+export enum Pages {
+  HOME = "/home/swap",
+  SWAP = "/home/swap",
+  ADD_LIQUIDITY = "/home/add",
+  REMOVE_LIQUIDITY = "/home/remove",
+  ABOUT = "/about",
+}
+
 export enum Token {
   XTZ = "XTZ",
   TzBTC = "TzBTC",
