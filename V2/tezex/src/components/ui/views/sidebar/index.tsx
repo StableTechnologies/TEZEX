@@ -25,20 +25,26 @@ const pages = ["Home", "Analytics", "About"];
 const settings = [""];
 export const SideBar: FC = () => {
   return (
-    <Sidebar>
+    <Sidebar
+      backgroundColor="#FFFFFF"
+      rootStyles={{
+        //boxShadow: "20px 20px 25px 20px rgba(0, 0, 0, 0.1)",
+        boxShadow: "0px 0px 10px 1px rgba(0,0,0,0.15)",
+      }}
+    >
       <Menu
         menuItemStyles={{
           button: {
             // the active class will be added automatically by react router
             // so we can use it to style the active menu item
             [`&.active`]: {
-              backgroundColor: "#13395e",
+              backgroundColor: "#FFFFFF",
               color: "#b6c8d9",
             },
           },
         }}
       >
-        <MenuItem component={<Link to="/Home" />}> Home</MenuItem>
+        <MenuItem component={<Link to="/home/swap" />}> Home</MenuItem>
         <MenuItem component={<Link to="/Analytics" />}> Analytics</MenuItem>
         <MenuItem component={<Link to="/About" />}> About</MenuItem>
       </Menu>

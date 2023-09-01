@@ -65,17 +65,17 @@ export const Header: FC = () => {
 
   return (
     //<AppBar sx={styles.header.headerbox} position="static">
-    <AppBar sx={{}} color="transparent" position="static">
-      <Container sx={styles.header.headerbox} maxWidth="xl">
+    <AppBar sx={styles.headerbox} color="transparent" position="static">
+      <Container sx={styles.headerbox} maxWidth="xl">
         <Toolbar disableGutters>
-          <Grid2 style={styles.header.logo}>
+          <Grid2 style={styles.logo}>
             <img src={logo} alt="Logo" />
           </Grid2>
 
-          <Grid2 sx={styles.header.nav}>
+          <Grid2 sx={styles.nav}>
             <NavApp />
           </Grid2>
-          <Grid2 md={2} sx={styles.header.wallet}>
+          <Grid2 md={2} sx={styles.wallet}>
             <Wallet variant={"header"} />
           </Grid2>
         </Toolbar>
