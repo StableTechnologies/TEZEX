@@ -44,6 +44,14 @@ const style = (theme) => {
       alignContent: "end",
       justifyContent: "flex-end",
     },
+    menu: {
+      display: { xs: "flex", sm: "flex", md: "none" },
+      position: "absolute",
+      right: "0px",
+      //left: "51vw",
+      alignContent: "end",
+      justifyContent: "flex-end",
+    },
   };
 };
 

@@ -19,11 +19,15 @@ import Tooltip from "@mui/material/Tooltip";
 import MenuItem from "@mui/material/MenuItem";
 import style from "./style";
 import useStyles from "../../../../hooks/styles";
+import { Module } from "module";
 
 const pages = ["Home", "Analytics", "About"];
 
 const settings = [""];
-export const Header: FC = () => {
+export interface IHeader {
+  toggleMenu: () => void;
+}
+export const Header: FC<IHeader> = (props) => {
   const styles = useStyles(style);
 
   const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(
@@ -77,6 +81,11 @@ export const Header: FC = () => {
           </Grid2>
           <Grid2 md={2} sx={styles.wallet}>
             <Wallet variant={"header"} />
+          </Grid2>
+          <Grid2 md={2} sx={styles.menu}>
+            <IconButton onClick={props.toggleMenu}>
+              <MenuIcon />
+            </IconButton>
           </Grid2>
         </Toolbar>
       </Container>
