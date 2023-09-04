@@ -1,4 +1,4 @@
-import React, { FC } from "react";
+import React, { FC, useState, useCallback } from "react";
 import { Header } from "../header";
 import ResponsiveAppBar from "../../../app-bar-example/";
 
@@ -21,6 +21,11 @@ export interface ILayout {
 
 export const Layout: FC<ILayout> = (props) => {
   const styles = useStyles(style);
+  const [openMenu, setOpenMenu] = useState(false);
+  const toggleMenu = useCallback(() => {
+    setOpenMenu(!openMenu);
+  }, [openMenu]);
+
   return (
     <Box
       sx={{
@@ -41,7 +46,7 @@ export const Layout: FC<ILayout> = (props) => {
               },
             }}
           >
-            <Header />
+            <Header toggleMenu={toggleMenu} />
           </Box>
         </header>
 
@@ -71,12 +76,10 @@ export const Layout: FC<ILayout> = (props) => {
 
       <Box
         sx={{
-          display: "none",
+          display: openMenu ? "flex" : "none",
           "@media (max-width: 900px) and (orientation: landscape)": {
             display: "flex",
             height: "100%",
-            position: "absolute",
-            right: "-30px",
             zIndex: 1000,
           },
         }}
