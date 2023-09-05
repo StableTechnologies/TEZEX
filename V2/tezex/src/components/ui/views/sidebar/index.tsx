@@ -63,16 +63,10 @@ export const SideBar: FC<ISideBarProps> = (props) => {
             },
           }}
         >
-          <MenuItem
-            icon={
-              !props.openMenu ? (
-                <MenuOutlinedIcon onClick={() => props.toggleMenu()} />
-              ) : (
-                <CloseIcon onClick={() => props.toggleMenu()} />
-              )
-            }
-          >
-            {" "}
+          <MenuItem>
+            <IconButton onClick={() => props.toggleMenu()}>
+              {!props.openMenu ? <MenuOutlinedIcon /> : <CloseIcon />}
+            </IconButton>
           </MenuItem>
           <MenuItem component={<Link to="/home/swap" />}> Home</MenuItem>
           <MenuItem component={<Link to="/Analytics" />}> Analytics</MenuItem>
