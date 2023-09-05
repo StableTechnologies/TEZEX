@@ -46,7 +46,7 @@ export const Layout: FC<ILayout> = (props) => {
               },
             }}
           >
-            <Header toggleMenu={toggleMenu} />
+            <Header openMenu={openMenu} toggleMenu={toggleMenu} />
           </Box>
         </header>
 

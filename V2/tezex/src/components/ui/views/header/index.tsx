@@ -25,6 +25,7 @@ const pages = ["Home", "Analytics", "About"];
 
 const settings = [""];
 export interface IHeader {
+  openMenu: boolean;
   toggleMenu: () => void;
 }
 export const Header: FC<IHeader> = (props) => {
@@ -82,7 +83,7 @@ export const Header: FC<IHeader> = (props) => {
           <Grid2 md={2} sx={styles.wallet}>
             <Wallet variant={"header"} />
           </Grid2>
-          <Grid2 md={2} sx={styles.menu}>
+          <Grid2 md={2} sx={props.openMenu ? styles.hide : styles.menu}>
             <IconButton onClick={props.toggleMenu}>
               <MenuIcon />
             </IconButton>
@@ -131,7 +132,7 @@ export const Header: FC<IHeader> = (props) => {
               ))}
             </Menu>
           </Box>
-          <Typography
+           <Typography
             variant="h5"
             noWrap
             component="a"
