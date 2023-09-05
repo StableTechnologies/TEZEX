@@ -84,7 +84,7 @@ export const Layout: FC<ILayout> = (props) => {
           },
         }}
       >
-        <SideBar />
+        <SideBar openMenu={openMenu} toggleMenu={toggleMenu} />
       </Box>
     </Box>
   );

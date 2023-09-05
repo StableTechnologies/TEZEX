@@ -1,4 +1,4 @@
-import React, { FC } from "react";
+import React, { FC, useEffect } from "react";
 import { Wallet } from "../../../wallet/Wallet";
 import { NavApp } from "../../../nav";
 
@@ -25,8 +25,16 @@ import { useTheme } from "@mui/material";
 const pages = ["Home", "Analytics", "About"];
 
 const settings = [""];
-export const SideBar: FC = () => {
+export interface ISideBarProps {
+  openMenu: boolean;
+  toggleMenu: () => void;
+}
+export const SideBar: FC<ISideBarProps> = (props) => {
   const [collapsed, setCollapsed] = React.useState(true);
+  useEffect(() => {
+    setCollapsed(!props.openMenu);
+  }, [props.openMenu]);
+
   return (
     <Sidebar
       backgroundColor="#FFFFFF"
@@ -57,10 +65,10 @@ export const SideBar: FC = () => {
         >
           <MenuItem
             icon={
-              collapsed ? (
-                <MenuOutlinedIcon onClick={() => setCollapsed(false)} />
+              !props.openMenu ? (
+                <MenuOutlinedIcon onClick={() => props.toggleMenu()} />
               ) : (
-                <CloseIcon onClick={() => setCollapsed(true)} />
+                <CloseIcon onClick={() => props.toggleMenu()} />
               )
             }
           >
