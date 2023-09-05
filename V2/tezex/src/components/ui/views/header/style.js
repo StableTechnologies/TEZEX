@@ -44,6 +44,9 @@ const style = (theme) => {
       alignContent: "end",
       justifyContent: "flex-end",
     },
+    hide: {
+      display: "none",
+    },
     menu: {
       display: { xs: "flex", sm: "flex", md: "none" },
       position: "absolute",
