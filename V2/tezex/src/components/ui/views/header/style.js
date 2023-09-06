@@ -6,12 +6,18 @@ const style = (theme) => {
       display: "flex",
       alignItems: "center",
       width: "100%",
-      height: "5vw",
+      //height: "5vw",
       left: "0px",
       top: "0px",
       background: "#FFFFFF",
       marginBottom: ".28vw",
       boxShadow: ".28vw .28vw .28vw rgba(204, 204, 204, 0.25)",
+      [theme.breakpoints.down("sm")]: {
+        boxShadow: "0px 0px 0px 0px",
+      },
+    },
+    toolbar: {
+      minHeight: "120px",
       [theme.breakpoints.down("sm")]: {
         boxShadow: "0px 0px 0px 0px",
       },

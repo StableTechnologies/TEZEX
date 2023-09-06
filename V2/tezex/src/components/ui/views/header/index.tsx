@@ -70,23 +70,47 @@ export const Header: FC<IHeader> = (props) => {
 
   return (
     //<AppBar sx={styles.header.headerbox} position="static">
-    <AppBar sx={styles.headerbox} color="transparent" position="static">
-      <Container sx={styles.headerbox} maxWidth="xl">
-        <Toolbar disableGutters>
-          <Grid2 style={styles.logo}>
-            <img src={logo} alt="Logo" />
-          </Grid2>
+    <AppBar sx={{}} color="transparent" position="static">
+      <Container
+        sx={
+          {
+            //marginBottom: "10px",
+          }
+        }
+        maxWidth="xl"
+      >
+        <Toolbar
+          disableGutters
+          sx={{
+            height: "120px",
+            alignItems: "flex-end",
 
-          <Grid2 sx={styles.nav}>
-            <NavApp />
-          </Grid2>
-          <Grid2 md={2} sx={styles.wallet}>
-            <Wallet variant={"header"} />
-          </Grid2>
-          <Grid2 md={2} sx={props.openMenu ? styles.hide : styles.menu}>
-            <IconButton onClick={props.toggleMenu}>
-              <MenuIcon />
-            </IconButton>
+            marginBottom: "2%",
+          }}
+        >
+          <Grid2
+            container
+            direction="row"
+            alignItems="center"
+            justifyContent="flex-start"
+            alignContent="center"
+            sx={{ flexGrow: 1 }}
+          >
+            <Grid2 style={styles.logo}>
+              <img src={logo} alt="Logo" />
+            </Grid2>
+
+            <Grid2 sx={styles.nav}>
+              <NavApp />
+            </Grid2>
+            <Grid2 md={2} sx={styles.wallet}>
+              <Wallet variant={"header"} />
+            </Grid2>
+            <Grid2 md={2} sx={props.openMenu ? styles.hide : styles.menu}>
+              <IconButton onClick={props.toggleMenu}>
+                <MenuIcon />
+              </IconButton>
+            </Grid2>
           </Grid2>
         </Toolbar>
       </Container>

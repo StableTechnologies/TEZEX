@@ -56,6 +56,7 @@ export const Layout: FC<ILayout> = (props) => {
         <header>
           <Box
             sx={{
+              flexgrow: 1,
               display: "flex",
               "@media (max-width: 900px) and (orientation: landscape)": {
                 display: "none",
