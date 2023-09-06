@@ -1,4 +1,4 @@
-import React, { FC, useState, useCallback } from "react";
+import React, { FC, useState, useEffect, useCallback } from "react";
 import { Header } from "../header";
 import ResponsiveAppBar from "../../../app-bar-example/";
 
@@ -25,6 +25,22 @@ export const Layout: FC<ILayout> = (props) => {
   const toggleMenu = useCallback(() => {
     setOpenMenu(!openMenu);
   }, [openMenu]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const screenWidth = window.innerWidth;
+      //To be adjusted
+      if (screenWidth > 1024) {
+        setOpenMenu(false);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
 
   return (
     <Box
