@@ -1,5 +1,6 @@
 // eslint-disable-next-line
 const style = (theme) => {
+  //all the view widths were set for a screen that is 1440 wide , convert all the vw's to pixels
   return {
     paperTypography: {
       marginLeft: "1vw",
@@ -126,8 +127,26 @@ const style = (theme) => {
     card: {
       overflow: "hidden",
       position: "relative",
+
       height: "28.49vw",
+
       width: "30.56vw",
+      transition: "all 0.3s ease-in-out",
+      [theme.breakpoints.down("md")]: {
+        height: "calc(28.49vw * 2)",
+
+        width: "calc(30.56vw * 2)",
+      },
+
+      [theme.breakpoints.down("sm")]: {
+        height: "28.49vw",
+
+        width: "30.56vw",
+      },
+      // height: "28.49vw",
+      // height: `${(28.49 / 100) * 1440}px`,
+      //width: "30.56vw",
+      // width: `${(30.56 / 100) * 1440}px`,
       borderRadius: "1.38vw",
       zIndex: 999,
       background: "#FFFFFF",
