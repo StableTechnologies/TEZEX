@@ -24,6 +24,7 @@ const style = (theme) => {
     },
 
     logo: {
+      minWidth: "164px",
       position: "relative",
       [theme.breakpoints.up("md")]: {
         //  width: "11.35vw",
@@ -31,7 +32,9 @@ const style = (theme) => {
         //  top: ".17vw",
         //  boxShadow: "0px 0px 0px 0px",
       },
-      [theme.breakpoints.down("sm")]: {},
+      [theme.breakpoints.down("sm")]: {
+        minWidth: "164px",
+      },
     },
 
     nav: {

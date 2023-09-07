@@ -5,6 +5,7 @@ import { NavApp } from "../../../nav";
 import Grid2 from "@mui/material/Unstable_Grid2"; // Grid version 2
 import Box from "@mui/material/Box";
 import logo from "../../../../assets/TezexLogo.svg";
+import logoSmall from "../../../../assets/tezexIcon.svg";
 
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
@@ -70,11 +71,27 @@ export const Header: FC<IHeader> = (props) => {
 
   return (
     //<AppBar sx={styles.header.headerbox} position="static">
-    <AppBar sx={{}} color="transparent" position="static">
+    <AppBar
+      sx={{
+        "&.MuiPaper-root": {
+          "@media screen and (max-width: 768px)": {
+            boxShadow: "none",
+          },
+        },
+      }}
+      color="transparent"
+      position="static"
+    >
       <Container
         sx={
           {
             //marginBottom: "10px",
+            //display: "flex",
+            /* justifyContent: "center",
+               alignContent: "center",
+               alignItems: "center",
+               height: "5vh",
+             */
           }
         }
         maxWidth="xl"
@@ -82,22 +99,55 @@ export const Header: FC<IHeader> = (props) => {
         <Toolbar
           disableGutters
           sx={{
-            height: "120px",
-            alignItems: "flex-end",
-
-            marginBottom: "2%",
+            height: "100%",
+            transition: "height 0.3s ",
+            "@media screen and (max-width: 768px)": {
+              height: "10vh",
+            },
           }}
         >
           <Grid2
             container
-            direction="row"
+            //direction="row"
             alignItems="center"
             justifyContent="flex-start"
             alignContent="center"
             sx={{ flexGrow: 1 }}
           >
-            <Grid2 style={styles.logo}>
-              <img src={logo} alt="Logo" />
+            <Grid2
+              sm={3}
+              style={{
+                width: "164px",
+              }}
+            >
+              <Box
+                component="img"
+                sx={{
+                  display: "flex",
+                  Width: "164px",
+                  "@media screen and (max-width: 768px)": {
+                    width: "164px",
+                  },
+                  "@media screen and (max-width: 246px)": {
+                    display: "none",
+                  },
+                }}
+                src={logo}
+                alt="Logo"
+              />
+
+              <Box
+                component="img"
+                sx={{
+                  display: "none",
+                  //Width: "",
+                  "@media screen and (max-width: 246px)": {
+                    display: "flex",
+                  },
+                }}
+                src={logoSmall}
+                alt="Logo"
+              />
             </Grid2>
 
             <Grid2 sx={styles.nav}>
@@ -106,7 +156,7 @@ export const Header: FC<IHeader> = (props) => {
             <Grid2 md={2} sx={styles.wallet}>
               <Wallet variant={"header"} />
             </Grid2>
-            <Grid2 md={2} sx={props.openMenu ? styles.hide : styles.menu}>
+            <Grid2 md={1} sx={props.openMenu ? styles.hide : styles.menu}>
               <IconButton onClick={props.toggleMenu}>
                 <MenuIcon />
               </IconButton>
