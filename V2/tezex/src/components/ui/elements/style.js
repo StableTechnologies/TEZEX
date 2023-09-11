@@ -67,7 +67,18 @@ const style = (theme) => {
     },
     icon: {
       padding: "0vw",
-      height: "1.33vw",
+      height: "100%",
+      //height: "4.33vw",
+      //height: "62px",
+      /*[theme.breakpoints.up("md")]: {
+
+        height: "1.33vw",
+      },
+      [theme.breakpoints.down("md")]: {
+
+        height: "62px",
+      },
+      */
     },
 
     box: {
@@ -79,7 +90,7 @@ const style = (theme) => {
     },
 
     button: {
-      minWidth: "2.22vw",
+      /* minWidth: "2.22vw",
       minHeight: "2.22vw",
       padding: "0px 0px 0px 0px ",
 
@@ -88,6 +99,11 @@ const style = (theme) => {
       boxShadow: "0px 0.28vw 1.38vw rgba(181, 181, 181, 0.25)",
       background: "#FFFFFF",
       borderRadius: ".55vw",
+*/
+      [theme.breakpoints.down("md")]: {
+        height: "32px",
+        width: "32px",
+      },
     },
   };
 };

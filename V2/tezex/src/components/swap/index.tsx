@@ -23,6 +23,7 @@ import Typography from "@mui/material/Typography";
 
 import style from "./style";
 import useStyles from "../../hooks/styles";
+import { height } from "@mui/system";
 
 export interface ISwapToken {
   children: null;
@@ -197,7 +198,7 @@ export const Swap: FC = () => {
   });
   return (
     <Grid2 container sx={styles.root}>
-      <Grid2>
+      <Box sx={{}}>
         <Card sx={styles.card}>
           <CardHeader
             sx={styles.cardHeader}
@@ -238,8 +239,8 @@ export const Swap: FC = () => {
           </CardActions>
         </Card>
 
-        <Paper variant="outlined" sx={styles.paper} square>
-          <Box sx={styles.paperBox}>
+        <Box sx={styles.paperBox}>
+          <Paper variant="outlined" sx={styles.paper} square>
             <Grid2 xs={4}>
               <SlippageLabel />
             </Grid2>
@@ -253,9 +254,9 @@ export const Swap: FC = () => {
                 loading={loading}
               />
             </Grid2>
-          </Box>
-        </Paper>
-      </Grid2>
+          </Paper>
+        </Box>
+      </Box>
     </Grid2>
   );
 };

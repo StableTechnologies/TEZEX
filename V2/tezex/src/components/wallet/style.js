@@ -73,6 +73,15 @@ const style = (theme) => {
       "&:hover": {
         background: "rgba(45, 45, 45, 0.5)",
       },
+
+      [theme.breakpoints.down("md")]: {
+        borderRadius: "16px",
+        fontWeight: "500",
+        fontSize: "24px",
+        lineHeight: "29px",
+        width: "408px",
+        height: "60px",
+      },
     },
     transact: {
       "&.MuiButton-root.Mui-disabled": {
