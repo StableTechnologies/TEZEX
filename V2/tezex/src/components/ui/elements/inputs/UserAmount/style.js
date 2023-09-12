@@ -44,11 +44,13 @@ export const style = (theme) => {
           flexDirection: "row",
           borderRadius: "1.11vw",
           backgroundColor: "#F4F4F4",
+          [theme.breakpoints.down("md")]: {},
         },
         lighter: {
           flexDirection: "column",
           borderRadius: "1.11vw",
           backgroundColor: "#F9F9F9",
+          [theme.breakpoints.down("md")]: {},
         },
       },
       label: {
@@ -57,6 +59,7 @@ export const style = (theme) => {
         fontSize: ".97vw",
         textAlign: "right",
         marginLeft: "1vw",
+        [theme.breakpoints.down("md")]: {},
       },
       textFieldTextAboveGrey: {
         "&.MuiFormControl-root": {
@@ -75,6 +78,7 @@ export const style = (theme) => {
 
         justifyContent: "center",
         width: "80%",
+        [theme.breakpoints.down("md")]: {},
       },
       textFieldTextAbove: {
         "&.MuiFormControl-root": {
@@ -92,6 +96,7 @@ export const style = (theme) => {
 
         justifyContent: "center",
         width: "80%",
+        [theme.breakpoints.down("md")]: {},
       },
       textFieldGrey: {
         "&.MuiFormControl-root": {
@@ -109,6 +114,7 @@ export const style = (theme) => {
 
         bottom: ".8vw",
         justifyContent: "center",
+        [theme.breakpoints.down("md")]: {},
       },
       textField: {
         "&.MuiFormControl-root": {
@@ -124,6 +130,7 @@ export const style = (theme) => {
 
         bottom: ".8vw",
         justifyContent: "center",
+        [theme.breakpoints.down("md")]: {},
       },
       inputAdornmentStart: {
         boxLabel: {
@@ -131,6 +138,7 @@ export const style = (theme) => {
             display: "flex",
             position: "absolute",
             paddingTop: "1.1vw",
+            [theme.breakpoints.down("md")]: {},
           },
 
           fontSize: "1.2vw",
@@ -141,11 +149,13 @@ export const style = (theme) => {
           display: "flex",
           flexDirection: "row",
           paddingTop: "0px",
+          [theme.breakpoints.down("md")]: {},
         },
         imgLarger: {
           marginLeft: "1vw",
           marginRight: "1vw",
           height: "2.22vw",
+          [theme.breakpoints.down("md")]: {},
         },
         img: {
           marginLeft: "1vw",
@@ -153,17 +163,20 @@ export const style = (theme) => {
           height: "1.61vw",
 
           marginTop: ".1vw",
+          [theme.breakpoints.down("md")]: {},
         },
         typographyForLargerLogo: {
           color: "#1E1E1E",
           fontWeight: "500",
           fontSize: "1.25vw",
           marginTop: ".15vw",
+          [theme.breakpoints.down("md")]: {},
         },
         typography: {
           color: "#1E1E1E",
           fontWeight: "500",
           fontSize: "1.25vw",
+          [theme.breakpoints.down("md")]: {},
         },
       },
       inputAdornmentEnd: {
@@ -184,6 +197,7 @@ export const style = (theme) => {
           "&.MuiInputAdornment-root": {
             position: "absolute",
           },
+          [theme.breakpoints.down("md")]: {},
         },
         adornment: {
           display: "flex",
@@ -195,6 +209,7 @@ export const style = (theme) => {
 
           position: "relative",
           bottom: "3vw",
+          [theme.breakpoints.down("md")]: {},
         },
 
         button: {
@@ -211,14 +226,17 @@ export const style = (theme) => {
             minWidth: "3vw",
             maxWidth: "3vw",
           },
+          [theme.breakpoints.down("md")]: {},
         },
         img: {
           width: ".66vw",
+          [theme.breakpoints.down("md")]: {},
         },
         typography: {
           color: "#1E1E1E",
           fontWeight: "500",
           fontSize: "1.25vw",
+          [theme.breakpoints.down("md")]: {},
         },
       },
       balance: {
@@ -231,18 +249,21 @@ export const style = (theme) => {
 
           position: "relative",
           top: "4vw",
+          [theme.breakpoints.down("md")]: {},
         },
         typography: {
           color: "#999999",
           fontWeight: "400",
           fontSize: ".97vw",
           textAlign: "right",
+          [theme.breakpoints.down("md")]: {},
         },
       },
 
       input: {
         textAlign: "right",
         fontSize: "2.2vw",
+        [theme.breakpoints.down("md")]: {},
       },
     },
 
@@ -259,6 +280,7 @@ export const style = (theme) => {
           width: "4.5ch",
           alignItems: "center",
           justifyContent: "space-between",
+          [theme.breakpoints.down("md")]: {},
         },
       },
       "& .MuiButtonBase-root": {
@@ -307,6 +329,7 @@ export const style = (theme) => {
 
         color: "palette.text.primary",
         textTransform: "initial",
+        [theme.breakpoints.down("md")]: {},
       },
     },
   };
