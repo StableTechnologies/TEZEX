@@ -6,7 +6,7 @@ import InputAdornment from "@mui/material/InputAdornment";
 import TextField from "@mui/material/TextField";
 
 import { style } from "./style";
-import useStyles from "../../../../../hooks/styles";
+import useStyles from "../../../../../../hooks/styles";
 
 export interface ISlippageInput {
   balance?: string;

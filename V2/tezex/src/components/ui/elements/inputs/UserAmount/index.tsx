@@ -3,9 +3,9 @@ import React, { memo, FC, useCallback, useState, useEffect } from "react";
 import { Asset } from "../../../../../types/general";
 
 import { BigNumber } from "bignumber.js";
-import { LeftInput } from "./leftInput";
-import { RightInput } from "./rightInput";
-import { SlippageInput } from "./slippageInput";
+import { LeftInput } from "./left-input";
+import { RightInput } from "./right-input";
+import { SlippageInput } from "./slippage";
 
 export interface IAmountField {
   asset?: Asset;

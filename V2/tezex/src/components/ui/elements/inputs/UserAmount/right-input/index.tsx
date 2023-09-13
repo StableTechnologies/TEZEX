@@ -1,6 +1,6 @@
 import React, { FC } from "react";
 
-import { Asset } from "../../../../../types/general";
+import { Asset } from "../../../../../../types/general";
 
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
@@ -9,12 +9,12 @@ import Button from "@mui/material/Button";
 import InputAdornment from "@mui/material/InputAdornment";
 import TextField from "@mui/material/TextField";
 
-import liquiditySwapIcon from "../../../../../assets/liquiditySwapIcon.svg";
+import liquiditySwapIcon from "../../../../../../assets/liquiditySwapIcon.svg";
 
-import { WalletConnected } from "../../../../session/WalletConnected";
+import { WalletConnected } from "../../../../../session/WalletConnected";
 
 import { style } from "./style";
-import useStyles from "../../../../../hooks/styles";
+import useStyles from "../../../../../../hooks/styles";
 
 export interface IRigthInput {
   asset?: Asset;
@@ -38,12 +38,12 @@ export const RightInput: FC<IRigthInput> = (props) => {
     <Box
       sx={
         props.darker
-          ? styles.rightInput.gridContainter.darker
-          : styles.rightInput.gridContainter.lighter
+          ? styles.gridContainter.darker
+          : styles.gridContainter.lighter
       }
     >
-      <Box sx={styles.rightInput.inputAdornmentStart.boxLabel}>
-        <Typography sx={styles.rightInput.label}>{props.label}</Typography>
+      <Box sx={styles.inputAdornmentStart.boxLabel}>
+        <Typography sx={styles.label}>{props.label}</Typography>
       </Box>
       <Box sx={{}}>
         <TextField
@@ -54,11 +54,11 @@ export const RightInput: FC<IRigthInput> = (props) => {
           sx={
             props.label
               ? props.noUserActionCheck()
-                ? styles.rightInput.textFieldTextAboveGrey
-                : styles.rightInput.textFieldTextAbove
+                ? styles.textFieldTextAboveGrey
+                : styles.textFieldTextAbove
               : props.noUserActionCheck()
-              ? styles.rightInput.textFieldGrey
-              : styles.rightInput.textField
+              ? styles.textFieldGrey
+              : styles.textField
           }
           InputProps={{
             disableUnderline: true,
@@ -70,25 +70,31 @@ export const RightInput: FC<IRigthInput> = (props) => {
                   },
             startAdornment: (
               <InputAdornment position="start">
-                <Box sx={styles.rightInput.inputAdornmentStart.boxToken}>
-                  <img
-                    style={
+                <Box sx={styles.inputAdornmentStart.boxToken}>
+                  <Box
+                    sx={
                       props.label
-                        ? styles.rightInput.inputAdornmentStart.img
-                        : styles.rightInput.inputAdornmentStart.imgLarger
+                        ? styles.inputAdornmentStart.img
+                        : styles.inputAdornmentStart.imgLarger
                     }
-                    src={
-                      props.asset && process.env.PUBLIC_URL + props.asset.logo
-                    }
-                    alt="logo"
-                  />
+                  >
+                    <img
+                      style={{
+                        height: "100%",
+                        width: "100%",
+                      }}
+                      src={
+                        props.asset && process.env.PUBLIC_URL + props.asset.logo
+                      }
+                      alt="logo"
+                    />
+                  </Box>
                   <Box sx={{ marginTop: "0px" }}>
                     <Typography
                       sx={
                         props.label
-                          ? styles.rightInput.inputAdornmentStart.typography
-                          : styles.rightInput.inputAdornmentStart
-                              .typographyForLargerLogo
+                          ? styles.inputAdornmentStart.typography
+                          : styles.inputAdornmentStart.typographyForLargerLogo
                       }
                     >
                       {props.asset && props.asset.label}
@@ -101,29 +107,29 @@ export const RightInput: FC<IRigthInput> = (props) => {
             endAdornment: (
               <InputAdornment
                 position="end"
-                sx={styles.rightInput.inputAdornmentEnd.adornmentLabelAbove}
+                sx={styles.inputAdornmentEnd.adornmentLabelAbove}
               >
                 <Box>
                   <Box visibility={props.swap ? "visible" : "hidden"}>
                     <Button
                       onClick={props.toggle}
-                      sx={styles.rightInput.inputAdornmentEnd.button}
+                      sx={styles.inputAdornmentEnd.button}
                     >
                       <img
-                        style={styles.rightInput.inputAdornmentEnd.img}
+                        style={styles.inputAdornmentEnd.img}
                         src={liquiditySwapIcon}
                         alt="logo"
                       />
                     </Button>
                   </Box>
 
-                  <Box sx={styles.rightInput.balance.grid}>
+                  <Box sx={styles.balance.grid}>
                     <WalletConnected>
                       <Typography
                         color="textSecondary"
                         variant="subtitle2"
                         hidden={props.balance ? false : true}
-                        sx={styles.rightInput.balance.typography}
+                        sx={styles.balance.typography}
                       >
                         Balance: {props.balance}{" "}
                         {props.asset && props.asset.name}
@@ -137,7 +143,7 @@ export const RightInput: FC<IRigthInput> = (props) => {
           inputProps={{
             readOnly: props.readOnly,
             style: {
-              ...styles.rightInput.input,
+              ...styles.input,
             },
           }}
           variant="standard"
