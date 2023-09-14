@@ -24,12 +24,15 @@ import Typography from "@mui/material/Typography";
 import style from "./style";
 import useStyles from "../../hooks/styles";
 
+import useMediaQuery from "@mui/material/useMediaQuery";
+import { theme } from "../../theme";
 export interface ISwapToken {
   children: null;
 }
 
 export const Swap: FC = () => {
-  const [scale, setScale] = useState<number>(2);
+  const [scale, setScale] = useState<number>(1);
+  const width = window.innerWidth;
   const styles = useStyles(style, scale);
   const network = useNetwork();
   const walletOperations: WalletOps = useWalletOps(TransactingComponent.SWAP);
@@ -54,6 +57,16 @@ export const Swap: FC = () => {
   const session = useSession();
 
   const active = walletOperations.getActiveTransaction();
+  const isXs = useMediaQuery(theme.breakpoints.only("xs"));
+  const isSm = useMediaQuery(theme.breakpoints.only("sm"));
+  const isMd = useMediaQuery(theme.breakpoints.only("md"));
+  const isLg = useMediaQuery(theme.breakpoints.only("lg"));
+
+  useEffect(() => {
+    if (isLg && scale != 1) setScale(1);
+    if (isMd && scale != 2) setScale(1.5);
+    if (isSm && scale != 3) setScale(3);
+  }, [isLg, isMd, isSm, scale]);
   const transact = async () => {
     await walletOperations.sendTransaction();
   };
@@ -107,6 +120,12 @@ export const Swap: FC = () => {
     }
   }, [sendAmount, active, slippage, walletOperations]);
 
+  useEffect(() => {
+    console.log(width);
+    if (width < 1024 && scale !== 2) {
+      // (scale !== 2) && setScale(2)
+    }
+  }, [width]);
   useEffect(() => {
     updateTransaction();
   }, [updateTransaction]);

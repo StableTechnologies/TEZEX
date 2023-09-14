@@ -15,11 +15,24 @@ declare module "@mui/material/styles" {
   interface SimplePaletteColorOptions {
     darker?: string;
   }
+  interface ThemeOptions {
+    myField?: {
+      myNestedField?: string;
+    };
+  }
+  interface Theme {
+    myField?: {
+      myNestedField?: string;
+    };
+  }
 }
 
 //const { palette } = createTheme();
 
 export const theme = createTheme({
+  myField: {
+    myNestedField: "value",
+  },
   typography: {
     fontFamily: "Inter",
   },
