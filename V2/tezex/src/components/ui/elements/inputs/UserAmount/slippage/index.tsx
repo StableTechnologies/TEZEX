@@ -6,7 +6,7 @@ import InputAdornment from "@mui/material/InputAdornment";
 import TextField from "@mui/material/TextField";
 
 import { style } from "./style";
-import useStyles from "../../../../../hooks/styles";
+import useStyles from "../../../../../../hooks/styles";
 
 export interface ISlippageInput {
   balance?: string;
@@ -16,10 +16,11 @@ export interface ISlippageInput {
   onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   inputString: string;
   editing: boolean;
+  scale?: number;
 }
 
 export const SlippageInput: FC<ISlippageInput> = (props) => {
-  const styles = useStyles(style);
+  const styles = useStyles(style, props.scale || 1);
   return (
     <Box sx={styles.slippageInput.box}>
       <TextField

@@ -7,9 +7,6 @@ import style from "./style";
 import useStyles from "../../hooks/styles";
 
 import { useSession } from "../../hooks/session";
-export interface INav {
-  children: string;
-}
 
 interface NavTabProps {
   label: string;
@@ -44,8 +41,12 @@ function NavTab(props: NavTabProps) {
   }
 }
 
-export const NavApp: FC = () => {
-  const styles = useStyles(style);
+interface INavApp {
+  scale?: number;
+}
+
+export const NavApp: FC<INavApp> = (props) => {
+  const styles = useStyles(style, props.scale || 1);
   const [value, setValue] = useState(0);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();

@@ -6,9 +6,9 @@ import { theme } from "../theme";
  * default : for use in  sx props
  * toCSS : outputs css classes as the old mui useStyles
  */
-const useStyles = (style, toCSS = false) => {
+const useStyles = (style, scale = 1, toCSS = false) => {
   return useMemo(() => {
-    const classes = typeof style === "function" ? style(theme) : style;
+    const classes = typeof style === "function" ? style(theme, scale) : style;
     if (toCSS) {
       const prepared = {};
 

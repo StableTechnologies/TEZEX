@@ -11,9 +11,11 @@ import infoIcon from "../../../assets/infoIcon.svg";
 import xtzTzbtcIcon from "../../../assets/xtzTzbtcIcon.svg";
 import sirsIcon from "../../../assets/sirsIcon.svg";
 import rightArrow from "../../../assets/rightArrow.svg";
-
-export const SlippageLabel: FC = () => {
-  const styles = useStyles(style);
+interface ISlippageLabel {
+  scale?: number;
+}
+export const SlippageLabel: FC<ISlippageLabel> = (props) => {
+  const styles = useStyles(style, props.scale || 1);
   return (
     <Box sx={styles.slippageLabel.box}>
       <Box>

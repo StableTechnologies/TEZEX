@@ -1,31 +1,31 @@
 // eslint-disable-next-line
-const style = (theme) => {
+const style = (theme, scale = 1) => {
   return {
     infoRecieve: {
-      marginRight: ".37vw",
-      fontSize: ".97vw",
+      marginRight: `calc(.37vw * ${scale})`,
+      fontSize: `calc(.97vw * ${scale})`,
       fontWeight: "700",
-      lineHeight: "1.18vw",
+      lineHeight: `calc(1.18vw * ${scale})`,
     },
     infoTextIcon: {
-      width: "1.11vw",
-      marginLeft: ".27vw",
-      marginRight: ".27vw",
+      width: `calc(1.11vw * ${scale})`,
+      marginLeft: `calc(.27vw * ${scale})`,
+      marginRight: `calc(.27vw * ${scale})`,
     },
     infoText: {
       display: "inline-flex",
-      fontSize: ".97vw",
+      fontSize: `calc(.97vw * ${scale})`,
       fontWeight: "400",
-      lineHeight: "1.18vw",
+      lineHeight: `calc(1.18vw * ${scale})`,
     },
     infoGrid: {
-      marginTop: "0.694vw",
+      marginTop: `calc(0.694vw * ${scale})`,
       flexDirection: "row",
       display: "inline-flex",
       alignItems: "flex-start",
     },
     plusIcon: {
-      width: ".97vw",
+      width: `calc(.97vw * ${scale})`,
     },
     plusIconGrid: {
       position: "relative",
@@ -37,31 +37,31 @@ const style = (theme) => {
       flexDirection: "row",
     },
     cardHeaderTypography: {
-      fontSize: "1.4vw",
+      fontSize: `calc(1.4vw * ${scale})`,
     },
     cardHeader: {
-      paddingTop: "2.22vw",
-      paddingBottom: "0vw",
-      paddingLeft: "2.22vw",
-      fontSize: "1vw",
+      paddingTop: `calc(2.22vw * ${scale})`,
+      paddingBottom: `calc(0vw * ${scale})`,
+      paddingLeft: `calc(2.22vw * ${scale})`,
+      fontSize: `calc(1vw * ${scale})`,
       textAlign: "left",
     },
     cardAction: {
       justifyContent: "space-between",
 
       "&.MuiCardActions-root": {
-        paddingTop: "3.54vw",
+        paddingTop: `calc(3.54vw * ${scale})`,
 
-        paddingRight: "1.597vw",
-        paddingLeft: "1.597vw",
+        paddingRight: `calc(1.597vw * ${scale})`,
+        paddingLeft: `calc(1.597vw * ${scale})`,
       },
     },
     input: {
-      width: "28.34vw",
-      height: "8.61vw",
+      width: `calc(28.34vw * ${scale})`,
+      height: `calc(8.61vw * ${scale})`,
       "& .MuiFormControl-root": {
-        width: "28.34vw",
-        height: "8.61vw",
+        width: `calc(28.34vw * ${scale})`,
+        height: `calc(8.61vw * ${scale})`,
       },
     },
     slippageBox: {
@@ -71,7 +71,7 @@ const style = (theme) => {
     slippageComponent: {
       "&.MuiGrid2-root": {
         position: "relative",
-        paddingTop: "1.46vw",
+        paddingTop: `calc(1.46vw * ${scale})`,
       },
     },
     slippage: {
@@ -80,15 +80,15 @@ const style = (theme) => {
 
     slippageInfo: {
       icon: {
-        height: ".925vw",
-        width: ".925vw",
+        height: `calc(.925vw * ${scale})`,
+        width: `calc(.925vw * ${scale})`,
       },
       tooltip: {
         color: "#1E1E1E",
         backgroundColor: "#FFFFFF",
         padding: "0px 0px 0px 0px ",
-        fontSize: ".83vw",
-        lineHeight: "1.25vw",
+        fontSize: `calc(.83vw * ${scale})`,
+        lineHeight: `calc(1.25vw * ${scale})`,
 
         display: "flex",
         alignItems: "center",
@@ -98,39 +98,39 @@ const style = (theme) => {
 
         border: "0.069vw solid #E1E1E1",
         "&.MuiTooltip-tooltip": {
-          minWidth: "17.22vw",
-          maxWidth: "17.22vw",
-          minHeight: "4.166vw",
-          maxHeight: "4.166vw",
+          minWidth: `calc(17.22vw * ${scale})`,
+          maxWidth: `calc(17.22vw * ${scale})`,
+          minHeight: `calc(4.166vw * ${scale})`,
+          maxHeight: `calc(4.166vw * ${scale})`,
         },
       },
     },
     tokens: {
       display: "flex",
       width: "100%",
-      paddingTop: "1.16vw",
-      paddingLeft: "2.22vw",
+      paddingTop: `calc(1.16vw * ${scale})`,
+      paddingLeft: `calc(2.22vw * ${scale})`,
     },
     cardContent: {
       "&.MuiCardContent-root": {
-        paddingTop: "2.22vw",
-        paddingBottom: "0vw",
+        paddingTop: `calc(2.22vw * ${scale})`,
+        paddingBottom: `calc(0vw * ${scale})`,
 
-        paddingLeft: "1.597vw",
-        paddingRight: "1.597vw",
+        paddingLeft: `calc(1.597vw * ${scale})`,
+        paddingRight: `calc(1.597vw * ${scale})`,
       },
       flexDirection: "column",
-      paddingTop: "10vw",
+      paddingTop: `calc(10vw * ${scale})`,
       alignItems: "center",
       display: "flex",
     },
     card: {
       display: "block",
-      minHeight: "32.57vw",
-      maxHeight: "32.57vw",
-      minWidth: "63.88vw",
-      maxWidth: "63.88vw",
-      borderRadius: "1.38vw",
+      minHeight: `calc(32.57vw * ${scale})`,
+      maxHeight: `calc(32.57vw * ${scale})`,
+      minWidth: `calc(63.88vw * ${scale})`,
+      maxWidth: `calc(63.88vw * ${scale})`,
+      borderRadius: `calc(1.38vw * ${scale})`,
       zIndex: 5,
       background: "#FFFFFF",
       border: ".069vw solid #E1E1E1",

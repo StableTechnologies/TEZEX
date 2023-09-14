@@ -1,5 +1,5 @@
 // eslint-disable-next-line
-const style = (theme) => {
+const style = (theme, scale = 1) => {
   return {
     dialog: {
       "& .MuiModal-root": {
@@ -9,23 +9,23 @@ const style = (theme) => {
       "& .MuiPaper-root": {
         position: "relative",
         display: "flex",
-        borderRadius: "1.38vw",
+        borderRadius: `calc(1.38vw * ${scale})`,
         alignItems: "center",
         alignContent: "center",
         justifyContent: "space-around",
-        height: "21.04vw",
-        width: "29.51vw",
-        minHeight: "21.04vw",
-        minWidth: "29.51vw",
-        maxHeight: "21.04vw",
-        maxWidth: "29.51vw",
+        height: `calc(21.04vw * ${scale})`,
+        width: `calc(29.51vw * ${scale})`,
+        minHeight: `calc(21.04vw * ${scale})`,
+        minWidth: `calc(29.51vw * ${scale})`,
+        maxHeight: `calc(21.04vw * ${scale})`,
+        maxWidth: `calc(29.51vw * ${scale})`,
         padding: "0px 0px 0px 0px",
         margin: "0px",
       },
       "& .MuiDialog-container": {
         alignItems: "flex-start",
       },
-      top: "19vw",
+      top: `calc(19vw * ${scale})`,
     },
     dialogContentBox: {
       width: "100%",
@@ -81,8 +81,8 @@ const style = (theme) => {
         fontFamily: "Inter",
         color: "#000000",
         fontSize: " 1.11vw",
-        fontWeight: "400vw",
-        lineHeight: "1.319vw",
+        fontWeight: `calc(400vw * ${scale})`,
+        lineHeight: `calc(1.319vw * ${scale})`,
         letterSpacing: "0em",
         textalign: "right",
         alignText: "center",
@@ -104,8 +104,8 @@ const style = (theme) => {
         padding: ".5vw 6.3vw 2.6vw 5.3vw ",
         fontFamily: "Inter",
         fontSize: " 1.11vw",
-        fontWeight: "400vw",
-        lineHeight: "1.319vw",
+        fontWeight: `calc(400vw * ${scale})`,
+        lineHeight: `calc(1.319vw * ${scale})`,
         letterSpacing: "0em",
         textalign: "center",
       },
@@ -121,7 +121,7 @@ const style = (theme) => {
         fontFamily: "Inter",
         fontSize: " 1.66vw",
         fontWeight: "500",
-        lineHeight: "2vw",
+        lineHeight: `calc(2vw * ${scale})`,
       },
     },
     title: {
@@ -137,12 +137,12 @@ const style = (theme) => {
         fontFamily: "Inter",
         fontSize: " 1.66vw",
         fontWeight: "500",
-        lineHeight: "2vw",
+        lineHeight: `calc(2vw * ${scale})`,
       },
     },
     closeIcon: {
-      height: ".61vw",
-      width: ".61vw",
+      height: `calc(.61vw * ${scale})`,
+      width: `calc(.61vw * ${scale})`,
     },
     tickIcon: {
       height: " 4.16vw",
@@ -150,7 +150,7 @@ const style = (theme) => {
       width: " 4.16vw",
     },
     copyButton: {
-      marginLeft: ".42vw",
+      marginLeft: `calc(.42vw * ${scale})`,
       "&.MuiButtonBase-root": {
         minHeight: " .79vw",
         minWidth: " .92vw",
@@ -162,7 +162,7 @@ const style = (theme) => {
       alignItems: "center",
     },
     copyIcon: {
-      marginTop: ".2vw",
+      marginTop: `calc(.2vw * ${scale})`,
       height: " .79vw",
       width: " .92vw",
       alignItems: "center",
@@ -176,24 +176,24 @@ const style = (theme) => {
     },
 
     button: {
-      height: "2.70vw",
-      width: "8.54vw",
-      borderRadius: ".55vw",
+      height: `calc(2.70vw * ${scale})`,
+      width: `calc(8.54vw * ${scale})`,
+      borderRadius: `calc(.55vw * ${scale})`,
       "&.MuiButton-root.Mui-disabled": {
         color: "white",
       },
       background: "#1E1E1E",
       color: "white",
       fontWeight: "500",
-      fontSize: "1.11vw",
-      lineHeight: "1.34vw",
+      fontSize: `calc(1.11vw * ${scale})`,
+      lineHeight: `calc(1.34vw * ${scale})`,
       textTransform: "none",
       "&:hover": {
         background: "#000",
       },
     },
     action: {
-      paddingBottom: "2.22vw",
+      paddingBottom: `calc(2.22vw * ${scale})`,
     },
   };
 };

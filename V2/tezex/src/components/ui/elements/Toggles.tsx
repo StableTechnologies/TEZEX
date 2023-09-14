@@ -7,10 +7,11 @@ import useStyles from "../../../hooks/styles";
 
 export interface IToggle {
   toggle: () => void;
+  scale?: number;
 }
 
 export const SwapUpDownToggle: FC<IToggle> = (props) => {
-  const styles = useStyles(style);
+  const styles = useStyles(style, props.scale || 1);
   return (
     <Button sx={styles.button} onClick={props.toggle}>
       <img style={styles.icon} src={swapIcon} alt="swapIcon" />

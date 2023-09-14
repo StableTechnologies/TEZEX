@@ -1,17 +1,17 @@
 // eslint-disable-next-line
-const style = (theme) => {
+const style = (theme, scale = 1) => {
   return {
     header: {
       headerBox: {
-        fontSize: "1.5vw",
+        fontSize: `calc(1.5vw * ${scale})`,
         display: "flex",
         alignItems: "center",
         width: "100%",
-        height: "5vw",
+        height: `calc(5vw * ${scale})`,
         left: "0px",
         top: "0px",
         background: "#FFFFFF",
-        marginBottom: ".28vw",
+        marginBottom: `calc(.28vw * ${scale})`,
         boxShadow: ".28vw .28vw .28vw rgba(204, 204, 204, 0.25)",
         [theme.breakpoints.down("sm")]: {
           boxShadow: "0px 0px 0px 0px",
@@ -21,9 +21,9 @@ const style = (theme) => {
       logo: {
         position: "relative",
         [theme.breakpoints.up("md")]: {
-          width: "11.35vw",
-          marginLeft: "11.39vw",
-          top: ".17vw",
+          width: `calc(11.35vw * ${scale})`,
+          marginLeft: `calc(11.39vw * ${scale})`,
+          top: `calc(.17vw * ${scale})`,
           boxShadow: "0px 0px 0px 0px",
         },
         [theme.breakpoints.down("sm")]: {},
@@ -41,7 +41,7 @@ const style = (theme) => {
         display: { xs: "none", sm: "none", md: "flex" },
         position: "absolute",
         right: "0px",
-        //left: "51vw",
+        //left: `calc(51vw * ${scale})`,
         alignContent: "end",
         justifyContent: "flex-end",
       },
@@ -61,13 +61,13 @@ const style = (theme) => {
     mainWindowBackground: {
       position: "absolute",
       zindex: "-1",
-      top: "6.9vw",
+      top: `calc(6.9vw * ${scale})`,
       display: "flex",
-      maxWidth: "1vw",
-      minWidth: "1vw",
-      maxHeight: "51.66vw",
-      minHeight: "51.66vw",
-      marginLeft: "2.05vw",
+      maxWidth: `calc(1vw * ${scale})`,
+      minWidth: `calc(1vw * ${scale})`,
+      maxHeight: `calc(51.66vw * ${scale})`,
+      minHeight: `calc(51.66vw * ${scale})`,
+      marginLeft: `calc(2.05vw * ${scale})`,
     },
     mainWindow: {
       height: "100%",

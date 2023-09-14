@@ -1,11 +1,11 @@
 // eslint-disable-next-line
-const style = (theme) => {
+const style = (theme, scale = 1) => {
   return {
     nav: {
       "&.MuiGrid2-root": {
         position: "relative",
-        marginTop: "3.89vw",
-        marginBottom: "2.22vw",
+        marginTop: `calc(3.89vw * ${scale})`,
+        marginBottom: `calc(2.22vw * ${scale})`,
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
