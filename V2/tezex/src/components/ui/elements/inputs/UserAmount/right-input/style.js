@@ -133,7 +133,7 @@ export const style = (theme, scale = 1) => {
       imgLarger: {
         position: "relative",
         dislpay: "flex",
-        width: `calc(1.1vw * ${scale})`,
+        // width: `calc(1.1vw * ${scale})`,
         marginLeft: `calc(1vw * ${scale})`,
         marginRight: `calc(1vw * ${scale})`,
         height: `calc(2.22vw * ${scale})`,

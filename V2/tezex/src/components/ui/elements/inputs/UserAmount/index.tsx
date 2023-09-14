@@ -122,6 +122,7 @@ const AmountField: FC<IAmountField> = (props) => {
             onKeyDown={onKeyDown}
             inputString={inputString}
             editing={editing}
+            scale={props.scale}
           />
         );
       case "LeftInput":
@@ -134,6 +135,7 @@ const AmountField: FC<IAmountField> = (props) => {
             onKeyDown={onKeyDown}
             inputString={inputString}
             editing={editing}
+            scale={props.scale}
           />
         );
       default:
@@ -150,6 +152,7 @@ const AmountField: FC<IAmountField> = (props) => {
             swap={props.swap}
             editing={editing}
             label={props.label}
+            scale={props.scale}
           />
         );
     }
