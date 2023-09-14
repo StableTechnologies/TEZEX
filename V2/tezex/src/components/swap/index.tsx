@@ -29,7 +29,8 @@ export interface ISwapToken {
 }
 
 export const Swap: FC = () => {
-  const styles = useStyles(style);
+  const [scale, setScale] = useState<number>(2);
+  const styles = useStyles(style, scale);
   const network = useNetwork();
   const walletOperations: WalletOps = useWalletOps(TransactingComponent.SWAP);
   const isWalletConnected = useWalletConnected();
@@ -213,11 +214,12 @@ export const Swap: FC = () => {
                 value={sendAmount.toFixed()}
                 balance={balances[0]}
                 loading={loading}
+                scale={scale}
               />
             </Grid2>
 
             <Box sx={styles.swapToggle}>
-              <SwapUpDownToggle toggle={swapFields} />
+              <SwapUpDownToggle toggle={swapFields} scale={scale} />
             </Box>
 
             <Grid2 xs={11.2} sx={styles.input2}>
@@ -226,12 +228,13 @@ export const Swap: FC = () => {
                 value={receiveAmount.toFixed()}
                 readOnly={true}
                 balance={balances[1]}
+                scale={scale}
               />
             </Grid2>
           </CardContent>
           <CardActions sx={styles.cardAction}>
             <Box sx={styles.transact}>
-              <Wallet transaction={active} callback={transact}>
+              <Wallet transaction={active} callback={transact} scale={scale}>
                 {"Swap Tokens"}
               </Wallet>
             </Box>
@@ -241,7 +244,7 @@ export const Swap: FC = () => {
         <Paper variant="outlined" sx={styles.paper} square>
           <Box sx={styles.paperBox}>
             <Grid2 xs={4}>
-              <SlippageLabel />
+              <SlippageLabel scale={scale} />
             </Grid2>
 
             <Grid2 xs={7}>
@@ -251,6 +254,7 @@ export const Swap: FC = () => {
                 onChange={updateSlippage}
                 inverse={true}
                 loading={loading}
+                scale={scale}
               />
             </Grid2>
           </Box>
