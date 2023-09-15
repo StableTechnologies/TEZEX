@@ -15,14 +15,22 @@ declare module "@mui/material/styles" {
   interface SimplePaletteColorOptions {
     darker?: string;
   }
+
+  interface ScaleAtBreakPoints {
+    xl: number;
+    lg: number;
+    md: number;
+    sm: number;
+    xs: number;
+  }
   interface ThemeOptions {
-    myField?: {
-      myNestedField?: string;
+    scaling?: {
+      swap?: ScaleAtBreakPoints;
     };
   }
   interface Theme {
-    myField?: {
-      myNestedField?: string;
+    scaling?: {
+      swap?: ScaleAtBreakPoints;
     };
   }
 }
@@ -30,8 +38,14 @@ declare module "@mui/material/styles" {
 //const { palette } = createTheme();
 
 export const theme = createTheme({
-  myField: {
-    myNestedField: "value",
+  scaling: {
+    swap: {
+      xl: 1,
+      lg: 1,
+      md: 1.5,
+      sm: 2,
+      xs: 3,
+    },
   },
   typography: {
     fontFamily: "Inter",

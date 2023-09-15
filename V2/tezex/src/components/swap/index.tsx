@@ -62,11 +62,6 @@ export const Swap: FC = () => {
   const isMd = useMediaQuery(theme.breakpoints.only("md"));
   const isLg = useMediaQuery(theme.breakpoints.only("lg"));
 
-  useEffect(() => {
-    if (isLg && scale != 1) setScale(1);
-    if (isMd && scale != 2) setScale(1.5);
-    if (isSm && scale != 3) setScale(3);
-  }, [isLg, isMd, isSm, scale]);
   const transact = async () => {
     await walletOperations.sendTransaction();
   };
