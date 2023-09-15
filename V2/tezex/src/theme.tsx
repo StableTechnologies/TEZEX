@@ -25,11 +25,13 @@ declare module "@mui/material/styles" {
   }
   interface ThemeOptions {
     scaling?: {
+      default: ScaleAtBreakPoints;
       swap?: ScaleAtBreakPoints;
     };
   }
   interface Theme {
     scaling?: {
+      default: ScaleAtBreakPoints;
       swap?: ScaleAtBreakPoints;
     };
   }
@@ -39,6 +41,13 @@ declare module "@mui/material/styles" {
 
 export const theme = createTheme({
   scaling: {
+    default: {
+      xl: 1,
+      lg: 1,
+      md: 1,
+      sm: 1,
+      xs: 1,
+    },
     swap: {
       xl: 1,
       lg: 1,

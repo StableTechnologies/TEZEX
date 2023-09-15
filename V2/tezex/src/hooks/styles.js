@@ -7,7 +7,7 @@ import useMediaQuery from "@mui/material/useMediaQuery";
  * default : for use in  sx props
  * toCSS : outputs css classes as the old mui useStyles
  */
-const useStyles = (style, sscale = 1, toCSS = false) => {
+const useStyles = (style, scalingKey = "default", toCSS = false) => {
   const [scale, setScale] = useState(1);
   const isXs = useMediaQuery(theme.breakpoints.only("xs"));
   const isSm = useMediaQuery(theme.breakpoints.only("sm"));
@@ -16,7 +16,7 @@ const useStyles = (style, sscale = 1, toCSS = false) => {
   const isXl = useMediaQuery(theme.breakpoints.only("xl"));
   // setscale to custom theme compoenet scales at breakpoint
   const componentName = "swap";
-  const scalingBreakpoints = theme.scaling[componentName];
+  const scalingBreakpoints = theme.scaling[scalingKey];
   useEffect(() => {
     console.log(scalingBreakpoints);
     if (isXl && scale != scalingBreakpoints.xl) setScale(scalingBreakpoints.xl);
