@@ -27,20 +27,20 @@ import style from "./style";
 export interface IAlert {
   completionRecord: CompletionRecord | undefined;
   clear: () => void;
-  scale?: number;
+  scalingKey?: string;
 }
 
 export interface ISuccessAlert {
   successRecord: SuccessRecord;
-  scale?: number;
+  scalingKey?: string;
 }
 export interface IErrorAlert {
   failureRecord: FailedRecord;
-  scale?: number;
+  scalingKey?: string;
 }
 
 const SuccessAlert: FC<ISuccessAlert> = (props) => {
-  const styles = useStyles(style, props.scale || 1);
+  const styles = useStyles(style, props.scalingKey);
   return (
     <DialogContent sx={styles.dialogContentSuccess}>
       <Box sx={styles.successContentBox}>
@@ -70,7 +70,7 @@ const SuccessAlert: FC<ISuccessAlert> = (props) => {
 };
 
 const ErrorAlert: FC<IErrorAlert> = (props) => {
-  const styles = useStyles(style, props.scale || 1);
+  const styles = useStyles(style, props.scalingKey);
   return (
     <DialogContent sx={styles.dialogContent}>
       <Box sx={styles.errorContentBox}>
@@ -92,7 +92,7 @@ const ErrorAlert: FC<IErrorAlert> = (props) => {
   );
 };
 export const Alert: FC<IAlert> = (props) => {
-  const styles = useStyles(style, props.scale || 1);
+  const styles = useStyles(style, props.scalingKey);
   const [open, setOpen] = React.useState(props.completionRecord ? true : false);
   const handleClose = () => {
     setOpen(false);

@@ -29,11 +29,11 @@ export interface IRigthInput {
   label?: string;
   darker?: boolean;
   readOnly?: boolean;
-  scale?: number;
+  scalingKey?: string;
 }
 
 export const RightInput: FC<IRigthInput> = (props) => {
-  const styles = useStyles(style, props.scale || 1);
+  const styles = useStyles(style, props.scalingKey);
   return (
     <Box
       sx={

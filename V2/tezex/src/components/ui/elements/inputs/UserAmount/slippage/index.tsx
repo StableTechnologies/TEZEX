@@ -16,11 +16,11 @@ export interface ISlippageInput {
   onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   inputString: string;
   editing: boolean;
-  scale?: number;
+  scalingKey?: string;
 }
 
 export const SlippageInput: FC<ISlippageInput> = (props) => {
-  const styles = useStyles(style, props.scale || 1);
+  const styles = useStyles(style, props.scalingKey);
   return (
     <Box sx={styles.slippageInput.box}>
       <TextField

@@ -13,13 +13,13 @@ import useStyles from "../../hooks/styles";
 interface NavTabProps {
   label: string;
   href: string;
-  scale?: number;
+  scalingKey?: string;
 }
 
 function NavTab(props: NavTabProps) {
   const navigate = useNavigate();
 
-  const styles = useStyles(style, props.scale || 1);
+  const styles = useStyles(style, props.scalingKey);
   return (
     <Tab
       sx={styles.navHome.tab}

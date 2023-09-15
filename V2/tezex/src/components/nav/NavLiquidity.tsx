@@ -28,10 +28,10 @@ function NavTab(props: NavTabProps) {
   );
 }
 export interface INavLiquidty {
-  scale?: number;
+  scalingKey?: string;
 }
 export const NavLiquidity: FC<INavLiquidty> = (props) => {
-  const styles = useStyles(style, props.scale || 1);
+  const styles = useStyles(style, props.scalingKey);
   const [value, setValue] = useState(0);
 
   const sessionInfo = useSession();

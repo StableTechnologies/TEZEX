@@ -16,11 +16,11 @@ export interface ISlippage {
   inverse?: boolean;
   loading?: boolean;
 
-  scale?: number;
+  scalingKey?: string;
 }
 
 const SlippageInput: FC<ISlippage> = (props) => {
-  const styles = useStyles(style, props.scale || 1);
+  const styles = useStyles(style, props.scalingKey);
   const [selectedId, setSelectedId] = useState("0");
   const [loading, setLoading] = useState(true);
   const [input, setInput] = useState<string>("0.5");
@@ -79,7 +79,7 @@ const SlippageInput: FC<ISlippage> = (props) => {
             onChange={props.onChange}
             value={props.value.toString()}
             readOnly={selectedId !== p.id}
-            scale={props.scale}
+            scalingKey={props.scalingKey}
           />
         );
       }

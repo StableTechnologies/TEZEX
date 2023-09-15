@@ -42,11 +42,11 @@ function NavTab(props: NavTabProps) {
 }
 
 interface INavApp {
-  scale?: number;
+  scalingKey?: string;
 }
 
 export const NavApp: FC<INavApp> = (props) => {
-  const styles = useStyles(style, props.scale || 1);
+  const styles = useStyles(style, props.scalingKey);
   const [value, setValue] = useState(0);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();

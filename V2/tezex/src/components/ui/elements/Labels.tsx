@@ -12,10 +12,10 @@ import xtzTzbtcIcon from "../../../assets/xtzTzbtcIcon.svg";
 import sirsIcon from "../../../assets/sirsIcon.svg";
 import rightArrow from "../../../assets/rightArrow.svg";
 interface ISlippageLabel {
-  scale?: number;
+  scalingKey?: string;
 }
 export const SlippageLabel: FC<ISlippageLabel> = (props) => {
-  const styles = useStyles(style, props.scale || 1);
+  const styles = useStyles(style, props.scalingKey);
   return (
     <Box sx={styles.slippageLabel.box}>
       <Box>

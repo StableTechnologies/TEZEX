@@ -31,9 +31,9 @@ export interface ISwapToken {
 }
 
 export const Swap: FC = () => {
-  const [scale, setScale] = useState<number>(1);
+  const scalingKey = "swap";
   const width = window.innerWidth;
-  const styles = useStyles(style, scale);
+  const styles = useStyles(style, scalingKey);
   const network = useNetwork();
   const walletOperations: WalletOps = useWalletOps(TransactingComponent.SWAP);
   const isWalletConnected = useWalletConnected();
@@ -115,12 +115,6 @@ export const Swap: FC = () => {
     }
   }, [sendAmount, active, slippage, walletOperations]);
 
-  useEffect(() => {
-    console.log(width);
-    if (width < 1024 && scale !== 2) {
-      // (scale !== 2) && setScale(2)
-    }
-  }, [width]);
   useEffect(() => {
     updateTransaction();
   }, [updateTransaction]);
@@ -228,12 +222,12 @@ export const Swap: FC = () => {
                 value={sendAmount.toFixed()}
                 balance={balances[0]}
                 loading={loading}
-                scale={scale}
+                scalingKey={scalingKey}
               />
             </Grid2>
 
             <Box sx={styles.swapToggle}>
-              <SwapUpDownToggle toggle={swapFields} scale={scale} />
+              <SwapUpDownToggle toggle={swapFields} scalingKey={scalingKey} />
             </Box>
 
             <Grid2 xs={11.2} sx={styles.input2}>
@@ -242,13 +236,17 @@ export const Swap: FC = () => {
                 value={receiveAmount.toFixed()}
                 readOnly={true}
                 balance={balances[1]}
-                scale={scale}
+                scalingKey={scalingKey}
               />
             </Grid2>
           </CardContent>
           <CardActions sx={styles.cardAction}>
             <Box sx={styles.transact}>
-              <Wallet transaction={active} callback={transact} scale={scale}>
+              <Wallet
+                transaction={active}
+                callback={transact}
+                scalingKey={scalingKey}
+              >
                 {"Swap Tokens"}
               </Wallet>
             </Box>
@@ -258,7 +256,7 @@ export const Swap: FC = () => {
         <Paper variant="outlined" sx={styles.paper} square>
           <Box sx={styles.paperBox}>
             <Grid2 xs={4}>
-              <SlippageLabel scale={scale} />
+              <SlippageLabel scalingKey={scalingKey} />
             </Grid2>
 
             <Grid2 xs={7}>
@@ -268,7 +266,7 @@ export const Swap: FC = () => {
                 onChange={updateSlippage}
                 inverse={true}
                 loading={loading}
-                scale={scale}
+                scalingKey={scalingKey}
               />
             </Grid2>
           </Box>

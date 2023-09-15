@@ -18,7 +18,7 @@ export interface IAmountField {
   variant?: "SlippageInput" | "LeftInput" | "RightInput";
   darker?: boolean;
   swap?: () => void;
-  scale?: number;
+  scalingKey?: string;
 }
 
 const AmountField: FC<IAmountField> = (props) => {
@@ -122,7 +122,7 @@ const AmountField: FC<IAmountField> = (props) => {
             onKeyDown={onKeyDown}
             inputString={inputString}
             editing={editing}
-            scale={props.scale}
+            scalingKey={props.scalingKey}
           />
         );
       case "LeftInput":
@@ -135,7 +135,7 @@ const AmountField: FC<IAmountField> = (props) => {
             onKeyDown={onKeyDown}
             inputString={inputString}
             editing={editing}
-            scale={props.scale}
+            scalingKey={props.scalingKey}
           />
         );
       default:
@@ -152,7 +152,7 @@ const AmountField: FC<IAmountField> = (props) => {
             swap={props.swap}
             editing={editing}
             label={props.label}
-            scale={props.scale}
+            scalingKey={props.scalingKey}
           />
         );
     }

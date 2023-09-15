@@ -22,11 +22,11 @@ export interface ILeftInput {
   onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   inputString: string;
   editing: boolean;
-  scale?: number;
+  scalingKey?: string;
 }
 
 export const LeftInput: FC<ILeftInput> = (props) => {
-  const styles = useStyles(style, props.scale || 1);
+  const styles = useStyles(style, props.scalingKey);
   return (
     <Box sx={styles.leftInput.gridContainter}>
       <TextField
