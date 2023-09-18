@@ -25,6 +25,7 @@ import Typography from "@mui/material/Typography";
 import style from "./style";
 import useStyles from "../../hooks/styles";
 import sirsSmall from "../../assets/sirsSmall.svg";
+import Box from "@mui/material/Box";
 export interface IAddLiquidity {
   children: null;
 }
@@ -288,19 +289,21 @@ export const AddLiquidity: FC = () => {
             </Grid2>
           </CardContent>
           <CardActions sx={styles.cardAction}>
-            <Grid2 xs={1.3} sx={styles.slippageComponent}>
-              <SlippageLabel scalingKey={scalingKey} />
-            </Grid2>
-            <Grid2 xs={5.5} sx={styles.slippageComponent}>
-              <Slippage
-                asset={assets[receive].name}
-                value={slippage}
-                onChange={updateSlippage}
-                inverse={true}
-                loading={loading}
-                scalingKey={scalingKey}
-              />
-            </Grid2>
+            <Box sx={styles.slippageBox}>
+              <Grid2 xs={1.3} sx={styles.slippageComponent}>
+                <SlippageLabel scalingKey={scalingKey} />
+              </Grid2>
+              <Grid2 xs={5.5} sx={styles.slippageComponent}>
+                <Slippage
+                  asset={assets[receive].name}
+                  value={slippage}
+                  onChange={updateSlippage}
+                  inverse={true}
+                  loading={loading}
+                  scalingKey={scalingKey}
+                />
+              </Grid2>
+            </Box>
 
             <Grid2 sx={{}} xs={6}>
               <Wallet

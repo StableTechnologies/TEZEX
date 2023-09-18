@@ -35,6 +35,10 @@ const style = (theme, scale = 1) => {
       justifyContent: "space-between",
       alignItems: "center",
       flexDirection: "row",
+
+      [theme.breakpoints.down("md")]: {
+        flexDirection: "column",
+      },
     },
     cardHeaderTypography: {
       fontSize: `calc(1.4vw * ${scale})`,
@@ -46,16 +50,7 @@ const style = (theme, scale = 1) => {
       fontSize: `calc(1vw * ${scale})`,
       textAlign: "left",
     },
-    cardAction: {
-      justifyContent: "space-between",
 
-      "&.MuiCardActions-root": {
-        paddingTop: `calc(3.54vw * ${scale})`,
-
-        paddingRight: `calc(1.597vw * ${scale})`,
-        paddingLeft: `calc(1.597vw * ${scale})`,
-      },
-    },
     input: {
       width: `calc(28.34vw * ${scale})`,
       height: `calc(8.61vw * ${scale})`,
@@ -66,6 +61,9 @@ const style = (theme, scale = 1) => {
     },
     slippageBox: {
       "& .MuiGrid2-root": {},
+      display: "flex",
+      flexDirection: "row",
+      justifyContent: "space-between",
     },
 
     slippageComponent: {
@@ -138,6 +136,38 @@ const style = (theme, scale = 1) => {
         boxShadow: "0",
       },
       "& .MuiCardContent-root": {},
+
+      [theme.breakpoints.down("md")]: {
+        minHeight: `calc(45.57vw * ${scale})`,
+        maxHeight: `calc(45.57vw * ${scale})`,
+        minWidth: `calc(32.88vw * ${scale})`,
+        maxWidth: `calc(32.88vw * ${scale})`,
+        // minHeight: `calc(32.57vw * ${scale})`,
+        //  height: `calc(28.49vw * ${scale})`,
+        //  maxWidth: `calc(30.56vw * ${scale})`,
+        //  maxWidth: `calc(63.88vw * ${scale})`,
+      },
+    },
+    cardAction: {
+      justifyContent: "space-between",
+
+      "&.MuiCardActions-root": {
+        paddingTop: `calc(3.54vw * ${scale})`,
+
+        paddingRight: `calc(1.597vw * ${scale})`,
+        paddingLeft: `calc(1.597vw * ${scale})`,
+      },
+      [theme.breakpoints.down("md")]: {
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        "&.MuiCardActions-root": {
+          paddingTop: `calc(1.54vw * ${scale})`,
+
+          paddingRight: `calc(0 * ${scale})`,
+          paddingLeft: `calc(0 * ${scale})`,
+        },
+      },
     },
     root: {
       position: "relative",
