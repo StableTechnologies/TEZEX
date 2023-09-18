@@ -28,7 +28,8 @@ export interface ISwapToken {
 }
 
 export const RemoveLiquidity: FC = () => {
-  const styles = useStyles(style);
+  const scalingKey = "removeLiquidity";
+  const styles = useStyles(style, scalingKey);
   const network = useNetwork();
   const walletOperations: WalletOps = useWalletOps(
     TransactingComponent.REMOVE_LIQUIDITY
@@ -144,7 +145,10 @@ export const RemoveLiquidity: FC = () => {
     <Grid2 container sx={styles.root}>
       <Grid2>
         <Card sx={styles.card}>
-          <CardHeader sx={styles.cardHeader} title={<NavLiquidity />} />
+          <CardHeader
+            sx={styles.cardHeader}
+            title={<NavLiquidity scalingKey={scalingKey} />}
+          />
           <CardContent sx={styles.cardcontent}>
             <Box sx={styles.cardContentBox}>
               <Box sx={styles.input1}>
@@ -155,6 +159,7 @@ export const RemoveLiquidity: FC = () => {
                   value={sendAmount.toFixed()}
                   loading={loading}
                   variant="LeftInput"
+                  scalingKey={scalingKey}
                 />
               </Box>
               <Button
@@ -180,7 +185,11 @@ export const RemoveLiquidity: FC = () => {
           </CardContent>
           <CardActions sx={styles.cardAction}>
             <Box sx={styles.wallet}>
-              <Wallet transaction={active} callback={transact}>
+              <Wallet
+                transaction={active}
+                callback={transact}
+                scalingKey={scalingKey}
+              >
                 {"Sell Shares"}
               </Wallet>
             </Box>

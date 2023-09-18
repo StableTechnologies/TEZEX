@@ -46,8 +46,11 @@ export const SlippageLabel: FC<ISlippageLabel> = (props) => {
     </Box>
   );
 };
-export const AddliquidityTokens: FC = () => {
-  const styles = useStyles(style);
+interface IAddLiquidityTokens {
+  scalingKey?: string;
+}
+export const AddliquidityTokens: FC<IAddLiquidityTokens> = (props) => {
+  const styles = useStyles(style, props.scalingKey);
   return (
     <Box sx={styles.addLiquidityTokens}>
       <img

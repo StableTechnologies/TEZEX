@@ -31,7 +31,7 @@ export const Home: FC<IHome> = (props) => {
   return (
     <Grid2 sx={styles.homeContainer} container>
       <Grid2 sx={styles.nav}>
-        <NavHome />
+        <NavHome scalingKey="navHome" />
       </Grid2>
       <Grid2>
         <Comp />

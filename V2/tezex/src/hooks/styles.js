@@ -15,7 +15,6 @@ const useStyles = (style, scalingKey = "default", toCSS = false) => {
   const isLg = useMediaQuery(theme.breakpoints.only("lg"));
   const isXl = useMediaQuery(theme.breakpoints.only("xl"));
   // setscale to custom theme compoenet scales at breakpoint
-  const componentName = "swap";
   const scalingBreakpoints = theme.scaling[scalingKey];
   useEffect(() => {
     console.log(scalingBreakpoints);

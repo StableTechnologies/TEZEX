@@ -29,7 +29,8 @@ export interface IAddLiquidity {
   children: null;
 }
 export const AddLiquidity: FC = () => {
-  const styles = useStyles(style);
+  const scalingKey = "addLiquidity";
+  const styles = useStyles(style, scalingKey);
   const network = useNetwork();
   const walletOperations: WalletOps = useWalletOps(
     TransactingComponent.ADD_LIQUIDITY
@@ -231,9 +232,12 @@ export const AddLiquidity: FC = () => {
     <Grid2 container sx={styles.root}>
       <Grid2>
         <Card sx={styles.card}>
-          <CardHeader sx={styles.cardHeader} title={<NavLiquidity />} />
+          <CardHeader
+            sx={styles.cardHeader}
+            title={<NavLiquidity scalingKey={scalingKey} />}
+          />
           <Grid2 sx={styles.tokens}>
-            <AddliquidityTokens />
+            <AddliquidityTokens scalingKey={scalingKey} />
           </Grid2>
           <CardContent sx={styles.cardContent}>
             <Grid2 xs={12} sx={styles.cardContendGrid}>
@@ -245,6 +249,7 @@ export const AddLiquidity: FC = () => {
                   balance={balances[0]}
                   label="Enter Amount"
                   loading={loading}
+                  scalingKey={scalingKey}
                 />
               </Grid2>
 
@@ -261,6 +266,7 @@ export const AddLiquidity: FC = () => {
                   label="Required Deposit"
                   darker={true}
                   swap={swapFields}
+                  scalingKey={scalingKey}
                 />
               </Grid2>
             </Grid2>
@@ -283,7 +289,7 @@ export const AddLiquidity: FC = () => {
           </CardContent>
           <CardActions sx={styles.cardAction}>
             <Grid2 xs={1.3} sx={styles.slippageComponent}>
-              <SlippageLabel />
+              <SlippageLabel scalingKey={scalingKey} />
             </Grid2>
             <Grid2 xs={5.5} sx={styles.slippageComponent}>
               <Slippage
@@ -292,11 +298,16 @@ export const AddLiquidity: FC = () => {
                 onChange={updateSlippage}
                 inverse={true}
                 loading={loading}
+                scalingKey={scalingKey}
               />
             </Grid2>
 
             <Grid2 sx={{}} xs={6}>
-              <Wallet transaction={active} callback={transact}>
+              <Wallet
+                transaction={active}
+                callback={transact}
+                scalingKey={scalingKey}
+              >
                 {"Add Liquidity"}
               </Wallet>
             </Grid2>

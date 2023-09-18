@@ -27,12 +27,20 @@ declare module "@mui/material/styles" {
     scaling?: {
       default: ScaleAtBreakPoints;
       swap?: ScaleAtBreakPoints;
+      removeLiquidity?: ScaleAtBreakPoints;
+      addLiquidity?: ScaleAtBreakPoints;
+      header?: ScaleAtBreakPoints;
+      navHome?: ScaleAtBreakPoints;
     };
   }
   interface Theme {
     scaling?: {
       default: ScaleAtBreakPoints;
       swap?: ScaleAtBreakPoints;
+      removeLiquidity?: ScaleAtBreakPoints;
+      addLiquidity?: ScaleAtBreakPoints;
+      header?: ScaleAtBreakPoints;
+      navHome?: ScaleAtBreakPoints;
     };
   }
 }
@@ -48,7 +56,30 @@ export const theme = createTheme({
       sm: 1,
       xs: 1,
     },
+
     swap: {
+      xl: 1,
+      lg: 1,
+      md: 1.5,
+      sm: 2,
+      xs: 3,
+    },
+    addLiquidity: {
+      xl: 1,
+      lg: 1,
+      md: 1.5,
+      sm: 2,
+      xs: 3,
+    },
+    removeLiquidity: {
+      xl: 1,
+      lg: 1,
+      md: 1.5,
+      sm: 2,
+      xs: 3,
+    },
+
+    navHome: {
       xl: 1,
       lg: 1,
       md: 1.5,
