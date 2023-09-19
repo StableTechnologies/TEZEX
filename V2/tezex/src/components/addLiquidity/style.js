@@ -64,8 +64,11 @@ const style = (theme, scale = 1) => {
       display: "flex",
       flexDirection: "row",
       justifyContent: "space-between",
+      [theme.breakpoints.down("md")]: {
+        justifyContent: "space-between",
+        width: "100%",
+      },
     },
-
     slippageComponent: {
       "&.MuiGrid2-root": {
         position: "relative",
@@ -138,8 +141,8 @@ const style = (theme, scale = 1) => {
       "& .MuiCardContent-root": {},
 
       [theme.breakpoints.down("md")]: {
-        minHeight: `calc(45.57vw * ${scale})`,
-        maxHeight: `calc(45.57vw * ${scale})`,
+        minHeight: `calc(55.57vw * ${scale})`,
+        maxHeight: `calc(55.57vw * ${scale})`,
         minWidth: `calc(32.88vw * ${scale})`,
         maxWidth: `calc(32.88vw * ${scale})`,
         // minHeight: `calc(32.57vw * ${scale})`,
@@ -164,9 +167,14 @@ const style = (theme, scale = 1) => {
         "&.MuiCardActions-root": {
           paddingTop: `calc(1.54vw * ${scale})`,
 
-          paddingRight: `calc(0 * ${scale})`,
-          paddingLeft: `calc(0 * ${scale})`,
+          paddingRight: `calc(1.597vw * ${scale})`,
+          paddingLeft: `calc(1.597vw * ${scale})`,
         },
+      },
+    },
+    wallet: {
+      [theme.breakpoints.down("md")]: {
+        paddingTop: "20%",
       },
     },
     root: {
