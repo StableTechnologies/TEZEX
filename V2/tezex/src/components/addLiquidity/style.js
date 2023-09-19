@@ -174,7 +174,7 @@ const style = (theme, scale = 1) => {
     },
     wallet: {
       [theme.breakpoints.down("md")]: {
-        paddingTop: "20%",
+        marginTop: "20%",
       },
     },
     root: {
