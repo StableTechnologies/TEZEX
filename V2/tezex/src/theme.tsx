@@ -22,6 +22,13 @@ declare module "@mui/material/styles" {
     md: number;
     sm: number;
     xs: number;
+    landscape?: {
+      xl: number;
+      lg: number;
+      md: number;
+      sm: number;
+      xs: number;
+    };
   }
   interface ThemeOptions {
     scaling?: {
@@ -70,6 +77,13 @@ export const theme = createTheme({
       md: 1.5,
       sm: 2,
       xs: 3,
+      landscape: {
+        xl: 1,
+        lg: 1,
+        md: 1,
+        sm: 1,
+        xs: 1,
+      },
     },
     removeLiquidity: {
       xl: 1,
