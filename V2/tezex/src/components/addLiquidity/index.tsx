@@ -234,7 +234,36 @@ export const AddLiquidity: FC = () => {
       <Card sx={styles.card}>
         <CardHeader
           sx={styles.cardHeader}
-          title={<NavLiquidity scalingKey={scalingKey} />}
+          title={
+            <Box>
+              <Box
+                sx={{
+                  display: {
+                    sm: "none",
+                    xs: "none",
+                    md: "none",
+                    lg: "block",
+                  },
+                }}
+              >
+                <NavLiquidity scalingKey={scalingKey} />
+              </Box>
+              <Box
+                sx={{
+                  display: {
+                    xs: "block",
+                    sm: "block",
+                    md: "none",
+                    lg: "none",
+                  },
+                }}
+              >
+                <Typography sx={styles.cardHeaderTypography}>
+                  Add Liquidity
+                </Typography>
+              </Box>
+            </Box>
+          }
         />
         <Grid2 sx={styles.tokens}>
           <AddliquidityTokens scalingKey={scalingKey} />
