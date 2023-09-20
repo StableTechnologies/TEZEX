@@ -41,8 +41,8 @@ const style = (theme, scale = 1) => {
     },
     swapToggle: {
       display: "flex",
-      position: "absolute",
-      top: "38.3%",
+      position: "relative",
+      // top: "38.3%",
       zIndex: 5,
       height: `calc(1vw * ${scale})`,
     },
@@ -60,7 +60,7 @@ const style = (theme, scale = 1) => {
       //position: "absolute",
       //top: "16.87%",
       position: "relative",
-      bottom: `calc(.2vw * ${scale})`,
+      bottom: `calc(-1vw * ${scale})`,
       "& .MuiFormControl-root": {
         width: `calc(28.34vw * ${scale})`,
         height: `calc(6.94vw * ${scale})`,
@@ -69,7 +69,7 @@ const style = (theme, scale = 1) => {
     input2: {
       //position: "absolute",
       position: "relative",
-      top: `calc(.8vw * ${scale})`,
+      top: `calc(.5vw * ${scale})`,
       "& .MuiFormControl-root": {
         width: `calc(28.34vw * ${scale})`,
         height: `calc(6.94vw * ${scale})`,
