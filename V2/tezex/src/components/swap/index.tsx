@@ -214,30 +214,41 @@ export const Swap: FC = () => {
           }
         />
         <CardContent sx={styles.cardcontent}>
-          <Grid2 xs={11.2} sx={styles.input1}>
-            <UserAmountField
-              asset={assets[send]}
-              onChange={updateSend}
-              value={sendAmount.toFixed()}
-              balance={balances[0]}
-              loading={loading}
-              scalingKey={scalingKey}
-            />
-          </Grid2>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+              alignContent: "center",
+              width: "100%",
+            }}
+          >
+            <Grid2 xs={11.2} sx={styles.input1}>
+              <UserAmountField
+                asset={assets[send]}
+                onChange={updateSend}
+                value={sendAmount.toFixed()}
+                balance={balances[0]}
+                loading={loading}
+                scalingKey={scalingKey}
+              />
+            </Grid2>
 
-          <Box sx={styles.swapToggle}>
-            <SwapUpDownToggle toggle={swapFields} scalingKey={scalingKey} />
+            <Box sx={styles.swapToggle}>
+              <SwapUpDownToggle toggle={swapFields} scalingKey={scalingKey} />
+            </Box>
+
+            <Grid2 xs={11.2} sx={styles.input2}>
+              <UserAmountField
+                asset={assets[receive]}
+                value={receiveAmount.toFixed()}
+                readOnly={true}
+                balance={balances[1]}
+                scalingKey={scalingKey}
+              />
+            </Grid2>
           </Box>
-
-          <Grid2 xs={11.2} sx={styles.input2}>
-            <UserAmountField
-              asset={assets[receive]}
-              value={receiveAmount.toFixed()}
-              readOnly={true}
-              balance={balances[1]}
-              scalingKey={scalingKey}
-            />
-          </Grid2>
         </CardContent>
         <CardActions sx={styles.cardAction}>
           <Box sx={styles.mobileSlippageBox}>

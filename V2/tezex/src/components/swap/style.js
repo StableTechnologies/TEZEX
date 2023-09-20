@@ -57,27 +57,33 @@ const style = (theme, scale = 1) => {
       textAlign: "left",
     },
     input1: {
-      position: "absolute",
-      top: "16.87%",
+      //position: "absolute",
+      //top: "16.87%",
+      position: "relative",
+      bottom: `calc(.2vw * ${scale})`,
       "& .MuiFormControl-root": {
         width: `calc(28.34vw * ${scale})`,
         height: `calc(6.94vw * ${scale})`,
       },
     },
     input2: {
-      position: "absolute",
-      top: "43.27%",
+      //position: "absolute",
+      position: "relative",
+      top: `calc(.8vw * ${scale})`,
       "& .MuiFormControl-root": {
         width: `calc(28.34vw * ${scale})`,
         height: `calc(6.94vw * ${scale})`,
       },
     },
     cardcontent: {
-      "&.MuiCardContent-root": {},
-      "& .MuiFormControl-root": {
-        width: `calc(28.34vw * ${scale})`,
-        height: `calc(6.94vw * ${scale})`,
+      "&.MuiCardContent-root": {
+        paddingRight: "0px",
+        paddingLeft: "0px",
       },
+      //  "& .MuiFormControl-root": {
+      //    width: `calc(28.34vw * ${scale})`,
+      //    height: `calc(6.94vw * ${scale})`,
+      //  },
     },
     cardAction: {
       justifyContent: "center",
