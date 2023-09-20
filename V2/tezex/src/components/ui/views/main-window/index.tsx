@@ -17,19 +17,7 @@ export interface IMainWindow {
 export const MainWindow: FC<IMainWindow> = (props) => {
   const styles = useStyles(style);
   return (
-    <Box
-      sx={{
-        height: "100%",
-        width: "100%",
-        position: "relative",
-        alignContent: "flex-start",
-        alignItems: "flex-start",
-
-        flexDirection: "row",
-        justifyContent: "center",
-        display: "flex",
-      }}
-    >
+    <Box sx={styles.mainWindow}>
       <Box
         sx={{
           height: "70%",

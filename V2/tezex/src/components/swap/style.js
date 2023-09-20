@@ -15,6 +15,7 @@ const style = (theme, scale = 1) => {
       paddingRight: `calc(1.11vw * ${scale})`,
     },
     paper: {
+      display: "block",
       position: "absolute",
       top: "89.4%",
       zindex: "-999",
@@ -28,6 +29,9 @@ const style = (theme, scale = 1) => {
 
       width: `calc(30.5vw * ${scale})`,
       height: `calc(10.14vw * ${scale})`,
+      [theme.breakpoints.down("sm")]: {
+        display: "none",
+      },
     },
     transact: {
       position: "absolute",
@@ -90,6 +94,17 @@ const style = (theme, scale = 1) => {
       "& .MuiGrid2-root": {},
     },
 
+    mobileSlippageBox: {
+      "& .MuiGrid2-root": {},
+      display: "none",
+      flexDirection: "row",
+      justifyContent: "space-between",
+      [theme.breakpoints.down("sm")]: {
+        display: "flex",
+        justifyContent: "space-between",
+        width: "100%",
+      },
+    },
     slippageComponent: {
       "& .MuiGrid2-root": {},
     },
@@ -140,6 +155,11 @@ const style = (theme, scale = 1) => {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
+      },
+      [theme.breakpoints.down("sm")]: {
+        overflow: "auto",
+        height: "90vh", //`calc(68.49vw * ${scale})`,
+        width: "100vw", //`calc(30.56vw * ${scale})`,
       },
     },
     root: {

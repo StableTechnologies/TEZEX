@@ -206,60 +206,45 @@ export const Swap: FC = () => {
   });
   return (
     <Grid2 container sx={styles.root}>
-      <Grid2>
-        <Card sx={styles.card}>
-          <CardHeader
-            sx={styles.cardHeader}
-            title={
-              <Typography sx={styles.cardHeaderTypography}>{"Swap"}</Typography>
-            }
-          />
-          <CardContent sx={styles.cardcontent}>
-            <Grid2 xs={11.2} sx={styles.input1}>
-              <UserAmountField
-                asset={assets[send]}
-                onChange={updateSend}
-                value={sendAmount.toFixed()}
-                balance={balances[0]}
-                loading={loading}
-                scalingKey={scalingKey}
-              />
-            </Grid2>
+      <Card sx={styles.card}>
+        <CardHeader
+          sx={styles.cardHeader}
+          title={
+            <Typography sx={styles.cardHeaderTypography}>{"Swap"}</Typography>
+          }
+        />
+        <CardContent sx={styles.cardcontent}>
+          <Grid2 xs={11.2} sx={styles.input1}>
+            <UserAmountField
+              asset={assets[send]}
+              onChange={updateSend}
+              value={sendAmount.toFixed()}
+              balance={balances[0]}
+              loading={loading}
+              scalingKey={scalingKey}
+            />
+          </Grid2>
 
-            <Box sx={styles.swapToggle}>
-              <SwapUpDownToggle toggle={swapFields} scalingKey={scalingKey} />
-            </Box>
+          <Box sx={styles.swapToggle}>
+            <SwapUpDownToggle toggle={swapFields} scalingKey={scalingKey} />
+          </Box>
 
-            <Grid2 xs={11.2} sx={styles.input2}>
-              <UserAmountField
-                asset={assets[receive]}
-                value={receiveAmount.toFixed()}
-                readOnly={true}
-                balance={balances[1]}
-                scalingKey={scalingKey}
-              />
-            </Grid2>
-          </CardContent>
-          <CardActions sx={styles.cardAction}>
-            <Box sx={styles.transact}>
-              <Wallet
-                transaction={active}
-                callback={transact}
-                scalingKey={scalingKey}
-              >
-                {"Swap Tokens"}
-              </Wallet>
-            </Box>
-          </CardActions>
-        </Card>
-
-        <Paper variant="outlined" sx={styles.paper} square>
-          <Box sx={styles.paperBox}>
-            <Grid2 xs={4}>
+          <Grid2 xs={11.2} sx={styles.input2}>
+            <UserAmountField
+              asset={assets[receive]}
+              value={receiveAmount.toFixed()}
+              readOnly={true}
+              balance={balances[1]}
+              scalingKey={scalingKey}
+            />
+          </Grid2>
+        </CardContent>
+        <CardActions sx={styles.cardAction}>
+          <Box sx={styles.mobileSlippageBox}>
+            <Grid2 lg={1.3} sx={styles.slippageComponent}>
               <SlippageLabel scalingKey={scalingKey} />
             </Grid2>
-
-            <Grid2 xs={7}>
+            <Grid2 lg={5.5} sx={styles.slippageComponent}>
               <Slippage
                 asset={assets[receive].name}
                 value={slippage}
@@ -270,8 +255,36 @@ export const Swap: FC = () => {
               />
             </Grid2>
           </Box>
-        </Paper>
-      </Grid2>
+          <Box sx={styles.transact}>
+            <Wallet
+              transaction={active}
+              callback={transact}
+              scalingKey={scalingKey}
+            >
+              {"Swap Tokens"}
+            </Wallet>
+          </Box>
+        </CardActions>
+      </Card>
+
+      <Paper variant="outlined" sx={styles.paper} square>
+        <Box sx={styles.paperBox}>
+          <Grid2 xs={4}>
+            <SlippageLabel scalingKey={scalingKey} />
+          </Grid2>
+
+          <Grid2 xs={7}>
+            <Slippage
+              asset={assets[receive].name}
+              value={slippage}
+              onChange={updateSlippage}
+              inverse={true}
+              loading={loading}
+              scalingKey={scalingKey}
+            />
+          </Grid2>
+        </Box>
+      </Paper>
     </Grid2>
   );
 };
