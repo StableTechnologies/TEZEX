@@ -17,7 +17,7 @@ import Button from "@mui/material/Button";
 import Tooltip from "@mui/material/Tooltip";
 import useStyles from "../../../../hooks/styles";
 import style from "./style";
-import { Sidebar, Menu, MenuItem } from "react-pro-sidebar";
+import { Sidebar, Menu, MenuItem, SubMenu } from "react-pro-sidebar";
 import { Link } from "react-router-dom";
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
 import CloseIcon from "@mui/icons-material/Close";
@@ -36,20 +36,21 @@ export const SideBar: FC<ISideBarProps> = (props) => {
   }, [props.openMenu]);
 
   return (
-    <Sidebar
-      backgroundColor="#FFFFFF"
-      collapsed={collapsed}
-      onBackdropClick={() => setCollapsed(false)}
-      rootStyles={{
-        //boxShadow: "20px 20px 25px 20px rgba(0, 0, 0, 0.1)",
-        fontSize: collapsed ? "0px" : "13px",
-        boxShadow: "0px 0px 10px 0px rgba(0,0,0,0.15)",
-        borderRight: "0px",
+    <Box
+      sx={{
+        display: "flex",
+        width: "100%",
       }}
     >
-      <Box
-        sx={{
-          display: "flex",
+      <Sidebar
+        backgroundColor="#FFFFFF"
+        collapsed={collapsed}
+        onBackdropClick={() => setCollapsed(false)}
+        rootStyles={{
+          //boxShadow: "20px 20px 25px 20px rgba(0, 0, 0, 0.1)",
+          fontSize: collapsed ? "0px" : "3vw",
+          boxShadow: "0px 0px 10px 0px rgba(0,0,0,0.15)",
+          borderRight: "0px",
         }}
       >
         <Menu
@@ -68,12 +69,24 @@ export const SideBar: FC<ISideBarProps> = (props) => {
               {!props.openMenu ? <MenuOutlinedIcon /> : <CloseIcon />}
             </IconButton>
           </MenuItem>
-          <MenuItem component={<Link to="/home/swap" />}> Home</MenuItem>
+          <SubMenu label="Home">
+            <MenuItem component={<Link to="/home/swap" />}> swap</MenuItem>
+            <SubMenu label="Liquidity">
+              <MenuItem component={<Link to="/home/add" />}>
+                {" "}
+                Add Liquidity
+              </MenuItem>
+              <MenuItem component={<Link to="/home/remove" />}>
+                {" "}
+                Remove Liquidity
+              </MenuItem>
+            </SubMenu>
+          </SubMenu>
           <MenuItem component={<Link to="/Analytics" />}> Analytics</MenuItem>
           <MenuItem component={<Link to="/About" />}> About</MenuItem>
         </Menu>
-      </Box>
-    </Sidebar>
+      </Sidebar>
+    </Box>
   );
 };
 /* 
