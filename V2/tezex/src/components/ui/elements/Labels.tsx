@@ -11,9 +11,11 @@ import infoIcon from "../../../assets/infoIcon.svg";
 import xtzTzbtcIcon from "../../../assets/xtzTzbtcIcon.svg";
 import sirsIcon from "../../../assets/sirsIcon.svg";
 import rightArrow from "../../../assets/rightArrow.svg";
-
-export const SlippageLabel: FC = () => {
-  const styles = useStyles(style);
+interface ISlippageLabel {
+  scalingKey?: string;
+}
+export const SlippageLabel: FC<ISlippageLabel> = (props) => {
+  const styles = useStyles(style, props.scalingKey);
   return (
     <Box sx={styles.slippageLabel.box}>
       <Box>
@@ -44,8 +46,11 @@ export const SlippageLabel: FC = () => {
     </Box>
   );
 };
-export const AddliquidityTokens: FC = () => {
-  const styles = useStyles(style);
+interface IAddLiquidityTokens {
+  scalingKey?: string;
+}
+export const AddliquidityTokens: FC<IAddLiquidityTokens> = (props) => {
+  const styles = useStyles(style, props.scalingKey);
   return (
     <Box sx={styles.addLiquidityTokens}>
       <img

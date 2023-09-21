@@ -46,9 +46,7 @@ root.render(
   <React.StrictMode>
     <SessionProvider config={appConfig as AppConfig}>
       <ThemeProvider theme={theme}>
-        <Box>
-          <RouterProvider router={router} />
-        </Box>
+        <RouterProvider router={router} />
       </ThemeProvider>
     </SessionProvider>
   </React.StrictMode>

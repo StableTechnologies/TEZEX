@@ -3,9 +3,9 @@ import React, { memo, FC, useCallback, useState, useEffect } from "react";
 import { Asset } from "../../../../../types/general";
 
 import { BigNumber } from "bignumber.js";
-import { LeftInput } from "./leftInput";
-import { RightInput } from "./rightInput";
-import { SlippageInput } from "./slippageInput";
+import { LeftInput } from "./left-input";
+import { RightInput } from "./right-input";
+import { SlippageInput } from "./slippage";
 
 export interface IAmountField {
   asset?: Asset;
@@ -18,6 +18,7 @@ export interface IAmountField {
   variant?: "SlippageInput" | "LeftInput" | "RightInput";
   darker?: boolean;
   swap?: () => void;
+  scalingKey?: string;
 }
 
 const AmountField: FC<IAmountField> = (props) => {
@@ -121,6 +122,7 @@ const AmountField: FC<IAmountField> = (props) => {
             onKeyDown={onKeyDown}
             inputString={inputString}
             editing={editing}
+            scalingKey={props.scalingKey}
           />
         );
       case "LeftInput":
@@ -133,6 +135,7 @@ const AmountField: FC<IAmountField> = (props) => {
             onKeyDown={onKeyDown}
             inputString={inputString}
             editing={editing}
+            scalingKey={props.scalingKey}
           />
         );
       default:
@@ -149,6 +152,7 @@ const AmountField: FC<IAmountField> = (props) => {
             swap={props.swap}
             editing={editing}
             label={props.label}
+            scalingKey={props.scalingKey}
           />
         );
     }

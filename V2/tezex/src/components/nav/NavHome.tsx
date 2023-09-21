@@ -13,12 +13,13 @@ import useStyles from "../../hooks/styles";
 interface NavTabProps {
   label: string;
   href: string;
+  scalingKey?: string;
 }
 
 function NavTab(props: NavTabProps) {
   const navigate = useNavigate();
 
-  const styles = useStyles(style);
+  const styles = useStyles(style, props.scalingKey);
   return (
     <Tab
       sx={styles.navHome.tab}
@@ -32,10 +33,10 @@ function NavTab(props: NavTabProps) {
 }
 
 export interface INavHome {
-  children: string;
+  scalingKey?: string;
 }
-export const NavHome: FC = () => {
-  const styles = useStyles(style);
+export const NavHome: FC<INavHome> = (props) => {
+  const styles = useStyles(style, props.scalingKey);
   const [value, setValue] = useState(0);
   const sessionInfo = useSession();
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -69,8 +70,12 @@ export const NavHome: FC = () => {
       onChange={handleChange}
       aria-label="nav-home-tabs"
     >
-      <NavTab label="Swap" href="/home/swap" />
-      <NavTab label="Liquidity" href={liquidityHref()} />
+      <NavTab label="Swap" href="/home/swap" scalingKey={props.scalingKey} />
+      <NavTab
+        label="Liquidity"
+        href={liquidityHref()}
+        scalingKey={props.scalingKey}
+      />
     </Tabs>
   );
 };

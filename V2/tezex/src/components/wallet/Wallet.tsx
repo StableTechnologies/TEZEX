@@ -22,10 +22,11 @@ interface IWallet {
   callback?: () => Promise<void>;
   variant?: "header" | "card";
   children?: string;
+  scalingKey?: string;
 }
 
 export const Wallet: FC<IWallet> = (props) => {
-  const styles = useStyles(style);
+  const styles = useStyles(style, props.scalingKey);
   const walletInfo: WalletInfo | undefined = useWallet();
   const networkInfo = useNetwork();
 

@@ -1,6 +1,6 @@
 import React, { FC } from "react";
 
-import { Asset } from "../../../../../types/general";
+import { Asset } from "../../../../../../types/general";
 
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
@@ -8,10 +8,10 @@ import Box from "@mui/material/Box";
 import InputAdornment from "@mui/material/InputAdornment";
 import TextField from "@mui/material/TextField";
 
-import { WalletConnected } from "../../../../session/WalletConnected";
+import { WalletConnected } from "../../../../../session/WalletConnected";
 
 import { style } from "./style";
-import useStyles from "../../../../../hooks/styles";
+import useStyles from "../../../../../../hooks/styles";
 
 export interface ILeftInput {
   asset?: Asset;
@@ -22,10 +22,11 @@ export interface ILeftInput {
   onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   inputString: string;
   editing: boolean;
+  scalingKey?: string;
 }
 
 export const LeftInput: FC<ILeftInput> = (props) => {
-  const styles = useStyles(style);
+  const styles = useStyles(style, props.scalingKey);
   return (
     <Box sx={styles.leftInput.gridContainter}>
       <TextField

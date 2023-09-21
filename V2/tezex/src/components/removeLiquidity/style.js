@@ -1,40 +1,40 @@
 // eslint-disable-next-line
-const style = (theme) => {
+const style = (theme, scale = 1) => {
   return {
     wallet: {
-      width: "28.33vw",
-      height: "4.16vw",
+      width: `calc(28.33vw * ${scale})`,
+      height: `calc(4.16vw * ${scale})`,
 
       position: "absolute",
       bottom: "0%",
       justifyContent: "center",
-      paddingBottom: "2.22vw",
+      paddingBottom: `calc(2.22vw * ${scale})`,
     },
     useMax: {
       "&.MuiButtonBase-root": {
         marginLeft: "0px",
 
         justifyContent: "flex-start",
-        paddingLeft: "1.11vw",
+        paddingLeft: `calc(1.11vw * ${scale})`,
       },
       "&.MuiTouchRipple-root": {
-        width: "2vw",
+        width: `calc(2vw * ${scale})`,
       },
     },
     useMaxTypographyDisabled: {
-      fontSize: ".97vw",
-      lineHeight: "1.176vw",
+      fontSize: `calc(.97vw * ${scale})`,
+      lineHeight: `calc(1.176vw * ${scale})`,
       color: "#999999;",
     },
     useMaxTypographyEnabled: {
-      fontSize: ".97vw",
-      lineHeight: "1.176vw",
+      fontSize: `calc(.97vw * ${scale})`,
+      lineHeight: `calc(1.176vw * ${scale})`,
       color: "#00A0E4",
     },
     cardContentBox: {
       display: "flex",
 
-      paddingLeft: "0vw",
+      paddingLeft: `calc(0vw * ${scale})`,
       position: "absolute",
       top: "33%",
       justifyContent: "flex-start",
@@ -47,19 +47,19 @@ const style = (theme) => {
       },
     },
     headerTypography: {
-      fontSize: "1.4vw",
+      fontSize: `calc(1.4vw * ${scale})`,
     },
     cardHeader: {
-      paddingLeft: "2.22vw",
-      paddingTop: "2.22vw",
-      fontSize: "1vw",
+      paddingLeft: `calc(2.22vw * ${scale})`,
+      paddingTop: `calc(2.22vw * ${scale})`,
+      fontSize: `calc(1vw * ${scale})`,
       textAlign: "left",
     },
     cardcontent: {
       "&.MuiCardContent-root": {
         display: "flex",
         justifyContent: "flex-start",
-        paddingLeft: "2.22vw",
+        paddingLeft: `calc(2.22vw * ${scale})`,
       },
       "& .MuiFormControl-root": {},
     },
@@ -89,16 +89,16 @@ const style = (theme) => {
       position: "relative",
 
       "& .MuiFormControl-root": {
-        width: "21.45vw",
-        height: "3.8vw",
+        width: `calc(21.45vw * ${scale})`,
+        height: `calc(3.8vw * ${scale})`,
       },
     },
     card: {
       overflow: "hidden",
       position: "relative",
-      height: "26.04vw",
-      width: "30.56vw",
-      borderRadius: "1.38vw",
+      height: `calc(26.04vw * ${scale})`,
+      width: `calc(30.56vw * ${scale})`,
+      borderRadius: `calc(1.38vw * ${scale})`,
       zIndex: 999,
       background: "#FFFFFF",
       border: "0.07vw solid #E1E1E1",

@@ -1,5 +1,5 @@
 // eslint-disable-next-line
-const style = (theme) => {
+const style = (theme, scale = 1) => {
   return {
     navLiquidity: {
       padding: 0,
@@ -9,13 +9,13 @@ const style = (theme) => {
         backgroundColor: "transparent",
       },
       "& .MuiTabs-indicatorSpan-add": {
-        height: ".1vw",
-        width: "7.92vw",
+        height: `calc(.1vw * ${scale})`,
+        width: `calc(7.92vw * ${scale})`,
         backgroundColor: "#000000",
       },
       "& .MuiTabs-indicatorSpan-remove": {
-        height: ".1vw",
-        width: "10vw",
+        height: `calc(.1vw * ${scale})`,
+        width: `calc(10vw * ${scale})`,
         backgroundColor: "#000000",
       },
       justifyContent: "flex-start",
@@ -25,15 +25,15 @@ const style = (theme) => {
         justifiyContent: "center",
         alignItems: "center",
         padding: "0px 0px 0px 0px ",
-        minHeight: "2.6vw",
-        maxHeight: "2.6vw",
+        minHeight: `calc(2.6vw * ${scale})`,
+        maxHeight: `calc(2.6vw * ${scale})`,
       },
       "& .MuiTabs-scroller": {
         display: "flex",
         justifiyContent: "center",
         alignItems: "center",
         padding: "0px 0px 0px 0px ",
-        height: "2.6vw",
+        height: `calc(2.6vw * ${scale})`,
       },
       "&.MuiButton-root.Mui-disabled": {
         color: "#999999",
@@ -50,10 +50,10 @@ const style = (theme) => {
         fontFamily: "Inter",
         fontStyle: "normal",
         fontWeight: "500",
-        fontSize: "1.25vw",
-        lineHeight: "1.52vw",
-        minWidth: "11vw",
-        maxWidth: "11vw",
+        fontSize: `calc(1.25vw * ${scale})`,
+        lineHeight: `calc(1.52vw * ${scale})`,
+        minWidth: `calc(11vw * ${scale})`,
+        maxWidth: `calc(11vw * ${scale})`,
         "&:not(first-child)": {},
         "&:first-child": {},
 
@@ -72,14 +72,14 @@ const style = (theme) => {
         justifiyContent: "center",
         alignItems: "center",
 
-        height: "2.6vw",
+        height: `calc(2.6vw * ${scale})`,
       },
       "& .MuiTabs-scroller": {
         display: "flex",
         justifiyContent: "center",
         alignItems: "center",
 
-        height: "2.6vw",
+        height: `calc(2.6vw * ${scale})`,
       },
 
       "& .MuiButtonBase-root": {
@@ -89,53 +89,53 @@ const style = (theme) => {
         fontFamily: "Inter",
         fontStyle: "normal",
         fontWeight: "500",
-        fontSize: "1.11vw",
-        lineHeight: "1.34vw",
+        // fontSize: `calc(1.11vw * ${scale})`,
+        lineHeight: `calc(1.34vw * ${scale})`,
         display: "inline-flex",
         justifyContent: "center",
         textAlign: "center",
-        minHeight: "4vw",
-        maxHeight: "4vw",
-        minWidth: "3.7vw",
-        maxWidth: "7.7vw",
-        paddingTop: "0vw",
-        paddingBottom: "0vw",
+        // minHeight: `calc(4vw * ${scale})`,
+        // maxHeight: `calc(4vw * ${scale})`,
+        minWidth: `calc(3.7vw * ${scale})`,
+        // maxWidth: `calc(7.7vw * ${scale})`,
+        paddingTop: `calc(0vw * ${scale})`,
+        paddingBottom: `calc(0vw * ${scale})`,
         "&:not(first-child)": {},
         "&:first-child": {
           paddingLeft: "3.1vw ",
         },
 
         color: "#999999",
-        background: "white",
+        background: "transparent",
         textTransform: "initial",
       },
 
       padding: 0,
 
       display: "flex",
-      fontSize: "1.5vw",
+      fontSize: `calc(1.5vw * ${scale})`,
       justifyContent: "center",
     },
     navHome: {
       root: {
         "& .MuiTabs-flexContainer": {
           justifyContent: "space-between",
-          height: "2.98vw",
-          minWidth: "15.34vw",
-          maxWidth: "15.34vw",
+          height: `calc(2.98vw * ${scale})`,
+          minWidth: `calc(15.34vw * ${scale})`,
+          maxWidth: `calc(15.34vw * ${scale})`,
           border: "0.07vw solid #EDEDED",
-          borderRadius: ".48vw",
+          borderRadius: `calc(.48vw * ${scale})`,
           display: "flex",
           position: "relative",
         },
 
         "&.MuiTabs-root": {
-          minHeight: "3.2vw",
+          minHeight: `calc(3.2vw * ${scale})`,
         },
         ".MuiTabs-indicator": {
           top: 0,
 
-          minHeight: "2.91vw",
+          minHeight: `calc(2.91vw * ${scale})`,
 
           background: "none",
           "&:after": {
@@ -143,11 +143,11 @@ const style = (theme) => {
             display: "flex",
             position: "absolute",
 
-            top: "0.28vw",
-            bottom: "0.1vw",
-            left: ".28vw",
-            right: ".28vw",
-            borderRadius: ".48vw",
+            top: `calc(0.28vw * ${scale})`,
+            bottom: `calc(0.1vw * ${scale})`,
+            left: `calc(.28vw * ${scale})`,
+            right: `calc(.28vw * ${scale})`,
+            borderRadius: `calc(.48vw * ${scale})`,
             backgroundColor: "selectedHomeTab.main",
           },
         },
@@ -157,9 +157,9 @@ const style = (theme) => {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          fontSize: "1.11vw",
-          minHeight: "2.91vw",
-          minWidth: "3.0vw",
+          fontSize: `calc(1.11vw * ${scale})`,
+          minHeight: `calc(2.91vw * ${scale})`,
+          minWidth: `calc(3.0vw * ${scale})`,
           padding: ".0vw 1.66vw .0vw 1.66vw ",
           zIndex: 2,
 

@@ -1,7 +1,7 @@
 import React, { FC } from "react";
 import "./App.css";
 
-import { Layout } from "./components/ui/views/Layout";
+import { Layout } from "./components/ui/views";
 import { Outlet } from "react-router-dom";
 
 export const App: FC = () => {

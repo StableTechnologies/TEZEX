@@ -24,12 +24,16 @@ import Typography from "@mui/material/Typography";
 import style from "./style";
 import useStyles from "../../hooks/styles";
 
+import useMediaQuery from "@mui/material/useMediaQuery";
+import { theme } from "../../theme";
 export interface ISwapToken {
   children: null;
 }
 
 export const Swap: FC = () => {
-  const styles = useStyles(style);
+  const scalingKey = "swap";
+  const width = window.innerWidth;
+  const styles = useStyles(style, scalingKey);
   const network = useNetwork();
   const walletOperations: WalletOps = useWalletOps(TransactingComponent.SWAP);
   const isWalletConnected = useWalletConnected();
@@ -53,6 +57,11 @@ export const Swap: FC = () => {
   const session = useSession();
 
   const active = walletOperations.getActiveTransaction();
+  const isXs = useMediaQuery(theme.breakpoints.only("xs"));
+  const isSm = useMediaQuery(theme.breakpoints.only("sm"));
+  const isMd = useMediaQuery(theme.breakpoints.only("md"));
+  const isLg = useMediaQuery(theme.breakpoints.only("lg"));
+
   const transact = async () => {
     await walletOperations.sendTransaction();
   };
@@ -213,11 +222,12 @@ export const Swap: FC = () => {
                 value={sendAmount.toFixed()}
                 balance={balances[0]}
                 loading={loading}
+                scalingKey={scalingKey}
               />
             </Grid2>
 
             <Box sx={styles.swapToggle}>
-              <SwapUpDownToggle toggle={swapFields} />
+              <SwapUpDownToggle toggle={swapFields} scalingKey={scalingKey} />
             </Box>
 
             <Grid2 xs={11.2} sx={styles.input2}>
@@ -226,12 +236,17 @@ export const Swap: FC = () => {
                 value={receiveAmount.toFixed()}
                 readOnly={true}
                 balance={balances[1]}
+                scalingKey={scalingKey}
               />
             </Grid2>
           </CardContent>
           <CardActions sx={styles.cardAction}>
             <Box sx={styles.transact}>
-              <Wallet transaction={active} callback={transact}>
+              <Wallet
+                transaction={active}
+                callback={transact}
+                scalingKey={scalingKey}
+              >
                 {"Swap Tokens"}
               </Wallet>
             </Box>
@@ -241,7 +256,7 @@ export const Swap: FC = () => {
         <Paper variant="outlined" sx={styles.paper} square>
           <Box sx={styles.paperBox}>
             <Grid2 xs={4}>
-              <SlippageLabel />
+              <SlippageLabel scalingKey={scalingKey} />
             </Grid2>
 
             <Grid2 xs={7}>
@@ -251,6 +266,7 @@ export const Swap: FC = () => {
                 onChange={updateSlippage}
                 inverse={true}
                 loading={loading}
+                scalingKey={scalingKey}
               />
             </Grid2>
           </Box>

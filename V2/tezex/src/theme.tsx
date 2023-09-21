@@ -15,11 +15,92 @@ declare module "@mui/material/styles" {
   interface SimplePaletteColorOptions {
     darker?: string;
   }
+
+  interface ScaleAtBreakPoints {
+    xl: number;
+    lg: number;
+    md: number;
+    sm: number;
+    xs: number;
+    landscape?: {
+      xl: number;
+      lg: number;
+      md: number;
+      sm: number;
+      xs: number;
+    };
+  }
+  interface ThemeOptions {
+    scaling?: {
+      default: ScaleAtBreakPoints;
+      swap?: ScaleAtBreakPoints;
+      removeLiquidity?: ScaleAtBreakPoints;
+      addLiquidity?: ScaleAtBreakPoints;
+      header?: ScaleAtBreakPoints;
+      navHome?: ScaleAtBreakPoints;
+    };
+  }
+  interface Theme {
+    scaling?: {
+      default: ScaleAtBreakPoints;
+      swap?: ScaleAtBreakPoints;
+      removeLiquidity?: ScaleAtBreakPoints;
+      addLiquidity?: ScaleAtBreakPoints;
+      header?: ScaleAtBreakPoints;
+      navHome?: ScaleAtBreakPoints;
+    };
+  }
 }
 
 //const { palette } = createTheme();
 
 export const theme = createTheme({
+  scaling: {
+    default: {
+      xl: 1,
+      lg: 1,
+      md: 1,
+      sm: 1,
+      xs: 1,
+    },
+
+    swap: {
+      xl: 1,
+      lg: 1,
+      md: 1.5,
+      sm: 2,
+      xs: 3,
+    },
+    addLiquidity: {
+      xl: 1,
+      lg: 1,
+      md: 1.5,
+      sm: 2,
+      xs: 3,
+      landscape: {
+        xl: 1,
+        lg: 1,
+        md: 1,
+        sm: 1,
+        xs: 1,
+      },
+    },
+    removeLiquidity: {
+      xl: 1,
+      lg: 1,
+      md: 1.5,
+      sm: 2,
+      xs: 3,
+    },
+
+    navHome: {
+      xl: 1,
+      lg: 1,
+      md: 1.5,
+      sm: 2,
+      xs: 3,
+    },
+  },
   typography: {
     fontFamily: "Inter",
   },

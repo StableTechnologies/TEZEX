@@ -1,24 +1,24 @@
 // eslint-disable-next-line
-const style = (theme) => {
+const style = (theme, scale = 1) => {
   return {
     transactionStatus: {
       fontWeight: "500",
-      fontSize: "1.66vw",
-      lineHeight: "2.01vw",
+      fontSize: `calc(1.66vw * ${scale})`,
+      lineHeight: `calc(2.01vw * ${scale})`,
     },
 
     spinnerBox: {
       position: "absolute",
-      left: "3.38vw",
-      top: "1.11vw",
+      left: `calc(3.38vw * ${scale})`,
+      top: `calc(1.11vw * ${scale})`,
     },
     spinner: {
-      maxWidth: "1.85vw",
-      maxHeight: "1.85vw",
+      maxWidth: `calc(1.85vw * ${scale})`,
+      maxHeight: `calc(1.85vw * ${scale})`,
       color: "#A1E3FF",
     },
     walletBox: {
-      width: "20vw",
+      width: `calc(20vw * ${scale})`,
       display: "flex",
       flexDirection: "row",
       justifyContent: "center",
@@ -27,8 +27,8 @@ const style = (theme) => {
 
     walletConnectedHeader: {
       logo: {
-        minHeight: "1.39vw",
-        maxHeight: "1.39vw",
+        minHeight: `calc(1.39vw * ${scale})`,
+        maxHeight: `calc(1.39vw * ${scale})`,
       },
       background:
         "linear-gradient(92.04deg, rgba(171, 240, 255, 0.2) 4.41%, #F9FEFF 84.62%)",
@@ -38,13 +38,13 @@ const style = (theme) => {
       alignItems: "center",
       justifyContent: "space-around",
 
-      minHeight: "2.7vw",
-      minWidth: "10.24vw",
+      minHeight: `calc(2.7vw * ${scale})`,
+      minWidth: `calc(10.24vw * ${scale})`,
 
-      borderRadius: ".55vw",
+      borderRadius: `calc(.55vw * ${scale})`,
       fontWeight: "500",
-      fontSize: "1.11vw",
-      lineHeight: "1.34vw",
+      fontSize: `calc(1.11vw * ${scale})`,
+      lineHeight: `calc(1.34vw * ${scale})`,
 
       textTransform: "none",
     },
@@ -61,13 +61,13 @@ const style = (theme) => {
       display: "flex",
       fontFamily: "Inter",
       width: "100%",
-      height: "4.16vw",
+      height: `calc(4.16vw * ${scale})`,
       background: "rgba(45, 45, 45, 0.5)",
       color: "white",
-      borderRadius: "1.11vw",
+      borderRadius: `calc(1.11vw * ${scale})`,
       fontWeight: "500",
-      fontSize: "1.66vw",
-      lineHeight: "2.01vw",
+      fontSize: `calc(1.66vw * ${scale})`,
+      lineHeight: `calc(2.01vw * ${scale})`,
       letterSpacing: "0.01em",
       textTransform: "none",
       "&:hover": {
@@ -82,14 +82,14 @@ const style = (theme) => {
       fontFamily: "Inter",
       width: "100%",
 
-      height: "4.16vw",
+      height: `calc(4.16vw * ${scale})`,
       backgroundColor: "#000",
       color: "white",
 
-      borderRadius: "1.11vw",
+      borderRadius: `calc(1.11vw * ${scale})`,
       fontWeight: "500",
-      fontSize: "1.66vw",
-      lineHeight: "2.01vw",
+      fontSize: `calc(1.66vw * ${scale})`,
+      lineHeight: `calc(2.01vw * ${scale})`,
       letterSpacing: "0.01em",
       textTransform: "none",
       "&:hover": {
@@ -100,16 +100,23 @@ const style = (theme) => {
       "&.MuiButton-root.Mui-disabled": {
         color: "white",
       },
+
+      "& .MuiButtonBase-root": {
+        display: "block",
+        flexWrap: "nowrap",
+      },
+
       background: "#1E1E1E",
       color: "white",
-      minHeight: "2.7vw",
-      minWidth: "10.24vw",
+      //minHeight: `calc(2.7vw * ${scale})`,
+      //minWidth: `calc(10.24vw * ${scale})`,
+      minWidth: "144px",
 
       border: "1px solid black",
-      borderRadius: ".55vw",
+      borderRadius: `calc(.55vw * ${scale})`,
       fontWeight: "500",
-      fontSize: "1.11vw",
-      lineHeight: "1.34vw",
+      // fontSize: `calc(1.11vw * ${scale})`,
+      // lineHeight: `calc(1.34vw * ${scale})`,
 
       textTransform: "none",
       "&:hover": {
