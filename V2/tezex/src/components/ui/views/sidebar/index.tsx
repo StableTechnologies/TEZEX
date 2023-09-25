@@ -22,6 +22,11 @@ import { Link } from "react-router-dom";
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
 import CloseIcon from "@mui/icons-material/Close";
 import { useTheme } from "@mui/material";
+import { padding } from "@mui/system";
+import KeyboardDoubleArrowRightSharpIcon from "@mui/icons-material/KeyboardDoubleArrowRightSharp";
+
+import logoSmall from "../../../../assets/tezexIcon.svg";
+import KeyboardDoubleArrowRightSharp from "@mui/icons-material/KeyboardDoubleArrowRightSharp";
 const pages = ["Home", "Analytics", "About"];
 
 const settings = [""];
@@ -46,11 +51,14 @@ export const SideBar: FC<ISideBarProps> = (props) => {
         backgroundColor="#FFFFFF"
         collapsed={collapsed}
         onBackdropClick={() => setCollapsed(false)}
+        rtl={true}
         rootStyles={{
           //boxShadow: "20px 20px 25px 20px rgba(0, 0, 0, 0.1)",
           fontSize: collapsed ? "0px" : "3vw",
           boxShadow: "0px 0px 10px 0px rgba(0,0,0,0.15)",
           borderRight: "0px",
+
+          textAlign: "right",
         }}
       >
         <Menu
@@ -63,22 +71,113 @@ export const SideBar: FC<ISideBarProps> = (props) => {
               },
             },
           }}
+          rootStyles={
+            {
+              //  textAlign: "right"
+            }
+          }
         >
-          <MenuItem>
-            <IconButton onClick={() => props.toggleMenu()}>
-              {!props.openMenu ? <MenuOutlinedIcon /> : <CloseIcon />}
-            </IconButton>
-          </MenuItem>
-          <SubMenu label="Home">
-            <MenuItem component={<Link to="/home/swap" />}> swap</MenuItem>
+          {!props.openMenu ? (
+            <MenuItem>
+              <IconButton onClick={() => props.toggleMenu()}>
+                <MenuOutlinedIcon />
+              </IconButton>
+            </MenuItem>
+          ) : (
+            <MenuItem
+              suffix={
+                <IconButton onClick={() => props.toggleMenu()}>
+                  <KeyboardDoubleArrowRightSharp />
+                </IconButton>
+              }
+            ></MenuItem>
+          )}
+        </Menu>
+        <Menu
+          menuItemStyles={{
+            button: {
+              // the active class will be added automatically by react router
+              // so we can use it to style the active menu item
+              [`&.active`]: {
+                backgroundColor: "#FFFFFF",
+              },
+            },
+          }}
+          rootStyles={
+            {
+              //  textAlign: "right"
+            }
+          }
+        >
+          {!props.openMenu ? (
+            <MenuItem>
+              <Box
+                component="img"
+                sx={{
+                  display: "flex",
+                  /* width: "164px",
+                 "@media screen and (max-width: 768px)": {
+                   width: "164px",
+                 },
+                 "@media screen and (max-width: 246px)": {
+                   display: "none",
+                 },*/
+                }}
+                src={logoSmall}
+                alt="Logo"
+              />
+            </MenuItem>
+          ) : (
+            <MenuItem>
+              <Box
+                component="img"
+                sx={{
+                  display: "flex",
+                  /* width: "164px",
+                 "@media screen and (max-width: 768px)": {
+                   width: "164px",
+                 },
+                 "@media screen and (max-width: 246px)": {
+                   display: "none",
+                 },*/
+                }}
+                src={logo}
+                alt="Logo"
+              />
+            </MenuItem>
+          )}
+        </Menu>
+        <Menu
+          rootStyles={{
+            display: !props.openMenu ? "none" : "block",
+          }}
+        >
+          <SubMenu
+            label="Home"
+            rootStyles={
+              {
+                //textAlign: "right"
+              }
+            }
+          >
+            <MenuItem
+              component={<Link to="/home/swap" />}
+              rootStyles={{
+                textAlign: "right",
+                justifyContent: "flex-end",
+                paddingRight: "0px",
+                position: "relative",
+                right: "0px",
+                padding: "0px 0px 0px 0px",
+              }}
+            >
+              <Typography> Swap</Typography>
+            </MenuItem>
             <SubMenu label="Liquidity">
-              <MenuItem component={<Link to="/home/add" />}>
-                {" "}
-                Add Liquidity
-              </MenuItem>
+              <MenuItem component={<Link to="/home/add" />}> Add</MenuItem>
               <MenuItem component={<Link to="/home/remove" />}>
                 {" "}
-                Remove Liquidity
+                Remove
               </MenuItem>
             </SubMenu>
           </SubMenu>
