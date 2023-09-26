@@ -27,6 +27,7 @@ import KeyboardDoubleArrowRightSharpIcon from "@mui/icons-material/KeyboardDoubl
 
 import logoSmall from "../../../../assets/tezexIcon.svg";
 import KeyboardDoubleArrowRightSharp from "@mui/icons-material/KeyboardDoubleArrowRightSharp";
+import zIndex from "@mui/material/styles/zIndex";
 const pages = ["Home", "Analytics", "About"];
 
 const settings = [""];
@@ -86,11 +87,40 @@ export const SideBar: FC<ISideBarProps> = (props) => {
           ) : (
             <MenuItem
               suffix={
-                <IconButton onClick={() => props.toggleMenu()}>
+                <IconButton
+                  sx={{
+                    //                  paddingRight: "10px"
+                    right: "60%",
+                  }}
+                  onClick={() => props.toggleMenu()}
+                >
                   <KeyboardDoubleArrowRightSharp />
                 </IconButton>
               }
-            ></MenuItem>
+            >
+              <Box
+                component="img"
+                sx={{
+                  display: "none",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  width: "100%",
+                  /* width: "164px",
+                 "@media screen and (max-width: 768px)": {
+                   width: "164px",
+                 },
+                 "@media screen and (max-width: 246px)": {
+                   display: "none",
+                 },*/
+
+                  "@media (max-width: 900px) and (orientation: landscape)": {
+                    display: "flex",
+                  },
+                }}
+                src={logo}
+                alt="Logo"
+              />
+            </MenuItem>
           )}
         </Menu>
         <Menu
@@ -128,28 +158,13 @@ export const SideBar: FC<ISideBarProps> = (props) => {
               />
             </MenuItem>
           ) : (
-            <MenuItem>
-              <Box
-                component="img"
-                sx={{
-                  display: "flex",
-                  /* width: "164px",
-                 "@media screen and (max-width: 768px)": {
-                   width: "164px",
-                 },
-                 "@media screen and (max-width: 246px)": {
-                   display: "none",
-                 },*/
-                }}
-                src={logo}
-                alt="Logo"
-              />
-            </MenuItem>
+            <></>
           )}
         </Menu>
         <Menu
           rootStyles={{
             display: !props.openMenu ? "none" : "block",
+            paddingTop: "10%",
           }}
         >
           <SubMenu
@@ -171,11 +186,16 @@ export const SideBar: FC<ISideBarProps> = (props) => {
                 padding: "0px 0px 0px 0px",
               }}
             >
-              <Typography> Swap</Typography>
+              Swap
             </MenuItem>
             <SubMenu label="Liquidity">
               <MenuItem component={<Link to="/home/add" />}> Add</MenuItem>
-              <MenuItem component={<Link to="/home/remove" />}>
+              <MenuItem
+                component={<Link to="/home/remove" />}
+                rootStyles={{
+                  paddingBottom: "10%",
+                }}
+              >
                 {" "}
                 Remove
               </MenuItem>
