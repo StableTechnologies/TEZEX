@@ -347,7 +347,7 @@ export const style = (theme, scale = 1) => {
 
         zIndex: 1,
 
-        color: "palette.text.primary",
+        color: "text.primary",
         textTransform: "initial",
         [theme.breakpoints.down("md")]: {},
       },

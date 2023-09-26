@@ -167,7 +167,7 @@ const style = (theme, scale = 1) => {
           textTransform: "initial",
         },
         wrapper: {
-          color: "palette.text.primary",
+          color: "text.primary",
           textTransform: "initial",
         },
       },

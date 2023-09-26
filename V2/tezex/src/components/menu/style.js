@@ -163,11 +163,11 @@ const style = (theme) => {
           padding: ".0vw 1.66vw .0vw 1.66vw ",
           zIndex: 2,
 
-          color: "palette.text.primary",
+          color: "text.primary",
           textTransform: "initial",
         },
         wrapper: {
-          color: "palette.text.primary",
+          color: "text.primary",
           textTransform: "initial",
         },
       },

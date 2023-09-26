@@ -37,41 +37,39 @@ export interface ISideBarProps {
 }
 export const SideBar: FC<ISideBarProps> = (props) => {
   const [collapsed, setCollapsed] = React.useState(true);
+
+  const styles = useStyles(style);
   useEffect(() => {
     setCollapsed(!props.openMenu);
   }, [props.openMenu]);
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        width: "100%",
-      }}
-    >
+    <Box sx={styles.box}>
       <Sidebar
-        backgroundColor="#FFFFFF"
+        backgroundColor={styles.root.backgroundColor}
         collapsed={collapsed}
         onBackdropClick={() => setCollapsed(false)}
         rtl={true}
-        rootStyles={{
-          //boxShadow: "20px 20px 25px 20px rgba(0, 0, 0, 0.1)",
-          fontSize: collapsed ? "0px" : "3vw",
-          boxShadow: "0px 0px 10px 0px rgba(0,0,0,0.15)",
-          borderRight: "0px",
-
-          textAlign: "right",
-        }}
+        rootStyles={styles.root}
       >
         <Menu
-          menuItemStyles={{
-            button: {
-              // the active class will be added automatically by react router
-              // so we can use it to style the active menu item
-              [`&.active`]: {
-                backgroundColor: "#FFFFFF",
-              },
-            },
-          }}
+          menuItemStyles={
+            {
+              //            button: ({ level, active, disabled }) => {
+              //              const style = active ? styles.menuItemActive : styles.menuItem;
+              //              //return style
+              //              if (active) {
+              //                return {
+              //                  backgroundColor: "#FFFFFF",
+              //                }
+              //              }
+              //
+              //              return {
+              //                backgroundColor: "red"
+              //              }
+              //            },
+            }
+          }
           rootStyles={
             {
               //  textAlign: "right"
@@ -124,15 +122,7 @@ export const SideBar: FC<ISideBarProps> = (props) => {
           )}
         </Menu>
         <Menu
-          menuItemStyles={{
-            button: {
-              // the active class will be added automatically by react router
-              // so we can use it to style the active menu item
-              [`&.active`]: {
-                backgroundColor: "#FFFFFF",
-              },
-            },
-          }}
+          menuItemStyles={{}}
           rootStyles={
             {
               //  textAlign: "right"
@@ -162,39 +152,48 @@ export const SideBar: FC<ISideBarProps> = (props) => {
           )}
         </Menu>
         <Menu
+          menuItemStyles={{
+            button: ({ level, active, disabled }) => {
+              const style = active ? styles.menuItemActive : styles.menuItem;
+              if (level > 1) {
+                const style1 = active
+                  ? styles.menuItemActive1
+                  : styles.menuItem1;
+                return style1;
+              }
+              return style;
+              //if (active) {
+              //  return {
+              //    backgroundColor: "#FFFFFF",
+              //  }
+              //}
+            },
+          }}
           rootStyles={{
             display: !props.openMenu ? "none" : "block",
             paddingTop: "10%",
+
+            //fontSize: "2.5vw",//collapsed ? "0px" : "3vw",
           }}
         >
-          <SubMenu
-            label="Home"
-            rootStyles={
-              {
-                //textAlign: "right"
-              }
-            }
-          >
+          <SubMenu label="Home" rootStyles={styles.home}>
             <MenuItem
               component={<Link to="/home/swap" />}
-              rootStyles={{
-                textAlign: "right",
-                justifyContent: "flex-end",
-                paddingRight: "0px",
-                position: "relative",
-                right: "0px",
-                padding: "0px 0px 0px 0px",
-              }}
+              rootStyles={styles.swap}
             >
               Swap
             </MenuItem>
-            <SubMenu label="Liquidity">
-              <MenuItem component={<Link to="/home/add" />}> Add</MenuItem>
+            <SubMenu label="Liquidity" rootStyles={styles.liquidity}>
+              <MenuItem
+                component={<Link to="/home/add" />}
+                rootStyles={styles.add}
+              >
+                {" "}
+                Add
+              </MenuItem>
               <MenuItem
                 component={<Link to="/home/remove" />}
-                rootStyles={{
-                  paddingBottom: "10%",
-                }}
+                rootStyles={styles.remove}
               >
                 {" "}
                 Remove

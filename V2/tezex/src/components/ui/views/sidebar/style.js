@@ -1,78 +1,76 @@
 // eslint-disable-next-line
 const style = (theme, scale = 1) => {
   return {
-    header: {
-      headerBox: {
-        fontSize: `calc(1.5vw * ${scale})`,
-        display: "flex",
-        alignItems: "center",
-        width: "100%",
-        height: `calc(5vw * ${scale})`,
-        left: "0px",
-        top: "0px",
-        background: "#FFFFFF",
-        marginBottom: `calc(.28vw * ${scale})`,
-        boxShadow: ".28vw .28vw .28vw rgba(204, 204, 204, 0.25)",
-        [theme.breakpoints.down("sm")]: {
-          boxShadow: "0px 0px 0px 0px",
-        },
-      },
-
-      logo: {
-        position: "relative",
-        [theme.breakpoints.up("md")]: {
-          width: `calc(11.35vw * ${scale})`,
-          marginLeft: `calc(11.39vw * ${scale})`,
-          top: `calc(.17vw * ${scale})`,
-          boxShadow: "0px 0px 0px 0px",
-        },
-        [theme.breakpoints.down("sm")]: {},
-      },
-
-      nav: {
-        [theme.breakpoints.down("md")]: {
-          display: "none",
-        },
-
-        alignContent: "center",
-      },
-
-      wallet: {
-        display: { xs: "none", sm: "none", md: "flex" },
-        position: "absolute",
-        right: "0px",
-        //left: `calc(51vw * ${scale})`,
-        alignContent: "end",
-        justifyContent: "flex-end",
-      },
-    },
-    layout: {
-      layoutBox: {
-        height: "100vh",
-        width: "100%",
-        alignContent: "flex-start",
-        flexDirection: "column",
-        justifyContent: "flex-start",
-        display: "flex",
-      },
-      layoutMainwindow: {},
-    },
-
-    mainWindowBackground: {
-      position: "absolute",
-      zindex: "-1",
-      top: `calc(6.9vw * ${scale})`,
+    box: {
       display: "flex",
-      maxWidth: `calc(1vw * ${scale})`,
-      minWidth: `calc(1vw * ${scale})`,
-      maxHeight: `calc(51.66vw * ${scale})`,
-      minHeight: `calc(51.66vw * ${scale})`,
-      marginLeft: `calc(2.05vw * ${scale})`,
-    },
-    mainWindow: {
-      height: "100%",
       width: "100%",
-      background: "#FEFEFE",
+    },
+    swap: {
+      fontSize: "2.9vw", //collapsed ? "0px" : "3vw",
+      textAlign: "right",
+      justifyContent: "flex-end",
+      paddingRight: "0px",
+      position: "relative",
+      right: "0px",
+      padding: "0px 0px 0px 0px",
+    },
+
+    liquidity: {
+      fontSize: "2.9vw", //collapsed ? "0px" : "3vw",
+      backgroundColor: "#FEFEFE",
+      paddingBottom: "10%",
+    },
+    home: {
+      fontSize: "3vw", //collapsed ? "0px" : "3vw",
+      backgroundColor: "#FEFEFE",
+    },
+    add: {
+      //fontSize: "2.8vw",//collapsed ? "0px" : "3vw",
+      backgroundColor: "#FEFEFE",
+    },
+    remove: {
+      //  fontSize: "2.8vw",//collapsed ? "0px" : "3vw",
+      backgroundColor: "#FEFEFE",
+      paddingBottom: "10%",
+    },
+    root: {
+      //boxShadow: "20px 20px 25px 20px rgba(0, 0, 0, 0.1)",
+      fontSize: "3vw", //collapsed ? "0px" : "3vw",
+      boxShadow: "0px 0px 10px 0px rgba(0,0,0,0.15)",
+      borderRight: "0px",
+
+      backgroundColor: theme.palette.primary.main,
+      //backgroundColor: "#FEFEFE",
+      textAlign: "right",
+    },
+
+    menuItem: {
+      backgroundColor: theme.palette.primary.main,
+    },
+    menuItemActive: {
+      backgroundColor: theme.palette.primary.main,
+      //backgroundColor: "#000000"
+      //backgroundColor: theme.palette.primary.main,
+    },
+
+    menuItem2: {
+      fontSize: "2.5vw", //collapsed ? "0px" : "3vw",
+      backgroundColor: theme.palette.primary.main,
+    },
+    menuItemActive2: {
+      fontSize: "2.5vw", //collapsed ? "0px" : "3vw",
+      backgroundColor: theme.palette.primary.main,
+      //backgroundColor: "#000000"
+      //backgroundColor: theme.palette.primary.main,
+    },
+
+    menuItem3: {
+      backgroundColor: theme.palette.primary.main,
+    },
+    menuItemActive3: {
+      backgroundColor: theme.palette.primary.main,
+      //backgroundColor: "#000000"
+      //backgroundColor: theme.palette.primary.main,
     },
   };
 };
