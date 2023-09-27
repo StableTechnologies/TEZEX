@@ -32,6 +32,7 @@ export interface IAddLiquidity {
 export const AddLiquidity: FC = () => {
   const scalingKey = "addLiquidity";
   const styles = useStyles(style, scalingKey);
+  const walletGridSize = styles.isLandScape ? 5 : 12;
   const network = useNetwork();
   const walletOperations: WalletOps = useWalletOps(
     TransactingComponent.ADD_LIQUIDITY
@@ -329,7 +330,13 @@ export const AddLiquidity: FC = () => {
             </Grid2>
           </Box>
 
-          <Grid2 sx={styles.wallet} xs={12} sm={12} md={12} lg={6}>
+          <Grid2
+            sx={styles.wallet}
+            xs={walletGridSize}
+            sm={walletGridSize}
+            md={walletGridSize}
+            lg={6}
+          >
             <Wallet
               transaction={active}
               callback={transact}
