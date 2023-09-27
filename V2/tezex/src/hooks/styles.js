@@ -69,7 +69,11 @@ const useStyles = (style, scalingKey = "default", toCSS = false) => {
       });
 
       return prepared;
-    } else return classes;
+    } else
+      return {
+        isLandScape: isLandScape,
+        ...classes,
+      };
   }, [style, theme, scale]);
 };
 
