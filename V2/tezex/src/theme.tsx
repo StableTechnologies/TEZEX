@@ -117,6 +117,7 @@ export const theme = createTheme({
     },
     text: {
       primary: "#000000",
+      disabled: "#999999",
     },
 
     primary: {

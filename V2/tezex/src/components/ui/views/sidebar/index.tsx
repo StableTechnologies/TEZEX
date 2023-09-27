@@ -28,6 +28,8 @@ import KeyboardDoubleArrowRightSharpIcon from "@mui/icons-material/KeyboardDoubl
 import logoSmall from "../../../../assets/tezexIcon.svg";
 import KeyboardDoubleArrowRightSharp from "@mui/icons-material/KeyboardDoubleArrowRightSharp";
 import zIndex from "@mui/material/styles/zIndex";
+import { useSession } from "../../../../hooks/session";
+import { TransactingComponent } from "../../../../types/general";
 const pages = ["Home", "Analytics", "About"];
 
 const settings = [""];
@@ -37,12 +39,27 @@ export interface ISideBarProps {
 }
 export const SideBar: FC<ISideBarProps> = (props) => {
   const [collapsed, setCollapsed] = React.useState(true);
+  const [active, setActive] = React.useState(0);
 
+  const sessionInfo = useSession();
   const styles = useStyles(style);
   useEffect(() => {
     setCollapsed(!props.openMenu);
   }, [props.openMenu]);
 
+  useEffect(() => {
+    switch (sessionInfo.activeComponent) {
+      case TransactingComponent.SWAP:
+        setActive(0);
+        break;
+      case TransactingComponent.ADD_LIQUIDITY:
+        setActive(1);
+        break;
+      case TransactingComponent.REMOVE_LIQUIDITY:
+        setActive(2);
+        break;
+    }
+  }, [sessionInfo]);
   return (
     <Box sx={styles.box}>
       <Sidebar
@@ -152,39 +169,30 @@ export const SideBar: FC<ISideBarProps> = (props) => {
           )}
         </Menu>
         <Menu
-          menuItemStyles={{
-            button: ({ level, active, disabled }) => {
-              const style = active ? styles.menuItemActive : styles.menuItem;
-              if (level > 1) {
-                const style1 = active
-                  ? styles.menuItemActive1
-                  : styles.menuItem1;
-                return style1;
-              }
-              return style;
-              //if (active) {
-              //  return {
-              //    backgroundColor: "#FFFFFF",
-              //  }
-              //}
-            },
-          }}
-          rootStyles={{
-            display: !props.openMenu ? "none" : "block",
-            paddingTop: "10%",
-
-            //fontSize: "2.5vw",//collapsed ? "0px" : "3vw",
-          }}
+          menuItemStyles={styles.menuItem}
+          rootStyles={
+            !props.openMenu ? styles.menuRootClosed : styles.menuRootOpen
+          }
         >
-          <SubMenu label="Home" rootStyles={styles.home}>
+          <SubMenu
+            active={active === 0 || active === 1 || active === 2 ? true : false}
+            label="Home"
+            rootStyles={styles.home}
+          >
             <MenuItem
+              active={active === 0 ? true : false}
               component={<Link to="/home/swap" />}
               rootStyles={styles.swap}
             >
               Swap
             </MenuItem>
-            <SubMenu label="Liquidity" rootStyles={styles.liquidity}>
+            <SubMenu
+              active={active === 1 || active === 2 ? true : false}
+              label="Liquidity"
+              rootStyles={styles.liquidity}
+            >
               <MenuItem
+                active={active === 1 ? true : false}
                 component={<Link to="/home/add" />}
                 rootStyles={styles.add}
               >
@@ -192,6 +200,7 @@ export const SideBar: FC<ISideBarProps> = (props) => {
                 Add
               </MenuItem>
               <MenuItem
+                active={active === 2 ? true : false}
                 component={<Link to="/home/remove" />}
                 rootStyles={styles.remove}
               >
@@ -200,80 +209,13 @@ export const SideBar: FC<ISideBarProps> = (props) => {
               </MenuItem>
             </SubMenu>
           </SubMenu>
-          <MenuItem component={<Link to="/Analytics" />}> Analytics</MenuItem>
+          <MenuItem active={false} component={<Link to="/Analytics" />}>
+            {" "}
+            Analytics
+          </MenuItem>
           <MenuItem component={<Link to="/About" />}> About</MenuItem>
         </Menu>
       </Sidebar>
     </Box>
   );
 };
-/* 
- *
- * ik
-          <Box sx={{ flexGrow: 1, display: { xs: "flex", md: "none" } }}>
-            <IconButton
-              size="large"
-              aria-label="account of current user"
-              aria-controls="menu-appbar"
-              aria-haspopup="true"
-              onClick={handleOpenNavMenu}
-              color="inherit"
-            >
-              <MenuIcon />
-            </IconButton>
-            <Menu
-              id="menu-appbar"
-              anchorEl={anchorElNav}
-              anchorOrigin={{
-                vertical: "bottom",
-                horizontal: "left",
-              }}
-              keepMounted
-              transformOrigin={{
-                vertical: "top",
-                horizontal: "left",
-              }}
-              open={Boolean(anchorElNav)}
-              onClose={handleCloseNavMenu}
-              sx={{
-                display: { xs: "block", md: "none" },
-              }}
-            >
-              {pages.map((page) => (
-                <MenuItem key={page} onClick={handleCloseNavMenu}>
-                  <Typography textAlign="center">{page}</Typography>
-                </MenuItem>
-              ))}
-            </Menu>
-          </Box>
-          <Typography
-            variant="h5"
-            noWrap
-            component="a"
-            href="/"
-            sx={{
-              mr: 2,
-              display: { xs: "flex", md: "none" },
-              flexGrow: 1,
-              fontFamily: "monospace",
-              fontWeight: 700,
-              letterSpacing: ".3rem",
-              color: "inherit",
-              textDecoration: "none",
-            }}
-          >
-            Tezex small
-          </Typography>
-          <Box sx={{ flexGrow: 1, display: { xs: "none", md: "flex" } }}>
-
-            {pages.map((page) => (
-              <Button
-                key={page}
-                onClick={handleCloseNavMenu}
-                sx={{ my: 2, color: "black", display: "block" }}
-              >
-                {page}
-              </Button>
-            ))}
-          </Box>
- * */

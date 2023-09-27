@@ -1,3 +1,4 @@
+import { menuClasses } from "react-pro-sidebar";
 // eslint-disable-next-line
 const style = (theme, scale = 1) => {
   return {
@@ -46,10 +47,35 @@ const style = (theme, scale = 1) => {
 
     menuItem: {
       backgroundColor: theme.palette.primary.main,
+      button: {
+        color: theme.palette.text.disabled,
+        [`&.${menuClasses.disabled}`]: {
+          color: theme.palette.text.disabled,
+        },
+        [`&.${menuClasses.active}`]: {
+          //          backgroundColor: 'red',
+          backgroundColor: theme.palette.primary.main,
+          color: theme.palette.text.primary,
+        },
+        "&:hover": {
+          backgroundColor: theme.palette.primary.main,
+
+          color: theme.palette.text.primary,
+          // backgroundColor: 'red'
+        },
+      },
+    },
+    menuRootClosed: {
+      display: "none",
+      //  paddingTop: "10%",
+    },
+    menuRootOpen: {
+      display: "block",
+      paddingTop: "10%",
     },
     menuItemActive: {
-      backgroundColor: theme.palette.primary.main,
-      //backgroundColor: "#000000"
+      // backgroundColor: theme.palette.primary.main,
+      backgroundColor: "red",
       //backgroundColor: theme.palette.primary.main,
     },
 
