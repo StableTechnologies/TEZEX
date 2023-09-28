@@ -64,6 +64,13 @@ export const theme = createTheme({
       xs: 1,
     },
 
+    header: {
+      xl: 1,
+      lg: 1,
+      md: 1.5,
+      sm: 2,
+      xs: 3,
+    },
     swap: {
       xl: 1,
       lg: 1,

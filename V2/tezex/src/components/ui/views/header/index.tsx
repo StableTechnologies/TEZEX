@@ -30,7 +30,8 @@ export interface IHeader {
   toggleMenu: () => void;
 }
 export const Header: FC<IHeader> = (props) => {
-  const styles = useStyles(style);
+  const scalingKey = "header";
+  const styles = useStyles(style, scalingKey);
 
   const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(
     null
@@ -116,10 +117,10 @@ export const Header: FC<IHeader> = (props) => {
             </Grid2>
 
             <Grid2 sx={styles.nav}>
-              <NavApp />
+              <NavApp scalingKey={scalingKey} />
             </Grid2>
             <Grid2 md={2} sx={styles.wallet}>
-              <Wallet variant={"header"} />
+              <Wallet variant={"header"} scalingKey={scalingKey} />
             </Grid2>
             <Grid2 md={1} sx={props.openMenu ? styles.hide : styles.menu}>
               <IconButton onClick={props.toggleMenu}>

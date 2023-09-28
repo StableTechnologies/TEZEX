@@ -161,7 +161,7 @@ const style = (theme, scale = 1) => {
           fontSize: `calc(1.11vw * ${scale})`,
           minHeight: `calc(2.91vw * ${scale})`,
           minWidth: `calc(3.0vw * ${scale})`,
-          padding: ".0vw 1.66vw .0vw 1.66vw ",
+          padding: `calc(.0vw * ${scale}) calc(1.66vw * ${scale}) calc(.0vw * ${scale}) calc(1.66vw * ${scale}) `,
           zIndex: 2,
 
           color: "palette.text.primary",
