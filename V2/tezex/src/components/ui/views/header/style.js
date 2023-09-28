@@ -1,6 +1,46 @@
 // eslint-disable-next-line
 const style = (theme, scale = 1) => {
   return {
+    appBar: {
+      "&.MuiPaper-root": {
+        boxShadow: ".28vw .28vw .28vw rgba(204, 204, 204, 0.25)",
+      },
+      "@media screen and (max-width: 768px)": {
+        "&.MuiPaper-root": {
+          boxShadow: "0px 0px 0px 0px",
+        },
+      },
+    },
+    toolbar: {
+      height: "100%",
+      transition: "height 0.3s ",
+      "@media screen and (max-width: 768px)": {
+        height: "10vh",
+      },
+    },
+    logoLarge: {
+      display: "flex",
+      width: "11.35vw",
+      "@media screen and (max-width: 768px)": {
+        width: "164px",
+      },
+      "@media screen and (max-width: 246px)": {
+        display: "none",
+      },
+    },
+    logoSmall: {
+      display: "none",
+      //Width: "",
+      "@media screen and (max-width: 246px)": {
+        display: "flex",
+      },
+    },
+    container: {
+      alignItems: "center",
+      justifyContent: "flex-start",
+      alignContent: "center",
+      flexGrow: 1,
+    },
     headerBox: {
       fontSize: `calc(1.5vw * ${scale})`,
       display: "flex",
@@ -12,12 +52,6 @@ const style = (theme, scale = 1) => {
       background: "#FFFFFF",
       marginBottom: `calc(.28vw * ${scale})`,
       boxShadow: ".28vw .28vw .28vw rgba(204, 204, 204, 0.25)",
-      [theme.breakpoints.down("sm")]: {
-        boxShadow: "0px 0px 0px 0px",
-      },
-    },
-    toolbar: {
-      minHeight: "120px",
       [theme.breakpoints.down("sm")]: {
         boxShadow: "0px 0px 0px 0px",
       },

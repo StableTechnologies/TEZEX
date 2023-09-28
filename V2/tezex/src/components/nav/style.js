@@ -94,19 +94,20 @@ const style = (theme, scale = 1) => {
         display: "inline-flex",
         justifyContent: "center",
         textAlign: "center",
-        // minHeight: `calc(4vw * ${scale})`,
-        // maxHeight: `calc(4vw * ${scale})`,
+        minHeight: `calc(4vw * ${scale})`,
+        maxHeight: `calc(4vw * ${scale})`,
         minWidth: `calc(3.7vw * ${scale})`,
-        // maxWidth: `calc(7.7vw * ${scale})`,
+        maxWidth: `calc(7.7vw * ${scale})`,
         paddingTop: `calc(0vw * ${scale})`,
         paddingBottom: `calc(0vw * ${scale})`,
+        fontSize: `calc(1.11vw * ${scale})`,
         "&:not(first-child)": {},
-        "&:first-child": {
-          paddingLeft: "3.1vw ",
-        },
+        //   "&:first-child": {
+        //     paddingLeft: "3.1vw ",
+        //   },
 
         color: "#999999",
-        background: "transparent",
+        background: "white",
         textTransform: "initial",
       },
 

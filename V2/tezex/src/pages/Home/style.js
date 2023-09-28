@@ -11,7 +11,7 @@ const style = (theme, scale = 1) => {
         alignItems: "center",
         padding: "0px 0px 0px 0px ",
 
-        [theme.breakpoints.down("sm")]: {
+        [theme.breakpoints.down("md")]: {
           display: "none",
         },
       },
