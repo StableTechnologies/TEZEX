@@ -100,23 +100,16 @@ const style = (theme) => {
       "&.MuiButton-root.Mui-disabled": {
         color: "white",
       },
-
-      "& .MuiButtonBase-root": {
-        display: "block",
-        flexWrap: "nowrap",
-      },
-
       background: "#1E1E1E",
       color: "white",
-      //minHeight: "2.7vw",
-      //minWidth: "10.24vw",
-      minWidth: "144px",
+      minHeight: "2.7vw",
+      minWidth: "10.24vw",
 
       border: "1px solid black",
       borderRadius: ".55vw",
       fontWeight: "500",
-      // fontSize: "1.11vw",
-      // lineHeight: "1.34vw",
+      fontSize: "1.11vw",
+      lineHeight: "1.34vw",
 
       textTransform: "none",
       "&:hover": {

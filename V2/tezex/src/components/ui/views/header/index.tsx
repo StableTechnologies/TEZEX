@@ -71,17 +71,7 @@ export const Header: FC<IHeader> = (props) => {
 
   return (
     //<AppBar sx={styles.header.headerbox} position="static">
-    <AppBar
-      sx={{
-        "&.MuiPaper-root": {
-          "@media screen and (max-width: 768px)": {
-            boxShadow: "none",
-          },
-        },
-      }}
-      color="transparent"
-      position="static"
-    >
+    <AppBar sx={styles.appBar} color="transparent" position="static">
       <Container
         sx={
           {
@@ -96,55 +86,30 @@ export const Header: FC<IHeader> = (props) => {
         }
         maxWidth="xl"
       >
-        <Toolbar
-          disableGutters
-          sx={{
-            height: "100%",
-            transition: "height 0.3s ",
-            "@media screen and (max-width: 768px)": {
-              height: "10vh",
-            },
-          }}
-        >
+        <Toolbar disableGutters sx={styles.toolbar}>
           <Grid2
             container
             //direction="row"
-            alignItems="center"
-            justifyContent="flex-start"
-            alignContent="center"
-            sx={{ flexGrow: 1 }}
+            sx={styles.container}
           >
             <Grid2
               sm={3}
-              style={{
-                width: "164px",
-              }}
+              style={
+                {
+                  //width: "164px",
+                }
+              }
             >
               <Box
                 component="img"
-                sx={{
-                  display: "flex",
-                  Width: "164px",
-                  "@media screen and (max-width: 768px)": {
-                    width: "164px",
-                  },
-                  "@media screen and (max-width: 246px)": {
-                    display: "none",
-                  },
-                }}
+                sx={styles.logoLarge}
                 src={logo}
                 alt="Logo"
               />
 
               <Box
                 component="img"
-                sx={{
-                  display: "none",
-                  //Width: "",
-                  "@media screen and (max-width: 246px)": {
-                    display: "flex",
-                  },
-                }}
+                sx={styles.logoSmall}
                 src={logoSmall}
                 alt="Logo"
               />
