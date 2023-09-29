@@ -10,7 +10,7 @@ const style = (theme, scale = 1) => {
     infoTextIcon: {
       width: `calc(1.11vw * ${scale})`,
       marginLeft: `calc(.27vw * ${scale})`,
-      marginRight: `calc(.27vw * ${scale})`,
+      marginRightblockblock: `calc(.27vw * ${scale})`,
     },
     infoText: {
       display: "inline-flex",
@@ -36,8 +36,10 @@ const style = (theme, scale = 1) => {
       alignItems: "center",
       flexDirection: "row",
 
-      [theme.breakpoints.down("md")]: {
-        flexDirection: "column",
+      "@media not all and (max-width: 900px) and (orientation: landscape)": {
+        [theme.breakpoints.down("md")]: {
+          flexDirection: "column",
+        },
       },
     },
     cardHeaderTypography: {
@@ -64,9 +66,11 @@ const style = (theme, scale = 1) => {
       display: "flex",
       flexDirection: "row",
       justifyContent: "space-between",
-      [theme.breakpoints.down("md")]: {
-        justifyContent: "space-between",
-        width: "100%",
+      "@media not all and (max-width: 900px) and (orientation: landscape)": {
+        [theme.breakpoints.down("md")]: {
+          justifyContent: "space-between",
+          width: "100%",
+        },
       },
     },
     slippageComponent: {
@@ -124,9 +128,24 @@ const style = (theme, scale = 1) => {
       paddingTop: `calc(10vw * ${scale})`,
       alignItems: "center",
       display: "flex",
+      "@media not all and (max-width: 900px) and (orientation: landscape)": {
+        [theme.breakpoints.down("md")]: {
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-around",
+          height: "100%",
+          "&.MuiCardActions-root": {
+            paddingTop: `calc(1.54vw * ${scale})`,
+
+            paddingRight: `calc(1.597vw * ${scale})`,
+            paddingLeft: `calc(1.597vw * ${scale})`,
+          },
+        },
+      },
     },
     card: {
-      display: "block",
+      display: "flex",
+      flexDirection: "column",
       minHeight: `calc(32.57vw * ${scale})`,
       maxHeight: `calc(32.57vw * ${scale})`,
       minWidth: `calc(63.88vw * ${scale})`,
@@ -140,15 +159,21 @@ const style = (theme, scale = 1) => {
       },
       "& .MuiCardContent-root": {},
 
-      [theme.breakpoints.down("md")]: {
-        minHeight: `calc(55.57vw * ${scale})`,
-        maxHeight: `calc(55.57vw * ${scale})`,
-        minWidth: `calc(32.88vw * ${scale})`,
-        maxWidth: `calc(32.88vw * ${scale})`,
-        // minHeight: `calc(32.57vw * ${scale})`,
-        //  height: `calc(28.49vw * ${scale})`,
-        //  maxWidth: `calc(30.56vw * ${scale})`,
-        //  maxWidth: `calc(63.88vw * ${scale})`,
+      "@media not all and (max-width: 900px) and (orientation: landscape)": {
+        [theme.breakpoints.down("md")]: {
+          display: "flex",
+          minHeight: "calc(70vw + 60vh) ",
+          //maxHeight: "80vh",
+          // height: "100%",
+          // minHeight: `calc(55.57vw * ${scale})`,
+          // maxHeight: `calc(55.57vw * ${scale})`,
+          minWidth: `calc(32.88vw * ${scale})`,
+          maxWidth: `calc(32.88vw * ${scale})`,
+          // minHeight: `calc(32.57vw * ${scale})`,
+          //  height: `calc(28.49vw * ${scale})`,
+          //  maxWidth: `calc(30.56vw * ${scale})`,
+          //  maxWidth: `calc(63.88vw * ${scale})`,
+        },
       },
     },
     cardAction: {
@@ -160,26 +185,40 @@ const style = (theme, scale = 1) => {
         paddingRight: `calc(1.597vw * ${scale})`,
         paddingLeft: `calc(1.597vw * ${scale})`,
       },
-      [theme.breakpoints.down("md")]: {
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-        "&.MuiCardActions-root": {
-          paddingTop: `calc(1.54vw * ${scale})`,
 
-          paddingRight: `calc(1.597vw * ${scale})`,
-          paddingLeft: `calc(1.597vw * ${scale})`,
+      "@media not all and (max-width: 900px) and (orientation: landscape)": {
+        [theme.breakpoints.down("md")]: {
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-around",
+          height: "100%",
+          "&.MuiCardActions-root": {
+            paddingTop: `calc(1.54vw * ${scale})`,
+
+            paddingRight: `calc(1.597vw * ${scale})`,
+            paddingLeft: `calc(1.597vw * ${scale})`,
+          },
         },
       },
     },
     wallet: {
-      [theme.breakpoints.down("md")]: {
-        marginTop: "20%",
+      "@media not all and (max-width: 900px) and (orientation: landscape)": {
+        [theme.breakpoints.down("md")]: {
+          marginTop: "20%",
+          paddingBottom: "20%",
+        },
       },
     },
     root: {
       position: "relative",
       justifyContent: "center",
+
+      "@media not all and (max-width: 900px) and (orientation: landscape)": {
+        [theme.breakpoints.down("md")]: {
+          display: "flex",
+          height: "100%",
+        },
+      },
     },
   };
 };

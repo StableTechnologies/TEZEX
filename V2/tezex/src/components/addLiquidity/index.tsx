@@ -32,6 +32,7 @@ export interface IAddLiquidity {
 export const AddLiquidity: FC = () => {
   const scalingKey = "addLiquidity";
   const styles = useStyles(style, scalingKey);
+  const walletGridSize = styles.isLandScape ? 5 : 12;
   const network = useNetwork();
   const walletOperations: WalletOps = useWalletOps(
     TransactingComponent.ADD_LIQUIDITY
@@ -236,32 +237,7 @@ export const AddLiquidity: FC = () => {
           sx={styles.cardHeader}
           title={
             <Box>
-              <Box
-                sx={{
-                  display: {
-                    sm: "none",
-                    xs: "none",
-                    md: "none",
-                    lg: "block",
-                  },
-                }}
-              >
-                <NavLiquidity scalingKey={scalingKey} />
-              </Box>
-              <Box
-                sx={{
-                  display: {
-                    xs: "block",
-                    sm: "block",
-                    md: "none",
-                    lg: "none",
-                  },
-                }}
-              >
-                <Typography sx={styles.cardHeaderTypography}>
-                  Add Liquidity
-                </Typography>
-              </Box>
+              <NavLiquidity scalingKey={scalingKey} />
             </Box>
           }
         />
@@ -314,10 +290,22 @@ export const AddLiquidity: FC = () => {
         </CardContent>
         <CardActions sx={styles.cardAction}>
           <Box sx={styles.slippageBox}>
-            <Grid2 lg={1.3} sx={styles.slippageComponent}>
+            <Grid2
+              sm={1.3}
+              md={1.3}
+              lg={1.3}
+              xl={1.3}
+              sx={styles.slippageComponent}
+            >
               <SlippageLabel scalingKey={scalingKey} />
             </Grid2>
-            <Grid2 lg={5.5} sx={styles.slippageComponent}>
+            <Grid2
+              sm={6}
+              md={5.5}
+              lg={5.5}
+              xl={5.5}
+              sx={styles.slippageComponent}
+            >
               <Slippage
                 asset={assets[receive].name}
                 value={slippage}
@@ -329,7 +317,13 @@ export const AddLiquidity: FC = () => {
             </Grid2>
           </Box>
 
-          <Grid2 sx={styles.wallet} xs={12} sm={12} md={12} lg={6}>
+          <Grid2
+            sx={styles.wallet}
+            xs={walletGridSize}
+            sm={walletGridSize}
+            md={walletGridSize}
+            lg={6}
+          >
             <Wallet
               transaction={active}
               callback={transact}
