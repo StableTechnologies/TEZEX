@@ -17,7 +17,7 @@ const style = (theme, scale = 1) => {
     paper: {
       position: "absolute",
       top: "89.4%",
-      zindex: "-999",
+      zindex: "-9",
 
       "&.MuiPaper-root": {
         boxShadow: "0",
@@ -129,7 +129,7 @@ const style = (theme, scale = 1) => {
       height: `calc(28.49vw * ${scale})`,
       width: `calc(30.56vw * ${scale})`,
       borderRadius: `calc(1.38vw * ${scale})`,
-      zIndex: 999,
+      zIndex: 9,
       background: "#FFFFFF",
       border: "0.069vw solid #E1E1E1",
 

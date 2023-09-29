@@ -3,7 +3,8 @@ const style = (theme, scale = 1) => {
   return {
     root: {
       display: "flex",
-      width: "100%",
+      minWidth: "100vw",
+      maxWidth: "100vw",
       height: "100%",
       justifyContent: "space-between",
       flexDirection: "row",
@@ -25,7 +26,11 @@ const style = (theme, scale = 1) => {
       display: "flex",
     },
     sideBar: {
+      zIndex: 10,
       display: "flex",
+      position: "absolute",
+      right: "0px",
+      height: "100%",
       "@media (max-width: 900px) and (orientation: landscape)": {
         display: "flex",
         height: "100%",
