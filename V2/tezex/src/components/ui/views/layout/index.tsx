@@ -43,68 +43,23 @@ export const Layout: FC<ILayout> = (props) => {
   }, []);
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        width: "100%",
-        height: "100%",
-        justifyContent: "space-between",
-        flexDirection: "row",
-      }}
-    >
-      <Box sx={styles.layout.layoutBox}>
+    <Box sx={styles.root}>
+      <Box sx={styles.headerAndMainWindow}>
         <header>
-          <Box
-            sx={{
-              flexgrow: 1,
-              display: "flex",
-              "@media (max-width: 900px) and (orientation: landscape)": {
-                display: "none",
-              },
-            }}
-          >
+          <Box sx={styles.header}>
             <Header openMenu={openMenu} toggleMenu={toggleMenu} />
           </Box>
         </header>
 
-        <Box
-          sx={{
-            height: "100%",
-            width: "100%",
-            position: "relative",
-            alignContent: "space-between",
-            flexDirection: "column",
-            justifyContent: "space-between",
-            display: "flex",
-          }}
-        >
+        <Box sx={styles.mainWindow}>
           <MainWindow>{props.children}</MainWindow>
 
-          <Box
-            sx={{
-              position: "absolute",
-              display: "flex",
-              bottom: "0%",
-              width: "100%",
-            }}
-          ></Box>
+          {/* Bottom space for bars or notification */}
+          <Box sx={styles.bottomSpace}></Box>
         </Box>
       </Box>
 
-      <Box
-        sx={{
-          display: openMenu ? "flex" : "none",
-          position: "absolute",
-          right: "0%",
-          height: "100vh",
-          zIndex: 1000,
-          "@media (max-width: 900px) and (orientation: landscape)": {
-            display: "flex",
-            height: "100vh",
-            zIndex: 1000,
-          },
-        }}
-      >
+      <Box sx={openMenu ? styles.sideBar : styles.sideBarHidden}>
         <SideBar openMenu={openMenu} toggleMenu={toggleMenu} />
       </Box>
     </Box>
