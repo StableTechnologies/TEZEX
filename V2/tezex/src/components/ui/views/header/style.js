@@ -2,8 +2,9 @@
 const style = (theme, scale = 1) => {
   return {
     appBar: {
+      background: theme.palette.primary.main,
       "&.MuiPaper-root": {
-        boxShadow: ".28vw .28vw .28vw rgba(204, 204, 204, 0.25)",
+        boxShadow: `calc(.28vw * ${scale}) calc(.28vw * ${scale}) calc(.28vw * ${scale}) rgba(204, 204, 204, 0.25)`,
       },
       "@media screen and (max-width: 768px)": {
         "&.MuiPaper-root": {
@@ -13,17 +14,17 @@ const style = (theme, scale = 1) => {
     },
     toolbar: {
       height: "100%",
-      transition: "height 0.3s ",
-      "@media screen and (max-width: 768px)": {
-        height: "10vh",
+      transition: "all 0.5s ease",
+      [theme.breakpoints.down("sm")]: {
+        height: "15vh",
       },
     },
     logoLarge: {
       display: "flex",
-      width: "11.35vw",
-      "@media screen and (max-width: 768px)": {
-        width: "164px",
-      },
+      width: `calc(11.35vw * ${scale})`,
+      //  "@media screen and (max-width: 768px)": {
+      //    width: "164px",
+      //  },
       "@media screen and (max-width: 246px)": {
         display: "none",
       },
@@ -54,20 +55,6 @@ const style = (theme, scale = 1) => {
       boxShadow: ".28vw .28vw .28vw rgba(204, 204, 204, 0.25)",
       [theme.breakpoints.down("sm")]: {
         boxShadow: "0px 0px 0px 0px",
-      },
-    },
-
-    logo: {
-      minWidth: "164px",
-      position: "relative",
-      [theme.breakpoints.up("md")]: {
-        //  width: `calc(11.35vw * ${scale})`,
-        //  marginLeft: `calc(11.39vw * ${scale})`,
-        //  top: `calc(.17vw * ${scale})`,
-        //  boxShadow: "0px 0px 0px 0px",
-      },
-      [theme.breakpoints.down("sm")]: {
-        minWidth: "164px",
       },
     },
 
