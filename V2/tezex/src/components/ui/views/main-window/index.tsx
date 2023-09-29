@@ -24,7 +24,6 @@ export const MainWindow: FC<IMainWindow> = (props) => {
         position: "relative",
         alignContent: "flex-start",
         alignItems: "flex-start",
-
         flexDirection: "row",
         justifyContent: "center",
         display: "flex",

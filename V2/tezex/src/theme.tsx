@@ -90,7 +90,7 @@ export const theme = createTheme({
       landscape: {
         xl: 1,
         lg: 1,
-        md: 1,
+        md: 1.2,
         sm: 1,
         xs: 1,
       },
@@ -161,25 +161,25 @@ const theme: Theme = createTheme({
     grey: {
       main: purple[500],
     }
-  },
-  typography: {
-    fontFamily: "Inter",
-   },
-   overrides: {
-    MuiCardContent: {
+            
+        aphy: {
+        Family: "Inter",
+                         
+          es: {
+      iCardContent: {
       root: {
         padding: '2rem 2rem .5rem',
         '@media (max-width: 600px)': {
           padding: ".8rem",
         }
       },
-    },
-    MuiCardHeader: {
-      root: {
+              
+          dHeader: {
+        ot: {
         padding: '0',
-      },
-    },
-    MuiButton: {
+        
+      
+      iButton: {
       root: {
         "& $label":{
           whiteSpace: "nowrap",
