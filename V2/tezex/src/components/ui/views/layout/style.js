@@ -1,78 +1,58 @@
 // eslint-disable-next-line
 const style = (theme, scale = 1) => {
   return {
-    header: {
-      headerBox: {
-        fontSize: `calc(1.5vw * ${scale})`,
-        display: "flex",
-        alignItems: "center",
-        width: "100%",
-        height: `calc(5vw * ${scale})`,
-        left: "0px",
-        top: "0px",
-        background: "#FFFFFF",
-        marginBottom: `calc(.28vw * ${scale})`,
-        boxShadow: ".28vw .28vw .28vw rgba(204, 204, 204, 0.25)",
-        [theme.breakpoints.down("sm")]: {
-          boxShadow: "0px 0px 0px 0px",
-        },
-      },
-
-      logo: {
-        position: "relative",
-        [theme.breakpoints.up("md")]: {
-          width: `calc(11.35vw * ${scale})`,
-          marginLeft: `calc(11.39vw * ${scale})`,
-          top: `calc(.17vw * ${scale})`,
-          boxShadow: "0px 0px 0px 0px",
-        },
-        [theme.breakpoints.down("sm")]: {},
-      },
-
-      nav: {
-        [theme.breakpoints.down("md")]: {
-          display: "none",
-        },
-
-        alignContent: "center",
-      },
-
-      wallet: {
-        display: { xs: "none", sm: "none", md: "flex" },
-        position: "absolute",
-        right: "0px",
-        //left: `calc(51vw * ${scale})`,
-        alignContent: "end",
-        justifyContent: "flex-end",
-      },
-    },
-    layout: {
-      layoutBox: {
-        height: "100vh",
-        width: "100%",
-        alignContent: "flex-start",
-        flexDirection: "column",
-        justifyContent: "flex-start",
-        display: "flex",
-      },
-      layoutMainwindow: {},
-    },
-
-    mainWindowBackground: {
-      position: "absolute",
-      zindex: "-1",
-      top: `calc(6.9vw * ${scale})`,
+    root: {
       display: "flex",
-      maxWidth: `calc(1vw * ${scale})`,
-      minWidth: `calc(1vw * ${scale})`,
-      maxHeight: `calc(51.66vw * ${scale})`,
-      minHeight: `calc(51.66vw * ${scale})`,
-      marginLeft: `calc(2.05vw * ${scale})`,
+      width: "100%",
+      height: "100%",
+      justifyContent: "space-between",
+      flexDirection: "row",
+    },
+    header: {
+      flexgrow: 1,
+      display: "flex",
+      "@media (max-width: 900px) and (orientation: landscape)": {
+        display: "none",
+      },
     },
     mainWindow: {
       height: "100%",
       width: "100%",
-      background: "#FEFEFE",
+      position: "relative",
+      alignContent: "space-between",
+      flexDirection: "column",
+      justifyContent: "space-between",
+      display: "flex",
+    },
+    sideBar: {
+      display: "flex",
+      "@media (max-width: 900px) and (orientation: landscape)": {
+        display: "flex",
+        height: "100%",
+        zIndex: 1000,
+      },
+    },
+    sideBarHidden: {
+      display: "none",
+      "@media (max-width: 900px) and (orientation: landscape)": {
+        display: "flex",
+        height: "100%",
+        zIndex: 1000,
+      },
+    },
+    bottomSpace: {
+      position: "absolute",
+      display: "flex",
+      bottom: "0%",
+      width: "100%",
+    },
+    headerAndMainWindow: {
+      height: "100vh",
+      width: "100%",
+      alignContent: "flex-start",
+      flexDirection: "column",
+      justifyContent: "flex-start",
+      display: "flex",
     },
   };
 };
