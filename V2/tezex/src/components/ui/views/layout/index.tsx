@@ -94,9 +94,13 @@ export const Layout: FC<ILayout> = (props) => {
       <Box
         sx={{
           display: openMenu ? "flex" : "none",
+          position: "absolute",
+          right: "0%",
+          height: "100vh",
+          zIndex: 1000,
           "@media (max-width: 900px) and (orientation: landscape)": {
             display: "flex",
-            height: "100%",
+            height: "100vh",
             zIndex: 1000,
           },
         }}

@@ -2,10 +2,13 @@ import { createTheme } from "@mui/material/styles";
 declare module "@mui/material/styles" {
   interface Palette {
     selectedHomeTab: Palette["primary"];
+    tirtiary: Palette["primary"];
   }
 
   interface PaletteOptions {
     selectedHomeTab: PaletteOptions["primary"];
+
+    tirtiary: PaletteOptions["primary"];
   }
 
   interface PaletteColor {
@@ -119,10 +122,31 @@ export const theme = createTheme({
     action: {
       selected: "#E3F7FF",
     },
+    text: {
+      primary: "#000000",
+      disabled: "#999999",
+    },
+
     primary: {
-      main: "#1E1E1E",
+      dark: "#FEFEFE",
+      main: "#FFFFFF",
     },
     secondary: {
+      light: "#F9F9F9",
+      main: "#F4F4F4",
+      dark: "#2D2D2D",
+    },
+    // primary: {
+    //   dark: "#FEFEFE",
+    //   main: "#000000",
+
+    // },
+    // secondary: {
+    //   main: "#999999",
+    //   dark: "#00A0E4",
+    // },
+    tirtiary: {
+      light: "#E3F7FF",
       main: "#999999",
       dark: "#00A0E4",
     },
