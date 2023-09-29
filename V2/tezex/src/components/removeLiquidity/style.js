@@ -124,6 +124,12 @@ const style = (theme, scale = 1) => {
       display: "flex",
       position: "relative",
       justifyContent: "center",
+
+      "@media not all and (max-width: 900px) and (orientation: landscape)": {
+        [theme.breakpoints.down("md")]: {
+          marginTop: "15%",
+        },
+      },
     },
   };
 };
