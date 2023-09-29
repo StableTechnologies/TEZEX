@@ -205,8 +205,8 @@ export const Swap: FC = () => {
       session.loadComponent(TransactingComponent.SWAP);
   });
   return (
-    <Grid2 container sx={styles.root}>
-      <Grid2>
+    <Box sx={styles.boxRoot}>
+      <Grid2 container sx={styles.root}>
         <Card sx={styles.card}>
           <CardHeader
             sx={styles.cardHeader}
@@ -272,6 +272,6 @@ export const Swap: FC = () => {
           </Box>
         </Paper>
       </Grid2>
-    </Grid2>
+    </Box>
   );
 };
