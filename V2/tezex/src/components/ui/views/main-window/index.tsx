@@ -17,39 +17,8 @@ export interface IMainWindow {
 export const MainWindow: FC<IMainWindow> = (props) => {
   const styles = useStyles(style);
   return (
-    <Box
-      sx={{
-        height: "100%",
-        width: "100%",
-        position: "relative",
-        alignContent: "flex-start",
-        alignItems: "flex-start",
-
-        flexDirection: "row",
-        justifyContent: "center",
-        display: "flex",
-      }}
-    >
-      <Box
-        sx={{
-          height: "70%",
-          justifyContent: "center",
-          display: "flex",
-          alignContent: "center",
-          position: "absolute",
-          alignItems: "flex-start",
-          left: "2%",
-          top: "2%",
-
-          "@media (max-width: 900px) and (orientation: landscape)": {
-            display: "none",
-          },
-
-          "@media screen and (max-width: 768px)": {
-            display: "none",
-          },
-        }}
-      >
+    <Box sx={styles.root}>
+      <Box sx={styles.sideLogo}>
         {" "}
         <img src={sidelogo} />{" "}
       </Box>
