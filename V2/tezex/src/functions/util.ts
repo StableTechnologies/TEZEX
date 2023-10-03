@@ -6,10 +6,26 @@ import {
   CompletionRecord,
   SuccessRecord,
   CompletionState,
+  Breakpoints,
 } from "../types/general";
 
 import { tokenDecimalToMantissa, tokenMantissaToDecimal } from "./scaling";
 
+export const adjustBreakpointsForDpr = (
+  breakpoints: Breakpoints
+): Breakpoints => {
+  const dpr: number = window.devicePixelRatio || 1;
+  const adjustedBreakpoints = { ...breakpoints };
+
+  for (const [key, value] of Object.entries(breakpoints.breakpoints.values)) {
+    const breakpointKey = key as keyof typeof breakpoints.breakpoints.values;
+
+    adjustedBreakpoints.breakpoints.values[breakpointKey] = value * dpr;
+
+    //  adjustedBreakpoints.breakpoints.values[breakpointKey] = value;
+  }
+  return adjustedBreakpoints;
+};
 export const shorten = (first: number, last: number, str: string) => {
   return str.substring(0, first) + "..." + str.substring(str.length - last);
 };

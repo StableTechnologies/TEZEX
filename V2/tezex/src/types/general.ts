@@ -2,6 +2,21 @@ import { BigNumber } from "bignumber.js";
 
 import { NetworkType } from "@airgap/beacon-sdk";
 
+export interface Breakpoints {
+  breakpoints: {
+    values: {
+      xs: number;
+      sm: number;
+      md: number;
+      lg: number;
+      xl: number;
+      mobile: number;
+      tablet: number;
+      laptop: number;
+      desktop: number;
+    };
+  };
+}
 export interface AppConfig {
   aboutRedirectUrl: string;
 }

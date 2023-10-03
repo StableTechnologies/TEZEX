@@ -1,5 +1,22 @@
-import { createTheme } from "@mui/material/styles";
+import { Breakpoint, createTheme, ThemeProvider } from "@mui/material/styles";
+import { Breakpoints } from "./types/general";
+import { adjustBreakpointsForDpr } from "./functions/util";
+
+import parser from "ua-parser-js";
+import { UAParser } from "ua-parser-js";
+import mediaQuery from "css-mediaquery";
 declare module "@mui/material/styles" {
+  interface BreakpointOverrides {
+    xs: true; // removes the `xs` breakpoint
+    sm: true;
+    md: true;
+    lg: true;
+    xl: true;
+    mobile: true; // adds the `mobile` breakpoint
+    tablet: true;
+    laptop: true;
+    desktop: true;
+  }
   interface Palette {
     selectedHomeTab: Palette["primary"];
     tirtiary: Palette["primary"];
@@ -56,8 +73,56 @@ declare module "@mui/material/styles" {
 }
 
 //const { palette } = createTheme();
-
+const br: Breakpoints = {
+  breakpoints: {
+    values: {
+      xs: 0,
+      sm: 600,
+      md: 900,
+      lg: 1200,
+      xl: 1536,
+      mobile: 0,
+      tablet: 640,
+      laptop: 1024,
+      desktop: 1200,
+    },
+  },
+};
+const breakpoints: Breakpoints = {
+  breakpoints: {
+    values: {
+      xs: 0,
+      sm: 600,
+      md: 900,
+      lg: 1200,
+      xl: 1536,
+      mobile: 0,
+      tablet: 640,
+      laptop: 1024,
+      desktop: 1200,
+    },
+  },
+};
+const dpr: number = window.devicePixelRatio || 1;
+const f = adjustBreakpointsForDpr(br);
+//  const deviceType = parser(req.headers['user-agent']).device.type || 'desktop';
+//  const ssrMatchMedia = (query: string) => ({
+//    matches: mediaQuery.match(query, {
+//      // The estimated CSS width of the browser.
+//      width: deviceType === 'mobile' ? '0px' : '1024px',
+//    }),
+//  })
+//}
 export const theme = createTheme({
+  ...f,
+  // components: {
+  // Change the default options of useMediaQuery
+  //      MuiUseMediaQuery: {
+  //        defaultProps: {
+  //          ssrMatchMedia,
+  //        },
+  //      },
+  //    },
   scaling: {
     default: {
       xl: 1,
