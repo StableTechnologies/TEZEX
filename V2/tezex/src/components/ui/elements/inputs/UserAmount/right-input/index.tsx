@@ -19,6 +19,8 @@ import useStyles from "../../../../../../hooks/styles";
 export interface IRigthInput {
   updateAmount: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  onFocus: () => void;
+  onBlur: () => void;
   inputString: string;
   editing: boolean;
   noUserActionCheck: () => boolean;
@@ -34,6 +36,7 @@ export interface IRigthInput {
 
 export const RightInput: FC<IRigthInput> = (props) => {
   const styles = useStyles(style, props.scalingKey);
+
   return (
     <Box
       sx={
@@ -48,6 +51,8 @@ export const RightInput: FC<IRigthInput> = (props) => {
       <Box sx={{}}>
         <TextField
           autoFocus={props.readOnly ? false : true}
+          onFocus={props.onFocus}
+          onBlur={props.onBlur}
           onChange={props.updateAmount}
           value={props.inputString}
           id="filled-start-adornment"
@@ -81,7 +86,7 @@ export const RightInput: FC<IRigthInput> = (props) => {
                     <img
                       style={{
                         height: "100%",
-                        width: "100%",
+                        //                       width: "100%",
                       }}
                       src={
                         props.asset && process.env.PUBLIC_URL + props.asset.logo

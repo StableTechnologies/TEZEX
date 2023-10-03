@@ -9,6 +9,8 @@ import { style } from "./style";
 import useStyles from "../../../../../../hooks/styles";
 
 export interface ISlippageInput {
+  onFocus: () => void;
+  onBlur: () => void;
   balance?: string;
   label?: string;
   readOnly?: boolean;
@@ -25,6 +27,8 @@ export const SlippageInput: FC<ISlippageInput> = (props) => {
     <Box sx={styles.slippageInput.box}>
       <TextField
         autoFocus
+        onFocus={props.onFocus}
+        onBlur={props.onBlur}
         disabled={props.readOnly}
         onChange={props.updateAmount}
         value={props.inputString}

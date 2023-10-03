@@ -14,6 +14,8 @@ import { style } from "./style";
 import useStyles from "../../../../../../hooks/styles";
 
 export interface ILeftInput {
+  onFocus: () => void;
+  onBlur: () => void;
   asset?: Asset;
   balance?: string;
   label?: string;
@@ -31,6 +33,8 @@ export const LeftInput: FC<ILeftInput> = (props) => {
     <Box sx={styles.leftInput.gridContainter}>
       <TextField
         autoFocus
+        onFocus={props.onFocus}
+        onBlur={props.onBlur}
         onChange={props.updateAmount}
         value={props.inputString}
         id="filled-start-adornment"

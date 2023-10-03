@@ -6,6 +6,8 @@ import { BigNumber } from "bignumber.js";
 import { LeftInput } from "./left-input";
 import { RightInput } from "./right-input";
 import { SlippageInput } from "./slippage";
+import useStyles from "../../../../../hooks/styles";
+import { style } from "./style";
 
 export interface IAmountField {
   asset?: Asset;
@@ -25,9 +27,20 @@ const AmountField: FC<IAmountField> = (props) => {
   const [inputString, setInputString] = useState<string>(props.value);
   const [lastString, setLastString] = useState<string>("");
   const [editing, setEditing] = useState<boolean>(false);
+
+  const [scrollY, setScrollY] = React.useState(0);
   const onChange = props.onChange;
   const re = /^\d*\.?\d*$/;
 
+  const stylesCSS = useStyles(style, props.scalingKey, true);
+  const handelFocus = () => {
+    setScrollY(window.scrollY);
+    document.body.classList.add(stylesCSS.noScroll);
+  };
+  const handelBlur = () => {
+    document.body.classList.remove(stylesCSS.noScroll);
+    window.scrollTo(0, scrollY);
+  };
   const display = useCallback(() => {
     if (isNaN(parseFloat(props.value)) || props.value === "0") {
       setInputString("0.00");
@@ -116,6 +129,8 @@ const AmountField: FC<IAmountField> = (props) => {
       case "SlippageInput":
         return (
           <SlippageInput
+            onFocus={handelFocus}
+            onBlur={handelBlur}
             balance={props.balance}
             readOnly={props.readOnly}
             updateAmount={updateAmount}
@@ -128,6 +143,8 @@ const AmountField: FC<IAmountField> = (props) => {
       case "LeftInput":
         return (
           <LeftInput
+            onFocus={handelFocus}
+            onBlur={handelBlur}
             asset={props.asset}
             balance={props.balance}
             readOnly={props.readOnly}
@@ -141,6 +158,8 @@ const AmountField: FC<IAmountField> = (props) => {
       default:
         return (
           <RightInput
+            onFocus={handelFocus}
+            onBlur={handelBlur}
             asset={props.asset}
             balance={props.balance}
             readOnly={props.readOnly}
