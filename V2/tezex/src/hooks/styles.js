@@ -18,7 +18,7 @@ const useStyles = (style, scalingKey = "default", toCSS = false) => {
   const isMd = useMediaQuery(theme.breakpoints.only("md"));
   const isLg = useMediaQuery(theme.breakpoints.only("lg"));
   const isXl = useMediaQuery(theme.breakpoints.only("xl"));
-  //setscale to custom theme compoenet scales at breakpoint
+  //set scale to custom theme component scale at breakpoint
   useEffect(() => {
     const handelOrientationChange = () => {
       setIsLandScape(window.matchMedia("(orientation: landscape)").matches);
@@ -29,7 +29,6 @@ const useStyles = (style, scalingKey = "default", toCSS = false) => {
     };
   }, []);
   useEffect(() => {
-    console.log(scalingBreakpoints);
     if (isLandScape && scalingBreakpoints.landscape) {
       if (isXl && scale != scalingBreakpoints.landscape.xl)
         setScale(scalingBreakpoints.landscape.xl);
@@ -53,9 +52,6 @@ const useStyles = (style, scalingKey = "default", toCSS = false) => {
       if (isXs && scale != scalingBreakpoints.xs)
         setScale(scalingBreakpoints.xs);
     }
-    // if (isLg && scale != scalingBreakpoints.xl) setScale(1);
-    // if (isMd && scale != 2) setScale(1.5);
-    // if (isSm && scale != 3) setScale(3);
   }, [isLandScape, isXl, isLg, isMd, isSm, scale]);
 
   return useMemo(() => {
