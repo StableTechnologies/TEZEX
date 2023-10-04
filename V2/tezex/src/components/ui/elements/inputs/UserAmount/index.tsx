@@ -1,4 +1,11 @@
-import React, { memo, FC, useCallback, useState, useEffect } from "react";
+import React, {
+  memo,
+  FC,
+  useCallback,
+  useState,
+  useEffect,
+  useRef,
+} from "react";
 
 import { Asset } from "../../../../../types/general";
 
@@ -28,6 +35,8 @@ const AmountField: FC<IAmountField> = (props) => {
   const [lastString, setLastString] = useState<string>("");
   const [editing, setEditing] = useState<boolean>(false);
 
+  const [focused, setFocused] = React.useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
   const [scrollY, setScrollY] = React.useState(0);
   const onChange = props.onChange;
   const re = /^\d*\.?\d*$/;
@@ -47,6 +56,24 @@ const AmountField: FC<IAmountField> = (props) => {
     } else setInputString(props.value);
   }, [props.value]);
 
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      //if (inputRef.current && !inputRef.current.contains(event.target as Node)) {
+      //  inputRef.current.blur();
+      //  setFocused(false);
+      //}
+
+      if (inputRef.current && inputRef.current.contains(event.target as Node)) {
+        //inputRef.current.focus();
+        !focused && setFocused(true);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [inputRef, focused]);
   useEffect(() => {
     !editing && display();
     props.loading && display();
@@ -106,6 +133,8 @@ const AmountField: FC<IAmountField> = (props) => {
   const onKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
       e.preventDefault();
+
+      !focused && setFocused(true);
       if (
         e.key !== "Backspace" &&
         inputString === "0.00" &&
@@ -129,6 +158,8 @@ const AmountField: FC<IAmountField> = (props) => {
       case "SlippageInput":
         return (
           <SlippageInput
+            inputRef={inputRef}
+            focused={props.readOnly ? false : focused}
             onFocus={handelFocus}
             onBlur={handelBlur}
             balance={props.balance}
@@ -143,6 +174,8 @@ const AmountField: FC<IAmountField> = (props) => {
       case "LeftInput":
         return (
           <LeftInput
+            inputRef={inputRef}
+            focused={props.readOnly ? false : focused}
             onFocus={handelFocus}
             onBlur={handelBlur}
             asset={props.asset}
@@ -158,6 +191,8 @@ const AmountField: FC<IAmountField> = (props) => {
       default:
         return (
           <RightInput
+            inputRef={inputRef}
+            focused={props.readOnly ? false : focused}
             onFocus={handelFocus}
             onBlur={handelBlur}
             asset={props.asset}

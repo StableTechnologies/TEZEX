@@ -9,6 +9,8 @@ import { style } from "./style";
 import useStyles from "../../../../../../hooks/styles";
 
 export interface ISlippageInput {
+  inputRef: React.RefObject<HTMLInputElement>;
+  focused: boolean;
   onFocus: () => void;
   onBlur: () => void;
   balance?: string;
@@ -61,7 +63,9 @@ export const SlippageInput: FC<ISlippageInput> = (props) => {
             alignItems: "center",
           },
         }}
-        inputProps={{}}
+        inputProps={{
+          inputMode: "decimal",
+        }}
         size="small"
         variant="standard"
       />

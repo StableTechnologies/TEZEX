@@ -14,6 +14,8 @@ import { style } from "./style";
 import useStyles from "../../../../../../hooks/styles";
 
 export interface ILeftInput {
+  inputRef: React.RefObject<HTMLInputElement>;
+  focused: boolean;
   onFocus: () => void;
   onBlur: () => void;
   asset?: Asset;
@@ -32,7 +34,8 @@ export const LeftInput: FC<ILeftInput> = (props) => {
   return (
     <Box sx={styles.leftInput.gridContainter}>
       <TextField
-        autoFocus
+        ref={props.inputRef}
+        autoFocus={props.readOnly ? false : props.focused}
         onFocus={props.onFocus}
         onBlur={props.onBlur}
         onChange={props.updateAmount}
@@ -72,6 +75,7 @@ export const LeftInput: FC<ILeftInput> = (props) => {
         inputProps={{
           readOnly: props.readOnly,
 
+          inputMode: "decimal",
           style: {
             ...styles.leftInput.input,
           },

@@ -1,4 +1,4 @@
-import React, { FC } from "react";
+import React, { FC, useEffect, useRef } from "react";
 
 import { Asset } from "../../../../../../types/general";
 
@@ -17,6 +17,8 @@ import { style } from "./style";
 import useStyles from "../../../../../../hooks/styles";
 
 export interface IRigthInput {
+  inputRef: React.RefObject<HTMLInputElement>;
+  focused: boolean;
   updateAmount: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   onFocus: () => void;
@@ -34,7 +36,7 @@ export interface IRigthInput {
   scalingKey?: string;
 }
 
-export const RightInput: FC<IRigthInput> = (props) => {
+const Right: FC<IRigthInput> = (props) => {
   const styles = useStyles(style, props.scalingKey);
 
   return (
@@ -50,7 +52,8 @@ export const RightInput: FC<IRigthInput> = (props) => {
       </Box>
       <Box sx={{}}>
         <TextField
-          autoFocus={props.readOnly ? false : true}
+          ref={props.inputRef}
+          autoFocus={props.readOnly ? false : props.focused}
           onFocus={props.onFocus}
           onBlur={props.onBlur}
           onChange={props.updateAmount}
@@ -146,6 +149,7 @@ export const RightInput: FC<IRigthInput> = (props) => {
             ),
           }}
           inputProps={{
+            inputMode: "decimal",
             readOnly: props.readOnly,
             style: {
               ...styles.input,
@@ -157,3 +161,5 @@ export const RightInput: FC<IRigthInput> = (props) => {
     </Box>
   );
 };
+
+export const RightInput = React.memo(Right);
