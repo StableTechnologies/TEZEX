@@ -129,6 +129,8 @@ const f = adjustBreakpointsForDpr(br);
 const [selectors, data] = useDeviceSelectors(window.navigator.userAgent);
 
 const { isMobile, isDesktop } = selectors;
+console.log("isMobile", isMobile);
+console.log("isDesktop", isDesktop);
 export const theme = createTheme({
   ...(isDesktop ? f : {}),
   // components: {

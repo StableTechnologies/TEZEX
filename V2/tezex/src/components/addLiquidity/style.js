@@ -38,6 +38,9 @@ const style = (theme, scale = 1) => {
 
       mobile: {
         [theme.breakpoints.down("md")]: {
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
           flexDirection: "column",
         },
       },
@@ -68,6 +71,8 @@ const style = (theme, scale = 1) => {
       justifyContent: "space-between",
       mobile: {
         [theme.breakpoints.down("md")]: {
+          display: "flex",
+          flexDirection: "row",
           justifyContent: "space-between",
           width: "100%",
         },
@@ -130,6 +135,7 @@ const style = (theme, scale = 1) => {
       display: "flex",
       mobile: {
         [theme.breakpoints.down("md")]: {
+          alignItems: "center",
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-around",
@@ -162,6 +168,7 @@ const style = (theme, scale = 1) => {
       mobile: {
         [theme.breakpoints.down("md")]: {
           display: "flex",
+          flexDirection: "column",
           minHeight: "calc(70vw + 60vh) ",
           //maxHeight: "80vh",
           // height: "100%",
@@ -173,6 +180,14 @@ const style = (theme, scale = 1) => {
           //  height: `calc(28.49vw * ${scale})`,
           //  maxWidth: `calc(30.56vw * ${scale})`,
           //  maxWidth: `calc(63.88vw * ${scale})`,
+
+          borderRadius: `calc(1.38vw * ${scale})`,
+          zIndex: 5,
+          background: "#FFFFFF",
+          border: ".069vw solid #E1E1E1",
+          "&.MuiPaper-root": {
+            boxShadow: "0",
+          },
         },
       },
     },
@@ -215,6 +230,8 @@ const style = (theme, scale = 1) => {
 
       mobile: {
         [theme.breakpoints.down("md")]: {
+          position: "relative",
+          justifyContent: "center",
           display: "flex",
           height: "100%",
         },

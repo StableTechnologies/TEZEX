@@ -112,6 +112,9 @@ const determineBreakpoint = (width) => {
 const useStyles = (style, scalingKey = "default", toCSS = false) => {
   const { isLandscape } = useMobileOrientation();
 
+  const [selectors, data] = useDeviceSelectors(window.navigator.userAgent);
+
+  const { isMobile, isDesktop } = selectors;
   //  const [isLandScape, setIsLandScape] = useState(
   //    window.matchMedia("(orientation: landscape)").matches
   //  );
@@ -209,12 +212,12 @@ const useStyles = (style, scalingKey = "default", toCSS = false) => {
     return prepared;
   } else {
     return {
-      isLandScape: isLandscape,
-      isMobile: theme.isMobile,
-      isMobileLandscape: isLandscape,
-      isDesktop: theme.isDesktop,
-      hide: { display: "none" },
       ...classes,
+      isLandScape: isLandscape,
+      isMobile: isMobile,
+      isMobileLandscape: isLandscape,
+      isDesktop: isDesktop,
+      hide: { display: "none" },
     };
   }
 };

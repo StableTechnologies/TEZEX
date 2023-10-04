@@ -26,6 +26,7 @@ import style from "./style";
 import useStyles from "../../hooks/styles";
 import sirsSmall from "../../assets/sirsSmall.svg";
 import Box from "@mui/material/Box";
+import { BrowserView, MobileView } from "react-device-detect";
 export interface IAddLiquidity {
   children: null;
 }
@@ -231,117 +232,226 @@ export const AddLiquidity: FC = () => {
   ]);
 
   return (
-    <Grid2 container sx={styles.isMobile ? styles.root.mobile : styles.root}>
-      <Card sx={styles.isMobile ? styles.card.mobile : styles.card}>
-        <CardHeader
-          sx={styles.cardHeader}
-          title={
-            <Box>
-              <NavLiquidity scalingKey={scalingKey} />
-            </Box>
-          }
-        />
-        <Grid2 sx={styles.tokens}>
-          <AddliquidityTokens scalingKey={scalingKey} />
+    <>
+      <MobileView>
+        <Grid2
+          container
+          sx={!styles.isMobileLandscape ? styles.root.mobile : styles.root}
+        >
+          <Card
+            sx={!styles.isMobileLandscape ? styles.card.mobile : styles.card}
+          >
+            <CardHeader
+              sx={styles.cardHeader}
+              title={
+                <Box>
+                  <NavLiquidity scalingKey={scalingKey} />
+                </Box>
+              }
+            />
+            <Grid2 sx={styles.tokens}>
+              <AddliquidityTokens scalingKey={scalingKey} />
+            </Grid2>
+            <CardContent
+              sx={
+                !styles.isMobileLandscape
+                  ? styles.cardContent.mobile
+                  : styles.cardContent
+              }
+            >
+              <Grid2 xs={12} sx={styles.cardContendGrid}>
+                <Grid2 xs={5} sx={styles.input}>
+                  <UserAmountField
+                    asset={assets[send1]}
+                    onChange={updateSend}
+                    value={sendAmount.toFixed()}
+                    balance={balances[0]}
+                    label="Enter Amount"
+                    loading={loading}
+                    scalingKey={scalingKey}
+                  />
+                </Grid2>
+
+                <Grid2 xs={1} sx={styles.plusIconGrid}>
+                  <img src={plusIcon} style={styles.plusIcon} alt="plusIcon" />
+                </Grid2>
+
+                <Grid2 xs={5} sx={styles.input}>
+                  <UserAmountField
+                    asset={assets[send2]}
+                    value={sendAmount2.toFixed()}
+                    readOnly={true}
+                    balance={balances[1]}
+                    label="Required Deposit"
+                    darker={true}
+                    swap={swapFields}
+                    scalingKey={scalingKey}
+                  />
+                </Grid2>
+              </Grid2>
+
+              <Grid2 xs={12} sx={styles.infoGrid}>
+                <Typography noWrap sx={styles.infoText}>
+                  You will recieve about{" "}
+                  <img
+                    style={styles.infoTextIcon}
+                    src={sirsSmall}
+                    alt="SirsLogo"
+                  />
+                  <Typography sx={styles.infoRecieve}>
+                    {" "}
+                    {receiveAmount.toFixed()} Sirs
+                  </Typography>
+                  for this deiposit
+                </Typography>
+              </Grid2>
+            </CardContent>
+            <CardActions
+              sx={
+                !styles.isMobileLandscape
+                  ? styles.cardAction.mobile
+                  : styles.cardAction
+              }
+            >
+              <Box
+                sx={
+                  !styles.isMobileLandscape
+                    ? styles.slippageBox.mobile
+                    : styles.slippageBox
+                }
+              >
+                <Grid2
+                  sm={1.3}
+                  md={1.3}
+                  lg={1.3}
+                  xl={1.3}
+                  sx={styles.slippageComponent}
+                >
+                  <SlippageLabel scalingKey={scalingKey} />
+                </Grid2>
+                <Grid2
+                  sm={6}
+                  md={5.5}
+                  lg={5.5}
+                  xl={5.5}
+                  sx={styles.slippageComponent}
+                >
+                  <Slippage
+                    asset={assets[receive].name}
+                    value={slippage}
+                    onChange={updateSlippage}
+                    inverse={true}
+                    loading={loading}
+                    scalingKey={scalingKey}
+                  />
+                </Grid2>
+              </Box>
+
+              <Grid2
+                sx={
+                  !styles.isMobileLandscape
+                    ? styles.wallet.mobile
+                    : styles.wallet
+                }
+                xs={walletGridSize}
+                sm={walletGridSize}
+                md={walletGridSize}
+                lg={6}
+              >
+                <Wallet
+                  transaction={active}
+                  callback={transact}
+                  scalingKey={scalingKey}
+                >
+                  {"Add Liquidity"}
+                </Wallet>
+              </Grid2>
+            </CardActions>
+          </Card>
         </Grid2>
-        <CardContent
-          sx={styles.isMobile ? styles.cardContent.mobile : styles.cardContent}
-        >
-          <Grid2 xs={12} sx={styles.cardContendGrid}>
-            <Grid2 xs={5} sx={styles.input}>
-              <UserAmountField
-                asset={assets[send1]}
-                onChange={updateSend}
-                value={sendAmount.toFixed()}
-                balance={balances[0]}
-                label="Enter Amount"
-                loading={loading}
-                scalingKey={scalingKey}
-              />
-            </Grid2>
+      </MobileView>
+      <BrowserView>
+        <Grid2 container sx={styles.root}>
+          <Grid2>
+            <Card sx={styles.card}>
+              <CardHeader sx={styles.cardHeader} title={<NavLiquidity />} />
+              <Grid2 sx={styles.tokens}>
+                <AddliquidityTokens />
+              </Grid2>
+              <CardContent sx={styles.cardContent}>
+                <Grid2 xs={12} sx={styles.cardContendGrid}>
+                  <Grid2 xs={5} sx={styles.input}>
+                    <UserAmountField
+                      asset={assets[send1]}
+                      onChange={updateSend}
+                      value={sendAmount.toFixed()}
+                      balance={balances[0]}
+                      label="Enter Amount"
+                      loading={loading}
+                    />
+                  </Grid2>
 
-            <Grid2 xs={1} sx={styles.plusIconGrid}>
-              <img src={plusIcon} style={styles.plusIcon} alt="plusIcon" />
-            </Grid2>
+                  <Grid2 xs={1} sx={styles.plusIconGrid}>
+                    <img
+                      src={plusIcon}
+                      style={styles.plusIcon}
+                      alt="plusIcon"
+                    />
+                  </Grid2>
 
-            <Grid2 xs={5} sx={styles.input}>
-              <UserAmountField
-                asset={assets[send2]}
-                value={sendAmount2.toFixed()}
-                readOnly={true}
-                balance={balances[1]}
-                label="Required Deposit"
-                darker={true}
-                swap={swapFields}
-                scalingKey={scalingKey}
-              />
-            </Grid2>
+                  <Grid2 xs={5} sx={styles.input}>
+                    <UserAmountField
+                      asset={assets[send2]}
+                      value={sendAmount2.toFixed()}
+                      readOnly={true}
+                      balance={balances[1]}
+                      label="Required Deposit"
+                      darker={true}
+                      swap={swapFields}
+                    />
+                  </Grid2>
+                </Grid2>
+
+                <Grid2 xs={12} sx={styles.infoGrid}>
+                  <Typography noWrap sx={styles.infoText}>
+                    You will recieve about{" "}
+                    <img
+                      style={styles.infoTextIcon}
+                      src={sirsSmall}
+                      alt="SirsLogo"
+                    />
+                    <Typography sx={styles.infoRecieve}>
+                      {" "}
+                      {receiveAmount.toFixed()} Sirs
+                    </Typography>
+                    for this deiposit
+                  </Typography>
+                </Grid2>
+              </CardContent>
+              <CardActions sx={styles.cardAction}>
+                <Grid2 xs={1.3} sx={styles.slippageComponent}>
+                  <SlippageLabel />
+                </Grid2>
+                <Grid2 xs={5.5} sx={styles.slippageComponent}>
+                  <Slippage
+                    asset={assets[receive].name}
+                    value={slippage}
+                    onChange={updateSlippage}
+                    inverse={true}
+                    loading={loading}
+                  />
+                </Grid2>
+
+                <Grid2 sx={{}} xs={6}>
+                  <Wallet transaction={active} callback={transact}>
+                    {"Add Liquidity"}
+                  </Wallet>
+                </Grid2>
+              </CardActions>
+            </Card>
           </Grid2>
-
-          <Grid2 xs={12} sx={styles.infoGrid}>
-            <Typography noWrap sx={styles.infoText}>
-              You will recieve about{" "}
-              <img style={styles.infoTextIcon} src={sirsSmall} alt="SirsLogo" />
-              <Typography sx={styles.infoRecieve}>
-                {" "}
-                {receiveAmount.toFixed()} Sirs
-              </Typography>
-              for this deiposit
-            </Typography>
-          </Grid2>
-        </CardContent>
-        <CardActions
-          sx={styles.isMobile ? styles.cardAction.mobile : styles.cardAction}
-        >
-          <Box
-            sx={
-              styles.isMobile ? styles.slippageBox.mobile : styles.slippageBox
-            }
-          >
-            <Grid2
-              sm={1.3}
-              md={1.3}
-              lg={1.3}
-              xl={1.3}
-              sx={styles.slippageComponent}
-            >
-              <SlippageLabel scalingKey={scalingKey} />
-            </Grid2>
-            <Grid2
-              sm={6}
-              md={5.5}
-              lg={5.5}
-              xl={5.5}
-              sx={styles.slippageComponent}
-            >
-              <Slippage
-                asset={assets[receive].name}
-                value={slippage}
-                onChange={updateSlippage}
-                inverse={true}
-                loading={loading}
-                scalingKey={scalingKey}
-              />
-            </Grid2>
-          </Box>
-
-          <Grid2
-            sx={styles.isMobile ? styles.wallet.mobile : styles.wallet}
-            xs={walletGridSize}
-            sm={walletGridSize}
-            md={walletGridSize}
-            lg={6}
-          >
-            <Wallet
-              transaction={active}
-              callback={transact}
-              scalingKey={scalingKey}
-            >
-              {"Add Liquidity"}
-            </Wallet>
-          </Grid2>
-        </CardActions>
-      </Card>
-    </Grid2>
+        </Grid2>
+      </BrowserView>
+    </>
   );
 };
