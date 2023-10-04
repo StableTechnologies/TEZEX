@@ -10,9 +10,20 @@ const style = (theme, scale = 1) => {
         justifyContent: "center",
         alignItems: "center",
         padding: "0px 0px 0px 0px ",
+      },
+      mobile: {
+        "&.MuiGrid2-root": {
+          position: "relative",
+          marginTop: `calc(3.89vw * ${scale})`,
+          marginBottom: `calc(2.22vw * ${scale})`,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          padding: "0px 0px 0px 0px ",
 
-        [theme.breakpoints.down("md")]: {
-          display: "none",
+          [theme.breakpoints.down("md")]: {
+            display: "none",
+          },
         },
       },
     },

@@ -146,8 +146,6 @@ const useStyles = (style, scalingKey = "default", toCSS = false) => {
   const matchedIndexUp = breakpointMatchesUp.findIndex((match) => match);
   const currentBreakpointUp =
     matchedIndexUp !== -1 ? breakpointSizesReverse[matchedIndexUp] : null;
-  console.log(currentBreakpoint);
-  console.log(currentBreakpointDown);
   function debounce(fn, ms) {
     let timer;
     return function (...args) {
