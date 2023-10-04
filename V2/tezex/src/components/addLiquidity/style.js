@@ -63,6 +63,15 @@ const style = (theme, scale = 1) => {
         width: `calc(28.34vw * ${scale})`,
         height: `calc(8.61vw * ${scale})`,
       },
+      mobile: {
+        width: "100%",
+        height: `calc(8.61vw * ${scale})`,
+
+        "& .MuiFormControl-root": {
+          width: "100%",
+          height: `calc(8.61vw * ${scale})`,
+        },
+      },
     },
     slippageBox: {
       "& .MuiGrid2-root": {},
@@ -134,6 +143,7 @@ const style = (theme, scale = 1) => {
       alignItems: "center",
       display: "flex",
       mobile: {
+        paddingTop: `calc(2.54vw * ${scale})`,
         [theme.breakpoints.down("md")]: {
           alignItems: "center",
           display: "flex",
@@ -141,10 +151,12 @@ const style = (theme, scale = 1) => {
           justifyContent: "space-around",
           height: "100%",
           "&.MuiCardActions-root": {
-            paddingTop: `calc(1.54vw * ${scale})`,
+            paddingTop: `calc(2.54vw * ${scale})`,
 
-            paddingRight: `calc(1.597vw * ${scale})`,
-            paddingLeft: `calc(1.597vw * ${scale})`,
+            //  paddingRight: `calc(0 * ${scale})`,
+            //  paddingLeft: `calc(0 * ${scale})`,
+            //  paddingRight: `calc(1.597vw * ${scale})`,
+            //  paddingLeft: `calc(1.597vw * ${scale})`,
           },
         },
       },
@@ -159,7 +171,7 @@ const style = (theme, scale = 1) => {
       borderRadius: `calc(1.38vw * ${scale})`,
       zIndex: 5,
       background: "#FFFFFF",
-      border: ".069vw solid #E1E1E1",
+      border: `calc(.069vw * ${scale}) solid #E1E1E1`,
       "&.MuiPaper-root": {
         boxShadow: "0",
       },
@@ -174,8 +186,9 @@ const style = (theme, scale = 1) => {
           height: "100%",
           // minHeight: `calc(55.57vw * ${scale})`,
           // maxHeight: `calc(55.57vw * ${scale})`,
-          minWidth: `calc(32.88vw * ${scale})`,
-          maxWidth: `calc(32.88vw * ${scale})`,
+          width: "95vw",
+          // minWidth: `calc(32.88vw * ${scale})`,
+          // maxWidth: `calc(32.88vw * ${scale})`,
           // minHeight: `calc(32.57vw * ${scale})`,
           //  height: `calc(28.49vw * ${scale})`,
           //  maxWidth: `calc(30.56vw * ${scale})`,
@@ -184,7 +197,7 @@ const style = (theme, scale = 1) => {
           borderRadius: `calc(1.38vw * ${scale})`,
           zIndex: 5,
           background: "#FFFFFF",
-          border: ".069vw solid #E1E1E1",
+          border: `calc(.069vw * ${scale}) solid #E1E1E1`,
           "&.MuiPaper-root": {
             boxShadow: "0",
           },

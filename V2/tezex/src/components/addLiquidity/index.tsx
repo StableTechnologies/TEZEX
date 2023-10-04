@@ -267,7 +267,10 @@ export const AddLiquidity: FC = () => {
                     : styles.cardContendGrid
                 }
               >
-                <Grid2 xs={5} sx={styles.input}>
+                <Grid2
+                  xs={!styles.isMobileLandscape ? 12 : 5}
+                  sx={styles.isMobile ? styles.input.mobile : styles.input}
+                >
                   <UserAmountField
                     asset={assets[send1]}
                     onChange={updateSend}
@@ -283,7 +286,10 @@ export const AddLiquidity: FC = () => {
                   <img src={plusIcon} style={styles.plusIcon} alt="plusIcon" />
                 </Grid2>
 
-                <Grid2 xs={5} sx={styles.input}>
+                <Grid2
+                  xs={!styles.isMobileLandscape ? 12 : 5}
+                  sx={styles.isMobile ? styles.input.mobile : styles.input}
+                >
                   <UserAmountField
                     asset={assets[send2]}
                     value={sendAmount2.toFixed()}
