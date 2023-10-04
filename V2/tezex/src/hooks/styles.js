@@ -115,9 +115,9 @@ const useStyles = (style, scalingKey = "default", toCSS = false) => {
   const [selectors, data] = useDeviceSelectors(window.navigator.userAgent);
 
   const { isMobile, isDesktop } = selectors;
-  //  const [isLandScape, setIsLandScape] = useState(
-  //    window.matchMedia("(orientation: landscape)").matches
-  //  );
+  const [isLandScape, setIsLandScape] = useState(
+    isLandscape // window.matchMedia("(orientation: landscape)").matches
+  );
 
   const scalingBreakpoints = theme.scaling[scalingKey];
   const [scale, setScale] = useState(1);
@@ -159,28 +159,30 @@ const useStyles = (style, scalingKey = "default", toCSS = false) => {
     };
   }
 
-  // useEffect(() => {
-  //   const handelOrientationChange = () => {
-  //     if (window.matchMedia("(orientation: landscape)").matches !== isLandScape) {
-  //       setIsLandScape(window.matchMedia("(orientation: landscape)").matches);
-  //     }
-  //   };
+  useEffect(() => {
+    const handelOrientationChange = () => {
+      const { isLandscape } = useMobileOrientation();
+      setIsLandScape(isLandscape);
+      // if (window.matchMedia("(orientation: landscape)").matches !== isLandScape) {
+      //   setIsLandScape(window.matchMedia("(orientation: landscape)").matches);
+      // }
+    };
 
-  //   const debouncedOrientationChange = debounce(handelOrientationChange, 700);
+    const debouncedOrientationChange = debounce(handelOrientationChange, 700);
 
-  //   window.addEventListener("resize", debouncedOrientationChange);
+    window.addEventListener("resize", debouncedOrientationChange);
 
-  //   return () => {
-  //     window.removeEventListener("resize", debouncedOrientationChange);
-  //   };
-  // }, [isLandScape, debounce]);
+    return () => {
+      window.removeEventListener("resize", debouncedOrientationChange);
+    };
+  }, [isLandScape, debounce]);
 
   useEffect(() => {
     const getBreakpoint = () => {
       return currentBreakpoint || currentBreakpointUp || currentBreakpointDown;
     };
     const targetBreakpoint =
-      theme.isMobile && scalingBreakpoints.mobile
+      theme.deviceType.isMobile && !isLandscape && scalingBreakpoints.mobile
         ? scalingBreakpoints.mobile[getBreakpoint()]
         : isLandscape && scalingBreakpoints.landscape
         ? scalingBreakpoints.landscape[getBreakpoint()]

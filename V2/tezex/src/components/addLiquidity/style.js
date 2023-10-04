@@ -169,9 +169,9 @@ const style = (theme, scale = 1) => {
         [theme.breakpoints.down("md")]: {
           display: "flex",
           flexDirection: "column",
-          minHeight: "calc(70vw + 60vh) ",
+          //minHeight: "calc(70vw + 60vh) ",
           //maxHeight: "80vh",
-          // height: "100%",
+          height: "100%",
           // minHeight: `calc(55.57vw * ${scale})`,
           // maxHeight: `calc(55.57vw * ${scale})`,
           minWidth: `calc(32.88vw * ${scale})`,

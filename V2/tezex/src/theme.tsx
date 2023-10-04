@@ -182,6 +182,13 @@ export const theme = createTheme({
       md: 1.5,
       sm: 2,
       xs: 3,
+      mobile: {
+        xl: 1,
+        lg: 1,
+        md: 1.5,
+        sm: 1.8,
+        xs: 2.5,
+      },
       landscape: {
         xl: 1,
         lg: 1,
