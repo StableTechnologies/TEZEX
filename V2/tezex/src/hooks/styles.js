@@ -111,9 +111,7 @@ const determineBreakpoint = (width) => {
 
 const useStyles = (style, scalingKey = "default", toCSS = false) => {
   const { isLandscape } = useMobileOrientation();
-  const [selectors, data] = useDeviceSelectors(window.navigator.userAgent);
 
-  const { isMobile, isDesktop } = selectors;
   //  const [isLandScape, setIsLandScape] = useState(
   //    window.matchMedia("(orientation: landscape)").matches
   //  );
@@ -175,14 +173,15 @@ const useStyles = (style, scalingKey = "default", toCSS = false) => {
   // }, [isLandScape, debounce]);
 
   useEffect(() => {
+    const getBreakpoint = () => {
+      return currentBreakpoint || currentBreakpointUp || currentBreakpointDown;
+    };
     const targetBreakpoint =
-      isLandscape && scalingBreakpoints.landscape
-        ? scalingBreakpoints.landscape[
-            currentBreakpoint || currentBreakpointUp || currentBreakpointDown
-          ]
-        : scalingBreakpoints[
-            currentBreakpoint || currentBreakpointUp || currentBreakpointDown
-          ];
+      theme.isMobile && scalingBreakpoints.mobile
+        ? scalingBreakpoints.mobile[getBreakpoint()]
+        : isLandscape && scalingBreakpoints.landscape
+        ? scalingBreakpoints.landscape[getBreakpoint()]
+        : scalingBreakpoints[getBreakpoint()];
 
     if (scale !== targetBreakpoint) {
       debounce(() => {
@@ -211,9 +210,9 @@ const useStyles = (style, scalingKey = "default", toCSS = false) => {
   } else {
     return {
       isLandScape: isLandscape,
-      isMobile: isMobile,
+      isMobile: theme.isMobile,
       isMobileLandscape: isLandscape,
-      isDesktop: isDesktop,
+      isDesktop: theme.isDesktop,
       hide: { display: "none" },
       ...classes,
     };

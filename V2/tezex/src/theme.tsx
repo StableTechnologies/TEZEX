@@ -5,6 +5,7 @@ import { adjustBreakpointsForDpr } from "./functions/util";
 import parser from "ua-parser-js";
 import { UAParser } from "ua-parser-js";
 import mediaQuery from "css-mediaquery";
+import { useDeviceSelectors } from "react-device-detect";
 declare module "@mui/material/styles" {
   interface BreakpointOverrides {
     xs: true; // removes the `xs` breakpoint
@@ -42,6 +43,13 @@ declare module "@mui/material/styles" {
     md: number;
     sm: number;
     xs: number;
+    mobile?: {
+      xl: number;
+      lg: number;
+      md: number;
+      sm: number;
+      xs: number;
+    };
     landscape?: {
       xl: number;
       lg: number;
@@ -51,6 +59,10 @@ declare module "@mui/material/styles" {
     };
   }
   interface ThemeOptions {
+    deviceType?: {
+      isMobile: boolean;
+      isDesktop: boolean;
+    };
     scaling?: {
       default: ScaleAtBreakPoints;
       swap?: ScaleAtBreakPoints;
@@ -113,8 +125,12 @@ const f = adjustBreakpointsForDpr(br);
 //    }),
 //  })
 //}
+
+const [selectors, data] = useDeviceSelectors(window.navigator.userAgent);
+
+const { isMobile, isDesktop } = selectors;
 export const theme = createTheme({
-  ...(dpr > 1 && dpr < 3 ? f : {}),
+  ...(isDesktop ? f : {}),
   // components: {
   // Change the default options of useMediaQuery
   //      MuiUseMediaQuery: {
@@ -123,6 +139,10 @@ export const theme = createTheme({
   //        },
   //      },
   //    },
+  deviceType: {
+    isMobile: isMobile,
+    isDesktop: isDesktop,
+  },
   scaling: {
     default: {
       xl: 1,
