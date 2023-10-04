@@ -72,7 +72,11 @@ export const Header: FC<IHeader> = (props) => {
 
   return (
     //<AppBar sx={styles.header.headerbox} position="static">
-    <AppBar sx={styles.appBar} color="transparent" position="static">
+    <AppBar
+      sx={styles.isMobile ? styles.appBar.mobile : styles.appBar}
+      color="transparent"
+      position="static"
+    >
       <Container
         sx={
           {
@@ -87,7 +91,10 @@ export const Header: FC<IHeader> = (props) => {
         }
         maxWidth="xl"
       >
-        <Toolbar disableGutters sx={styles.toolbar}>
+        <Toolbar
+          disableGutters
+          sx={styles.isMobile ? styles.toolbar.mobile : styles.toolbar}
+        >
           <Grid2
             container
             //direction="row"

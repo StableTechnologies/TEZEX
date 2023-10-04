@@ -2,6 +2,12 @@ import React, { FC, useState, useEffect, useCallback } from "react";
 import { Header } from "../header";
 import ResponsiveAppBar from "../../../app-bar-example/";
 
+import {
+  BrowserView,
+  MobileView,
+  isBrowser,
+  isMobile,
+} from "react-device-detect";
 // } from "../../../app-bar-exa ";
 import { MainWindow } from "../main-window";
 import { SideBar } from "../sidebar";
@@ -46,9 +52,18 @@ export const Layout: FC<ILayout> = (props) => {
     <Box sx={styles.root}>
       <Box sx={styles.headerAndMainWindow}>
         <header>
-          <Box sx={styles.header}>
-            <Header openMenu={openMenu} toggleMenu={toggleMenu} />
-          </Box>
+          <BrowserView>
+            <Box sx={styles.header}>
+              <Header openMenu={openMenu} toggleMenu={toggleMenu} />
+            </Box>
+          </BrowserView>
+          <MobileView>
+            <Box
+              sx={styles.isMobileLandscape ? styles.hide : styles.headerMobile}
+            >
+              <Header openMenu={openMenu} toggleMenu={toggleMenu} />
+            </Box>
+          </MobileView>
         </header>
 
         <Box sx={styles.mainWindow}>
@@ -59,9 +74,25 @@ export const Layout: FC<ILayout> = (props) => {
         </Box>
       </Box>
 
-      <Box sx={openMenu ? styles.sideBar : styles.sideBarHidden}>
-        <SideBar openMenu={openMenu} toggleMenu={toggleMenu} />
-      </Box>
+      <MobileView>
+        <Box
+          sx={
+            openMenu
+              ? styles.sideBar
+              : styles.isLandScape
+              ? styles.sideBarShow
+              : styles.sideBarHidden
+          }
+        >
+          <SideBar openMenu={openMenu} toggleMenu={toggleMenu} />
+        </Box>
+      </MobileView>
+
+      <BrowserView>
+        <Box sx={openMenu ? styles.sideBar : styles.hide}>
+          <SideBar openMenu={openMenu} toggleMenu={toggleMenu} />
+        </Box>
+      </BrowserView>
     </Box>
   );
 };

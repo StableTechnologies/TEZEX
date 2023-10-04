@@ -36,7 +36,7 @@ const style = (theme, scale = 1) => {
       alignItems: "center",
       flexDirection: "row",
 
-      "@media not all and (max-width: 900px) and (orientation: landscape)": {
+      mobile: {
         [theme.breakpoints.down("md")]: {
           flexDirection: "column",
         },
@@ -66,7 +66,7 @@ const style = (theme, scale = 1) => {
       display: "flex",
       flexDirection: "row",
       justifyContent: "space-between",
-      "@media not all and (max-width: 900px) and (orientation: landscape)": {
+      mobile: {
         [theme.breakpoints.down("md")]: {
           justifyContent: "space-between",
           width: "100%",
@@ -128,7 +128,7 @@ const style = (theme, scale = 1) => {
       paddingTop: `calc(10vw * ${scale})`,
       alignItems: "center",
       display: "flex",
-      "@media not all and (max-width: 900px) and (orientation: landscape)": {
+      mobile: {
         [theme.breakpoints.down("md")]: {
           display: "flex",
           flexDirection: "column",
@@ -159,7 +159,7 @@ const style = (theme, scale = 1) => {
       },
       "& .MuiCardContent-root": {},
 
-      "@media not all and (max-width: 900px) and (orientation: landscape)": {
+      mobile: {
         [theme.breakpoints.down("md")]: {
           display: "flex",
           minHeight: "calc(70vw + 60vh) ",
@@ -186,7 +186,7 @@ const style = (theme, scale = 1) => {
         paddingLeft: `calc(1.597vw * ${scale})`,
       },
 
-      "@media not all and (max-width: 900px) and (orientation: landscape)": {
+      mobile: {
         [theme.breakpoints.down("md")]: {
           display: "flex",
           flexDirection: "column",
@@ -202,7 +202,7 @@ const style = (theme, scale = 1) => {
       },
     },
     wallet: {
-      "@media not all and (max-width: 900px) and (orientation: landscape)": {
+      mobile: {
         [theme.breakpoints.down("md")]: {
           marginTop: "20%",
           paddingBottom: "20%",
@@ -213,7 +213,7 @@ const style = (theme, scale = 1) => {
       position: "relative",
       justifyContent: "center",
 
-      "@media not all and (max-width: 900px) and (orientation: landscape)": {
+      mobile: {
         [theme.breakpoints.down("md")]: {
           display: "flex",
           height: "100%",

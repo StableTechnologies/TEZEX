@@ -114,7 +114,7 @@ const f = adjustBreakpointsForDpr(br);
 //  })
 //}
 export const theme = createTheme({
-  ...f,
+  ...(dpr > 1 && dpr < 3 ? f : {}),
   // components: {
   // Change the default options of useMediaQuery
   //      MuiUseMediaQuery: {
@@ -145,6 +145,14 @@ export const theme = createTheme({
       md: 1.5,
       sm: 2,
       xs: 3,
+
+      landscape: {
+        xl: 1,
+        lg: 1,
+        md: 1.2,
+        sm: 1,
+        xs: 1,
+      },
     },
     addLiquidity: {
       xl: 1,

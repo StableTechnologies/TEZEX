@@ -231,8 +231,8 @@ export const AddLiquidity: FC = () => {
   ]);
 
   return (
-    <Grid2 container sx={styles.root}>
-      <Card sx={styles.card}>
+    <Grid2 container sx={styles.isMobile ? styles.root.mobile : styles.root}>
+      <Card sx={styles.isMobile ? styles.card.mobile : styles.card}>
         <CardHeader
           sx={styles.cardHeader}
           title={
@@ -244,7 +244,9 @@ export const AddLiquidity: FC = () => {
         <Grid2 sx={styles.tokens}>
           <AddliquidityTokens scalingKey={scalingKey} />
         </Grid2>
-        <CardContent sx={styles.cardContent}>
+        <CardContent
+          sx={styles.isMobile ? styles.cardContent.mobile : styles.cardContent}
+        >
           <Grid2 xs={12} sx={styles.cardContendGrid}>
             <Grid2 xs={5} sx={styles.input}>
               <UserAmountField
@@ -288,8 +290,14 @@ export const AddLiquidity: FC = () => {
             </Typography>
           </Grid2>
         </CardContent>
-        <CardActions sx={styles.cardAction}>
-          <Box sx={styles.slippageBox}>
+        <CardActions
+          sx={styles.isMobile ? styles.cardAction.mobile : styles.cardAction}
+        >
+          <Box
+            sx={
+              styles.isMobile ? styles.slippageBox.mobile : styles.slippageBox
+            }
+          >
             <Grid2
               sm={1.3}
               md={1.3}
@@ -318,7 +326,7 @@ export const AddLiquidity: FC = () => {
           </Box>
 
           <Grid2
-            sx={styles.wallet}
+            sx={styles.isMobile ? styles.wallet.mobile : styles.wallet}
             xs={walletGridSize}
             sm={walletGridSize}
             md={walletGridSize}

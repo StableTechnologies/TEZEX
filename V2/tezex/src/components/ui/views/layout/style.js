@@ -9,12 +9,17 @@ const style = (theme, scale = 1) => {
       justifyContent: "space-between",
       flexDirection: "row",
     },
+
     header: {
-      flexgrow: 1,
+      flexGrow: 1,
       display: "flex",
-      "@media (max-width: 900px) and (orientation: landscape)": {
-        display: "none",
-      },
+    },
+    headerMobile: {
+      flexGrow: 1,
+      display: "flex",
+      // "@media screen and (max-width: 900px) and (orientation: landscape)": {
+      //   display: "none",
+      // },
     },
     mainWindow: {
       height: "100%",
@@ -31,19 +36,29 @@ const style = (theme, scale = 1) => {
       position: "absolute",
       right: "0px",
       height: "100%",
-      "@media (max-width: 900px) and (orientation: landscape)": {
+      "@media screen and (max-width: 900px) and (orientation: landscape)": {
         display: "flex",
         height: "100%",
         zIndex: 1000,
       },
     },
+    sideBarShow: {
+      display: "flex",
+      height: "100%",
+      zIndex: 1000,
+    },
     sideBarHidden: {
       display: "none",
-      "@media (max-width: 900px) and (orientation: landscape)": {
-        display: "flex",
-        height: "100%",
-        zIndex: 1000,
-      },
+      // "@media screen  and (max-width: 1400px) and (orientation: landscape)": {
+      //   display: "none",
+      //   height: "100%",
+      //   zIndex: 1000,
+      // },
+      // "@media screen  and (max-width: 900px) and (orientation: landscape)": {
+      //   display: "flex",
+      //   height: "100%",
+      //   zIndex: 1000,
+      // },
     },
     bottomSpace: {
       position: "absolute",

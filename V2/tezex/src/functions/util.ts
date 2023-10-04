@@ -20,7 +20,7 @@ export const adjustBreakpointsForDpr = (
   for (const [key, value] of Object.entries(breakpoints.breakpoints.values)) {
     const breakpointKey = key as keyof typeof breakpoints.breakpoints.values;
 
-    adjustedBreakpoints.breakpoints.values[breakpointKey] = value * dpr;
+    adjustedBreakpoints.breakpoints.values[breakpointKey] = value / dpr;
 
     //  adjustedBreakpoints.breakpoints.values[breakpointKey] = value;
   }

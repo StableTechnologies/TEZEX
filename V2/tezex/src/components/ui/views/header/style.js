@@ -6,7 +6,7 @@ const style = (theme, scale = 1) => {
       "&.MuiPaper-root": {
         boxShadow: `calc(.28vw * ${scale}) calc(.28vw * ${scale}) calc(.28vw * ${scale}) rgba(204, 204, 204, 0.25)`,
       },
-      "@media screen and (max-width: 768px)": {
+      mobile: {
         "&.MuiPaper-root": {
           boxShadow: "0px 0px 0px 0px",
         },
@@ -14,9 +14,12 @@ const style = (theme, scale = 1) => {
     },
     toolbar: {
       height: "100%",
-      transition: "all 0.5s ease",
-      [theme.breakpoints.down("sm")]: {
-        height: "15vh",
+      mobile: {
+        height: "100%",
+        transition: "all 0.5s ease",
+        [theme.breakpoints.down("sm")]: {
+          height: "15vh",
+        },
       },
     },
     logoLarge: {
