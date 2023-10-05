@@ -54,8 +54,6 @@ const style = (theme, scale = 1) => {
         lineHeight: `calc(1.52vw * ${scale})`,
         minWidth: `calc(11vw * ${scale})`,
         maxWidth: `calc(11vw * ${scale})`,
-        "&:not(first-child)": {},
-        "&:first-child": {},
 
         color: "#999999",
         background: "white",
@@ -101,10 +99,6 @@ const style = (theme, scale = 1) => {
         paddingTop: `calc(0vw * ${scale})`,
         paddingBottom: `calc(0vw * ${scale})`,
         fontSize: `calc(1.11vw * ${scale})`,
-        "&:not(first-child)": {},
-        //   "&:first-child": {
-        //     paddingLeft: "3.1vw ",
-        //   },
 
         color: "#999999",
         background: "white",

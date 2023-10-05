@@ -16,6 +16,10 @@ interface NavTabProps {
 
 function NavTab(props: NavTabProps) {
   const navigate = useNavigate();
+  const _props = {
+    label: props.label,
+    href: props.href,
+  };
   if (props.external) {
     return (
       <Tab
@@ -24,7 +28,7 @@ function NavTab(props: NavTabProps) {
           event.preventDefault();
           window.open(props.href, "_blank");
         }}
-        {...props}
+        {..._props}
       />
     );
   } else {
@@ -35,7 +39,7 @@ function NavTab(props: NavTabProps) {
           event.preventDefault();
           navigate(props.href);
         }}
-        {...props}
+        {..._props}
       />
     );
   }

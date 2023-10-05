@@ -157,23 +157,23 @@ const useStyles = (style, scalingKey = "default", toCSS = false) => {
     };
   }
 
-  useEffect(() => {
-    const handelOrientationChange = () => {
-      const { isLandscape } = useMobileOrientation();
-      setIsLandScape(isLandscape);
-      // if (window.matchMedia("(orientation: landscape)").matches !== isLandScape) {
-      //   setIsLandScape(window.matchMedia("(orientation: landscape)").matches);
-      // }
-    };
-
-    const debouncedOrientationChange = debounce(handelOrientationChange, 700);
-
-    window.addEventListener("resize", debouncedOrientationChange);
-
-    return () => {
-      window.removeEventListener("resize", debouncedOrientationChange);
-    };
-  }, [isLandScape, debounce]);
+  //  useEffect(() => {
+  //    const handelOrientationChange = () => {
+  //      const { isLandscape } = useMobileOrientation();
+  //      setIsLandScape(isLandscape);
+  //      // if (window.matchMedia("(orientation: landscape)").matches !== isLandScape) {
+  //      //   setIsLandScape(window.matchMedia("(orientation: landscape)").matches);
+  //      // }
+  //    };
+  //
+  //    const debouncedOrientationChange = debounce(handelOrientationChange, 700);
+  //
+  //    window.addEventListener("resize", debouncedOrientationChange);
+  //
+  //    return () => {
+  //      window.removeEventListener("resize", debouncedOrientationChange);
+  //    };
+  //  }, [isLandScape, debounce]);
 
   useEffect(() => {
     const getBreakpoint = () => {

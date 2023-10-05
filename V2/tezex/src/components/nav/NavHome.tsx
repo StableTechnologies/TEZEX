@@ -19,6 +19,10 @@ interface NavTabProps {
 function NavTab(props: NavTabProps) {
   const navigate = useNavigate();
 
+  const _props = {
+    label: props.label,
+    href: props.href,
+  };
   const styles = useStyles(style, props.scalingKey);
   return (
     <Tab
@@ -27,7 +31,7 @@ function NavTab(props: NavTabProps) {
         event.preventDefault();
         navigate(props.href);
       }}
-      {...props}
+      {..._props}
     />
   );
 }

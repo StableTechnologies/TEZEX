@@ -14,10 +14,6 @@ const style = (theme, scale = 1) => {
         maxHeight: `calc(2.7vw * ${scale})`,
         minHeight: `calc(2.7vw * ${scale})`,
         borderRadius: `calc(.55vw * ${scale})`,
-
-        "&:first-child": {
-          paddingLeft: ".28vw ",
-        },
       },
       border: "0.07vw solid #EDEDED",
     },
