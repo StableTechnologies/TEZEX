@@ -46,7 +46,7 @@ const style = (theme, scale = 1) => {
         zindex: "3",
         alignItems: "center",
         justifyContent: "center",
-        padding: "0 0 calc(4vw * ${scale}) 0",
+        padding: `0 0 calc(4vw * ${scale}) 0`,
         display: "flex",
         alignText: "center",
       },
@@ -64,7 +64,7 @@ const style = (theme, scale = 1) => {
     },
     successContentTextBox: {
       "& .MuiDialogContent-root": {
-        padding: "0 0 calc(4.16vw * ${scale}) 0",
+        padding: `0 0 calc(4.16vw * ${scale}) 0`,
       },
       flexDirection: "row",
       display: "flex",
@@ -103,7 +103,7 @@ const style = (theme, scale = 1) => {
         display: "flex",
         padding: `calc(.5vw * ${scale}) calc(6.3vw * ${scale}) calc(2.6vw * ${scale}) calc(5.3vw * ${scale}) `,
         fontFamily: "Inter",
-        fontSize: " calc(1.11vw * ${scale})",
+        fontSize: ` calc(1.11vw * ${scale})`,
         fontWeight: `calc(400vw * ${scale})`,
         lineHeight: `calc(1.319vw * ${scale})`,
         letterSpacing: "0em",
@@ -145,9 +145,9 @@ const style = (theme, scale = 1) => {
       width: `calc(.61vw * ${scale})`,
     },
     tickIcon: {
-      height: " calc(4.16vw * ${scale})",
+      height: ` calc(4.16vw * ${scale})`,
       alignItems: "center",
-      width: " calc(4.16vw * ${scale})",
+      width: ` calc(4.16vw * ${scale})`,
     },
     copyButton: {
       marginLeft: `calc(.42vw * ${scale})`,
@@ -163,8 +163,8 @@ const style = (theme, scale = 1) => {
     },
     copyIcon: {
       marginTop: `calc(.2vw * ${scale})`,
-      height: " calc(.79vw * ${scale})",
-      width: " calc(.92vw * ${scale})",
+      height: ` calc(.79vw * ${scale})`,
+      width: ` calc(.92vw * ${scale})`,
       alignItems: "center",
     },
     alertIcon: {
