@@ -7,7 +7,7 @@ const style = (theme, scale = 1) => {
       width: "100%",
     },
     swap: {
-      fontSize: "2.9vw", //collapsed ? "0px" : "3vw",
+      fontSize: `calc(2.9vw * ${scale})`, //collapsed ? "0px" : "3vw",
       textAlign: "right",
       justifyContent: "flex-end",
       paddingRight: "0px",
@@ -17,12 +17,12 @@ const style = (theme, scale = 1) => {
     },
 
     liquidity: {
-      fontSize: "2.9vw", //collapsed ? "0px" : "3vw",
+      fontSize: `calc(2.9vw * ${scale})`, //collapsed ? "0px" : "3vw",
       backgroundColor: "#FEFEFE",
       paddingBottom: "10%",
     },
     home: {
-      fontSize: "3vw", //collapsed ? "0px" : "3vw",
+      fontSize: `calc(3vw * ${scale})`, //collapsed ? "0px" : "3vw",
       backgroundColor: "#FEFEFE",
     },
     add: {
@@ -36,8 +36,8 @@ const style = (theme, scale = 1) => {
     },
     root: {
       //boxShadow: "20px 20px 25px 20px rgba(0, 0, 0, 0.1)",
-      fontSize: "3vw", //collapsed ? "0px" : "3vw",
-      boxShadow: "0px 0px 10px 0px rgba(0,0,0,0.15)",
+      fontSize: `calc(3vw * ${scale})`, //collapsed ? "0px" : "3vw",
+      boxShadow: `0px 0px calc(0.7vw * ${scale}) 0px rgba(0,0,0,0.15)`,
       borderRight: "0px",
 
       backgroundColor: theme.palette.primary.main,
@@ -80,11 +80,11 @@ const style = (theme, scale = 1) => {
     },
 
     menuItem2: {
-      fontSize: "2.5vw", //collapsed ? "0px" : "3vw",
+      fontSize: `calc(2.5vw * ${scale})`, //collapsed ? "0px" : "3vw",
       backgroundColor: theme.palette.primary.main,
     },
     menuItemActive2: {
-      fontSize: "2.5vw", //collapsed ? "0px" : "3vw",
+      fontSize: `calc(2.5vw * ${scale})`, //collapsed ? "0px" : "3vw",
       backgroundColor: theme.palette.primary.main,
       //backgroundColor: "#000000"
       //backgroundColor: theme.palette.primary.main,

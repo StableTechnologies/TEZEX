@@ -77,11 +77,10 @@ const style = (theme, scale = 1) => {
         position: "absolute",
         display: "flex",
         left: "0px",
-        padding:
-          "calc(2vw * ${scale}) calc(1vw * ${scale}) 0 calc(2vw * ${scale}) ",
+        padding: `calc(2vw * ${scale}) calc(1vw * ${scale}) 0 calc(2vw * ${scale}) `,
         fontFamily: "Inter",
         color: "#000000",
-        fontSize: " calc(1.11vw * ${scale})",
+        fontSize: ` calc(1.11vw * ${scale})`,
         fontWeight: `calc(400vw * ${scale})`,
         lineHeight: `calc(1.319vw * ${scale})`,
         letterSpacing: "0em",
@@ -102,8 +101,7 @@ const style = (theme, scale = 1) => {
     errorText: {
       "&.MuiTypography-root": {
         display: "flex",
-        padding:
-          "calc(.5vw * ${scale}) calc(6.3vw * ${scale}) calc(2.6vw * ${scale}) calc(5.3vw * ${scale}) ",
+        padding: `calc(.5vw * ${scale}) calc(6.3vw * ${scale}) calc(2.6vw * ${scale}) calc(5.3vw * ${scale}) `,
         fontFamily: "Inter",
         fontSize: " calc(1.11vw * ${scale})",
         fontWeight: `calc(400vw * ${scale})`,
@@ -119,16 +117,15 @@ const style = (theme, scale = 1) => {
       width: "100%",
       "& .MuiTypography-root": {
         color: "#000000",
-        padding:
-          "calc(1.9vw * ${scale}) calc(2vw * ${scale}) calc(1.1vw * ${scale}) calc(2vw * ${scale})",
+        padding: `calc(1.9vw * ${scale}) calc(2vw * ${scale}) calc(1.1vw * ${scale}) calc(2vw * ${scale})`,
         fontFamily: "Inter",
-        fontSize: " calc(1.66vw * ${scale})",
+        fontSize: ` calc(1.66vw * ${scale})`,
         fontWeight: "500",
         lineHeight: `calc(2vw * ${scale})`,
       },
     },
     title: {
-      justifyContent: "space-between",
+      justifyContent: `space-between`,
       display: "flex",
       flexDirection: "row",
     },
@@ -138,7 +135,7 @@ const style = (theme, scale = 1) => {
         padding: "0px 0px 0px 0px",
         color: "#000000",
         fontFamily: "Inter",
-        fontSize: " calc(1.66vw * ${scale})",
+        fontSize: ` calc(1.66vw * ${scale})`,
         fontWeight: "500",
         lineHeight: `calc(2vw * ${scale})`,
       },
@@ -155,13 +152,13 @@ const style = (theme, scale = 1) => {
     copyButton: {
       marginLeft: `calc(.42vw * ${scale})`,
       "&.MuiButtonBase-root": {
-        minHeight: " calc(.79vw * ${scale})",
-        minWidth: " calc(.92vw * ${scale})",
+        minHeight: ` calc(.79vw * ${scale})`,
+        minWidth: ` calc(.92vw * ${scale})`,
       },
-      maxHeight: " calc(.79vw * ${scale})",
-      maxWidth: " calc(.92vw * ${scale})",
-      height: " calc(.79vw * ${scale})",
-      width: " calc(.92vw * ${scale})",
+      maxHeight: ` calc(.79vw * ${scale})`,
+      maxWidth: ` calc(.92vw * ${scale})`,
+      height: ` calc(.79vw * ${scale})`,
+      width: ` calc(.92vw * ${scale})`,
       alignItems: "center",
     },
     copyIcon: {
@@ -171,11 +168,11 @@ const style = (theme, scale = 1) => {
       alignItems: "center",
     },
     alertIcon: {
-      height: " calc(2.55vw * ${scale})",
+      height: ` calc(2.55vw * ${scale})`,
       alignItems: "center",
-      width: " calc(2.86vw * ${scale})",
-      left: " calc(.37vw * ${scale})",
-      top: " calc(.60vw * ${scale})",
+      width: ` calc(2.86vw * ${scale})`,
+      left: ` calc(.37vw * ${scale})`,
+      top: ` calc(.60vw * ${scale})`,
     },
 
     button: {
