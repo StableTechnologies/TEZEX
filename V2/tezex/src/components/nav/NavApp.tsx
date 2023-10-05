@@ -80,7 +80,7 @@ export const NavApp: FC<INavApp> = (props) => {
       value={value}
       sx={styles.navApp}
       onChange={handleChange}
-      aria-label="nav tabs "
+      aria-label="nav tabs"
       TabIndicatorProps={{
         style: { display: "none" },
       }}
