@@ -11,38 +11,33 @@ import { useSession } from "../../hooks/session";
 interface NavTabProps {
   label: string;
   href: string;
-  external?: boolean;
 }
 
-function NavTab(props: NavTabProps) {
+function NavTabExternal(props: NavTabProps) {
+  return (
+    <Tab
+      sx={{}}
+      onClick={(event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
+        event.preventDefault();
+        window.open(props.href, "_blank");
+      }}
+      {...props}
+    />
+  );
+}
+
+function NavTab(props: NavTabProps, external?: boolean) {
   const navigate = useNavigate();
-  const _props = {
-    label: props.label,
-    href: props.href,
-  };
-  if (props.external) {
-    return (
-      <Tab
-        sx={{}}
-        onClick={(event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
-          event.preventDefault();
-          window.open(props.href, "_blank");
-        }}
-        {..._props}
-      />
-    );
-  } else {
-    return (
-      <Tab
-        sx={{}}
-        onClick={(event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
-          event.preventDefault();
-          navigate(props.href);
-        }}
-        {..._props}
-      />
-    );
-  }
+  return (
+    <Tab
+      sx={{}}
+      onClick={(event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
+        event.preventDefault();
+        navigate(props.href);
+      }}
+      {...props}
+    />
+  );
 }
 
 interface INavApp {
@@ -80,14 +75,14 @@ export const NavApp: FC<INavApp> = (props) => {
       value={value}
       sx={styles.navApp}
       onChange={handleChange}
-      aria-label="nav tabs"
+      aria-label="nav tabs "
       TabIndicatorProps={{
         style: { display: "none" },
       }}
     >
       <NavTab label="Home" href="/home/swap" />
       <NavTab label="Analytics" href="/Analytics" />
-      <NavTab label="About" href={aboutRedirectUrl} external={true} />
+      <NavTabExternal label="About" href={aboutRedirectUrl} />
     </Tabs>
   );
 };
