@@ -137,7 +137,11 @@ export const style = (theme, scale = 1) => {
       },
       imgLarger: {
         position: "relative",
-        dislpay: "flex",
+        alignSelf: "center",
+        alignContent: "center",
+        justifyContent: "center",
+        alignItems: "center",
+        display: "flex",
         // width: `calc(1.1vw * ${scale})`,
         marginLeft: `calc(1vw * ${scale})`,
         marginRight: `calc(1vw * ${scale})`,
@@ -150,6 +154,12 @@ export const style = (theme, scale = 1) => {
         },*/
       },
       img: {
+        position: "relative",
+        display: "flex",
+        alignSelf: "center",
+        alignContent: "center",
+        justifyContent: "center",
+        alignItems: "center",
         marginLeft: `calc(1vw * ${scale})`,
         marginRight: `calc(1vw * ${scale})`,
         height: `calc(1.61vw * ${scale})`,
