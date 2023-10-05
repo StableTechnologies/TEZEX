@@ -69,6 +69,7 @@ declare module "@mui/material/styles" {
       removeLiquidity?: ScaleAtBreakPoints;
       addLiquidity?: ScaleAtBreakPoints;
       header?: ScaleAtBreakPoints;
+      alert?: ScaleAtBreakPoints;
       navHome?: ScaleAtBreakPoints;
     };
   }
@@ -79,6 +80,7 @@ declare module "@mui/material/styles" {
       removeLiquidity?: ScaleAtBreakPoints;
       addLiquidity?: ScaleAtBreakPoints;
       header?: ScaleAtBreakPoints;
+      alert?: ScaleAtBreakPoints;
       navHome?: ScaleAtBreakPoints;
     };
   }
@@ -198,6 +200,14 @@ export const theme = createTheme({
       },
     },
     removeLiquidity: {
+      xl: 1,
+      lg: 1,
+      md: 1.5,
+      sm: 2,
+      xs: 3,
+    },
+
+    alert: {
       xl: 1,
       lg: 1,
       md: 1.5,
