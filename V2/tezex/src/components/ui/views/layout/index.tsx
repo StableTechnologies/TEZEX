@@ -23,6 +23,7 @@ export interface ILayout {
     | React.ReactElement
     | React.ReactElement[]
     | string;
+  key?: string;
 }
 
 export const Layout: FC<ILayout> = (props) => {
