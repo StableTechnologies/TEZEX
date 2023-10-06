@@ -11,6 +11,24 @@ import {
 
 import { tokenDecimalToMantissa, tokenMantissaToDecimal } from "./scaling";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function debounce<F extends (...args: any[]) => any>(
+  fn: F,
+  ms: number
+): F {
+  let timer: NodeJS.Timeout | null;
+  return function (
+    this: ThisParameterType<F>,
+    ...args: Parameters<F>
+  ): ReturnType<F> | void {
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(() => {
+      timer = null;
+      fn.apply(this, args);
+    }, ms);
+  } as F;
+}
+
 export const adjustBreakpointsForDpr = (
   breakpoints: Breakpoints
 ): Breakpoints => {
