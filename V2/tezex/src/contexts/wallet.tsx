@@ -1,7 +1,7 @@
 import React, { useCallback, createContext, useEffect, useState } from "react";
 import { Draft } from "immer";
 import { useImmer } from "use-immer";
-
+import { Mutex } from "async-mutex";
 import { DAppClient } from "@airgap/beacon-dapp";
 import {
   Transaction,
@@ -103,7 +103,12 @@ interface IWalletProvider {
 export function WalletProvider(props: IWalletProvider) {
   const network = useNetwork();
   const session = useSession();
-
+  const mutex = new Mutex();
+  const transactionMutex = new Mutex();
+  const transactionUpdateMutex = new Mutex();
+  const [transactions, setTransactions] = useImmer<{
+    [key in TransactingComponent]?: Transaction;
+  }>({});
   const [swapTransaction, setSwapTransaction] = useImmer<
     Transaction | undefined
   >(undefined);
@@ -220,18 +225,20 @@ export function WalletProvider(props: IWalletProvider) {
     return () => clearInterval(interval);
   });
   //
+  const removeTransaction = useCallback(
+    (component: TransactingComponent) => {
+      setTransactions((draft) => {
+        delete draft[component];
+      });
+    },
+    [setTransactions]
+  );
+
   const getActiveTransaction = useCallback(
     (component: TransactingComponent): Transaction | undefined => {
-      switch (component) {
-        case TransactingComponent.SWAP:
-          return swapTransaction;
-        case TransactingComponent.ADD_LIQUIDITY:
-          return addLiquidityTransaction;
-        case TransactingComponent.REMOVE_LIQUIDITY:
-          return removeLiquidityTransaction;
-      }
+      return transactions[component];
     },
-    [swapTransaction, addLiquidityTransaction, removeLiquidityTransaction]
+    [transactions]
   );
   const transact = useCallback(
     async (transaction: Transaction): Promise<Transaction> => {
@@ -270,49 +277,37 @@ export function WalletProvider(props: IWalletProvider) {
   );
 
   useEffect(() => {
-    const proc = async () => {
-      swapTransaction &&
-        swapTransaction.transactionStatus === TransactionStatus.PENDING &&
-        (await transact(swapTransaction).then((transaction: Transaction) => {
-          transaction.transactionStatus === TransactionStatus.FAILED
-            ? setSwapTransaction(transaction)
-            : setSwapTransaction(undefined);
-        }));
-    };
-    proc();
-  }, [transact, setSwapTransaction, swapTransaction]);
-
-  useEffect(() => {
-    const proc = async () => {
-      addLiquidityTransaction &&
-        addLiquidityTransaction.transactionStatus ===
-          TransactionStatus.PENDING &&
-        (await transact(addLiquidityTransaction).then(
-          (transaction: Transaction) => {
-            transaction.transactionStatus === TransactionStatus.FAILED
-              ? setAddLiquidityTransaction(transaction)
-              : setAddLiquidityTransaction(undefined);
+    const proc = async (component: TransactingComponent) => {
+      return transactionMutex.runExclusive(async () => {
+        const currentTransaction = transactions[component];
+        if (
+          currentTransaction &&
+          currentTransaction.transactionStatus === TransactionStatus.PENDING
+        ) {
+          const updatedTransaction = await transact(currentTransaction);
+          if (
+            updatedTransaction.transactionStatus === TransactionStatus.FAILED
+          ) {
+            setTransactions((draft) => {
+              draft[component] = updatedTransaction;
+            });
+          } else {
+            setTransactions((draft) => {
+              delete draft[component];
+            });
           }
-        ));
+        }
+      });
     };
-    proc();
-  }, [transact, setAddLiquidityTransaction, addLiquidityTransaction]);
 
-  useEffect(() => {
-    const proc = async () => {
-      removeLiquidityTransaction &&
-        removeLiquidityTransaction.transactionStatus ===
-          TransactionStatus.PENDING &&
-        (await transact(removeLiquidityTransaction).then(
-          (transaction: Transaction) => {
-            transaction.transactionStatus === TransactionStatus.FAILED
-              ? setRemoveLiquidityTransaction(transaction)
-              : setRemoveLiquidityTransaction(undefined);
-          }
-        ));
-    };
-    proc();
-  }, [transact, setRemoveLiquidityTransaction, removeLiquidityTransaction]);
+    Promise.all([
+      proc(TransactingComponent.SWAP),
+      proc(TransactingComponent.ADD_LIQUIDITY),
+      proc(TransactingComponent.REMOVE_LIQUIDITY),
+    ]).then(() => {
+      //
+    });
+  }, [transact, transactions, setTransactions]);
 
   const setActiveTransaction = useCallback(
     (
@@ -320,34 +315,16 @@ export function WalletProvider(props: IWalletProvider) {
       transaction?: Transaction,
       op?: (transaction: Draft<Transaction>) => void
     ): void => {
-      switch (component) {
-        case TransactingComponent.SWAP:
-          if (op && swapTransaction) {
-            setSwapTransaction((draft) => (draft ? op(draft) : draft));
-          } else if (transaction) setSwapTransaction(transaction);
-          break;
-        case TransactingComponent.ADD_LIQUIDITY:
-          if (op && addLiquidityTransaction) {
-            setAddLiquidityTransaction((draft) => (draft ? op(draft) : draft));
-          } else if (transaction) setAddLiquidityTransaction(transaction);
-          break;
-        case TransactingComponent.REMOVE_LIQUIDITY:
-          if (op && removeLiquidityTransaction) {
-            setRemoveLiquidityTransaction((draft) =>
-              draft ? op(draft) : draft
-            );
-          } else if (transaction) setRemoveLiquidityTransaction(transaction);
-          break;
-      }
+      setTransactions((draft) => {
+        const currentTransaction = draft[component];
+        if (op && currentTransaction) {
+          op(currentTransaction as Draft<Transaction>);
+        } else if (transaction) {
+          draft[component] = transaction;
+        }
+      });
     },
-    [
-      setSwapTransaction,
-      setAddLiquidityTransaction,
-      setRemoveLiquidityTransaction,
-      addLiquidityTransaction,
-      removeLiquidityTransaction,
-      swapTransaction,
-    ]
+    [setTransactions]
   );
 
   const initialiseTransaction = useCallback(
@@ -436,86 +413,37 @@ export function WalletProvider(props: IWalletProvider) {
   );
 
   const updateTransactionBalance = useCallback(
-    (component: TransactingComponent, transaction: Transaction) => {
-      const _transaction: Transaction = updateBalanceTransaction(transaction);
-      switch (component) {
-        case TransactingComponent.SWAP:
-          setSwapTransaction((draft: Draft<Transaction | undefined>) => {
-            if (draft && transaction.id === draft.id) {
-              draft.sendAssetBalance = _transaction.sendAssetBalance;
-              draft.receiveAssetBalance = _transaction.receiveAssetBalance;
-              draft.transactionStatus = _transaction.transactionStatus;
-            }
-          });
-          break;
-        case TransactingComponent.ADD_LIQUIDITY:
-          setAddLiquidityTransaction(
-            (draft: Draft<Transaction | undefined>) => {
-              if (draft && transaction.id === draft.id) {
-                draft.sendAssetBalance = _transaction.sendAssetBalance;
-                draft.receiveAssetBalance = _transaction.receiveAssetBalance;
-                draft.transactionStatus = _transaction.transactionStatus;
-              }
-            }
-          );
-          break;
-        case TransactingComponent.REMOVE_LIQUIDITY:
-          setRemoveLiquidityTransaction(
-            (draft: Draft<Transaction | undefined>) => {
-              if (draft && transaction.id === draft.id) {
-                draft.sendAssetBalance = _transaction.sendAssetBalance;
-                draft.receiveAssetBalance = _transaction.receiveAssetBalance;
-                draft.transactionStatus = _transaction.transactionStatus;
-              }
-            }
-          );
-          break;
-      }
-      return true;
+    async (component: TransactingComponent, transaction: Transaction) => {
+      await transactionUpdateMutex.runExclusive(() => {
+        const _transaction: Transaction = updateBalanceTransaction(transaction);
+        setTransactions((draft) => {
+          if (draft[component] && draft[component]?.id === transaction.id) {
+            draft[component]!.sendAssetBalance = _transaction.sendAssetBalance;
+            draft[component]!.receiveAssetBalance =
+              _transaction.receiveAssetBalance;
+            draft[component]!.transactionStatus =
+              _transaction.transactionStatus;
+          }
+        });
+      });
     },
-    [
-      updateBalanceTransaction,
-      setAddLiquidityTransaction,
-      setRemoveLiquidityTransaction,
-      setSwapTransaction,
-    ]
+    [updateBalanceTransaction, setTransactions]
   );
 
   const updateStatus = useCallback(
-    (component: TransactingComponent, transactionStatus: TransactionStatus) => {
-      switch (component) {
-        case TransactingComponent.SWAP:
-          setSwapTransaction((draft: Draft<Transaction | undefined>) => {
-            if (draft) {
-              draft.transactionStatus = transactionStatus;
-            }
-          });
-          break;
-        case TransactingComponent.ADD_LIQUIDITY:
-          setAddLiquidityTransaction(
-            (draft: Draft<Transaction | undefined>) => {
-              if (draft) {
-                draft.transactionStatus = transactionStatus;
-              }
-            }
-          );
-          break;
-        case TransactingComponent.REMOVE_LIQUIDITY:
-          setRemoveLiquidityTransaction(
-            (draft: Draft<Transaction | undefined>) => {
-              if (draft) {
-                draft.transactionStatus = transactionStatus;
-              }
-            }
-          );
-          break;
-      }
+    async (
+      component: TransactingComponent,
+      transactionStatus: TransactionStatus
+    ) => {
+      await transactionUpdateMutex.runExclusive(() => {
+        setTransactions((draft) => {
+          if (draft[component]) {
+            draft[component]!.transactionStatus = transactionStatus;
+          }
+        });
+      });
     },
-    [
-      setAddLiquidityTransaction,
-      setSwapTransaction,
-      setRemoveLiquidityTransaction,
-    ]
+    [setTransactions]
   );
   const updateAmount = useCallback(
     (
@@ -524,129 +452,57 @@ export function WalletProvider(props: IWalletProvider) {
       amountUpdateReceive?: Amount,
       slippageUpdate?: number
     ): boolean => {
-      switch (component) {
-        case TransactingComponent.SWAP:
-          setSwapTransaction((draft: Draft<Transaction | undefined>) => {
-            if (draft) {
-              if (
-                amountUpdateSend &&
-                swapTransaction &&
-                !swapTransaction.sendAmount[0].decimal.eq(
-                  amountUpdateSend[0].decimal
-                )
-              ) {
-                draft.sendAmount = amountUpdateSend;
-                if (swapTransaction && isWalletConnected)
-                  draft.transactionStatus = checkSufficientBalance(
-                    swapTransaction.sendAssetBalance,
-                    amountUpdateSend
-                  );
-              }
-              if (
-                amountUpdateReceive &&
-                swapTransaction &&
-                !swapTransaction.receiveAmount[0].decimal.eq(
-                  amountUpdateReceive[0].decimal
-                )
-              ) {
-                draft.receiveAmount = amountUpdateReceive;
-              }
-              if (
-                slippageUpdate &&
-                swapTransaction &&
-                swapTransaction.slippage !== slippageUpdate
+      let result = false;
+
+      transactionUpdateMutex.runExclusive(() => {
+        setTransactions((draft) => {
+          if (draft[component]) {
+            const currentTransaction = draft[component]!; // Use non-null assertion here
+
+            // Convert WritableDraft<Balance> to Balance
+            const sendAssetBalance: Amount =
+              currentTransaction.sendAssetBalance.map((balance) => ({
+                ...balance,
+              })) as Amount;
+
+            if (
+              amountUpdateSend &&
+              !currentTransaction.sendAmount[0].decimal.eq(
+                amountUpdateSend[0].decimal
               )
-                draft.slippage = slippageUpdate;
-            }
-          });
-          break;
-        case TransactingComponent.ADD_LIQUIDITY:
-          setAddLiquidityTransaction(
-            (draft: Draft<Transaction | undefined>) => {
-              if (draft) {
-                if (
-                  amountUpdateSend &&
-                  addLiquidityTransaction &&
-                  !addLiquidityTransaction.sendAmount[0].decimal.eq(
-                    amountUpdateSend[0].decimal
-                  )
-                ) {
-                  draft.sendAmount = amountUpdateSend;
-                  if (addLiquidityTransaction && isWalletConnected)
-                    draft.transactionStatus = checkSufficientBalance(
-                      addLiquidityTransaction.sendAssetBalance,
-                      amountUpdateSend
-                    );
-                }
-                if (
-                  amountUpdateReceive &&
-                  addLiquidityTransaction &&
-                  !addLiquidityTransaction.receiveAmount[0].decimal.eq(
-                    amountUpdateReceive[0].decimal
-                  )
-                ) {
-                  draft.receiveAmount = amountUpdateReceive;
-                }
-                if (
-                  slippageUpdate &&
-                  addLiquidityTransaction &&
-                  addLiquidityTransaction.slippage !== slippageUpdate
-                )
-                  draft.slippage = slippageUpdate;
+            ) {
+              currentTransaction.sendAmount = amountUpdateSend;
+              if (isWalletConnected) {
+                currentTransaction.transactionStatus = checkSufficientBalance(
+                  sendAssetBalance,
+                  amountUpdateSend
+                );
               }
+              result = true;
             }
-          );
-          break;
-        case TransactingComponent.REMOVE_LIQUIDITY:
-          setRemoveLiquidityTransaction(
-            (draft: Draft<Transaction | undefined>) => {
-              if (draft) {
-                if (
-                  amountUpdateSend &&
-                  removeLiquidityTransaction &&
-                  !removeLiquidityTransaction.sendAmount[0].decimal.eq(
-                    amountUpdateSend[0].decimal
-                  )
-                ) {
-                  draft.sendAmount = amountUpdateSend;
-                  if (removeLiquidityTransaction && isWalletConnected)
-                    draft.transactionStatus = checkSufficientBalance(
-                      removeLiquidityTransaction.sendAssetBalance,
-                      amountUpdateSend
-                    );
-                }
-                if (
-                  amountUpdateReceive &&
-                  removeLiquidityTransaction &&
-                  !removeLiquidityTransaction.receiveAmount[0].decimal.eq(
-                    amountUpdateReceive[0].decimal
-                  )
-                ) {
-                  draft.receiveAmount = amountUpdateReceive;
-                }
-                if (
-                  slippageUpdate &&
-                  removeLiquidityTransaction &&
-                  removeLiquidityTransaction.slippage !== slippageUpdate
-                )
-                  draft.slippage = slippageUpdate;
-              }
+            if (
+              amountUpdateReceive &&
+              !currentTransaction.receiveAmount[0].decimal.eq(
+                amountUpdateReceive[0].decimal
+              )
+            ) {
+              currentTransaction.receiveAmount = amountUpdateReceive;
+              result = true;
             }
-          );
-          break;
-      }
-      if (!amountUpdateSend || (!amountUpdateReceive && !slippageUpdate)) {
-        return false;
-      } else return true;
+            if (
+              slippageUpdate &&
+              currentTransaction.slippage !== slippageUpdate
+            ) {
+              currentTransaction.slippage = slippageUpdate;
+              result = true;
+            }
+          }
+        });
+      });
+
+      return result;
     },
-    [
-      addLiquidityTransaction,
-      removeLiquidityTransaction,
-      swapTransaction,
-      setSwapTransaction,
-      setAddLiquidityTransaction,
-      setRemoveLiquidityTransaction,
-    ]
+    [setTransactions, isWalletConnected]
   );
 
   useEffect(() => {
