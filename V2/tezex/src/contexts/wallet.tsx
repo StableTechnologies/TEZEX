@@ -445,6 +445,39 @@ export function WalletProvider(props: IWalletProvider) {
     },
     [setTransactions]
   );
+  const updateTransactionStatusBasedOnBalance = (
+    transaction: Transaction,
+    amountUpdateSend?: Amount
+  ) => {
+    const sendAssetBalance: Amount = transaction.sendAssetBalance.map(
+      (balance) => ({ ...balance })
+    ) as Amount;
+    if (
+      amountUpdateSend &&
+      !transaction.sendAmount[0].decimal.eq(amountUpdateSend[0].decimal)
+    ) {
+      transaction.sendAmount = amountUpdateSend;
+      if (isWalletConnected) {
+        transaction.transactionStatus = checkSufficientBalance(
+          sendAssetBalance,
+          amountUpdateSend
+        );
+      }
+      return true;
+    }
+    return false;
+  };
+  const updateTransaction = (
+    draft: any,
+    component: TransactingComponent,
+    updater: (transaction: Transaction) => boolean
+  ) => {
+    const transaction = draft[component];
+    if (transaction) {
+      updater(transaction);
+    }
+  };
+
   const updateAmount = useCallback(
     (
       component: TransactingComponent,
@@ -453,53 +486,31 @@ export function WalletProvider(props: IWalletProvider) {
       slippageUpdate?: number
     ): boolean => {
       let result = false;
-
       transactionUpdateMutex.runExclusive(() => {
         setTransactions((draft) => {
-          if (draft[component]) {
-            const currentTransaction = draft[component]!; // Use non-null assertion here
-
-            // Convert WritableDraft<Balance> to Balance
-            const sendAssetBalance: Amount =
-              currentTransaction.sendAssetBalance.map((balance) => ({
-                ...balance,
-              })) as Amount;
-
-            if (
-              amountUpdateSend &&
-              !currentTransaction.sendAmount[0].decimal.eq(
-                amountUpdateSend[0].decimal
-              )
-            ) {
-              currentTransaction.sendAmount = amountUpdateSend;
-              if (isWalletConnected) {
-                currentTransaction.transactionStatus = checkSufficientBalance(
-                  sendAssetBalance,
-                  amountUpdateSend
-                );
-              }
-              result = true;
-            }
+          updateTransaction(draft, component, (transaction) => {
             if (
               amountUpdateReceive &&
-              !currentTransaction.receiveAmount[0].decimal.eq(
+              !transaction.receiveAmount[0].decimal.eq(
                 amountUpdateReceive[0].decimal
               )
             ) {
-              currentTransaction.receiveAmount = amountUpdateReceive;
+              transaction.receiveAmount = amountUpdateReceive;
               result = true;
             }
-            if (
-              slippageUpdate &&
-              currentTransaction.slippage !== slippageUpdate
-            ) {
-              currentTransaction.slippage = slippageUpdate;
+            if (slippageUpdate && transaction.slippage !== slippageUpdate) {
+              transaction.slippage = slippageUpdate;
               result = true;
             }
-          }
+            return (
+              updateTransactionStatusBasedOnBalance(
+                transaction,
+                amountUpdateSend
+              ) || result
+            );
+          });
         });
       });
-
       return result;
     },
     [setTransactions, isWalletConnected]
