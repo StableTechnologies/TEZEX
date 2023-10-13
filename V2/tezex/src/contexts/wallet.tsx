@@ -27,6 +27,8 @@ import {
   completionRecordFailed,
   completionRecordSuccess,
 } from "../functions/util";
+import { Writable } from "stream";
+import { WritableDraft } from "immer/dist/types/types-external";
 
 export enum WalletStatus {
   ESTIMATING_SIRS = "Estimating Sirs",
@@ -417,7 +419,11 @@ export function WalletProvider(props: IWalletProvider) {
       await transactionUpdateMutex.runExclusive(() => {
         const _transaction: Transaction = updateBalanceTransaction(transaction);
         setTransactions((draft) => {
-          if (draft[component] && draft[component]?.id === transaction.id) {
+          if (
+            draft[component] &&
+            draft[component]?.id &&
+            draft[component]?.id === transaction.id
+          ) {
             draft[component]!.sendAssetBalance = _transaction.sendAssetBalance;
             draft[component]!.receiveAssetBalance =
               _transaction.receiveAssetBalance;
@@ -446,7 +452,7 @@ export function WalletProvider(props: IWalletProvider) {
     [setTransactions]
   );
   const updateTransactionStatusBasedOnBalance = (
-    transaction: Transaction,
+    transaction: WritableDraft<Transaction>,
     amountUpdateSend?: Amount
   ) => {
     const sendAssetBalance: Amount = transaction.sendAssetBalance.map(
@@ -467,15 +473,15 @@ export function WalletProvider(props: IWalletProvider) {
     }
     return false;
   };
+
+  //type draft = WritableDraft<{ [key in TransactingComponent]?: Transaction }>;
+
   const updateTransaction = (
-    draft: any,
-    component: TransactingComponent,
-    updater: (transaction: Transaction) => boolean
-  ) => {
-    const transaction = draft[component];
-    if (transaction) {
-      updater(transaction);
-    }
+    transaction: WritableDraft<Transaction> | undefined,
+    updater: (transaction: WritableDraft<Transaction>) => boolean
+  ): boolean => {
+    if (!transaction) return false;
+    return updater(transaction);
   };
 
   const updateAmount = useCallback(
@@ -488,27 +494,36 @@ export function WalletProvider(props: IWalletProvider) {
       let result = false;
       transactionUpdateMutex.runExclusive(() => {
         setTransactions((draft) => {
-          updateTransaction(draft, component, (transaction) => {
-            if (
-              amountUpdateReceive &&
-              !transaction.receiveAmount[0].decimal.eq(
-                amountUpdateReceive[0].decimal
-              )
-            ) {
-              transaction.receiveAmount = amountUpdateReceive;
-              result = true;
+          const wasUpdated = updateTransaction(
+            draft[component],
+            (transaction) => {
+              if (
+                amountUpdateReceive &&
+                !transaction.receiveAmount[0].decimal.eq(
+                  amountUpdateReceive[0].decimal
+                )
+              ) {
+                transaction.receiveAmount = amountUpdateReceive;
+                result = true;
+              }
+              if (slippageUpdate && transaction.slippage !== slippageUpdate) {
+                transaction.slippage = slippageUpdate;
+                result = true;
+              }
+              return (
+                updateTransactionStatusBasedOnBalance(
+                  transaction,
+                  amountUpdateSend
+                ) || result
+              );
             }
-            if (slippageUpdate && transaction.slippage !== slippageUpdate) {
-              transaction.slippage = slippageUpdate;
-              result = true;
+          );
+          if (wasUpdated && draft[component]) {
+            const currentTransaction = draft[component];
+            if (currentTransaction) {
+              draft[component] = { ...currentTransaction };
             }
-            return (
-              updateTransactionStatusBasedOnBalance(
-                transaction,
-                amountUpdateSend
-              ) || result
-            );
-          });
+          }
         });
       });
       return result;
