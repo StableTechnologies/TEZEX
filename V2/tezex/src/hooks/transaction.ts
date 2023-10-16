@@ -2,7 +2,11 @@ import { useContext, useCallback, useEffect, useState } from "react";
 import { BigNumber } from "bignumber.js";
 import { WalletContext } from "../contexts/wallet";
 import { useNetwork } from "../hooks/network";
-import { balanceBuilder } from "../functions/util";
+import {
+  balanceBuilder,
+  getAssetStateByTypeAndAsset,
+  transactionToAssetStates,
+} from "../functions/util";
 import { estimate } from "../functions/estimates";
 import {
   Transaction,
@@ -10,6 +14,9 @@ import {
   TransactingComponent,
   AssetOrAssetPair,
   LiquidityBakingStorageXTZ,
+  AssetState,
+  TranferType,
+  Asset,
 } from "../types/general";
 
 export interface TransactionOps {
@@ -24,6 +31,10 @@ export interface TransactionOps {
   updateTransactionBalance: () => boolean;
   updateAmount: (sendAmount?: string, slippage?: string) => void;
   sendTransaction: () => Promise<void>;
+  getAsetState: (
+    transferType: TranferType,
+    asset: Asset
+  ) => AssetState | undefined;
 }
 export interface TransactionUpdate {
   sendAmount?: string;
@@ -36,6 +47,9 @@ export function useTransaction(
   const network = useNetwork();
 
   const [loading, setLoading] = useState<boolean>(true);
+  const [assetStates, setAssetStates] = useState<AssetState[] | undefined>(
+    undefined
+  );
   const [transacting, setTransacting] = useState<boolean>(false);
   const [transaction, setTransaction] = useState<Transaction | undefined>(
     wallet ? wallet.getActiveTransaction(component) : undefined
@@ -47,13 +61,25 @@ export function useTransaction(
   useEffect(() => {
     if (wallet) {
       const currentTransaction = wallet.getActiveTransaction(component);
-      setTransaction(currentTransaction);
-      setLoading(false);
+      if (currentTransaction && transaction) {
+        if (
+          transaction.lastModified !== currentTransaction.lastModified ||
+          transaction.transactionStatus !== currentTransaction.transactionStatus
+        ) {
+          setTransaction(currentTransaction);
+          transactionToAssetStates(currentTransaction);
+        }
+      } else if (currentTransaction && !transaction) {
+        setTransaction(currentTransaction);
+
+        transactionToAssetStates(currentTransaction);
+        setLoading(false);
+      }
       if (update && wallet.lbContractStorage) {
         _updateAmount(update.sendAmount, update.slippage);
       }
     }
-  }, [wallet, component]);
+  }, [wallet, transaction, component, update]);
 
   useEffect(() => {
     if (
@@ -63,6 +89,13 @@ export function useTransaction(
       setTransaction(undefined);
     }
   }, [transaction]);
+
+  const getAsetState = useCallback(
+    (transferType: TranferType, asset: Asset): AssetState | undefined => {
+      return getAssetStateByTypeAndAsset(transferType, asset, assetStates);
+    },
+    [assetStates]
+  );
 
   const initialize = useCallback(
     (
@@ -128,6 +161,7 @@ export function useTransaction(
       if (sendAmount || slippage) {
         if (_updateAmount(sendAmount, slippage)) {
           if (update) {
+            // clear pending update if it exists
             setUpdate(undefined);
           }
         } else {
@@ -187,5 +221,6 @@ export function useTransaction(
     updateTransactionBalance,
     updateAmount,
     sendTransaction,
+    getAsetState,
   };
 }
