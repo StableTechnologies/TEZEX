@@ -49,13 +49,13 @@ export interface Asset {
   decimals: number;
 }
 
-export enum TranferType {
+export enum TransferType {
   SEND = "Send",
   RECEIVE = "Receive",
 }
 
 export interface AssetState {
-  transferType: TranferType;
+  transferType: TransferType;
   amount: Balance | undefined;
   balance: Balance | undefined;
   asset: Asset;

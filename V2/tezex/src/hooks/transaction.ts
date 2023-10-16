@@ -15,7 +15,7 @@ import {
   AssetOrAssetPair,
   LiquidityBakingStorageXTZ,
   AssetState,
-  TranferType,
+  TransferType,
   Asset,
 } from "../types/general";
 
@@ -32,7 +32,7 @@ export interface TransactionOps {
   updateAmount: (sendAmount?: string, slippage?: string) => void;
   sendTransaction: () => Promise<void>;
   getAsetState: (
-    transferType: TranferType,
+    transferType: TransferType,
     asset: Asset
   ) => AssetState | undefined;
 }
@@ -91,7 +91,7 @@ export function useTransaction(
   }, [transaction]);
 
   const getAsetState = useCallback(
-    (transferType: TranferType, asset: Asset): AssetState | undefined => {
+    (transferType: TransferType, asset: Asset): AssetState | undefined => {
       return getAssetStateByTransactionTypeAndAsset(
         transferType,
         asset,

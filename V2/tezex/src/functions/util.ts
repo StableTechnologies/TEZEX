@@ -9,7 +9,7 @@ import {
   Breakpoints,
   Transaction,
   AssetState,
-  TranferType,
+  TransferType,
 } from "../types/general";
 
 import { tokenDecimalToMantissa, tokenMantissaToDecimal } from "./scaling";
@@ -121,7 +121,7 @@ export function transactionToAssetStates(
   // Handle send assets
   transaction.sendAsset.forEach((asset, index) => {
     assetStates.push({
-      transferType: TranferType.SEND,
+      transferType: TransferType.SEND,
       amount: transaction.sendAmount[index],
       balance: transaction.sendAssetBalance[index],
       asset: asset,
@@ -131,7 +131,7 @@ export function transactionToAssetStates(
   // Handle receive assets
   transaction.receiveAsset.forEach((asset, index) => {
     assetStates.push({
-      transferType: TranferType.RECEIVE,
+      transferType: TransferType.RECEIVE,
       amount: transaction.receiveAmount[index],
       balance: transaction.receiveAssetBalance[index],
       asset: asset,
@@ -142,7 +142,7 @@ export function transactionToAssetStates(
 }
 
 export function getAssetStateByTransactionTypeAndAsset(
-  transferType: TranferType,
+  transferType: TransferType,
   asset: Asset,
   assetStates: AssetState[] | undefined
 ): AssetState | undefined {
