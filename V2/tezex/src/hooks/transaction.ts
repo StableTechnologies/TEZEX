@@ -4,7 +4,7 @@ import { WalletContext } from "../contexts/wallet";
 import { useNetwork } from "../hooks/network";
 import {
   balanceBuilder,
-  getAssetStateByTypeAndAsset,
+  getAssetStateByTransactionTypeAndAsset,
   transactionToAssetStates,
 } from "../functions/util";
 import { estimate } from "../functions/estimates";
@@ -92,7 +92,11 @@ export function useTransaction(
 
   const getAsetState = useCallback(
     (transferType: TranferType, asset: Asset): AssetState | undefined => {
-      return getAssetStateByTypeAndAsset(transferType, asset, assetStates);
+      return getAssetStateByTransactionTypeAndAsset(
+        transferType,
+        asset,
+        assetStates
+      );
     },
     [assetStates]
   );
