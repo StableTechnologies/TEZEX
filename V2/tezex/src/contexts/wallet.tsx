@@ -392,7 +392,7 @@ export function WalletProvider(props: IWalletProvider) {
     }
   };
 
-  const updateBalanceTransaction = useCallback(
+  const TranscationWithUpdatedBalance = useCallback(
     (transaction: Transaction): Transaction => {
       const sendAssetBalance: Amount = getBalancesOfAssets(
         transaction.sendAsset
@@ -417,7 +417,8 @@ export function WalletProvider(props: IWalletProvider) {
   const updateTransactionBalance = useCallback(
     async (component: TransactingComponent, transaction: Transaction) => {
       await transactionUpdateMutex.runExclusive(() => {
-        const _transaction: Transaction = updateBalanceTransaction(transaction);
+        const _transaction: Transaction =
+          TranscationWithUpdatedBalance(transaction);
         setTransactions((draft) => {
           if (
             draft[component] &&
@@ -429,11 +430,12 @@ export function WalletProvider(props: IWalletProvider) {
               _transaction.receiveAssetBalance;
             draft[component]!.transactionStatus =
               _transaction.transactionStatus;
+            draft[component]!.lastModified = new Date();
           }
         });
       });
     },
-    [updateBalanceTransaction, setTransactions]
+    [TranscationWithUpdatedBalance, setTransactions]
   );
 
   const updateStatus = useCallback(
@@ -445,6 +447,7 @@ export function WalletProvider(props: IWalletProvider) {
         setTransactions((draft) => {
           if (draft[component]) {
             draft[component]!.transactionStatus = transactionStatus;
+            draft[component]!.lastModified = new Date();
           }
         });
       });
@@ -519,10 +522,7 @@ export function WalletProvider(props: IWalletProvider) {
             }
           );
           if (wasUpdated && draft[component]) {
-            const currentTransaction = draft[component];
-            if (currentTransaction) {
-              draft[component] = { ...currentTransaction };
-            }
+            draft[component]!.lastModified = new Date();
           }
         });
       });
