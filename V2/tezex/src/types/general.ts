@@ -49,6 +49,17 @@ export interface Asset {
   decimals: number;
 }
 
+export enum TranferType {
+  SEND = "Send",
+  RECEIVE = "Receive",
+}
+
+export interface AssetState {
+  transferType: TranferType;
+  amount: Balance | undefined;
+  balance: Balance | undefined;
+  asset: Asset;
+}
 export interface AssetBalance {
   balance: Balance | undefined;
   asset: Asset;
