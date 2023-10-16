@@ -7,6 +7,9 @@ import {
   SuccessRecord,
   CompletionState,
   Breakpoints,
+  Transaction,
+  AssetState,
+  TranferType,
 } from "../types/general";
 
 import { tokenDecimalToMantissa, tokenMantissaToDecimal } from "./scaling";
@@ -108,4 +111,45 @@ export function showAlert(
         return undefined;
     }
   } else return record;
+}
+
+export function transactionToAssetStates(
+  transaction: Transaction
+): AssetState[] {
+  const assetStates: AssetState[] = [];
+
+  // Handle send assets
+  transaction.sendAsset.forEach((asset, index) => {
+    assetStates.push({
+      transferType: TranferType.SEND,
+      amount: transaction.sendAmount[index],
+      balance: transaction.sendAssetBalance[index],
+      asset: asset,
+    });
+  });
+
+  // Handle receive assets
+  transaction.receiveAsset.forEach((asset, index) => {
+    assetStates.push({
+      transferType: TranferType.RECEIVE,
+      amount: transaction.receiveAmount[index],
+      balance: transaction.receiveAssetBalance[index],
+      asset: asset,
+    });
+  });
+
+  return assetStates;
+}
+
+export function getAssetStateByTransactionTypeAndAsset(
+  transferType: TranferType,
+  asset: Asset,
+  assetStates: AssetState[] | undefined
+): AssetState | undefined {
+  if (assetStates)
+    return assetStates.find(
+      (state) =>
+        state.transferType === transferType && state.asset.name === asset.name
+    );
+  return undefined;
 }
