@@ -1,7 +1,12 @@
 import React, { memo, FC, useState, useEffect } from "react";
 import { BigNumber } from "bignumber.js";
 
-import { Token } from "../../../../types/general";
+import {
+  Asset,
+  Token,
+  TransactingComponent,
+  TransferType,
+} from "../../../../types/general";
 
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -10,7 +15,9 @@ import style from "./style";
 import useStyles from "../../../../hooks/styles";
 import { UserAmountField } from "./UserAmount";
 export interface ISlippage {
-  asset: Token;
+  asset: Asset;
+  component: TransactingComponent;
+  transferType: TransferType;
   value: BigNumber | number;
   onChange: (value: string) => void;
   inverse?: boolean;
@@ -75,6 +82,9 @@ const SlippageInput: FC<ISlippage> = (props) => {
       } else {
         return (
           <UserAmountField
+            component={props.component}
+            transferType={props.transferType}
+            asset={props.asset}
             variant="SlippageInput"
             onChange={props.onChange}
             value={props.value.toString()}

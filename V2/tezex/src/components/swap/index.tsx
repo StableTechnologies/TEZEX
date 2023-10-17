@@ -1,6 +1,11 @@
 import React, { FC, useState, useEffect, useCallback } from "react";
 
-import { Token, Asset, TransactingComponent } from "../../types/general";
+import {
+  Token,
+  Asset,
+  TransactingComponent,
+  TransferType,
+} from "../../types/general";
 
 import { BigNumber } from "bignumber.js";
 import { UserAmountField, Slippage } from "../../components/ui/elements/inputs";
@@ -217,6 +222,8 @@ export const Swap: FC = () => {
           <CardContent sx={styles.cardcontent}>
             <Grid2 xs={11.2} sx={styles.input1}>
               <UserAmountField
+                component={TransactingComponent.SWAP}
+                transferType={TransferType.SEND}
                 asset={assets[send]}
                 onChange={updateSend}
                 value={sendAmount.toFixed()}
@@ -232,6 +239,8 @@ export const Swap: FC = () => {
 
             <Grid2 xs={11.2} sx={styles.input2}>
               <UserAmountField
+                component={TransactingComponent.SWAP}
+                transferType={TransferType.RECEIVE}
                 asset={assets[receive]}
                 value={receiveAmount.toFixed()}
                 readOnly={true}
@@ -261,7 +270,9 @@ export const Swap: FC = () => {
 
             <Grid2 xs={7}>
               <Slippage
-                asset={assets[receive].name}
+                component={TransactingComponent.SWAP}
+                transferType={TransferType.RECEIVE}
+                asset={assets[receive]}
                 value={slippage}
                 onChange={updateSlippage}
                 inverse={true}

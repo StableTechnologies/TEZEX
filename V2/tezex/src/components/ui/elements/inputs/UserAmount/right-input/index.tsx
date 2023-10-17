@@ -1,6 +1,6 @@
 import React, { FC, useEffect, useRef } from "react";
 
-import { Asset } from "../../../../../../types/general";
+import { Asset, TransferType } from "../../../../../../types/general";
 
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
@@ -17,6 +17,7 @@ import { style } from "./style";
 import useStyles from "../../../../../../hooks/styles";
 
 export interface IRigthInput {
+  transferType?: TransferType;
   inputRef: React.RefObject<HTMLInputElement>;
   focused: boolean;
   updateAmount: (e: React.ChangeEvent<HTMLInputElement>) => void;

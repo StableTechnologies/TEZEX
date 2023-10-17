@@ -7,7 +7,11 @@ import React, {
   useRef,
 } from "react";
 
-import { Asset } from "../../../../../types/general";
+import {
+  Asset,
+  TransferType,
+  TransactingComponent,
+} from "../../../../../types/general";
 
 import { BigNumber } from "bignumber.js";
 import { LeftInput } from "./left-input";
@@ -17,6 +21,8 @@ import useStyles from "../../../../../hooks/styles";
 import { style } from "./style";
 
 export interface IAmountField {
+  component: TransactingComponent;
+  transferType: TransferType;
   asset?: Asset;
   onChange?: (value: string) => void;
   balance?: string;

@@ -3,7 +3,12 @@ import plusIcon from "../../assets/plusIcon.svg";
 
 import { Wallet } from "../wallet";
 import { NavLiquidity } from "../nav/NavLiquidity";
-import { Token, Asset, TransactingComponent } from "../../types/general";
+import {
+  Token,
+  Asset,
+  TransactingComponent,
+  TransferType,
+} from "../../types/general";
 
 import { BigNumber } from "bignumber.js";
 import { UserAmountField, Slippage } from "../../components/ui/elements/inputs";
@@ -273,6 +278,8 @@ export const AddLiquidity: FC = () => {
                 >
                   <UserAmountField
                     asset={assets[send1]}
+                    component={TransactingComponent.ADD_LIQUIDITY}
+                    transferType={TransferType.SEND}
                     onChange={updateSend}
                     value={sendAmount.toFixed()}
                     balance={balances[0]}
@@ -292,6 +299,8 @@ export const AddLiquidity: FC = () => {
                 >
                   <UserAmountField
                     asset={assets[send2]}
+                    component={TransactingComponent.ADD_LIQUIDITY}
+                    transferType={TransferType.SEND}
                     value={sendAmount2.toFixed()}
                     readOnly={true}
                     balance={balances[1]}
@@ -350,7 +359,9 @@ export const AddLiquidity: FC = () => {
                   sx={styles.slippageComponent}
                 >
                   <Slippage
-                    asset={assets[receive].name}
+                    transferType={TransferType.RECEIVE}
+                    component={TransactingComponent.ADD_LIQUIDITY}
+                    asset={assets[receive]}
                     value={slippage}
                     onChange={updateSlippage}
                     inverse={true}
@@ -402,6 +413,8 @@ export const AddLiquidity: FC = () => {
                 <Grid2 xs={12} sx={styles.cardContendGrid}>
                   <Grid2 xs={5} sx={styles.input}>
                     <UserAmountField
+                      component={TransactingComponent.ADD_LIQUIDITY}
+                      transferType={TransferType.SEND}
                       asset={assets[send1]}
                       onChange={updateSend}
                       value={sendAmount.toFixed()}
@@ -422,6 +435,8 @@ export const AddLiquidity: FC = () => {
 
                   <Grid2 xs={5} sx={styles.input}>
                     <UserAmountField
+                      component={TransactingComponent.ADD_LIQUIDITY}
+                      transferType={TransferType.SEND}
                       asset={assets[send2]}
                       value={sendAmount2.toFixed()}
                       readOnly={true}
@@ -456,7 +471,9 @@ export const AddLiquidity: FC = () => {
                 </Grid2>
                 <Grid2 xs={5.5} sx={styles.slippageComponent}>
                   <Slippage
-                    asset={assets[receive].name}
+                    transferType={TransferType.RECEIVE}
+                    component={TransactingComponent.ADD_LIQUIDITY}
+                    asset={assets[receive]}
                     value={slippage}
                     onChange={updateSlippage}
                     inverse={true}

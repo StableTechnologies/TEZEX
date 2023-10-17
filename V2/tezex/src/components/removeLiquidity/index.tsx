@@ -1,6 +1,11 @@
 import React, { FC, useState, useEffect, useCallback } from "react";
 
-import { Token, Asset, TransactingComponent } from "../../types/general";
+import {
+  Token,
+  Asset,
+  TransactingComponent,
+  TransferType,
+} from "../../types/general";
 
 import { BigNumber } from "bignumber.js";
 import { UserAmountField } from "../../components/ui/elements/inputs";
@@ -154,6 +159,8 @@ export const RemoveLiquidity: FC = () => {
               <Box sx={styles.input1}>
                 <UserAmountField
                   asset={assets[send]}
+                  transferType={TransferType.SEND}
+                  component={TransactingComponent.REMOVE_LIQUIDITY}
                   readOnly={useMax}
                   onChange={updateSend}
                   value={sendAmount.toFixed()}
