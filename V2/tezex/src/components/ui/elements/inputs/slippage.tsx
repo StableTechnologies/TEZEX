@@ -1,4 +1,4 @@
-import React, { memo, FC, useState, useEffect } from "react";
+import React, { memo, FC, useState, useEffect, useCallback } from "react";
 import { BigNumber } from "bignumber.js";
 
 import {
@@ -14,12 +14,12 @@ import Button from "@mui/material/Button";
 import style from "./style";
 import useStyles from "../../../../hooks/styles";
 import { UserAmountField } from "./UserAmount";
+import { useTransaction } from "../../../../hooks/transaction";
 export interface ISlippage {
   asset: Asset;
   component: TransactingComponent;
   transferType: TransferType;
   value: BigNumber | number;
-  onChange: (value: string) => void;
   inverse?: boolean;
   loading?: boolean;
 
@@ -31,6 +31,17 @@ const SlippageInput: FC<ISlippage> = (props) => {
   const [selectedId, setSelectedId] = useState("0");
   const [loading, setLoading] = useState(true);
   const [input, setInput] = useState<string>("0.5");
+  const transactionOps = useTransaction(props.component);
+
+  const onChange = useCallback(
+    async (value: string) => {
+      const transaction = transactionOps.getActiveTransaction();
+      transaction &&
+        transaction.slippage.toString() !== value &&
+        (await transactionOps.updateAmount(undefined, value));
+    },
+    [transactionOps]
+  );
 
   useEffect(() => {
     if (!props.loading) {
@@ -47,8 +58,8 @@ const SlippageInput: FC<ISlippage> = (props) => {
     }
   }, [props.value, props.loading]);
   useEffect(() => {
-    if ((input === "0.5" || input === "1") && !loading) {
-      props.onChange(input);
+    if (!loading) {
+      onChange(input);
     }
   }, [input]);
 
@@ -86,8 +97,7 @@ const SlippageInput: FC<ISlippage> = (props) => {
             transferType={props.transferType}
             asset={props.asset}
             variant="SlippageInput"
-            onChange={props.onChange}
-            value={props.value.toString()}
+            onChange={onChange}
             readOnly={selectedId !== p.id}
             scalingKey={props.scalingKey}
           />

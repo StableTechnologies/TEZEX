@@ -23,13 +23,10 @@ import { style } from "./style";
 export interface IAmountField {
   component: TransactingComponent;
   transferType: TransferType;
-  asset?: Asset;
+  asset: Asset;
   onChange?: (value: string) => void;
-  balance?: string;
-  value: string;
   label?: string;
   readOnly?: boolean;
-  loading?: boolean;
   variant?: "SlippageInput" | "LeftInput" | "RightInput";
   darker?: boolean;
   swap?: () => void;
@@ -37,7 +34,7 @@ export interface IAmountField {
 }
 
 const AmountField: FC<IAmountField> = (props) => {
-  const [inputString, setInputString] = useState<string>(props.value);
+  const [inputString, setInputString] = useState<string>(""); //props.value);
   const [lastString, setLastString] = useState<string>("");
   const [editing, setEditing] = useState<boolean>(false);
 
@@ -56,11 +53,11 @@ const AmountField: FC<IAmountField> = (props) => {
     document.body.classList.remove(stylesCSS.noScroll);
     window.scrollTo(0, scrollY);
   };
-  const display = useCallback(() => {
-    if (isNaN(parseFloat(props.value)) || props.value === "0") {
-      setInputString("0.00");
-    } else setInputString(props.value);
-  }, [props.value]);
+  //  const display = useCallback(() => {
+  //    if (isNaN(parseFloat(props.value)) || props.value === "0") {
+  //      setInputString("0.00");
+  //    } else setInputString(props.value);
+  //  }, [props.value]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -80,10 +77,10 @@ const AmountField: FC<IAmountField> = (props) => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [inputRef, focused]);
-  useEffect(() => {
-    !editing && display();
-    props.loading && display();
-  }, [props.loading, props.value]);
+  // useEffect(() => {
+  //   !editing && display();
+  //   props.loading && display();
+  // }, [props.loading, props.value]);
 
   const callBack = useCallback(
     async (value: string) => {
@@ -94,26 +91,26 @@ const AmountField: FC<IAmountField> = (props) => {
   const toggle = useCallback(() => {
     if (props.swap) props.swap();
   }, [props.swap]);
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (
-        !new BigNumber(props.value).isEqualTo(inputString) &&
-        !props.readOnly &&
-        !props.loading
-      ) {
-        callBack(inputString);
-      } else if (new BigNumber(props.value).isEqualTo(inputString) && editing) {
-        setEditing(false);
-      }
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, [inputString, callBack, props, editing]);
+  //  useEffect(() => {
+  //    const timer = setTimeout(() => {
+  //      if (
+  //        !new BigNumber(props.value).isEqualTo(inputString) &&
+  //        !props.readOnly &&
+  //        !props.loading
+  //      ) {
+  //        callBack(inputString);
+  //      } else if (new BigNumber(props.value).isEqualTo(inputString) && editing) {
+  //        setEditing(false);
+  //      }
+  //    }, 1500);
+  //    return () => clearTimeout(timer);
+  //  }, [inputString, callBack, props, editing]);
 
-  useEffect(() => {
-    if (props.value !== inputString && props.readOnly) {
-      display();
-    }
-  }, [props, inputString]);
+  //  useEffect(() => {
+  //    if (props.value !== inputString && props.readOnly) {
+  //      display();
+  //    }
+  //  }, [props, inputString]);
 
   const amountNotEntered: () => boolean = useCallback(() => {
     return inputString === "0.00" && lastString !== "0.00";
@@ -163,7 +160,8 @@ const AmountField: FC<IAmountField> = (props) => {
     switch (props.variant) {
       case "SlippageInput":
         return (
-          <SlippageInput
+          <div>SlippageInput</div>
+          /* <SlippageInput
             inputRef={inputRef}
             focused={props.readOnly ? false : focused}
             onFocus={handelFocus}
@@ -175,11 +173,12 @@ const AmountField: FC<IAmountField> = (props) => {
             inputString={inputString}
             editing={editing}
             scalingKey={props.scalingKey}
-          />
+          /> */
         );
       case "LeftInput":
         return (
-          <LeftInput
+          <div>LeftInput</div>
+          /*<LeftInput
             inputRef={inputRef}
             focused={props.readOnly ? false : focused}
             onFocus={handelFocus}
@@ -192,25 +191,24 @@ const AmountField: FC<IAmountField> = (props) => {
             inputString={inputString}
             editing={editing}
             scalingKey={props.scalingKey}
-          />
+          />*/
         );
       default:
         return (
           <RightInput
-            inputRef={inputRef}
-            focused={props.readOnly ? false : focused}
-            onFocus={handelFocus}
-            onBlur={handelBlur}
+            component={props.component}
+            transferType={props.transferType}
             asset={props.asset}
-            balance={props.balance}
+            //   inputRef={inputRef}
+            //   focused={props.readOnly ? false : focused}
+            //   onFocus={handelFocus}
+            //   onBlur={handelBlur}
             readOnly={props.readOnly}
-            updateAmount={updateAmount}
-            onKeyDown={onKeyDown}
-            inputString={inputString}
-            noUserActionCheck={amountNotEntered}
-            toggle={toggle}
-            swap={props.swap}
-            editing={editing}
+            //     updateAmount={updateAmount}
+            //     onKeyDown={onKeyDown}
+            //      noUserActionCheck={amountNotEntered}
+            //     toggle={toggle}
+            //      swap={props.swap}
             label={props.label}
             scalingKey={props.scalingKey}
           />

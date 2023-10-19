@@ -13,39 +13,40 @@ import {
 } from "../types/general";
 
 export interface WalletOps {
-  initialize: (
-    sendAsset: AssetOrAssetPair,
-    recieveAsset: AssetOrAssetPair,
-    sendAmount?: BigNumber,
-    receiveAmount?: BigNumber,
-    slippage?: number
-  ) => Transaction | undefined;
+  updateBalance: () => Promise<boolean>;
   getActiveTransaction: () => Transaction | undefined;
-  updateTransactionBalance: () => boolean;
-  updateAmount: (sendAmount?: string, slippage?: string) => boolean;
   sendTransaction: () => Promise<void>;
+  transaction: Transaction | undefined;
 }
 
-export function useWalletOps(component: TransactingComponent): WalletOps {
+export function useWalletOps(
+  component: TransactingComponent,
+  trackTransaction = false
+): WalletOps {
   const wallet = useContext(WalletContext);
   const network = useNetwork();
 
   const [loading, setLoading] = useState<boolean>(true);
   const [transacting, setTransacting] = useState<boolean>(false);
   const [transaction, setTransaction] = useState<Transaction | undefined>(
-    undefined
+    wallet.getActiveTransaction(component)
   );
 
   useEffect(() => {
-    if (wallet) {
-      const currentTransaction = wallet.getActiveTransaction(component);
-      setTransaction(currentTransaction);
-      setLoading(false);
+    if (loading) {
+      if (trackTransaction) {
+        const currentTransaction = wallet.getActiveTransaction(component);
+        if (currentTransaction) {
+          setTransaction(currentTransaction);
+          loading && setLoading(false);
+        }
+      } else setLoading(false);
     }
-  }, [wallet, component]);
+  }, [wallet, component, loading]);
 
   useEffect(() => {
     if (
+      trackTransaction &&
       transaction &&
       transaction.transactionStatus === TransactionStatus.COMPLETED
     ) {
@@ -53,99 +54,26 @@ export function useWalletOps(component: TransactingComponent): WalletOps {
     }
   }, [transaction]);
 
-  const initialize = useCallback(
-    (
-      sendAsset: AssetOrAssetPair,
-      receiveAsset: AssetOrAssetPair
-    ): Transaction | undefined => {
-      if (wallet) {
-        const transaction = wallet.initialiseTransaction(
-          component,
-          sendAsset,
-          receiveAsset
-        );
-        if (wallet.client) {
-          wallet.updateTransactionBalance(component, transaction);
-        }
-        setTransaction(transaction);
-        return transaction;
-      }
-      return undefined;
-    },
-    [wallet, component]
-  );
-
-  const updateTransactionBalance = useCallback((): boolean => {
-    if (
-      wallet &&
-      transaction &&
-      transaction.transactionStatus !== TransactionStatus.PENDING &&
-      !transacting
-    ) {
-      wallet.updateTransactionBalance(component, transaction);
-      return true;
-    }
-    return false;
-  }, [wallet, component, transaction, transacting]);
+  const updateBalance = useCallback(async (): Promise<boolean> => {
+    return await wallet.updateTransactionBalance(component);
+  }, [wallet, component]);
 
   const getActiveTransaction = useCallback((): Transaction | undefined => {
-    return transaction;
-  }, [transaction]);
+    return wallet.getActiveTransaction(component);
+  }, [wallet, component]);
 
   const sendTransaction = useCallback(async () => {
-    if (wallet && transaction) {
-      wallet.updateStatus(component, TransactionStatus.PENDING);
+    const _transaction = wallet.getActiveTransaction(component);
+    if (wallet && _transaction && !_transaction.locked) {
+      await wallet.updateStatus(component, TransactionStatus.PENDING);
     }
   }, [wallet, component, transaction]);
 
-  const updateAmount = useCallback(
-    (sendAmount?: string, slippage?: string): boolean => {
-      if (transaction && !transacting && sendAmount) {
-        if (wallet && wallet.lbContractStorage) {
-          const updatedTransaction: Transaction = {
-            ...transaction,
-            sendAmount: !transaction.sendAmount[1]
-              ? [balanceBuilder(sendAmount, transaction.sendAsset[0], false)]
-              : [
-                  balanceBuilder(sendAmount, transaction.sendAsset[0], false),
-                  transaction.sendAmount[1],
-                ],
-          };
-          const _transaction = estimate(
-            updatedTransaction,
-            wallet.lbContractStorage
-          );
-          wallet.updateAmount(
-            _transaction.component,
-            _transaction.sendAmount,
-            _transaction.receiveAmount
-          );
-          return true;
-        }
-      } else if (
-        slippage &&
-        transaction &&
-        !new BigNumber(transaction.slippage).eq(slippage)
-      ) {
-        wallet &&
-          wallet.updateAmount(
-            component,
-            undefined,
-            undefined,
-            new BigNumber(slippage).toNumber()
-          );
-      }
-      return false;
-    },
-    [transaction, wallet, component, transacting]
-  );
-
   return {
-    initialize,
     getActiveTransaction,
-    updateTransactionBalance,
-    updateAmount,
+    updateBalance,
     sendTransaction,
+    transaction,
   };
 }
 

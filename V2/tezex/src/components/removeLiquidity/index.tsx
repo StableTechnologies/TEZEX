@@ -33,7 +33,8 @@ export interface ISwapToken {
 }
 
 export const RemoveLiquidity: FC = () => {
-  const scalingKey = "removeLiquidity";
+  return <div>Remove Liquidity</div>;
+  /*const scalingKey = "removeLiquidity";
   const styles = useStyles(style, scalingKey);
   const network = useNetwork();
   const walletOperations: WalletOps = useWalletOps(
@@ -163,7 +164,6 @@ export const RemoveLiquidity: FC = () => {
                   component={TransactingComponent.REMOVE_LIQUIDITY}
                   readOnly={useMax}
                   onChange={updateSend}
-                  value={sendAmount.toFixed()}
                   loading={loading}
                   variant="LeftInput"
                   scalingKey={scalingKey}
@@ -205,4 +205,5 @@ export const RemoveLiquidity: FC = () => {
       </Grid2>
     </Grid2>
   );
+    */
 };

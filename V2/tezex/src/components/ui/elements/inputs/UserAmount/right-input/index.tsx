@@ -1,6 +1,11 @@
-import React, { FC, useEffect, useRef } from "react";
-
-import { Asset, TransferType } from "../../../../../../types/general";
+import React, { FC, useCallback, useEffect, useRef, useState } from "react";
+import { useDebounce } from "@uidotdev/usehooks";
+import {
+  Asset,
+  AssetState,
+  TransactingComponent,
+  TransferType,
+} from "../../../../../../types/general";
 
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
@@ -15,22 +20,26 @@ import { WalletConnected } from "../../../../../session/WalletConnected";
 
 import { style } from "./style";
 import useStyles from "../../../../../../hooks/styles";
-
+import { useTransaction } from "../../../../../../hooks/transaction";
+import {
+  cleanNumericString,
+  isNumeric,
+} from "../../../../../../functions/util";
+import debounce from "lodash/debounce";
 export interface IRigthInput {
-  transferType?: TransferType;
-  inputRef: React.RefObject<HTMLInputElement>;
-  focused: boolean;
-  updateAmount: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
-  onFocus: () => void;
-  onBlur: () => void;
-  inputString: string;
-  editing: boolean;
-  noUserActionCheck: () => boolean;
-  toggle: () => void;
-  swap?: () => void;
-  asset?: Asset;
-  balance?: string;
+  component: TransactingComponent;
+  transferType: TransferType;
+  asset: Asset;
+  //inputRef: React.RefObject<HTMLInputElement>;
+  //focused: boolean;
+  //updateAmount: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  //onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  //onFocus: () => void;
+  //onBlur: () => void;
+  //editing: boolean;
+  //noUserActionCheck: () => boolean;
+  // toggle: () => void;
+  // swap?: () => void;
   label?: string;
   darker?: boolean;
   readOnly?: boolean;
@@ -39,6 +48,88 @@ export interface IRigthInput {
 
 const Right: FC<IRigthInput> = (props) => {
   const styles = useStyles(style, props.scalingKey);
+  const transactionOps = useTransaction(props.component);
+  const [value, setValue] = useState("0.00");
+  const [balance, setBalance] = useState("");
+  const [isZeroOnFocus, setIsZeroOnFocus] = useState(false);
+  const [assetState, setAssetState] = useState<AssetState | undefined>(
+    transactionOps.getAsetState(props.transferType, props.asset)
+  );
+  const [transactionBalance, setTransactionBalance] = useState<
+    string | unknown
+  >(undefined);
+  const [loading, setLoading] = useState(true);
+  const swap = useCallback(async () => {
+    transactionOps.swapFields();
+  }, [transactionOps]);
+
+  const debouncedUpdateAmount = useRef(
+    debounce(async (value) => {
+      await transactionOps.updateAmount(value);
+    }, 300)
+  ); // 300ms debounce time
+
+  useEffect(() => {
+    if (!props.readOnly) {
+      debouncedUpdateAmount.current(value);
+    }
+  }, [props.readOnly, value]);
+  const [transactionAmount, setTransactionAmount] = useState<string | unknown>(
+    undefined
+  );
+  useEffect(() => {
+    if (props.readOnly && typeof transactionAmount === "string") {
+      transactionAmount &&
+        value !== transactionAmount &&
+        setValue(transactionAmount);
+    }
+  }, [transactionAmount]);
+  useEffect(() => {
+    if (assetState && assetState.balance) {
+      setTransactionBalance(assetState.balance.decimal.toFixed());
+    }
+    if (assetState && assetState.amount) {
+      setTransactionAmount(assetState.amount.decimal.toFixed());
+    }
+    console.log("assetState", assetState);
+  }, [assetState]);
+
+  const handleFocus = props.readOnly
+    ? undefined
+    : () => {
+        if (value === "0.00") {
+          setIsZeroOnFocus(true);
+          setValue("");
+        }
+        // props.onFocus();
+      };
+
+  const handleBlur = props.readOnly
+    ? undefined
+    : () => {
+        if (value === "" && isZeroOnFocus) {
+          setValue("0.00");
+          setIsZeroOnFocus(false);
+        }
+        //props.onBlur();
+      };
+  const handleChange = props.readOnly
+    ? undefined
+    : (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const newValue = event.target.value;
+
+        // Allow deleting characters one by one
+        if (newValue.length < value.length) {
+          setValue(newValue);
+        } else {
+          const result = cleanNumericString(newValue);
+          if (isNumeric(result)) setValue(result);
+        }
+      };
+
+  const amountNotEntered: () => boolean = useCallback(() => {
+    return value === "0.00";
+  }, [value]);
 
   return (
     <Box
@@ -53,30 +144,22 @@ const Right: FC<IRigthInput> = (props) => {
       </Box>
       <Box sx={{}}>
         <TextField
-          ref={props.inputRef}
-          autoFocus={props.readOnly ? false : props.focused}
-          onFocus={props.onFocus}
-          onBlur={props.onBlur}
-          onChange={props.updateAmount}
-          value={props.inputString}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          onChange={handleChange}
+          value={value}
           id="filled-start-adornment"
           sx={
-            props.label
-              ? props.noUserActionCheck()
+            props.component === "Add Liquidity"
+              ? amountNotEntered()
                 ? styles.textFieldTextAboveGrey
                 : styles.textFieldTextAbove
-              : props.noUserActionCheck()
+              : amountNotEntered()
               ? styles.textFieldGrey
               : styles.textField
           }
           InputProps={{
             disableUnderline: true,
-            onKeyDown:
-              !props.editing && props.inputString === "0.00"
-                ? props.onKeyDown
-                : () => {
-                    null;
-                  },
             startAdornment: (
               <InputAdornment position="start">
                 <Box sx={styles.inputAdornmentStart.boxToken}>
@@ -119,11 +202,12 @@ const Right: FC<IRigthInput> = (props) => {
                 sx={styles.inputAdornmentEnd.adornmentLabelAbove}
               >
                 <Box>
-                  <Box visibility={props.swap ? "visible" : "hidden"}>
-                    <Button
-                      onClick={props.toggle}
-                      sx={styles.inputAdornmentEnd.button}
-                    >
+                  <Box
+                    visibility={
+                      props.component === "Add Liquidity" ? "visible" : "hidden"
+                    }
+                  >
+                    <Button onClick={swap} sx={styles.inputAdornmentEnd.button}>
                       <img
                         style={styles.inputAdornmentEnd.img}
                         src={liquiditySwapIcon}
@@ -137,11 +221,16 @@ const Right: FC<IRigthInput> = (props) => {
                       <Typography
                         color="textSecondary"
                         variant="subtitle2"
-                        hidden={props.balance ? false : true}
+                        hidden={transactionBalance ? false : true}
                         sx={styles.balance.typography}
                       >
-                        Balance: {props.balance}{" "}
-                        {props.asset && props.asset.name}
+                        <>
+                          Balance:{" "}
+                          {transactionBalance
+                            ? transactionBalance
+                            : "loading..."}{" "}
+                          {props.asset && props.asset.name}
+                        </>
                       </Typography>
                     </WalletConnected>
                   </Box>

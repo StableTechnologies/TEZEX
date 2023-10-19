@@ -36,6 +36,8 @@ export interface IAddLiquidity {
   children: null;
 }
 export const AddLiquidity: FC = () => {
+  return <div> Add Liquidity</div>;
+  /*
   const scalingKey = "addLiquidity";
   const styles = useStyles(style, scalingKey);
   const walletGridSize = styles.isLandScape ? 5 : 12;
@@ -281,8 +283,6 @@ export const AddLiquidity: FC = () => {
                     component={TransactingComponent.ADD_LIQUIDITY}
                     transferType={TransferType.SEND}
                     onChange={updateSend}
-                    value={sendAmount.toFixed()}
-                    balance={balances[0]}
                     label="Enter Amount"
                     loading={loading}
                     scalingKey={scalingKey}
@@ -301,9 +301,7 @@ export const AddLiquidity: FC = () => {
                     asset={assets[send2]}
                     component={TransactingComponent.ADD_LIQUIDITY}
                     transferType={TransferType.SEND}
-                    value={sendAmount2.toFixed()}
                     readOnly={true}
-                    balance={balances[1]}
                     label="Required Deposit"
                     darker={true}
                     swap={swapFields}
@@ -417,8 +415,6 @@ export const AddLiquidity: FC = () => {
                       transferType={TransferType.SEND}
                       asset={assets[send1]}
                       onChange={updateSend}
-                      value={sendAmount.toFixed()}
-                      balance={balances[0]}
                       label="Enter Amount"
                       loading={loading}
                       scalingKey={scalingKey}
@@ -438,9 +434,7 @@ export const AddLiquidity: FC = () => {
                       component={TransactingComponent.ADD_LIQUIDITY}
                       transferType={TransferType.SEND}
                       asset={assets[send2]}
-                      value={sendAmount2.toFixed()}
                       readOnly={true}
-                      balance={balances[1]}
                       label="Required Deposit"
                       darker={true}
                       swap={swapFields}
@@ -498,4 +492,5 @@ export const AddLiquidity: FC = () => {
       </BrowserView>
     </>
   );
+*/
 };

@@ -6,7 +6,7 @@ import style from "./style";
 import useStyles from "../../../hooks/styles";
 
 export interface IToggle {
-  toggle: () => void;
+  toggle: () => Promise<void>;
   scalingKey?: string;
 }
 

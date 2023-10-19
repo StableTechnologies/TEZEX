@@ -130,6 +130,7 @@ export interface Transaction {
   receiveAssetBalance: Amount;
   transactionStatus: TransactionStatus;
   lastModified: Date;
+  locked: boolean;
 }
 
 export interface LiquidityBakingStorageXTZ {

@@ -1,4 +1,10 @@
-import React, { useCallback, createContext, useEffect, useState } from "react";
+import React, {
+  useCallback,
+  createContext,
+  useEffect,
+  useState,
+  Component,
+} from "react";
 import { Draft } from "immer";
 import { useImmer } from "use-immer";
 import { Mutex } from "async-mutex";
@@ -16,7 +22,7 @@ import {
   Errors,
 } from "../types/general";
 import { TezosToolkit } from "@taquito/taquito";
-
+import { eq } from "lodash";
 import { processTransaction } from "../functions/transactions";
 import { useNetwork } from "../hooks/network";
 import { useSession } from "../hooks/session";
@@ -29,6 +35,7 @@ import {
 } from "../functions/util";
 import { Writable } from "stream";
 import { WritableDraft } from "immer/dist/types/types-external";
+import { Slippage } from "../components/ui/elements/inputs";
 
 export enum WalletStatus {
   ESTIMATING_SIRS = "Estimating Sirs",
@@ -52,38 +59,72 @@ export interface WalletInfo {
   setAddress: React.Dispatch<React.SetStateAction<string | null>>;
   isWalletConnected: boolean;
   disconnect: () => void;
-  swapTransaction: Transaction | undefined;
-  addLiquidityTransaction: Transaction | undefined;
-  removeLiquidityTransaction: Transaction | undefined;
   initialiseTransaction: (
     component: TransactingComponent,
     sendAsset: AssetOrAssetPair,
     receiveAsset: AssetOrAssetPair,
     sendAmount?: Amount,
-    receiveAmount?: Amount
-  ) => Transaction;
+    receiveAmount?: Amount,
+    slipppage?: number
+  ) => Promise<boolean>;
 
   updateTransactionBalance: (
-    component: TransactingComponent,
-    transaction: Transaction
-  ) => void;
+    component: TransactingComponent
+  ) => Promise<boolean>;
 
   updateStatus: (
     component: TransactingComponent,
     transactionStatus: TransactionStatus
-  ) => void;
+  ) => Promise<void>;
   updateAmount: (
     component: TransactingComponent,
     amountUpdateSend?: Amount,
     amountUpdateReceive?: Amount,
     slippageUpdate?: number
-  ) => boolean;
+  ) => Promise<boolean>;
   getActiveTransaction: (
     component: TransactingComponent
   ) => Transaction | undefined;
 }
 
-export const WalletContext = createContext<WalletInfo | undefined>(undefined);
+const defaultWalletInfo: WalletInfo = {
+  client: null,
+  setClient: () => {
+    throw new Error("setClient called outside of wallet provider");
+  },
+  toolkit: null,
+  setToolkit: () => {
+    throw new Error("setToolkit called outside of wallet provider");
+  },
+  address: null,
+  lbContractStorage: undefined,
+  setAddress: () => {
+    throw new Error("setAddress called outside of wallet provider");
+  },
+  isWalletConnected: false,
+  disconnect: () => {
+    throw new Error("disconnect called outside of wallet provider");
+  },
+  initialiseTransaction: async () => {
+    throw new Error("initialiseTransaction called outside of wallet provider");
+  },
+  updateTransactionBalance: async () => {
+    throw new Error(
+      "updateTransactionBalance called outside of wallet provider"
+    );
+  },
+  updateStatus: async () => {
+    throw new Error("updateStatus called outside of wallet provider");
+  },
+  updateAmount: async () => {
+    throw new Error("updateAmount  called outside of wallet provider");
+  },
+  getActiveTransaction: () => {
+    throw new Error("getActiveTransaction called outside of wallet provider");
+  },
+};
+
+export const WalletContext = createContext<WalletInfo>(defaultWalletInfo);
 
 export interface IWallet {
   children:
@@ -286,7 +327,12 @@ export function WalletProvider(props: IWalletProvider) {
           currentTransaction &&
           currentTransaction.transactionStatus === TransactionStatus.PENDING
         ) {
-          const updatedTransaction = await transact(currentTransaction);
+          const updatedTransaction = await transact(currentTransaction).then(
+            (transaction) => {
+              transaction.locked = false;
+              return transaction;
+            }
+          );
           if (
             updatedTransaction.transactionStatus === TransactionStatus.FAILED
           ) {
@@ -315,58 +361,65 @@ export function WalletProvider(props: IWalletProvider) {
     (
       component: TransactingComponent,
       transaction?: Transaction,
-      op?: (transaction: Draft<Transaction>) => void
-    ): void => {
+      op?: (transaction: Draft<Transaction>) => boolean
+    ): boolean => {
+      let updated = false;
+      const activeTransaction = getActiveTransaction(component);
       setTransactions((draft) => {
-        const currentTransaction = draft[component];
-        if (op && currentTransaction) {
-          op(currentTransaction as Draft<Transaction>);
-        } else if (transaction) {
+        const draftTransaction = draft[component];
+        if (op && draftTransaction) {
+          updated = op(draftTransaction as Draft<Transaction>);
+        } else if (transaction && !eq(activeTransaction, transaction)) {
           draft[component] = transaction;
+          updated = true;
         }
       });
+      return updated;
     },
     [setTransactions]
   );
 
   const initialiseTransaction = useCallback(
-    (
+    async (
       component: TransactingComponent,
       sendAsset: AssetOrAssetPair,
       receiveAsset: AssetOrAssetPair,
       sendAmount?: Amount,
-      receiveAmount?: Amount
-    ): Transaction => {
-      const initBalance = (asset: AssetOrAssetPair): Amount => {
-        switch (asset.length) {
-          case 1:
-            return [zeroBalance];
-          case 2:
-            return [zeroBalance, zeroBalance];
-        }
-      };
-      const send: Amount = sendAmount ? sendAmount : initBalance(sendAsset);
-      const receive: Amount = receiveAmount
-        ? receiveAmount
-        : initBalance(receiveAsset);
+      receiveAmount?: Amount,
+      slipppage = 0.5
+    ): Promise<boolean> => {
+      return await transactionUpdateMutex.runExclusive(() => {
+        const initBalance = (asset: AssetOrAssetPair): Amount => {
+          switch (asset.length) {
+            case 1:
+              return [zeroBalance];
+            case 2:
+              return [zeroBalance, zeroBalance];
+          }
+        };
+        const send: Amount = sendAmount ? sendAmount : initBalance(sendAsset);
+        const receive: Amount = receiveAmount
+          ? receiveAmount
+          : initBalance(receiveAsset);
 
-      const transaction: Transaction = {
-        id: uuidv4(),
+        const transaction: Transaction = {
+          id: uuidv4(),
 
-        network: network.network,
-        component,
-        sendAsset,
-        sendAmount: send,
-        sendAssetBalance: initBalance(sendAsset),
-        receiveAsset,
-        receiveAmount: receive,
-        receiveAssetBalance: initBalance(receiveAsset),
-        transactionStatus: TransactionStatus.INITIALISED,
-        slippage: 0.5,
-        lastModified: new Date(),
-      };
-      setActiveTransaction(component, transaction);
-      return transaction;
+          network: network.network,
+          component,
+          sendAsset,
+          sendAmount: send,
+          sendAssetBalance: initBalance(sendAsset),
+          receiveAsset,
+          receiveAmount: receive,
+          receiveAssetBalance: initBalance(receiveAsset),
+          transactionStatus: TransactionStatus.INITIALISED,
+          slippage: slipppage,
+          lastModified: new Date(),
+          locked: false,
+        };
+        return setActiveTransaction(component, transaction);
+      });
     },
     [network.network, setActiveTransaction]
   );
@@ -415,25 +468,33 @@ export function WalletProvider(props: IWalletProvider) {
   );
 
   const updateTransactionBalance = useCallback(
-    async (component: TransactingComponent, transaction: Transaction) => {
-      await transactionUpdateMutex.runExclusive(() => {
-        const _transaction: Transaction =
-          TranscationWithUpdatedBalance(transaction);
-        setTransactions((draft) => {
-          if (
-            draft[component] &&
-            draft[component]?.id &&
-            draft[component]?.id === transaction.id
-          ) {
-            draft[component]!.sendAssetBalance = _transaction.sendAssetBalance;
-            draft[component]!.receiveAssetBalance =
-              _transaction.receiveAssetBalance;
-            draft[component]!.transactionStatus =
-              _transaction.transactionStatus;
-            draft[component]!.lastModified = new Date();
-          }
-        });
-      });
+    async (component: TransactingComponent): Promise<boolean> => {
+      const transaction = getActiveTransaction(component);
+      let updated = false;
+      transaction &&
+        (await transactionUpdateMutex.runExclusive(() => {
+          const _transaction: Transaction =
+            TranscationWithUpdatedBalance(transaction);
+          setTransactions((draft) => {
+            updated = updateTransaction(draft[component], (transaction) => {
+              if (
+                transaction &&
+                transaction.id &&
+                transaction.id === transaction.id
+              ) {
+                transaction.sendAssetBalance = _transaction.sendAssetBalance;
+                transaction.receiveAssetBalance =
+                  _transaction.receiveAssetBalance;
+                transaction.transactionStatus = _transaction.transactionStatus;
+                transaction.lastModified = new Date();
+                return true;
+              }
+
+              return false;
+            });
+          });
+        }));
+      return updated;
     },
     [TranscationWithUpdatedBalance, setTransactions]
   );
@@ -445,15 +506,22 @@ export function WalletProvider(props: IWalletProvider) {
     ) => {
       await transactionUpdateMutex.runExclusive(() => {
         setTransactions((draft) => {
-          if (draft[component]) {
-            draft[component]!.transactionStatus = transactionStatus;
-            draft[component]!.lastModified = new Date();
-          }
+          const updated = updateTransaction(draft[component], (transaction) => {
+            if (transaction && !transaction.locked) {
+              transaction.transactionStatus = transactionStatus;
+              if (transactionStatus === TransactionStatus.PENDING) {
+                draft[component]!.locked = true;
+              }
+              draft[component]!.lastModified = new Date();
+              return true;
+            } else return false;
+          });
         });
       });
     },
     [setTransactions]
   );
+
   const updateTransactionStatusBasedOnBalance = (
     transaction: WritableDraft<Transaction>,
     amountUpdateSend?: Amount
@@ -484,18 +552,19 @@ export function WalletProvider(props: IWalletProvider) {
     updater: (transaction: WritableDraft<Transaction>) => boolean
   ): boolean => {
     if (!transaction) return false;
+    if (transaction.locked) return false;
     return updater(transaction);
   };
 
   const updateAmount = useCallback(
-    (
+    async (
       component: TransactingComponent,
       amountUpdateSend?: Amount,
       amountUpdateReceive?: Amount,
       slippageUpdate?: number
-    ): boolean => {
-      let result = false;
-      transactionUpdateMutex.runExclusive(() => {
+    ): Promise<boolean> => {
+      let updated = true;
+      await transactionUpdateMutex.runExclusive(() => {
         setTransactions((draft) => {
           const wasUpdated = updateTransaction(
             draft[component],
@@ -507,26 +576,28 @@ export function WalletProvider(props: IWalletProvider) {
                 )
               ) {
                 transaction.receiveAmount = amountUpdateReceive;
-                result = true;
+                updated = true;
               }
               if (slippageUpdate && transaction.slippage !== slippageUpdate) {
                 transaction.slippage = slippageUpdate;
-                result = true;
+                updated = true;
               }
               return (
                 updateTransactionStatusBasedOnBalance(
                   transaction,
                   amountUpdateSend
-                ) || result
+                ) || updated
               );
             }
           );
           if (wasUpdated && draft[component]) {
             draft[component]!.lastModified = new Date();
+          } else {
+            updated = false;
           }
         });
       });
-      return result;
+      return updated;
     },
     [setTransactions, isWalletConnected]
   );
@@ -553,9 +624,6 @@ export function WalletProvider(props: IWalletProvider) {
     lbContractStorage,
     setAddress,
     isWalletConnected,
-    swapTransaction,
-    addLiquidityTransaction,
-    removeLiquidityTransaction,
     initialiseTransaction,
     updateStatus,
     updateTransactionBalance,

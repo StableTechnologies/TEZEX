@@ -1,4 +1,4 @@
-import React, { FC, useState, useEffect, useCallback } from "react";
+import React, { FC, useState, useEffect, useCallback, useRef } from "react";
 
 import {
   Token,
@@ -31,22 +31,22 @@ import useStyles from "../../hooks/styles";
 
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { theme } from "../../theme";
+import { useTransaction } from "../../hooks/transaction";
+import { debounce, eq } from "lodash";
 export interface ISwapToken {
   children: null;
 }
 
 export const Swap: FC = () => {
   const scalingKey = "swap";
-  const width = window.innerWidth;
   const styles = useStyles(style, scalingKey);
   const network = useNetwork();
-  const walletOperations: WalletOps = useWalletOps(TransactingComponent.SWAP);
+  const walletOps: WalletOps = useWalletOps(TransactingComponent.SWAP, true);
+  const transactionOps = useTransaction(TransactingComponent.SWAP);
   const isWalletConnected = useWalletConnected();
 
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
 
-  const [sendAmount, setSendAmount] = useState(new BigNumber(0));
-  const [receiveAmount, setReceiveAmount] = useState(new BigNumber(0));
   const [slippage, setSlippage] = useState<number>(0.5);
 
   const send = 0;
@@ -57,232 +57,186 @@ export const Swap: FC = () => {
     network.getAsset(Token.TzBTC),
   ]);
 
-  const [balances, setBalances] = useState<[string, string]>(["", ""]);
   const [swappingFileds, setSwappingFileds] = useState<boolean>(false);
   const session = useSession();
 
-  const active = walletOperations.getActiveTransaction();
-  const isXs = useMediaQuery(theme.breakpoints.only("xs"));
-  const isSm = useMediaQuery(theme.breakpoints.only("sm"));
-  const isMd = useMediaQuery(theme.breakpoints.only("md"));
-  const isLg = useMediaQuery(theme.breakpoints.only("lg"));
+  const active = walletOps.getActiveTransaction();
 
   const transact = async () => {
-    await walletOperations.sendTransaction();
+    await walletOps.sendTransaction();
   };
 
-  const updateReceive = useCallback(
-    (value: string) => {
-      const amt = new BigNumber(value);
-      if (!amt.eq(receiveAmount)) {
-        setReceiveAmount(amt);
-      }
-    },
-    [receiveAmount]
-  );
-
-  const updateSlippage = useCallback(
-    (value: string) => {
-      const amt = new BigNumber(value).dp(1).toNumber();
-      if (amt !== slippage) {
-        setSlippage(amt);
-      }
-    },
-    [slippage]
-  );
-  const swapFields = useCallback(() => {
+  const swapFields = useCallback(async () => {
     setLoading(true);
     setAssets([assets[1], assets[0]]);
     setSwappingFileds(true);
-    setSendAmount(receiveAmount);
-  }, [assets]);
+    await transactionOps.swapFields();
+  }, [assets, transactionOps]);
 
-  const updateSend = useCallback(
-    (value: string) => {
-      const amt = new BigNumber(value);
-      if (amt !== sendAmount && !swappingFileds) {
-        setSendAmount(amt);
-      }
-    },
-    [sendAmount, swappingFileds]
-  );
-  const updateTransaction = useCallback(() => {
-    if (active) {
-      if (
-        !active.sendAmount[0].decimal.eq(sendAmount) ||
-        active.slippage !== slippage
-      ) {
-        walletOperations.updateAmount(
-          sendAmount.toFixed(),
-          slippage.toString()
-        );
-      }
-    }
-  }, [sendAmount, active, slippage, walletOperations]);
-
-  useEffect(() => {
-    updateTransaction();
-  }, [updateTransaction]);
-
-  const updateBalance = useCallback(() => {
+  const updateBalance = useCallback(async () => {
     if (isWalletConnected) {
-      if (active) {
-        walletOperations.updateTransactionBalance();
+      if (walletOps.transaction) {
+        await walletOps.updateBalance();
       }
     }
-  }, [active, walletOperations, isWalletConnected]);
+  }, [walletOps, walletOps.updateBalance, isWalletConnected]);
 
-  useEffect(() => {
-    if (active) {
-      setBalances([
-        active.sendAssetBalance[0].decimal.toFixed(),
-        active.receiveAssetBalance[0].decimal.toFixed(),
-      ]);
-
-      setAssets([active.sendAsset[0], active.receiveAsset[0]]);
-    }
-  }, [active]);
-
-  useEffect(() => {
-    if (active) {
-      updateReceive(active.receiveAmount[0].decimal.toFixed());
-    }
-  }, [active, updateReceive]);
+  //  useEffect(() => {
+  //    if (walletOps.transaction) {
+  //      //      setAssets([
+  //      //        walletOps.transaction.sendAsset[0],
+  //      //        walletOps.transaction.receiveAsset[0],
+  //      //      ]);
+  //    } else transactionOps.initialize([assets[send]], [assets[receive]]);
+  //  }, [walletOps.transaction, assets, transactionOps]);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      updateBalance();
+      !loading && updateBalance();
     }, 2000);
     return () => clearInterval(interval);
   });
 
+  const debouncedNewTransaction = debounce(
+    async () => {
+      const transaction = await transactionOps.initialize(
+        [assets[send]],
+        [assets[receive]]
+      );
+
+      if (transaction) {
+        await updateBalance();
+        if (swappingFileds) setSwappingFileds(false);
+        setLoading(false);
+      }
+    },
+    300,
+    {
+      leading: false,
+      trailing: true,
+    }
+  );
+
   const newTransaction = useCallback(async () => {
-    const transaction = walletOperations.initialize(
+    const transaction = await transactionOps.initialize(
       [assets[send]],
       [assets[receive]]
     );
 
     if (transaction) {
-      updateBalance();
+      await updateBalance();
       if (swappingFileds) setSwappingFileds(false);
       setLoading(false);
     }
-  }, [swappingFileds, assets, updateBalance, walletOperations]);
+  }, [swappingFileds, assets, updateBalance, transactionOps]);
 
   useEffect(() => {
     if (session.activeComponent !== TransactingComponent.SWAP)
       session.loadComponent(TransactingComponent.SWAP);
   });
   useEffect(() => {
-    if (!loading && !active) {
-      setLoading(true); // newTransaction();
-    }
-    if (loading && swappingFileds) {
-      newTransaction();
-    }
-    if (loading && !active) {
+    // if (!loading && !walletOps.transaction) {
+    //   setLoading(true); // newTransaction();
+    // }
+    if (loading && !walletOps.transaction) {
       newTransaction();
     } else if (loading) {
-      if (active) {
-        updateSend(active.sendAmount[0].decimal.toFixed());
-
-        updateReceive(active.receiveAmount[0].decimal.toFixed());
-        updateSlippage(active.slippage.toString());
+      if (walletOps.transaction) {
         updateBalance();
+        const _assets: [Asset, Asset] = [
+          walletOps.transaction.sendAsset[0],
+          walletOps.transaction.receiveAsset[0],
+        ];
+        !eq(_assets, assets) && setAssets(_assets);
         setLoading(false);
       }
     }
   }, [
     swappingFileds,
     loading,
-    active,
+    walletOps.transaction,
     newTransaction,
     session,
-    updateSend,
-    updateSlippage,
     updateBalance,
-    updateReceive,
-    walletOperations,
   ]);
 
   useEffect(() => {
     if (session.activeComponent !== TransactingComponent.SWAP)
       session.loadComponent(TransactingComponent.SWAP);
   });
-  return (
-    <Box sx={styles.boxRoot}>
-      <Grid2 container sx={styles.root}>
-        <Card sx={styles.card}>
-          <CardHeader
-            sx={styles.cardHeader}
-            title={
-              <Typography sx={styles.cardHeaderTypography}>{"Swap"}</Typography>
-            }
-          />
-          <CardContent sx={styles.cardcontent}>
-            <Grid2 xs={11.2} sx={styles.input1}>
-              <UserAmountField
-                component={TransactingComponent.SWAP}
-                transferType={TransferType.SEND}
-                asset={assets[send]}
-                onChange={updateSend}
-                value={sendAmount.toFixed()}
-                balance={balances[0]}
-                loading={loading}
-                scalingKey={scalingKey}
-              />
-            </Grid2>
+  if (loading) {
+    return <div> </div>;
+  } else {
+    return (
+      <Box sx={styles.boxRoot}>
+        <Grid2 container sx={styles.root}>
+          <Card sx={styles.card}>
+            <CardHeader
+              sx={styles.cardHeader}
+              title={
+                <Typography sx={styles.cardHeaderTypography}>
+                  {"Swap"}
+                </Typography>
+              }
+            />
+            <CardContent sx={styles.cardcontent}>
+              <Grid2 xs={11.2} sx={styles.input1}>
+                <UserAmountField
+                  component={TransactingComponent.SWAP}
+                  transferType={TransferType.SEND}
+                  asset={assets[send]}
+                  scalingKey={scalingKey}
+                />
+              </Grid2>
 
-            <Box sx={styles.swapToggle}>
-              <SwapUpDownToggle toggle={swapFields} scalingKey={scalingKey} />
+              <Box sx={styles.swapToggle}>
+                <SwapUpDownToggle toggle={swapFields} scalingKey={scalingKey} />
+              </Box>
+
+              <Grid2 xs={11.2} sx={styles.input2}>
+                <UserAmountField
+                  component={TransactingComponent.SWAP}
+                  transferType={TransferType.RECEIVE}
+                  asset={assets[receive]}
+                  readOnly={true}
+                  scalingKey={scalingKey}
+                />
+              </Grid2>
+            </CardContent>
+            <CardActions sx={styles.cardAction}>
+              <Box sx={styles.transact}>
+                <Wallet
+                  transaction={active}
+                  callback={transact}
+                  scalingKey={scalingKey}
+                >
+                  {"Swap Tokens"}
+                </Wallet>
+              </Box>
+            </CardActions>
+          </Card>
+
+          <Paper variant="outlined" sx={styles.paper} square>
+            <Box sx={styles.paperBox}>
+              <Grid2 xs={4}>
+                <SlippageLabel scalingKey={scalingKey} />
+              </Grid2>
+
+              <Grid2 xs={7}>
+                <Slippage
+                  component={TransactingComponent.SWAP}
+                  transferType={TransferType.RECEIVE}
+                  asset={assets[receive]}
+                  value={slippage}
+                  inverse={true}
+                  loading={loading}
+                  scalingKey={scalingKey}
+                />
+              </Grid2>
             </Box>
-
-            <Grid2 xs={11.2} sx={styles.input2}>
-              <UserAmountField
-                component={TransactingComponent.SWAP}
-                transferType={TransferType.RECEIVE}
-                asset={assets[receive]}
-                value={receiveAmount.toFixed()}
-                readOnly={true}
-                balance={balances[1]}
-                scalingKey={scalingKey}
-              />
-            </Grid2>
-          </CardContent>
-          <CardActions sx={styles.cardAction}>
-            <Box sx={styles.transact}>
-              <Wallet
-                transaction={active}
-                callback={transact}
-                scalingKey={scalingKey}
-              >
-                {"Swap Tokens"}
-              </Wallet>
-            </Box>
-          </CardActions>
-        </Card>
-
-        <Paper variant="outlined" sx={styles.paper} square>
-          <Box sx={styles.paperBox}>
-            <Grid2 xs={4}>
-              <SlippageLabel scalingKey={scalingKey} />
-            </Grid2>
-
-            <Grid2 xs={7}>
-              <Slippage
-                component={TransactingComponent.SWAP}
-                transferType={TransferType.RECEIVE}
-                asset={assets[receive]}
-                value={slippage}
-                onChange={updateSlippage}
-                inverse={true}
-                loading={loading}
-                scalingKey={scalingKey}
-              />
-            </Grid2>
-          </Box>
-        </Paper>
-      </Grid2>
-    </Box>
-  );
+          </Paper>
+        </Grid2>
+      </Box>
+    );
+  }
 };

@@ -153,3 +153,17 @@ export function getAssetStateByTransactionTypeAndAsset(
     );
   return undefined;
 }
+
+export function isNumeric(n: string): boolean {
+  return !isNaN(parseFloat(n)) && isFinite(parseFloat(n));
+}
+
+export function toNumber(n: string): number {
+  if (isNumeric(n)) {
+    return parseFloat(n);
+  } else throw new Error("Not a number");
+}
+
+export function cleanNumericString(n: string): string {
+  return n.replace(/[^0-9.]+/g, "").replace(/(\..*)\./g, "$1");
+}
