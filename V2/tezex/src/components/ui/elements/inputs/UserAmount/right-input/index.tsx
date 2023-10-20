@@ -26,6 +26,7 @@ import {
   isNumeric,
 } from "../../../../../../functions/util";
 import debounce from "lodash/debounce";
+import { eq } from "lodash";
 export interface IRigthInput {
   component: TransactingComponent;
   transferType: TransferType;
@@ -52,6 +53,8 @@ const Right: FC<IRigthInput> = (props) => {
   const [value, setValue] = useState("0.00");
   const [balance, setBalance] = useState("");
   const [isZeroOnFocus, setIsZeroOnFocus] = useState(false);
+
+  // set asset state
   const [assetState, setAssetState] = useState<AssetState | undefined>(
     transactionOps.getAsetState(props.transferType, props.asset)
   );
@@ -70,7 +73,7 @@ const Right: FC<IRigthInput> = (props) => {
   ); // 300ms debounce time
 
   useEffect(() => {
-    if (!props.readOnly) {
+    if (!props.readOnly && value !== "0.00") {
       debouncedUpdateAmount.current(value);
     }
   }, [props.readOnly, value]);
@@ -86,10 +89,12 @@ const Right: FC<IRigthInput> = (props) => {
   }, [transactionAmount]);
   useEffect(() => {
     if (assetState && assetState.balance) {
-      setTransactionBalance(assetState.balance.decimal.toFixed());
+      !eq(assetState.balance.string, transactionBalance) &&
+        setTransactionBalance(assetState.balance.decimal.toFixed());
     }
     if (assetState && assetState.amount) {
-      setTransactionAmount(assetState.amount.decimal.toFixed());
+      !eq(assetState.amount.string, transactionBalance) &&
+        setTransactionAmount(assetState.amount.decimal.toFixed());
     }
     console.log("assetState", assetState);
   }, [assetState]);
