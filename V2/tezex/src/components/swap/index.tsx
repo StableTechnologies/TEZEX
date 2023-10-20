@@ -45,7 +45,7 @@ export const Swap: FC = () => {
   const transactionOps = useTransaction(TransactingComponent.SWAP);
   const isWalletConnected = useWalletConnected();
 
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
 
   const [slippage, setSlippage] = useState<number>(0.5);
 
@@ -124,6 +124,7 @@ export const Swap: FC = () => {
     );
 
     if (transaction) {
+      console.log("newTransaction");
       await updateBalance();
       if (swappingFileds) setSwappingFileds(false);
       setLoading(false);

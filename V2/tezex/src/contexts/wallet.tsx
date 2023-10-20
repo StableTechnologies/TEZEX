@@ -178,6 +178,7 @@ export function WalletProvider(props: IWalletProvider) {
   const zeroBalance: Balance = {
     decimal: new BigNumber(0),
     mantissa: new BigNumber(0),
+    string: "0.00",
     greaterOrEqualTo: (balance: Balance): boolean => {
       return new BigNumber(0).isGreaterThanOrEqualTo(balance.mantissa);
     },

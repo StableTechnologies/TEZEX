@@ -81,6 +81,7 @@ export const balanceBuilder = (
   return {
     decimal,
     mantissa,
+    string: decimal.toFixed(),
     greaterOrEqualTo: geq,
   };
 };

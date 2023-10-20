@@ -38,6 +38,7 @@ export enum Token {
 export interface Balance {
   decimal: BigNumber;
   mantissa: BigNumber;
+  string: string;
   greaterOrEqualTo: (balance: Balance) => boolean;
 }
 
