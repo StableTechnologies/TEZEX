@@ -15,6 +15,7 @@ import {
 export interface WalletOps {
   updateBalance: () => Promise<boolean>;
   getActiveTransaction: () => Transaction | undefined;
+  getActransactionStatus: () => TransactionStatus;
   sendTransaction: () => Promise<void>;
   transaction: Transaction | undefined;
 }
@@ -61,6 +62,11 @@ export function useWalletOps(
   const getActiveTransaction = useCallback((): Transaction | undefined => {
     return wallet.getActiveTransaction(component);
   }, [wallet, component]);
+  const getActransactionStatus = useCallback((): TransactionStatus => {
+    const _transaction = wallet.getActiveTransaction(component);
+    if (_transaction) return _transaction.transactionStatus;
+    else return TransactionStatus.UNINITIALIZED;
+  }, [wallet, component]);
 
   const sendTransaction = useCallback(async () => {
     const _transaction = wallet.getActiveTransaction(component);
@@ -71,6 +77,7 @@ export function useWalletOps(
 
   return {
     getActiveTransaction,
+    getActransactionStatus,
     updateBalance,
     sendTransaction,
     transaction,

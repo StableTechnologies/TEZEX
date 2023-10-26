@@ -42,7 +42,11 @@ export const Swap: FC = () => {
   const styles = useStyles(style, scalingKey);
   const network = useNetwork();
   const walletOps: WalletOps = useWalletOps(TransactingComponent.SWAP, true);
-  const transactionOps = useTransaction(TransactingComponent.SWAP);
+  const transactionOps = useTransaction(
+    TransactingComponent.SWAP,
+    undefined,
+    true
+  );
   const isWalletConnected = useWalletConnected();
 
   const [loading, setLoading] = useState<boolean>(true);
@@ -67,9 +71,10 @@ export const Swap: FC = () => {
   };
 
   const swapFields = useCallback(async () => {
-    setLoading(true);
+    //setLoading(true);
+    //
     setAssets([assets[1], assets[0]]);
-    setSwappingFileds(true);
+    //setSwappingFileds(true);
     await transactionOps.swapFields();
   }, [assets, transactionOps]);
 
@@ -162,9 +167,13 @@ export const Swap: FC = () => {
   ]);
 
   useEffect(() => {
+    console.log("transaction in walletOps ", walletOps.transaction);
+  }, [loading, walletOps.transaction]);
+  useEffect(() => {
     if (session.activeComponent !== TransactingComponent.SWAP)
       session.loadComponent(TransactingComponent.SWAP);
-  });
+  }, [session]);
+
   if (loading) {
     return <div> </div>;
   } else {

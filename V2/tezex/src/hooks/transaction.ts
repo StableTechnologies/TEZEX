@@ -1,4 +1,11 @@
-import { useContext, useCallback, useEffect, useState, useRef } from "react";
+import {
+  useContext,
+  useCallback,
+  useEffect,
+  useState,
+  useRef,
+  useMemo,
+} from "react";
 import { BigNumber } from "bignumber.js";
 import { WalletContext } from "../contexts/wallet";
 import { useNetwork } from "../hooks/network";
@@ -36,6 +43,8 @@ export interface TransactionOps {
     transferType: TransferType,
     asset: Asset
   ) => AssetState | undefined;
+  loading: boolean;
+  transacting: boolean;
   trackedAsset: AssetState | undefined;
 }
 export interface TransactionUpdate {
@@ -47,10 +56,12 @@ export function useTransaction(
   trackAsset?: {
     transFerType: TransferType;
     asset: Asset;
-  }
+  },
+  debug?: boolean
 ): TransactionOps {
   const wallet = useContext(WalletContext);
   const network = useNetwork();
+  const [counter, setCounter] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [assetStates, setAssetStates] = useState<AssetState[]>([]);
   const [assetState, setAssetState] = useState<AssetState | undefined>(
@@ -63,6 +74,19 @@ export function useTransaction(
   const [update, setUpdate] = useState<TransactionUpdate | undefined>(
     undefined
   );
+
+  const setDebouncedLoading = useRef(
+    debounce((newLoadingState) => {
+      setLoading(newLoadingState);
+    }, 1000) // 300ms debounce time
+  ).current;
+
+  useEffect(() => {
+    if (wallet && wallet.lbContractStorage) {
+      //console.log("lbContractStorage", wallet.lbContractStorage);
+    }
+  }, [wallet, loading]);
+
   //  useEffect(() => {
   //    if (wallet && wallet.lbContractStorage) {
   //      const currentTransaction = wallet.getActiveTransaction(component);
@@ -76,12 +100,37 @@ export function useTransaction(
   //    }
   //  }, [wallet, loading]);
 
+  /*
   const debouncedTransactionRead = useRef(
     debounce(
       () => {
+        console.log("debouncedTransactionRead");
+        console.log("debouncedTransactionRead loading status", loading);
         const _transaction = wallet.getActiveTransaction(component);
-        if (!eq(_transaction, transaction)) {
+        if (loading && !transaction && _transaction) {
+          console.log(
+            "UPDATED Init first transaction! :debouncedTransactionRead, Transaction : ",
+            _transaction
+          );
           setTransaction(_transaction);
+          setLoading(false);
+        }
+        if (loading && !eq(_transaction, transaction)) {
+          console.log(
+            "UPDATED new Tranasaction! :debouncedTransactionRead, Transaction : ",
+            _transaction
+          );
+          setTransaction(_transaction);
+          setLoading(false);
+        } else {
+          console.log(
+            "NOT UPDATED! : debouncedTransactionRead, _transaction : ",
+            _transaction
+          );
+          console.log(
+            "NOT UPDATED2! : debouncedTransactionRead, Transaction : ",
+            transaction
+          );
         }
       },
       300,
@@ -94,59 +143,115 @@ export function useTransaction(
   useEffect(() => {
     debouncedTransactionRead.current();
   }, [wallet.getActiveTransaction, transaction]);
+*/
+  const internalUpdate = useCallback(
+    (
+      transaction: Transaction,
+      loading?: boolean,
+      trackAsset?: {
+        transFerType: TransferType;
+        asset: Asset;
+      }
+    ) => {
+      debug && console.log("internalUpdate");
+      setTransaction(transaction);
+      const _assetStates = transactionToAssetStates(transaction);
+      setAssetStates(_assetStates);
+      // if (loading) setLoading(false);
+      if (trackAsset) {
+        setAssetState(
+          getAssetStateByTransactionTypeAndAsset(
+            trackAsset.transFerType,
+            trackAsset.asset,
+            _assetStates
+          )
+        );
+      }
+    },
+    [transaction, loading, trackAsset]
+  );
 
-  const debouncedUpdateStateEffect = useRef(
-    debounce(
-      () => {
-        const currentTransaction = wallet.getActiveTransaction(component);
-        if (currentTransaction && transaction) {
-          if (
-            transaction.lastModified !== currentTransaction.lastModified ||
-            transaction.transactionStatus !==
-              currentTransaction.transactionStatus
-          ) {
-            const _assetStates = transactionToAssetStates(currentTransaction);
-            setTransaction(currentTransaction);
-            console.log("transaction", transaction);
-            console.log("currentTransaction", currentTransaction);
-            setAssetStates(_assetStates);
-            console.log("_assetStates", _assetStates);
-          }
-        } else if (currentTransaction && !eq(currentTransaction, transaction)) {
-          setTransaction(currentTransaction);
-          const _assetStates = transactionToAssetStates(currentTransaction);
-          console.log("currentTransaction", currentTransaction);
-          console.log("_assetStates", _assetStates);
-          setAssetStates(_assetStates);
-          if (trackAsset) {
-            setAssetState(
-              getAssetStateByTransactionTypeAndAsset(
-                trackAsset.transFerType,
-                trackAsset.asset,
-                _assetStates
-              )
-            );
-          }
-          loading && setLoading(false);
+  useEffect(() => {
+    debug && console.log("useEffect loading", loading);
+  }, [loading]);
+
+  useEffect(() => {
+    debug && console.log("useEffect transactioni", transaction);
+  }, [transaction]);
+
+  const _counter = useCallback(() => {
+    return counter;
+  }, [counter]);
+  const active = useCallback(() => {
+    return wallet.getActiveTransaction(component);
+  }, [wallet.getActiveTransaction, component]);
+  const debouncedUpdateStateEffect = useCallback(
+    (counter?: number) => {
+      //console.log("Debounced function is executing");
+      debug && console.log("debouncedUpdateStateEffect counter", counter);
+      const currentTransaction = active();
+      debug &&
+        console.log(
+          "debouncedUpdateStateEffect ,loading , current",
+          loading,
+          currentTransaction
+        );
+      if (loading && currentTransaction) {
+        debug &&
+          console.log(
+            "debouncedUpdateStateEffect  loading && currentTransaction"
+          );
+        internalUpdate(currentTransaction, loading, trackAsset);
+      } else if (currentTransaction && transaction) {
+        if (!eq(currentTransaction, transaction)) {
+          internalUpdate(currentTransaction, loading, trackAsset);
         }
+        // console.log(
+        //   "debouncedUpdateStateEffect lbContractStorage",
+        //   wallet.lbContractStorage
+        // );
         if (update && wallet.lbContractStorage) {
-          console.log(" retrying update amount");
+          debug && console.log(" retrying update amount");
           updateAmount(update.sendAmount, update.slippage);
         }
-      },
-      300,
-      {
-        leading: true,
-        trailing: false,
       }
-    )
+    },
+    [active, loading, transaction, update, trackAsset, counter]
   );
   useEffect(() => {
-    debouncedUpdateStateEffect.current();
-    return () => {
-      debouncedUpdateStateEffect.current.cancel();
-    };
-  }, [wallet, transaction, update, loading]);
+    const currentTransaction = active();
+    debug &&
+      console.log(
+        "useEffect update currentTransaction, counter",
+        currentTransaction,
+        counter
+      );
+    debug &&
+      console.log("useEffect update,  loading, counter", loading, counter);
+    setCounter((c) => c + 1);
+    debouncedUpdateStateEffect(counter);
+
+    //    return () => {
+    //      debouncedUpdateStateEffect.current.cancel();
+    //    };
+  }, [
+    wallet.getActiveTransaction,
+    transaction,
+    update,
+    loading,
+    debug,
+    internalUpdate,
+    active,
+  ]);
+  useEffect(() => {
+    if (loading && transaction) {
+      debug && console.log("useEffect loading && transaction", transaction);
+      setDebouncedLoading(false);
+    } else if (!transaction) {
+      debug &&
+        console.log("Null useEffect loading && transaction", transaction);
+    }
+  }, [loading, transaction]);
 
   useEffect(() => {
     if (
@@ -165,7 +270,7 @@ export function useTransaction(
 
   const getAsetState = useCallback(
     (transferType: TransferType, asset: Asset): AssetState | undefined => {
-      console.log("assetStates", assetStates);
+      // console.log("assetStates", assetStates);
       return getAssetStateByTransactionTypeAndAsset(
         transferType,
         asset,
@@ -195,6 +300,8 @@ export function useTransaction(
             slippage
           )
           .then((done) => {
+            console.log("done : ", done);
+            //done && setLoading(false);
             initialized = done;
             if (done && wallet.client)
               return wallet.updateTransactionBalance(component);
@@ -231,10 +338,26 @@ export function useTransaction(
   const debouncedSwapFields = useRef(
     debounce(
       async (oldTransaction: Transaction) => {
+        debug && console.log("debouncedSwapFields");
+        debug &&
+          console.log(
+            "debouncedSwapFields receiveAsset",
+            oldTransaction.receiveAsset
+          );
+        debug &&
+          debug &&
+          console.log(
+            "debouncedSwapFields sendAsset",
+            oldTransaction.sendAsset
+          );
+
+        //setLoading(true);
         await initialize(
           oldTransaction.receiveAsset,
           oldTransaction.sendAsset,
-          oldTransaction.receiveAmount
+          undefined,
+          oldTransaction.receiveAmount,
+          oldTransaction.slippage
         );
       },
       300,
@@ -243,12 +366,15 @@ export function useTransaction(
         trailing: false,
       }
     )
-  );
+  ).current;
   const swapFields = useCallback(async () => {
+    debug && console.log("swapFields");
     if (transaction) {
-      await debouncedSwapFields.current(transaction);
+      await debouncedSwapFields(transaction);
+    } else {
+      debug && console.log("swapFields transaction is undefined", transaction);
     }
-  }, [transaction]);
+  }, [transaction, initialize]);
 
   const getActiveTransaction = useCallback((): Transaction | undefined => {
     return transaction;
@@ -308,12 +434,12 @@ export function useTransaction(
         if (sendAmount || slippage) {
           if (await _updateAmount(sendAmount, slippage)) {
             if (update) {
-              console.log("clearing update");
+              debug && console.log("clearing update");
               // clear pending update if it exists
               setUpdate(undefined);
             }
           } else {
-            console.log("update failed , added pending update");
+            debug && console.log("update failed , added pending update");
 
             setUpdate({ sendAmount, slippage });
           }
@@ -340,6 +466,8 @@ export function useTransaction(
     getActiveTransaction,
     updateAmount,
     getAsetState,
+    loading,
+    transacting,
     trackedAsset: assetState,
   };
 }

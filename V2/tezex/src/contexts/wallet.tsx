@@ -414,7 +414,7 @@ export function WalletProvider(props: IWalletProvider) {
           receiveAsset,
           receiveAmount: receive,
           receiveAssetBalance: initBalance(receiveAsset),
-          transactionStatus: TransactionStatus.INITIALISED,
+          transactionStatus: TransactionStatus.INITIALIZED,
           slippage: slipppage,
           lastModified: new Date(),
           locked: false,

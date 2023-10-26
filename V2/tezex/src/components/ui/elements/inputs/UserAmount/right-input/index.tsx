@@ -63,38 +63,54 @@ const Right: FC<IRigthInput> = (props) => {
   >(undefined);
   const [loading, setLoading] = useState(true);
   const swap = useCallback(async () => {
-    transactionOps.swapFields();
+    console.log("swap-right-input");
+    await transactionOps.swapFields();
   }, [transactionOps]);
 
   const debouncedUpdateAmount = useRef(
-    debounce(async (value) => {
-      await transactionOps.updateAmount(value);
-    }, 300)
+    debounce(
+      async (value: string, oldValue: string) => {
+        if (value !== oldValue) {
+          const canUpdate =
+            !transactionOps.loading && !transactionOps.transacting;
+          canUpdate && (await transactionOps.updateAmount(value));
+        }
+      },
+      300,
+      { leading: false, trailing: true }
+    )
   ); // 300ms debounce time
 
   useEffect(() => {
     if (!props.readOnly && value !== "0.00") {
-      debouncedUpdateAmount.current(value);
+      const oldValue = transactionOps.trackedAsset?.amount?.string;
+      oldValue && debouncedUpdateAmount.current(value, oldValue);
     }
-  }, [props.readOnly, value]);
+  }, [
+    props.readOnly,
+    value,
+    transactionOps.loading,
+    transactionOps.transacting,
+    transactionOps.trackedAsset,
+  ]);
   const [transactionAmount, setTransactionAmount] = useState<string | unknown>(
     undefined
   );
   useEffect(() => {
-    if (props.readOnly && typeof transactionAmount === "string") {
-      transactionAmount &&
-        value !== transactionAmount &&
-        setValue(transactionAmount);
+    const amountState = transactionOps.trackedAsset?.amount?.string;
+    if (props.readOnly && amountState) {
+      value !== amountState && setValue(amountState);
     }
-  }, [transactionAmount]);
+  }, [props.readOnly, transactionOps.trackedAsset]);
+
   useEffect(() => {
     if (assetState && assetState.balance) {
       !eq(assetState.balance.string, transactionBalance) &&
-        setTransactionBalance(assetState.balance.decimal.toFixed());
+        setTransactionBalance(assetState.balance.string);
     }
     if (assetState && assetState.amount) {
       !eq(assetState.amount.string, transactionBalance) &&
-        setTransactionAmount(assetState.amount.decimal.toFixed());
+        setTransactionAmount(assetState.amount.string);
     }
     console.log("assetState", assetState);
   }, [assetState]);
@@ -118,19 +134,20 @@ const Right: FC<IRigthInput> = (props) => {
         }
         //props.onBlur();
       };
-  const handleChange = props.readOnly
-    ? undefined
-    : (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const newValue = event.target.value;
+  const handleChange =
+    props.readOnly || transactionOps.loading
+      ? undefined
+      : (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+          const newValue = event.target.value;
 
-        // Allow deleting characters one by one
-        if (newValue.length < value.length) {
-          setValue(newValue);
-        } else {
-          const result = cleanNumericString(newValue);
-          if (isNumeric(result)) setValue(result);
-        }
-      };
+          // Allow deleting characters one by one
+          if (newValue.length < value.length) {
+            setValue(newValue);
+          } else {
+            const result = cleanNumericString(newValue);
+            if (isNumeric(result)) setValue(result);
+          }
+        };
 
   const amountNotEntered: () => boolean = useCallback(() => {
     return value === "0.00";
