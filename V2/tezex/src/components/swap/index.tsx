@@ -42,11 +42,13 @@ export const Swap: FC = () => {
   const styles = useStyles(style, scalingKey);
   const network = useNetwork();
   const walletOps: WalletOps = useWalletOps(TransactingComponent.SWAP, true);
+
   const transactionOps = useTransaction(
-    TransactingComponent.SWAP,
-    undefined,
-    true
+    TransactingComponent.SWAP
+    //  undefined,
+    //  true
   );
+
   const isWalletConnected = useWalletConnected();
 
   const [loading, setLoading] = useState<boolean>(true);

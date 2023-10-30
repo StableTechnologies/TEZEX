@@ -36,6 +36,7 @@ import {
 import { Writable } from "stream";
 import { WritableDraft } from "immer/dist/types/types-external";
 import { Slippage } from "../components/ui/elements/inputs";
+import { estimate } from "../functions/estimates";
 
 export enum WalletStatus {
   ESTIMATING_SIRS = "Estimating Sirs",
@@ -403,7 +404,7 @@ export function WalletProvider(props: IWalletProvider) {
           ? receiveAmount
           : initBalance(receiveAsset);
 
-        const transaction: Transaction = {
+        const _transaction: Transaction = {
           id: uuidv4(),
 
           network: network.network,
@@ -419,6 +420,10 @@ export function WalletProvider(props: IWalletProvider) {
           lastModified: new Date(),
           locked: false,
         };
+
+        const transaction: Transaction = lbContractStorage
+          ? estimate(_transaction, lbContractStorage)
+          : _transaction;
         return setActiveTransaction(component, transaction);
       });
     },

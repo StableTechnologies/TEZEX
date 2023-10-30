@@ -1,8 +1,8 @@
 import React, { FC, useCallback, useEffect, useRef, useState } from "react";
-import { useDebounce } from "@uidotdev/usehooks";
 import {
   Asset,
   AssetState,
+  Id,
   TransactingComponent,
   TransferType,
 } from "../../../../../../types/general";
@@ -26,6 +26,7 @@ import {
   isNumeric,
 } from "../../../../../../functions/util";
 import debounce from "lodash/debounce";
+import { useDebounce } from "usehooks-ts";
 import { eq } from "lodash";
 export interface IRigthInput {
   component: TransactingComponent;
@@ -49,71 +50,168 @@ export interface IRigthInput {
 
 const Right: FC<IRigthInput> = (props) => {
   const styles = useStyles(style, props.scalingKey);
-  const transactionOps = useTransaction(props.component);
+  const transactionOps = useTransaction(
+    props.component,
+    { transferType: props.transferType, asset: props.asset },
+    false
+  );
   const [value, setValue] = useState("0.00");
+  const debouncedValue = useDebounce<string>(value, 500);
   const [balance, setBalance] = useState("");
   const [isZeroOnFocus, setIsZeroOnFocus] = useState(false);
 
   // set asset state
-  const [assetState, setAssetState] = useState<AssetState | undefined>(
-    transactionOps.getAsetState(props.transferType, props.asset)
-  );
   const [transactionBalance, setTransactionBalance] = useState<
     string | unknown
   >(undefined);
   const [loading, setLoading] = useState(true);
+  const [id, setId] = useState<Id | undefined>(undefined);
   const swap = useCallback(async () => {
     console.log("swap-right-input");
     await transactionOps.swapFields();
   }, [transactionOps]);
 
-  const debouncedUpdateAmount = useRef(
-    debounce(
-      async (value: string, oldValue: string) => {
-        if (value !== oldValue) {
-          const canUpdate =
-            !transactionOps.loading && !transactionOps.transacting;
-          canUpdate && (await transactionOps.updateAmount(value));
-        }
-      },
-      300,
-      { leading: false, trailing: true }
-    )
-  ); // 300ms debounce time
-
+  // Set id on new transaction
   useEffect(() => {
-    if (!props.readOnly && value !== "0.00") {
+    const transactionId = transactionOps.getActiveTransaction()?.id;
+    if (!id && transactionId) {
+      setId(transactionId);
+      setLoading(true);
+    }
+    if (id && transactionId && id !== transactionId) {
+      setId(transactionId);
+      setLoading(true);
+    }
+  }, [transactionOps.getActiveTransaction, id]);
+
+  // boolean check to see  if updates can be made
+  const canUpdate = useCallback(() => {
+    return !(transactionOps.loading || transactionOps.transacting);
+  }, [transactionOps.loading, transactionOps.transacting]);
+  // callback to set loading to false
+
+  const setLoadingFalse = useCallback(() => {
+    //check if updates can be made and set loading to false
+    canUpdate() &&
+      setLoading((loading) => {
+        if (loading === false) return loading;
+        else return false;
+      });
+  }, [canUpdate]);
+
+  // call back to load value and set loading to false
+  const loadValue = useCallback(() => {
+    const amount = transactionOps.trackedAsset?.amount?.string;
+    if (amount) {
+      //update value if different
+      setValue((value) => {
+        if (value === amount) return value;
+        else return amount;
+      });
+      //handle loading
+      setLoadingFalse();
+    }
+  }, [transactionOps.trackedAsset?.amount?.string, setLoadingFalse]);
+
+  //callback to update balance
+  const updateBalance = useCallback(() => {
+    const balance = transactionOps.trackedAsset?.balance?.string;
+    if (balance) {
+      //update balance if different
+      setTransactionBalance((_balance: string | undefined) => {
+        if (_balance === balance) return _balance;
+        else return balance;
+      });
+    }
+  }, [transactionOps.trackedAsset?.balance?.string]);
+
+  // on transaction balance change , update balance
+  useEffect(() => {
+    updateBalance();
+  }, [updateBalance]);
+
+  // on id or amount change , load value and handle loading
+  useEffect(() => {
+    const transactionId = transactionOps.getActiveTransaction()?.id;
+
+    console.log("load value effect, id", id, "transactionId", transactionId);
+    // non-read only: update local value only on id change
+    if (!props.readOnly && loading) {
+      console.log("load value : non read only");
+      loadValue();
+    }
+    //  read only , update on transaction change
+    if (props.readOnly) {
+      loadValue();
+    }
+  }, [
+    id,
+    props.readOnly,
+    transactionOps.getActiveTransaction,
+    loading,
+    loadValue,
+  ]);
+
+  //debug loading
+  useEffect(() => {
+    console.log("loading", loading);
+  }, [loading]);
+  // track hook state for loading and transacting  and set loading to true
+  useEffect(() => {
+    if (!canUpdate()) {
+      console.log("set loading to true");
+      setLoading(true);
+    }
+  }, [canUpdate]);
+
+  // Callback to check if local value differs from transaction amount
+  // if it does it calls an update
+  const updateAmount = useCallback(
+    async (value: string, oldValue: string) => {
+      if (value !== oldValue) {
+        canUpdate() && (await transactionOps.updateAmount(value));
+      }
+    },
+    [canUpdate, transactionOps.updateAmount]
+  );
+
+  // This effect tracks and  sends the debounced value for updating
+  // the transaction amount,
+  useEffect(() => {
+    if (!props.readOnly && debouncedValue !== "0.00") {
       const oldValue = transactionOps.trackedAsset?.amount?.string;
-      oldValue && debouncedUpdateAmount.current(value, oldValue);
+      oldValue && updateAmount(debouncedValue, oldValue);
     }
   }, [
     props.readOnly,
-    value,
-    transactionOps.loading,
-    transactionOps.transacting,
-    transactionOps.trackedAsset,
+    debouncedValue,
+    transactionOps.trackedAsset?.amount?.string,
+    updateAmount,
   ]);
-  const [transactionAmount, setTransactionAmount] = useState<string | unknown>(
-    undefined
-  );
-  useEffect(() => {
-    const amountState = transactionOps.trackedAsset?.amount?.string;
-    if (props.readOnly && amountState) {
-      value !== amountState && setValue(amountState);
-    }
-  }, [props.readOnly, transactionOps.trackedAsset]);
+
+  //const [transactionAmount, setTransactionAmount] = useState<string | unknown>(
+  //  undefined
+  //);
+
+  //useEffect(() => {
+  //  const amountState = transactionOps.trackedAsset?.amount?.string;
+  //  if (props.readOnly && amountState) {
+  //    value !== amountState && setValue(amountState);
+  //  }
+  //}, [props.readOnly, transactionOps.trackedAsset]);
 
   useEffect(() => {
+    const assetState = transactionOps.trackedAsset;
     if (assetState && assetState.balance) {
       !eq(assetState.balance.string, transactionBalance) &&
         setTransactionBalance(assetState.balance.string);
     }
-    if (assetState && assetState.amount) {
-      !eq(assetState.amount.string, transactionBalance) &&
-        setTransactionAmount(assetState.amount.string);
-    }
+    //  if (assetState && assetState.amount) {
+    //    !eq(assetState.amount.string, transactionBalance) &&
+    //      setTransactionAmount(assetState.amount.string);
+    //  }
     console.log("assetState", assetState);
-  }, [assetState]);
+  }, [transactionOps.trackedAsset]);
 
   const handleFocus = props.readOnly
     ? undefined
@@ -134,20 +232,22 @@ const Right: FC<IRigthInput> = (props) => {
         }
         //props.onBlur();
       };
-  const handleChange =
-    props.readOnly || transactionOps.loading
-      ? undefined
-      : (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-          const newValue = event.target.value;
+  const handleChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      console.log("handleChange, loading", loading);
+      if (props.readOnly || loading) return;
 
-          // Allow deleting characters one by one
-          if (newValue.length < value.length) {
-            setValue(newValue);
-          } else {
-            const result = cleanNumericString(newValue);
-            if (isNumeric(result)) setValue(result);
-          }
-        };
+      const newValue = event.target.value;
+
+      if (newValue.length < value.length) {
+        setValue(newValue);
+      } else {
+        const result = cleanNumericString(newValue);
+        if (isNumeric(result)) setValue(result);
+      }
+    },
+    [props.readOnly, loading, value] // dependencies
+  );
 
   const amountNotEntered: () => boolean = useCallback(() => {
     return value === "0.00";
