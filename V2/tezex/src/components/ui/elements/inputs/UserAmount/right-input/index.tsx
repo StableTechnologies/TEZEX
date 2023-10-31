@@ -71,7 +71,7 @@ const Right: FC<IRigthInput> = (props) => {
     await transactionOps.swapFields();
   }, [transactionOps]);
 
-  // Set id on new transaction
+  // Set id on new transaction and set loading to true
   useEffect(() => {
     const transactionId = transactionOps.getActiveTransaction()?.id;
     if (!id && transactionId) {
@@ -88,12 +88,13 @@ const Right: FC<IRigthInput> = (props) => {
   const canUpdate = useCallback(() => {
     return !(transactionOps.loading || transactionOps.transacting);
   }, [transactionOps.loading, transactionOps.transacting]);
-  // callback to set loading to false
 
+  // callback to set loading to false
   const setLoadingFalse = useCallback(() => {
     //check if updates can be made and set loading to false
     canUpdate() &&
       setLoading((loading) => {
+        //only update if loading is true
         if (loading === false) return loading;
         else return false;
       });
@@ -266,6 +267,7 @@ const Right: FC<IRigthInput> = (props) => {
       </Box>
       <Box sx={{}}>
         <TextField
+          autoComplete="off"
           onFocus={handleFocus}
           onBlur={handleBlur}
           onChange={handleChange}
