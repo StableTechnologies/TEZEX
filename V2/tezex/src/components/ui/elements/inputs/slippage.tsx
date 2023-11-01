@@ -19,7 +19,11 @@ import { useTransaction } from "../../../../hooks/transaction";
 import TextField from "@mui/material/TextField";
 import InputAdornment from "@mui/material/InputAdornment";
 import { useDebounce } from "usehooks-ts";
-import { cleanNumericString, isNumeric } from "../../../../functions/util";
+import {
+  cleanNumericString,
+  isNumeric,
+  toNumber,
+} from "../../../../functions/util";
 export interface ISlippage {
   asset: Asset;
   component: TransactingComponent;
@@ -54,7 +58,6 @@ const SlippageInput: FC<ISlippage> = (props) => {
     }
   }, [transactionOps.getActiveTransaction, id]);
 
-  //
   // boolean check to see  if updates can be made
   const canUpdate = useCallback(() => {
     return !(transactionOps.loading || transactionOps.transacting);
@@ -71,7 +74,16 @@ const SlippageInput: FC<ISlippage> = (props) => {
       });
   }, [canUpdate]);
 
-  // callback to set input value
+  //callback to set selected id if different
+  const _setSelectedId = useCallback((id: string) => {
+    //check if updates can be made and set selected id
+    setSelectedId((value) => {
+      //only update if selected id is different
+      if (value === id) return value;
+      else return id;
+    });
+  }, []);
+  // callback to set input value if different
   const setInputValue = useCallback((slippage: string) => {
     //check if updates can be made and set input value
     setInput((value) => {
@@ -81,13 +93,24 @@ const SlippageInput: FC<ISlippage> = (props) => {
     });
   }, []);
 
+  //call back to set selected tab based on loaded value
+  const setSelectedIdFromValue = useCallback((slippage: string) => {
+    // get curent slippage of transaction in context
+    //update selected tab if different
+    if (slippage === "0.5") _setSelectedId("0");
+    else if (slippage === "1") _setSelectedId("1");
+    else _setSelectedId("input");
+  }, []);
+
   // call back to load value and set loading to false
   const loadValue = useCallback(() => {
     // get curent slippage of transaction in context
-    const slippage = transactionOps.getActiveTransaction()?.slippage.toFixed(2);
+    const slippage = transactionOps.getActiveTransaction()?.slippage.toFixed(1);
     if (slippage) {
       //update input if different
       setInputValue(slippage);
+      //update selected tab if different
+      setSelectedIdFromValue(slippage);
       //handle loading
       setLoadingFalse();
     }
@@ -111,48 +134,36 @@ const SlippageInput: FC<ISlippage> = (props) => {
   // if it does it calls an update
   const updateAmount = useCallback(
     async (slippage: string, oldSlippage: string) => {
-      if (slippage !== oldSlippage) {
+      console.log(
+        "Top level slippage update , New slippage : ",
+        slippage,
+        " old :",
+        oldSlippage
+      );
+
+      // if slippage is different from old slippage update
+      if (toNumber(slippage) !== toNumber(oldSlippage)) {
+        // check if updates can be made and update slippage
         canUpdate() && (await transactionOps.updateAmount(undefined, slippage));
       }
     },
     [canUpdate, transactionOps.updateAmount]
   );
-  const onChange = useCallback(
-    async (value: string) => {
-      const transaction = transactionOps.getActiveTransaction();
-      transaction &&
-        transaction.slippage.toString() !== value &&
-        (await transactionOps.updateAmount(undefined, value));
-    },
-    [transactionOps]
-  );
 
+  // Effect to update slippage in context on debounced value change
   useEffect(() => {
-    if (!props.loading) {
-      setInput(props.value.toString());
-
-      if (props.value.toString() === "0.5") {
-        setSelectedId("0");
-      } else if (props.value.toString() === "1") {
-        setSelectedId("1");
-      } else {
-        setSelectedId("input");
-      }
-      setLoading(false);
-    }
-  }, [props.value, props.loading]);
-
-  useEffect(() => {
-    if (!loading) {
-      onChange(input);
-    }
-  }, [input]);
+    // get curent slippage of transaction in context
+    const slippage = transactionOps.getActiveTransaction()?.slippage.toFixed(1);
+    // update slippage if different
+    if (slippage) updateAmount(debouncedValue, slippage);
+  }, [transactionOps.getActiveTransaction, debouncedValue, updateAmount]);
 
   //calback to check if input is selected
   const isInputSelected = useCallback(() => {
     return selectedId === "input";
   }, [selectedId]);
 
+  // Textfield component for slippage input
   const SlippageInput: FC = () => {
     const styles = useStyles(style, props.scalingKey);
     const handleFocus = undefined;
@@ -236,9 +247,9 @@ const SlippageInput: FC<ISlippage> = (props) => {
             onClick={(
               event: React.MouseEvent<HTMLAnchorElement, MouseEvent>
             ) => {
-              event.preventDefault();
-              setSelectedId(p.id);
-              setInput(p.amount.toString());
+              //    event.preventDefault();
+              //    _setSelectedId(p.id);
+              //    setInputValue(p.amount.toString());
             }}
             {...p}
           >
@@ -246,17 +257,7 @@ const SlippageInput: FC<ISlippage> = (props) => {
           </Button>
         );
       } else {
-        return (
-          <UserAmountField
-            component={props.component}
-            transferType={props.transferType}
-            asset={props.asset}
-            variant="SlippageInput"
-            onChange={onChange}
-            readOnly={selectedId !== p.id}
-            scalingKey={props.scalingKey}
-          />
-        );
+        return <SlippageInput />;
       }
     };
 
@@ -265,8 +266,8 @@ const SlippageInput: FC<ISlippage> = (props) => {
         sx={styles.slippageTab.box}
         onClick={(event) => {
           event.preventDefault();
-          setSelectedId(p.id);
-          setInput(p.amount.toString());
+          _setSelectedId(p.id);
+          setInputValue(p.amount.toString());
         }}
       >
         <ButtonOrInput />

@@ -347,10 +347,26 @@ export function useTransaction(
     return transaction;
   }, [transaction]);
 
+  // calback to handle send amount or slippage updates to transaction in context
   const _updateAmount = useCallback(
     async (sendAmount?: string, slippage?: string): Promise<boolean> => {
+      // variable to track if transaction was updated
       let updated = false;
+      // if transaction exists and is not locked
       if (transaction && !transaction.locked) {
+        // handle slippage update
+        if (slippage) {
+          const _slippage = new BigNumber(slippage).toNumber();
+          updated =
+            updated ||
+            (await wallet.updateAmount(
+              component,
+              undefined,
+              undefined,
+              _slippage
+            ));
+        }
+        // handle send amount update
         if (sendAmount) {
           if (wallet.lbContractStorage) {
             const updatedTransaction: Transaction = {
@@ -375,21 +391,6 @@ export function useTransaction(
               ));
           }
         }
-        if (
-          slippage &&
-          transaction &&
-          !transaction.locked &&
-          !new BigNumber(transaction.slippage).eq(slippage)
-        ) {
-          updated =
-            updated ||
-            (await wallet.updateAmount(
-              component,
-              undefined,
-              undefined,
-              new BigNumber(slippage).toNumber()
-            ));
-        }
       }
       return updated;
     },
@@ -398,7 +399,8 @@ export function useTransaction(
 
   const updateAmount = useCallback(
     async (sendAmount?: string, slippage?: string) => {
-      console.log("updateAmount send Amount", sendAmount);
+      sendAmount && console.log("updateAmount send Amount", sendAmount);
+      slippage && console.log("updateAmount slippage", slippage);
       if (sendAmount || slippage) {
         if (await _updateAmount(sendAmount, slippage)) {
           console.log("updateAmount updated", update);
