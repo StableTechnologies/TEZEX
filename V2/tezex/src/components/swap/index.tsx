@@ -238,10 +238,6 @@ export const Swap: FC = () => {
                 <Slippage
                   component={TransactingComponent.SWAP}
                   transferType={TransferType.RECEIVE}
-                  asset={assets[receive]}
-                  value={slippage}
-                  inverse={true}
-                  loading={loading}
                   scalingKey={scalingKey}
                 />
               </Grid2>

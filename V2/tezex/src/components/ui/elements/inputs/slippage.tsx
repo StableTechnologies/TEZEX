@@ -25,13 +25,8 @@ import {
   toNumber,
 } from "../../../../functions/util";
 export interface ISlippage {
-  asset: Asset;
   component: TransactingComponent;
   transferType: TransferType;
-  value: BigNumber | number;
-  inverse?: boolean;
-  loading?: boolean;
-
   scalingKey?: string;
 }
 
@@ -164,7 +159,8 @@ const SlippageInput: FC<ISlippage> = (props) => {
   }, [selectedId]);
 
   // Textfield component for slippage input
-  const SlippageInput: FC = () => {
+  // memoized to prevent rerenders
+  const SlippageInput = memo(() => {
     const styles = useStyles(style, props.scalingKey);
     const handleFocus = undefined;
     const handleBlur = undefined;
@@ -228,7 +224,11 @@ const SlippageInput: FC<ISlippage> = (props) => {
         />
       </Box>
     );
-  };
+  });
+
+  // inner memoization causes display name to be lost
+  SlippageInput.displayName = "SlippageInput";
+
   interface SlippageTabProps {
     id: string;
     label?: React.ReactNode;
