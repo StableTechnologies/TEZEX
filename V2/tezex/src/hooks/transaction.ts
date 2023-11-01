@@ -144,6 +144,7 @@ export function useTransaction(
     debouncedTransactionRead.current();
   }, [wallet.getActiveTransaction, transaction]);
 */
+  //Callback to load transaction and AssetStates from wallet
   const internalUpdate = useCallback(
     (
       transaction: Transaction,
@@ -155,10 +156,13 @@ export function useTransaction(
     ) => {
       debug && console.log("internalUpdate");
       setTransaction(transaction);
+
+      // derive asset states from transaction
       const _assetStates = transactionToAssetStates(transaction);
       setAssetStates(_assetStates);
-      // if (loading) setLoading(false);
+      // check to see if an Asset needs to be tracked
       if (trackAsset) {
+        // set tracked asset state
         setAssetState(
           getAssetStateByTransactionTypeAndAsset(
             trackAsset.transferType,
@@ -182,9 +186,12 @@ export function useTransaction(
   const _counter = useCallback(() => {
     return counter;
   }, [counter]);
+
+  // Callback to get active transaction from wallet
   const active = useCallback(() => {
     return wallet.getActiveTransaction(component);
   }, [wallet.getActiveTransaction, component]);
+
   const debouncedUpdateStateEffect = useCallback(
     (counter?: number) => {
       //console.log("Debounced function is executing");
@@ -261,6 +268,7 @@ export function useTransaction(
     }
   }, [transaction]);
 
+  // Callback to get asset state from transaction in context
   const getAsetState = useCallback(
     (transferType: TransferType, asset: Asset): AssetState | undefined => {
       // console.log("assetStates", assetStates);
@@ -273,6 +281,7 @@ export function useTransaction(
     [assetStates]
   );
 
+  // callback to initialize transaction in context
   const initialize = useCallback(
     async (
       sendAsset: AssetOrAssetPair,
@@ -291,11 +300,14 @@ export function useTransaction(
           slippage
         )
         .then(async (done) => {
-          setLoading(true);
+          // set loading to false if transaction was initialized
+          done && setLoading(true);
           console.log("done : ", done);
+          // if send amount was passed, update send amount which calls estimating recieve amount
           sendAmount &&
             (await updateAmount(sendAmount[0].string, slippage?.toString()));
           //done && setLoading(false);
+          // update transaction balance
           if (done && wallet.client) wallet.updateTransactionBalance(component);
           return done;
         });
@@ -397,13 +409,17 @@ export function useTransaction(
     [transaction, wallet, component, transacting]
   );
 
+  // exported callback to handle send amount or slippage updates to transaction in context
   const updateAmount = useCallback(
     async (sendAmount?: string, slippage?: string) => {
       sendAmount && console.log("updateAmount send Amount", sendAmount);
       slippage && console.log("updateAmount slippage", slippage);
+      // check if slippage or send amount is being updated
       if (sendAmount || slippage) {
+        //check if update was successful
         if (await _updateAmount(sendAmount, slippage)) {
           console.log("updateAmount updated", update);
+          // if update was successful and pending update exists
           if (update) {
             debug && console.log("clearing update");
             // clear pending update if it exists
@@ -411,7 +427,7 @@ export function useTransaction(
           }
         } else {
           console.log("updateAmount update failed , added pending update");
-
+          // if update failed, add pending update
           setUpdate({ sendAmount, slippage });
         }
       }
