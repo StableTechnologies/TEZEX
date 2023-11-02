@@ -22,7 +22,7 @@ import {
   Errors,
 } from "../types/general";
 import { TezosToolkit } from "@taquito/taquito";
-import { eq } from "lodash";
+import { eq, isNumber } from "lodash";
 import { processTransaction } from "../functions/transactions";
 import { useNetwork } from "../hooks/network";
 import { useSession } from "../hooks/session";
@@ -584,9 +584,20 @@ export function WalletProvider(props: IWalletProvider) {
                 transaction.receiveAmount = amountUpdateReceive;
                 updated = true;
               }
-              if (slippageUpdate && transaction.slippage !== slippageUpdate) {
+              if (
+                isNumber(slippageUpdate) &&
+                transaction.slippage !== slippageUpdate
+              ) {
+                console.log("slippage update");
                 transaction.slippage = slippageUpdate;
                 updated = true;
+              } else {
+                console.log(
+                  "slippage not updated. slippage: " +
+                    slippageUpdate +
+                    " transaction.slippage: " +
+                    transaction.slippage
+                );
               }
               return (
                 updateTransactionStatusBasedOnBalance(

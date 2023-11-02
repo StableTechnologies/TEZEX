@@ -24,6 +24,7 @@ import {
   isNumeric,
   toNumber,
 } from "../../../../functions/util";
+import { isNumber } from "lodash";
 export interface ISlippage {
   component: TransactingComponent;
   transferType: TransferType;
@@ -128,19 +129,11 @@ const SlippageInput: FC<ISlippage> = (props) => {
   // Callback to check if  old slippage differs from current transaction slippage
   // if it does it calls an update
   const updateAmount = useCallback(
-    async (slippage: string, oldSlippage: string) => {
-      console.log(
-        "Top level slippage update , New slippage : ",
-        slippage,
-        " old :",
-        oldSlippage
-      );
+    async (slippage: string): Promise<void> => {
+      //console.log("Top level slippage update , New slippage : ", slippage);
 
-      // if slippage is different from old slippage update
-      if (toNumber(slippage) !== toNumber(oldSlippage)) {
-        // check if updates can be made and update slippage
-        canUpdate() && (await transactionOps.updateAmount(undefined, slippage));
-      }
+      // check if updates can be made and update slippage
+      canUpdate() && (await transactionOps.updateAmount(undefined, slippage));
     },
     [canUpdate, transactionOps.updateAmount]
   );
@@ -148,10 +141,27 @@ const SlippageInput: FC<ISlippage> = (props) => {
   // Effect to update slippage in context on debounced value change
   useEffect(() => {
     // get curent slippage of transaction in context
-    const slippage = transactionOps.getActiveTransaction()?.slippage.toFixed(1);
-    // update slippage if different
-    if (slippage) updateAmount(debouncedValue, slippage);
-  }, [transactionOps.getActiveTransaction, debouncedValue, updateAmount]);
+    const slippage = transactionOps.getActiveTransaction()?.slippage;
+    // if slippage is different from slippage in context update slippage
+    if (!isNumber(slippage)) updateAmount(debouncedValue);
+    if (
+      isNumber(slippage) &&
+      isNumeric(debouncedValue) &&
+      slippage !== toNumber(debouncedValue)
+    ) {
+      console.log(
+        "Slippage update , New slippage : ",
+        debouncedValue,
+        "Old slippage : ",
+        slippage
+      );
+      updateAmount(debouncedValue);
+    }
+  }, [
+    transactionOps.getActiveTransaction()?.slippage,
+    debouncedValue,
+    updateAmount,
+  ]);
 
   //calback to check if input is selected
   const isInputSelected = useCallback(() => {
@@ -161,15 +171,14 @@ const SlippageInput: FC<ISlippage> = (props) => {
   // Textfield component for slippage input
   // memoized to prevent rerenders
   const SlippageInput = memo(() => {
-    const styles = useStyles(style, props.scalingKey);
+    //const styles = useStyles(style, props.scalingKey);
     const handleFocus = undefined;
     const handleBlur = undefined;
 
     //calback to handle slippage input change
     const handleChange = useCallback(
       (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        console.log("handleChange, loading", loading);
-        if (!isInputSelected() || loading) return;
+        if (!canUpdate() || !isInputSelected) return;
 
         const newValue = event.target.value;
 
@@ -180,7 +189,7 @@ const SlippageInput: FC<ISlippage> = (props) => {
           if (isNumeric(result)) setInputValue(result);
         }
       },
-      [isInputSelected, loading, input] // dependencies
+      [canUpdate, isInputSelected, input] // dependencies
     );
 
     return (
