@@ -142,8 +142,11 @@ const SlippageInput: FC<ISlippage> = (props) => {
   useEffect(() => {
     // get curent slippage of transaction in context
     const slippage = transactionOps.getActiveTransaction()?.slippage;
-    // if slippage is different from slippage in context update slippage
+
+    // if slippage in transaction  is not set update slippage
     if (!isNumber(slippage)) updateAmount(debouncedValue);
+
+    // if slippage is different from slippage in context update slippage
     if (
       isNumber(slippage) &&
       isNumeric(debouncedValue) &&
@@ -178,14 +181,19 @@ const SlippageInput: FC<ISlippage> = (props) => {
     //calback to handle slippage input change
     const handleChange = useCallback(
       (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        // check if updates can be made and input is selected
         if (!canUpdate() || !isInputSelected) return;
 
+        // get value in input
         const newValue = event.target.value;
 
+        //  deal with backspace
         if (newValue.length < input.length) {
           setInput(newValue);
         } else {
+          // clean non numeric characters off the input string
           const result = cleanNumericString(newValue);
+          // if cleaned string is numeric update input
           if (isNumeric(result)) setInputValue(result);
         }
       },
@@ -207,23 +215,13 @@ const SlippageInput: FC<ISlippage> = (props) => {
             disableUnderline: true,
             endAdornment: (
               <InputAdornment
-                sx={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  right: ".7vw",
-                  padding: "0px 0px 0px 0px",
-                }}
+                sx={styles.slippageInput.endAdornment}
                 position="start"
               >
                 %
               </InputAdornment>
             ),
-            sx: {
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-            },
+            sx: styles.slippageInput.inputProps,
           }}
           inputProps={{
             inputMode: "decimal",

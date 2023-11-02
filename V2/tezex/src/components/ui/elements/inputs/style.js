@@ -86,6 +86,18 @@ const style = (theme, scale = 1) => {
           justifyContent: "space-between",
         },
       },
+      inputProps: {
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+      },
+      endAdornment: {
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        right: `calc(.7vw * ${scale})`,
+        padding: "0px 0px 0px 0px",
+      },
       "& .MuiButtonBase-root": {
         zIndex: 3,
       },
