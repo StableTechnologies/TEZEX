@@ -37,18 +37,22 @@ export interface ISwapToken {
   children: null;
 }
 
+// TODO: track id change and set loading to true
 export const Swap: FC = () => {
   const scalingKey = "swap";
+  // load styles and apply responsive scaling for component
   const styles = useStyles(style, scalingKey);
   const network = useNetwork();
+  // load wallet operations for component
   const walletOps: WalletOps = useWalletOps(TransactingComponent.SWAP, true);
-
+  // load transaction operations for component
   const transactionOps = useTransaction(
     TransactingComponent.SWAP
     //  undefined,
     //  true
   );
 
+  // load wallet connection status hook
   const isWalletConnected = useWalletConnected();
 
   const [loading, setLoading] = useState<boolean>(true);
@@ -68,18 +72,20 @@ export const Swap: FC = () => {
 
   const active = walletOps.getActiveTransaction();
 
-  const transact = async () => {
+  // Callback to process transaction
+  const transact = useCallback(async () => {
     await walletOps.sendTransaction();
-  };
+  }, [walletOps.sendTransaction]);
 
+  // Callback to swap fields
   const swapFields = useCallback(async () => {
-    //setLoading(true);
-    //
+    // swap assets
     setAssets([assets[1], assets[0]]);
-    //setSwappingFileds(true);
+    // swap transaction fields
     await transactionOps.swapFields();
   }, [assets, transactionOps]);
 
+  // call back to update balance of active transaction
   const updateBalance = useCallback(async () => {
     if (isWalletConnected) {
       if (walletOps.transaction) {
@@ -97,6 +103,8 @@ export const Swap: FC = () => {
   //    } else transactionOps.initialize([assets[send]], [assets[receive]]);
   //  }, [walletOps.transaction, assets, transactionOps]);
 
+  // effect to keep  updating balance of active transaction
+  // at a 2 second intervals
   useEffect(() => {
     const interval = setInterval(() => {
       !loading && updateBalance();
@@ -124,12 +132,14 @@ export const Swap: FC = () => {
     }
   );
 
+  // callback to create new transaction
   const newTransaction = useCallback(async () => {
     const transaction = await transactionOps.initialize(
       [assets[send]],
       [assets[receive]]
     );
 
+    //if transaction initialized update balance and set loading params to false
     if (transaction) {
       console.log("newTransaction");
       await updateBalance();
@@ -138,23 +148,32 @@ export const Swap: FC = () => {
     }
   }, [swappingFileds, assets, updateBalance, transactionOps]);
 
-  useEffect(() => {
-    if (session.activeComponent !== TransactingComponent.SWAP)
-      session.loadComponent(TransactingComponent.SWAP);
-  });
+  // useEffect(() => {
+  //   if (session.activeComponent !== TransactingComponent.SWAP)
+  //     session.loadComponent(TransactingComponent.SWAP);
+  // });
+
+  // Effect to handle loading of transaction
   useEffect(() => {
     // if (!loading && !walletOps.transaction) {
     //   setLoading(true); // newTransaction();
     // }
+
+    // if loading and no transaction, create new transaction
     if (loading && !walletOps.transaction) {
       newTransaction();
     } else if (loading) {
+      // if loading and transaction,
+      // update balance  , assets and set loading to false
       if (walletOps.transaction) {
         updateBalance();
+
+        //grab assets from transaction
         const _assets: [Asset, Asset] = [
           walletOps.transaction.sendAsset[0],
           walletOps.transaction.receiveAsset[0],
         ];
+        // Load assets if transaction assets are different from current assets
         !eq(_assets, assets) && setAssets(_assets);
         setLoading(false);
       }
@@ -176,6 +195,7 @@ export const Swap: FC = () => {
       session.loadComponent(TransactingComponent.SWAP);
   }, [session]);
 
+  // if loading return empty div else render component
   if (loading) {
     return <div> </div>;
   } else {
