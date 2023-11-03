@@ -300,15 +300,18 @@ export function useTransaction(
           slippage
         )
         .then(async (done) => {
-          // set loading to false if transaction was initialized
-          done && setLoading(true);
           console.log("done : ", done);
+          sendAmount && console.log("init sendAmount : ", sendAmount);
           // if send amount was passed, update send amount which calls estimating recieve amount
           sendAmount &&
             (await updateAmount(sendAmount[0].string, slippage?.toString()));
           //done && setLoading(false);
           // update transaction balance
-          if (done && wallet.client) wallet.updateTransactionBalance(component);
+          if (done && wallet.client)
+            await wallet.updateTransactionBalance(component);
+
+          // set loading to true if transaction was initialized
+          done && setLoading(true);
           return done;
         });
     },
@@ -369,6 +372,7 @@ export function useTransaction(
         // handle slippage update
         if (slippage) {
           const _slippage = new BigNumber(slippage).toNumber();
+          console.log("_updateAmount slippage", _slippage);
           updated =
             updated ||
             (await wallet.updateAmount(
@@ -380,6 +384,7 @@ export function useTransaction(
         }
         // handle send amount update
         if (sendAmount) {
+          console.log("init _updateAmount sendAmount", sendAmount);
           if (wallet.lbContractStorage) {
             const updatedTransaction: Transaction = {
               ...transaction,
@@ -394,13 +399,11 @@ export function useTransaction(
               updatedTransaction,
               wallet.lbContractStorage
             );
-            updated =
-              updated ||
-              (await wallet.updateAmount(
-                _transaction.component,
-                _transaction.sendAmount,
-                _transaction.receiveAmount
-              ));
+            updated = await wallet.updateAmount(
+              _transaction.component,
+              _transaction.sendAmount,
+              _transaction.receiveAmount
+            );
           }
         }
       }
@@ -418,7 +421,7 @@ export function useTransaction(
       if (sendAmount || slippage) {
         //check if update was successful
         if (await _updateAmount(sendAmount, slippage)) {
-          console.log("updateAmount updated", update);
+          console.log("init updateAmount updated", update);
           // if update was successful and pending update exists
           if (update) {
             debug && console.log("clearing update");
