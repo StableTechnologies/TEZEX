@@ -41,7 +41,7 @@ export interface IRigthInput {
   //editing: boolean;
   //noUserActionCheck: () => boolean;
   // toggle: () => void;
-  // swap?: () => void;
+  swap?: () => void;
   label?: string;
   darker?: boolean;
   readOnly?: boolean;
@@ -66,10 +66,10 @@ const Right: FC<IRigthInput> = (props) => {
   >(undefined);
   const [loading, setLoading] = useState(true);
   const [id, setId] = useState<Id | undefined>(undefined);
-  const swap = useCallback(async () => {
+  const swap = useCallback(() => {
     console.log("swap-right-input");
-    await transactionOps.swapFields();
-  }, [transactionOps]);
+    if (props.swap) props.swap();
+  }, [props.swap]);
 
   // Set id on new transaction and set loading to true
   useEffect(() => {

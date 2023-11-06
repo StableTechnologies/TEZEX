@@ -334,13 +334,30 @@ export function useTransaction(
           );
 
         //setLoading(true);
-        await initialize(
-          oldTransaction.receiveAsset,
-          oldTransaction.sendAsset,
-          oldTransaction.receiveAmount,
-          undefined,
-          oldTransaction.slippage
-        );
+        switch (component) {
+          case TransactingComponent.SWAP:
+            await initialize(
+              oldTransaction.receiveAsset,
+              oldTransaction.sendAsset,
+              oldTransaction.receiveAmount,
+              undefined,
+              oldTransaction.slippage
+            );
+            break;
+          case TransactingComponent.ADD_LIQUIDITY:
+            if (oldTransaction.sendAmount[1] && oldTransaction.sendAsset[1]) {
+              await initialize(
+                [oldTransaction.sendAsset[1], oldTransaction.sendAsset[0]],
+                oldTransaction.receiveAsset,
+                [oldTransaction.sendAmount[1], oldTransaction.sendAmount[0]],
+                undefined,
+                oldTransaction.slippage
+              );
+            }
+            break;
+          case TransactingComponent.REMOVE_LIQUIDITY:
+            break;
+        }
       },
       300,
       {

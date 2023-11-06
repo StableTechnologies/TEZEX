@@ -83,13 +83,34 @@ export const AddLiquidity: FC = () => {
   }, [walletOps.sendTransaction]);
 
   const swapFields = useCallback(() => {
+    setSwapingFields(true);
+    console.log("!!!!!setSwapingFields(true)");
     // const send = sendAmount2;
     // setLoading(true);
     // setAssets([assets[1], assets[0], assets[receive]]);
     //
     // setSwapingFields(true);
     // setSendAmount(send);
-  }, [assets]);
+  }, []);
+
+  // callback to internally call swap fields
+  const _swapFields = useCallback(async () => {
+    setAssets([assets[1], assets[0], assets[receive]]);
+    await transactionOps.swapFields().then(() => {
+      setSwapingFields(false);
+      //setLoading(true);
+    });
+    //
+    // setSwapingFields(true);
+    // setSendAmount(send);
+  }, [assets, transactionOps.swapFields]);
+
+  //monitor swappingFields state and trigger swap
+  useEffect(() => {
+    if (swapingFields) {
+      _swapFields();
+    }
+  }, [swapingFields, _swapFields]);
 
   // useEffect(() => {
   //   if (active && !swapingFields) {
@@ -168,8 +189,6 @@ export const AddLiquidity: FC = () => {
     // if loading and no transaction, create new transaction
     if (loading && !walletOps.transaction) {
       newTransaction();
-    } else if (loading && !active) {
-      newTransaction();
     } else if (loading) {
       // if loading and transaction,
       // update balance, assets and set loading to false
@@ -209,7 +228,7 @@ export const AddLiquidity: FC = () => {
   //  transactionOps.getActiveTransaction()?.receiveAmount[1].string;
   const _t = walletOps.transaction?.receiveAmount[0].string;
   // if loading return empty div else render component
-  if (loading) {
+  if (loading || swapingFields) {
     return <div> </div>;
   } else {
     return (
