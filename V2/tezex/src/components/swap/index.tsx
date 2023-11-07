@@ -5,6 +5,7 @@ import {
   Asset,
   TransactingComponent,
   TransferType,
+  TransactionStatus,
 } from "../../types/general";
 
 import { BigNumber } from "bignumber.js";
@@ -69,6 +70,8 @@ export const Swap: FC = () => {
 
   const [swappingFileds, setSwappingFileds] = useState<boolean>(false);
   const session = useSession();
+
+  const [canUpdate, setCanUpdate] = useState<boolean>(false);
 
   const active = walletOps.getActiveTransaction();
 
@@ -190,10 +193,42 @@ export const Swap: FC = () => {
   useEffect(() => {
     console.log("transaction in walletOps ", walletOps.transaction);
   }, [loading, walletOps.transaction]);
+
   useEffect(() => {
     if (session.activeComponent !== TransactingComponent.SWAP)
       session.loadComponent(TransactingComponent.SWAP);
   }, [session]);
+
+  //callback to handle transaction status changes
+  const monitorStatus = useCallback(() => {
+    const transaction = transactionOps.getActiveTransaction();
+    const _canUpdate: boolean = (() => {
+      if (transaction) {
+        switch (transaction.transactionStatus) {
+          case TransactionStatus.PENDING:
+            return false;
+          case TransactionStatus.UNINITIALIZED:
+            return false;
+          case TransactionStatus.COMPLETED:
+            return false;
+          default:
+            return true;
+        }
+      } else {
+        return false;
+      }
+    })();
+
+    setCanUpdate((canUpdate) => {
+      if (canUpdate === _canUpdate) return canUpdate;
+      return _canUpdate;
+    });
+  }, [transactionOps.getActiveTransaction]);
+
+  // effect to monitor transaction status by calling monitorStatus
+  useEffect(() => {
+    monitorStatus();
+  }, [monitorStatus]);
 
   // if loading return empty div else render component
   if (loading) {
@@ -217,6 +252,7 @@ export const Swap: FC = () => {
                   component={TransactingComponent.SWAP}
                   transferType={TransferType.SEND}
                   asset={assets[send]}
+                  readOnly={!canUpdate}
                   scalingKey={scalingKey}
                 />
               </Grid2>
