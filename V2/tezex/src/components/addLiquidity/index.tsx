@@ -8,6 +8,7 @@ import {
   Asset,
   TransactingComponent,
   TransferType,
+  TransactionStatus,
 } from "../../types/general";
 
 import { BigNumber } from "bignumber.js";
@@ -76,6 +77,9 @@ export const AddLiquidity: FC = () => {
   ]);
   const [swapingFields, setSwapingFields] = useState<boolean>(false);
   const session = useSession();
+
+  // used to set input to editable or not
+  const [canUpdate, setCanUpdate] = useState<boolean>(false);
 
   // Callback to process transaction
   const transact = useCallback(async () => {
@@ -225,8 +229,36 @@ export const AddLiquidity: FC = () => {
     console.log("!..send1", send1);
     console.log("!..send2", send2);
   }, [transactionOps.getActiveTransaction]);
-  //  transactionOps.getActiveTransaction()?.receiveAmount[1].string;
-  const _t = walletOps.transaction?.receiveAmount[0].string;
+  //callback to handle transaction status changes
+  const monitorStatus = useCallback(() => {
+    const transaction = transactionOps.getActiveTransaction();
+    const _canUpdate: boolean = (() => {
+      if (transaction) {
+        switch (transaction.transactionStatus) {
+          case TransactionStatus.PENDING:
+            return false;
+          case TransactionStatus.UNINITIALIZED:
+            return false;
+          case TransactionStatus.COMPLETED:
+            return false;
+          default:
+            return true;
+        }
+      } else {
+        return false;
+      }
+    })();
+
+    setCanUpdate((canUpdate) => {
+      if (canUpdate === _canUpdate) return canUpdate;
+      return _canUpdate;
+    });
+  }, [transactionOps.getActiveTransaction]);
+
+  // effect to monitor transaction status by calling monitorStatus
+  useEffect(() => {
+    monitorStatus();
+  }, [monitorStatus]);
   // if loading return empty div else render component
   if (loading || swapingFields) {
     return <div> </div>;
@@ -276,6 +308,7 @@ export const AddLiquidity: FC = () => {
                       component={TransactingComponent.ADD_LIQUIDITY}
                       transferType={TransferType.SEND}
                       label="Enter Amount"
+                      readOnly={!canUpdate}
                       scalingKey={scalingKey}
                     />
                   </Grid2>
@@ -405,6 +438,7 @@ export const AddLiquidity: FC = () => {
                         transferType={TransferType.SEND}
                         asset={assets[send1]}
                         label="Enter Amount"
+                        readOnly={!canUpdate}
                         scalingKey={scalingKey}
                       />
                     </Grid2>
