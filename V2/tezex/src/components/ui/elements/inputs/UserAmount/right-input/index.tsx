@@ -27,7 +27,7 @@ import {
 } from "../../../../../../functions/util";
 import debounce from "lodash/debounce";
 import { useDebounce } from "usehooks-ts";
-import { eq } from "lodash";
+import { eq, toNumber } from "lodash";
 export interface IRigthInput {
   component: TransactingComponent;
   transferType: TransferType;
@@ -41,6 +41,7 @@ export interface IRigthInput {
   //editing: boolean;
   //noUserActionCheck: () => boolean;
   // toggle: () => void;
+  variant?: "LeftInput" | "RightInput";
   swap?: () => void;
   label?: string;
   darker?: boolean;
@@ -106,13 +107,18 @@ const Right: FC<IRigthInput> = (props) => {
     if (amount) {
       //update value if different
       setValue((value) => {
-        if (value === amount) return value;
+        if (toNumber(value) === toNumber(amount)) return value;
+        else if (props.readOnly && toNumber(amount) === 0) return "0.00";
         else return amount;
       });
       //handle loading
       setLoadingFalse();
     }
-  }, [transactionOps.trackedAsset?.amount?.string, setLoadingFalse]);
+  }, [
+    transactionOps.trackedAsset?.amount?.string,
+    props.readOnly,
+    setLoadingFalse,
+  ]);
 
   //callback to update balance
   const updateBalance = useCallback(() => {
@@ -169,7 +175,7 @@ const Right: FC<IRigthInput> = (props) => {
   // if it does it calls an update
   const updateAmount = useCallback(
     async (value: string, oldValue: string) => {
-      if (value !== oldValue) {
+      if (toNumber(value) !== toNumber(oldValue)) {
         canUpdate() && (await transactionOps.updateAmount(value));
       }
     },
@@ -179,7 +185,12 @@ const Right: FC<IRigthInput> = (props) => {
   // This effect tracks and  sends the debounced value for updating
   // the transaction amount,
   useEffect(() => {
-    if (!props.readOnly && debouncedValue !== "0.00") {
+    // if (!props.readOnly && debouncedValue !== "0.00") {
+    //   const oldValue = transactionOps.trackedAsset?.amount?.string;
+    //   oldValue && updateAmount(debouncedValue, oldValue);
+    // }
+
+    if (!props.readOnly) {
       const oldValue = transactionOps.trackedAsset?.amount?.string;
       oldValue && updateAmount(debouncedValue, oldValue);
     }
@@ -254,18 +265,9 @@ const Right: FC<IRigthInput> = (props) => {
     return value === "0.00";
   }, [value]);
 
-  return (
-    <Box
-      sx={
-        props.darker
-          ? styles.gridContainter.darker
-          : styles.gridContainter.lighter
-      }
-    >
-      <Box sx={styles.inputAdornmentStart.boxLabel}>
-        <Typography sx={styles.label}>{props.label}</Typography>
-      </Box>
-      <Box sx={{}}>
+  if (props.variant === "LeftInput") {
+    return (
+      <Box sx={styles.leftInput.gridContainter}>
         <TextField
           autoComplete="off"
           onFocus={handleFocus}
@@ -273,107 +275,170 @@ const Right: FC<IRigthInput> = (props) => {
           onChange={handleChange}
           value={value}
           id="filled-start-adornment"
-          sx={
-            props.component === "Add Liquidity"
-              ? amountNotEntered()
-                ? styles.textFieldTextAboveGrey
-                : styles.textFieldTextAbove
-              : amountNotEntered()
-              ? styles.textFieldGrey
-              : styles.textField
-          }
+          sx={styles.leftInput.textField}
           InputProps={{
             disableUnderline: true,
-            startAdornment: (
-              <InputAdornment position="start">
-                <Box sx={styles.inputAdornmentStart.boxToken}>
-                  <Box
-                    sx={
-                      props.label
-                        ? styles.inputAdornmentStart.img
-                        : styles.inputAdornmentStart.imgLarger
-                    }
-                  >
+            endAdornment: (
+              <InputAdornment position="end">
+                <Box sx={styles.leftInput.inputAdornment.box}>
+                  <Box sx={styles.leftInput.inputAdornment.box}>
                     <img
-                      style={{
-                        height: "100%",
-                        //                       width: "100%",
-                      }}
+                      style={styles.leftInput.inputAdornment.img}
                       src={
                         props.asset && process.env.PUBLIC_URL + props.asset.logo
                       }
                       alt="logo"
                     />
                   </Box>
-                  <Box sx={{ marginTop: "0px" }}>
-                    <Typography
-                      sx={
-                        props.label
-                          ? styles.inputAdornmentStart.typography
-                          : styles.inputAdornmentStart.typographyForLargerLogo
-                      }
-                    >
+                  <Box>
+                    <Typography sx={styles.leftInput.inputAdornment.typography}>
                       {props.asset && props.asset.label}
                     </Typography>
                   </Box>
                 </Box>
               </InputAdornment>
             ),
-
-            endAdornment: (
-              <InputAdornment
-                position="end"
-                sx={styles.inputAdornmentEnd.adornmentLabelAbove}
-              >
-                <Box>
-                  <Box
-                    visibility={
-                      props.component === "Add Liquidity" ? "visible" : "hidden"
-                    }
-                  >
-                    <Button onClick={swap} sx={styles.inputAdornmentEnd.button}>
-                      <img
-                        style={styles.inputAdornmentEnd.img}
-                        src={liquiditySwapIcon}
-                        alt="logo"
-                      />
-                    </Button>
-                  </Box>
-
-                  <Box sx={styles.balance.grid}>
-                    <WalletConnected>
-                      <Typography
-                        color="textSecondary"
-                        variant="subtitle2"
-                        hidden={transactionBalance ? false : true}
-                        sx={styles.balance.typography}
-                      >
-                        <>
-                          Balance:{" "}
-                          {transactionBalance
-                            ? transactionBalance
-                            : "loading..."}{" "}
-                          {props.asset && props.asset.name}
-                        </>
-                      </Typography>
-                    </WalletConnected>
-                  </Box>
-                </Box>
-              </InputAdornment>
-            ),
           }}
           inputProps={{
-            inputMode: "decimal",
             readOnly: props.readOnly,
+
+            inputMode: "decimal",
             style: {
-              ...styles.input,
+              ...styles.leftInput.input,
             },
           }}
           variant="standard"
         />
       </Box>
-    </Box>
-  );
+    );
+  } else {
+    return (
+      <Box
+        sx={
+          props.darker
+            ? styles.gridContainter.darker
+            : styles.gridContainter.lighter
+        }
+      >
+        <Box sx={styles.inputAdornmentStart.boxLabel}>
+          <Typography sx={styles.label}>{props.label}</Typography>
+        </Box>
+        <Box sx={{}}>
+          <TextField
+            autoComplete="off"
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            onChange={handleChange}
+            value={value}
+            id="filled-start-adornment"
+            sx={
+              props.component === "Add Liquidity"
+                ? amountNotEntered()
+                  ? styles.textFieldTextAboveGrey
+                  : styles.textFieldTextAbove
+                : amountNotEntered()
+                ? styles.textFieldGrey
+                : styles.textField
+            }
+            InputProps={{
+              disableUnderline: true,
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Box sx={styles.inputAdornmentStart.boxToken}>
+                    <Box
+                      sx={
+                        props.label
+                          ? styles.inputAdornmentStart.img
+                          : styles.inputAdornmentStart.imgLarger
+                      }
+                    >
+                      <img
+                        style={{
+                          height: "100%",
+                          //                       width: "100%",
+                        }}
+                        src={
+                          props.asset &&
+                          process.env.PUBLIC_URL + props.asset.logo
+                        }
+                        alt="logo"
+                      />
+                    </Box>
+                    <Box sx={{ marginTop: "0px" }}>
+                      <Typography
+                        sx={
+                          props.label
+                            ? styles.inputAdornmentStart.typography
+                            : styles.inputAdornmentStart.typographyForLargerLogo
+                        }
+                      >
+                        {props.asset && props.asset.label}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </InputAdornment>
+              ),
+
+              endAdornment: (
+                <InputAdornment
+                  position="end"
+                  sx={styles.inputAdornmentEnd.adornmentLabelAbove}
+                >
+                  <Box>
+                    <Box
+                      visibility={
+                        props.component === "Add Liquidity"
+                          ? "visible"
+                          : "hidden"
+                      }
+                    >
+                      <Button
+                        onClick={swap}
+                        sx={styles.inputAdornmentEnd.button}
+                      >
+                        <img
+                          style={styles.inputAdornmentEnd.img}
+                          src={liquiditySwapIcon}
+                          alt="logo"
+                        />
+                      </Button>
+                    </Box>
+
+                    <Box sx={styles.balance.grid}>
+                      <WalletConnected>
+                        <Typography
+                          color="textSecondary"
+                          variant="subtitle2"
+                          hidden={transactionBalance ? false : true}
+                          sx={styles.balance.typography}
+                        >
+                          <>
+                            Balance:{" "}
+                            {transactionBalance
+                              ? transactionBalance
+                              : "loading..."}{" "}
+                            {props.asset && props.asset.name}
+                          </>
+                        </Typography>
+                      </WalletConnected>
+                    </Box>
+                  </Box>
+                </InputAdornment>
+              ),
+            }}
+            inputProps={{
+              inputMode: "decimal",
+              readOnly: props.readOnly,
+              style: {
+                ...styles.input,
+              },
+            }}
+            variant="standard"
+          />
+        </Box>
+      </Box>
+    );
+  }
 };
 
 export const RightInput = React.memo(Right);

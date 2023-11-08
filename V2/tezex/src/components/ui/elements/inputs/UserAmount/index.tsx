@@ -208,6 +208,7 @@ const AmountField: FC<IAmountField> = (props) => {
             //     onKeyDown={onKeyDown}
             //      noUserActionCheck={amountNotEntered}
             //     toggle={toggle}
+            variant={props.variant}
             swap={props.swap}
             label={props.label}
             scalingKey={props.scalingKey}

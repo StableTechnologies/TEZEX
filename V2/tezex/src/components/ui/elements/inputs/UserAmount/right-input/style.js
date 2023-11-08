@@ -1,6 +1,42 @@
 // eslint-disable-next-line
 export const style = (theme, scale = 1) => {
   return {
+    leftInput: {
+      gridContainter: {
+        flexDirection: "row",
+        borderRadius: `calc(0.55vw * ${scale})`,
+        backgroundColor: "background.default",
+      },
+      textField: {
+        justifyContent: "center",
+        width: "100%",
+      },
+      inputAdornment: {
+        box: {
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+        },
+        img: {
+          marginRight: `calc(0.28vw * ${scale})`,
+          height: `calc(1.61vw * ${scale})`,
+        },
+        typography: {
+          fontSize: `calc(1.11vw * ${scale})`,
+          marginRight: `calc(1vw * ${scale})`,
+        },
+      },
+      balanceTypography: {
+        padding: "0px 1.11vw",
+        textAlign: "right",
+      },
+      input: {
+        textAlign: "left",
+        marginLeft: `calc(1.11vw * ${scale})`,
+        fontSize: `calc(1.25vw * ${scale})`,
+        lineHeight: `calc(1.51vw * ${scale})`,
+      },
+    },
     noScroll: {
       position: "fixed",
       width: "100%",
