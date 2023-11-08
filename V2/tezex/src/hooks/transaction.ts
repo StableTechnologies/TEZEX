@@ -350,7 +350,7 @@ export function useTransaction(
                 [oldTransaction.sendAsset[1], oldTransaction.sendAsset[0]],
                 oldTransaction.receiveAsset,
                 [oldTransaction.sendAmount[1], oldTransaction.sendAmount[0]],
-                undefined,
+                oldTransaction.receiveAmount,
                 oldTransaction.slippage
               );
             }
