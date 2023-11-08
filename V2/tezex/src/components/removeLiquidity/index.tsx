@@ -5,6 +5,7 @@ import {
   Asset,
   TransactingComponent,
   TransferType,
+  TransactionStatus,
 } from "../../types/general";
 
 import { BigNumber } from "bignumber.js";
@@ -27,26 +28,31 @@ import Typography from "@mui/material/Typography";
 
 import style from "./style";
 import useStyles from "../../hooks/styles";
+import { eq } from "lodash";
+import { useTransaction } from "../../hooks/transaction";
 
 export interface ISwapToken {
   children: null;
 }
 
 export const RemoveLiquidity: FC = () => {
-  return <div>Remove Liquidity</div>;
-  /*const scalingKey = "removeLiquidity";
+  //return <div>Remove Liquidity</div>;
+  const scalingKey = "removeLiquidity";
+  // load styles and apply responsive scaling for component
   const styles = useStyles(style, scalingKey);
   const network = useNetwork();
-  const walletOperations: WalletOps = useWalletOps(
+  // load wallet operations for component
+  const walletOps: WalletOps = useWalletOps(
     TransactingComponent.REMOVE_LIQUIDITY
   );
+  // load transaction operations for component
+  const transactionOps = useTransaction(TransactingComponent.REMOVE_LIQUIDITY);
   const isWalletConnected = useWalletConnected();
 
   const [loading, setLoading] = useState<boolean>(true);
 
-  const [sendAmount, setSendAmount] = useState(new BigNumber(0));
-
-  const [balance, setBalance] = useState(new BigNumber(0));
+  // used to set input to editable or not
+  const [canUpdate, setCanUpdate] = useState<boolean>(false);
 
   const [useMax, setUseMax] = useState<boolean>(false);
   const send = 0;
@@ -60,56 +66,25 @@ export const RemoveLiquidity: FC = () => {
   ]);
   const session = useSession();
 
-  const active = walletOperations.getActiveTransaction();
-  const transact = async () => {
-    await walletOperations.sendTransaction();
-  };
+  const active = walletOps.getActiveTransaction();
+
+  // Callback to process transaction
+  const transact = useCallback(async () => {
+    await walletOps.sendTransaction();
+  }, [walletOps.sendTransaction]);
 
   useEffect(() => {
-    if (useMax) setSendAmount(balance);
-  }, [useMax, balance]);
-  const updateSend = useCallback(
-    (value: string) => {
-      const amt = new BigNumber(value);
-      if (amt !== sendAmount) {
-        setSendAmount(amt);
-      }
-    },
-    [sendAmount]
-  );
+    if (useMax) transactionOps.useMax();
+  }, [useMax, transactionOps.useMax]);
 
-  const updateTransaction = useCallback(() => {
-    if (active) {
-      if (!active.sendAmount[0].decimal.eq(sendAmount)) {
-        walletOperations.updateAmount(sendAmount.toFixed());
-      }
-    }
-  }, [sendAmount, active, walletOperations]);
-
-  useEffect(() => {
-    updateTransaction();
-  }, [updateTransaction]);
-
-  const updateBalance = useCallback(() => {
+  // call back to update balance of active transaction
+  const updateBalance = useCallback(async () => {
     if (isWalletConnected) {
-      if (active) {
-        walletOperations.updateTransactionBalance();
+      if (walletOps.transaction) {
+        await walletOps.updateBalance();
       }
     }
-  }, [active, walletOperations, isWalletConnected]);
-
-  useEffect(() => {
-    if (active) {
-      setBalance(active.sendAssetBalance[0].decimal);
-
-      active.receiveAsset[1] &&
-        setAssets([
-          active.sendAsset[0],
-          active.receiveAsset[0],
-          active.receiveAsset[1],
-        ]);
-    }
-  }, [active]);
+  }, [walletOps, walletOps.updateBalance, isWalletConnected]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -119,7 +94,7 @@ export const RemoveLiquidity: FC = () => {
   });
 
   const newTransaction = useCallback(async () => {
-    const transaction = walletOperations.initialize(
+    const transaction = await transactionOps.initialize(
       [assets[send]],
       [assets[receive1], assets[receive2]]
     );
@@ -127,26 +102,64 @@ export const RemoveLiquidity: FC = () => {
       updateBalance();
       setLoading(false);
     }
-  }, [assets, updateBalance, walletOperations]);
+  }, [assets, updateBalance, transactionOps.initialize]);
 
   useEffect(() => {
     if (session.activeComponent !== TransactingComponent.REMOVE_LIQUIDITY)
       session.loadComponent(TransactingComponent.REMOVE_LIQUIDITY);
   });
   useEffect(() => {
-    if (!loading && !active) {
-      setLoading(true);
-    }
-    if (loading && !active) {
+    // if loading and no transaction, create new transaction
+    if (loading && !walletOps.transaction) {
       newTransaction();
     } else if (loading) {
-      if (active) {
-        updateSend(active.sendAmount[0].decimal.toFixed());
+      // if loading and transaction,
+      // update balance, assets and set loading to false
+      if (walletOps.transaction && walletOps.transaction.receiveAsset[1]) {
         updateBalance();
+        //grab assets from transaction
+        const _assets: [Asset, Asset, Asset] = [
+          walletOps.transaction.sendAsset[0],
+          walletOps.transaction.receiveAsset[0],
+          walletOps.transaction.receiveAsset[1],
+        ];
+        // Load assets if transaction assets are different from current assets
+        !eq(_assets, assets) && setAssets(_assets);
         setLoading(false);
       }
     }
-  }, [loading, active, newTransaction, session, updateSend, walletOperations]);
+  }, [loading, active, newTransaction, session, walletOps]);
+
+  //callback to handle transaction status changes
+  const monitorStatus = useCallback(() => {
+    const transaction = transactionOps.getActiveTransaction();
+    const _canUpdate: boolean = (() => {
+      if (transaction) {
+        switch (transaction.transactionStatus) {
+          case TransactionStatus.PENDING:
+            return false;
+          case TransactionStatus.UNINITIALIZED:
+            return false;
+          case TransactionStatus.COMPLETED:
+            return false;
+          default:
+            return true;
+        }
+      } else {
+        return false;
+      }
+    })();
+
+    setCanUpdate((canUpdate) => {
+      if (canUpdate === _canUpdate) return canUpdate;
+      return _canUpdate;
+    });
+  }, [transactionOps.getActiveTransaction]);
+
+  // effect to monitor transaction status by calling monitorStatus
+  useEffect(() => {
+    monitorStatus();
+  }, [monitorStatus]);
   return (
     <Grid2 container sx={styles.root}>
       <Grid2>
@@ -162,9 +175,7 @@ export const RemoveLiquidity: FC = () => {
                   asset={assets[send]}
                   transferType={TransferType.SEND}
                   component={TransactingComponent.REMOVE_LIQUIDITY}
-                  readOnly={useMax}
-                  onChange={updateSend}
-                  loading={loading}
+                  readOnly={useMax || !canUpdate}
                   variant="LeftInput"
                   scalingKey={scalingKey}
                 />
@@ -205,5 +216,4 @@ export const RemoveLiquidity: FC = () => {
       </Grid2>
     </Grid2>
   );
-    */
 };
