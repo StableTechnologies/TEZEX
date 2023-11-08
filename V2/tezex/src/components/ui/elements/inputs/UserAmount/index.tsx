@@ -175,24 +175,6 @@ const AmountField: FC<IAmountField> = (props) => {
             scalingKey={props.scalingKey}
           /> */
         );
-      case "LeftInput":
-        return (
-          <div>LeftInput</div>
-          /*<LeftInput
-            inputRef={inputRef}
-            focused={props.readOnly ? false : focused}
-            onFocus={handelFocus}
-            onBlur={handelBlur}
-            asset={props.asset}
-            balance={props.balance}
-            readOnly={props.readOnly}
-            updateAmount={updateAmount}
-            onKeyDown={onKeyDown}
-            inputString={inputString}
-            editing={editing}
-            scalingKey={props.scalingKey}
-          />*/
-        );
       default:
         return (
           <TokenAmountInput
@@ -208,6 +190,7 @@ const AmountField: FC<IAmountField> = (props) => {
             //     onKeyDown={onKeyDown}
             //      noUserActionCheck={amountNotEntered}
             //     toggle={toggle}
+            darker={props.darker}
             variant={props.variant}
             swap={props.swap}
             label={props.label}
