@@ -39,7 +39,6 @@ export const LeftInput: FC<ILeftInput> = (props) => {
         onFocus={props.onFocus}
         onBlur={props.onBlur}
         onChange={props.updateAmount}
-        value={props.inputString}
         id="filled-start-adornment"
         sx={styles.leftInput.textField}
         InputProps={{

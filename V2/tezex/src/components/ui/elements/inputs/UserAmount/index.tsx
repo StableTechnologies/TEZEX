@@ -15,7 +15,7 @@ import {
 
 import { BigNumber } from "bignumber.js";
 import { LeftInput } from "./left-input";
-import { RightInput } from "./right-input";
+import { TokenAmountInput } from "./token-input";
 import { SlippageInput } from "./slippage";
 import useStyles from "../../../../../hooks/styles";
 import { style } from "./style";
@@ -195,7 +195,7 @@ const AmountField: FC<IAmountField> = (props) => {
         );
       default:
         return (
-          <RightInput
+          <TokenAmountInput
             component={props.component}
             transferType={props.transferType}
             asset={props.asset}
