@@ -39,6 +39,7 @@ export interface TransactionOps {
   getActiveTransaction: () => Transaction | undefined;
   updateAmount: (sendAmount?: string, slippage?: string) => Promise<void>;
   swapFields: () => Promise<void>;
+  useMax: () => Promise<void>;
   getAsetState: (
     transferType: TransferType,
     asset: Asset
@@ -80,6 +81,11 @@ export function useTransaction(
       setLoading(newLoadingState);
     }, 1000) // 300ms debounce time
   ).current;
+
+  //callback to get current transaction from wallet
+  const getActiveTransaction = useCallback((): Transaction | undefined => {
+    return transaction;
+  }, [transaction]);
 
   useEffect(() => {
     if (wallet && wallet.lbContractStorage) {
@@ -375,9 +381,40 @@ export function useTransaction(
     }
   }, [transaction, initialize]);
 
-  const getActiveTransaction = useCallback((): Transaction | undefined => {
-    return transaction;
-  }, [transaction]);
+  //debounced max send amount transaction.
+  const debouncedMax = useRef(
+    debounce(
+      async (oldTransaction: Transaction) => {
+        //currently only implemented for remove liquidity
+        switch (component) {
+          case TransactingComponent.SWAP:
+            break;
+          case TransactingComponent.ADD_LIQUIDITY:
+            break;
+          case TransactingComponent.REMOVE_LIQUIDITY:
+            await updateAmount(oldTransaction.sendAssetBalance[0].string);
+            break;
+        }
+      },
+      300,
+      {
+        leading: true,
+        trailing: false,
+      }
+    )
+  ).current;
+
+  //callback to set transaction with max send amount
+  const useMax = useCallback(async () => {
+    const transaction = getActiveTransaction();
+    // if transaction exists and send amount is not equal to send balance
+    if (
+      transaction &&
+      !eq(transaction.sendAmount, transaction.sendAssetBalance)
+    ) {
+      await debouncedMax(transaction);
+    }
+  }, [getActiveTransaction, initialize]);
 
   // calback to handle send amount or slippage updates to transaction in context
   const _updateAmount = useCallback(
@@ -458,6 +495,7 @@ export function useTransaction(
   return {
     initialize,
     swapFields,
+    useMax,
     getActiveTransaction,
     updateAmount,
     getAsetState,
