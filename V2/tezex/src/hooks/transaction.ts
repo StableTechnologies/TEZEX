@@ -28,6 +28,7 @@ import {
 } from "../types/general";
 
 import { debounce, eq, initial } from "lodash";
+import { useDebounce } from "usehooks-ts";
 export interface TransactionOps {
   initialize: (
     sendAsset: AssetOrAssetPair,
@@ -76,6 +77,7 @@ export function useTransaction(
     undefined
   );
 
+  const debouncedUpdate = useDebounce(update, 500);
   const setDebouncedLoading = useRef(
     debounce((newLoadingState) => {
       setLoading(newLoadingState);
@@ -477,7 +479,7 @@ export function useTransaction(
         if (await _updateAmount(sendAmount, slippage)) {
           console.log("init updateAmount updated", update);
           // if update was successful and pending update exists
-          if (update) {
+          if (debouncedUpdate) {
             debug && console.log("clearing update");
             // clear pending update if it exists
             setUpdate(undefined);
@@ -489,7 +491,7 @@ export function useTransaction(
         }
       }
     },
-    [update, _updateAmount]
+    [debouncedUpdate, _updateAmount]
   );
 
   return {
