@@ -131,7 +131,9 @@ const style = (theme, scale = 1) => {
         fontSize: `calc(.83vw * ${scale})`,
         lineHeight: `calc(1vw * ${scale})`,
         display: "inline-flex",
+        alignItems: "center",
         justifyContent: "center",
+        alignContent: "center",
         textAlign: "center",
       },
 
@@ -141,9 +143,7 @@ const style = (theme, scale = 1) => {
         alignItems: "center",
         justifyContent: "center",
         alignContent: "center",
-
         textAlign: "center",
-        paddingTop: "10%",
       },
 
       "& .MuiInputBase-root": {
