@@ -1,113 +1,21 @@
-import React, { useState, useMemo, useEffect, useCallback } from "react";
+import React, {
+  useState,
+  useRef,
+  useMemo,
+  useEffect,
+  useCallback,
+} from "react";
 import { css } from "@emotion/css";
 import { theme } from "../theme";
+import { debounce } from "lodash";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useMobileOrientation, useDeviceSelectors } from "react-device-detect";
+
 /*
  * mui useStyles is depreciated
  * default : for use in  sx props
  * toCSS : outputs css classes as the old mui useStyles
  */
-/*const useStyles = (style, scalingKey = "default", toCSS = false) => {
-  const [isLandScape, setIsLandScape] = useState(
-    window.matchMedia("(orientation: landscape)").matches
-  );
-  const scalingBreakpoints = theme.scaling[scalingKey];
-  const [scale, setScale] = useState(1);
-  const isXs = useMediaQuery(theme.breakpoints.only("xs"));
-  const isSm = useMediaQuery(theme.breakpoints.only("sm"));
-  const isMd = useMediaQuery(theme.breakpoints.only("md"));
-  const isLg = useMediaQuery(theme.breakpoints.only("lg"));
-  const isXl = useMediaQuery(theme.breakpoints.only("xl"));
-  function debounce(fn, ms) {
-    let timer;
-    return function(...args) {
-      clearTimeout(timer);
-      timer = setTimeout(() => {
-        timer = null;
-        fn.apply(this, args);
-      }, ms);
-    };
-  }
-  //set scale to custom theme component scale at breakpoint
-  const handleResize = useCallback(() => {
-    if (isLandScape && scalingBreakpoints.landscape) {
-      if (isXl && scale != scalingBreakpoints.landscape.xl)
-        setScale(scalingBreakpoints.landscape.xl);
-      if (isLg && scale != scalingBreakpoints.landscape.lg)
-        setScale(scalingBreakpoints.landscape.lg);
-      if (isMd && scale != scalingBreakpoints.landscape.md)
-        setScale(scalingBreakpoints.landscape.md);
-      if (isSm && scale != scalingBreakpoints.landscape.sm)
-        setScale(scalingBreakpoints.landscape.sm);
-      if (isXs && scale != scalingBreakpoints.landscape.xs)
-        setScale(scalingBreakpoints.landscape.xs);
-    } else if (!isLandScape || !scalingBreakpoints.landscape) {
-      if (isXl && scale != scalingBreakpoints.xl)
-        setScale(scalingBreakpoints.xl);
-      if (isLg && scale != scalingBreakpoints.lg)
-        setScale(scalingBreakpoints.lg);
-      if (isMd && scale != scalingBreakpoints.md)
-        setScale(scalingBreakpoints.md);
-      if (isSm && scale != scalingBreakpoints.sm)
-        setScale(scalingBreakpoints.sm);
-      if (isXs && scale != scalingBreakpoints.xs)
-        setScale(scalingBreakpoints.xs);
-    }
-  }, [isLandScape, isXl, isLg, isMd, isSm, scale])
-
-  const handelOrientationChange = () => {
-    setIsLandScape(window.matchMedia("(orientation: landscape)").matches);
-  };
-  const debounceResize = debounce(function handleChange() {
-    handleResize();
-    handelOrientationChange();
-  }, 100);
-  useEffect(() => {
-
-
-    console.log({
-      isXl: isXl,
-      isLg: isLg,
-      isMd: isMd,
-      isSm: isSm,
-      isXs: isXs,
-    });
-    window.addEventListener("resize", debounceResize);
-    return () => {
-      window.removeEventListener("resize", debounceResize)
-    };
-  }, []);
-
-  const classes = typeof style === "function" ? style(theme, scale) : style;
-
-  if (toCSS) {
-    const prepared = {};
-
-    Object.entries(classes).forEach(([key, value]) => {
-      prepared[key] = css(value);
-    });
-
-    return prepared;
-  } else
-    return {
-      isLandScape: isLandScape,
-      ...classes,
-    };
-}; */
-
-const getWidth = () =>
-  window.innerWidth ||
-  document.documentElement.clientWidth ||
-  document.body.clientWidth;
-
-const determineBreakpoint = (width) => {
-  if (width < theme.breakpoints.values.sm) return "xs";
-  if (width < theme.breakpoints.values.md) return "sm";
-  if (width < theme.breakpoints.values.lg) return "md";
-  if (width < theme.breakpoints.values.xl) return "lg";
-  return "xl";
-};
 
 const useStyles = (style, scalingKey = "default", toCSS = false) => {
   const { isLandscape } = useMobileOrientation();
@@ -119,77 +27,78 @@ const useStyles = (style, scalingKey = "default", toCSS = false) => {
     isLandscape // window.matchMedia("(orientation: landscape)").matches
   );
 
+  // fetch scaling factors from theme
   const scalingBreakpoints = theme.scaling[scalingKey];
   const [scale, setScale] = useState(1);
 
   const breakpointSizes = ["xs", "sm", "md", "lg", "xl"];
+
+  // breakpointSizes indexes as a boolean array of exact current breakpoint match
   const breakpointMatches = breakpointSizes.map((size) =>
     useMediaQuery(theme.breakpoints.only(size))
   );
 
+  // first breakpointSizes index that is true
   const matchedIndex = breakpointMatches.findIndex((match) => match);
+
+  // current breakpoint that is an exact match, -1 for no match
   const currentBreakpoint =
     matchedIndex !== -1 ? breakpointSizes[matchedIndex] : null;
 
+  // breakpointSizes indexes as a  boolean array of matches below current breakpoint match
   const breakpointMatchesDown = breakpointSizes.map((size) =>
     useMediaQuery(theme.breakpoints.down(size))
   );
 
+  // first breakpointSizes index that is true for a match below current breakpoint
   const matchedIndexDown = breakpointMatchesDown.findIndex((match) => match);
+  // breakpoint that is a match below current breakpoint, -1 for no match
+
   const currentBreakpointDown =
     matchedIndexDown !== -1 ? breakpointSizes[matchedIndexDown] : null;
 
   const breakpointSizesReverse = breakpointSizes.reverse();
+
+  // breakpointSizes indexes as a  boolean array of matches above  current breakpoint match
   const breakpointMatchesUp = breakpointSizes.map((size) =>
     useMediaQuery(theme.breakpoints.up(size))
   );
+  // first breakpointSizes index that is true for a match above current breakpoint
   const matchedIndexUp = breakpointMatchesUp.findIndex((match) => match);
+
+  // breakpoint that is a match above current breakpoint, -1 for no match
   const currentBreakpointUp =
     matchedIndexUp !== -1 ? breakpointSizesReverse[matchedIndexUp] : null;
-  function debounce(fn, ms) {
-    let timer;
-    return function (...args) {
-      clearTimeout(timer);
-      timer = setTimeout(() => {
-        timer = null;
-        fn.apply(this, args);
-      }, ms);
-    };
-  }
 
-  //  useEffect(() => {
-  //    const handelOrientationChange = () => {
-  //      const { isLandscape } = useMobileOrientation();
-  //      setIsLandScape(isLandscape);
-  //      // if (window.matchMedia("(orientation: landscape)").matches !== isLandScape) {
-  //      //   setIsLandScape(window.matchMedia("(orientation: landscape)").matches);
-  //      // }
-  //    };
-  //
-  //    const debouncedOrientationChange = debounce(handelOrientationChange, 700);
-  //
-  //    window.addEventListener("resize", debouncedOrientationChange);
-  //
-  //    return () => {
-  //      window.removeEventListener("resize", debouncedOrientationChange);
-  //    };
-  //  }, [isLandScape, debounce]);
+  // debounce scale update
+  const debouncedScaleUpdate = useRef(
+    debounce(
+      (scalingFactor) => {
+        setScale(scalingFactor);
+      },
+      500,
+      { leading: true, trailing: true }
+    )
+  );
 
+  // update scaling factor
   useEffect(() => {
+    // get closest breakpoint,  dealing with edge cases
     const getBreakpoint = () => {
       return currentBreakpoint || currentBreakpointUp || currentBreakpointDown;
     };
-    const targetBreakpoint =
+
+    // get scaling factor from theme
+    const scalingFactor =
       theme.deviceType.isMobile && !isLandscape && scalingBreakpoints.mobile
         ? scalingBreakpoints.mobile[getBreakpoint()]
         : isLandscape && scalingBreakpoints.landscape
         ? scalingBreakpoints.landscape[getBreakpoint()]
         : scalingBreakpoints[getBreakpoint()];
 
-    if (scale !== targetBreakpoint) {
-      debounce(() => {
-        setScale(targetBreakpoint);
-      }, 100)();
+    // update scaling factor if changed
+    if (scale !== scalingFactor) {
+      debouncedScaleUpdate.current(scalingFactor);
     }
   }, [
     isLandscape,
