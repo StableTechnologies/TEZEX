@@ -1,4 +1,11 @@
-import React, { memo, FC, useState, useEffect, useCallback } from "react";
+import React, {
+  memo,
+  FC,
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+} from "react";
 import { BigNumber } from "bignumber.js";
 
 import {
@@ -24,7 +31,7 @@ import {
   isNumeric,
   toNumber,
 } from "../../../../functions/util";
-import { isNumber } from "lodash";
+import lodash, { isNumber } from "lodash";
 export interface ISlippage {
   component: TransactingComponent;
   transferType: TransferType;
@@ -33,14 +40,15 @@ export interface ISlippage {
 
 const SlippageInput: FC<ISlippage> = (props) => {
   const styles = useStyles(style, props.scalingKey);
-  const [selectedId, setSelectedId] = useState("0");
+  const [selectedId, setSelectedId] = useState("1");
+  const [sselectedId, ssetSelectedId] = useState("1");
   const [loading, setLoading] = useState(true);
   const [input, setInput] = useState<string>("0.5");
   const debouncedValue = useDebounce<string>(input, 500);
   const [isZeroOnFocus, setIsZeroOnFocus] = useState(false);
   const transactionOps = useTransaction(props.component);
   const [id, setId] = useState<Id | undefined>(undefined);
-
+  const inputRef = useRef<HTMLInputElement>(null);
   // Set id on new transaction and set loading to true
   useEffect(() => {
     const transactionId = transactionOps.getActiveTransaction()?.id;
@@ -53,7 +61,6 @@ const SlippageInput: FC<ISlippage> = (props) => {
       setLoading(true);
     }
   }, [transactionOps.getActiveTransaction, id]);
-
   // boolean check to see  if updates can be made
   const canUpdate = useCallback(() => {
     return !(transactionOps.loading || transactionOps.transacting);
@@ -93,8 +100,8 @@ const SlippageInput: FC<ISlippage> = (props) => {
   const setSelectedIdFromValue = useCallback((slippage: string) => {
     // get curent slippage of transaction in context
     //update selected tab if different
-    if (slippage === "0.5") _setSelectedId("0");
-    else if (slippage === "1") _setSelectedId("1");
+    if (lodash.toNumber(slippage) === 0.5) _setSelectedId("0");
+    else if (lodash.toNumber(slippage) === 1) _setSelectedId("1");
     else _setSelectedId("input");
   }, []);
 
@@ -144,7 +151,7 @@ const SlippageInput: FC<ISlippage> = (props) => {
     const slippage = transactionOps.getActiveTransaction()?.slippage;
 
     // if slippage in transaction  is not set update slippage
-    if (!isNumber(slippage)) updateAmount(debouncedValue);
+    //if (!isNumber(slippage)) updateAmount(debouncedValue);
 
     // if slippage is different from slippage in context update slippage
     if (
@@ -160,17 +167,35 @@ const SlippageInput: FC<ISlippage> = (props) => {
       );
       updateAmount(debouncedValue);
     }
-  }, [
-    transactionOps.getActiveTransaction()?.slippage,
-    debouncedValue,
-    updateAmount,
-  ]);
+  }, [transactionOps.getActiveTransaction, debouncedValue, updateAmount]);
 
   //calback to check if input is selected
   const isInputSelected = useCallback(() => {
     return selectedId === "input";
   }, [selectedId]);
 
+  //calback to handle slippage text input change
+  const handleChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      // check if updates can be made and input is selected
+      if (!canUpdate() || !isInputSelected) return;
+
+      // get value in input
+      const newValue = event.target.value;
+
+      //  deal with backspace
+      if (newValue.length < input.length) {
+        setInput(newValue);
+      } else {
+        // clean non numeric characters off the input string
+        const result = cleanNumericString(newValue);
+        // if cleaned string is numeric update input
+        if (isNumeric(result)) setInputValue(result);
+      }
+    },
+    [canUpdate, isInputSelected, input] // dependencies
+  );
+  /*
   // Textfield component for slippage input
   // memoized to prevent rerenders
   const SlippageInput = memo(() => {
@@ -292,6 +317,97 @@ const SlippageInput: FC<ISlippage> = (props) => {
   };
 
   return <SlippageTabs />;
+*/
+  // callback to handle slippage tab clicks
+  const handleSlippageTabClick = (id: string) => {
+    setSelectedId(id);
+    switch (id) {
+      case "0":
+        console.log("0.5% clicked");
+        setInput("0.5");
+        break;
+      case "1":
+        console.log("1.0% clicked");
+        setInput("1.0");
+        break;
+      default:
+        if (id === "input" && inputRef.current) {
+          console.log("Input clicked");
+          setTimeout(() => inputRef.current?.focus(), 0); // Focus after state update
+        }
+        break;
+    }
+  };
+  return (
+    <Box sx={styles.slippageTabsRoot}>
+      <>
+        <Box
+          sx={{
+            marginLeft: "2%",
+          }}
+          onClick={() => handleSlippageTabClick("0")}
+        >
+          <Button disabled={selectedId !== "0"} sx={styles.slippageTab}>
+            0.5%
+          </Button>
+        </Box>
+        <Box onClick={() => handleSlippageTabClick("1")}>
+          <Button disabled={selectedId !== "1"} sx={styles.slippageTab}>
+            1.0%
+          </Button>
+        </Box>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            height: "100%",
+            // width: "100%",
+          }}
+          onClick={() => handleSlippageTabClick("input")}
+        >
+          <Box sx={styles.slippageInput.box}>
+            {selectedId === "input" ? (
+              <TextField
+                ref={inputRef}
+                autoComplete="off"
+                autoFocus
+                disabled={selectedId !== "input"}
+                onChange={handleChange}
+                value={input}
+                sx={{ ...styles.slippageInput, zindex: 10 }}
+                InputProps={{
+                  disableUnderline: true,
+                  endAdornment: (
+                    <InputAdornment
+                      sx={styles.slippageInput.endAdornment}
+                      position="start"
+                    >
+                      %
+                    </InputAdornment>
+                  ),
+                  sx: styles.slippageInput.inputProps,
+                }}
+                inputProps={{
+                  inputMode: "decimal",
+                }}
+                size="small"
+                variant="standard"
+              />
+            ) : (
+              <Box
+                sx={styles.slippageTab}
+                onClick={() => handleSlippageTabClick("input")}
+              >
+                <Button disabled={true} sx={styles.slippageTab}>
+                  {input}%
+                </Button>
+              </Box>
+            )}
+          </Box>
+        </Box>
+      </>
+    </Box>
+  );
 };
 
 export const Slippage = memo(SlippageInput);

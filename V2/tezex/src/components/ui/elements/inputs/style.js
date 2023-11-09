@@ -4,11 +4,12 @@ const style = (theme, scale = 1) => {
     slippageTabsRoot: {
       "&.MuiBox-root": {
         background: "#FFFFFF",
-        display: "flex",
+        display: "inline-flex",
         position: "relative",
         flexDirection: "row",
         height: `calc(3vw * ${scale})`,
         alignItems: "center",
+        alignContent: "center",
         justifyContent: "space-between",
         width: `calc(15.2vw * ${scale})`,
         maxHeight: `calc(2.7vw * ${scale})`,
@@ -24,6 +25,7 @@ const style = (theme, scale = 1) => {
           display: "flex",
           position: "relative",
           alignItems: "center",
+          alignContent: "center",
           justifyContent: "center",
 
           minWidth: `calc(4.2vw * ${scale})`,
@@ -39,13 +41,15 @@ const style = (theme, scale = 1) => {
         fontSize: `calc(.83vw * ${scale})`,
         lineHeight: `calc(1vw * ${scale})`,
         display: "inline-flex",
+        alignItems: "center",
         justifyContent: "center",
+        alignContent: "center",
         textAlign: "center",
 
         minHeight: `calc(2.2vw * ${scale})`,
         maxHeight: `calc(2.2vw * ${scale})`,
 
-        zIndex: 1,
+        zIndex: 10,
       },
       "&.MuiButtonBase-root": {
         position: "relative",
@@ -57,13 +61,15 @@ const style = (theme, scale = 1) => {
         lineHeight: `calc(1vw * ${scale})`,
         display: "inline-flex",
         justifyContent: "center",
+        alignItems: "center",
+        alignContent: "center",
         textAlign: "center",
         minHeight: `calc(2.2vw * ${scale})`,
         maxHeight: `calc(2.2vw * ${scale})`,
 
         minWidth: `calc(4.2vw * ${scale})`,
         maxWidth: `calc(4.2vw * ${scale})`,
-        zIndex: 1,
+        zIndex: 10,
 
         backgroundColor: "selectedHomeTab.main",
         color: "text.primary",
@@ -78,12 +84,15 @@ const style = (theme, scale = 1) => {
       box: {
         "&.MuiBox-root": {
           paddingTop: `calc(.28vw * ${scale})`,
-          display: "flex",
+          display: "inline-flex",
           position: "relative",
           flexDirection: "row",
-          width: "3ch",
-          alignItems: "center",
-          justifyContent: "space-between",
+          // minWidth: "4ch",
+          //maxWidth: "6ch",
+          alignItems: "baseline",
+          justifyContent: "center",
+          alignContent: "center",
+          //justifyContent: "space-between",
         },
       },
       inputProps: {
@@ -102,13 +111,16 @@ const style = (theme, scale = 1) => {
         zIndex: 3,
       },
       "& .MuiInputAdornment-root": {
-        display: "flex",
+        display: "inline-flex",
         alignItems: "center",
         justifyContent: "center",
+        alignContent: "center",
         position: "relative",
         bottom: `calc(.13vw * ${scale})`,
 
-        paddingRight: `calc(0vw * ${scale})`,
+        //paddingRight: `calc(.13vw * ${scale})`,
+        paddingLeft: "0%",
+        marginRight: "2%", //`calc(.53vw * ${scale})`,
       },
 
       "& .MuiTypography-root": {
@@ -128,16 +140,24 @@ const style = (theme, scale = 1) => {
 
         alignItems: "center",
         justifyContent: "center",
+        alignContent: "center",
+
+        textAlign: "center",
+        paddingTop: "10%",
       },
 
       "& .MuiInputBase-root": {
+        paddingTop: "12%",
         fontFamily: "Inter",
         fontStyle: "normal",
         fontWeight: "500",
         fontSize: `calc(.83vw * ${scale})`,
         lineHeight: `calc(1vw * ${scale})`,
-        display: "flex",
+        width: "6ch",
+        display: "inline-flex",
+        alignItems: "center",
         justifyContent: "center",
+        alignContent: "center",
         textAlign: "center",
 
         zIndex: 1,
