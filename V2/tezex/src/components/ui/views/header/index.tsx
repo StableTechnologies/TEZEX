@@ -70,6 +70,22 @@ export const Header: FC<IHeader> = (props) => {
     </Grid2>
   ); */
 
+  /*
+  return (
+    <Box sx={styles.header.headerBox}>
+      <Box>
+        <img style={styles.header.logo} src={logo} alt="Logo" />
+      </Box>
+
+      <Box sx={styles.header.nav}>
+        <NavApp />
+      </Box>
+      <Box sx={styles.header.wallet}>
+        <Wallet variant={"header"} />
+      </Box>
+    </Box>
+  );
+  */
   return (
     //<AppBar sx={styles.header.headerbox} position="static">
     <AppBar
@@ -82,14 +98,14 @@ export const Header: FC<IHeader> = (props) => {
           {
             //marginBottom: "10px",
             //display: "flex",
-            /* justifyContent: "center",
-               alignContent: "center",
-               alignItems: "center",
-               height: "5vh",
-             */
+            // justifyContent: "center",
+            //   alignContent: "center",
+            //   alignItems: "center",
+            //   height: "5vh",
+            //
           }
         }
-        maxWidth="xl"
+        maxWidth={false}
       >
         <Toolbar
           disableGutters
