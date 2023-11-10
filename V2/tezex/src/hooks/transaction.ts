@@ -86,8 +86,8 @@ export function useTransaction(
 
   //callback to get current transaction from wallet
   const getActiveTransaction = useCallback((): Transaction | undefined => {
-    return transaction;
-  }, [transaction]);
+    return wallet.getActiveTransaction(component);
+  }, [wallet.getActiveTransaction, component]);
 
   useEffect(() => {
     if (wallet && wallet.lbContractStorage) {
@@ -308,13 +308,13 @@ export function useTransaction(
           slippage
         )
         .then(async (done) => {
-          console.log("done : ", done);
-          sendAmount && console.log("init sendAmount : ", sendAmount);
-          // if send amount was passed, update send amount which calls estimating recieve amount
-          sendAmount &&
-            (await updateAmount(sendAmount[0].string, slippage?.toString()));
-          //done && setLoading(false);
-          // update transaction balance
+          // console.log("done : ", done);
+          // sendAmount && console.log("init sendAmount : ", sendAmount);
+          // // if send amount was passed, update send amount which calls estimating recieve amount
+          // sendAmount &&
+          //   (await updateAmount(sendAmount[0].string, slippage?.toString()));
+          // //done && setLoading(false);
+          // // update transaction balance
           if (done && wallet.client)
             await wallet.updateTransactionBalance(component);
 
@@ -323,65 +323,67 @@ export function useTransaction(
           return done;
         });
     },
-    [wallet, component]
+    [
+      wallet.initialiseTransaction,
+      wallet.updateTransactionBalance,
+      wallet.client,
+      component,
+    ]
   );
-  const debouncedSwapFields = useRef(
-    debounce(
-      async (oldTransaction: Transaction) => {
-        debug && console.log("debouncedSwapFields");
+  const debouncedSwapFields = useCallback(
+    async (oldTransaction: Transaction) => {
+      debug && console.log("debouncedSwapFields");
+      debug &&
+        console.log(
+          "debouncedSwapFields receiveAsset",
+          oldTransaction.receiveAsset
+        );
+      debug &&
         debug &&
-          console.log(
-            "debouncedSwapFields receiveAsset",
-            oldTransaction.receiveAsset
-          );
-        debug &&
-          debug &&
-          console.log(
-            "debouncedSwapFields sendAsset",
-            oldTransaction.sendAsset
-          );
+        console.log("debouncedSwapFields sendAsset", oldTransaction.sendAsset);
 
-        //setLoading(true);
-        switch (component) {
-          case TransactingComponent.SWAP:
+      //setLoading(true);
+      switch (component) {
+        case TransactingComponent.SWAP:
+          console.log(
+            "swapFields debouncedSwapFields debug old receive amount",
+            oldTransaction.receiveAmount[0].string
+          );
+          await initialize(
+            oldTransaction.receiveAsset,
+            oldTransaction.sendAsset,
+            oldTransaction.receiveAmount,
+            undefined,
+            oldTransaction.slippage
+          );
+          break;
+        case TransactingComponent.ADD_LIQUIDITY:
+          if (oldTransaction.sendAmount[1] && oldTransaction.sendAsset[1]) {
             await initialize(
+              [oldTransaction.sendAsset[1], oldTransaction.sendAsset[0]],
               oldTransaction.receiveAsset,
-              oldTransaction.sendAsset,
+              [oldTransaction.sendAmount[1], oldTransaction.sendAmount[0]],
               oldTransaction.receiveAmount,
-              undefined,
               oldTransaction.slippage
             );
-            break;
-          case TransactingComponent.ADD_LIQUIDITY:
-            if (oldTransaction.sendAmount[1] && oldTransaction.sendAsset[1]) {
-              await initialize(
-                [oldTransaction.sendAsset[1], oldTransaction.sendAsset[0]],
-                oldTransaction.receiveAsset,
-                [oldTransaction.sendAmount[1], oldTransaction.sendAmount[0]],
-                oldTransaction.receiveAmount,
-                oldTransaction.slippage
-              );
-            }
-            break;
-          case TransactingComponent.REMOVE_LIQUIDITY:
-            break;
-        }
-      },
-      300,
-      {
-        leading: true,
-        trailing: false,
+          }
+          break;
+        case TransactingComponent.REMOVE_LIQUIDITY:
+          break;
       }
-    )
-  ).current;
+    },
+    [initialize, component]
+  );
   const swapFields = useCallback(async () => {
     debug && console.log("swapFields");
+    const transaction = getActiveTransaction();
+    console.log("swapFields transaction", transaction);
     if (transaction) {
       await debouncedSwapFields(transaction);
     } else {
       debug && console.log("swapFields transaction is undefined", transaction);
     }
-  }, [transaction, initialize]);
+  }, [getActiveTransaction, debouncedSwapFields, initialize]);
 
   //debounced max send amount transaction.
   const debouncedMax = useRef(
@@ -423,6 +425,7 @@ export function useTransaction(
     async (sendAmount?: string, slippage?: string): Promise<boolean> => {
       // variable to track if transaction was updated
       let updated = false;
+      const transaction = getActiveTransaction();
       // if transaction exists and is not locked
       if (transaction && !transaction.locked) {
         // handle slippage update
@@ -440,7 +443,15 @@ export function useTransaction(
         }
         // handle send amount update
         if (sendAmount) {
-          console.log("init _updateAmount sendAmount", sendAmount);
+          console.log(
+            "swapFields debug init _updateAmount 1 sendAmount",
+            sendAmount
+          );
+
+          console.log(
+            "swapFields debug init _updateAmount 2 current transaction",
+            transaction
+          );
           if (wallet.lbContractStorage) {
             const updatedTransaction: Transaction = {
               ...transaction,
@@ -451,9 +462,17 @@ export function useTransaction(
                     transaction.sendAmount[1],
                   ],
             };
+            console.log(
+              "swapFields debug updatedTransaction sendAmount[0] before estimate",
+              updatedTransaction.sendAmount[0].string
+            );
             const _transaction: Transaction = estimate(
               updatedTransaction,
               wallet.lbContractStorage
+            );
+            console.log(
+              "swapFields  _updateAmount receiveAmount debug ",
+              _transaction.receiveAmount
             );
             updated = await wallet.updateAmount(
               _transaction.component,
@@ -465,7 +484,7 @@ export function useTransaction(
       }
       return updated;
     },
-    [transaction, wallet, component, transacting]
+    [getActiveTransaction, wallet, component, transacting]
   );
 
   // exported callback to handle send amount or slippage updates to transaction in context
