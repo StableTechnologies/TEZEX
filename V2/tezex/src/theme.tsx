@@ -119,30 +119,12 @@ const breakpoints: Breakpoints = {
 };
 const dpr: number = window.devicePixelRatio || 1;
 const f = adjustBreakpointsForDpr(br);
-//  const deviceType = parser(req.headers['user-agent']).device.type || 'desktop';
-//  const ssrMatchMedia = (query: string) => ({
-//    matches: mediaQuery.match(query, {
-//      // The estimated CSS width of the browser.
-//      width: deviceType === 'mobile' ? '0px' : '1024px',
-//    }),
-//  })
-//}
 
 const [selectors, data] = useDeviceSelectors(window.navigator.userAgent);
 
 const { isMobile, isDesktop } = selectors;
-console.log("isMobile", isMobile);
-console.log("isDesktop", isDesktop);
 export const theme = createTheme({
   ...(isDesktop ? f : {}),
-  // components: {
-  // Change the default options of useMediaQuery
-  //      MuiUseMediaQuery: {
-  //        defaultProps: {
-  //          ssrMatchMedia,
-  //        },
-  //      },
-  //    },
   deviceType: {
     isMobile: isMobile,
     isDesktop: isDesktop,
@@ -267,49 +249,5 @@ export const theme = createTheme({
     },
   },
 });
-/*
-const theme: Theme = createTheme({
-  palette: {
-    grey: {
-      main: purple[500],
-    }
-            
-        aphy: {
-        Family: "Inter",
-                         
-          es: {
-      iCardContent: {
-      root: {
-        padding: '2rem 2rem .5rem',
-        '@media (max-width: 600px)': {
-          padding: ".8rem",
-        }
-      },
-              
-          dHeader: {
-        ot: {
-        padding: '0',
-        
-      
-      iButton: {
-      root: {
-        "& $label":{
-          whiteSpace: "nowrap",
-        }
-      }
-    },
-    MuiList: {
-      root: {
-        padding: ".5rem 1.5rem",
-      },
-    },
-    MuiCircularProgress: {
-      colorPrimary: {
-        color: "#000",
-      }
-    }
-  },
-})
 
-*/
 export default theme;
