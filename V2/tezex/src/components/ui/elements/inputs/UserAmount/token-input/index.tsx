@@ -226,15 +226,13 @@ const TokenInput: FC<IRigthInput> = (props) => {
     console.log("assetState", assetState);
   }, [transactionOps.trackedAsset]);
 
-  const handleFocus = props.readOnly
-    ? undefined
-    : () => {
-        if (value === "0.00") {
-          setIsZeroOnFocus(true);
-          setValue("");
-        }
-        // props.onFocus();
-      };
+  const handleFocus = useCallback(() => {
+    if (value === "0.00") {
+      setIsZeroOnFocus(true);
+      setValue("");
+    }
+    // props.onFocus();
+  }, [value]);
 
   const handleBlur = useCallback(() => {
     if (props.readOnly || loading) return;

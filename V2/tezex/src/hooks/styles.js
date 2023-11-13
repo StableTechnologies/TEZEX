@@ -76,7 +76,7 @@ const useStyles = (style, scalingKey = "default", toCSS = false) => {
       (scalingFactor) => {
         setScale(scalingFactor);
       },
-      700,
+      300,
       { leading: false, trailing: true }
     )
   );
