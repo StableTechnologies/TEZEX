@@ -228,7 +228,7 @@ const TokenInput: FC<IRigthInput> = (props) => {
 
   const handleFocus = useCallback(() => {
     if (value === "0.00") {
-      setIsZeroOnFocus(true);
+      //setIsZeroOnFocus(true);
       setValue("");
     }
     // props.onFocus();
@@ -236,12 +236,12 @@ const TokenInput: FC<IRigthInput> = (props) => {
 
   const handleBlur = useCallback(() => {
     if (props.readOnly || loading) return;
-    console.log("handleBlur");
-    if (value === "" && isZeroOnFocus) {
+    console.log("handleBlur value:", value);
+    if (value === "" || toNumber(value) === 0) {
       setValue("0.00");
-      setIsZeroOnFocus(false);
+      // setIsZeroOnFocus(false);
     }
-  }, [props.readOnly, loading, value, isZeroOnFocus]);
+  }, [props.readOnly, loading, value]);
   const handleChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       console.log("handleChange, loading", loading);
