@@ -88,15 +88,6 @@ export const Swap: FC = () => {
     await transactionOps.swapFields();
   }, [assets, transactionOps]);
 
-  // call back to update balance of active transaction
-  const updateBalance = useCallback(async () => {
-    if (isWalletConnected) {
-      if (walletOps.transaction) {
-        // await walletOps.updateBalance();
-      }
-    }
-  }, [walletOps, walletOps.updateBalance, isWalletConnected]);
-
   //  useEffect(() => {
   //    if (walletOps.transaction) {
   //      //      setAssets([
@@ -106,15 +97,6 @@ export const Swap: FC = () => {
   //    } else transactionOps.initialize([assets[send]], [assets[receive]]);
   //  }, [walletOps.transaction, assets, transactionOps]);
 
-  // effect to keep  updating balance of active transaction
-  // at a 2 second intervals
-  useEffect(() => {
-    const interval = setInterval(() => {
-      // !loading && updateBalance();
-    }, 2000);
-    return () => clearInterval(interval);
-  });
-
   const debouncedNewTransaction = debounce(
     async () => {
       const transaction = await transactionOps.initialize(
@@ -123,7 +105,6 @@ export const Swap: FC = () => {
       );
 
       if (transaction) {
-        await updateBalance();
         if (swappingFileds) setSwappingFileds(false);
         setLoading(false);
       }
@@ -144,12 +125,10 @@ export const Swap: FC = () => {
 
     //if transaction initialized update balance and set loading params to false
     if (transaction) {
-      console.log("newTransaction");
-      await updateBalance();
       if (swappingFileds) setSwappingFileds(false);
       setLoading(false);
     }
-  }, [swappingFileds, assets, updateBalance, transactionOps]);
+  }, [swappingFileds, assets, transactionOps]);
 
   // useEffect(() => {
   //   if (session.activeComponent !== TransactingComponent.SWAP)
@@ -169,8 +148,6 @@ export const Swap: FC = () => {
       // if loading and transaction,
       // update balance  , assets and set loading to false
       if (walletOps.transaction) {
-        updateBalance();
-
         //grab assets from transaction
         const _assets: [Asset, Asset] = [
           walletOps.transaction.sendAsset[0],
@@ -181,24 +158,9 @@ export const Swap: FC = () => {
         setLoading(false);
       }
     }
-  }, [
-    swappingFileds,
-    loading,
-    walletOps.transaction,
-    newTransaction,
-    session,
-    updateBalance,
-  ]);
+  }, [swappingFileds, loading, walletOps.transaction, newTransaction, session]);
 
   useEffect(() => {
-    console.log("transaction in walletOps ", walletOps.transaction);
-  }, [loading, walletOps.transaction]);
-
-  useEffect(() => {
-    console.log(
-      "setting session session.activeComponent",
-      session.activeComponent
-    );
     if (session.activeComponent !== TransactingComponent.SWAP)
       session.loadComponent(TransactingComponent.SWAP);
   }, [session]);

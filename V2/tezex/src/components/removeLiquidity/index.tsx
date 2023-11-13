@@ -77,32 +77,15 @@ export const RemoveLiquidity: FC = () => {
     if (useMax) transactionOps.useMax();
   }, [useMax, transactionOps.useMax]);
 
-  // call back to update balance of active transaction
-  const updateBalance = useCallback(async () => {
-    if (isWalletConnected) {
-      if (walletOps.transaction) {
-        //await walletOps.updateBalance();
-      }
-    }
-  }, [walletOps, walletOps.updateBalance, isWalletConnected]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      updateBalance();
-    }, 2000);
-    return () => clearInterval(interval);
-  });
-
   const newTransaction = useCallback(async () => {
     const transaction = await transactionOps.initialize(
       [assets[send]],
       [assets[receive1], assets[receive2]]
     );
     if (transaction) {
-      updateBalance();
       setLoading(false);
     }
-  }, [assets, updateBalance, transactionOps.initialize]);
+  }, [assets, transactionOps.initialize]);
 
   useEffect(() => {
     if (session.activeComponent !== TransactingComponent.REMOVE_LIQUIDITY)
@@ -116,7 +99,6 @@ export const RemoveLiquidity: FC = () => {
       // if loading and transaction,
       // update balance, assets and set loading to false
       if (walletOps.transaction && walletOps.transaction.receiveAsset[1]) {
-        updateBalance();
         //grab assets from transaction
         const _assets: [Asset, Asset, Asset] = [
           walletOps.transaction.sendAsset[0],

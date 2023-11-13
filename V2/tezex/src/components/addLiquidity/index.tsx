@@ -88,13 +88,6 @@ export const AddLiquidity: FC = () => {
 
   const swapFields = useCallback(() => {
     setSwapingFields(true);
-    console.log("!!!!!setSwapingFields(true)");
-    // const send = sendAmount2;
-    // setLoading(true);
-    // setAssets([assets[1], assets[0], assets[receive]]);
-    //
-    // setSwapingFields(true);
-    // setSendAmount(send);
   }, []);
 
   // callback to internally call swap fields
@@ -116,58 +109,6 @@ export const AddLiquidity: FC = () => {
     }
   }, [swapingFields, _swapFields]);
 
-  // useEffect(() => {
-  //   if (active && !swapingFields) {
-  //     active.sendAssetBalance[1] &&
-  //       setBalances([
-  //         active.sendAssetBalance[0].decimal.toFixed(),
-  //         active.sendAssetBalance[1].decimal.toFixed(),
-  //       ]);
-  //
-  //     active.sendAsset[1] &&
-  //       setAssets([
-  //         active.sendAsset[0],
-  //         active.sendAsset[1],
-  //         active.receiveAsset[0],
-  //       ]);
-  //   }
-  // }, [active]);
-
-  // const updateTransaction = useCallback(() => {
-  //   if (active && !swapingFields) {
-  //     if (
-  //       !active.sendAmount[0].decimal.eq(sendAmount) ||
-  //       active.slippage !== slippage
-  //     ) {
-  //       walletOps.updateAmount(
-  //         sendAmount.toFixed(),
-  //         slippage.toString()
-  //       );
-  //     }
-  //   }
-  // }, [sendAmount, active, slippage, walletOps]);
-  // useEffect(() => {
-  //   updateTransaction();
-  // }, [updateTransaction]);
-
-  // call back to update balance of active transaction
-  const updateBalance = useCallback(async () => {
-    if (isWalletConnected) {
-      if (walletOps.transaction) {
-        //await walletOps.updateBalance();
-      }
-    }
-  }, [walletOps, walletOps.updateBalance, isWalletConnected]);
-
-  // effect to keep  updating balance of active transaction
-  // at a 2 second intervals
-  useEffect(() => {
-    const interval = setInterval(() => {
-      //  !loading && updateBalance();
-    }, 2000);
-    return () => clearInterval(interval);
-  });
-
   // callback to create new transaction
   const newTransaction = useCallback(async () => {
     const transaction = await transactionOps.initialize(
@@ -177,17 +118,12 @@ export const AddLiquidity: FC = () => {
 
     //if transaction initialized update balance and set loading params to false
     if (transaction) {
-      updateBalance();
       if (swapingFields) setSwapingFields(false);
       setLoading(false);
     }
-  }, [swapingFields, assets, updateBalance, transactionOps]);
+  }, [swapingFields, assets, transactionOps]);
 
   useEffect(() => {
-    console.log(
-      "setting session session.activeComponent",
-      session.activeComponent
-    );
     if (session.activeComponent !== TransactingComponent.ADD_LIQUIDITY)
       session.loadComponent(TransactingComponent.ADD_LIQUIDITY);
   }, [session]);
@@ -201,8 +137,6 @@ export const AddLiquidity: FC = () => {
       // if loading and transaction,
       // update balance, assets and set loading to false
       if (walletOps.transaction && walletOps.transaction.sendAsset[1]) {
-        updateBalance();
-
         //grab assets from transaction
         const _assets: [Asset, Asset, Asset] = [
           walletOps.transaction.sendAsset[0],
@@ -214,7 +148,7 @@ export const AddLiquidity: FC = () => {
         setLoading(false);
       }
     }
-  }, [loading, walletOps.transaction, newTransaction, session, updateBalance]);
+  }, [loading, walletOps.transaction, newTransaction, session]);
 
   // Callback to fetch the estimate of amount of liquidity tokens to recieve
   const getLiquidityTokens = useCallback((): string => {
@@ -224,15 +158,6 @@ export const AddLiquidity: FC = () => {
     return lqt || "0";
   }, [transactionOps.getActiveTransaction]);
 
-  useEffect(() => {
-    const transaction = transactionOps.getActiveTransaction();
-    const sirs = transaction?.receiveAmount[0].string;
-    const send1 = transaction?.sendAmount[0].string;
-    const send2 = transaction?.sendAmount[1]?.string;
-    console.log("!..sirs", sirs);
-    console.log("!..send1", send1);
-    console.log("!..send2", send2);
-  }, [transactionOps.getActiveTransaction]);
   //callback to handle transaction status changes
   const monitorStatus = useCallback(() => {
     const transaction = transactionOps.getActiveTransaction();
