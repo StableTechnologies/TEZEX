@@ -69,7 +69,6 @@ const TokenInput: FC<IRigthInput> = (props) => {
   const [loading, setLoading] = useState(true);
   const [id, setId] = useState<Id | undefined>(undefined);
   const swap = useCallback(() => {
-    console.log("swap-right-input");
     if (props.swap) props.swap();
   }, [props.swap]);
 
@@ -142,10 +141,8 @@ const TokenInput: FC<IRigthInput> = (props) => {
   useEffect(() => {
     const transactionId = transactionOps.getActiveTransaction()?.id;
 
-    console.log("load value effect, id", id, "transactionId", transactionId);
     // non-read only: update local value only on id change
     if (!props.readOnly && loading) {
-      console.log("load value : non read only");
       loadValue();
     }
     //  read only , update on transaction change
@@ -160,14 +157,9 @@ const TokenInput: FC<IRigthInput> = (props) => {
     loadValue,
   ]);
 
-  //debug loading
-  useEffect(() => {
-    console.log("loading", loading);
-  }, [loading]);
   // track hook state for loading and transacting  and set loading to true
   useEffect(() => {
     if (!canUpdate()) {
-      console.log("set loading to true");
       setLoading(true);
     }
   }, [canUpdate]);
@@ -223,7 +215,6 @@ const TokenInput: FC<IRigthInput> = (props) => {
     //    !eq(assetState.amount.string, transactionBalance) &&
     //      setTransactionAmount(assetState.amount.string);
     //  }
-    console.log("assetState", assetState);
   }, [transactionOps.trackedAsset]);
 
   const handleFocus = useCallback(() => {
@@ -236,7 +227,6 @@ const TokenInput: FC<IRigthInput> = (props) => {
 
   const handleBlur = useCallback(() => {
     if (props.readOnly || loading) return;
-    console.log("handleBlur value:", value);
     if (value === "" || toNumber(value) === 0) {
       setValue("0.00");
       // setIsZeroOnFocus(false);
@@ -244,7 +234,6 @@ const TokenInput: FC<IRigthInput> = (props) => {
   }, [props.readOnly, loading, value]);
   const handleChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      console.log("handleChange, loading", loading);
       if (props.readOnly || loading) return;
 
       const newValue = event.target.value;
