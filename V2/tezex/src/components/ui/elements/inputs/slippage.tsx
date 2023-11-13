@@ -128,7 +128,6 @@ const SlippageInput: FC<ISlippage> = (props) => {
   // track hook state for loading and transacting  and set loading to true
   useEffect(() => {
     if (!canUpdate()) {
-      console.log("set loading to true");
       setLoading(true);
     }
   }, [canUpdate]);
@@ -137,8 +136,6 @@ const SlippageInput: FC<ISlippage> = (props) => {
   // if it does it calls an update
   const updateAmount = useCallback(
     async (slippage: string): Promise<void> => {
-      //console.log("Top level slippage update , New slippage : ", slippage);
-
       // check if updates can be made and update slippage
       canUpdate() && (await transactionOps.updateAmount(undefined, slippage));
     },
@@ -156,12 +153,6 @@ const SlippageInput: FC<ISlippage> = (props) => {
       isNumeric(debouncedValue) &&
       slippage !== toNumber(debouncedValue)
     ) {
-      console.log(
-        "Slippage update , New slippage : ",
-        debouncedValue,
-        "Old slippage : ",
-        slippage
-      );
       const timeoutId = setTimeout(() => {
         updateAmount(debouncedValue);
       }, 500); // 500 ms delay before calling the update function again
@@ -205,16 +196,13 @@ const SlippageInput: FC<ISlippage> = (props) => {
     setSelectedId(id);
     switch (id) {
       case "0":
-        console.log("0.5% clicked");
         setInput("0.5");
         break;
       case "1":
-        console.log("1.0% clicked");
         setInput("1.0");
         break;
       default:
         if (id === "input" && inputRef.current) {
-          console.log("Input clicked");
           setTimeout(() => inputRef.current?.focus(), 0); // Focus after state update
         }
         break;
