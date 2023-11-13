@@ -385,41 +385,6 @@ export function useTransaction(
     }
   }, [getActiveTransaction, debouncedSwapFields, initialize]);
 
-  //debounced max send amount transaction.
-  const debouncedMax = useRef(
-    debounce(
-      async (oldTransaction: Transaction) => {
-        //currently only implemented for remove liquidity
-        switch (component) {
-          case TransactingComponent.SWAP:
-            break;
-          case TransactingComponent.ADD_LIQUIDITY:
-            break;
-          case TransactingComponent.REMOVE_LIQUIDITY:
-            await updateAmount(oldTransaction.sendAssetBalance[0].string);
-            break;
-        }
-      },
-      300,
-      {
-        leading: true,
-        trailing: false,
-      }
-    )
-  ).current;
-
-  //callback to set transaction with max send amount
-  const useMax = useCallback(async () => {
-    const transaction = getActiveTransaction();
-    // if transaction exists and send amount is not equal to send balance
-    if (
-      transaction &&
-      !eq(transaction.sendAmount, transaction.sendAssetBalance)
-    ) {
-      await debouncedMax(transaction);
-    }
-  }, [getActiveTransaction, initialize]);
-
   // calback to handle send amount or slippage updates to transaction in context
   const _updateAmount = useCallback(
     async (sendAmount?: string, slippage?: string): Promise<boolean> => {
@@ -512,6 +477,44 @@ export function useTransaction(
     },
     [debouncedUpdate, _updateAmount]
   );
+
+  //debounced max send amount transaction.
+  const debouncedMax = useRef(
+    debounce(
+      async (oldTransaction: Transaction) => {
+        //currently only implemented for remove liquidity
+        switch (component) {
+          case TransactingComponent.SWAP:
+            break;
+          case TransactingComponent.ADD_LIQUIDITY:
+            break;
+          case TransactingComponent.REMOVE_LIQUIDITY:
+            await updateAmount(oldTransaction.sendAssetBalance[0].string);
+            break;
+        }
+      },
+      300,
+      {
+        leading: true,
+        trailing: false,
+      }
+    )
+  ).current;
+
+  //callback to set transaction with max send amount
+  const useMax = useCallback(async () => {
+    const transaction = getActiveTransaction();
+    // if transaction exists and send amount is not equal to send balance
+    if (
+      transaction &&
+      !eq(
+        JSON.stringify(transaction.sendAmount[0]),
+        JSON.stringify(transaction.sendAssetBalance[0])
+      )
+    ) {
+      await updateAmount(transaction.sendAssetBalance[0].string);
+    }
+  }, [getActiveTransaction, updateAmount, initialize]);
 
   return {
     initialize,

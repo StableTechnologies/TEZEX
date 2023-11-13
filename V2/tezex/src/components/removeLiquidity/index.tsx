@@ -81,7 +81,7 @@ export const RemoveLiquidity: FC = () => {
   const updateBalance = useCallback(async () => {
     if (isWalletConnected) {
       if (walletOps.transaction) {
-        await walletOps.updateBalance();
+        //await walletOps.updateBalance();
       }
     }
   }, [walletOps, walletOps.updateBalance, isWalletConnected]);
