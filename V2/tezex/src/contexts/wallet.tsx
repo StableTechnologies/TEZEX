@@ -497,7 +497,6 @@ export function WalletProvider(props: IWalletProvider) {
   );
 
   const updateBalancesOfAllTransactions = useCallback(async () => {
-    console.log("*&*updateBalancesOfAllTransactions");
     await transactionUpdateMutex.runExclusive(() => {
       Object.entries(transactions).forEach(([key, transaction]) => {
         const component = key as TransactingComponent;
@@ -514,13 +513,6 @@ export function WalletProvider(props: IWalletProvider) {
             //   JSON.stringify(updatedTransaction.sendAssetBalance)
             // )
           ) {
-            console.log(
-              "*&*, !eq(updatedTransaction, transaction)",
-              "newUpdate: ",
-              JSON.stringify(t.sendAssetBalance),
-              "current transaction",
-              JSON.stringify(updatedTransaction.sendAssetBalance)
-            );
             setTransactions((draft) => {
               const _ = updateTransaction(draft[component], (transaction) => {
                 if (
@@ -552,11 +544,7 @@ export function WalletProvider(props: IWalletProvider) {
 
                 return true;
               });
-
-              console.log("*&* transaction balances updated");
             });
-          } else {
-            console.log("*&* transaction balances not updated");
           }
         }
       });
@@ -565,10 +553,6 @@ export function WalletProvider(props: IWalletProvider) {
 
   // Effect to update balances of all transactions on change of balances
   useEffect(() => {
-    console.log(
-      "*&*useEffect updateBalancesOfAllTransactions , assetBalances",
-      assetBalances
-    );
     updateBalancesOfAllTransactions();
   }, [assetBalances, updateBalancesOfAllTransactions]);
 
@@ -650,11 +634,6 @@ export function WalletProvider(props: IWalletProvider) {
     return false;
   };
 
-  // debug effect trasactions
-  useEffect(() => {
-    console.log("*&* transactions modified", transactions);
-  }, [transactions]);
-
   // Allows for safe update of a transaction
   const updateTransaction = (
     transaction: WritableDraft<Transaction> | undefined,
@@ -694,16 +673,8 @@ export function WalletProvider(props: IWalletProvider) {
                 isNumber(slippageUpdate) &&
                 transaction.slippage !== slippageUpdate
               ) {
-                console.log("slippage update");
                 transaction.slippage = slippageUpdate;
                 updated = true;
-              } else {
-                console.log(
-                  "slippage not updated. slippage: " +
-                    slippageUpdate +
-                    " transaction.slippage: " +
-                    transaction.slippage
-                );
               }
               return (
                 updateTransactionStatusBasedOnBalance(
