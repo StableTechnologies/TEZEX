@@ -427,7 +427,7 @@ export function WalletProvider(props: IWalletProvider) {
         return setActiveTransaction(component, transaction);
       });
     },
-    [network.network, setActiveTransaction]
+    [lbContractStorage, network.network, setActiveTransaction]
   );
 
   const checkSufficientBalance = (
