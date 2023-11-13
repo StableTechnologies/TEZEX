@@ -92,7 +92,7 @@ export const Swap: FC = () => {
   const updateBalance = useCallback(async () => {
     if (isWalletConnected) {
       if (walletOps.transaction) {
-        await walletOps.updateBalance();
+        // await walletOps.updateBalance();
       }
     }
   }, [walletOps, walletOps.updateBalance, isWalletConnected]);
@@ -110,7 +110,7 @@ export const Swap: FC = () => {
   // at a 2 second intervals
   useEffect(() => {
     const interval = setInterval(() => {
-      !loading && updateBalance();
+      // !loading && updateBalance();
     }, 2000);
     return () => clearInterval(interval);
   });
@@ -195,6 +195,10 @@ export const Swap: FC = () => {
   }, [loading, walletOps.transaction]);
 
   useEffect(() => {
+    console.log(
+      "setting session session.activeComponent",
+      session.activeComponent
+    );
     if (session.activeComponent !== TransactingComponent.SWAP)
       session.loadComponent(TransactingComponent.SWAP);
   }, [session]);

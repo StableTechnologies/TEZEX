@@ -153,21 +153,13 @@ export function WalletProvider(props: IWalletProvider) {
   const [transactions, setTransactions] = useImmer<{
     [key in TransactingComponent]?: Transaction;
   }>({});
-  const [swapTransaction, setSwapTransaction] = useImmer<
-    Transaction | undefined
-  >(undefined);
-  const [addLiquidityTransaction, setAddLiquidityTransaction] = useImmer<
-    Transaction | undefined
-  >(undefined);
-  const [removeLiquidityTransaction, setRemoveLiquidityTransaction] = useImmer<
-    Transaction | undefined
-  >(undefined);
+
   const [loading, setLoading] = useState(true);
   const [isWalletConnected, setIsWalletConnected] = useState(false);
   const [client, setClient] = useState<DAppClient | null>(null);
   const [toolkit, setToolkit] = useState<TezosToolkit | null>(null);
   const [address, setAddress] = useState<string | null>(null);
-  const [lbContractStorage, setLbContractStroage] = useState<
+  const [lbContractStorage, setLbContractStorage] = useState<
     LiquidityBakingStorageXTZ | undefined
   >(undefined);
   const [assetBalances, setAssetBalances] = useState<AssetBalance[]>(
@@ -176,6 +168,7 @@ export function WalletProvider(props: IWalletProvider) {
     })
   );
 
+  // zero balance object
   const zeroBalance: Balance = {
     decimal: new BigNumber(0),
     mantissa: new BigNumber(0),
@@ -184,23 +177,41 @@ export function WalletProvider(props: IWalletProvider) {
       return new BigNumber(0).isGreaterThanOrEqualTo(balance.mantissa);
     },
   };
-  const findAssetBalance = (asset: Asset): Balance => {
-    const found = assetBalances.find((assetBalance: AssetBalance) => {
-      return (assetBalance.asset.name as string) === (asset.name as string);
-    });
-    if (found) {
-      if (found.balance) return found.balance as Balance;
-      return zeroBalance;
-    } else throw Error("Asset : " + asset.name + " not found in Config");
-  };
-  const getBalancesOfAssets = (assets: AssetOrAssetPair): Amount => {
-    const amount: Amount = assets.map((asset: Asset) => {
-      return findAssetBalance(asset);
-    }) as Amount;
-    return amount;
-  };
+
+  //calback to find the balance of an asset
+  const findAssetBalance = useCallback(
+    (asset: Asset): Balance => {
+      // find the balance of an asset
+      const found = assetBalances.find((assetBalance: AssetBalance) => {
+        return (assetBalance.asset.name as string) === (asset.name as string);
+      });
+      // if found return the balance or zero balance else throw error
+      if (found) {
+        if (found.balance) return found.balance as Balance;
+        // if balance is undefined return zero balance
+        return zeroBalance;
+      } else throw Error("Asset : " + asset.name + " not found in Config");
+    },
+    [assetBalances]
+  );
+
+  // callback to get the balance of an asset or an asset pair
+  const getBalancesOfAssets = useCallback(
+    (assets: AssetOrAssetPair): Amount => {
+      // map asset or asset pair to get combined amount
+      const amount: Amount = assets.map((asset: Asset) => {
+        // find the balance of this asset
+        return findAssetBalance(asset);
+      }) as Amount;
+      return amount;
+    },
+    [findAssetBalance]
+  );
+
+  // callback to update state of asset balances
   const updateBalances = useCallback(async () => {
     if (address && toolkit && client) {
+      // get balances of all assets by mapping over current asset balances
       const _assetBalances: AssetBalance[] = await Promise.all(
         assetBalances.map(async (assetBalance: AssetBalance) => {
           return {
@@ -209,17 +220,29 @@ export function WalletProvider(props: IWalletProvider) {
           };
         })
       );
-      setAssetBalances(_assetBalances);
+      //only update if balances have changed
+      if (!eq(_assetBalances, assetBalances)) setAssetBalances(_assetBalances);
     }
-  }, [address, toolkit, client]);
+  }, [assetBalances, address, toolkit, client]);
 
   const updateStorage = useCallback(async () => {
-    setLbContractStroage(
-      await network.getDexStorage().catch((e) => {
-        session.setAlert(completionRecordFailed(e as Errors));
-        return undefined;
-      })
-    );
+    // get the current storage of the liquidity baking contract
+    const newStorage = await network.getDexStorage().catch((e) => {
+      session.setAlert(completionRecordFailed(e as Errors));
+      return undefined;
+    });
+
+    setLbContractStorage((storage) => {
+      // if the storage has changed update it
+      if (newStorage) {
+        // don not update if storage is the same
+        if (storage && eq(storage, newStorage)) return storage;
+        return newStorage;
+      } else {
+        // if the storage is undefined return the old storage
+        return storage;
+      }
+    });
   }, [network]);
 
   useEffect(() => {
@@ -255,20 +278,20 @@ export function WalletProvider(props: IWalletProvider) {
       return () => clearInterval(interval);
     }
   });
-  useEffect(() => {
-    const _updateStorage = async () => {
-      await updateStorage();
-    };
-    const _updateBalances = async () => {
-      await updateBalances();
-    };
-
-    const interval = setInterval(() => {
-      _updateBalances();
-      _updateStorage();
-    }, 5000);
-    return () => clearInterval(interval);
-  });
+  //  useEffect(() => {
+  //    const _updateStorage = async () => {
+  //      await updateStorage();
+  //    };
+  //    const _updateBalances = async () => {
+  //      await updateBalances();
+  //    };
+  //
+  //    const interval = setInterval(() => {
+  //      _updateBalances();
+  //      _updateStorage();
+  //    }, 5000);
+  //    return () => clearInterval(interval);
+  //  });
   //
   const removeTransaction = useCallback(
     (component: TransactingComponent) => {
@@ -473,6 +496,82 @@ export function WalletProvider(props: IWalletProvider) {
     [getBalancesOfAssets]
   );
 
+  const updateBalancesOfAllTransactions = useCallback(async () => {
+    console.log("*&*updateBalancesOfAllTransactions");
+    await transactionUpdateMutex.runExclusive(() => {
+      Object.entries(transactions).forEach(([key, transaction]) => {
+        const component = key as TransactingComponent;
+        if (transaction) {
+          const updatedTransaction = TranscationWithUpdatedBalance(transaction);
+
+          const t = transactions[component]!;
+          if (
+            t &&
+            !eq(JSON.stringify(updatedTransaction), JSON.stringify(t))
+            // &&
+            // !eq(
+            //   JSON.stringify(t.sendAssetBalance),
+            //   JSON.stringify(updatedTransaction.sendAssetBalance)
+            // )
+          ) {
+            console.log(
+              "*&*, !eq(updatedTransaction, transaction)",
+              "newUpdate: ",
+              JSON.stringify(t.sendAssetBalance),
+              "current transaction",
+              JSON.stringify(updatedTransaction.sendAssetBalance)
+            );
+            setTransactions((draft) => {
+              const _ = updateTransaction(draft[component], (transaction) => {
+                if (
+                  transaction.sendAssetBalance !==
+                  updatedTransaction.sendAssetBalance
+                ) {
+                  transaction.lastModified = new Date();
+                  transaction.sendAssetBalance =
+                    updatedTransaction.sendAssetBalance;
+                }
+                if (
+                  transaction.receiveAssetBalance !==
+                  updatedTransaction.receiveAssetBalance
+                ) {
+                  transaction.lastModified = new Date();
+
+                  transaction.receiveAssetBalance =
+                    updatedTransaction.receiveAssetBalance;
+                }
+                if (
+                  transaction.transactionStatus !==
+                  updatedTransaction.transactionStatus
+                ) {
+                  transaction.lastModified = new Date();
+
+                  transaction.transactionStatus =
+                    updatedTransaction.transactionStatus;
+                }
+
+                return true;
+              });
+
+              console.log("*&* transaction balances updated");
+            });
+          } else {
+            console.log("*&* transaction balances not updated");
+          }
+        }
+      });
+    });
+  }, [transactions, TranscationWithUpdatedBalance, setTransactions]);
+
+  // Effect to update balances of all transactions on change of balances
+  useEffect(() => {
+    console.log(
+      "*&*useEffect updateBalancesOfAllTransactions , assetBalances",
+      assetBalances
+    );
+    updateBalancesOfAllTransactions();
+  }, [assetBalances, updateBalancesOfAllTransactions]);
+
   const updateTransactionBalance = useCallback(
     async (component: TransactingComponent): Promise<boolean> => {
       const transaction = getActiveTransaction(component);
@@ -551,14 +650,21 @@ export function WalletProvider(props: IWalletProvider) {
     return false;
   };
 
-  //type draft = WritableDraft<{ [key in TransactingComponent]?: Transaction }>;
+  // debug effect trasactions
+  useEffect(() => {
+    console.log("*&* transactions modified", transactions);
+  }, [transactions]);
 
+  // Allows for safe update of a transaction
   const updateTransaction = (
     transaction: WritableDraft<Transaction> | undefined,
     updater: (transaction: WritableDraft<Transaction>) => boolean
   ): boolean => {
+    // if the transaction is locked or undefined  return
     if (!transaction) return false;
     if (transaction.locked) return false;
+    // else safe to update, run the updater
+
     return updater(transaction);
   };
 
