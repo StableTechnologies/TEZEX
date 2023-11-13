@@ -30,6 +30,7 @@ const style = (theme, scale = 1) => {
         minHeight: `calc(1.39vw * ${scale})`,
         maxHeight: `calc(1.39vw * ${scale})`,
       },
+      color: "#000000",
       background:
         "linear-gradient(92.04deg, rgba(171, 240, 255, 0.2) 4.41%, #F9FEFF 84.62%)",
 
