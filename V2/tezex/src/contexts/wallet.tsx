@@ -225,6 +225,7 @@ export function WalletProvider(props: IWalletProvider) {
     }
   }, [assetBalances, address, toolkit, client]);
 
+  // callback to update the storage of the liquidity baking contract
   const updateStorage = useCallback(async () => {
     // get the current storage of the liquidity baking contract
     const newStorage = await network.getDexStorage().catch((e) => {
@@ -232,6 +233,7 @@ export function WalletProvider(props: IWalletProvider) {
       return undefined;
     });
 
+    // if the storage has changed update the state
     setLbContractStorage((storage) => {
       // if the storage has changed update it
       if (newStorage) {
@@ -245,6 +247,7 @@ export function WalletProvider(props: IWalletProvider) {
     });
   }, [network]);
 
+  // load the storage on initial render
   useEffect(() => {
     const loadStorage = async () => {
       await updateStorage();
@@ -255,6 +258,7 @@ export function WalletProvider(props: IWalletProvider) {
     }
   }, [loading]);
 
+  // load / update balances on wallet connection
   useEffect(() => {
     const _updateBalances = async () => {
       await updateBalances();
@@ -262,37 +266,26 @@ export function WalletProvider(props: IWalletProvider) {
     _updateBalances();
   }, [isWalletConnected]);
 
+  // Keep storage up to date by polling every minute
   useEffect(() => {
     const _updateStorage = async () => {
       await updateStorage();
     };
     if (!lbContractStorage) {
+      // if storage state is undefined update every second
       const interval = setInterval(() => {
         _updateStorage();
       }, 1000);
       return () => clearInterval(interval);
     } else {
+      // if storage state is defined update every minute
       const interval = setInterval(() => {
         _updateStorage();
       }, 60000);
       return () => clearInterval(interval);
     }
   });
-  //  useEffect(() => {
-  //    const _updateStorage = async () => {
-  //      await updateStorage();
-  //    };
-  //    const _updateBalances = async () => {
-  //      await updateBalances();
-  //    };
-  //
-  //    const interval = setInterval(() => {
-  //      _updateBalances();
-  //      _updateStorage();
-  //    }, 5000);
-  //    return () => clearInterval(interval);
-  //  });
-  //
+
   const removeTransaction = useCallback(
     (component: TransactingComponent) => {
       setTransactions((draft) => {
@@ -302,15 +295,20 @@ export function WalletProvider(props: IWalletProvider) {
     [setTransactions]
   );
 
+  // callback to return the active transaction of a component
   const getActiveTransaction = useCallback(
     (component: TransactingComponent): Transaction | undefined => {
       return transactions[component];
     },
     [transactions]
   );
+
+  // calback to send a transaction for final processing
   const transact = useCallback(
     async (transaction: Transaction): Promise<Transaction> => {
+      // if the wallet is connected and the toolkit is defined
       if (address && toolkit) {
+        // if the transaction is pending process it
         if (transaction.transactionStatus === TransactionStatus.PENDING) {
           const t: Transaction = await processTransaction(
             transaction,
@@ -319,16 +317,19 @@ export function WalletProvider(props: IWalletProvider) {
             toolkit
           )
             .then((success) => {
+              // if the transaction is successful set success alert and update balances
               session.setAlert(completionRecordSuccess(success), true);
               return updateBalances();
             })
             .then(() => {
+              // set transaction status to completed
               return {
                 ...transaction,
                 transactionStatus: TransactionStatus.COMPLETED,
               };
             })
             .catch((e) => {
+              // if the transaction fails set failed alert and status to failed
               session.setAlert(completionRecordFailed(e as Errors), true);
               return {
                 ...transaction,
@@ -341,23 +342,34 @@ export function WalletProvider(props: IWalletProvider) {
         }
       } else throw Error("wallet not Connected");
     },
-    [address, toolkit]
+    [address, session.setAlert, toolkit]
   );
 
+  // Effect to monitor transactions and send them for processing
   useEffect(() => {
+    // process a transaction
     const proc = async (component: TransactingComponent) => {
       return transactionMutex.runExclusive(async () => {
         const currentTransaction = transactions[component];
+        // if there is a transaction and it is pending and not locked
         if (
           currentTransaction &&
-          currentTransaction.transactionStatus === TransactionStatus.PENDING
+          currentTransaction.transactionStatus === TransactionStatus.PENDING &&
+          !currentTransaction.locked
         ) {
+          // lock transaction
+          setTransactions((draft) => {
+            draft[component]!.locked = true;
+          });
+          // send transaction for final processing
           const updatedTransaction = await transact(currentTransaction).then(
             (transaction) => {
+              // unlock transaction copy
               transaction.locked = false;
               return transaction;
             }
           );
+          // if the transaction has failed update the state
           if (
             updatedTransaction.transactionStatus === TransactionStatus.FAILED
           ) {
@@ -365,6 +377,7 @@ export function WalletProvider(props: IWalletProvider) {
               draft[component] = updatedTransaction;
             });
           } else {
+            // if the transaction has completed remove it from state
             setTransactions((draft) => {
               delete draft[component];
             });
@@ -373,6 +386,7 @@ export function WalletProvider(props: IWalletProvider) {
       });
     };
 
+    // process all pending transactions
     Promise.all([
       proc(TransactingComponent.SWAP),
       proc(TransactingComponent.ADD_LIQUIDITY),
@@ -382,6 +396,7 @@ export function WalletProvider(props: IWalletProvider) {
     });
   }, [transact, transactions, setTransactions]);
 
+  // callback to set the active transaction of a component or apply an operation to the transaction
   const setActiveTransaction = useCallback(
     (
       component: TransactingComponent,
@@ -389,12 +404,17 @@ export function WalletProvider(props: IWalletProvider) {
       op?: (transaction: Draft<Transaction>) => boolean
     ): boolean => {
       let updated = false;
+      // get the active transaction of the component
       const activeTransaction = getActiveTransaction(component);
       setTransactions((draft) => {
         const draftTransaction = draft[component];
         if (op && draftTransaction) {
+          // if there is an operation apply it to the transaction
           updated = op(draftTransaction as Draft<Transaction>);
-        } else if (transaction && !eq(activeTransaction, transaction)) {
+        } else if (
+          transaction &&
+          !eq(JSON.stringify(activeTransaction), JSON.stringify(transaction))
+        ) {
           draft[component] = transaction;
           updated = true;
         }
@@ -404,6 +424,7 @@ export function WalletProvider(props: IWalletProvider) {
     [setTransactions]
   );
 
+  // callback to initialise a transaction
   const initialiseTransaction = useCallback(
     async (
       component: TransactingComponent,
@@ -414,6 +435,7 @@ export function WalletProvider(props: IWalletProvider) {
       slipppage = 0.5
     ): Promise<boolean> => {
       return await transactionUpdateMutex.runExclusive(() => {
+        // initialise zeroBalance
         const initBalance = (asset: AssetOrAssetPair): Amount => {
           switch (asset.length) {
             case 1:
@@ -422,6 +444,7 @@ export function WalletProvider(props: IWalletProvider) {
               return [zeroBalance, zeroBalance];
           }
         };
+        // if no send or recieve amount is provided initialise them to zero balance
         const send: Amount = sendAmount ? sendAmount : initBalance(sendAsset);
         const receive: Amount = receiveAmount
           ? receiveAmount
@@ -444,6 +467,7 @@ export function WalletProvider(props: IWalletProvider) {
           locked: false,
         };
 
+        // estimate missing amounts and set the transaction
         const transaction: Transaction = lbContractStorage
           ? estimate(_transaction, lbContractStorage)
           : _transaction;
@@ -453,19 +477,23 @@ export function WalletProvider(props: IWalletProvider) {
     [lbContractStorage, network.network, setActiveTransaction]
   );
 
+  // function to check if a user has sufficient balance
   const checkSufficientBalance = (
     userBalance: Amount,
     requiredAmount: Amount
   ): TransactionStatus => {
+    // Amounts to compare must be of same length( currently : a single asset or an asset pair)
     if (userBalance.length !== requiredAmount.length) {
       throw Error("Error: balance check asset pair mismatch");
     }
+    // check if the user has sufficient balance by comparing the two amounts
     const checks: boolean[] = Array.from(userBalance, (assetBalance, index) => {
       const required = requiredAmount[index];
       if (required) {
         return assetBalance.greaterOrEqualTo(required);
       } else throw Error("Amount indexs don't match / align");
     });
+    // if all checks are true return sufficient balance else return insufficient balance
     const hasSufficientBalance = !checks.includes(false);
     if (hasSufficientBalance) {
       return TransactionStatus.SUFFICIENT_BALANCE;
@@ -598,9 +626,6 @@ export function WalletProvider(props: IWalletProvider) {
           const updated = updateTransaction(draft[component], (transaction) => {
             if (transaction && !transaction.locked) {
               transaction.transactionStatus = transactionStatus;
-              if (transactionStatus === TransactionStatus.PENDING) {
-                draft[component]!.locked = true;
-              }
               draft[component]!.lastModified = new Date();
               return true;
             } else return false;
