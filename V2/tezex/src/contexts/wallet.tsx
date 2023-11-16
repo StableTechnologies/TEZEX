@@ -625,11 +625,15 @@ export function WalletProvider(props: IWalletProvider) {
     ) => {
       await transactionUpdateMutex.runExclusive(() => {
         setTransactions((draft) => {
-          const updated = updateTransaction(draft[component], (transaction) => {
-            transaction.transactionStatus = transactionStatus;
-            draft[component]!.lastModified = new Date();
-            return true;
-          });
+          const updated = updateTransaction(
+            draft[component],
+            // update function
+            (transaction) => {
+              transaction.transactionStatus = transactionStatus;
+              draft[component]!.lastModified = new Date();
+              return true;
+            }
+          );
         });
       });
     },
