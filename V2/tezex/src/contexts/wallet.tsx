@@ -502,6 +502,7 @@ export function WalletProvider(props: IWalletProvider) {
     }
   };
 
+  // callback to update balances and status of a transaction balance for a given transaction
   const TranscationWithUpdatedBalance = useCallback(
     (transaction: Transaction): Transaction => {
       const sendAssetBalance: Amount = getBalancesOfAssets(
@@ -524,23 +525,22 @@ export function WalletProvider(props: IWalletProvider) {
     [getBalancesOfAssets]
   );
 
+  // callback to update balances of all transactions
   const updateBalancesOfAllTransactions = useCallback(async () => {
     await transactionUpdateMutex.runExclusive(() => {
+      // iterate over all transactions
       Object.entries(transactions).forEach(([key, transaction]) => {
+        // key is the component
         const component = key as TransactingComponent;
+        // if the transaction is defined
         if (transaction) {
+          // get the new transaction with updated balances
           const updatedTransaction = TranscationWithUpdatedBalance(transaction);
 
+          // old transaction before balance update
           const t = transactions[component]!;
-          if (
-            t &&
-            !eq(JSON.stringify(updatedTransaction), JSON.stringify(t))
-            // &&
-            // !eq(
-            //   JSON.stringify(t.sendAssetBalance),
-            //   JSON.stringify(updatedTransaction.sendAssetBalance)
-            // )
-          ) {
+          // if the new transaction is different from the old one update the state
+          if (t && !eq(JSON.stringify(updatedTransaction), JSON.stringify(t))) {
             setTransactions((draft) => {
               const _ = updateTransaction(draft[component], (transaction) => {
                 if (
@@ -584,6 +584,7 @@ export function WalletProvider(props: IWalletProvider) {
     updateBalancesOfAllTransactions();
   }, [assetBalances, updateBalancesOfAllTransactions]);
 
+  // exported callback to update transaction balance of a  single component
   const updateTransactionBalance = useCallback(
     async (component: TransactingComponent): Promise<boolean> => {
       const transaction = getActiveTransaction(component);
@@ -616,6 +617,7 @@ export function WalletProvider(props: IWalletProvider) {
     [TranscationWithUpdatedBalance, setTransactions]
   );
 
+  // exported callback to update transaction status of a  single component
   const updateStatus = useCallback(
     async (
       component: TransactingComponent,
@@ -624,11 +626,9 @@ export function WalletProvider(props: IWalletProvider) {
       await transactionUpdateMutex.runExclusive(() => {
         setTransactions((draft) => {
           const updated = updateTransaction(draft[component], (transaction) => {
-            if (transaction && !transaction.locked) {
-              transaction.transactionStatus = transactionStatus;
-              draft[component]!.lastModified = new Date();
-              return true;
-            } else return false;
+            transaction.transactionStatus = transactionStatus;
+            draft[component]!.lastModified = new Date();
+            return true;
           });
         });
       });
@@ -636,6 +636,8 @@ export function WalletProvider(props: IWalletProvider) {
     [setTransactions]
   );
 
+  // update transaction status based on balance for a single draft transaction
+  // for use with update amount function
   const updateTransactionStatusBasedOnBalance = (
     transaction: WritableDraft<Transaction>,
     amountUpdateSend?: Amount
@@ -643,6 +645,7 @@ export function WalletProvider(props: IWalletProvider) {
     const sendAssetBalance: Amount = transaction.sendAssetBalance.map(
       (balance) => ({ ...balance })
     ) as Amount;
+    // if the send amount has changed update the transaction status and balance
     if (
       amountUpdateSend &&
       !transaction.sendAmount[0].decimal.eq(amountUpdateSend[0].decimal)
@@ -659,7 +662,7 @@ export function WalletProvider(props: IWalletProvider) {
     return false;
   };
 
-  // Allows for safe update of a transaction
+  // Allows for safe update of a transaction draft
   const updateTransaction = (
     transaction: WritableDraft<Transaction> | undefined,
     updater: (transaction: WritableDraft<Transaction>) => boolean
@@ -672,6 +675,7 @@ export function WalletProvider(props: IWalletProvider) {
     return updater(transaction);
   };
 
+  // exported callback to update amount of a  single component
   const updateAmount = useCallback(
     async (
       component: TransactingComponent,
@@ -684,7 +688,9 @@ export function WalletProvider(props: IWalletProvider) {
         setTransactions((draft) => {
           const wasUpdated = updateTransaction(
             draft[component],
+            // update function
             (transaction) => {
+              // if receive amount has changed update the transaction
               if (
                 amountUpdateReceive &&
                 !transaction.receiveAmount[0].decimal.eq(
@@ -694,6 +700,7 @@ export function WalletProvider(props: IWalletProvider) {
                 transaction.receiveAmount = amountUpdateReceive;
                 updated = true;
               }
+              // if slippage has changed update the transaction
               if (
                 isNumber(slippageUpdate) &&
                 transaction.slippage !== slippageUpdate
@@ -701,6 +708,7 @@ export function WalletProvider(props: IWalletProvider) {
                 transaction.slippage = slippageUpdate;
                 updated = true;
               }
+              // update the transaction status based on the new balance
               return (
                 updateTransactionStatusBasedOnBalance(
                   transaction,
@@ -709,6 +717,7 @@ export function WalletProvider(props: IWalletProvider) {
               );
             }
           );
+          // if updated, update the last modified date
           if (wasUpdated && draft[component]) {
             draft[component]!.lastModified = new Date();
           } else {
@@ -721,6 +730,7 @@ export function WalletProvider(props: IWalletProvider) {
     [setTransactions, isWalletConnected]
   );
 
+  // update the wallet connection state
   useEffect(() => {
     if (client) {
       setIsWalletConnected(true);
@@ -729,6 +739,7 @@ export function WalletProvider(props: IWalletProvider) {
     }
   }, [client]);
 
+  // disconnect wallet
   const disconnect = () => {
     setClient(null);
     setAddress(null);
