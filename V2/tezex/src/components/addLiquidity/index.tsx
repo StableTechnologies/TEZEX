@@ -92,13 +92,9 @@ export const AddLiquidity: FC = () => {
 
   // callback to internally call swap fields
   const _swapFields = useCallback(async () => {
-    //setAssets([assets[1], assets[0], assets[receive]]);
     await transactionOps.swapFields().then(() => {
       setLoading(true);
-      //setSwapingFields(false);
-    }); //
-    // setSwapingFields(true);
-    // setSendAmount(send);
+    });
   }, [assets, transactionOps.swapFields]);
 
   //monitor swappingFields state and trigger swap
