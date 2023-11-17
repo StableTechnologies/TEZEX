@@ -43,11 +43,12 @@ export interface IRigthInput {
   //noUserActionCheck: () => boolean;
   // toggle: () => void;
   variant?: "LeftInput" | "RightInput";
-  swap?: () => void;
+  swap?: React.MutableRefObject<() => Promise<void>>;
   label?: string;
   darker?: boolean;
   readOnly?: boolean;
   scalingKey?: string;
+  loading?: boolean;
 }
 
 const TokenInput: FC<IRigthInput> = (props) => {
@@ -57,6 +58,7 @@ const TokenInput: FC<IRigthInput> = (props) => {
     { transferType: props.transferType, asset: props.asset },
     false
   );
+  // TODO: set value at time of loading  from transactionOps
   const [value, setValue] = useState("0.00");
   const debouncedValue = useDebounce<string>(value, 500);
   const [balance, setBalance] = useState("");
@@ -67,11 +69,23 @@ const TokenInput: FC<IRigthInput> = (props) => {
     string | unknown
   >(undefined);
   const [loading, setLoading] = useState(true);
+  const [swapping, setSwapping] = useState(false);
   const [id, setId] = useState<Id | undefined>(undefined);
-  const swap = useCallback(() => {
-    if (props.swap) props.swap();
-  }, [props.swap]);
+  const swap = useCallback(async () => {
+    setSwapping(true);
 
+    // if (props.swap) await props.swap.current();
+  }, []);
+  // monitor swapping and swapfields
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (swapping) {
+        console.log("swapping");
+        transactionOps.swapFields();
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [transactionOps.swapFields, swapping]);
   // Set id on new transaction and set loading to true
   useEffect(() => {
     const transactionId = transactionOps.getActiveTransaction()?.id;
@@ -87,8 +101,18 @@ const TokenInput: FC<IRigthInput> = (props) => {
 
   // boolean check to see  if updates can be made
   const canUpdate = useCallback(() => {
-    return !(transactionOps.loading || transactionOps.transacting);
-  }, [transactionOps.loading, transactionOps.transacting]);
+    return !(
+      swapping ||
+      props.loading ||
+      transactionOps.loading ||
+      transactionOps.transacting
+    );
+  }, [
+    swapping,
+    props.loading,
+    transactionOps.loading,
+    transactionOps.transacting,
+  ]);
 
   // callback to set loading to false
   const setLoadingFalse = useCallback(() => {
@@ -103,21 +127,29 @@ const TokenInput: FC<IRigthInput> = (props) => {
 
   // call back to load value and set loading to false
   const loadValue = useCallback(() => {
+    const t = transactionOps.getActiveTransaction();
     const amount = transactionOps.trackedAsset?.amount?.string;
     if (amount) {
+      !props.readOnly && console.log("!!amount to load", amount);
       //update value if different
       setValue((value) => {
         if (toNumber(value) === toNumber(amount)) return value;
         else if (props.readOnly && toNumber(amount) === 0) return "0.00";
         else return amount;
       });
+      // setSwapping((swapping) => {
+      //   if (swapping) return false;
+      //   else return swapping;
+      // });
       //handle loading
       setLoadingFalse();
     }
   }, [
-    transactionOps.trackedAsset?.amount?.string,
+    transactionOps.getActiveTransaction,
+    setSwapping,
     props.readOnly,
     setLoadingFalse,
+    transactionOps.trackedAsset,
   ]);
 
   //callback to update balance
@@ -142,7 +174,7 @@ const TokenInput: FC<IRigthInput> = (props) => {
     const transactionId = transactionOps.getActiveTransaction()?.id;
 
     // non-read only: update local value only on id change
-    if (!props.readOnly && loading) {
+    if (!props.readOnly && (loading || swapping)) {
       loadValue();
     }
     //  read only , update on transaction change
@@ -151,28 +183,30 @@ const TokenInput: FC<IRigthInput> = (props) => {
     }
   }, [
     id,
+    swapping,
     props.readOnly,
     transactionOps.getActiveTransaction,
     loading,
     loadValue,
   ]);
 
-  // track hook state for loading and transacting  and set loading to true
-  useEffect(() => {
-    if (!canUpdate()) {
-      setLoading(true);
-    }
-  }, [canUpdate]);
-
+  // // track hook state for loading and transacting  and set loading to true
+  // useEffect(() => {
+  //   if (!canUpdate()) {
+  //     setLoading(true);
+  //   }
+  // }, [canUpdate]);
+  //
   // Callback to check if local value differs from transaction amount
   // if it does it calls an update
   const updateAmount = useCallback(
     async (value: string, oldValue: string) => {
       if (toNumber(value) !== toNumber(oldValue)) {
-        canUpdate() && (await transactionOps.updateAmount(value));
+        if (canUpdate() && !loading && !swapping)
+          await transactionOps.updateAmount(value, undefined, "tokenInput");
       }
     },
-    [canUpdate, transactionOps.updateAmount]
+    [canUpdate, swapping, loading, transactionOps.updateAmount]
   );
 
   // This effect tracks and  sends the debounced value for updating
@@ -183,14 +217,20 @@ const TokenInput: FC<IRigthInput> = (props) => {
     //   oldValue && updateAmount(debouncedValue, oldValue);
     // }
 
-    if (!props.readOnly) {
-      const oldValue = transactionOps.trackedAsset?.amount?.string;
-      oldValue && updateAmount(debouncedValue, oldValue);
-    }
+    const timer = setTimeout(() => {
+      if (!props.readOnly && !loading && !swapping) {
+        const oldValue = transactionOps.trackedAsset?.amount?.string;
+        console.log("!!!oldValue", oldValue);
+        if (oldValue) updateAmount(debouncedValue, oldValue);
+      }
+    }, 100);
+    return () => clearTimeout(timer);
   }, [
     props.readOnly,
+    loading,
+    swapping,
     debouncedValue,
-    transactionOps.trackedAsset?.amount?.string,
+    transactionOps.trackedAsset,
     updateAmount,
   ]);
 
@@ -428,4 +468,4 @@ const TokenInput: FC<IRigthInput> = (props) => {
   }
 };
 
-export const TokenAmountInput = React.memo(TokenInput);
+export const TokenAmountInput = TokenInput;

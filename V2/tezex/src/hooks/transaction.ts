@@ -38,7 +38,11 @@ export interface TransactionOps {
     slippage?: number
   ) => Promise<boolean>;
   getActiveTransaction: () => Transaction | undefined;
-  updateAmount: (sendAmount?: string, slippage?: string) => Promise<void>;
+  updateAmount: (
+    sendAmount?: string,
+    slippage?: string,
+    caller?: string
+  ) => Promise<void>;
   swapFields: () => Promise<void>;
   useMax: () => Promise<void>;
   getAsetState: (
@@ -305,9 +309,13 @@ export function useTransaction(
 
   // exported callback to handle send amount or slippage updates to transaction in context
   const updateAmount = useCallback(
-    async (sendAmount?: string, slippage?: string) => {
+    async (sendAmount?: string, slippage?: string, caller?: string) => {
       // check if slippage or send amount is being updated
       if (sendAmount || slippage) {
+        console.log(
+          "!!updating amount",
+          JSON.stringify({ sendAmount, slippage, caller })
+        );
         //check if update was successful
         if (await _updateAmount(sendAmount, slippage)) {
           // if update was successful and pending update exists

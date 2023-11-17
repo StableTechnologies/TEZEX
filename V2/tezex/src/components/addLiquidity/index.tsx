@@ -1,4 +1,4 @@
-import React, { FC, useState, useEffect, useCallback } from "react";
+import React, { FC, useState, useEffect, useCallback, useRef } from "react";
 import plusIcon from "../../assets/plusIcon.svg";
 
 import { Wallet } from "../wallet";
@@ -9,6 +9,7 @@ import {
   TransactingComponent,
   TransferType,
   TransactionStatus,
+  Id,
 } from "../../types/general";
 
 import { BigNumber } from "bignumber.js";
@@ -35,6 +36,7 @@ import Box from "@mui/material/Box";
 import { BrowserView, MobileView } from "react-device-detect";
 import { useTransaction } from "../../hooks/transaction";
 import { eq, get } from "lodash";
+import { useDebounce } from "usehooks-ts";
 export interface IAddLiquidity {
   children: null;
 }
@@ -62,7 +64,9 @@ export const AddLiquidity: FC = () => {
 
   const active = walletOps.getActiveTransaction();
 
+  const [id, setId] = useState<Id | undefined>(undefined);
   const [loading, setLoading] = useState<boolean>(true);
+  const [reloading, setReloading] = useState<boolean>(true);
 
   const slippage = 1;
 
@@ -76,6 +80,7 @@ export const AddLiquidity: FC = () => {
     network.getAsset(Token.Sirs),
   ]);
   const [swapingFields, setSwapingFields] = useState<boolean>(false);
+  const swapping = useDebounce(swapingFields, 500);
   const session = useSession();
 
   // used to set input to editable or not
@@ -86,27 +91,34 @@ export const AddLiquidity: FC = () => {
     await walletOps.sendTransaction();
   }, [walletOps.sendTransaction]);
 
-  const swapFields = useCallback(() => {
-    setSwapingFields(true);
-  }, []);
-
   // callback to internally call swap fields
   const _swapFields = useCallback(async () => {
-    await transactionOps.swapFields().then(() => {
-      setLoading(true);
-    });
-  }, [assets, transactionOps.swapFields]);
+    //setSwapingFields(false);
+    await transactionOps.swapFields();
+    // .then(() => {
+    //   //setAssets([assets[1], assets[0], assets[receive]]);
+    //   //setSwapingFields(false);
+    //   //setLoading(true);
+    // });
+    //
+    // setSwapingFields(true);
+    // setSendAmount(send);
+  }, [assets, setAssets, transactionOps.swapFields]);
 
-  //monitor swappingFields state and trigger swap
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (swapingFields) {
-        _swapFields();
-        setSwapingFields(false);
-      }
-    }, 100);
-    return () => clearTimeout(timer);
-  }, [swapingFields, _swapFields]);
+  const swapFields = useRef(
+    useCallback(async () => {
+      setSwapingFields(true);
+      await _swapFields();
+      setSwapingFields(false);
+    }, [_swapFields])
+  );
+
+  // //monitor swappingFields state and trigger swap
+  // useEffect(() => {
+  //   if (swapingFields) {
+  //     _swapFields();
+  //   }
+  // }, [swapingFields, _swapFields]);
 
   // callback to create new transaction
   const newTransaction = useCallback(async () => {
@@ -129,38 +141,25 @@ export const AddLiquidity: FC = () => {
 
   // Effect to handle loading of transaction
   useEffect(() => {
-    const timer = setTimeout(() => {
-      // get active transaction
-      const t = transactionOps.getActiveTransaction();
-      // if loading and no transaction, create new transaction
-      if (loading && !t) {
-        newTransaction();
-      } else if (loading && t) {
-        // if loading and transaction,
-        // update balance, assets and set loading to false
-        if (t && t.sendAsset[1]) {
-          //grab assets from transaction
-          const _assets: [Asset, Asset, Asset] = [
-            t.sendAsset[0],
-            t.sendAsset[1],
-            t.receiveAsset[0],
-          ];
-          // Load assets if transaction assets are different from current assets
-          if (!eq(JSON.stringify(_assets), JSON.stringify(assets))) {
-            setAssets(_assets);
-          }
-          setLoading(false);
-        }
+    // if loading and no transaction, create new transaction
+    if (loading && !walletOps.transaction) {
+      newTransaction();
+    } else if (loading) {
+      // if loading and transaction,
+      // update balance, assets and set loading to false
+      if (walletOps.transaction && walletOps.transaction.sendAsset[1]) {
+        //grab assets from transaction
+        const _assets: [Asset, Asset, Asset] = [
+          walletOps.transaction.sendAsset[0],
+          walletOps.transaction.sendAsset[1],
+          walletOps.transaction.receiveAsset[0],
+        ];
+        // Load assets if transaction assets are different from current assets
+        !eq(_assets, assets) && setAssets(_assets);
+        setLoading(false);
       }
-    }, 10);
-    return () => clearTimeout(timer);
-  }, [
-    loading,
-    assets,
-    transactionOps.getActiveTransaction,
-    newTransaction,
-    session,
-  ]);
+    }
+  }, [loading, walletOps.transaction, newTransaction, session]);
 
   // Callback to fetch the estimate of amount of liquidity tokens to recieve
   const getLiquidityTokens = useCallback((): string => {
@@ -194,14 +193,61 @@ export const AddLiquidity: FC = () => {
       if (canUpdate === _canUpdate) return canUpdate;
       return _canUpdate;
     });
-  }, [transactionOps.getActiveTransaction]);
+
+    const transactionId = transaction?.id;
+    if (!id && transactionId) {
+      setId(transactionId);
+      setReloading(true);
+    }
+    if (id && transactionId && id !== transactionId) {
+      console.log("id, transactionId", id, transactionId);
+      setId(transactionId);
+      setReloading(true);
+    }
+  }, [transactionOps.getActiveTransaction, id]);
 
   // effect to monitor transaction status by calling monitorStatus
   useEffect(() => {
     monitorStatus();
   }, [monitorStatus]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      // get active transaction
+      const t = transactionOps.getActiveTransaction();
+      // if loading and no transaction, create new transaction
+      if (reloading && t) {
+        // if loading and transaction,
+        // update balance, assets and set loading to false
+        if (t.sendAsset[1]) {
+          //grab assets from transaction
+          const _assets: [Asset, Asset, Asset] = [
+            t.sendAsset[0],
+            t.sendAsset[1],
+            t.receiveAsset[0],
+          ];
+          console.log("effect u[pdate assets", JSON.stringify(assets));
+          console.log("effect u[pdate assets transaciont", JSON.stringify(t));
+          // Load assets if transaction assets are different from current assets
+          if (!eq(JSON.stringify(_assets), JSON.stringify(assets))) {
+            setAssets(_assets);
+          }
+          setReloading(false);
+        }
+      }
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [transactionOps.getActiveTransaction, assets, reloading]);
+
+  useEffect(() => {
+    console.log("assets", JSON.stringify(assets));
+  }, [assets]);
+  useEffect(() => {
+    console.log("id", id);
+  }, [id]);
+
   // if loading return empty div else render component
-  if (loading || swapingFields) {
+  if (loading) {
     return <div> </div>;
   } else {
     return (
@@ -251,6 +297,7 @@ export const AddLiquidity: FC = () => {
                       label="Enter Amount"
                       readOnly={!canUpdate}
                       scalingKey={scalingKey}
+                      loading={swapping}
                     />
                   </Grid2>
 
@@ -275,6 +322,7 @@ export const AddLiquidity: FC = () => {
                       darker={true}
                       swap={swapFields}
                       scalingKey={scalingKey}
+                      loading={swapping}
                     />
                   </Grid2>
                 </Grid2>

@@ -29,8 +29,9 @@ export interface IAmountField {
   readOnly?: boolean;
   variant?: "SlippageInput" | "LeftInput" | "RightInput";
   darker?: boolean;
-  swap?: () => void;
+  swap?: React.MutableRefObject<() => Promise<void>>;
   scalingKey?: string;
+  loading?: boolean;
 }
 
 const AmountField: FC<IAmountField> = (props) => {
@@ -88,9 +89,9 @@ const AmountField: FC<IAmountField> = (props) => {
     },
     [onChange]
   );
-  const toggle = useCallback(() => {
-    if (props.swap) props.swap();
-  }, [props.swap]);
+  // const toggle = useCallback(() => {
+  //   if (props.swap) props.swap();
+  // }, [props.swap]);
   //  useEffect(() => {
   //    const timer = setTimeout(() => {
   //      if (
@@ -195,11 +196,14 @@ const AmountField: FC<IAmountField> = (props) => {
             swap={props.swap}
             label={props.label}
             scalingKey={props.scalingKey}
+            loading={props.loading}
           />
         );
     }
   };
-  return <Variant />;
+  if (props.loading) {
+    return <div></div>;
+  } else return <Variant />;
 };
 
 export const UserAmountField = memo(AmountField);
