@@ -12,13 +12,11 @@ import {
   Id,
 } from "../../types/general";
 
-import { BigNumber } from "bignumber.js";
 import { UserAmountField, Slippage } from "../../components/ui/elements/inputs";
 import {
   SlippageLabel,
   AddliquidityTokens,
 } from "../../components/ui/elements/Labels";
-import { useWalletConnected } from "../../hooks/wallet";
 import { useSession } from "../../hooks/session";
 import { useWalletOps, WalletOps } from "../../hooks/wallet";
 import { useNetwork } from "../../hooks/network";
@@ -35,12 +33,8 @@ import sirsSmall from "../../assets/sirsSmall.svg";
 import Box from "@mui/material/Box";
 import { BrowserView, MobileView } from "react-device-detect";
 import { useTransaction } from "../../hooks/transaction";
-import { eq, get } from "lodash";
-import { useDebounce } from "usehooks-ts";
-export interface IAddLiquidity {
-  children: null;
-}
-// TODO: track id change and set loading to true
+import { eq } from "lodash";
+
 export const AddLiquidity: FC = () => {
   //return <div> Add Liquidity</div>;
   const scalingKey = "addLiquidity";
@@ -53,21 +47,16 @@ export const AddLiquidity: FC = () => {
   const walletOps: WalletOps = useWalletOps(TransactingComponent.ADD_LIQUIDITY);
 
   // load transaction operations for component
-  const transactionOps = useTransaction(
-    TransactingComponent.ADD_LIQUIDITY
-    //  undefined,
-    //  true
-  );
+  const transactionOps = useTransaction(TransactingComponent.ADD_LIQUIDITY);
 
-  // load wallet connection status hook
-  const isWalletConnected = useWalletConnected();
-
+  // TODO: : remove this and use transactionOps.getActiveTransaction to pass to wallet
   const active = walletOps.getActiveTransaction();
 
   const [id, setId] = useState<Id | undefined>(undefined);
   const [loading, setLoading] = useState<boolean>(true);
   const [reloading, setReloading] = useState<boolean>(true);
 
+  // TODO: : update slippage component to take this as a default
   const slippage = 1;
 
   const send1 = 0;
@@ -79,8 +68,6 @@ export const AddLiquidity: FC = () => {
     network.getAsset(Token.TzBTC),
     network.getAsset(Token.Sirs),
   ]);
-  const [swapingFields, setSwapingFields] = useState<boolean>(false);
-  const swapping = useDebounce(swapingFields, 500);
   const session = useSession();
 
   // used to set input to editable or not
@@ -91,55 +78,27 @@ export const AddLiquidity: FC = () => {
     await walletOps.sendTransaction();
   }, [walletOps.sendTransaction]);
 
-  // callback to internally call swap fields
-  const _swapFields = useCallback(async () => {
-    //setSwapingFields(false);
-    await transactionOps.swapFields();
-    // .then(() => {
-    //   //setAssets([assets[1], assets[0], assets[receive]]);
-    //   //setSwapingFields(false);
-    //   //setLoading(true);
-    // });
-    //
-    // setSwapingFields(true);
-    // setSendAmount(send);
-  }, [assets, setAssets, transactionOps.swapFields]);
-
-  const swapFields = useRef(
-    useCallback(async () => {
-      setSwapingFields(true);
-      await _swapFields();
-      setSwapingFields(false);
-    }, [_swapFields])
-  );
-
-  // //monitor swappingFields state and trigger swap
-  // useEffect(() => {
-  //   if (swapingFields) {
-  //     _swapFields();
-  //   }
-  // }, [swapingFields, _swapFields]);
-
   // callback to create new transaction
   const newTransaction = useCallback(async () => {
-    const transaction = await transactionOps.initialize(
+    // initialize transaction
+    const transactionInitialized = await transactionOps.initialize(
       [assets[send1], assets[send2]],
       [assets[receive]]
     );
 
     //if transaction initialized update balance and set loading params to false
-    if (transaction) {
-      if (swapingFields) setSwapingFields(false);
+    if (transactionInitialized) {
       setLoading(false);
     }
-  }, [swapingFields, assets, transactionOps]);
+  }, [assets, transactionOps]);
 
+  // Effect to load component
   useEffect(() => {
     if (session.activeComponent !== TransactingComponent.ADD_LIQUIDITY)
       session.loadComponent(TransactingComponent.ADD_LIQUIDITY);
   }, [session]);
 
-  // Effect to handle loading of transaction
+  // Effect to handle initial loading of transaction
   useEffect(() => {
     // if loading and no transaction, create new transaction
     if (loading && !walletOps.transaction) {
@@ -171,7 +130,9 @@ export const AddLiquidity: FC = () => {
 
   //callback to handle transaction status changes
   const monitorStatus = useCallback(() => {
+    // get active transaction
     const transaction = transactionOps.getActiveTransaction();
+    // map transaction status to a boolean value to determine if transaction can be updated
     const _canUpdate: boolean = (() => {
       if (transaction) {
         switch (transaction.transactionStatus) {
@@ -189,16 +150,20 @@ export const AddLiquidity: FC = () => {
       }
     })();
 
+    // update can update if different from above _canUpdate
     setCanUpdate((canUpdate) => {
       if (canUpdate === _canUpdate) return canUpdate;
       return _canUpdate;
     });
 
+    // current transaction id in wallet context
     const transactionId = transaction?.id;
+    // if no id and transaction id, set id and set reloading to true
     if (!id && transactionId) {
       setId(transactionId);
       setReloading(true);
     }
+    // if id and transaction id and different, set id and set reloading to true
     if (id && transactionId && id !== transactionId) {
       console.log("id, transactionId", id, transactionId);
       setId(transactionId);
@@ -211,6 +176,7 @@ export const AddLiquidity: FC = () => {
     monitorStatus();
   }, [monitorStatus]);
 
+  // Effect to reload new transactions
   useEffect(() => {
     const timer = setTimeout(() => {
       // get active transaction
@@ -226,8 +192,6 @@ export const AddLiquidity: FC = () => {
             t.sendAsset[1],
             t.receiveAsset[0],
           ];
-          console.log("effect u[pdate assets", JSON.stringify(assets));
-          console.log("effect u[pdate assets transaciont", JSON.stringify(t));
           // Load assets if transaction assets are different from current assets
           if (!eq(JSON.stringify(_assets), JSON.stringify(assets))) {
             setAssets(_assets);
@@ -239,12 +203,10 @@ export const AddLiquidity: FC = () => {
     return () => clearTimeout(timer);
   }, [transactionOps.getActiveTransaction, assets, reloading]);
 
-  useEffect(() => {
-    console.log("assets", JSON.stringify(assets));
-  }, [assets]);
-  useEffect(() => {
-    console.log("id", id);
-  }, [id]);
+  // get loading status for child compoenents
+  const isLoaded = useCallback(() => {
+    return !loading && !reloading;
+  }, [loading, reloading]);
 
   // if loading return empty div else render component
   if (loading) {
@@ -297,7 +259,7 @@ export const AddLiquidity: FC = () => {
                       label="Enter Amount"
                       readOnly={!canUpdate}
                       scalingKey={scalingKey}
-                      loading={swapping}
+                      loading={isLoaded()}
                     />
                   </Grid2>
 
@@ -320,9 +282,8 @@ export const AddLiquidity: FC = () => {
                       readOnly={true}
                       label="Required Deposit"
                       darker={true}
-                      swap={swapFields}
                       scalingKey={scalingKey}
-                      loading={swapping}
+                      loading={isLoaded()}
                     />
                   </Grid2>
                 </Grid2>
@@ -448,7 +409,6 @@ export const AddLiquidity: FC = () => {
                         readOnly={true}
                         label="Required Deposit"
                         darker={true}
-                        swap={swapFields}
                         scalingKey={scalingKey}
                       />
                     </Grid2>
