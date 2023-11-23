@@ -66,8 +66,6 @@ export function addSlippage(
  * Calculates and credits a subsidy to a given liquidity pool.
  * The function adds a predefined subsidy amount (LIQUIDITY_BAKING_SUBSIDY)
  * to the current size of the liquidity pool (xtzPool). The subsidy amount is set to 2.5 tez (2500000 microtez),
- * based on an initial assumption, though there's a note to investigate
- * the discrepancy between official examples (2.5 tez) and Tezos documentation (1.25 tez).
  *
  * @param {BigNumber|number} xtzPool - The current size of the liquidity pool. Can be a BigNumber or a number.
  *

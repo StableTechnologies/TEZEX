@@ -6,6 +6,7 @@ import {
   TransactingComponent,
   TransferType,
   TransactionStatus,
+  Id,
 } from "../../types/general";
 
 import { BigNumber } from "bignumber.js";
@@ -68,6 +69,8 @@ export const RemoveLiquidity: FC = () => {
 
   const active = walletOps.getActiveTransaction();
 
+  const [id, setId] = useState<Id | undefined>(undefined);
+  const [reloading, setReloading] = useState<boolean>(true);
   // Callback to process transaction
   const transact = useCallback(async () => {
     await walletOps.sendTransaction();
@@ -136,12 +139,59 @@ export const RemoveLiquidity: FC = () => {
       if (canUpdate === _canUpdate) return canUpdate;
       return _canUpdate;
     });
-  }, [transactionOps.getActiveTransaction]);
+
+    // current transaction id in wallet context
+    const transactionId = transaction?.id;
+    // if no id and transaction id, set id and set reloading to true
+    if (!id && transactionId) {
+      setId(transactionId);
+      setReloading(true);
+    }
+    // if id and transaction id and different, set id and set reloading to true
+    if (id && transactionId && id !== transactionId) {
+      console.log("id, transactionId", id, transactionId);
+      setId(transactionId);
+      setReloading(true);
+    }
+  }, [transactionOps.getActiveTransaction, id]);
 
   // effect to monitor transaction status by calling monitorStatus
   useEffect(() => {
     monitorStatus();
   }, [monitorStatus]);
+
+  // Effect to reload new transactions
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      // get active transaction
+      const t = transactionOps.getActiveTransaction();
+      // if loading and no transaction, create new transaction
+      if (reloading && t) {
+        // if loading and transaction,
+        // update balance, assets and set loading to false
+        if (t.receiveAsset[1]) {
+          //grab assets from transaction
+          const _assets: [Asset, Asset, Asset] = [
+            t.sendAsset[0],
+            t.receiveAsset[0],
+            t.receiveAsset[1],
+          ];
+          // Load assets if transaction assets are different from current assets
+          if (!eq(JSON.stringify(_assets), JSON.stringify(assets))) {
+            setAssets(_assets);
+          }
+          setReloading(false);
+        }
+      }
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [transactionOps.getActiveTransaction, assets, reloading]);
+
+  // get loading status for child compoenents
+  const isLoaded = useCallback(() => {
+    return !loading && !reloading;
+  }, [loading, reloading]);
+
   return (
     <Grid2 container sx={styles.root}>
       <Grid2>
@@ -160,6 +210,7 @@ export const RemoveLiquidity: FC = () => {
                   readOnly={useMax || !canUpdate}
                   variant="LeftInput"
                   scalingKey={scalingKey}
+                  loading={isLoaded()}
                 />
               </Box>
               <Button

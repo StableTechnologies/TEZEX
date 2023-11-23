@@ -6,6 +6,7 @@ import {
   TransactingComponent,
   TransferType,
   TransactionStatus,
+  Id,
 } from "../../types/general";
 
 import { BigNumber } from "bignumber.js";
@@ -53,12 +54,9 @@ export const Swap: FC = () => {
     //  true
   );
 
-  // load wallet connection status hook
-  const isWalletConnected = useWalletConnected();
-
+  const [id, setId] = useState<Id | undefined>(undefined);
   const [loading, setLoading] = useState<boolean>(true);
-
-  const [slippage, setSlippage] = useState<number>(0.5);
+  const [reloading, setReloading] = useState<boolean>(true);
 
   const send = 0;
   const receive = 1;
@@ -88,34 +86,6 @@ export const Swap: FC = () => {
     await transactionOps.swapFields();
   }, [assets, transactionOps]);
 
-  //  useEffect(() => {
-  //    if (walletOps.transaction) {
-  //      //      setAssets([
-  //      //        walletOps.transaction.sendAsset[0],
-  //      //        walletOps.transaction.receiveAsset[0],
-  //      //      ]);
-  //    } else transactionOps.initialize([assets[send]], [assets[receive]]);
-  //  }, [walletOps.transaction, assets, transactionOps]);
-
-  const debouncedNewTransaction = debounce(
-    async () => {
-      const transaction = await transactionOps.initialize(
-        [assets[send]],
-        [assets[receive]]
-      );
-
-      if (transaction) {
-        if (swappingFileds) setSwappingFileds(false);
-        setLoading(false);
-      }
-    },
-    300,
-    {
-      leading: false,
-      trailing: true,
-    }
-  );
-
   // callback to create new transaction
   const newTransaction = useCallback(async () => {
     const transaction = await transactionOps.initialize(
@@ -130,17 +100,8 @@ export const Swap: FC = () => {
     }
   }, [swappingFileds, assets, transactionOps]);
 
-  // useEffect(() => {
-  //   if (session.activeComponent !== TransactingComponent.SWAP)
-  //     session.loadComponent(TransactingComponent.SWAP);
-  // });
-
   // Effect to handle loading of transaction
   useEffect(() => {
-    // if (!loading && !walletOps.transaction) {
-    //   setLoading(true); // newTransaction();
-    // }
-
     // if loading and no transaction, create new transaction
     if (loading && !walletOps.transaction) {
       newTransaction();
@@ -189,12 +150,52 @@ export const Swap: FC = () => {
       if (canUpdate === _canUpdate) return canUpdate;
       return _canUpdate;
     });
-  }, [transactionOps.getActiveTransaction]);
+
+    // current transaction id in wallet context
+    const transactionId = transaction?.id;
+    // if no id and transaction id, set id and set reloading to true
+    if (!id && transactionId) {
+      setId(transactionId);
+      setReloading(true);
+    }
+    // if id and transaction id and different, set id and set reloading to true
+    if (id && transactionId && id !== transactionId) {
+      console.log("id, transactionId", id, transactionId);
+      setId(transactionId);
+      setReloading(true);
+    }
+  }, [transactionOps.getActiveTransaction, id]);
 
   // effect to monitor transaction status by calling monitorStatus
   useEffect(() => {
     monitorStatus();
   }, [monitorStatus]);
+
+  // Effect to reload new transactions
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      // get active transaction
+      const t = transactionOps.getActiveTransaction();
+      // if loading and no transaction, create new transaction
+      if (reloading && t) {
+        // if loading and transaction,
+        // update balance, assets and set loading to false
+        //grab assets from transaction
+        const _assets: [Asset, Asset] = [t.sendAsset[0], t.receiveAsset[0]];
+        // Load assets if transaction assets are different from current assets
+        if (!eq(JSON.stringify(_assets), JSON.stringify(assets))) {
+          setAssets(_assets);
+        }
+        setReloading(false);
+      }
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [transactionOps.getActiveTransaction, assets, reloading]);
+
+  // get loading status for child compoenents
+  const isLoaded = useCallback(() => {
+    return !loading && !reloading;
+  }, [loading, reloading]);
 
   // if loading return empty div else render component
   if (loading) {
@@ -220,6 +221,7 @@ export const Swap: FC = () => {
                   asset={assets[send]}
                   readOnly={!canUpdate}
                   scalingKey={scalingKey}
+                  loading={isLoaded()}
                 />
               </Grid2>
 
@@ -234,6 +236,7 @@ export const Swap: FC = () => {
                   asset={assets[receive]}
                   readOnly={true}
                   scalingKey={scalingKey}
+                  loading={isLoaded()}
                 />
               </Grid2>
             </CardContent>
