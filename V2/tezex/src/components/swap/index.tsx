@@ -182,10 +182,8 @@ export const Swap: FC = () => {
         // update balance, assets and set loading to false
         //grab assets from transaction
         const _assets: [Asset, Asset] = [t.sendAsset[0], t.receiveAsset[0]];
-        // Load assets if transaction assets are different from current assets
-        if (!eq(JSON.stringify(_assets), JSON.stringify(assets))) {
-          setAssets(_assets);
-        }
+        // reload assets
+        setAssets(_assets);
         setReloading(false);
       }
     }, 100);

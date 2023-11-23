@@ -176,10 +176,8 @@ export const RemoveLiquidity: FC = () => {
             t.receiveAsset[0],
             t.receiveAsset[1],
           ];
-          // Load assets if transaction assets are different from current assets
-          if (!eq(JSON.stringify(_assets), JSON.stringify(assets))) {
-            setAssets(_assets);
-          }
+          // reload assets
+          setAssets(_assets);
           setReloading(false);
         }
       }

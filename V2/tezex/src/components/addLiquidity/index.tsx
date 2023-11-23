@@ -192,10 +192,8 @@ export const AddLiquidity: FC = () => {
             t.sendAsset[1],
             t.receiveAsset[0],
           ];
-          // Load assets if transaction assets are different from current assets
-          if (!eq(JSON.stringify(_assets), JSON.stringify(assets))) {
-            setAssets(_assets);
-          }
+          // reload assets
+          setAssets(_assets);
           setReloading(false);
         }
       }
@@ -390,6 +388,7 @@ export const AddLiquidity: FC = () => {
                         label="Enter Amount"
                         readOnly={!canUpdate}
                         scalingKey={scalingKey}
+                        loading={isLoaded()}
                       />
                     </Grid2>
 
@@ -410,6 +409,7 @@ export const AddLiquidity: FC = () => {
                         label="Required Deposit"
                         darker={true}
                         scalingKey={scalingKey}
+                        loading={isLoaded()}
                       />
                     </Grid2>
                   </Grid2>
