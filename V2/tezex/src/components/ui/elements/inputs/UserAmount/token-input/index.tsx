@@ -33,15 +33,6 @@ export interface IRigthInput {
   component: TransactingComponent;
   transferType: TransferType;
   asset: Asset;
-  //inputRef: React.RefObject<HTMLInputElement>;
-  //focused: boolean;
-  //updateAmount: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  //onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
-  //onFocus: () => void;
-  //onBlur: () => void;
-  //editing: boolean;
-  //noUserActionCheck: () => boolean;
-  // toggle: () => void;
   variant?: "LeftInput" | "RightInput";
   swap?: React.MutableRefObject<() => Promise<void>>;
   label?: string;
@@ -73,9 +64,8 @@ const TokenInput: FC<IRigthInput> = (props) => {
   const [id, setId] = useState<Id | undefined>(undefined);
   const swap = useCallback(async () => {
     setSwapping(true);
-
-    // if (props.swap) await props.swap.current();
   }, []);
+
   // monitor swapping and swapfields
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -86,6 +76,7 @@ const TokenInput: FC<IRigthInput> = (props) => {
     }, 500);
     return () => clearTimeout(timer);
   }, [transactionOps.swapFields, swapping]);
+
   // Set id on new transaction and set loading to true
   useEffect(() => {
     const transactionId = transactionOps.getActiveTransaction()?.id;
@@ -130,18 +121,12 @@ const TokenInput: FC<IRigthInput> = (props) => {
     const t = transactionOps.getActiveTransaction();
     const amount = transactionOps.trackedAsset?.amount?.string;
     if (amount) {
-      !props.readOnly && console.log("!!amount to load", amount);
       //update value if different
       setValue((value) => {
         if (toNumber(value) === toNumber(amount)) return value;
         else if (props.readOnly && toNumber(amount) === 0) return "0.00";
         else return amount;
       });
-      // setSwapping((swapping) => {
-      //   if (swapping) return false;
-      //   else return swapping;
-      // });
-      //handle loading
       setLoadingFalse();
     }
   }, [
@@ -190,13 +175,6 @@ const TokenInput: FC<IRigthInput> = (props) => {
     loadValue,
   ]);
 
-  // // track hook state for loading and transacting  and set loading to true
-  // useEffect(() => {
-  //   if (!canUpdate()) {
-  //     setLoading(true);
-  //   }
-  // }, [canUpdate]);
-  //
   // Callback to check if local value differs from transaction amount
   // if it does it calls an update
   const updateAmount = useCallback(
@@ -212,11 +190,6 @@ const TokenInput: FC<IRigthInput> = (props) => {
   // This effect tracks and  sends the debounced value for updating
   // the transaction amount,
   useEffect(() => {
-    // if (!props.readOnly && debouncedValue !== "0.00") {
-    //   const oldValue = transactionOps.trackedAsset?.amount?.string;
-    //   oldValue && updateAmount(debouncedValue, oldValue);
-    // }
-
     const timer = setTimeout(() => {
       if (!props.readOnly && !loading && !swapping) {
         const oldValue = transactionOps.trackedAsset?.amount?.string;
@@ -234,44 +207,30 @@ const TokenInput: FC<IRigthInput> = (props) => {
     updateAmount,
   ]);
 
-  //const [transactionAmount, setTransactionAmount] = useState<string | unknown>(
-  //  undefined
-  //);
-
-  //useEffect(() => {
-  //  const amountState = transactionOps.trackedAsset?.amount?.string;
-  //  if (props.readOnly && amountState) {
-  //    value !== amountState && setValue(amountState);
-  //  }
-  //}, [props.readOnly, transactionOps.trackedAsset]);
-
   useEffect(() => {
     const assetState = transactionOps.trackedAsset;
     if (assetState && assetState.balance) {
       !eq(assetState.balance.string, transactionBalance) &&
         setTransactionBalance(assetState.balance.string);
     }
-    //  if (assetState && assetState.amount) {
-    //    !eq(assetState.amount.string, transactionBalance) &&
-    //      setTransactionAmount(assetState.amount.string);
-    //  }
   }, [transactionOps.trackedAsset]);
 
+  // calback for when the input is focused on
   const handleFocus = useCallback(() => {
     if (value === "0.00") {
-      //setIsZeroOnFocus(true);
       setValue("");
     }
-    // props.onFocus();
   }, [value]);
 
+  // callback for when the user clicks away from the input
   const handleBlur = useCallback(() => {
     if (props.readOnly || loading) return;
     if (value === "" || toNumber(value) === 0) {
       setValue("0.00");
-      // setIsZeroOnFocus(false);
     }
   }, [props.readOnly, loading, value]);
+
+  // callback for when the user changes the input value
   const handleChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       if (props.readOnly || loading) return;
@@ -285,7 +244,7 @@ const TokenInput: FC<IRigthInput> = (props) => {
         if (isNumeric(result)) setValue(result);
       }
     },
-    [props.readOnly, loading, value] // dependencies
+    [props.readOnly, loading, value]
   );
 
   const amountNotEntered: () => boolean = useCallback(() => {
