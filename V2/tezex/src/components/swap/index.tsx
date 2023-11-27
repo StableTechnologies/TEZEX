@@ -192,6 +192,8 @@ export const Swap: FC = () => {
 
   // get loading status for child compoenents
   const isLoaded = useCallback(() => {
+    console.log("loading, reloading", loading, reloading);
+    console.log("!loading && !reloading", !loading && !reloading);
     return !loading && !reloading;
   }, [loading, reloading]);
 
@@ -219,7 +221,7 @@ export const Swap: FC = () => {
                   asset={assets[send]}
                   readOnly={!canUpdate}
                   scalingKey={scalingKey}
-                  loading={isLoaded()}
+                  loading={!isLoaded()}
                 />
               </Grid2>
 
@@ -234,7 +236,7 @@ export const Swap: FC = () => {
                   asset={assets[receive]}
                   readOnly={true}
                   scalingKey={scalingKey}
-                  loading={isLoaded()}
+                  loading={!isLoaded()}
                 />
               </Grid2>
             </CardContent>

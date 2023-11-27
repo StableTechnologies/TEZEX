@@ -208,7 +208,7 @@ export const RemoveLiquidity: FC = () => {
                   readOnly={useMax || !canUpdate}
                   variant="LeftInput"
                   scalingKey={scalingKey}
-                  loading={isLoaded()}
+                  loading={!isLoaded()}
                 />
               </Box>
               <Button

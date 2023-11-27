@@ -257,7 +257,7 @@ export const AddLiquidity: FC = () => {
                       label="Enter Amount"
                       readOnly={!canUpdate}
                       scalingKey={scalingKey}
-                      loading={isLoaded()}
+                      loading={!isLoaded()}
                     />
                   </Grid2>
 
@@ -281,7 +281,7 @@ export const AddLiquidity: FC = () => {
                       label="Required Deposit"
                       darker={true}
                       scalingKey={scalingKey}
-                      loading={isLoaded()}
+                      loading={!isLoaded()}
                     />
                   </Grid2>
                 </Grid2>
@@ -388,7 +388,7 @@ export const AddLiquidity: FC = () => {
                         label="Enter Amount"
                         readOnly={!canUpdate}
                         scalingKey={scalingKey}
-                        loading={isLoaded()}
+                        loading={!isLoaded()}
                       />
                     </Grid2>
 
@@ -409,7 +409,7 @@ export const AddLiquidity: FC = () => {
                         label="Required Deposit"
                         darker={true}
                         scalingKey={scalingKey}
-                        loading={isLoaded()}
+                        loading={!isLoaded()}
                       />
                     </Grid2>
                   </Grid2>

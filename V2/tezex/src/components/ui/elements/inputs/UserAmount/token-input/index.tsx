@@ -73,7 +73,7 @@ const TokenInput: FC<IRigthInput> = (props) => {
         console.log("swapping");
         transactionOps.swapFields();
       }
-    }, 500);
+    }, 100);
     return () => clearTimeout(timer);
   }, [transactionOps.swapFields, swapping]);
 
