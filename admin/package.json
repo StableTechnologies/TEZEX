@@ -28,7 +28,7 @@
     "jsonpath-plus": "^4.0.0",
     "loglevel": "^1.6.8",
     "node-fetch": "^2.6.0",
-    "web3": "^1.2.11"
+    "web3": "^4.0.1"
   },
   "devDependencies": {
     "eslint": "^7.5.0"
