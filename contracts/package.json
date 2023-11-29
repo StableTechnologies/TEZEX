@@ -9,7 +9,7 @@
   "author": "Soumya Ghosh Dastidar",
   "license": "MIT",
   "dependencies": {
-    "big-integer": "^1.6.48",
+    "big-integer": "^1.6.51",
     "conseiljs": "5.0.8-1",
     "conseiljs-softsigner": "5.0.4-1",
     "ethereumjs-tx": "^2.1.2",
