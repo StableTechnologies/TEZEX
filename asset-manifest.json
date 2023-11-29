@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/static/css/main.18220fd6.css",
-    "main.js": "/static/js/main.c112060a.js",
+    "main.js": "/static/js/main.ec1eac1b.js",
     "static/js/496.463fef9a.chunk.js": "/static/js/496.463fef9a.chunk.js",
     "static/media/sirsIcon.svg": "/static/media/sirsIcon.5002a55ace3cfc5d31debece8d9c27fa.svg",
     "static/media/xtzTzbtcIcon.svg": "/static/media/xtzTzbtcIcon.475ffaadd8917d5261494e4dca136899.svg",
@@ -10,22 +10,22 @@
     "static/media/liquiditySwapIcon.svg": "/static/media/liquiditySwapIcon.8f1e02de3095483209de196f8517490f.svg",
     "static/media/swapIcon.svg": "/static/media/swapIcon.d8241838b1310217d74263c8853bf23f.svg",
     "static/media/tzwalletlogo.svg": "/static/media/tzwalletlogo.298ee304ca29eec491be48cb5f4a1231.svg",
+    "index.html": "/index.html",
     "static/media/infoIcon.svg": "/static/media/infoIcon.db8904b17ea469a46aa80fced7b18e26.svg",
     "static/media/closeIcon.svg": "/static/media/closeIcon.7c1291738b4e26b9a045b4984d45081d.svg",
     "static/media/sirsSmall.svg": "/static/media/sirsSmall.9078f563fb175d3d0951f6f7f17f76a1.svg",
     "static/media/rightArrow.svg": "/static/media/rightArrow.7dcc15c8dbb97c68650723f627f831c8.svg",
     "static/media/copyIcon.svg": "/static/media/copyIcon.33a1802d976cc4a100936132200a4e17.svg",
-    "index.html": "/index.html",
     "static/media/alert.svg": "/static/media/alert.6cae5ab1e588979d597a9fd45c8bab01.svg",
     "static/media/tezexIcon.svg": "/static/media/tezexIcon.3c8afc012f361860a7d52d042c689e72.svg",
     "static/media/tick.svg": "/static/media/tick.d076760eef5bddd337afda379a56c965.svg",
     "static/media/plusIcon.svg": "/static/media/plusIcon.dc94d200e3f2bc2295ce02c5485a00ef.svg",
     "main.18220fd6.css.map": "/static/css/main.18220fd6.css.map",
-    "main.c112060a.js.map": "/static/js/main.c112060a.js.map",
+    "main.ec1eac1b.js.map": "/static/js/main.ec1eac1b.js.map",
     "496.463fef9a.chunk.js.map": "/static/js/496.463fef9a.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.18220fd6.css",
-    "static/js/main.c112060a.js"
+    "static/js/main.ec1eac1b.js"
   ]
 }
