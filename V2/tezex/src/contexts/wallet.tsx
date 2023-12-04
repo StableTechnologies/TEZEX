@@ -648,7 +648,11 @@ export function WalletProvider(props: IWalletProvider) {
   ): boolean => {
     // if the transaction is locked or undefined  return
     if (!transaction) return false;
-    if (transaction.locked) return false;
+    if (
+      transaction.locked ||
+      transaction.transactionStatus === TransactionStatus.PENDING
+    )
+      return false;
     // else safe to update, run the updater
 
     return updater(transaction);

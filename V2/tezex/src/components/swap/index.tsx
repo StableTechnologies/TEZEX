@@ -98,24 +98,33 @@ export const Swap: FC = () => {
 
   // Effect to handle loading of transaction
   useEffect(() => {
+    // get active transaction
+    const transaction = transactionOps.getActiveTransaction();
     // if loading and no transaction, create new transaction
-    if (loading && !walletOps.transaction) {
+    if (loading && !transaction) {
       newTransaction();
     } else if (loading) {
       // if loading and transaction,
       // update balance  , assets and set loading to false
-      if (walletOps.transaction) {
+      if (transaction) {
         //grab assets from transaction
         const _assets: [Asset, Asset] = [
-          walletOps.transaction.sendAsset[0],
-          walletOps.transaction.receiveAsset[0],
+          transaction.sendAsset[0],
+          transaction.receiveAsset[0],
         ];
         // Load assets if transaction assets are different from current assets
         !eq(_assets, assets) && setAssets(_assets);
         setLoading(false);
       }
     }
-  }, [swappingFileds, loading, walletOps.transaction, newTransaction, session]);
+  }, [
+    swappingFileds,
+    loading,
+    newTransaction,
+    session,
+    transactionOps.getActiveTransaction,
+    assets,
+  ]);
 
   useEffect(() => {
     if (session.activeComponent !== TransactingComponent.SWAP)

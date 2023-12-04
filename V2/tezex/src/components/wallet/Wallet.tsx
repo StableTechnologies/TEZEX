@@ -48,7 +48,7 @@ export const Wallet: FC<IWallet> = (props) => {
         setTransactionStatus(status);
       }
     }
-  }, [walletOps?.getTransactionStatus]);
+  }, [walletOps?.getTransactionStatus, transactionStatus]);
 
   // Effect to monitor transaction status and update wallet text
   useEffect(() => {
