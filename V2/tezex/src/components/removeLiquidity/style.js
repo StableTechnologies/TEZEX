@@ -99,7 +99,7 @@ const style = (theme, scale = 1) => {
       height: `calc(26.04vw * ${scale})`,
       width: `calc(30.56vw * ${scale})`,
       borderRadius: `calc(1.38vw * ${scale})`,
-      zIndex: 999,
+      zIndex: 5,
       background: "#FFFFFF",
       border: "0.07vw solid #E1E1E1",
 
