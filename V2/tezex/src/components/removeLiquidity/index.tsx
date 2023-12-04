@@ -149,13 +149,11 @@ export const RemoveLiquidity: FC = () => {
     const transactionId = transaction?.id;
     // if no id and transaction id, set id and set reloading to true
     if (!id && transactionId) {
-      console.log("!id, transactionId", id, transactionId);
       setId(transactionId);
       setReloading(true);
     }
     // if id and transaction id and different, set id and set reloading to true
     if (id && transactionId && id !== transactionId) {
-      console.log("id, transactionId", id, transactionId);
       setId(transactionId);
       setReloading(true);
       setUseMax(false);

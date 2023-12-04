@@ -170,7 +170,6 @@ export const AddLiquidity: FC = () => {
     }
     // if id and transaction id and different, set id and set reloading to true
     if (id && transactionId && id !== transactionId) {
-      console.log("id, transactionId", id, transactionId);
       setId(transactionId);
       setReloading(true);
     }

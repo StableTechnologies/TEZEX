@@ -65,7 +65,6 @@ const TokenInput: FC<IRigthInput> = (props) => {
   useEffect(() => {
     const timer = setTimeout(() => {
       if (swapping) {
-        console.log("swapping");
         transactionOps.swapFields();
       }
     }, 100);
@@ -175,7 +174,6 @@ const TokenInput: FC<IRigthInput> = (props) => {
     const timer = setTimeout(() => {
       if (!props.readOnly && !loading && !swapping) {
         const oldValue = transactionOps.trackedAsset?.amount?.string;
-        console.log("!!!oldValue", oldValue);
         if (oldValue) updateAmount(debouncedValue, oldValue);
       }
     }, 100);
