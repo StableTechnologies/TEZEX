@@ -1,6 +1,6 @@
 import React, { FC, useEffect, useCallback, useState } from "react";
 import connectWallet from "../../functions/beacon";
-import { useWallet } from "../../hooks/wallet";
+import { useWallet, useWalletOps } from "../../hooks/wallet";
 import { useNetwork } from "../../hooks/network";
 import { WalletInfo } from "../../contexts/wallet";
 import { WalletConnected } from "../session/WalletConnected";
@@ -11,13 +11,18 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import tzwalletlogo from "../../assets/tzwalletlogo.svg";
-import { Transaction, TransactionStatus } from "../../types/general";
+import {
+  TransactingComponent,
+  Transaction,
+  TransactionStatus,
+} from "../../types/general";
 import Button from "@mui/material/Button";
 import { eq, debounce, throttle } from "lodash";
 import style from "./style";
 import useStyles from "../../hooks/styles";
 
 interface IWallet {
+  component?: TransactingComponent;
   transaction?: Transaction;
   callback?: () => Promise<void>;
   variant?: "header" | "card";
@@ -29,45 +34,53 @@ export const Wallet: FC<IWallet> = (props) => {
   const styles = useStyles(style, props.scalingKey);
   const walletInfo: WalletInfo | undefined = useWallet();
   const networkInfo = useNetwork();
-
+  const walletOps = props.component ? useWalletOps(props.component) : undefined;
   const [spinner, setSpinner] = useState(false);
   const [disabled, setDisabled] = useState(false);
-  const [transactionStatus, setTransactionStatus] = useState<
-    string | undefined
-  >(undefined);
-  const walletText = useCallback((): string | undefined => {
-    if (props.transaction && props.transaction.sendAmount[0].decimal.eq(0)) {
-      setDisabled(true);
-      setSpinner(false);
-      return "Enter Amount";
-    } else if (props.transaction) {
-      const transactionStatus: TransactionStatus =
-        props.transaction.transactionStatus;
-      switch (transactionStatus) {
-        case TransactionStatus.INSUFFICIENT_BALANCE:
-          setDisabled(true);
-          setSpinner(false);
-          return transactionStatus as string;
-        case TransactionStatus.MODIFIED:
-          setDisabled(true);
-          setSpinner(true);
-          return props.children;
-        case TransactionStatus.SUFFICIENT_BALANCE:
-          setDisabled(false);
-          setSpinner(false);
-          return props.children;
-        default:
-          setDisabled(true);
-          setSpinner(true);
-          return transactionStatus as string;
+  const [transactionStatus, setTransactionStatus] = useState<TransactionStatus>(
+    TransactionStatus.ZERO_AMOUNT
+  );
+  const [walletText, setWalletText] = useState<string | undefined>("");
+  // use effect to update transaction status
+  useEffect(() => {
+    const status = walletOps?.getTransactionStatus();
+    if (status) {
+      if (transactionStatus !== status) {
+        setTransactionStatus(status);
       }
     }
-  }, [props.transaction, props.children]);
+  }, [walletOps?.getTransactionStatus]);
+
+  // Effect to monitor transaction status and update wallet text
   useEffect(() => {
-    if (props.transaction) {
-      setTransactionStatus(walletText());
+    switch (transactionStatus) {
+      case TransactionStatus.ZERO_AMOUNT:
+        setDisabled(true);
+        setSpinner(false);
+        setWalletText(transactionStatus);
+        break;
+      case TransactionStatus.INSUFFICIENT_BALANCE:
+        setDisabled(true);
+        setSpinner(false);
+        setWalletText(transactionStatus);
+        break;
+      case TransactionStatus.MODIFIED:
+        setDisabled(true);
+        setSpinner(true);
+        setWalletText(props.children);
+        break;
+      case TransactionStatus.SUFFICIENT_BALANCE:
+        setDisabled(false);
+        setSpinner(false);
+        setWalletText(props.children);
+        break;
+      default:
+        setDisabled(true);
+        setSpinner(true);
+        setWalletText(transactionStatus);
     }
-  }, [props.transaction, walletText]);
+  }, [transactionStatus, props.children]);
+
   const transact = async () => {
     if (props.callback) {
       await props.callback();
@@ -135,9 +148,7 @@ export const Wallet: FC<IWallet> = (props) => {
             >
               <CircularProgress sx={styles.spinner} />
             </Box>
-            <Typography sx={styles.transactionStatus}>
-              {transactionStatus}
-            </Typography>
+            <Typography sx={styles.transactionStatus}>{walletText}</Typography>
           </Box>
         </Button>
       );

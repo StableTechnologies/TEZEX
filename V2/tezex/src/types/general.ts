@@ -69,6 +69,7 @@ export interface AssetBalance {
 export enum TransactionStatus {
   INITIALIZED = "Initialized",
   UNINITIALIZED = "Uninitialized",
+  ZERO_AMOUNT = "Enter Amount",
   MODIFIED = "Estimating",
   INSUFFICIENT_BALANCE = "Insufficient Balance",
   SUFFICIENT_BALANCE = "Sufficient Balance",

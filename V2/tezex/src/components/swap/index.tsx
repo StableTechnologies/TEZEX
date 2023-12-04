@@ -153,16 +153,26 @@ export const Swap: FC = () => {
 
     // current transaction id in wallet context
     const transactionId = transaction?.id;
+    // current transaction status in wallet context
+    const transactionStatus = transaction?.transactionStatus;
+
     // if no id and transaction id, set id and set reloading to true
     if (!id && transactionId) {
+      console.log("!id, transactionId", id, transactionId);
       setId(transactionId);
       setReloading(true);
     }
+    if (transactionStatus) {
+      console.log(
+        "transaction?.transactionStatus",
+        transaction?.transactionStatus
+      );
+    }
     // if id and transaction id and different, set id and set reloading to true
     if (id && transactionId && id !== transactionId) {
-      console.log("id, transactionId", id, transactionId);
       setId(transactionId);
       setReloading(true);
+      console.log("id, transactionId", id, transactionId);
     }
   }, [transactionOps.getActiveTransaction, id]);
 
@@ -192,8 +202,8 @@ export const Swap: FC = () => {
 
   // get loading status for child compoenents
   const isLoaded = useCallback(() => {
-    console.log("loading, reloading", loading, reloading);
-    console.log("!loading && !reloading", !loading && !reloading);
+    // console.log("loading, reloading", loading, reloading);
+    // console.log("!loading && !reloading", !loading && !reloading);
     return !loading && !reloading;
   }, [loading, reloading]);
 
@@ -243,6 +253,7 @@ export const Swap: FC = () => {
             <CardActions sx={styles.cardAction}>
               <Box sx={styles.transact}>
                 <Wallet
+                  component={TransactingComponent.SWAP}
                   transaction={active}
                   callback={transact}
                   scalingKey={scalingKey}

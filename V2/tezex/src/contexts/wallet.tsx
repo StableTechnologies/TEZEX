@@ -369,19 +369,9 @@ export function WalletProvider(props: IWalletProvider) {
               return transaction;
             }
           );
-          // if the transaction has failed update the state
-          if (
-            updatedTransaction.transactionStatus === TransactionStatus.FAILED
-          ) {
-            setTransactions((draft) => {
-              draft[component] = updatedTransaction;
-            });
-          } else {
-            // if the transaction has completed remove it from state
-            setTransactions((draft) => {
-              delete draft[component];
-            });
-          }
+          setTransactions((draft) => {
+            draft[component] = updatedTransaction;
+          });
         }
       });
     };

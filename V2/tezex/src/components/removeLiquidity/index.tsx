@@ -235,6 +235,7 @@ export const RemoveLiquidity: FC = () => {
           <CardActions sx={styles.cardAction}>
             <Box sx={styles.wallet}>
               <Wallet
+                component={TransactingComponent.REMOVE_LIQUIDITY}
                 transaction={active}
                 callback={transact}
                 scalingKey={scalingKey}

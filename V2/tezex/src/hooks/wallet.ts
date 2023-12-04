@@ -15,8 +15,9 @@ import {
 export interface WalletOps {
   updateBalance: () => Promise<boolean>;
   getActiveTransaction: () => Transaction | undefined;
-  getActransactionStatus: () => TransactionStatus;
+  getTransactionStatus: () => TransactionStatus;
   sendTransaction: () => Promise<void>;
+  isZero: () => boolean;
   transaction: Transaction | undefined;
 }
 
@@ -45,16 +46,6 @@ export function useWalletOps(
     }
   }, [wallet, component, loading]);
 
-  useEffect(() => {
-    if (
-      trackTransaction &&
-      transaction &&
-      transaction.transactionStatus === TransactionStatus.COMPLETED
-    ) {
-      setTransaction(undefined);
-    }
-  }, [transaction]);
-
   const updateBalance = useCallback(async (): Promise<boolean> => {
     return await wallet.updateTransactionBalance(component);
   }, [wallet, component]);
@@ -62,10 +53,21 @@ export function useWalletOps(
   const getActiveTransaction = useCallback((): Transaction | undefined => {
     return wallet.getActiveTransaction(component);
   }, [wallet, component]);
-  const getActransactionStatus = useCallback((): TransactionStatus => {
+
+  const getTransactionStatus = useCallback((): TransactionStatus => {
     const _transaction = wallet.getActiveTransaction(component);
-    if (_transaction) return _transaction.transactionStatus;
-    else return TransactionStatus.UNINITIALIZED;
+    if (_transaction) {
+      if (_transaction.sendAmount[0].decimal.eq(0))
+        return TransactionStatus.ZERO_AMOUNT;
+      return _transaction.transactionStatus;
+    } else return TransactionStatus.UNINITIALIZED;
+  }, [wallet.getActiveTransaction, component]);
+
+  const isZero = useCallback((): boolean => {
+    const _transaction = wallet.getActiveTransaction(component);
+    if (_transaction) {
+      return _transaction.sendAmount[0].decimal.eq(0);
+    } else return true;
   }, [wallet, component]);
 
   const sendTransaction = useCallback(async () => {
@@ -77,9 +79,10 @@ export function useWalletOps(
 
   return {
     getActiveTransaction,
-    getActransactionStatus,
+    getTransactionStatus,
     updateBalance,
     sendTransaction,
+    isZero,
     transaction,
   };
 }

@@ -352,7 +352,8 @@ export const AddLiquidity: FC = () => {
                   lg={6}
                 >
                   <Wallet
-                    transaction={active}
+                    component={TransactingComponent.ADD_LIQUIDITY}
+                    transaction={transactionOps.getActiveTransaction()}
                     callback={transact}
                     scalingKey={scalingKey}
                   >
@@ -444,6 +445,7 @@ export const AddLiquidity: FC = () => {
 
                   <Grid2 sx={{}} xs={6}>
                     <Wallet
+                      component={TransactingComponent.ADD_LIQUIDITY}
                       transaction={active}
                       callback={transact}
                       scalingKey={scalingKey}
