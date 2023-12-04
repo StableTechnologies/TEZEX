@@ -15,7 +15,7 @@ export interface IAmountField {
   onChange?: (value: string) => void;
   label?: string;
   readOnly?: boolean;
-  variant?: "SlippageInput" | "LeftInput" | "RightInput";
+  variant?: "LeftInput" | "RightInput";
   darker?: boolean;
   swap?: React.MutableRefObject<() => Promise<void>>;
   scalingKey?: string;
@@ -25,8 +25,6 @@ export interface IAmountField {
 const AmountField: FC<IAmountField> = (props) => {
   const Variant = () => {
     switch (props.variant) {
-      case "SlippageInput":
-        return <div>SlippageInput</div>;
       default:
         return (
           <TokenAmountInput
