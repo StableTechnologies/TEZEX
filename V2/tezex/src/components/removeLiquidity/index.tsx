@@ -152,6 +152,7 @@ export const RemoveLiquidity: FC = () => {
       console.log("id, transactionId", id, transactionId);
       setId(transactionId);
       setReloading(true);
+      setUseMax(false);
     }
   }, [transactionOps.getActiveTransaction, id]);
 

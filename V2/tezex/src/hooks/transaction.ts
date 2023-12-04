@@ -364,7 +364,8 @@ export function useTransaction(
       !eq(
         JSON.stringify(transaction.sendAmount[0]),
         JSON.stringify(transaction.sendAssetBalance[0])
-      )
+      ) &&
+      !transaction.sendAssetBalance[0].decimal.isZero()
     ) {
       await updateAmount(transaction.sendAssetBalance[0].string);
     }
