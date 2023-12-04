@@ -11,7 +11,6 @@ export interface WalletOps {
   getActiveTransaction: () => Transaction | undefined;
   getTransactionStatus: () => TransactionStatus;
   sendTransaction: () => Promise<void>;
-  isZero: () => boolean;
   transaction: Transaction | undefined;
 }
 
@@ -55,13 +54,6 @@ export function useWalletOps(
     } else return TransactionStatus.UNINITIALIZED;
   }, [wallet.getActiveTransaction, component]);
 
-  const isZero = useCallback((): boolean => {
-    const _transaction = wallet.getActiveTransaction(component);
-    if (_transaction) {
-      return _transaction.sendAmount[0].decimal.eq(0);
-    } else return true;
-  }, [wallet, component]);
-
   const sendTransaction = useCallback(async () => {
     const _transaction = wallet.getActiveTransaction(component);
     if (wallet && _transaction && !_transaction.locked) {
@@ -74,7 +66,6 @@ export function useWalletOps(
     getTransactionStatus,
     updateBalance,
     sendTransaction,
-    isZero,
     transaction,
   };
 }
