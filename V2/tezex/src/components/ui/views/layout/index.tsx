@@ -1,21 +1,13 @@
 import React, { FC, useState, useEffect, useCallback } from "react";
 import { Header } from "../header";
-import ResponsiveAppBar from "../../../app-bar-example/";
 
-import {
-  BrowserView,
-  MobileView,
-  isBrowser,
-  isMobile,
-} from "react-device-detect";
-// } from "../../../app-bar-exa ";
+import { BrowserView, MobileView } from "react-device-detect";
 import { MainWindow } from "../main-window";
 import { SideBar } from "../sidebar";
 import Box from "@mui/material/Box";
 
 import style from "./style";
 import useStyles from "../../../../hooks/styles";
-import Grid2 from "@mui/material/Unstable_Grid2/Grid2";
 export interface ILayout {
   children:
     | JSX.Element[]

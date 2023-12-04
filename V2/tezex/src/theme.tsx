@@ -1,10 +1,7 @@
-import { Breakpoint, createTheme, ThemeProvider } from "@mui/material/styles";
+import { createTheme } from "@mui/material/styles";
 import { Breakpoints } from "./types/general";
 import { adjustBreakpointsForDpr } from "./functions/util";
 
-import parser from "ua-parser-js";
-import { UAParser } from "ua-parser-js";
-import mediaQuery from "css-mediaquery";
 import { useDeviceSelectors } from "react-device-detect";
 declare module "@mui/material/styles" {
   interface BreakpointOverrides {
@@ -102,29 +99,14 @@ const br: Breakpoints = {
     },
   },
 };
-const breakpoints: Breakpoints = {
-  breakpoints: {
-    values: {
-      xs: 0,
-      sm: 600,
-      md: 900,
-      lg: 1200,
-      xl: 1536,
-      mobile: 0,
-      tablet: 640,
-      laptop: 1024,
-      desktop: 1200,
-    },
-  },
-};
-const dpr: number = window.devicePixelRatio || 1;
-const f = adjustBreakpointsForDpr(br);
 
-const [selectors, data] = useDeviceSelectors(window.navigator.userAgent);
+const dprAdjustedBreakpoints = adjustBreakpointsForDpr(br);
+
+const selectors = useDeviceSelectors(window.navigator.userAgent);
 
 const { isMobile, isDesktop } = selectors;
 export const theme = createTheme({
-  ...(isDesktop ? f : {}),
+  ...(isDesktop ? dprAdjustedBreakpoints : {}),
   deviceType: {
     isMobile: isMobile,
     isDesktop: isDesktop,

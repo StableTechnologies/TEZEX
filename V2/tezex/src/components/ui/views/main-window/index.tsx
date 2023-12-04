@@ -4,7 +4,7 @@ import { Box } from "@mui/system";
 import style from "./style";
 import useStyles from "../../../../hooks/styles";
 import sidelogo from "../../../../assets/sidelogo.svg";
-import { SideBar } from "../sidebar";
+
 export interface IMainWindow {
   children:
     | JSX.Element[]

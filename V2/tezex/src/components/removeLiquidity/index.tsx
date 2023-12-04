@@ -9,11 +9,9 @@ import {
   Id,
 } from "../../types/general";
 
-import { BigNumber } from "bignumber.js";
 import { UserAmountField } from "../../components/ui/elements/inputs";
 import { Wallet } from "../wallet";
 import { NavLiquidity } from "../nav/NavLiquidity";
-import { useWalletConnected } from "../../hooks/wallet";
 import { useSession } from "../../hooks/session";
 import { useNetwork } from "../../hooks/network";
 import { useWalletOps, WalletOps } from "../../hooks/wallet";
@@ -48,7 +46,6 @@ export const RemoveLiquidity: FC = () => {
   );
   // load transaction operations for component
   const transactionOps = useTransaction(TransactingComponent.REMOVE_LIQUIDITY);
-  const isWalletConnected = useWalletConnected();
 
   const [loading, setLoading] = useState<boolean>(true);
 

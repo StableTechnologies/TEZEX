@@ -1,4 +1,4 @@
-import React, { FC, useState, useEffect, useCallback, useRef } from "react";
+import React, { FC, useState, useEffect, useCallback } from "react";
 import plusIcon from "../../assets/plusIcon.svg";
 
 import { Wallet } from "../wallet";
@@ -55,9 +55,6 @@ export const AddLiquidity: FC = () => {
   const [id, setId] = useState<Id | undefined>(undefined);
   const [loading, setLoading] = useState<boolean>(true);
   const [reloading, setReloading] = useState<boolean>(true);
-
-  // TODO: : update slippage component to take this as a default
-  const slippage = 1;
 
   const send1 = 0;
   const send2 = 1;

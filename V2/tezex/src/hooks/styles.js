@@ -1,10 +1,4 @@
-import React, {
-  useState,
-  useRef,
-  useMemo,
-  useEffect,
-  useCallback,
-} from "react";
+import { useState, useRef, useEffect } from "react";
 import { css } from "@emotion/css";
 import { theme } from "../theme";
 import { debounce } from "lodash";
@@ -20,12 +14,9 @@ import { useMobileOrientation, useDeviceSelectors } from "react-device-detect";
 const useStyles = (style, scalingKey = "default", toCSS = false) => {
   const { isLandscape } = useMobileOrientation();
 
-  const [selectors, data] = useDeviceSelectors(window.navigator.userAgent);
+  const [selectors] = useDeviceSelectors(window.navigator.userAgent);
 
   const { isMobile, isDesktop } = selectors;
-  const [isLandScape, setIsLandScape] = useState(
-    isLandscape // window.matchMedia("(orientation: landscape)").matches
-  );
 
   // fetch scaling factors from theme
   const scalingBreakpoints = theme.scaling[scalingKey];

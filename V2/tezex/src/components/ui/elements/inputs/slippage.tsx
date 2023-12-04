@@ -6,12 +6,9 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import { BigNumber } from "bignumber.js";
 
 import {
-  Asset,
   Id,
-  Token,
   TransactingComponent,
   TransferType,
 } from "../../../../types/general";
@@ -21,7 +18,6 @@ import Button from "@mui/material/Button";
 
 import style from "./style";
 import useStyles from "../../../../hooks/styles";
-import { UserAmountField } from "./UserAmount";
 import { useTransaction } from "../../../../hooks/transaction";
 import TextField from "@mui/material/TextField";
 import InputAdornment from "@mui/material/InputAdornment";
@@ -41,11 +37,9 @@ export interface ISlippage {
 const SlippageInput: FC<ISlippage> = (props) => {
   const styles = useStyles(style, props.scalingKey);
   const [selectedId, setSelectedId] = useState("1");
-  const [sselectedId, ssetSelectedId] = useState("1");
   const [loading, setLoading] = useState(true);
   const [input, setInput] = useState<string>("0.5");
   const debouncedValue = useDebounce<string>(input, 500);
-  const [isZeroOnFocus, setIsZeroOnFocus] = useState(false);
   const transactionOps = useTransaction(props.component);
   const [id, setId] = useState<Id | undefined>(undefined);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -63,8 +57,8 @@ const SlippageInput: FC<ISlippage> = (props) => {
   }, [transactionOps.getActiveTransaction, id]);
   // boolean check to see  if updates can be made
   const canUpdate = useCallback(() => {
-    return !(transactionOps.loading || transactionOps.transacting);
-  }, [transactionOps.loading, transactionOps.transacting]);
+    return !transactionOps.loading;
+  }, [transactionOps.loading]);
 
   // callback to set loading to false
   const setLoadingFalse = useCallback(() => {

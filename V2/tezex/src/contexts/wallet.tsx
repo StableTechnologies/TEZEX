@@ -1,10 +1,4 @@
-import React, {
-  useCallback,
-  createContext,
-  useEffect,
-  useState,
-  Component,
-} from "react";
+import React, { useCallback, createContext, useEffect, useState } from "react";
 import { Draft } from "immer";
 import { useImmer } from "use-immer";
 import { Mutex } from "async-mutex";
@@ -33,9 +27,7 @@ import {
   completionRecordFailed,
   completionRecordSuccess,
 } from "../functions/util";
-import { Writable } from "stream";
 import { WritableDraft } from "immer/dist/types/types-external";
-import { Slippage } from "../components/ui/elements/inputs";
 import { estimate } from "../functions/estimates";
 
 export enum WalletStatus {
@@ -147,7 +139,6 @@ interface IWalletProvider {
 export function WalletProvider(props: IWalletProvider) {
   const network = useNetwork();
   const session = useSession();
-  const mutex = new Mutex();
   const transactionMutex = new Mutex();
   const transactionUpdateMutex = new Mutex();
   const [transactions, setTransactions] = useImmer<{
@@ -286,15 +277,6 @@ export function WalletProvider(props: IWalletProvider) {
     }
   });
 
-  const removeTransaction = useCallback(
-    (component: TransactingComponent) => {
-      setTransactions((draft) => {
-        delete draft[component];
-      });
-    },
-    [setTransactions]
-  );
-
   // callback to return the active transaction of a component
   const getActiveTransaction = useCallback(
     (component: TransactingComponent): Transaction | undefined => {
@@ -359,6 +341,7 @@ export function WalletProvider(props: IWalletProvider) {
         ) {
           // lock transaction
           setTransactions((draft) => {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             draft[component]!.locked = true;
           });
           // send transaction for final processing
@@ -528,11 +511,12 @@ export function WalletProvider(props: IWalletProvider) {
           const updatedTransaction = TranscationWithUpdatedBalance(transaction);
 
           // old transaction before balance update
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           const t = transactions[component]!;
           // if the new transaction is different from the old one update the state
           if (t && !eq(JSON.stringify(updatedTransaction), JSON.stringify(t))) {
             setTransactions((draft) => {
-              const _ = updateTransaction(draft[component], (transaction) => {
+              updateTransaction(draft[component], (transaction) => {
                 if (
                   transaction.sendAssetBalance !==
                   updatedTransaction.sendAssetBalance
@@ -615,11 +599,12 @@ export function WalletProvider(props: IWalletProvider) {
     ) => {
       await transactionUpdateMutex.runExclusive(() => {
         setTransactions((draft) => {
-          const updated = updateTransaction(
+          updateTransaction(
             draft[component],
             // update function
             (transaction) => {
               transaction.transactionStatus = transactionStatus;
+              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
               draft[component]!.lastModified = new Date();
               return true;
             }
@@ -713,6 +698,7 @@ export function WalletProvider(props: IWalletProvider) {
           );
           // if updated, update the last modified date
           if (wasUpdated && draft[component]) {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             draft[component]!.lastModified = new Date();
           } else {
             updated = false;

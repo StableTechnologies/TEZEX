@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useCallback, useState } from "react";
+import React, { FC, useEffect, useState } from "react";
 import connectWallet from "../../functions/beacon";
 import { useWallet, useWalletOps } from "../../hooks/wallet";
 import { useNetwork } from "../../hooks/network";
@@ -17,7 +17,6 @@ import {
   TransactionStatus,
 } from "../../types/general";
 import Button from "@mui/material/Button";
-import { eq, debounce, throttle } from "lodash";
 import style from "./style";
 import useStyles from "../../hooks/styles";
 

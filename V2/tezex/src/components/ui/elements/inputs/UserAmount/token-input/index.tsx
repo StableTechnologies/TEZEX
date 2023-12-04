@@ -1,7 +1,6 @@
-import React, { FC, useCallback, useEffect, useRef, useState } from "react";
+import React, { FC, useCallback, useEffect, useState } from "react";
 import {
   Asset,
-  AssetState,
   Id,
   TransactingComponent,
   TransferType,
@@ -25,10 +24,9 @@ import {
   cleanNumericString,
   isNumeric,
 } from "../../../../../../functions/util";
-import debounce from "lodash/debounce";
 import { useDebounce } from "usehooks-ts";
 import { eq, toNumber } from "lodash";
-import { convertToObject } from "typescript";
+
 export interface IRigthInput {
   component: TransactingComponent;
   transferType: TransferType;
@@ -44,16 +42,13 @@ export interface IRigthInput {
 
 const TokenInput: FC<IRigthInput> = (props) => {
   const styles = useStyles(style, props.scalingKey);
-  const transactionOps = useTransaction(
-    props.component,
-    { transferType: props.transferType, asset: props.asset },
-    false
-  );
+  const transactionOps = useTransaction(props.component, {
+    transferType: props.transferType,
+    asset: props.asset,
+  });
   // TODO: set value at time of loading  from transactionOps
   const [value, setValue] = useState("0.00");
   const debouncedValue = useDebounce<string>(value, 500);
-  const [balance, setBalance] = useState("");
-  const [isZeroOnFocus, setIsZeroOnFocus] = useState(false);
 
   // set asset state
   const [transactionBalance, setTransactionBalance] = useState<
@@ -92,18 +87,8 @@ const TokenInput: FC<IRigthInput> = (props) => {
 
   // boolean check to see  if updates can be made
   const canUpdate = useCallback(() => {
-    return !(
-      swapping ||
-      props.loading ||
-      transactionOps.loading ||
-      transactionOps.transacting
-    );
-  }, [
-    swapping,
-    props.loading,
-    transactionOps.loading,
-    transactionOps.transacting,
-  ]);
+    return !(swapping || props.loading || transactionOps.loading);
+  }, [swapping, props.loading, transactionOps.loading]);
 
   // callback to set loading to false
   const setLoadingFalse = useCallback(() => {
@@ -118,7 +103,6 @@ const TokenInput: FC<IRigthInput> = (props) => {
 
   // call back to load value and set loading to false
   const loadValue = useCallback(() => {
-    const t = transactionOps.getActiveTransaction();
     const amount = transactionOps.trackedAsset?.amount?.string;
     if (amount) {
       //update value if different
@@ -156,8 +140,6 @@ const TokenInput: FC<IRigthInput> = (props) => {
 
   // on id or amount change , load value and handle loading
   useEffect(() => {
-    const transactionId = transactionOps.getActiveTransaction()?.id;
-
     // non-read only: update local value only on id change
     if (!props.readOnly && (loading || swapping)) {
       loadValue();

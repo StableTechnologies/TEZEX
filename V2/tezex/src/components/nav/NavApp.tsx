@@ -26,7 +26,7 @@ function NavTabExternal(props: NavTabProps) {
   );
 }
 
-function NavTab(props: NavTabProps, external?: boolean) {
+function NavTab(props: NavTabProps) {
   const navigate = useNavigate();
   return (
     <Tab

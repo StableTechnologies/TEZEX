@@ -1,4 +1,4 @@
-import React, { FC, useState, useEffect, useCallback, useRef } from "react";
+import React, { FC, useState, useEffect, useCallback } from "react";
 
 import {
   Token,
@@ -9,10 +9,8 @@ import {
   Id,
 } from "../../types/general";
 
-import { BigNumber } from "bignumber.js";
 import { UserAmountField, Slippage } from "../../components/ui/elements/inputs";
 import { Wallet } from "../wallet";
-import { useWalletConnected } from "../../hooks/wallet";
 import { useSession } from "../../hooks/session";
 import { useWalletOps, WalletOps } from "../../hooks/wallet";
 import { SwapUpDownToggle } from "../../components/ui/elements/Toggles";
@@ -31,10 +29,8 @@ import Typography from "@mui/material/Typography";
 import style from "./style";
 import useStyles from "../../hooks/styles";
 
-import useMediaQuery from "@mui/material/useMediaQuery";
-import { theme } from "../../theme";
 import { useTransaction } from "../../hooks/transaction";
-import { debounce, eq } from "lodash";
+import { eq } from "lodash";
 export interface ISwapToken {
   children: null;
 }

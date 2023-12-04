@@ -1,14 +1,6 @@
-import {
-  useContext,
-  useCallback,
-  useEffect,
-  useState,
-  useRef,
-  useMemo,
-} from "react";
+import { useContext, useCallback, useEffect, useState, useRef } from "react";
 import { BigNumber } from "bignumber.js";
 import { WalletContext } from "../contexts/wallet";
-import { useNetwork } from "../hooks/network";
 import {
   balanceBuilder,
   getAssetStateByTransactionTypeAndAsset,
@@ -20,14 +12,13 @@ import {
   TransactionStatus,
   TransactingComponent,
   AssetOrAssetPair,
-  LiquidityBakingStorageXTZ,
   AssetState,
   TransferType,
   Asset,
   Amount,
 } from "../types/general";
 
-import { debounce, eq, initial } from "lodash";
+import { debounce, eq } from "lodash";
 import { useDebounce } from "usehooks-ts";
 export interface TransactionOps {
   initialize: (
@@ -50,7 +41,6 @@ export interface TransactionOps {
     asset: Asset
   ) => AssetState | undefined;
   loading: boolean;
-  transacting: boolean;
   trackedAsset: AssetState | undefined;
 }
 export interface TransactionUpdate {
@@ -62,18 +52,16 @@ export function useTransaction(
   trackAsset?: {
     transferType: TransferType;
     asset: Asset;
-  },
-  debug?: boolean
+  }
 ): TransactionOps {
   const wallet = useContext(WalletContext);
-  const network = useNetwork();
   const [counter, setCounter] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [assetStates, setAssetStates] = useState<AssetState[]>([]);
   const [assetState, setAssetState] = useState<AssetState | undefined>(
     undefined
   );
-  const [transacting, setTransacting] = useState<boolean>(false);
+
   const [transaction, setTransaction] = useState<Transaction | undefined>(
     wallet.getActiveTransaction(component)
   );
@@ -123,34 +111,27 @@ export function useTransaction(
     [transaction, loading, trackAsset]
   );
 
-  const _counter = useCallback(() => {
-    return counter;
-  }, [counter]);
-
   // Callback to get active transaction from wallet
   const active = useCallback(() => {
     return wallet.getActiveTransaction(component);
   }, [wallet.getActiveTransaction, component]);
 
-  const debouncedUpdateStateEffect = useCallback(
-    (counter?: number) => {
-      const currentTransaction = active();
-      if (loading && currentTransaction) {
+  const debouncedUpdateStateEffect = useCallback(() => {
+    const currentTransaction = active();
+    if (loading && currentTransaction) {
+      internalUpdate(currentTransaction, loading, trackAsset);
+    } else if (currentTransaction && transaction) {
+      if (!eq(currentTransaction, transaction)) {
         internalUpdate(currentTransaction, loading, trackAsset);
-      } else if (currentTransaction && transaction) {
-        if (!eq(currentTransaction, transaction)) {
-          internalUpdate(currentTransaction, loading, trackAsset);
-        }
-        if (update && wallet.lbContractStorage) {
-          updateAmount(update.sendAmount, update.slippage);
-        }
       }
-    },
-    [active, loading, transaction, update, trackAsset, counter]
-  );
+      if (update && wallet.lbContractStorage) {
+        updateAmount(update.sendAmount, update.slippage);
+      }
+    }
+  }, [active, loading, transaction, update, trackAsset, counter]);
   useEffect(() => {
     setCounter((c) => c + 1);
-    debouncedUpdateStateEffect(counter);
+    debouncedUpdateStateEffect();
   }, [wallet.getActiveTransaction, loading]);
 
   useEffect(() => {
@@ -304,18 +285,14 @@ export function useTransaction(
       }
       return updated;
     },
-    [getActiveTransaction, wallet, component, transacting]
+    [getActiveTransaction, wallet, component]
   );
 
   // exported callback to handle send amount or slippage updates to transaction in context
   const updateAmount = useCallback(
-    async (sendAmount?: string, slippage?: string, caller?: string) => {
+    async (sendAmount?: string, slippage?: string) => {
       // check if slippage or send amount is being updated
       if (sendAmount || slippage) {
-        console.log(
-          "!!updating amount",
-          JSON.stringify({ sendAmount, slippage, caller })
-        );
         //check if update was successful
         if (await _updateAmount(sendAmount, slippage)) {
           // if update was successful and pending update exists
@@ -331,29 +308,6 @@ export function useTransaction(
     },
     [debouncedUpdate, _updateAmount]
   );
-
-  //debounced max send amount transaction.
-  const debouncedMax = useRef(
-    debounce(
-      async (oldTransaction: Transaction) => {
-        //currently only implemented for remove liquidity
-        switch (component) {
-          case TransactingComponent.SWAP:
-            break;
-          case TransactingComponent.ADD_LIQUIDITY:
-            break;
-          case TransactingComponent.REMOVE_LIQUIDITY:
-            await updateAmount(oldTransaction.sendAssetBalance[0].string);
-            break;
-        }
-      },
-      300,
-      {
-        leading: true,
-        trailing: false,
-      }
-    )
-  ).current;
 
   //callback to set transaction with max send amount
   const useMax = useCallback(async () => {
@@ -379,7 +333,6 @@ export function useTransaction(
     updateAmount,
     getAsetState,
     loading,
-    transacting,
     trackedAsset: assetState,
   };
 }

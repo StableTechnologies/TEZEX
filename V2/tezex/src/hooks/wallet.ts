@@ -1,15 +1,9 @@
 import { useContext, useCallback, useEffect, useState } from "react";
-import { BigNumber } from "bignumber.js";
 import { WalletContext } from "../contexts/wallet";
-import { useNetwork } from "../hooks/network";
-import { balanceBuilder } from "../functions/util";
-import { estimate } from "../functions/estimates";
 import {
   Transaction,
   TransactionStatus,
   TransactingComponent,
-  AssetOrAssetPair,
-  LiquidityBakingStorageXTZ,
 } from "../types/general";
 
 export interface WalletOps {
@@ -26,10 +20,8 @@ export function useWalletOps(
   trackTransaction = false
 ): WalletOps {
   const wallet = useContext(WalletContext);
-  const network = useNetwork();
 
   const [loading, setLoading] = useState<boolean>(true);
-  const [transacting, setTransacting] = useState<boolean>(false);
   const [transaction, setTransaction] = useState<Transaction | undefined>(
     wallet.getActiveTransaction(component)
   );
