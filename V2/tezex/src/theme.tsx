@@ -5,7 +5,7 @@ import { adjustBreakpointsForDpr } from "./functions/util";
 import { useDeviceSelectors } from "react-device-detect";
 declare module "@mui/material/styles" {
   interface BreakpointOverrides {
-    xs: true;
+    xs: true; // removes the `xs` breakpoint
     sm: true;
     md: true;
     lg: true;
@@ -99,10 +99,10 @@ const br: Breakpoints = {
     },
   },
 };
-
 const dprAdjustedBreakpoints = adjustBreakpointsForDpr(br);
 
-const selectors = useDeviceSelectors(window.navigator.userAgent);
+// eslint-disable-next-line  @typescript-eslint/no-unused-vars
+const [selectors, data] = useDeviceSelectors(window.navigator.userAgent);
 
 const { isMobile, isDesktop } = selectors;
 export const theme = createTheme({
@@ -145,8 +145,8 @@ export const theme = createTheme({
     addLiquidity: {
       xl: 1,
       lg: 1,
-      md: 1.2,
-      sm: 1.4,
+      md: 1.5,
+      sm: 1.5,
       xs: 2,
       mobile: {
         xl: 1,
@@ -184,7 +184,7 @@ export const theme = createTheme({
       lg: 1,
       md: 1.5,
       sm: 2,
-      xs: 2.5,
+      xs: 3,
     },
   },
   typography: {
@@ -212,6 +212,15 @@ export const theme = createTheme({
       main: "#F4F4F4",
       dark: "#2D2D2D",
     },
+    // primary: {
+    //   dark: "#FEFEFE",
+    //   main: "#000000",
+
+    // },
+    // secondary: {
+    //   main: "#999999",
+    //   dark: "#00A0E4",
+    // },
     tirtiary: {
       light: "#E3F7FF",
       main: "#999999",

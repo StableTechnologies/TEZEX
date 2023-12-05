@@ -14,7 +14,8 @@ import { useMobileOrientation, useDeviceSelectors } from "react-device-detect";
 const useStyles = (style, scalingKey = "default", toCSS = false) => {
   const { isLandscape } = useMobileOrientation();
 
-  const [selectors] = useDeviceSelectors(window.navigator.userAgent);
+  // eslint-disable-next-line  @typescript-eslint/no-unused-vars
+  const [selectors, data] = useDeviceSelectors(window.navigator.userAgent);
 
   const { isMobile, isDesktop } = selectors;
 
