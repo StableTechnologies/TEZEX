@@ -5,7 +5,7 @@ import { adjustBreakpointsForDpr } from "./functions/util";
 import { useDeviceSelectors } from "react-device-detect";
 declare module "@mui/material/styles" {
   interface BreakpointOverrides {
-    xs: true; // removes the `xs` breakpoint
+    xs: true;
     sm: true;
     md: true;
     lg: true;
@@ -212,15 +212,6 @@ export const theme = createTheme({
       main: "#F4F4F4",
       dark: "#2D2D2D",
     },
-    // primary: {
-    //   dark: "#FEFEFE",
-    //   main: "#000000",
-
-    // },
-    // secondary: {
-    //   main: "#999999",
-    //   dark: "#00A0E4",
-    // },
     tirtiary: {
       light: "#E3F7FF",
       main: "#999999",
