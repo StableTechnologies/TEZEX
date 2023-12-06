@@ -3,11 +3,13 @@ import "./App.css";
 
 import { Layout } from "./components/ui/views";
 import { Outlet } from "react-router-dom";
+import { useMobileOrientation } from "react-device-detect";
 
 export const App: FC = () => {
+  const { isLandscape } = useMobileOrientation();
   return (
     <div className="App">
-      <Layout>
+      <Layout isLandScape={isLandscape}>
         <Outlet />
       </Layout>
     </div>

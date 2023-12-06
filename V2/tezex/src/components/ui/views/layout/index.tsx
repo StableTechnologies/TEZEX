@@ -15,6 +15,7 @@ export interface ILayout {
     | React.ReactElement
     | React.ReactElement[]
     | string;
+  isLandScape: boolean;
   key?: string;
 }
 
