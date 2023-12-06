@@ -74,13 +74,10 @@ const useStyles = (style, scalingKey = "default", toCSS = false) => {
         ? scalingBreakpoints.landscape[getBreakpoint()]
         : scalingBreakpoints[getBreakpoint()];
 
-    const timer = setTimeout(() => {
-      // update scaling factor if changed
-      if (scale !== scalingFactor) {
-        setScale(scalingFactor);
-      }
-    }, 50);
-    return () => clearTimeout(timer);
+    // update scaling factor if changed
+    if (scale !== scalingFactor) {
+      setScale(scalingFactor);
+    }
   }, [
     isLandscape,
     currentBreakpoint,
