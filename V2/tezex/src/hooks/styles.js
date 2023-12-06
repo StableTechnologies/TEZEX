@@ -1,10 +1,8 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { css } from "@emotion/css";
 import { theme } from "../theme";
-import { debounce } from "lodash";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useMobileOrientation, useDeviceSelectors } from "react-device-detect";
-
 /*
  * mui useStyles is depreciated
  * default : for use in  sx props
@@ -13,7 +11,6 @@ import { useMobileOrientation, useDeviceSelectors } from "react-device-detect";
 
 const useStyles = (style, scalingKey = "default", toCSS = false) => {
   const { isLandscape } = useMobileOrientation();
-
   // eslint-disable-next-line  @typescript-eslint/no-unused-vars
   const [selectors, data] = useDeviceSelectors(window.navigator.userAgent);
 
@@ -62,17 +59,6 @@ const useStyles = (style, scalingKey = "default", toCSS = false) => {
   const currentBreakpointUp =
     matchedIndexUp !== -1 ? breakpointSizesReverse[matchedIndexUp] : null;
 
-  // debounce scale update
-  const debouncedScaleUpdate = useRef(
-    debounce(
-      (scalingFactor) => {
-        setScale(scalingFactor);
-      },
-      300,
-      { leading: false, trailing: true }
-    )
-  );
-
   // update scaling factor
   useEffect(() => {
     // get closest breakpoint,  dealing with edge cases
@@ -88,10 +74,13 @@ const useStyles = (style, scalingKey = "default", toCSS = false) => {
         ? scalingBreakpoints.landscape[getBreakpoint()]
         : scalingBreakpoints[getBreakpoint()];
 
-    // update scaling factor if changed
-    if (scale !== scalingFactor) {
-      debouncedScaleUpdate.current(scalingFactor);
-    }
+    const timer = setTimeout(() => {
+      // update scaling factor if changed
+      if (scale !== scalingFactor) {
+        setScale(scalingFactor);
+      }
+    }, 10);
+    return () => clearTimeout(timer);
   }, [
     isLandscape,
     currentBreakpoint,
