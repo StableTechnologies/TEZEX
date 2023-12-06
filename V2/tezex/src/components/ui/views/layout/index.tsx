@@ -74,7 +74,8 @@ export const Layout: FC<ILayout> = (props) => {
           sx={
             openMenu
               ? styles.sideBar
-              : props.isLandScape
+              : props.orientation === "landscape-primary" ||
+                props.orientation === "landscape-secondary"
               ? styles.sideBarShow
               : styles.sideBarHidden
           }
