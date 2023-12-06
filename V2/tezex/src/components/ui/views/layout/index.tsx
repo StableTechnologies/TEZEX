@@ -73,7 +73,7 @@ export const Layout: FC<ILayout> = (props) => {
           sx={
             openMenu
               ? styles.sideBar
-              : styles.isLandScape
+              : props.isLandScape
               ? styles.sideBarShow
               : styles.sideBarHidden
           }

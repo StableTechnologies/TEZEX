@@ -32,11 +32,11 @@ import useStyles from "../../hooks/styles";
 import { useTransaction } from "../../hooks/transaction";
 import { eq } from "lodash";
 export interface ISwapToken {
-  children: null;
+  orientation: "portrait" | "landscape";
 }
 
 // TODO: track id change and set loading to true
-export const Swap: FC = () => {
+export const Swap: FC<ISwapToken> = (props) => {
   const scalingKey = "swap";
   // load styles and apply responsive scaling for component
   const styles = useStyles(style, scalingKey);

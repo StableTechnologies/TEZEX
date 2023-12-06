@@ -9,7 +9,12 @@ import { useMobileOrientation, useDeviceSelectors } from "react-device-detect";
  * toCSS : outputs css classes as the old mui useStyles
  */
 
-const useStyles = (style, scalingKey = "default", toCSS = false) => {
+const useStyles = (
+  style,
+  scalingKey = "default",
+  toCSS = false,
+  orientation = "portrait"
+) => {
   const { isLandscape } = useMobileOrientation();
   // eslint-disable-next-line  @typescript-eslint/no-unused-vars
   const [selectors, data] = useDeviceSelectors(window.navigator.userAgent);

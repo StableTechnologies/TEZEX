@@ -35,11 +35,14 @@ import { BrowserView, MobileView } from "react-device-detect";
 import { useTransaction } from "../../hooks/transaction";
 import { eq } from "lodash";
 
-export const AddLiquidity: FC = () => {
+export interface IAddLiquidity {
+  orientation: "portrait" | "landscape";
+}
+export const AddLiquidity: FC<IAddLiquidity> = (props) => {
   //return <div> Add Liquidity</div>;
   const scalingKey = "addLiquidity";
   // load styles and apply responsive scaling for component
-  const styles = useStyles(style, scalingKey);
+  const styles = useStyles(style, scalingKey, false, props.orientation);
   const walletGridSize = styles.isLandScape ? 5 : 12;
   const network = useNetwork();
 

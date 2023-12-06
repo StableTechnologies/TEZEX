@@ -30,15 +30,15 @@ import useStyles from "../../hooks/styles";
 import { eq } from "lodash";
 import { useTransaction } from "../../hooks/transaction";
 
-export interface ISwapToken {
-  children: null;
+export interface IRemoveLiquidity {
+  orientation: "portrait" | "landscape";
 }
 
-export const RemoveLiquidity: FC = () => {
+export const RemoveLiquidity: FC<IRemoveLiquidity> = (props) => {
   //return <div>Remove Liquidity</div>;
   const scalingKey = "removeLiquidity";
   // load styles and apply responsive scaling for component
-  const styles = useStyles(style, scalingKey);
+  const styles = useStyles(style, scalingKey, false, props.orientation);
   const network = useNetwork();
   // load wallet operations for component
   const walletOps: WalletOps = useWalletOps(

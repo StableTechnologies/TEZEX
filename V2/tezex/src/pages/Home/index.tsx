@@ -9,7 +9,11 @@ import Grid2 from "@mui/material/Unstable_Grid2"; // Grid version 2
 
 import style from "./style";
 import useStyles from "../../hooks/styles";
-import { BrowserView, MobileView } from "react-device-detect";
+import {
+  BrowserView,
+  MobileView,
+  useMobileOrientation,
+} from "react-device-detect";
 
 type HomePaths = "swap" | "add" | "remove";
 
@@ -17,15 +21,16 @@ export interface IHome {
   path: HomePaths;
 }
 export const Home: FC<IHome> = (props) => {
+  const { orientation } = useMobileOrientation();
   const styles = useStyles(style);
   const Comp = (() => {
     switch (props.path) {
       case "add":
-        return AddLiquidity;
+        return <AddLiquidity orientation={orientation} />;
       case "remove":
-        return RemoveLiquidity;
+        return <RemoveLiquidity orientation={orientation} />;
       case "swap":
-        return Swap;
+        return <Swap orientation={orientation} />;
     }
   })();
 
@@ -42,9 +47,7 @@ export const Home: FC<IHome> = (props) => {
           <NavHome scalingKey="navHome" />
         </Grid2>
       </BrowserView>
-      <Grid2>
-        <Comp />
-      </Grid2>
+      <Grid2>{Comp}</Grid2>
     </Grid2>
   );
 };
