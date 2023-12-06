@@ -16,6 +16,7 @@ export interface ILayout {
     | React.ReactElement[]
     | string;
   isLandScape: boolean;
+  orientation: string;
   key?: string;
 }
 
