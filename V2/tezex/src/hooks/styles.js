@@ -79,7 +79,7 @@ const useStyles = (style, scalingKey = "default", toCSS = false) => {
       if (scale !== scalingFactor) {
         setScale(scalingFactor);
       }
-    }, 10);
+    }, 50);
     return () => clearTimeout(timer);
   }, [
     isLandscape,
