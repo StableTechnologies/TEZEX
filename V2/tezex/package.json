@@ -1,8 +1,8 @@
 {
   "name": "Tezex",
   "version": "0.1.0",
-  "homepage": ".",
-  "private": true,
+  "homepage": "https://stabletechnologies.github.io",
+  "private": false,
   "dependencies": {
     "@airgap/beacon-core": "^4.0.12",
     "@airgap/beacon-dapp": "4.0.12",
@@ -68,7 +68,7 @@
   },
   "scripts": {
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build",
+    "deploy": "echo tezex.io > ./build/CNAME && gh-pages -d build",
     "start": "react-app-rewired start",
     "build": "react-app-rewired build",
     "test": "react-app-rewired test",
