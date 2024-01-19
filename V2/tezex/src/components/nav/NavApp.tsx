@@ -7,45 +7,45 @@ import style from "./style";
 import useStyles from "../../hooks/styles";
 
 import { useSession } from "../../hooks/session";
-export interface INav {
-  children: string;
-}
 
 interface NavTabProps {
   label: string;
   href: string;
-  external?: boolean;
+}
+
+function NavTabExternal(props: NavTabProps) {
+  return (
+    <Tab
+      sx={{}}
+      onClick={(event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
+        event.preventDefault();
+        window.open(props.href, "_blank");
+      }}
+      {...props}
+    />
+  );
 }
 
 function NavTab(props: NavTabProps) {
   const navigate = useNavigate();
-  if (props.external) {
-    return (
-      <Tab
-        sx={{}}
-        onClick={(event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
-          event.preventDefault();
-          window.open(props.href, "_blank");
-        }}
-        {...props}
-      />
-    );
-  } else {
-    return (
-      <Tab
-        sx={{}}
-        onClick={(event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
-          event.preventDefault();
-          navigate(props.href);
-        }}
-        {...props}
-      />
-    );
-  }
+  return (
+    <Tab
+      sx={{}}
+      onClick={(event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
+        event.preventDefault();
+        navigate(props.href);
+      }}
+      {...props}
+    />
+  );
 }
 
-export const NavApp: FC = () => {
-  const styles = useStyles(style);
+interface INavApp {
+  scalingKey?: string;
+}
+
+export const NavApp: FC<INavApp> = (props) => {
+  const styles = useStyles(style, props.scalingKey);
   const [value, setValue] = useState(0);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -82,7 +82,7 @@ export const NavApp: FC = () => {
     >
       <NavTab label="Home" href="/home/swap" />
       <NavTab label="Analytics" href="/Analytics" />
-      <NavTab label="About" href={aboutRedirectUrl} external={true} />
+      <NavTabExternal label="About" href={aboutRedirectUrl} />
     </Tabs>
   );
 };

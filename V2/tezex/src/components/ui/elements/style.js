@@ -1,30 +1,30 @@
 // eslint-disable-next-line
-const style = (theme) => {
+const style = (theme, scale = 1) => {
   return {
     addLiquidityTokens: {
       "&.MuiBox-root": {
-        width: "18.9vw",
+        width: `calc(18.9vw * ${scale})`,
         alignContent: "center",
         display: "flex",
         flexDirection: "row",
         justifyContent: "space-between",
       },
       recieveAssetIcon: {
-        width: "6.1vw",
+        width: `calc(6.1vw * ${scale})`,
       },
       rightArrow: {
         position: "relative",
-        width: "1.67vw",
-        bottom: "0.7vw",
+        width: `calc(1.67vw * ${scale})`,
+        bottom: `calc(0.7vw * ${scale})`,
       },
       sendAssetsIcon: {
-        width: "7.1vw",
+        width: `calc(7.1vw * ${scale})`,
       },
     },
     slippageLabel: {
       typography: {
-        fontSize: ".972vw",
-        lineHeighr: "1.176vw",
+        fontSize: `calc(.972vw * ${scale})`,
+        lineHeighr: `calc(1.176vw * ${scale})`,
       },
       box: {
         "&.MuiBox-root": {
@@ -33,21 +33,21 @@ const style = (theme) => {
           justifyContent: "flex-start",
           alignItems: "center",
           alignContent: "center",
-          height: "2vw",
+          height: `calc(2vw * ${scale})`,
         },
       },
       info: {
         icon: {
-          height: ".925vw",
-          width: ".925vw",
-          paddingLeft: ".21vw",
+          height: `calc(.925vw * ${scale})`,
+          width: `calc(.925vw * ${scale})`,
+          paddingLeft: `calc(.21vw * ${scale})`,
         },
         tooltip: {
           color: "#1E1E1E",
           backgroundColor: "#FFFFFF",
           padding: "0px 0px 0px 0px ",
-          fontSize: ".83vw",
-          lineHeight: "1.25vw",
+          fontSize: `calc(.83vw * ${scale})`,
+          lineHeight: `calc(1.25vw * ${scale})`,
 
           display: "flex",
           alignItems: "center",
@@ -57,37 +57,37 @@ const style = (theme) => {
 
           border: "0.069vw solid #E1E1E1",
           "&.MuiTooltip-tooltip": {
-            minWidth: "17.22vw",
-            maxWidth: "17.22vw",
-            minHeight: "4.166vw",
-            maxHeight: "4.166vw",
+            minWidth: `calc(17.22vw * ${scale})`,
+            maxWidth: `calc(17.22vw * ${scale})`,
+            minHeight: `calc(4.166vw * ${scale})`,
+            maxHeight: `calc(4.166vw * ${scale})`,
           },
         },
       },
     },
     icon: {
-      padding: "0vw",
-      height: "1.33vw",
+      padding: `calc(0vw * ${scale})`,
+      height: `calc(1.33vw * ${scale})`,
     },
 
     box: {
       display: "flex",
       justifyContent: "center",
 
-      minWidth: "2.22vw",
-      minHeight: "2.22vw",
+      minWidth: `calc(2.22vw * ${scale})`,
+      minHeight: `calc(2.22vw * ${scale})`,
     },
 
     button: {
-      minWidth: "2.22vw",
-      minHeight: "2.22vw",
+      minWidth: `calc(2.22vw * ${scale})`,
+      minHeight: `calc(2.22vw * ${scale})`,
       padding: "0px 0px 0px 0px ",
 
-      maxWidth: "2.22vw",
-      maxHeight: "2.22vw",
+      maxWidth: `calc(2.22vw * ${scale})`,
+      maxHeight: `calc(2.22vw * ${scale})`,
       boxShadow: "0px 0.28vw 1.38vw rgba(181, 181, 181, 0.25)",
       background: "#FFFFFF",
-      borderRadius: ".55vw",
+      borderRadius: `calc(.55vw * ${scale})`,
     },
   };
 };

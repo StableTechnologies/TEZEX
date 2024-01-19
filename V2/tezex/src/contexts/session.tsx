@@ -6,9 +6,11 @@ import {
   AppConfig,
   TransactingComponent,
   CompletionRecord,
+  Pages,
 } from "../types/general";
 import { showAlert } from "../functions/util";
 import appConfig from "../config/app.json";
+import { useNavigate } from "react-router-dom";
 
 export const SessionContext = createContext<SessionInfo>({
   loadComponent: (_: TransactingComponent) => {
@@ -16,6 +18,14 @@ export const SessionContext = createContext<SessionInfo>({
     null;
   },
   activeComponent: null,
+  navigate: (_: Pages) => {
+    _;
+    null;
+  },
+  isPageActive: (_: Pages): boolean => {
+    _;
+    return false;
+  },
   setAlert: (_: CompletionRecord | undefined) => {
     _;
     null;
@@ -26,6 +36,8 @@ export const SessionContext = createContext<SessionInfo>({
 export interface SessionInfo {
   loadComponent: (comp: TransactingComponent) => void;
   activeComponent: TransactingComponent | null;
+  navigate: (page: Pages) => void;
+  isPageActive: (page: Pages) => boolean;
   setAlert: (record: CompletionRecord | undefined, force?: boolean) => void;
   appConfig: AppConfig;
 }
@@ -45,6 +57,14 @@ export function SessionProvider(props: ISession) {
 
   const [_alert, setAlert] = useState<CompletionRecord | undefined>(undefined);
 
+  const [activePage, setActivePage] = useState<Pages>(Pages.HOME);
+
+  const isPageActive = useCallback((page: Pages) => {
+    if (page === Pages.HOME || page === activePage) {
+      return true;
+    }
+    return false;
+  }, []);
   const clearAlert = useCallback(() => {
     setAlert(undefined);
   }, []);
@@ -58,6 +78,27 @@ export function SessionProvider(props: ISession) {
 
   const loadComponent = useCallback((comp: TransactingComponent) => {
     setActiveComponent(comp);
+    switch (comp) {
+      case TransactingComponent.SWAP:
+        setActivePage(Pages.SWAP);
+        break;
+      case TransactingComponent.ADD_LIQUIDITY:
+        setActivePage(Pages.ADD_LIQUIDITY);
+        break;
+      case TransactingComponent.REMOVE_LIQUIDITY:
+        setActivePage(Pages.REMOVE_LIQUIDITY);
+        break;
+    }
+  }, []);
+
+  const navigate = useCallback((page: Pages) => {
+    const nav = useNavigate();
+    if (page === Pages.ABOUT) {
+      window.open(appConfig.aboutRedirectUrl, "_blank");
+    } else {
+      setActivePage(page);
+      nav(page);
+    }
   }, []);
 
   return (
@@ -65,6 +106,8 @@ export function SessionProvider(props: ISession) {
       value={{
         loadComponent,
         activeComponent,
+        navigate,
+        isPageActive,
         setAlert: setRecord,
         appConfig: props.config,
       }}

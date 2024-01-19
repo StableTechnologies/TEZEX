@@ -2,8 +2,31 @@ import { BigNumber } from "bignumber.js";
 
 import { NetworkType } from "@airgap/beacon-sdk";
 
+export interface Breakpoints {
+  breakpoints: {
+    values: {
+      xs: number;
+      sm: number;
+      md: number;
+      lg: number;
+      xl: number;
+      mobile: number;
+      tablet: number;
+      laptop: number;
+      desktop: number;
+    };
+  };
+}
 export interface AppConfig {
   aboutRedirectUrl: string;
+}
+
+export enum Pages {
+  HOME = "/home/swap",
+  SWAP = "/home/swap",
+  ADD_LIQUIDITY = "/home/add",
+  REMOVE_LIQUIDITY = "/home/remove",
+  ABOUT = "/about",
 }
 
 export enum Token {
@@ -15,6 +38,7 @@ export enum Token {
 export interface Balance {
   decimal: BigNumber;
   mantissa: BigNumber;
+  string: string;
   greaterOrEqualTo: (balance: Balance) => boolean;
 }
 
@@ -26,13 +50,26 @@ export interface Asset {
   decimals: number;
 }
 
+export enum TransferType {
+  SEND = "Send",
+  RECEIVE = "Receive",
+}
+
+export interface AssetState {
+  transferType: TransferType;
+  amount: Balance | undefined;
+  balance: Balance | undefined;
+  asset: Asset;
+}
 export interface AssetBalance {
   balance: Balance | undefined;
   asset: Asset;
 }
 
 export enum TransactionStatus {
-  INITIALISED = "Initialised",
+  INITIALIZED = "Initialized",
+  UNINITIALIZED = "Uninitialized",
+  ZERO_AMOUNT = "Enter Amount",
   MODIFIED = "Estimating",
   INSUFFICIENT_BALANCE = "Insufficient Balance",
   SUFFICIENT_BALANCE = "Sufficient Balance",
@@ -96,6 +133,7 @@ export interface Transaction {
   receiveAssetBalance: Amount;
   transactionStatus: TransactionStatus;
   lastModified: Date;
+  locked: boolean;
 }
 
 export interface LiquidityBakingStorageXTZ {

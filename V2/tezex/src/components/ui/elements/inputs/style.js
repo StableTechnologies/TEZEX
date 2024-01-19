@@ -1,23 +1,20 @@
 // eslint-disable-next-line
-const style = (theme) => {
+const style = (theme, scale = 1) => {
   return {
     slippageTabsRoot: {
       "&.MuiBox-root": {
         background: "#FFFFFF",
-        display: "flex",
+        display: "inline-flex",
         position: "relative",
         flexDirection: "row",
-        height: "3vw",
+        height: `calc(3vw * ${scale})`,
         alignItems: "center",
+        alignContent: "center",
         justifyContent: "space-between",
-        width: "15.2vw",
-        maxHeight: "2.7vw",
-        minHeight: "2.7vw",
-        borderRadius: ".55vw",
-
-        "&:first-child": {
-          paddingLeft: ".28vw ",
-        },
+        width: `calc(15.2vw * ${scale})`,
+        maxHeight: `calc(2.7vw * ${scale})`,
+        minHeight: `calc(2.7vw * ${scale})`,
+        borderRadius: `calc(.55vw * ${scale})`,
       },
       border: "0.07vw solid #EDEDED",
     },
@@ -28,10 +25,11 @@ const style = (theme) => {
           display: "flex",
           position: "relative",
           alignItems: "center",
+          alignContent: "center",
           justifyContent: "center",
 
-          minWidth: "4.2vw",
-          maxWidth: "4.2vw",
+          minWidth: `calc(4.2vw * ${scale})`,
+          maxWidth: `calc(4.2vw * ${scale})`,
         },
       },
       "&.MuiButton-root.Mui-disabled": {
@@ -40,16 +38,18 @@ const style = (theme) => {
         fontFamily: "Inter",
         fontStyle: "normal",
         fontWeight: "500",
-        fontSize: ".83vw",
-        lineHeight: "1vw",
+        fontSize: `calc(.83vw * ${scale})`,
+        lineHeight: `calc(1vw * ${scale})`,
         display: "inline-flex",
+        alignItems: "center",
         justifyContent: "center",
+        alignContent: "center",
         textAlign: "center",
 
-        minHeight: "2.2vw",
-        maxHeight: "2.2vw",
+        minHeight: `calc(2.2vw * ${scale})`,
+        maxHeight: `calc(2.2vw * ${scale})`,
 
-        zIndex: 1,
+        zIndex: 10,
       },
       "&.MuiButtonBase-root": {
         position: "relative",
@@ -57,19 +57,22 @@ const style = (theme) => {
         fontFamily: "Inter",
         fontStyle: "normal",
         fontWeight: "500",
-        fontSize: ".83vw",
-        lineHeight: "1vw",
+        fontSize: `calc(.83vw * ${scale})`,
+        lineHeight: `calc(1vw * ${scale})`,
         display: "inline-flex",
         justifyContent: "center",
+        alignItems: "center",
+        alignContent: "center",
         textAlign: "center",
-        minHeight: "2.2vw",
-        maxHeight: "2.2vw",
+        minHeight: `calc(2.2vw * ${scale})`,
+        maxHeight: `calc(2.2vw * ${scale})`,
 
-        minWidth: "4.2vw",
-        maxWidth: "4.2vw",
-        zIndex: 1,
+        minWidth: `calc(4.2vw * ${scale})`,
+        maxWidth: `calc(4.2vw * ${scale})`,
+        zIndex: 10,
 
         backgroundColor: "selectedHomeTab.main",
+        color: "text.primary",
         textTransform: "initial",
       },
       wrapper: {
@@ -80,26 +83,44 @@ const style = (theme) => {
     slippageInput: {
       box: {
         "&.MuiBox-root": {
-          paddingTop: ".28vw",
-          display: "flex",
+          paddingTop: `calc(.28vw * ${scale})`,
+          display: "inline-flex",
           position: "relative",
           flexDirection: "row",
-          width: "3ch",
-          alignItems: "center",
-          justifyContent: "space-between",
+          // minWidth: "4ch",
+          //maxWidth: "6ch",
+          alignItems: "baseline",
+          justifyContent: "center",
+          alignContent: "center",
+          //justifyContent: "space-between",
         },
+      },
+      inputProps: {
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+      },
+      endAdornment: {
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        right: `calc(.7vw * ${scale})`,
+        padding: "0px 0px 0px 0px",
       },
       "& .MuiButtonBase-root": {
         zIndex: 3,
       },
       "& .MuiInputAdornment-root": {
-        display: "flex",
+        display: "inline-flex",
         alignItems: "center",
         justifyContent: "center",
+        alignContent: "center",
         position: "relative",
-        bottom: ".13vw",
+        bottom: `calc(.13vw * ${scale})`,
 
-        paddingRight: "0vw",
+        //paddingRight: `calc(.13vw * ${scale})`,
+        paddingLeft: "0%",
+        marginRight: "2%", //`calc(.53vw * ${scale})`,
       },
 
       "& .MuiTypography-root": {
@@ -107,10 +128,12 @@ const style = (theme) => {
         fontStyle: "normal",
         fontWeight: "500",
 
-        fontSize: ".83vw",
-        lineHeight: "1vw",
+        fontSize: `calc(.83vw * ${scale})`,
+        lineHeight: `calc(1vw * ${scale})`,
         display: "inline-flex",
+        alignItems: "center",
         justifyContent: "center",
+        alignContent: "center",
         textAlign: "center",
       },
 
@@ -119,21 +142,27 @@ const style = (theme) => {
 
         alignItems: "center",
         justifyContent: "center",
+        alignContent: "center",
+        textAlign: "center",
       },
 
       "& .MuiInputBase-root": {
+        paddingTop: "12%",
         fontFamily: "Inter",
         fontStyle: "normal",
         fontWeight: "500",
-        fontSize: ".83vw",
-        lineHeight: "1vw",
-        display: "flex",
+        fontSize: `calc(.83vw * ${scale})`,
+        lineHeight: `calc(1vw * ${scale})`,
+        width: "6ch",
+        display: "inline-flex",
+        alignItems: "center",
         justifyContent: "center",
+        alignContent: "center",
         textAlign: "center",
 
         zIndex: 1,
 
-        color: "palette.text.primary",
+        color: "text.primary",
         textTransform: "initial",
       },
     },

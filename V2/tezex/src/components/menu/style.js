@@ -1,5 +1,5 @@
 // eslint-disable-next-line
-const style = (theme, scale = 1) => {
+const style = (theme) => {
   return {
     navLiquidity: {
       padding: 0,
@@ -9,13 +9,13 @@ const style = (theme, scale = 1) => {
         backgroundColor: "transparent",
       },
       "& .MuiTabs-indicatorSpan-add": {
-        height: `calc(.1vw * ${scale})`,
-        width: `calc(7.92vw * ${scale})`,
+        height: ".1vw",
+        width: "7.92vw",
         backgroundColor: "#000000",
       },
       "& .MuiTabs-indicatorSpan-remove": {
-        height: `calc(.1vw * ${scale})`,
-        width: `calc(10vw * ${scale})`,
+        height: ".1vw",
+        width: "10vw",
         backgroundColor: "#000000",
       },
       justifyContent: "flex-start",
@@ -25,15 +25,15 @@ const style = (theme, scale = 1) => {
         justifiyContent: "center",
         alignItems: "center",
         padding: "0px 0px 0px 0px ",
-        minHeight: `calc(2.6vw * ${scale})`,
-        maxHeight: `calc(2.6vw * ${scale})`,
+        minHeight: "2.6vw",
+        maxHeight: "2.6vw",
       },
       "& .MuiTabs-scroller": {
         display: "flex",
         justifiyContent: "center",
         alignItems: "center",
         padding: "0px 0px 0px 0px ",
-        height: `calc(2.6vw * ${scale})`,
+        height: "2.6vw",
       },
       "&.MuiButton-root.Mui-disabled": {
         color: "#999999",
@@ -50,10 +50,12 @@ const style = (theme, scale = 1) => {
         fontFamily: "Inter",
         fontStyle: "normal",
         fontWeight: "500",
-        fontSize: `calc(1.25vw * ${scale})`,
-        lineHeight: `calc(1.52vw * ${scale})`,
-        minWidth: `calc(11vw * ${scale})`,
-        maxWidth: `calc(11vw * ${scale})`,
+        fontSize: "1.25vw",
+        lineHeight: "1.52vw",
+        minWidth: "11vw",
+        maxWidth: "11vw",
+        "&:not(first-child)": {},
+        "&:first-child": {},
 
         color: "#999999",
         background: "white",
@@ -70,14 +72,14 @@ const style = (theme, scale = 1) => {
         justifiyContent: "center",
         alignItems: "center",
 
-        height: `calc(2.6vw * ${scale})`,
+        height: "2.6vw",
       },
       "& .MuiTabs-scroller": {
         display: "flex",
         justifiyContent: "center",
         alignItems: "center",
 
-        height: `calc(2.6vw * ${scale})`,
+        height: "2.6vw",
       },
 
       "& .MuiButtonBase-root": {
@@ -87,18 +89,21 @@ const style = (theme, scale = 1) => {
         fontFamily: "Inter",
         fontStyle: "normal",
         fontWeight: "500",
-        // fontSize: `calc(1.11vw * ${scale})`,
-        lineHeight: `calc(1.34vw * ${scale})`,
+        fontSize: "1.11vw",
+        lineHeight: "1.34vw",
         display: "inline-flex",
         justifyContent: "center",
         textAlign: "center",
-        minHeight: `calc(4vw * ${scale})`,
-        maxHeight: `calc(4vw * ${scale})`,
-        minWidth: `calc(3.7vw * ${scale})`,
-        maxWidth: `calc(7.7vw * ${scale})`,
-        paddingTop: `calc(0vw * ${scale})`,
-        paddingBottom: `calc(0vw * ${scale})`,
-        fontSize: `calc(1.11vw * ${scale})`,
+        minHeight: "4vw",
+        maxHeight: "4vw",
+        minWidth: "3.7vw",
+        maxWidth: "7.7vw",
+        paddingTop: "0vw",
+        paddingBottom: "0vw",
+        "&:not(first-child)": {},
+        "&:first-child": {
+          paddingLeft: "3.1vw ",
+        },
 
         color: "#999999",
         background: "white",
@@ -108,29 +113,29 @@ const style = (theme, scale = 1) => {
       padding: 0,
 
       display: "flex",
-      fontSize: `calc(1.5vw * ${scale})`,
+      fontSize: "1.5vw",
       justifyContent: "center",
     },
     navHome: {
       root: {
         "& .MuiTabs-flexContainer": {
           justifyContent: "space-between",
-          height: `calc(2.98vw * ${scale})`,
-          minWidth: `calc(15.34vw * ${scale})`,
-          maxWidth: `calc(15.34vw * ${scale})`,
+          height: "2.98vw",
+          minWidth: "15.34vw",
+          maxWidth: "15.34vw",
           border: "0.07vw solid #EDEDED",
-          borderRadius: `calc(.48vw * ${scale})`,
+          borderRadius: ".48vw",
           display: "flex",
           position: "relative",
         },
 
         "&.MuiTabs-root": {
-          minHeight: `calc(3.2vw * ${scale})`,
+          minHeight: "3.2vw",
         },
         ".MuiTabs-indicator": {
           top: 0,
 
-          minHeight: `calc(2.91vw * ${scale})`,
+          minHeight: "2.91vw",
 
           background: "none",
           "&:after": {
@@ -138,11 +143,11 @@ const style = (theme, scale = 1) => {
             display: "flex",
             position: "absolute",
 
-            top: `calc(0.28vw * ${scale})`,
-            bottom: `calc(0.1vw * ${scale})`,
-            left: `calc(.28vw * ${scale})`,
-            right: `calc(.28vw * ${scale})`,
-            borderRadius: `calc(.48vw * ${scale})`,
+            top: "0.28vw",
+            bottom: "0.1vw",
+            left: ".28vw",
+            right: ".28vw",
+            borderRadius: ".48vw",
             backgroundColor: "selectedHomeTab.main",
           },
         },
@@ -152,10 +157,10 @@ const style = (theme, scale = 1) => {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          fontSize: `calc(1.11vw * ${scale})`,
-          minHeight: `calc(2.91vw * ${scale})`,
-          minWidth: `calc(3.0vw * ${scale})`,
-          padding: `calc(.0vw * ${scale}) calc(1.66vw * ${scale}) calc(.0vw * ${scale}) calc(1.66vw * ${scale}) `,
+          fontSize: "1.11vw",
+          minHeight: "2.91vw",
+          minWidth: "3.0vw",
+          padding: ".0vw 1.66vw .0vw 1.66vw ",
           zIndex: 2,
 
           color: "text.primary",

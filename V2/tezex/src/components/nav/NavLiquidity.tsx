@@ -9,10 +9,6 @@ import { TransactingComponent } from "../../types/general";
 import style from "./style";
 import useStyles from "../../hooks/styles";
 
-export interface INav {
-  children: string;
-}
-
 interface NavTabProps {
   label: string;
   href: string;
@@ -31,8 +27,11 @@ function NavTab(props: NavTabProps) {
     />
   );
 }
-export const NavLiquidity: FC = () => {
-  const styles = useStyles(style);
+export interface INavLiquidty {
+  scalingKey?: string;
+}
+export const NavLiquidity: FC<INavLiquidty> = (props) => {
+  const styles = useStyles(style, props.scalingKey);
   const [value, setValue] = useState(0);
 
   const sessionInfo = useSession();
@@ -50,14 +49,14 @@ export const NavLiquidity: FC = () => {
     }
   }, [sessionInfo]);
   /*
-	useEffect(() => {
-	  if (loading) {
-	    navigate("home/swap");
-	    setValue(0);
-	    setLoading(false);
-	  }
-	}, [loading, navigate]);
-	*/
+  useEffect(() => {
+    if (loading) {
+      navigate("home/swap");
+      setValue(0);
+      setLoading(false);
+    }
+  }, [loading, navigate]);
+  */
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     event.preventDefault();

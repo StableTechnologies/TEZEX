@@ -1,6 +1,6 @@
 import React, { FC } from "react";
 
-import { Asset } from "../../../../../types/general";
+import { Asset } from "../../../../../../types/general";
 
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
@@ -8,12 +8,16 @@ import Box from "@mui/material/Box";
 import InputAdornment from "@mui/material/InputAdornment";
 import TextField from "@mui/material/TextField";
 
-import { WalletConnected } from "../../../../session/WalletConnected";
+import { WalletConnected } from "../../../../../session/WalletConnected";
 
 import { style } from "./style";
-import useStyles from "../../../../../hooks/styles";
+import useStyles from "../../../../../../hooks/styles";
 
 export interface ILeftInput {
+  inputRef: React.RefObject<HTMLInputElement>;
+  focused: boolean;
+  onFocus: () => void;
+  onBlur: () => void;
   asset?: Asset;
   balance?: string;
   label?: string;
@@ -22,16 +26,19 @@ export interface ILeftInput {
   onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   inputString: string;
   editing: boolean;
+  scalingKey?: string;
 }
 
 export const LeftInput: FC<ILeftInput> = (props) => {
-  const styles = useStyles(style);
+  const styles = useStyles(style, props.scalingKey);
   return (
     <Box sx={styles.leftInput.gridContainter}>
       <TextField
-        autoFocus
+        ref={props.inputRef}
+        autoFocus={props.readOnly ? false : props.focused}
+        onFocus={props.onFocus}
+        onBlur={props.onBlur}
         onChange={props.updateAmount}
-        value={props.inputString}
         id="filled-start-adornment"
         sx={styles.leftInput.textField}
         InputProps={{
@@ -67,6 +74,7 @@ export const LeftInput: FC<ILeftInput> = (props) => {
         inputProps={{
           readOnly: props.readOnly,
 
+          inputMode: "decimal",
           style: {
             ...styles.leftInput.input,
           },

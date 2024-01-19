@@ -27,17 +27,20 @@ import style from "./style";
 export interface IAlert {
   completionRecord: CompletionRecord | undefined;
   clear: () => void;
+  scalingKey?: string;
 }
 
 export interface ISuccessAlert {
   successRecord: SuccessRecord;
+  scalingKey?: string;
 }
 export interface IErrorAlert {
   failureRecord: FailedRecord;
+  scalingKey?: string;
 }
 
 const SuccessAlert: FC<ISuccessAlert> = (props) => {
-  const styles = useStyles(style);
+  const styles = useStyles(style, props.scalingKey);
   return (
     <DialogContent sx={styles.dialogContentSuccess}>
       <Box sx={styles.successContentBox}>
@@ -67,7 +70,7 @@ const SuccessAlert: FC<ISuccessAlert> = (props) => {
 };
 
 const ErrorAlert: FC<IErrorAlert> = (props) => {
-  const styles = useStyles(style);
+  const styles = useStyles(style, props.scalingKey);
   return (
     <DialogContent sx={styles.dialogContent}>
       <Box sx={styles.errorContentBox}>
@@ -89,7 +92,8 @@ const ErrorAlert: FC<IErrorAlert> = (props) => {
   );
 };
 export const Alert: FC<IAlert> = (props) => {
-  const styles = useStyles(style);
+  const scalingKey = props.scalingKey || "alert";
+  const styles = useStyles(style, scalingKey);
   const [open, setOpen] = React.useState(props.completionRecord ? true : false);
   const handleClose = () => {
     setOpen(false);
@@ -103,9 +107,19 @@ export const Alert: FC<IAlert> = (props) => {
     if (props.completionRecord) {
       switch (props.completionRecord[0]) {
         case CompletionState.SUCCESS:
-          return <SuccessAlert successRecord={props.completionRecord[1]} />;
+          return (
+            <SuccessAlert
+              successRecord={props.completionRecord[1]}
+              scalingKey={scalingKey}
+            />
+          );
         case CompletionState.FAILED:
-          return <ErrorAlert failureRecord={props.completionRecord[1]} />;
+          return (
+            <ErrorAlert
+              failureRecord={props.completionRecord[1]}
+              scalingKey={scalingKey}
+            />
+          );
       }
     } else return <Box></Box>;
   };
