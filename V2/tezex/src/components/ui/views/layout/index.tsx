@@ -3,7 +3,6 @@ import { Header } from "../header";
 
 import { BrowserView, MobileView } from "react-device-detect";
 import { MainWindow } from "../main-window";
-import { SideBar } from "../sidebar";
 import Box from "@mui/material/Box";
 
 import style from "./style";
@@ -49,14 +48,14 @@ export const Layout: FC<ILayout> = (props) => {
         <header>
           <BrowserView>
             <Box sx={styles.header}>
-              <Header openMenu={openMenu} toggleMenu={toggleMenu} />
+              <Header />
             </Box>
           </BrowserView>
           <MobileView>
             <Box
               sx={styles.isMobileLandscape ? styles.hide : styles.headerMobile}
             >
-              <Header openMenu={openMenu} toggleMenu={toggleMenu} />
+              <Header />
             </Box>
           </MobileView>
         </header>
@@ -68,26 +67,6 @@ export const Layout: FC<ILayout> = (props) => {
           <Box sx={styles.bottomSpace}></Box>
         </Box>
       </Box>
-
-      <MobileView>
-        <Box
-          sx={
-            openMenu
-              ? styles.sideBar
-              : props.isLandScape
-              ? styles.sideBarShow
-              : styles.sideBarHidden
-          }
-        >
-          <SideBar openMenu={openMenu} toggleMenu={toggleMenu} />
-        </Box>
-      </MobileView>
-
-      <BrowserView>
-        <Box sx={openMenu ? styles.sideBar : styles.hide}>
-          <SideBar openMenu={openMenu} toggleMenu={toggleMenu} />
-        </Box>
-      </BrowserView>
     </Box>
   );
 };

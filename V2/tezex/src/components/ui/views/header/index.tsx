@@ -15,11 +15,7 @@ import Container from "@mui/material/Container";
 import style from "./style";
 import useStyles from "../../../../hooks/styles";
 
-export interface IHeader {
-  openMenu: boolean;
-  toggleMenu: () => void;
-}
-export const Header: FC<IHeader> = (props) => {
+export const Header: FC = (props) => {
   const scalingKey = "header";
   const styles = useStyles(style, scalingKey);
 
@@ -56,11 +52,6 @@ export const Header: FC<IHeader> = (props) => {
             </Grid2>
             <Grid2 md={2} sx={styles.wallet}>
               <Wallet variant={"header"} scalingKey={scalingKey} />
-            </Grid2>
-            <Grid2 md={1} sx={props.openMenu ? styles.hide : styles.menu}>
-              <IconButton onClick={props.toggleMenu}>
-                <MenuIcon />
-              </IconButton>
             </Grid2>
           </Grid2>
         </Toolbar>
