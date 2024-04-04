@@ -14,6 +14,8 @@ import MenuIcon from "@mui/icons-material/Menu";
 import Container from "@mui/material/Container";
 import style from "./style";
 import useStyles from "../../../../hooks/styles";
+import { useNavigate } from "react-router-dom";
+import { Link } from "@mui/material";
 
 export interface IHeader {
   openMenu: boolean;
@@ -36,13 +38,14 @@ export const Header: FC<IHeader> = (props) => {
         >
           <Grid2 container sx={styles.container}>
             <Grid2 sm={3}>
-              <Box
-                component="img"
-                sx={styles.logoLarge}
-                src={logo}
-                alt="Logo"
-              />
-
+              <Link href="/">
+                <Box
+                  component="img"
+                  sx={styles.logoLarge}
+                  src={logo}
+                  alt="Logo"
+                />
+              </Link>
               <Box
                 component="img"
                 sx={styles.logoSmall}
