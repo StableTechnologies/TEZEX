@@ -112,7 +112,7 @@ const style = (theme, scale = 1) => {
     },
 
     wallet: {
-      display: { xs: "none", sm: "none", md: "flex" },
+      display: { xs: "flex", sm: "flex", md: "flex" },
       position: "absolute",
       right: "0px",
       //left: `calc(51vw * ${scale})`,
