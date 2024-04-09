@@ -116,8 +116,9 @@ const style = (theme, scale = 1) => {
         "& .MuiTabs-flexContainer": {
           justifyContent: "space-between",
           height: `calc(2.98vw * ${scale})`,
-          minWidth: `calc(15.34vw * ${scale})`,
-          maxWidth: `calc(15.34vw * ${scale})`,
+
+          minWidth: `calc(30.56vw * ${scale})`,
+          maxWidth: `calc(30.56vw * ${scale})`,
           border: "0.07vw solid #EDEDED",
           borderRadius: `calc(.48vw * ${scale})`,
           display: "flex",
@@ -154,10 +155,9 @@ const style = (theme, scale = 1) => {
           justifyContent: "center",
           fontSize: `calc(1.11vw * ${scale})`,
           minHeight: `calc(2.91vw * ${scale})`,
-          minWidth: `calc(3.0vw * ${scale})`,
+          minWidth: `calc(15.0vw * ${scale})`,
           padding: `calc(.0vw * ${scale}) calc(1.66vw * ${scale}) calc(.0vw * ${scale}) calc(1.66vw * ${scale}) `,
           zIndex: 2,
-
           color: "text.primary",
           textTransform: "initial",
         },
