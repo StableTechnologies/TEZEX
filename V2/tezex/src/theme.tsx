@@ -192,7 +192,7 @@ export const theme = createTheme({
   },
   palette: {
     selectedHomeTab: {
-      main: "#E3F7FF",
+      main: "#0F61FF",
       contrastText: "#fff",
     },
     action: {
