@@ -8,11 +8,11 @@ const style = (theme, scale = 1) => {
     },
     paperBox: {
       display: "flex",
-      justifyContent: "space-between",
+      justifyContent: "center",
       alignItems: "center",
       paddingTop: `calc(5.2vw * ${scale})`,
-      paddingLeft: `calc(1.6vw * ${scale})`,
-      paddingRight: `calc(1.11vw * ${scale})`,
+      paddingLeft: `calc(2.4 * 1.6vw * ${scale})`,
+      paddingRight: `calc(2.4 * 1.6vw * ${scale})`,
     },
     paper: {
       position: "absolute",

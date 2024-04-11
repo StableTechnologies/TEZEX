@@ -11,7 +11,7 @@ const style = (theme, scale = 1) => {
         alignItems: "center",
         alignContent: "center",
         justifyContent: "space-between",
-        width: `calc(15.2vw * ${scale})`,
+        width: `calc(13.2vw * ${scale})`,
         maxHeight: `calc(2.7vw * ${scale})`,
         minHeight: `calc(2.7vw * ${scale})`,
         borderRadius: `calc(.55vw * ${scale})`,
