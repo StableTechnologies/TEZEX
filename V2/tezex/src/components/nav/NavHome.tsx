@@ -11,29 +11,10 @@ import style from "./style";
 import useStyles from "../../hooks/styles";
 
 interface NavTabProps {
+  id: number;
   label: string;
   href: string;
   scalingKey?: string;
-}
-
-function NavTab(props: NavTabProps) {
-  const navigate = useNavigate();
-
-  const _props = {
-    label: props.label,
-    href: props.href,
-  };
-  const styles = useStyles(style, props.scalingKey);
-  return (
-    <Tab
-      sx={styles.navHome.tab}
-      onClick={(event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
-        event.preventDefault();
-        navigate(props.href);
-      }}
-      {..._props}
-    />
-  );
 }
 
 export interface INavHome {
@@ -67,6 +48,28 @@ export const NavHome: FC<INavHome> = (props) => {
     } else return "/home/add";
   }, [sessionInfo]);
 
+  function NavTab(props: NavTabProps) {
+    const navigate = useNavigate();
+
+    const _props = {
+      label: props.label,
+      href: props.href,
+    };
+    const styles = useStyles(style, props.scalingKey);
+    return (
+      <Tab
+        sx={{
+          ...styles.navHome.tab,
+          color: value === props.id ? "#FFFFFF" : "selectedHomeTab.dark",
+        }}
+        onClick={(event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
+          event.preventDefault();
+          navigate(props.href);
+        }}
+        {..._props}
+      />
+    );
+  }
   return (
     <Tabs
       value={value}
@@ -74,8 +77,14 @@ export const NavHome: FC<INavHome> = (props) => {
       onChange={handleChange}
       aria-label="nav-home-tabs"
     >
-      <NavTab label="Swap" href="/home/swap" scalingKey={props.scalingKey} />
       <NavTab
+        id={0}
+        label="Swap"
+        href="/home/swap"
+        scalingKey={props.scalingKey}
+      />
+      <NavTab
+        id={1}
         label="Liquidity"
         href={liquidityHref()}
         scalingKey={props.scalingKey}

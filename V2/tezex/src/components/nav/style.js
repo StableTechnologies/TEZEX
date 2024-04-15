@@ -154,11 +154,12 @@ const style = (theme, scale = 1) => {
           alignItems: "center",
           justifyContent: "center",
           fontSize: `calc(1.11vw * ${scale})`,
+          fontWeight: `700`,
           minHeight: `calc(2.91vw * ${scale})`,
           minWidth: `calc(15.0vw * ${scale})`,
           padding: `calc(.0vw * ${scale}) calc(1.66vw * ${scale}) calc(.0vw * ${scale}) calc(1.66vw * ${scale}) `,
           zIndex: 2,
-          color: "text.primary",
+
           textTransform: "initial",
         },
         wrapper: {
