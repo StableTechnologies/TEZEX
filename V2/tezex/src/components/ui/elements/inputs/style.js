@@ -72,7 +72,7 @@ const style = (theme, scale = 1) => {
         zIndex: 10,
 
         backgroundColor: "selectedHomeTab.main",
-        color: "text.primary",
+        color: "selectedHomeTab.dark",
         textTransform: "initial",
       },
       wrapper: {

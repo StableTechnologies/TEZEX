@@ -211,12 +211,28 @@ const SlippageInput: FC<ISlippage> = (props) => {
           }}
           onClick={() => handleSlippageTabClick("0")}
         >
-          <Button disabled={selectedId !== "0"} sx={styles.slippageTab}>
+          <Button
+            disabled={selectedId !== "0"}
+            sx={{
+              ...styles.slippageTab,
+              "&.MuiButton-text": {
+                color: selectedId === "0" ? "#FFFFFF" : "text.primary",
+              },
+            }}
+          >
             0.5%
           </Button>
         </Box>
         <Box onClick={() => handleSlippageTabClick("1")}>
-          <Button disabled={selectedId !== "1"} sx={styles.slippageTab}>
+          <Button
+            disabled={selectedId !== "1"}
+            sx={{
+              ...styles.slippageTab,
+              "&.MuiButton-text": {
+                color: selectedId === "1" ? "#FFFFFF" : "text.primary",
+              },
+            }}
+          >
             1.0%
           </Button>
         </Box>
