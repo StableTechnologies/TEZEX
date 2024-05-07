@@ -1,5 +1,6 @@
 import React, { FC, useState, useEffect, useCallback } from "react";
 import { Header } from "../header";
+import Footer from "../footer";
 
 import { BrowserView, MobileView } from "react-device-detect";
 import { MainWindow } from "../main-window";
@@ -65,6 +66,17 @@ export const Layout: FC<ILayout> = (props) => {
 
           {/* Bottom space for bars or notification */}
           <Box sx={styles.bottomSpace}></Box>
+        </Box>
+
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "flex-end",
+            height: "70vw",
+          }}
+        >
+          <Footer />
         </Box>
       </Box>
     </Box>

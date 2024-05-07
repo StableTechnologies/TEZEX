@@ -3,8 +3,7 @@ const style = (theme, scale = 1) => {
   return {
     root: {
       display: "flex",
-      minWidth: "100vw",
-      maxWidth: "100vw",
+      maxWidth: "100%",
       height: "100%",
       justifyContent: "space-between",
       flexDirection: "row",

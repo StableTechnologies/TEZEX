@@ -25,7 +25,8 @@ const style = (theme, scale = 1) => {
     },
 
     homeContainer: {
-      display: "flex",
+      display: "block",
+      height: "100%",
       flexDirection: "column",
       justifyContent: "center",
     },
