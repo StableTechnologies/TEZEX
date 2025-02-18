@@ -168,3 +168,30 @@ export function toNumber(n: string): number {
 export function cleanNumericString(n: string): string {
   return n.replace(/[^0-9.]+/g, "").replace(/(\..*)\./g, "$1");
 }
+
+export function formatWithSubscript(
+  value: BigNumber,
+  decimals: number
+): string {
+  value = value.abs();
+  if (value.gte(0.01) || value.isZero()) {
+    return value.isInteger() ? value.toString() : value.toFixed(decimals);
+  }
+  const nOfDecimals = value.decimalPlaces()!;
+  const significantDigits = value.sd();
+  const nOfZeroes = nOfDecimals - significantDigits;
+
+  const significantPart = value
+    .shiftedBy(nOfDecimals)
+    .precision(decimals)
+    .toString()
+    .replace(/0+$/, "");
+
+  const subscriptNumberOfZeroes = nOfZeroes
+    .toString()
+    .split("")
+    .map((digit) => String.fromCodePoint(Number("0x208" + digit)))
+    .join("");
+
+  return `0.0${subscriptNumberOfZeroes}${significantPart}`;
+}
