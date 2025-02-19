@@ -90,6 +90,20 @@ const style = (theme, scale = 1) => {
         display: "flex",
       },
     },
+    disconnectItem: {
+      "& .MuiButtonBase-root": {
+        color: "#FF4B55",
+        borderTop: "1px solid rgba(255, 75, 85, 0.2)",
+        "&:hover": {
+          backgroundColor: "rgba(255, 75, 85, 0.08)",
+          color: "#FF6B74",
+        },
+        "&.Mui-selected": {
+          backgroundColor: "rgba(255, 75, 85, 0.12)",
+          color: "#FF6B74",
+        },
+      },
+    },
   };
 };
 

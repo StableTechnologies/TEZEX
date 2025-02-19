@@ -22,6 +22,9 @@ import { useMobileOrientation } from "react-device-detect";
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
 import logo from "../../../../assets/TezexLogo.svg";
 import logoSmall from "../../../../assets/tezexIcon.svg";
+import { useWallet } from "../../../../hooks/wallet";
+import { WalletInfo } from "../../../../contexts/wallet";
+import LogoutIcon from "@mui/icons-material/Logout";
 
 export interface ISideBarProps {
   openMenu: boolean;
@@ -35,6 +38,7 @@ export const SideBar: FC<ISideBarProps> = (props) => {
   const sessionInfo = useSession();
   const styles = useStyles(style);
   const { isLandscape } = useMobileOrientation();
+  const walletInfo: WalletInfo | undefined = useWallet();
 
   useEffect(() => {
     switch (sessionInfo.activeComponent) {
@@ -49,6 +53,13 @@ export const SideBar: FC<ISideBarProps> = (props) => {
         break;
     }
   }, [sessionInfo]);
+
+  const disconnect = async () => {
+    if (walletInfo) {
+      await walletInfo.disconnect();
+      props.toggleMenu();
+    }
+  };
 
   const aboutRedirectUrl = sessionInfo.appConfig.aboutRedirectUrl;
   const iOS =
@@ -170,6 +181,20 @@ export const SideBar: FC<ISideBarProps> = (props) => {
                 <ListItemText primary="About" sx={styles.listItemText} />
               </ListItemButton>
             </ListItem>
+
+            {walletInfo && walletInfo.isWalletConnected && (
+              <ListItem disablePadding sx={styles.disconnectItem}>
+                <ListItemButton onClick={disconnect}>
+                  <ListItemIcon>
+                    <LogoutIcon sx={{ color: "#FF4B55" }} />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary="Disconnect Wallet"
+                    sx={styles.listItemText}
+                  />
+                </ListItemButton>
+              </ListItem>
+            )}
           </>
         )}
       </List>
