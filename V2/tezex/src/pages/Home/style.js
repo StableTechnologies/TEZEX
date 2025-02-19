@@ -20,10 +20,6 @@ const style = (theme, scale = 1) => {
           justifyContent: "center",
           alignItems: "center",
           padding: "0px 0px 0px 0px ",
-
-          [theme.breakpoints.down("md")]: {
-            display: "none",
-          },
         },
       },
     },
