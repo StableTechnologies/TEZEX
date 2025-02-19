@@ -1,5 +1,5 @@
 import React, { FC, useEffect, useState } from "react";
-import connectWallet from "../../functions/beacon";
+import connectWallet, { reconnectWallet } from "../../functions/beacon";
 import { useWallet, useWalletOps } from "../../hooks/wallet";
 import { useNetwork } from "../../hooks/network";
 import { WalletInfo } from "../../contexts/wallet";
@@ -50,6 +50,19 @@ export const Wallet: FC<IWallet> = (props) => {
     }
   }, [walletOps?.getTransactionStatus, transactionStatus]);
 
+  // use effect to reconnect the wallet if user refreshes the page
+  useEffect(() => {
+    const autoReconnect = async () => {
+      try {
+        await reconnectWallet(walletInfo, networkInfo);
+      } catch (error) {
+        console.error("Failed to reconnect:", error);
+      }
+    };
+
+    autoReconnect();
+  }, []);
+
   // Effect to monitor transaction status and update wallet text
   useEffect(() => {
     switch (transactionStatus) {
@@ -93,7 +106,7 @@ export const Wallet: FC<IWallet> = (props) => {
   };
   const disconnect = async () => {
     if (walletInfo) {
-      walletInfo.disconnect();
+      await walletInfo.disconnect();
     }
   };
 
