@@ -52,7 +52,11 @@ const SuccessAlert: FC<ISuccessAlert> = (props) => {
     return props.successRecord.tx.sendAsset.map((asset, i) => (
       <Box key={i} sx={{ display: "flex", alignItems: "center" }}>
         {i == 1 && <AddIcon style={styles.assetIcon} />}
-        <img style={styles.assetIcon} src={asset.logo} alt={asset.name} />
+        <img
+          style={styles.assetIcon}
+          src={process.env.PUBLIC_URL + asset.logo}
+          alt={asset.name}
+        />
         <Typography sx={styles.descriptionHighlight}>
           {formatWithSubscript(
             new BigNumber(props.successRecord.tx.sendAmount[i].string),
@@ -68,7 +72,11 @@ const SuccessAlert: FC<ISuccessAlert> = (props) => {
     return props.successRecord.tx.receiveAsset.map((asset, i) => (
       <Box key={i} sx={{ display: "flex", alignItems: "center" }}>
         {i == 1 && <AddIcon style={styles.assetIcon} />}
-        <img style={styles.assetIcon} src={asset.logo} alt={asset.name} />
+        <img
+          style={styles.assetIcon}
+          src={process.env.PUBLIC_URL + asset.logo}
+          alt={asset.name}
+        />
         <Typography sx={styles.descriptionHighlight}>
           {formatWithSubscript(
             new BigNumber(props.successRecord.tx.receiveAmount[i].string),
