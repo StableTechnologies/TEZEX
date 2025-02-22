@@ -110,6 +110,7 @@ export interface FailedRecord {
 
 export interface SuccessRecord {
   opHash: string;
+  tx: Transaction;
 }
 export type CompletionRecord =
   | [CompletionState.FAILED, FailedRecord]

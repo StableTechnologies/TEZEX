@@ -332,7 +332,7 @@ export async function tokenToXtz(
   tzbtcContractAddress: string,
   toolkit: TezosToolkit,
   slippage: number | BigNumber | string = 0
-): Promise<SuccessRecord> {
+): Promise<Omit<SuccessRecord, "tx">> {
   const lbContract = await toolkit.wallet.at(lbContractAddress);
   // the deadline value is arbitrary and can be changed
   const tzBtcContract = await toolkit.wallet.at(tzbtcContractAddress);
@@ -485,7 +485,7 @@ export async function xtzToToken(
   userAddress: string,
   lbContractAddress: string,
   toolkit: TezosToolkit
-): Promise<SuccessRecord> {
+): Promise<Omit<SuccessRecord, "tx">> {
   const deadline = new Date(Date.now() + 60000).toISOString();
 
   const estimate = await toolkit.wallet
@@ -660,7 +660,7 @@ export async function buyLiquidityShares(
   lbContractAddress: string,
   tzbtcContractAddress: string,
   toolkit: TezosToolkit
-): Promise<SuccessRecord> {
+): Promise<Omit<SuccessRecord, "tx">> {
   const deadline = new Date(Date.now() + 60000).toISOString();
 
   const lbContract = await toolkit.wallet.at(lbContractAddress);
@@ -853,7 +853,7 @@ export async function removeLiquidity(
   userAddress: string,
   lbContractAddress: string,
   toolkit: TezosToolkit
-): Promise<SuccessRecord> {
+): Promise<Omit<SuccessRecord, "tx">> {
   const deadline = new Date(Date.now() + 60000).toISOString();
 
   const lbContractStorage = await getLbContractStorage(
