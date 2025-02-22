@@ -51,7 +51,7 @@ export interface WalletInfo {
   lbContractStorage: LiquidityBakingStorageXTZ | undefined;
   setAddress: React.Dispatch<React.SetStateAction<string | null>>;
   isWalletConnected: boolean;
-  disconnect: () => void;
+  disconnect: () => Promise<void>;
   initialiseTransaction: (
     component: TransactingComponent,
     sendAsset: AssetOrAssetPair,
@@ -724,7 +724,10 @@ export function WalletProvider(props: IWalletProvider) {
   }, [client]);
 
   // disconnect wallet
-  const disconnect = () => {
+  const disconnect = async () => {
+    if (client) {
+      await client.clearActiveAccount();
+    }
     setClient(null);
     setAddress(null);
   };

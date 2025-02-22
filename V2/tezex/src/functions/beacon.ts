@@ -77,3 +77,22 @@ export default async function connectWallet(
     }
   }
 }
+
+export async function reconnectWallet(
+  walletInfo: WalletInfo,
+  network: INetwork
+) {
+  const beaconWallet = new BeaconWallet({
+    name: "Tezex",
+    preferredNetwork: network.network,
+  });
+  const activeAccount = await beaconWallet.client.getActiveAccount();
+  if (activeAccount) {
+    const tezos = new TezosToolkit(network.info.tezosServer);
+    tezos.setPackerProvider(new MichelCodecPacker());
+    tezos.setWalletProvider(beaconWallet);
+    walletInfo.setAddress(activeAccount.address);
+    walletInfo.setClient(beaconWallet.client);
+    walletInfo.setToolkit(tezos);
+  }
+}
