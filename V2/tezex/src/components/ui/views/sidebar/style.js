@@ -1,102 +1,108 @@
-import { menuClasses } from "react-pro-sidebar";
 // eslint-disable-next-line
 const style = (theme, scale = 1) => {
   return {
-    box: {
-      display: "flex",
-      width: "100%",
+    drawer: {
+      width: "60vw",
+      flexShrink: 0,
+      "& .MuiDrawer-paper": {
+        width: "60vw",
+        boxSizing: "border-box",
+        backgroundColor: theme.palette.primary.main,
+        boxShadow: `0px 0px calc(0.7vw * ${scale}) 0px rgba(0,0,0,0.15)`,
+        borderRight: "0px",
+      },
     },
-    swap: {
-      fontSize: `calc(2.9vw * ${scale})`, //collapsed ? "0px" : "3vw",
-      textAlign: "right",
-      justifyContent: "flex-end",
-      paddingRight: "0px",
-      position: "relative",
-      right: "0px",
-      padding: "0px 0px 0px 0px",
+    drawerClosed: {
+      width: 70,
+      "& .MuiDrawer-paper": {
+        width: 70,
+      },
     },
-
-    liquidity: {
-      fontSize: `calc(2.9vw * ${scale})`, //collapsed ? "0px" : "3vw",
-      backgroundColor: "#FEFEFE",
-      paddingBottom: "10%",
+    menuButton: {
+      padding: 0,
+      gap: 1,
     },
-    home: {
-      fontSize: `calc(3vw * ${scale})`, //collapsed ? "0px" : "3vw",
-      backgroundColor: "#FEFEFE",
+    homeItem: {
+      paddingTop: "10%",
     },
-    add: {
-      //fontSize: "2.8vw",//collapsed ? "0px" : "3vw",
-      backgroundColor: "#FEFEFE",
-    },
-    remove: {
-      //  fontSize: "2.8vw",//collapsed ? "0px" : "3vw",
-      backgroundColor: "#FEFEFE",
-      paddingBottom: "10%",
-    },
-    root: {
-      //boxShadow: "20px 20px 25px 20px rgba(0, 0, 0, 0.1)",
-      fontSize: `calc(3vw * ${scale})`, //collapsed ? "0px" : "3vw",
-      boxShadow: `0px 0px calc(0.7vw * ${scale}) 0px rgba(0,0,0,0.15)`,
-      borderRight: "0px",
-
+    listItem: {
       backgroundColor: theme.palette.primary.main,
-      //backgroundColor: "#FEFEFE",
-      textAlign: "right",
-    },
-
-    menuItem: {
-      backgroundColor: theme.palette.primary.main,
-      button: {
+      "& .MuiButtonBase-root": {
         color: theme.palette.text.disabled,
-        [`&.${menuClasses.disabled}`]: {
-          color: theme.palette.text.disabled,
-        },
-        [`&.${menuClasses.active}`]: {
-          //          backgroundColor: 'red',
-          backgroundColor: theme.palette.primary.main,
-          color: theme.palette.text.primary,
-        },
         "&:hover": {
           backgroundColor: theme.palette.primary.main,
-
           color: theme.palette.text.primary,
-          // backgroundColor: 'red'
+        },
+        "&.Mui-selected": {
+          backgroundColor: theme.palette.primary.main,
+          color: theme.palette.text.primary,
         },
       },
     },
-    menuRootClosed: {
+    menuItemClosed: {
+      justifyContent: "center",
+    },
+    menuItemOpened: {
+      justifyContent: "flex-start",
+    },
+    listItemText: {
+      textAlign: "right",
+      "& .MuiTypography-root": {
+        fontSize: `calc(3vw * ${scale})`,
+      },
+    },
+    swapButton: {
+      paddingLeft: 4,
+    },
+    swapText: {
+      textAlign: "right",
+      paddingRight: 4,
+      "& .MuiTypography-root": {
+        fontSize: `calc(2.9vw * ${scale})`,
+      },
+    },
+    liquidityButton: {
+      paddingLeft: 4,
+    },
+    liquidityText: {
+      textAlign: "right",
+      paddingRight: 4,
+      "& .MuiTypography-root": {
+        fontSize: `calc(2.9vw * ${scale})`,
+      },
+    },
+    nestedButton: {
+      paddingLeft: 6,
+    },
+    nestedText: {
+      textAlign: "right",
+      paddingRight: 7,
+      "& .MuiTypography-root": {
+        fontSize: `calc(2.8vw * ${scale})`,
+      },
+    },
+    logo: {
       display: "none",
-      //  paddingTop: "10%",
+      justifyContent: "center",
+      alignItems: "center",
+      width: "100%",
+      "@media (max-width: 900px) and (orientation: landscape)": {
+        display: "flex",
+      },
     },
-    menuRootOpen: {
-      display: "block",
-      paddingTop: "10%",
-    },
-    menuItemActive: {
-      // backgroundColor: theme.palette.primary.main,
-      backgroundColor: "red",
-      //backgroundColor: theme.palette.primary.main,
-    },
-
-    menuItem2: {
-      fontSize: `calc(2.5vw * ${scale})`, //collapsed ? "0px" : "3vw",
-      backgroundColor: theme.palette.primary.main,
-    },
-    menuItemActive2: {
-      fontSize: `calc(2.5vw * ${scale})`, //collapsed ? "0px" : "3vw",
-      backgroundColor: theme.palette.primary.main,
-      //backgroundColor: "#000000"
-      //backgroundColor: theme.palette.primary.main,
-    },
-
-    menuItem3: {
-      backgroundColor: theme.palette.primary.main,
-    },
-    menuItemActive3: {
-      backgroundColor: theme.palette.primary.main,
-      //backgroundColor: "#000000"
-      //backgroundColor: theme.palette.primary.main,
+    disconnectItem: {
+      "& .MuiButtonBase-root": {
+        color: "#FF4B55",
+        borderTop: "1px solid rgba(255, 75, 85, 0.2)",
+        "&:hover": {
+          backgroundColor: "rgba(255, 75, 85, 0.08)",
+          color: "#FF6B74",
+        },
+        "&.Mui-selected": {
+          backgroundColor: "rgba(255, 75, 85, 0.12)",
+          color: "#FF6B74",
+        },
+      },
     },
   };
 };

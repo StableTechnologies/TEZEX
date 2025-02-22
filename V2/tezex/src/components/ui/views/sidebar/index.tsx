@@ -1,33 +1,44 @@
 import React, { FC, useEffect } from "react";
-
-import Box from "@mui/material/Box";
-import logo from "../../../../assets/TezexLogo.svg";
-
-import IconButton from "@mui/material/IconButton";
-import useStyles from "../../../../hooks/styles";
-import style from "./style";
-import { Sidebar, Menu, MenuItem, SubMenu } from "react-pro-sidebar";
 import { Link } from "react-router-dom";
-import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
-
-import logoSmall from "../../../../assets/tezexIcon.svg";
+import {
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  IconButton,
+  Collapse,
+  SwipeableDrawer,
+  Box,
+} from "@mui/material";
 import KeyboardDoubleArrowRightSharp from "@mui/icons-material/KeyboardDoubleArrowRightSharp";
+import ExpandLess from "@mui/icons-material/ExpandLess";
+import ExpandMore from "@mui/icons-material/ExpandMore";
 import { useSession } from "../../../../hooks/session";
 import { TransactingComponent } from "../../../../types/general";
+import style from "./style";
+import useStyles from "../../../../hooks/styles";
+import { useMobileOrientation } from "react-device-detect";
+import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
+import logo from "../../../../assets/TezexLogo.svg";
+import logoSmall from "../../../../assets/tezexIcon.svg";
+import { useWallet } from "../../../../hooks/wallet";
+import { WalletInfo } from "../../../../contexts/wallet";
+import LogoutIcon from "@mui/icons-material/Logout";
 
 export interface ISideBarProps {
   openMenu: boolean;
   toggleMenu: () => void;
 }
-export const SideBar: FC<ISideBarProps> = (props) => {
-  const [collapsed, setCollapsed] = React.useState(true);
-  const [active, setActive] = React.useState(0);
 
+export const SideBar: FC<ISideBarProps> = (props) => {
+  const [homeOpen, setHomeOpen] = React.useState(false);
+  const [liquidityOpen, setLiquidityOpen] = React.useState(false);
+  const [active, setActive] = React.useState(0);
   const sessionInfo = useSession();
   const styles = useStyles(style);
-  useEffect(() => {
-    setCollapsed(!props.openMenu);
-  }, [props.openMenu]);
+  const { isLandscape } = useMobileOrientation();
+  const walletInfo: WalletInfo | undefined = useWallet();
 
   useEffect(() => {
     switch (sessionInfo.activeComponent) {
@@ -42,118 +53,151 @@ export const SideBar: FC<ISideBarProps> = (props) => {
         break;
     }
   }, [sessionInfo]);
-  return (
-    <Box sx={styles.box}>
-      <Sidebar
-        backgroundColor={styles.root.backgroundColor}
-        collapsed={collapsed}
-        onBackdropClick={() => setCollapsed(false)}
-        rtl={true}
-        rootStyles={styles.root}
-      >
-        <Menu>
-          {!props.openMenu ? (
-            <MenuItem>
-              <IconButton onClick={() => props.toggleMenu()}>
-                <MenuOutlinedIcon />
-              </IconButton>
-            </MenuItem>
-          ) : (
-            <MenuItem
-              suffix={
-                <IconButton
-                  sx={{
-                    //                  paddingRight: "10px"
-                    right: "60%",
-                  }}
-                  onClick={() => props.toggleMenu()}
-                >
-                  <KeyboardDoubleArrowRightSharp />
-                </IconButton>
-              }
-            >
-              <Box
-                component="img"
-                sx={{
-                  display: "none",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  width: "100%",
 
-                  "@media (max-width: 900px) and (orientation: landscape)": {
-                    display: "flex",
-                  },
-                }}
-                src={logo}
-                alt="Logo"
-              />
-            </MenuItem>
-          )}
-        </Menu>
-        <Menu>
-          {!props.openMenu ? (
-            <MenuItem>
-              <Box
-                component="img"
-                sx={{
-                  display: "flex",
-                }}
-                src={logoSmall}
-                alt="Logo"
-              />
-            </MenuItem>
-          ) : (
-            <></>
-          )}
-        </Menu>
-        <Menu
-          menuItemStyles={styles.menuItem}
-          rootStyles={
-            !props.openMenu ? styles.menuRootClosed : styles.menuRootOpen
-          }
+  const disconnect = async () => {
+    if (walletInfo) {
+      await walletInfo.disconnect();
+      props.toggleMenu();
+    }
+  };
+
+  const aboutRedirectUrl = sessionInfo.appConfig.aboutRedirectUrl;
+  const iOS =
+    typeof navigator !== "undefined" &&
+    /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+  return (
+    <SwipeableDrawer
+      disableBackdropTransition={!iOS}
+      disableDiscovery={iOS}
+      onClose={props.toggleMenu}
+      onOpen={props.toggleMenu}
+      open={props.openMenu}
+      variant={isLandscape ? "permanent" : undefined}
+      anchor="right"
+      sx={props.openMenu ? styles.drawer : styles.drawerClosed}
+      transitionDuration={{
+        enter: 500,
+        exit: 0,
+      }}
+    >
+      <List>
+        <ListItem
+          sx={props.openMenu ? styles.menuItemOpened : styles.menuItemClosed}
         >
-          <SubMenu
-            active={active === 0 || active === 1 || active === 2 ? true : false}
-            label="Home"
-            rootStyles={styles.home}
-          >
-            <MenuItem
-              active={active === 0 ? true : false}
-              component={<Link to="/home/swap" />}
-              rootStyles={styles.swap}
-            >
-              Swap
-            </MenuItem>
-            <SubMenu
-              active={active === 1 || active === 2 ? true : false}
-              label="Liquidity"
-              rootStyles={styles.liquidity}
-            >
-              <MenuItem
-                active={active === 1 ? true : false}
-                component={<Link to="/home/add" />}
-                rootStyles={styles.add}
-              >
-                {" "}
-                Add
-              </MenuItem>
-              <MenuItem
-                active={active === 2 ? true : false}
-                component={<Link to="/home/remove" />}
-                rootStyles={styles.remove}
-              >
-                {" "}
-                Remove
-              </MenuItem>
-            </SubMenu>
-          </SubMenu>
-          <MenuItem active={false} component={<Link to="/Analytics" />}>
-            {" "}
-            Analytics
-          </MenuItem>
-          <MenuItem component={<Link to="/About" />}> About</MenuItem>
-        </Menu>
-      </Sidebar>
-    </Box>
+          <IconButton onClick={props.toggleMenu} sx={styles.menuButton}>
+            {!props.openMenu ? (
+              <MenuOutlinedIcon />
+            ) : (
+              <>
+                <KeyboardDoubleArrowRightSharp />
+                <Box component="img" sx={styles.logo} src={logo} alt="Logo" />
+              </>
+            )}
+          </IconButton>
+        </ListItem>
+
+        {!props.openMenu && (
+          <ListItem>
+            <Box component="img" src={logoSmall} alt="Logo" />
+          </ListItem>
+        )}
+
+        {props.openMenu && (
+          <>
+            <ListItem disablePadding sx={styles.homeItem}>
+              <ListItemButton onClick={() => setHomeOpen(!homeOpen)}>
+                <ListItemIcon>
+                  {homeOpen ? <ExpandLess /> : <ExpandMore />}
+                </ListItemIcon>
+                <ListItemText primary="Home" sx={styles.listItemText} />
+              </ListItemButton>
+            </ListItem>
+
+            <Collapse in={homeOpen} timeout="auto" unmountOnExit>
+              <List>
+                <ListItem disablePadding sx={styles.listItem}>
+                  <ListItemButton
+                    component={Link}
+                    to="/home/swap"
+                    selected={active === 0}
+                    sx={styles.swapButton}
+                  >
+                    <ListItemText primary="Swap" sx={styles.swapText} />
+                  </ListItemButton>
+                </ListItem>
+
+                <ListItem disablePadding sx={styles.listItem}>
+                  <ListItemButton
+                    onClick={() => setLiquidityOpen(!liquidityOpen)}
+                    sx={styles.liquidityButton}
+                  >
+                    <ListItemIcon>
+                      {liquidityOpen ? <ExpandLess /> : <ExpandMore />}
+                    </ListItemIcon>
+                    <ListItemText
+                      primary="Liquidity"
+                      sx={styles.liquidityText}
+                    />
+                  </ListItemButton>
+                </ListItem>
+
+                <Collapse in={liquidityOpen} timeout="auto" unmountOnExit>
+                  <List>
+                    <ListItem disablePadding sx={styles.listItem}>
+                      <ListItemButton
+                        component={Link}
+                        to="/home/add"
+                        selected={active === 1}
+                        sx={styles.nestedButton}
+                      >
+                        <ListItemText primary="Add" sx={styles.nestedText} />
+                      </ListItemButton>
+                    </ListItem>
+
+                    <ListItem disablePadding sx={styles.listItem}>
+                      <ListItemButton
+                        component={Link}
+                        to="/home/remove"
+                        selected={active === 2}
+                        sx={styles.nestedButton}
+                      >
+                        <ListItemText primary="Remove" sx={styles.nestedText} />
+                      </ListItemButton>
+                    </ListItem>
+                  </List>
+                </Collapse>
+              </List>
+            </Collapse>
+
+            <ListItem disablePadding sx={styles.listItem}>
+              <ListItemButton component={Link} to="/Analytics">
+                <ListItemText primary="Analytics" sx={styles.listItemText} />
+              </ListItemButton>
+            </ListItem>
+
+            <ListItem disablePadding sx={styles.listItem}>
+              <ListItemButton href={aboutRedirectUrl}>
+                <ListItemText primary="About" sx={styles.listItemText} />
+              </ListItemButton>
+            </ListItem>
+
+            {walletInfo && walletInfo.isWalletConnected && (
+              <ListItem disablePadding sx={styles.disconnectItem}>
+                <ListItemButton onClick={disconnect}>
+                  <ListItemIcon>
+                    <LogoutIcon sx={{ color: "#FF4B55" }} />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary="Disconnect Wallet"
+                    sx={styles.listItemText}
+                  />
+                </ListItemButton>
+              </ListItem>
+            )}
+          </>
+        )}
+      </List>
+    </SwipeableDrawer>
   );
 };
