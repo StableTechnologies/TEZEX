@@ -1,0 +1,26 @@
+{
+    "name": "scripts",
+    "version": "1.0.0",
+    "type": "module",
+    "scripts": {
+        "deploy:testnet": "tsx src/deploy.ts --network=testnet",
+        "deploy:mainnet": "tsx src/deploy.ts --network=mainnet"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "description": "",
+    "dependencies": {
+        "@taquito/michel-codec": "^23.1.0",
+        "@taquito/michelson-encoder": "^23.1.0",
+        "@taquito/signer": "^23.0.3",
+        "@taquito/taquito": "^23.0.3",
+        "bn.js": "^5.2.2",
+        "dotenv": "^17.2.3"
+    },
+    "devDependencies": {
+        "@types/node": "^25.0.0",
+        "tsx": "4.21.0",
+        "typescript": "5.9.3"
+    }
+}
