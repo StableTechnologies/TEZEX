@@ -6,6 +6,7 @@ const style = (theme, scale = 1) => {
       fontSize: `calc(.97vw * ${scale})`,
       fontWeight: "700",
       lineHeight: `calc(1.18vw * ${scale})`,
+      paddingLeft: "3px",
     },
     infoTextIcon: {
       width: `calc(1.11vw * ${scale})`,
@@ -52,8 +53,13 @@ const style = (theme, scale = 1) => {
       paddingTop: `calc(2.22vw * ${scale})`,
       paddingBottom: `calc(0vw * ${scale})`,
       paddingLeft: `calc(2.22vw * ${scale})`,
+      paddingRight: `calc(2.22vw * ${scale})`,
       fontSize: `calc(1vw * ${scale})`,
       textAlign: "left",
+      [theme.breakpoints.down("md")]: {
+        paddingLeft: theme.spacing(2),
+        paddingRight: theme.spacing(2),
+      },
     },
 
     input: {
@@ -143,7 +149,7 @@ const style = (theme, scale = 1) => {
       alignItems: "center",
       display: "flex",
       mobile: {
-        paddingTop: `calc(2.54vw * ${scale})`,
+        paddingTop: `calc(2vw * ${scale})`,
         [theme.breakpoints.down("md")]: {
           alignItems: "center",
           display: "flex",
@@ -247,6 +253,49 @@ const style = (theme, scale = 1) => {
           justifyContent: "center",
           display: "flex",
           height: "100%",
+        },
+      },
+    },
+    poolSelector: {
+      minWidth: `calc(10.5vw * ${scale})`,
+
+      "& .MuiSelect-select": {
+        fontSize: `calc(0.75vw * ${scale})`,
+        paddingY: `calc(0.6vw * ${scale})`,
+        paddingX: `calc(0.9vw * ${scale})`,
+      },
+
+      "& .MuiOutlinedInput-root": {
+        height: `calc(2.6vw * ${scale})`,
+        backgroundColor: "#FAFAFA",
+        border: "1px solid #E1E1E1",
+        transition: "all 0.2s ease",
+
+        "&:hover": {
+          backgroundColor: "#F5F5F5",
+          borderColor: "#CCCCCC",
+        },
+
+        "&.Mui-focused": {
+          backgroundColor: "#FFFFFF",
+          borderColor: "#999999",
+        },
+      },
+
+      // Mobile
+      [theme.breakpoints.down("md")]: {
+        minWidth: `calc(25vw * ${scale})`,
+        width: "100%",
+        paddingTop: `calc(1vw * ${scale})`,
+
+        "& .MuiSelect-select": {
+          fontSize: `calc(1.2vw * ${scale})`,
+          paddingY: `calc(1vw * ${scale})`,
+          paddingX: `calc(1.5vw * ${scale})`,
+        },
+
+        "& .MuiOutlinedInput-root": {
+          height: `calc(4.5vw * ${scale})`,
         },
       },
     },
