@@ -31,6 +31,8 @@ import useStyles from "../../hooks/styles";
 
 import { useTransaction } from "../../hooks/transaction";
 import { eq } from "lodash";
+import { PoolSelector } from "../ui/elements/PoolSelector";
+
 export interface ISwapToken {
   orientation: "portrait" | "landscape";
 }
@@ -57,9 +59,15 @@ export const Swap: FC<ISwapToken> = (props) => {
   const send = 0;
   const receive = 1;
 
+  const availablePools = network.getAllPools();
+  const [selectedPoolId, setSelectedPoolId] = useState<string>(
+    availablePools[0]?.id || ""
+  );
+
+  const currentPool = availablePools.find((p) => p.id === selectedPoolId);
   const [assets, setAssets] = useState<[Asset, Asset]>([
-    network.getAsset(Token.XTZ),
-    network.getAsset(Token.TzBTC),
+    network.getAsset(currentPool?.tokenA || Token.XTZ),
+    network.getAsset(currentPool?.tokenB || Token.TzBTC),
   ]);
 
   const [swappingFileds, setSwappingFileds] = useState<boolean>(false);
@@ -68,6 +76,23 @@ export const Swap: FC<ISwapToken> = (props) => {
   const [canUpdate, setCanUpdate] = useState<boolean>(false);
 
   const active = walletOps.getActiveTransaction();
+
+  const handlePoolChange = useCallback(
+    async (newPoolId: string) => {
+      const pool = network.getAllPools().find((p) => p.id === newPoolId);
+      if (!pool) return;
+
+      setSelectedPoolId(newPoolId);
+      setAssets([network.getAsset(pool.tokenA), network.getAsset(pool.tokenB)]);
+      // Re-initialize transaction with new pool
+      await transactionOps.initialize(
+        [network.getAsset(pool.tokenA)],
+        [network.getAsset(pool.tokenB)],
+        newPoolId
+      );
+    },
+    [network, transactionOps]
+  );
 
   // Callback to process transaction
   const transact = useCallback(async () => {
@@ -86,7 +111,8 @@ export const Swap: FC<ISwapToken> = (props) => {
   const newTransaction = useCallback(async () => {
     const transaction = await transactionOps.initialize(
       [assets[send]],
-      [assets[receive]]
+      [assets[receive]],
+      selectedPoolId
     );
 
     //if transaction initialized update balance and set loading params to false
@@ -117,14 +143,7 @@ export const Swap: FC<ISwapToken> = (props) => {
         setLoading(false);
       }
     }
-  }, [
-    swappingFileds,
-    loading,
-    newTransaction,
-    session,
-    transactionOps.getActiveTransaction,
-    assets,
-  ]);
+  }, [loading]);
 
   useEffect(() => {
     if (session.activeComponent !== TransactingComponent.SWAP)
@@ -211,9 +230,22 @@ export const Swap: FC<ISwapToken> = (props) => {
             <CardHeader
               sx={styles.cardHeader}
               title={
-                <Typography sx={styles.cardHeaderTypography}>
-                  {"Swap"}
-                </Typography>
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="space-between"
+                >
+                  <Typography sx={styles.cardHeaderTypography}>
+                    {"Swap"}
+                  </Typography>
+
+                  <PoolSelector
+                    selectedPoolId={selectedPoolId}
+                    onChange={handlePoolChange}
+                    disabled={!canUpdate}
+                    sx={styles.poolSelector}
+                  />
+                </Box>
               }
             />
             <CardContent sx={styles.cardcontent}>
