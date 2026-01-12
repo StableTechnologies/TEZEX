@@ -1,0 +1,82 @@
+import { IPoolAdapter, PoolConfig, PoolType } from "../types/pools";
+import { Asset, Token } from "../types/general";
+import { SiriusAdapter } from "./sirius";
+import { TezexAdapter } from "./tezex";
+
+export class PoolRegistry {
+  private static adapters: Map<string, IPoolAdapter> = new Map();
+  private static assets: Asset[] = [];
+
+  static registerPool(config: PoolConfig): void {
+    const adapter = this.createAdapter(config);
+    this.adapters.set(config.id, adapter);
+  }
+
+  static getAdapter(poolId: string): IPoolAdapter {
+    const adapter = this.adapters.get(poolId);
+    if (!adapter) {
+      throw new Error(`Pool adapter not found for id: ${poolId}`);
+    }
+    return adapter;
+  }
+
+  static getAsset(token: Token): Asset {
+    const asset = this.assets.find((a) => a.name === token);
+    if (!asset) {
+      throw new Error(`Asset not found: ${token}`);
+    }
+    return asset;
+  }
+
+  static getAssetByName(name: string): Asset {
+    const asset = this.assets.find((a) => a.name === name);
+    if (!asset) {
+      throw new Error(`Asset not found: ${name}`);
+    }
+    return asset;
+  }
+
+  static getAssetAddress(token: Token): string {
+    return this.getAsset(token).address;
+  }
+
+  static getAllPools(): PoolConfig[] {
+    return Array.from(this.adapters.values()).map(
+      (adapter) => adapter.poolConfig
+    );
+  }
+
+  static getPoolsByTokenPair(tokenA: Token, tokenB: Token): PoolConfig[] {
+    return this.getAllPools().filter(
+      (pool) =>
+        (pool.tokenA === tokenA && pool.tokenB === tokenB) ||
+        (pool.tokenA === tokenB && pool.tokenB === tokenA)
+    );
+  }
+
+  static getPoolById(poolId: string): PoolConfig | undefined {
+    const adapter = this.adapters.get(poolId);
+    return adapter?.poolConfig;
+  }
+
+  private static createAdapter(config: PoolConfig): IPoolAdapter {
+    switch (config.type) {
+      case PoolType.SIRIUS:
+        return new SiriusAdapter(config);
+      case PoolType.TEZEX_XTZUSDTZ:
+        return new TezexAdapter(config);
+      default:
+        throw new Error(`Unknown pool type: ${config.type}`);
+    }
+  }
+
+  static initializeFromConfig(pools: PoolConfig[], assets: Asset[]): void {
+    this.assets = assets;
+    pools.forEach((pool) => this.registerPool(pool));
+  }
+
+  static clear(): void {
+    this.adapters.clear();
+    this.assets = [];
+  }
+}

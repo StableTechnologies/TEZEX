@@ -12,7 +12,6 @@ import {
   TransactingComponent,
   Amount,
   AssetOrAssetPair,
-  LiquidityBakingStorageXTZ,
   Errors,
 } from "../types/general";
 import { TezosToolkit } from "@taquito/taquito";
@@ -28,7 +27,7 @@ import {
   completionRecordSuccess,
 } from "../functions/util";
 import { WritableDraft } from "immer/dist/types/types-external";
-import { estimate } from "../functions/estimates";
+import { estimateWithAdapter } from "../functions/estimates";
 
 export enum WalletStatus {
   ESTIMATING_SIRS = "Estimating Sirs",
@@ -48,7 +47,8 @@ export interface WalletInfo {
   toolkit: TezosToolkit | null;
   setToolkit: React.Dispatch<React.SetStateAction<TezosToolkit | null>>;
   address: string | null;
-  lbContractStorage: LiquidityBakingStorageXTZ | undefined;
+  // poolStorages: Map<string, LiquidityBakingStorageXTZ>;
+  // lbContractStorage: LiquidityBakingStorageXTZ | undefined;
   setAddress: React.Dispatch<React.SetStateAction<string | null>>;
   isWalletConnected: boolean;
   disconnect: () => Promise<void>;
@@ -56,6 +56,7 @@ export interface WalletInfo {
     component: TransactingComponent,
     sendAsset: AssetOrAssetPair,
     receiveAsset: AssetOrAssetPair,
+    poolId: string,
     sendAmount?: Amount,
     receiveAmount?: Amount,
     slipppage?: number
@@ -90,7 +91,7 @@ const defaultWalletInfo: WalletInfo = {
     throw new Error("setToolkit called outside of wallet provider");
   },
   address: null,
-  lbContractStorage: undefined,
+  // poolStorages: new Map(),
   setAddress: () => {
     throw new Error("setAddress called outside of wallet provider");
   },
@@ -145,14 +146,11 @@ export function WalletProvider(props: IWalletProvider) {
     [key in TransactingComponent]?: Transaction;
   }>({});
 
-  const [loading, setLoading] = useState(true);
   const [isWalletConnected, setIsWalletConnected] = useState(false);
   const [client, setClient] = useState<DAppClient | null>(null);
   const [toolkit, setToolkit] = useState<TezosToolkit | null>(null);
   const [address, setAddress] = useState<string | null>(null);
-  const [lbContractStorage, setLbContractStorage] = useState<
-    LiquidityBakingStorageXTZ | undefined
-  >(undefined);
+
   const [assetBalances, setAssetBalances] = useState<AssetBalance[]>(
     network.info.assets.map((asset) => {
       return { balance: undefined, asset: asset };
@@ -216,39 +214,6 @@ export function WalletProvider(props: IWalletProvider) {
     }
   }, [assetBalances, address, toolkit, client]);
 
-  // callback to update the storage of the liquidity baking contract
-  const updateStorage = useCallback(async () => {
-    // get the current storage of the liquidity baking contract
-    const newStorage = await network.getDexStorage().catch((e) => {
-      session.setAlert(completionRecordFailed(e as Errors));
-      return undefined;
-    });
-
-    // if the storage has changed update the state
-    setLbContractStorage((storage) => {
-      // if the storage has changed update it
-      if (newStorage) {
-        // don not update if storage is the same
-        if (storage && eq(storage, newStorage)) return storage;
-        return newStorage;
-      } else {
-        // if the storage is undefined return the old storage
-        return storage;
-      }
-    });
-  }, [network]);
-
-  // load the storage on initial render
-  useEffect(() => {
-    const loadStorage = async () => {
-      await updateStorage();
-      setLoading(false);
-    };
-    if (loading) {
-      loadStorage;
-    }
-  }, [loading]);
-
   // load / update balances on wallet connection
   useEffect(() => {
     const _updateBalances = async () => {
@@ -257,25 +222,13 @@ export function WalletProvider(props: IWalletProvider) {
     _updateBalances();
   }, [isWalletConnected]);
 
-  // Keep storage up to date by polling every minute
   useEffect(() => {
-    const _updateStorage = async () => {
-      await updateStorage();
-    };
-    if (!lbContractStorage) {
-      // if storage state is undefined update every second
-      const interval = setInterval(() => {
-        _updateStorage();
-      }, 1000);
-      return () => clearInterval(interval);
-    } else {
-      // if storage state is defined update every minute
-      const interval = setInterval(() => {
-        _updateStorage();
-      }, 60000);
-      return () => clearInterval(interval);
-    }
-  });
+    const interval = setInterval(() => {
+      updateBalances();
+    }, 15000);
+
+    return () => clearInterval(interval);
+  }, [updateBalances]);
 
   // callback to return the active transaction of a component
   const getActiveTransaction = useCallback(
@@ -295,7 +248,6 @@ export function WalletProvider(props: IWalletProvider) {
           const t: Transaction = await processTransaction(
             transaction,
             address,
-            network.info.dex.address,
             toolkit
           )
             .then((success) => {
@@ -403,11 +355,12 @@ export function WalletProvider(props: IWalletProvider) {
       component: TransactingComponent,
       sendAsset: AssetOrAssetPair,
       receiveAsset: AssetOrAssetPair,
+      poolId: string,
       sendAmount?: Amount,
       receiveAmount?: Amount,
       slipppage = 0.5
     ): Promise<boolean> => {
-      return await transactionUpdateMutex.runExclusive(() => {
+      return await transactionUpdateMutex.runExclusive(async () => {
         // initialise zeroBalance
         const initBalance = (asset: AssetOrAssetPair): Amount => {
           switch (asset.length) {
@@ -428,6 +381,7 @@ export function WalletProvider(props: IWalletProvider) {
 
           network: network.network,
           component,
+          poolId,
           sendAsset,
           sendAmount: send,
           sendAssetBalance: initBalance(sendAsset),
@@ -440,14 +394,20 @@ export function WalletProvider(props: IWalletProvider) {
           locked: false,
         };
 
-        // estimate missing amounts and set the transaction
-        const transaction: Transaction = lbContractStorage
-          ? estimate(_transaction, lbContractStorage)
-          : _transaction;
+        let transaction: Transaction = _transaction;
+        const _toolkit: TezosToolkit = toolkit || network.toolkit;
+
+        const adapter = network.getPoolAdapter(poolId);
+        transaction = await estimateWithAdapter(
+          _transaction,
+          _toolkit,
+          adapter
+        );
+
         return setActiveTransaction(component, transaction);
       });
     },
-    [lbContractStorage, network.network, setActiveTransaction]
+    [network.network, setActiveTransaction]
   );
 
   // function to check if a user has sufficient balance
@@ -738,7 +698,6 @@ export function WalletProvider(props: IWalletProvider) {
     toolkit,
     setToolkit,
     address,
-    lbContractStorage,
     setAddress,
     isWalletConnected,
     initialiseTransaction,

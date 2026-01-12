@@ -1,5 +1,4 @@
 import { BigNumber } from "bignumber.js";
-
 import {
   Errors,
   SuccessRecord,
@@ -7,142 +6,123 @@ import {
   Token,
   TransactingComponent,
 } from "../types/general";
-
 import { TezosToolkit } from "@taquito/taquito";
-
-import {
-  xtzToToken,
-  tokenToXtz,
-  buyLiquidityShares,
-  removeLiquidity,
-} from "../functions/liquidityBaking";
+import { PoolRegistry } from "../adapters/poolRegistry";
+import { IPoolAdapter } from "../types/pools";
 
 export async function processTransaction(
   transaction: Transaction,
   userAddress: string,
-  dex: string,
   toolkit: TezosToolkit
 ): Promise<SuccessRecord> {
+  const adapter = PoolRegistry.getAdapter(transaction.poolId);
+
   switch (transaction.component) {
     case TransactingComponent.SWAP:
-      return await swapTransaction(transaction, userAddress, dex, toolkit);
+      return await swapTransaction(transaction, userAddress, toolkit, adapter);
     case TransactingComponent.ADD_LIQUIDITY:
       return await addLiquidityTransaction(
         transaction,
         userAddress,
-        dex,
-        toolkit
+        toolkit,
+        adapter
       );
     case TransactingComponent.REMOVE_LIQUIDITY:
       return await removeLiquidityTransaction(
         transaction,
         userAddress,
-        dex,
-        toolkit
+        toolkit,
+        adapter
       );
   }
 }
+
 const swapTransaction = async (
   transaction: Transaction,
   userAddress: string,
-  dex: string,
-  toolkit: TezosToolkit
+  toolkit: TezosToolkit,
+  adapter: IPoolAdapter
 ): Promise<SuccessRecord> => {
-  switch (transaction.sendAsset[0].name) {
-    case Token.XTZ:
-      return {
-        ...(await xtzToToken(
-          transaction.sendAmount[0].mantissa,
-          transaction.receiveAmount[0].mantissa,
-          userAddress,
-          dex,
-          toolkit
-        )),
-        tx: transaction,
-      };
-    case Token.TzBTC:
-      return {
-        ...(await tokenToXtz(
-          transaction.sendAmount[0].mantissa,
-          transaction.receiveAmount[0].mantissa,
-          userAddress,
-          dex,
-          transaction.sendAsset[0].address,
-          toolkit,
-          transaction.slippage
-        )),
-        tx: transaction,
-      };
+  const inputToken = transaction.sendAsset[0].name as Token;
+  const inputAmount = transaction.sendAmount[0].mantissa;
+  const minOutputAmount = transaction.receiveAmount[0].mantissa;
+  const slippage = transaction.slippage;
 
-    default:
-      console.log("Unimplemented swap asset :", transaction.sendAsset[0].name);
-      throw Errors.INTERNAL;
+  const opHash = await adapter.executeSwap(
+    toolkit,
+    userAddress,
+    inputToken,
+    inputAmount,
+    minOutputAmount,
+    slippage
+  );
+
+  return {
+    opHash,
+    tx: transaction,
+  };
+};
+
+const addLiquidityTransaction = async (
+  transaction: Transaction,
+  userAddress: string,
+  toolkit: TezosToolkit,
+  adapter: IPoolAdapter
+): Promise<SuccessRecord> => {
+  if (!transaction.sendAmount[1] || !transaction.sendAsset[1]) {
+    console.log("addLiquidity requires send Pair");
+    throw Errors.INTERNAL;
   }
+
+  // Get pool config to determine token order
+  const poolConfig = adapter.poolConfig;
+  const isFirstAssetTokenA =
+    transaction.sendAsset[0].name === poolConfig.tokenA;
+
+  const tokenAAmount = isFirstAssetTokenA
+    ? transaction.sendAmount[0].mantissa
+    : transaction.sendAmount[1].mantissa;
+
+  const tokenBAmount = isFirstAssetTokenA
+    ? transaction.sendAmount[1].mantissa
+    : transaction.sendAmount[0].mantissa;
+
+  const minLpTokens = transaction.receiveAmount[0].mantissa;
+  const slippage = transaction.slippage;
+
+  const opHash = await adapter.executeAddLiquidity(
+    toolkit,
+    userAddress,
+    tokenAAmount,
+    tokenBAmount,
+    minLpTokens,
+    slippage
+  );
+
+  return {
+    opHash,
+    tx: transaction,
+  };
 };
 
 const removeLiquidityTransaction = async (
   transaction: Transaction,
   userAddress: string,
-  dex: string,
-  toolkit: TezosToolkit
+  toolkit: TezosToolkit,
+  adapter: IPoolAdapter
 ): Promise<SuccessRecord> => {
+  const lpTokenAmount = transaction.sendAmount[0].mantissa;
+
+  const opHash = await adapter.executeRemoveLiquidity(
+    toolkit,
+    userAddress,
+    lpTokenAmount
+  );
+
   return {
-    ...(await removeLiquidity(
-      transaction.sendAmount[0].mantissa,
-      userAddress,
-      dex,
-      toolkit
-    )),
+    opHash,
     tx: transaction,
   };
-};
-const addLiquidityTransaction = async (
-  transaction: Transaction,
-  userAddress: string,
-  dex: string,
-  toolkit: TezosToolkit
-): Promise<SuccessRecord> => {
-  if (transaction.sendAmount[1] && transaction.sendAsset[1]) {
-    switch (transaction.sendAsset[0].name) {
-      case Token.XTZ:
-        return {
-          ...(await buyLiquidityShares(
-            transaction.sendAmount[0].mantissa,
-            transaction.sendAmount[1].mantissa,
-            transaction.receiveAmount[0].mantissa,
-            new BigNumber(transaction.slippage),
-            userAddress,
-            dex,
-            transaction.sendAsset[1].address,
-            toolkit
-          )),
-          tx: transaction,
-        };
-      case Token.TzBTC:
-        return {
-          ...(await buyLiquidityShares(
-            transaction.sendAmount[1].mantissa,
-            transaction.sendAmount[0].mantissa,
-            transaction.receiveAmount[0].mantissa,
-            new BigNumber(transaction.slippage),
-            userAddress,
-            dex,
-            transaction.sendAsset[0].address,
-            toolkit
-          )),
-          tx: transaction,
-        };
-      default:
-        console.log(
-          "Unimplemented addLiquidtiy asset :",
-          transaction.sendAsset[0].name
-        );
-        throw Errors.INTERNAL;
-    }
-  } else {
-    console.log(" addLiquidity requires send Pair");
-    throw Errors.INTERNAL;
-  }
 };
 
 export const decimals = {
@@ -150,6 +130,8 @@ export const decimals = {
   TzBTC: 8,
   Sirius: 0,
   Sirs: 0,
+  USDtz: 6,
+  LP_XTZUSDtz: 6,
 };
 
 export function tokenMantissaToDecimal(
@@ -162,6 +144,7 @@ export function tokenMantissaToDecimal(
 
   return decimal;
 }
+
 export function tokenDecimalToMantissa(
   decimalAmount: BigNumber | number | string,
   asset: Token

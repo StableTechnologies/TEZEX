@@ -6,7 +6,7 @@ import {
   getAssetStateByTransactionTypeAndAsset,
   transactionToAssetStates,
 } from "../functions/util";
-import { estimate } from "../functions/estimates";
+import { estimateWithAdapter } from "../functions/estimates";
 import {
   Transaction,
   TransactionStatus,
@@ -20,10 +20,13 @@ import {
 
 import { debounce, eq } from "lodash";
 import { useDebounce } from "usehooks-ts";
+import { PoolRegistry } from "../adapters/poolRegistry";
+import { NetworkContext } from "../contexts/network";
 export interface TransactionOps {
   initialize: (
     sendAsset: AssetOrAssetPair,
     recieveAsset: AssetOrAssetPair,
+    poolId: string,
     sendAmount?: Amount,
     receiveAmount?: Amount,
     slippage?: number
@@ -55,6 +58,7 @@ export function useTransaction(
   }
 ): TransactionOps {
   const wallet = useContext(WalletContext);
+  const network = useContext(NetworkContext);
   const [counter, setCounter] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [assetStates, setAssetStates] = useState<AssetState[]>([]);
@@ -124,7 +128,7 @@ export function useTransaction(
       if (!eq(currentTransaction, transaction)) {
         internalUpdate(currentTransaction, loading, trackAsset);
       }
-      if (update && wallet.lbContractStorage) {
+      if (update && currentTransaction.poolId) {
         updateAmount(update.sendAmount, update.slippage);
       }
     }
@@ -148,6 +152,7 @@ export function useTransaction(
       initialize(
         transaction.sendAsset,
         transaction.receiveAsset,
+        transaction.poolId,
         undefined,
         undefined,
         transaction.slippage
@@ -172,6 +177,7 @@ export function useTransaction(
     async (
       sendAsset: AssetOrAssetPair,
       receiveAsset: AssetOrAssetPair,
+      poolId: string,
       sendAmount?: Amount,
       receiveAmount?: Amount,
       slippage?: number
@@ -181,6 +187,7 @@ export function useTransaction(
           component,
           sendAsset,
           receiveAsset,
+          poolId,
           sendAmount,
           receiveAmount,
           slippage
@@ -210,6 +217,7 @@ export function useTransaction(
           await initialize(
             oldTransaction.receiveAsset,
             oldTransaction.sendAsset,
+            oldTransaction.poolId,
             oldTransaction.receiveAmount,
             undefined,
             oldTransaction.slippage
@@ -220,6 +228,7 @@ export function useTransaction(
             await initialize(
               [oldTransaction.sendAsset[1], oldTransaction.sendAsset[0]],
               oldTransaction.receiveAsset,
+              oldTransaction.poolId,
               [oldTransaction.sendAmount[1], oldTransaction.sendAmount[0]],
               oldTransaction.receiveAmount,
               oldTransaction.slippage
@@ -261,26 +270,28 @@ export function useTransaction(
         }
         // handle send amount update
         if (sendAmount) {
-          if (wallet.lbContractStorage) {
-            const updatedTransaction: Transaction = {
-              ...transaction,
-              sendAmount: !transaction.sendAmount[1]
-                ? [balanceBuilder(sendAmount, transaction.sendAsset[0], false)]
-                : [
-                    balanceBuilder(sendAmount, transaction.sendAsset[0], false),
-                    transaction.sendAmount[1],
-                  ],
-            };
-            const _transaction: Transaction = estimate(
-              updatedTransaction,
-              wallet.lbContractStorage
-            );
-            updated = await wallet.updateAmount(
-              _transaction.component,
-              _transaction.sendAmount,
-              _transaction.receiveAmount
-            );
-          }
+          const adapter = PoolRegistry.getAdapter(transaction.poolId);
+
+          const updatedTransaction: Transaction = {
+            ...transaction,
+            sendAmount: !transaction.sendAmount[1]
+              ? [balanceBuilder(sendAmount, transaction.sendAsset[0], false)]
+              : [
+                  balanceBuilder(sendAmount, transaction.sendAsset[0], false),
+                  transaction.sendAmount[1],
+                ],
+          };
+          const toolkit = wallet.toolkit || network.toolkit;
+          const _transaction: Transaction = await estimateWithAdapter(
+            updatedTransaction,
+            toolkit,
+            adapter
+          );
+          updated = await wallet.updateAmount(
+            _transaction.component,
+            _transaction.sendAmount,
+            _transaction.receiveAmount
+          );
         }
       }
       return updated;
