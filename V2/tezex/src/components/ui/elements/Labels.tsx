@@ -2,15 +2,15 @@ import React, { FC } from "react";
 
 import style from "./style";
 import useStyles from "../../../hooks/styles";
+import { useNetwork } from "../../../hooks/network";
 
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Tooltip from "@mui/material/Tooltip";
-import infoIcon from "../../../assets/infoIcon.svg";
 
-import xtzTzbtcIcon from "../../../assets/xtzTzbtcIcon.svg";
-import sirsIcon from "../../../assets/sirsIcon.svg";
+import infoIcon from "../../../assets/infoIcon.svg";
 import rightArrow from "../../../assets/rightArrow.svg";
+
 interface ISlippageLabel {
   scalingKey?: string;
 }
@@ -47,27 +47,70 @@ export const SlippageLabel: FC<ISlippageLabel> = (props) => {
   );
 };
 interface IAddLiquidityTokens {
+  poolId: string;
   scalingKey?: string;
 }
+
 export const AddliquidityTokens: FC<IAddLiquidityTokens> = (props) => {
   const styles = useStyles(style, props.scalingKey);
+  const network = useNetwork();
+
+  // Get pool config
+  const pool = network.getAllPools().find((p) => p.id === props.poolId);
+
+  if (!pool) {
+    console.error(`Pool not found: ${props.poolId}`);
+    return null;
+  }
+
+  // Get assets
+  const tokenA = network.getAsset(pool.tokenA);
+  const tokenB = network.getAsset(pool.tokenB);
+  const lpToken = network.getAsset(pool.lpToken);
+
   return (
     <Box sx={styles.addLiquidityTokens}>
-      <img
-        style={styles.addLiquidityTokens.sendAssetsIcon}
-        src={xtzTzbtcIcon}
-        alt="xtzTzbtcIcon"
-      />
+      {/* Send assets with label */}
+      <Box sx={styles.addLiquidityTokens.sendAssetsContainer}>
+        {/* Overlapping icons */}
+        <Box sx={styles.addLiquidityTokens.sendAssetsIconsWrapper}>
+          <img
+            style={styles.addLiquidityTokens.sendAssetIcon}
+            src={tokenA.logo}
+            alt={tokenA.label}
+          />
+          <img
+            style={styles.addLiquidityTokens.sendAssetIcon2}
+            src={tokenB.logo}
+            alt={tokenB.label}
+          />
+        </Box>
+        {/* Label with token names */}
+        <Typography sx={styles.addLiquidityTokens.sendAssetsLabel}>
+          {tokenA.label}/{tokenB.label}
+        </Typography>
+      </Box>
+
+      {/* Arrow */}
       <img
         style={styles.addLiquidityTokens.rightArrow}
         src={rightArrow}
-        alt="rightArrow"
+        alt="arrow"
       />
-      <img
-        style={styles.addLiquidityTokens.recieveAssetIcon}
-        src={sirsIcon}
-        alt="sirsIcon"
-      />
+
+      {/* Receive asset with label */}
+      <Box sx={styles.addLiquidityTokens.receiveAssetContainer}>
+        {/* LP token icon */}
+        <img
+          style={styles.addLiquidityTokens.receiveAssetIcon}
+          src={lpToken.logo}
+          alt={lpToken.label}
+        />
+        {/* Label with LP token name */}
+        <Typography sx={styles.addLiquidityTokens.receiveAssetLabel}>
+          {lpToken.label}
+        </Typography>
+      </Box>
     </Box>
   );
 };
