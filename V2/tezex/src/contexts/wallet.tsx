@@ -47,8 +47,6 @@ export interface WalletInfo {
   toolkit: TezosToolkit | null;
   setToolkit: React.Dispatch<React.SetStateAction<TezosToolkit | null>>;
   address: string | null;
-  // poolStorages: Map<string, LiquidityBakingStorageXTZ>;
-  // lbContractStorage: LiquidityBakingStorageXTZ | undefined;
   setAddress: React.Dispatch<React.SetStateAction<string | null>>;
   isWalletConnected: boolean;
   disconnect: () => Promise<void>;
@@ -61,11 +59,9 @@ export interface WalletInfo {
     receiveAmount?: Amount,
     slipppage?: number
   ) => Promise<boolean>;
-
   updateTransactionBalance: (
     component: TransactingComponent
   ) => Promise<boolean>;
-
   updateStatus: (
     component: TransactingComponent,
     transactionStatus: TransactionStatus
@@ -91,7 +87,6 @@ const defaultWalletInfo: WalletInfo = {
     throw new Error("setToolkit called outside of wallet provider");
   },
   address: null,
-  // poolStorages: new Map(),
   setAddress: () => {
     throw new Error("setAddress called outside of wallet provider");
   },

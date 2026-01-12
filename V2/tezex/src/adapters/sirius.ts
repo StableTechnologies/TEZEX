@@ -11,6 +11,7 @@ import BigNumber from "bignumber.js";
 import { Errors, Token } from "../types/general";
 import { PoolRegistry } from "./poolRegistry";
 import { PoolDataCache } from "../utils/poolDataCache";
+import { getTxDeadline } from "../functions/util";
 
 export class SiriusAdapter implements IPoolAdapter {
   private readonly FEE = 999; // 0.1% fee
@@ -163,7 +164,7 @@ export class SiriusAdapter implements IPoolAdapter {
     slippage: number
   ): Promise<string> {
     try {
-      const deadline = new Date(Date.now() + 60000).toISOString();
+      const deadline = getTxDeadline().toISOString();
       const tokenAddress = PoolRegistry.getAssetAddress(this.poolConfig.tokenB);
 
       const lbContract = await toolkit.wallet.at(this.poolConfig.address);
@@ -273,7 +274,7 @@ export class SiriusAdapter implements IPoolAdapter {
     lpTokenAmount: BigNumber
   ): Promise<string> {
     try {
-      const deadline = new Date(Date.now() + 60000).toISOString();
+      const deadline = getTxDeadline().toISOString();
 
       // Get expected amounts
       const estimate = await this.estimateRemoveLiquidity(
@@ -418,7 +419,7 @@ export class SiriusAdapter implements IPoolAdapter {
     minTokensBought: BigNumber
   ): Promise<string> {
     try {
-      const deadline = new Date(Date.now() + 60000).toISOString();
+      const deadline = getTxDeadline().toISOString();
       const lbContract = await toolkit.wallet.at(this.poolConfig.address);
 
       // Estimate gas
@@ -475,7 +476,7 @@ export class SiriusAdapter implements IPoolAdapter {
     minXtzBought: BigNumber
   ): Promise<string> {
     try {
-      const deadline = new Date(Date.now() + 60000).toISOString();
+      const deadline = getTxDeadline().toISOString();
       const tokenAddress = PoolRegistry.getAssetAddress(this.poolConfig.tokenB);
 
       const lbContract = await toolkit.wallet.at(this.poolConfig.address);

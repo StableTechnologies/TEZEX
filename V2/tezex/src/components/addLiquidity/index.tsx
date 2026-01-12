@@ -77,7 +77,7 @@ export const AddLiquidity: FC<IAddLiquidity> = (props) => {
       if (!pool) return network.getAsset(Token.Sirs);
       return network.getAsset(pool.lpToken);
     },
-    [network, currentPool]
+    [network]
   );
 
   const [assets, setAssets] = useState<[Asset, Asset, Asset]>([

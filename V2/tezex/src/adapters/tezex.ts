@@ -11,6 +11,7 @@ import {
 } from "../types/pools";
 import { PoolRegistry } from "./poolRegistry";
 import { PoolDataCache } from "../utils/poolDataCache";
+import { getTxDeadline } from "../functions/util";
 
 const viewCaller = "tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU";
 
@@ -79,7 +80,7 @@ export class TezexAdapter implements IPoolAdapter {
         return requiredToken;
       } else {
         // User input USDtz, calculate required XTZ
-        // Formula: ceildiv(tokenAmount * xtzPool, tokenPool)
+        // Formula: floordiv(tokenAmount * xtzPool, tokenPool)
         const numerator = inputAmount.times(tokenAPool);
         const requiredXtz = numerator
           .dividedBy(tokenBPool)
@@ -164,7 +165,7 @@ export class TezexAdapter implements IPoolAdapter {
     slippage: number
   ): Promise<string> {
     try {
-      const deadline = new Date(Date.now() + 60000).toISOString(); // 1 minute from now
+      const deadline = getTxDeadline().toISOString();
       const contract = await toolkit.wallet.at(this.poolConfig.address);
       const isXtzInput = inputToken === Token.XTZ;
 
@@ -267,7 +268,7 @@ export class TezexAdapter implements IPoolAdapter {
   ): Promise<string> {
     try {
       const contract = await toolkit.wallet.at(this.poolConfig.address);
-      const deadline = new Date(Date.now() + 60000).toISOString();
+      const deadline = getTxDeadline().toISOString();
       const tokenAddress = this.getTokenAddress(this.poolConfig.tokenB);
       const tokenContract = await toolkit.wallet.at(tokenAddress);
 
@@ -360,7 +361,7 @@ export class TezexAdapter implements IPoolAdapter {
   ): Promise<string> {
     try {
       const contract = await toolkit.wallet.at(this.poolConfig.address);
-      const deadline = new Date(Date.now() + 60000).toISOString();
+      const deadline = getTxDeadline().toISOString();
 
       // Get estimates for min amounts
       const estimate = await this.estimateRemoveLiquidity(

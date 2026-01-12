@@ -14,6 +14,8 @@ import {
 
 import { tokenDecimalToMantissa, tokenMantissaToDecimal } from "./scaling";
 
+const DEADLINE_OFFSET_MS = 60000;
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function debounce<F extends (...args: any[]) => any>(
   fn: F,
@@ -194,4 +196,8 @@ export function formatWithSubscript(
     .join("");
 
   return `0.0${subscriptNumberOfZeroes}${significantPart}`;
+}
+
+export function getTxDeadline(): Date {
+  return new Date(Date.now() + DEADLINE_OFFSET_MS);
 }
