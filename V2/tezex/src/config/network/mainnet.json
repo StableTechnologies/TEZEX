@@ -1,9 +1,25 @@
 {
   "tezosServer": "https://mainnet.api.tez.ie",
-  "dex": {
-    "name": "Sirius",
-    "address": "KT1TxqZ8QtKvLu3V3JH7Gx58n7Co8pgtpQU5"
-  },
+  "pools": [
+    {
+      "id": "xtz-tzbtc-sirius",
+      "name": "Sirius",
+      "type": "SIRIUS",
+      "address": "KT1TxqZ8QtKvLu3V3JH7Gx58n7Co8pgtpQU5",
+      "tokenA": "XTZ",
+      "tokenB": "TzBTC",
+      "lpToken": "Sirs"
+    },
+    {
+      "id": "xtz-usdtz-tezex",
+      "name": "TEZEX",
+      "type": "TEZEX XTZ-USDtz",
+      "address": "KT1VqphtqcszFRi9gzhLTgMBopDw1xQ1UzBd",
+      "tokenA": "XTZ",
+      "tokenB": "USDtz",
+      "lpToken": "LP_XTZUSDtz"
+    }
+  ],
   "assets": [
     {
       "name": "XTZ",
@@ -25,6 +41,20 @@
       "logo": "/assets/tzbtcLogo.svg",
       "address": "KT1PWx2mnDueood7fEmfbBDKx1D9BAnnXitn",
       "decimals": 8
+    },
+    {
+      "name": "USDtz",
+      "label": "USDtz",
+      "logo": "/assets/usdtzLogo.svg",
+      "address": "KT1LN4LPSqTMS7Sd2CJw4bbDGRkMv2t68Fy9",
+      "decimals": 6
+    },
+    {
+      "name": "LP_XTZUSDtz",
+      "label": "LP-XTZUSDtz",
+      "logo": "/assets/lpxtzusdtzLogo.svg",
+      "address": "KT1Np5pCBF6vkvPTGxUVFZZpUaqPQfKjEsLQ",
+      "decimals": 6
     }
   ]
 }

@@ -3,24 +3,84 @@ const style = (theme, scale = 1) => {
   return {
     addLiquidityTokens: {
       "&.MuiBox-root": {
-        width: `calc(18.9vw * ${scale})`,
-        alignContent: "center",
         display: "flex",
         flexDirection: "row",
-        justifyContent: "space-between",
+        alignItems: "center",
+        gap: `calc(1vw * ${scale})`,
       },
-      recieveAssetIcon: {
-        width: `calc(6.1vw * ${scale})`,
+
+      sendAssetsContainer: {
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: `calc(0.3vw * ${scale})`,
       },
-      rightArrow: {
+
+      sendAssetsIconsWrapper: {
+        display: "flex",
+        alignItems: "center",
         position: "relative",
-        width: `calc(1.67vw * ${scale})`,
-        bottom: `calc(0.7vw * ${scale})`,
       },
-      sendAssetsIcon: {
-        width: `calc(7.1vw * ${scale})`,
+
+      sendAssetIcon: {
+        width: `calc(2.2vw * ${scale})`,
+        height: `calc(2.2vw * ${scale})`,
+        borderRadius: "50%",
+        border: `calc(0.12vw * ${scale}) solid #E1E1E1`,
+        backgroundColor: "white",
+        position: "relative",
+        zIndex: 2,
+      },
+
+      sendAssetIcon2: {
+        width: `calc(2.2vw * ${scale})`,
+        height: `calc(2.2vw * ${scale})`,
+        borderRadius: "50%",
+        border: `calc(0.12vw * ${scale}) solid #E1E1E1`,
+        backgroundColor: "white",
+        marginLeft: `calc(-0.7vw * ${scale})`,
+        position: "relative",
+        zIndex: 1,
+      },
+
+      sendAssetsLabel: {
+        fontSize: `calc(0.85vw * ${scale})`,
+        color: "#383636ff",
+        fontWeight: 500,
+        lineHeight: 1,
+        whiteSpace: "nowrap",
+      },
+
+      rightArrow: {
+        width: `calc(1.5vw * ${scale})`,
+        height: `calc(1.5vw * ${scale})`,
+        paddingBottom: `calc(0.3vw * ${scale})`,
+      },
+
+      receiveAssetContainer: {
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: `calc(0.3vw * ${scale})`,
+      },
+
+      receiveAssetIcon: {
+        width: `calc(2.2vw * ${scale})`,
+        height: `calc(2.2vw * ${scale})`,
+        borderRadius: "50%",
+        border: `calc(0.12vw * ${scale}) solid #E1E1E1`,
+        backgroundColor: "white",
+      },
+
+      receiveAssetLabel: {
+        fontSize: `calc(0.85vw * ${scale})`,
+        color: "#383636ff",
+        fontWeight: 500,
+        lineHeight: 1,
+        whiteSpace: "nowrap",
       },
     },
+
     slippageLabel: {
       typography: {
         fontSize: `calc(.972vw * ${scale})`,

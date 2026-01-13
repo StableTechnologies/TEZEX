@@ -33,6 +33,8 @@ export enum Token {
   XTZ = "XTZ",
   TzBTC = "TzBTC",
   Sirs = "Sirs",
+  USDtz = "USDtz",
+  LP_XTZUSDtz = "LP_XTZUSDtz",
 }
 
 export interface Balance {
@@ -125,6 +127,7 @@ export interface Transaction {
   id: Id;
   network: NetworkType;
   component: TransactingComponent;
+  poolId: string;
   sendAsset: AssetOrAssetPair;
   sendAmount: Amount;
   sendAssetBalance: Amount;

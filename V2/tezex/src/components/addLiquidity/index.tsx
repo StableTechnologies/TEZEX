@@ -13,12 +13,9 @@ import {
 } from "../../types/general";
 
 import { UserAmountField, Slippage } from "../../components/ui/elements/inputs";
-import {
-  SlippageLabel,
-  AddliquidityTokens,
-} from "../../components/ui/elements/Labels";
+import { SlippageLabel } from "../../components/ui/elements/Labels";
 import { useSession } from "../../hooks/session";
-import { useWalletOps, WalletOps } from "../../hooks/wallet";
+import { useWallet, useWalletOps, WalletOps } from "../../hooks/wallet";
 import { useNetwork } from "../../hooks/network";
 
 import Grid2 from "@mui/material/Unstable_Grid2";
@@ -29,11 +26,12 @@ import CardHeader from "@mui/material/CardHeader";
 import Typography from "@mui/material/Typography";
 import style from "./style";
 import useStyles from "../../hooks/styles";
-import sirsSmall from "../../assets/sirsSmall.svg";
 import Box from "@mui/material/Box";
 import { BrowserView, MobileView } from "react-device-detect";
 import { useTransaction } from "../../hooks/transaction";
 import { eq } from "lodash";
+import { PoolSelector } from "../ui/elements/PoolSelector";
+import { getBalance } from "../../functions/beacon";
 
 export interface IAddLiquidity {
   orientation: "portrait" | "landscape";
@@ -45,6 +43,7 @@ export const AddLiquidity: FC<IAddLiquidity> = (props) => {
   const styles = useStyles(style, scalingKey, false, props.orientation);
   const walletGridSize = styles.isLandScape ? 5 : 12;
   const network = useNetwork();
+  const wallet = useWallet();
 
   // load wallet operations for component
   const walletOps: WalletOps = useWalletOps(TransactingComponent.ADD_LIQUIDITY);
@@ -63,11 +62,53 @@ export const AddLiquidity: FC<IAddLiquidity> = (props) => {
   const send2 = 1;
   const receive = 2;
 
+  const availablePools = network.getAllPools();
+
+  const [selectedPoolId, setSelectedPoolId] = useState<string>(
+    transactionOps.getActiveTransaction()?.poolId || availablePools[0]?.id || ""
+  );
+  const currentPool = availablePools.find((p) => p.id === selectedPoolId);
+  const [poolBalances, setPoolBalances] = useState<Map<string, string>>(
+    new Map()
+  );
+
+  const getLPToken = useCallback(
+    (pool: typeof currentPool): Asset => {
+      if (!pool) return network.getAsset(Token.Sirs);
+      return network.getAsset(pool.lpToken);
+    },
+    [network]
+  );
+
   const [assets, setAssets] = useState<[Asset, Asset, Asset]>([
-    network.getAsset(Token.XTZ),
-    network.getAsset(Token.TzBTC),
-    network.getAsset(Token.Sirs),
+    network.getAsset(currentPool?.tokenA || Token.XTZ),
+    network.getAsset(currentPool?.tokenB || Token.TzBTC),
+    getLPToken(currentPool),
   ]);
+
+  const handlePoolChange = useCallback(
+    async (newPoolId: string) => {
+      const pool = network.getAllPools().find((p) => p.id === newPoolId);
+      if (!pool) return;
+
+      setSelectedPoolId(newPoolId);
+      const newAssets: [Asset, Asset, Asset] = [
+        network.getAsset(pool.tokenA),
+        network.getAsset(pool.tokenB),
+        getLPToken(pool),
+      ];
+      setAssets(newAssets);
+
+      // Re-initialize transaction with new pool
+      await transactionOps.initialize(
+        [newAssets[0], newAssets[1]],
+        [newAssets[2]],
+        newPoolId
+      );
+    },
+    [network, getLPToken, transactionOps]
+  );
+
   const session = useSession();
 
   // used to set input to editable or not
@@ -83,7 +124,8 @@ export const AddLiquidity: FC<IAddLiquidity> = (props) => {
     // initialize transaction
     const transactionInitialized = await transactionOps.initialize(
       [assets[send1], assets[send2]],
-      [assets[receive]]
+      [assets[receive]],
+      selectedPoolId
     );
 
     //if transaction initialized update balance and set loading params to false
@@ -135,6 +177,38 @@ export const AddLiquidity: FC<IAddLiquidity> = (props) => {
     const lqt = transaction?.receiveAmount[0].string;
     return lqt || "0";
   }, [transactionOps.getActiveTransaction]);
+
+  // Fetch balances for all pools
+  useEffect(() => {
+    const fetchBalances = async () => {
+      if (!wallet.address || !wallet.toolkit) return;
+
+      const balances = new Map<string, string>();
+      const pools = network.getAllPools();
+
+      for (const pool of pools) {
+        try {
+          const lpToken = network.getAsset(pool.lpToken);
+          const balance = await getBalance(
+            wallet.toolkit,
+            wallet.address,
+            lpToken
+          );
+          balances.set(pool.id, balance.string || "0");
+        } catch (error) {
+          balances.set(pool.id, "0");
+        }
+      }
+
+      setPoolBalances(balances);
+    };
+
+    fetchBalances();
+  }, [wallet.address, wallet.toolkit, network]);
+
+  const getPoolBalance = (poolId: string): string => {
+    return poolBalances.get(poolId) || "0";
+  };
 
   //callback to handle transaction status changes
   const monitorStatus = useCallback(() => {
@@ -230,14 +304,20 @@ export const AddLiquidity: FC<IAddLiquidity> = (props) => {
               <CardHeader
                 sx={styles.cardHeader}
                 title={
-                  <Box>
+                  <Box display="flex" flexDirection="column" gap={1}>
                     <NavLiquidity scalingKey={scalingKey} />
+
+                    <PoolSelector
+                      selectedPoolId={selectedPoolId}
+                      onChange={handlePoolChange}
+                      disabled={!canUpdate}
+                      sx={styles.poolSelector}
+                      showBalance={true}
+                      getPoolBalance={getPoolBalance}
+                    />
                   </Box>
                 }
               />
-              <Grid2 sx={styles.tokens}>
-                <AddliquidityTokens scalingKey={scalingKey} />
-              </Grid2>
               <CardContent
                 sx={
                   !styles.isMobileLandscape
@@ -298,12 +378,12 @@ export const AddLiquidity: FC<IAddLiquidity> = (props) => {
                     You will recieve about{" "}
                     <img
                       style={styles.infoTextIcon}
-                      src={sirsSmall}
-                      alt="SirsLogo"
+                      src={getLPToken(currentPool).logo}
+                      alt="LPLogo"
                     />
                     <Typography sx={styles.infoRecieve}>
                       {" "}
-                      {getLiquidityTokens()} Sirs
+                      {getLiquidityTokens()} {getLPToken(currentPool).label}
                     </Typography>
                     for this deposit
                   </Typography>
@@ -378,14 +458,23 @@ export const AddLiquidity: FC<IAddLiquidity> = (props) => {
                 <CardHeader
                   sx={styles.cardHeader}
                   title={
-                    <Box>
+                    <Box
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="space-between"
+                      gap={1.5}
+                    >
                       <NavLiquidity scalingKey={scalingKey} />
+
+                      <PoolSelector
+                        selectedPoolId={selectedPoolId}
+                        onChange={handlePoolChange}
+                        disabled={!canUpdate}
+                        sx={styles.poolSelector}
+                      />
                     </Box>
                   }
                 />
-                <Grid2 sx={styles.tokens}>
-                  <AddliquidityTokens scalingKey={scalingKey} />
-                </Grid2>
                 <CardContent sx={styles.cardContent}>
                   <Grid2 xs={12} sx={styles.cardContendGrid}>
                     <Grid2 xs={5} sx={styles.input}>
@@ -427,14 +516,14 @@ export const AddLiquidity: FC<IAddLiquidity> = (props) => {
                       You will recieve about{" "}
                       <img
                         style={styles.infoTextIcon}
-                        src={sirsSmall}
-                        alt="SirsLogo"
+                        src={getLPToken(currentPool).logo}
+                        alt="LPLogo"
                       />
                       <Typography sx={styles.infoRecieve}>
                         {" "}
-                        {getLiquidityTokens()} Sirs
+                        {getLiquidityTokens()} {getLPToken(currentPool).label}
                       </Typography>
-                      for this deiposit
+                      for this deposit
                     </Typography>
                   </Grid2>
                 </CardContent>

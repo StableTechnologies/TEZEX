@@ -34,6 +34,7 @@ const style = (theme, scale = 1) => {
       top: "77.5%",
       width: `calc(28.33vw * ${scale})`,
       justifyContent: "center",
+      marginTop: `calc(1vw * ${scale})`,
     },
     swapToggle: {
       display: "flex",
@@ -41,14 +42,15 @@ const style = (theme, scale = 1) => {
       top: "38.3%",
       zIndex: 5,
       height: `calc(1vw * ${scale})`,
+      marginTop: `calc(1vw * ${scale})`,
     },
     cardHeaderTypography: {
       fontSize: `calc(1.4vw * ${scale})`,
     },
     cardHeader: {
-      paddingTop: `calc(1.59vw * ${scale})`,
-      paddingBottom: `calc(0vw * ${scale})`,
-      paddingLeft: `calc(1.59vw * ${scale})`,
+      paddingTop: `calc(2vw * ${scale})`,
+      paddingLeft: `calc(2vw * ${scale})`,
+      paddingRight: `calc(1.5vw * ${scale})`,
       fontSize: `calc(1vw * ${scale})`,
       textAlign: "left",
     },
@@ -59,6 +61,7 @@ const style = (theme, scale = 1) => {
         width: `calc(28.34vw * ${scale})`,
         height: `calc(6.94vw * ${scale})`,
       },
+      marginTop: `calc(1.5vw * ${scale})`,
     },
     input2: {
       position: "absolute",
@@ -67,6 +70,8 @@ const style = (theme, scale = 1) => {
         width: `calc(28.34vw * ${scale})`,
         height: `calc(6.94vw * ${scale})`,
       },
+      marginTop: `calc(1vw * ${scale})`,
+      marginBottom: `calc(1vw * ${scale})`,
     },
     cardcontent: {
       "&.MuiCardContent-root": {},
@@ -126,7 +131,7 @@ const style = (theme, scale = 1) => {
     card: {
       overflow: "hidden",
       position: "relative",
-      height: `calc(28.49vw * ${scale})`,
+      height: `calc(30vw * ${scale})`,
       width: `calc(30.56vw * ${scale})`,
       borderRadius: `calc(1.38vw * ${scale})`,
       zIndex: 9,
@@ -146,6 +151,32 @@ const style = (theme, scale = 1) => {
       display: "flex",
       position: "relative",
       justifyContent: "center",
+    },
+    poolSelector: {
+      minWidth: `calc(10.5vw * ${scale})`,
+
+      "& .MuiSelect-select": {
+        fontSize: `calc(0.75vw * ${scale})`,
+        paddingY: `calc(0.6vw * ${scale})`,
+        paddingX: `calc(0.9vw * ${scale})`,
+      },
+
+      "& .MuiOutlinedInput-root": {
+        height: `calc(2.6vw * ${scale})`,
+        backgroundColor: "#FAFAFA",
+        border: "1px solid #E1E1E1",
+        transition: "all 0.2s ease",
+
+        "&:hover": {
+          backgroundColor: "#F5F5F5",
+          borderColor: "#CCCCCC",
+        },
+
+        "&.Mui-focused": {
+          backgroundColor: "#FFFFFF",
+          borderColor: "#999999",
+        },
+      },
     },
   };
 };
