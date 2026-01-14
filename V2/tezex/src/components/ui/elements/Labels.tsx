@@ -76,12 +76,12 @@ export const AddliquidityTokens: FC<IAddLiquidityTokens> = (props) => {
         <Box sx={styles.addLiquidityTokens.sendAssetsIconsWrapper}>
           <img
             style={styles.addLiquidityTokens.sendAssetIcon}
-            src={tokenA.logo}
+            src={process.env.PUBLIC_URL + tokenA.logo}
             alt={tokenA.label}
           />
           <img
             style={styles.addLiquidityTokens.sendAssetIcon2}
-            src={tokenB.logo}
+            src={process.env.PUBLIC_URL + tokenB.logo}
             alt={tokenB.label}
           />
         </Box>
@@ -103,7 +103,7 @@ export const AddliquidityTokens: FC<IAddLiquidityTokens> = (props) => {
         {/* LP token icon */}
         <img
           style={styles.addLiquidityTokens.receiveAssetIcon}
-          src={lpToken.logo}
+          src={process.env.PUBLIC_URL + lpToken.logo}
           alt={lpToken.label}
         />
         {/* Label with LP token name */}

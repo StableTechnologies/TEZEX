@@ -198,7 +198,7 @@ export const RemoveLiquidity: FC<IRemoveLiquidity> = (props) => {
         {/* Token 1 */}
         <Box display="flex" alignItems="center">
           <img
-            src={token1.logo}
+            src={process.env.PUBLIC_URL + token1.logo}
             alt={token1.label}
             style={styles.receiveIcons}
           />
@@ -213,7 +213,7 @@ export const RemoveLiquidity: FC<IRemoveLiquidity> = (props) => {
         {/* Token 2 */}
         <Box display="flex" alignItems="center">
           <img
-            src={token2.logo}
+            src={process.env.PUBLIC_URL + token2.logo}
             alt={token2.label}
             style={styles.receiveIcons}
           />

@@ -378,7 +378,9 @@ export const AddLiquidity: FC<IAddLiquidity> = (props) => {
                     You will recieve about{" "}
                     <img
                       style={styles.infoTextIcon}
-                      src={getLPToken(currentPool).logo}
+                      src={
+                        process.env.PUBLIC_URL + getLPToken(currentPool).logo
+                      }
                       alt="LPLogo"
                     />
                     <Typography sx={styles.infoRecieve}>
@@ -516,7 +518,9 @@ export const AddLiquidity: FC<IAddLiquidity> = (props) => {
                       You will recieve about{" "}
                       <img
                         style={styles.infoTextIcon}
-                        src={getLPToken(currentPool).logo}
+                        src={
+                          process.env.PUBLIC_URL + getLPToken(currentPool).logo
+                        }
                         alt="LPLogo"
                       />
                       <Typography sx={styles.infoRecieve}>
