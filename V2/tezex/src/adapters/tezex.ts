@@ -177,8 +177,12 @@ export class TezexAdapter implements IPoolAdapter {
       if (isXtzInput) {
         // XTZ -> Token swap
         // xtzToToken(address to, nat minTokensBought, timestamp deadline)
-        const operation = contract.methods
-          .xtzToToken(userAddress, minWithSlippage.toNumber(), deadline)
+        const operation = contract.methodsObject
+          .xtzToToken({
+            to: userAddress,
+            minTokensBought: minWithSlippage.toNumber(),
+            deadline,
+          })
           .toTransferParams({ amount: inputAmount.toNumber(), mutez: true });
 
         const estimate = await toolkit.estimate.transfer(operation);
@@ -198,20 +202,20 @@ export class TezexAdapter implements IPoolAdapter {
         const tokenContract = await toolkit.wallet.at(tokenAddress);
 
         // Estimate gas for batch
-        const approve0 = tokenContract.methods.approve(
-          this.poolConfig.address,
-          0
-        );
-        const approve = tokenContract.methods.approve(
-          this.poolConfig.address,
-          inputAmount.integerValue(BigNumber.ROUND_DOWN).toNumber()
-        );
-        const swap = contract.methods.tokenToXtz(
-          userAddress,
-          inputAmount.integerValue(BigNumber.ROUND_DOWN).toNumber(),
-          minWithSlippage.toNumber(),
-          deadline
-        );
+        const approve0 = tokenContract.methodsObject.approve({
+          spender: this.poolConfig.address,
+          value: 0,
+        });
+        const approve = tokenContract.methodsObject.approve({
+          spender: this.poolConfig.address,
+          value: inputAmount.integerValue(BigNumber.ROUND_DOWN).toNumber(),
+        });
+        const swap = contract.methodsObject.tokenToXtz({
+          to: userAddress,
+          tokensSold: inputAmount.integerValue(BigNumber.ROUND_DOWN).toNumber(),
+          minXtzBought: minWithSlippage.toNumber(),
+          deadline,
+        });
 
         const estimate = await toolkit.estimate.batch([
           { kind: OpKind.TRANSACTION, ...approve0.toTransferParams() },
@@ -278,20 +282,20 @@ export class TezexAdapter implements IPoolAdapter {
         .integerValue(BigNumber.ROUND_DOWN);
 
       // addLiquidity(address owner, nat minLqtMinted, nat maxTokensDeposited, timestamp deadline)
-      const approve0 = tokenContract.methods.approve(
-        this.poolConfig.address,
-        0
-      );
-      const approve = tokenContract.methods.approve(
-        this.poolConfig.address,
-        maxTokensDeposited.toNumber()
-      );
-      const addLiq = contract.methods.addLiquidity(
-        userAddress,
-        minLpTokens.integerValue(BigNumber.ROUND_DOWN).toNumber(),
-        maxTokensDeposited.toNumber(),
-        deadline
-      );
+      const approve0 = tokenContract.methodsObject.approve({
+        spender: this.poolConfig.address,
+        value: 0,
+      });
+      const approve = tokenContract.methodsObject.approve({
+        spender: this.poolConfig.address,
+        value: maxTokensDeposited.toNumber(),
+      });
+      const addLiq = contract.methodsObject.addLiquidity({
+        owner: userAddress,
+        minLqtMinted: minLpTokens.integerValue(BigNumber.ROUND_DOWN).toNumber(),
+        maxTokensDeposited: maxTokensDeposited.toNumber(),
+        deadline,
+      });
 
       // Estimate gas
       const estimate = await toolkit.estimate.batch([
@@ -378,14 +382,16 @@ export class TezexAdapter implements IPoolAdapter {
         .integerValue(BigNumber.ROUND_DOWN);
 
       // removeLiquidity(address to, nat lqtBurned, mutez minXtzWithdrawn, nat minTokensWithdrawn, timestamp deadline)
-      const operation = await contract.methods
-        .removeLiquidity(
-          userAddress,
-          lpTokenAmount.integerValue(BigNumber.ROUND_DOWN).toNumber(),
-          minTokenA.toNumber(), // mutez
-          minTokenB.toNumber(), // nat
-          deadline
-        )
+      const operation = await contract.methodsObject
+        .removeLiquidity({
+          to: userAddress,
+          lqtBurned: lpTokenAmount
+            .integerValue(BigNumber.ROUND_DOWN)
+            .toNumber(),
+          minXtzWithdrawn: minTokenA.toNumber(), // mutez
+          minTokensWithdrawn: minTokenB.toNumber(), // nat
+          deadline,
+        })
         .send();
 
       await operation.confirmation();

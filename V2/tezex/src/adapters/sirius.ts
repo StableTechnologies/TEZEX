@@ -12,6 +12,7 @@ import { Errors, Token } from "../types/general";
 import { PoolRegistry } from "./poolRegistry";
 import { PoolDataCache } from "../utils/poolDataCache";
 import { getTxDeadline } from "../functions/util";
+import { WalletContract } from "@taquito/taquito";
 
 export class SiriusAdapter implements IPoolAdapter {
   private readonly FEE = 999; // 0.1% fee
@@ -167,8 +168,12 @@ export class SiriusAdapter implements IPoolAdapter {
       const deadline = getTxDeadline().toISOString();
       const tokenAddress = PoolRegistry.getAssetAddress(this.poolConfig.tokenB);
 
-      const lbContract = await toolkit.wallet.at(this.poolConfig.address);
-      const tokenContract = await toolkit.wallet.at(tokenAddress);
+      const lbContract: WalletContract = await toolkit.wallet.at(
+        this.poolConfig.address
+      );
+      const tokenContract: WalletContract = await toolkit.wallet.at(
+        tokenAddress
+      );
 
       // Calculate max tokens with slippage
       const maxTokensSold = this.addSlippage(
@@ -177,20 +182,20 @@ export class SiriusAdapter implements IPoolAdapter {
       );
 
       // Prepare operations
-      const approve0 = tokenContract.methods.approve(
-        this.poolConfig.address,
-        0
-      );
-      const approve1 = tokenContract.methods.approve(
-        this.poolConfig.address,
-        maxTokensSold.toNumber()
-      );
-      const addLiq = lbContract.methods.addLiquidity(
-        userAddress,
-        minLpTokens.integerValue(BigNumber.ROUND_DOWN).toNumber(),
-        maxTokensSold.toNumber(),
-        deadline
-      );
+      const approve0 = tokenContract.methodsObject.approve({
+        spender: this.poolConfig.address,
+        value: 0,
+      });
+      const approve1 = tokenContract.methodsObject.approve({
+        spender: this.poolConfig.address,
+        value: maxTokensSold.toNumber(),
+      });
+      const addLiq = lbContract.methodsObject.addLiquidity({
+        owner: userAddress,
+        minLqtMinted: minLpTokens.integerValue(BigNumber.ROUND_DOWN).toNumber(),
+        maxTokensDeposited: maxTokensSold.toNumber(),
+        deadline,
+      });
 
       const estimate = await toolkit.estimate
         .batch([
@@ -274,6 +279,8 @@ export class SiriusAdapter implements IPoolAdapter {
     lpTokenAmount: BigNumber
   ): Promise<string> {
     try {
+      // Entrypoint signature:
+      // removeLiquidity(address to, nat lqtBurned, mutez minXtzWithdrawn, nat minTokensWithdrawn, timestamp deadline)
       const deadline = getTxDeadline().toISOString();
 
       // Get expected amounts
@@ -287,18 +294,20 @@ export class SiriusAdapter implements IPoolAdapter {
       // Estimate gas
       const gasEstimate = await toolkit.estimate
         .transfer(
-          lbContract.methods
-            .removeLiquidity(
-              userAddress,
-              lpTokenAmount.integerValue(BigNumber.ROUND_DOWN).toNumber(),
-              estimate.tokenAAmount
+          lbContract.methodsObject
+            .removeLiquidity({
+              to: userAddress,
+              lqtBurned: lpTokenAmount
                 .integerValue(BigNumber.ROUND_DOWN)
                 .toNumber(),
-              estimate.tokenBAmount
+              minXtzWithdrawn: estimate.tokenAAmount
                 .integerValue(BigNumber.ROUND_DOWN)
                 .toNumber(),
-              deadline
-            )
+              minTokensWithdrawn: estimate.tokenBAmount
+                .integerValue(BigNumber.ROUND_DOWN)
+                .toNumber(),
+              deadline,
+            })
             .toTransferParams()
         )
         .catch((error) => {
@@ -311,14 +320,20 @@ export class SiriusAdapter implements IPoolAdapter {
       }
 
       // Execute
-      const op = await lbContract.methods
-        .removeLiquidity(
-          userAddress,
-          lpTokenAmount.integerValue(BigNumber.ROUND_DOWN).toNumber(),
-          estimate.tokenAAmount.integerValue(BigNumber.ROUND_DOWN).toNumber(),
-          estimate.tokenBAmount.integerValue(BigNumber.ROUND_DOWN).toNumber(),
-          deadline
-        )
+      const op = await lbContract.methodsObject
+        .removeLiquidity({
+          to: userAddress,
+          lqtBurned: lpTokenAmount
+            .integerValue(BigNumber.ROUND_DOWN)
+            .toNumber(),
+          minXtzWithdrawn: estimate.tokenAAmount
+            .integerValue(BigNumber.ROUND_DOWN)
+            .toNumber(),
+          minTokensWithdrawn: estimate.tokenBAmount
+            .integerValue(BigNumber.ROUND_DOWN)
+            .toNumber(),
+          deadline,
+        })
         .send({
           fee: gasEstimate.suggestedFeeMutez,
           gasLimit: gasEstimate.gasLimit,
@@ -420,13 +435,19 @@ export class SiriusAdapter implements IPoolAdapter {
   ): Promise<string> {
     try {
       const deadline = getTxDeadline().toISOString();
+      // Entrypoint signature:
+      // xtzToToken(address to, nat minTokensBought, timestamp deadline)
       const lbContract = await toolkit.wallet.at(this.poolConfig.address);
 
       // Estimate gas
       const estimate = await toolkit.estimate
         .transfer(
-          lbContract.methods
-            .xtzToToken(userAddress, minTokensBought.toNumber(), deadline)
+          lbContract.methodsObject
+            .xtzToToken({
+              to: userAddress,
+              minTokensBought: minTokensBought.toNumber(),
+              deadline,
+            })
             .toTransferParams({
               amount: xtzAmount.toNumber(),
               mutez: true,
@@ -441,8 +462,12 @@ export class SiriusAdapter implements IPoolAdapter {
         throw Errors.GAS_ESTIMATION;
       }
 
-      const op = await lbContract.methods
-        .xtzToToken(userAddress, minTokensBought.toNumber(), deadline)
+      const op = await lbContract.methodsObject
+        .xtzToToken({
+          to: userAddress,
+          minTokensBought: minTokensBought.toNumber(),
+          deadline,
+        })
         .send({
           amount: xtzAmount.toNumber(),
           mutez: true,
@@ -477,26 +502,28 @@ export class SiriusAdapter implements IPoolAdapter {
   ): Promise<string> {
     try {
       const deadline = getTxDeadline().toISOString();
+      // Entrypoint signature:
+      // tokenToXtz(address to, nat tokensSold, mutez minXtzBought, timestamp deadline)
       const tokenAddress = PoolRegistry.getAssetAddress(this.poolConfig.tokenB);
 
       const lbContract = await toolkit.wallet.at(this.poolConfig.address);
       const tokenContract = await toolkit.wallet.at(tokenAddress);
 
       // Prepare operations
-      const approve0 = tokenContract.methods.approve(
-        this.poolConfig.address,
-        0
-      );
-      const approve = tokenContract.methods.approve(
-        this.poolConfig.address,
-        tokenAmount.integerValue(BigNumber.ROUND_DOWN).toNumber()
-      );
-      const transfer = lbContract.methods.tokenToXtz(
-        userAddress,
-        tokenAmount.integerValue(BigNumber.ROUND_DOWN).toNumber(),
-        minXtzBought.toNumber(),
-        deadline
-      );
+      const approve0 = tokenContract.methodsObject.approve({
+        spender: this.poolConfig.address,
+        value: 0,
+      });
+      const approve = tokenContract.methodsObject.approve({
+        spender: this.poolConfig.address,
+        value: tokenAmount.integerValue(BigNumber.ROUND_DOWN).toNumber(),
+      });
+      const transfer = lbContract.methodsObject.tokenToXtz({
+        to: userAddress,
+        tokensSold: tokenAmount.integerValue(BigNumber.ROUND_DOWN).toNumber(),
+        minXtzBought: minXtzBought.toNumber(),
+        deadline,
+      });
 
       // Estimate gas
       const estimate = await toolkit.estimate
