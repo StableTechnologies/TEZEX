@@ -10,7 +10,11 @@ import {
   SuccessRecord,
 } from "../../../../types/general";
 
-import { formatWithSubscript, shorten } from "../../../../functions/util";
+import {
+  formatWithSubscript,
+  getExplorer,
+  shorten,
+} from "../../../../functions/util";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
@@ -46,7 +50,8 @@ export interface IErrorAlert {
 
 const SuccessAlert: FC<ISuccessAlert> = (props) => {
   const styles = useStyles(style, props.scalingKey);
-  const explorerLink = "https://tzkt.io/" + props.successRecord.opHash;
+  const explorerLink =
+    getExplorer(props.successRecord.tx.network) + props.successRecord.opHash;
 
   const sendInfo = useMemo(() => {
     return props.successRecord.tx.sendAsset.map((asset, i) => (

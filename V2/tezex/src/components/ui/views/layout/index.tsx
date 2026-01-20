@@ -8,6 +8,7 @@ import Box from "@mui/material/Box";
 
 import style from "./style";
 import useStyles from "../../../../hooks/styles";
+import { Link, Typography } from "@mui/material";
 export interface ILayout {
   children:
     | JSX.Element[]
@@ -65,7 +66,20 @@ export const Layout: FC<ILayout> = (props) => {
           <MainWindow>{props.children}</MainWindow>
 
           {/* Bottom space for bars or notification */}
-          <Box sx={styles.bottomSpace}></Box>
+          <Box sx={styles.bottomSpace}>
+            <Typography sx={styles.bottomSpaceText}>
+              Data provided by
+              <Link
+                href="https://tzkt.io"
+                target="_blank"
+                rel="noopener noreferrer"
+                sx={styles.bottomSpaceLink}
+              >
+                TzKT
+              </Link>
+              API
+            </Typography>
+          </Box>
         </Box>
       </Box>
 

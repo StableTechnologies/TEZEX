@@ -206,7 +206,7 @@ export function WalletProvider(props: IWalletProvider) {
 
       try {
         const dAppClient = new DAppClient({
-          name: "TEZEX",
+          name: "Tezex",
           network: { type: network.network },
           preferredNetwork: network.network,
         });
@@ -447,7 +447,6 @@ export function WalletProvider(props: IWalletProvider) {
           ? receiveAmount
           : initBalance(receiveAsset);
 
-        console.log("initialise tx called for: ", network.network);
         const _transaction: Transaction = {
           id: uuidv4(),
 

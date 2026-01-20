@@ -7,10 +7,12 @@ import style from "./style";
 import useStyles from "../../hooks/styles";
 
 import { useSession } from "../../hooks/session";
+import Box from "@mui/material/Box";
 
 interface NavTabProps {
   label: string;
   href: string;
+  disabled?: boolean;
 }
 
 function NavTabExternal(props: NavTabProps) {
@@ -26,19 +28,72 @@ function NavTabExternal(props: NavTabProps) {
   );
 }
 
+// TODO: Fallback to old implementation when Analytics page is ready
 function NavTab(props: NavTabProps) {
   const navigate = useNavigate();
+  const { disabled, label, ...restProps } = props;
   return (
-    <Tab
-      sx={{}}
-      onClick={(event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
-        event.preventDefault();
-        navigate(props.href);
-      }}
-      {...props}
-    />
+    <Box
+      sx={{ position: "relative", display: "inline-flex", overflow: "visible" }}
+    >
+      <Tab
+        sx={{
+          opacity: disabled ? 0.7 : 1,
+          cursor: disabled ? "not-allowed" : "pointer",
+        }}
+        onClick={(event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
+          event.preventDefault();
+          if (!disabled) {
+            navigate(props.href);
+          }
+        }}
+        label={label}
+        disabled={disabled}
+        {...restProps}
+      />
+      {disabled && (
+        <Box
+          sx={{
+            position: "absolute",
+            bottom: "18%",
+            right: "0%",
+            background: "transparent",
+            backdropFilter: "blur(1px)",
+            WebkitBackdropFilter: "blur(1px)",
+            color: "black",
+            fontSize: { xs: "8px", md: "9px" },
+            fontWeight: 700,
+            padding: "3px 10px",
+            textTransform: "uppercase",
+            letterSpacing: "0.4px",
+            transform: "rotate(-15deg)",
+            transformOrigin: "center",
+            pointerEvents: "none",
+            zIndex: 10,
+            borderRadius: "10px",
+            whiteSpace: "nowrap",
+          }}
+        >
+          Soon
+        </Box>
+      )}
+    </Box>
   );
 }
+
+// function NavTab(props: NavTabProps) {
+//   const navigate = useNavigate();
+//   return (
+//     <Tab
+//       sx={{}}
+//       onClick={(event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
+//         event.preventDefault();
+//         navigate(props.href);
+//       }}
+//       {...props}
+//     />
+//   );
+// }
 
 interface INavApp {
   scalingKey?: string;
@@ -81,7 +136,7 @@ export const NavApp: FC<INavApp> = (props) => {
       }}
     >
       <NavTab label="Home" href="/home/swap" />
-      <NavTab label="Analytics" href="/Analytics" />
+      <NavTab disabled label="Analytics" href="/Analytics" />
       <NavTabExternal label="About" href={aboutRedirectUrl} />
     </Tabs>
   );

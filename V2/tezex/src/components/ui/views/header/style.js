@@ -67,16 +67,12 @@ const style = (theme, scale = 1) => {
     logoLarge: {
       display: "flex",
       width: `calc(11.35vw * ${scale})`,
-      //  "@media screen and (max-width: 768px)": {
-      //    width: "164px",
-      //  },
       "@media screen and (max-width: 246px)": {
         display: "none",
       },
     },
     logoSmall: {
       display: "none",
-      //Width: "",
       "@media screen and (max-width: 246px)": {
         display: "flex",
       },
@@ -92,7 +88,6 @@ const style = (theme, scale = 1) => {
       display: "flex",
       alignItems: "center",
       width: "100%",
-      //height: `calc(5vw * ${scale})`,
       left: "0px",
       top: "0px",
       background: "#FFFFFF",
@@ -103,11 +98,31 @@ const style = (theme, scale = 1) => {
       },
     },
 
+    networkSelector: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "flex-start",
+      flexShrink: 0,
+
+      paddingLeft: {
+        xs: `calc(2vw * ${scale})`,
+        sm: `calc(3vw * ${scale})`,
+        md: `calc(1.5vw * ${scale})`,
+        lg: `calc(1.8vw * ${scale})`,
+      },
+
+      marginRight: {
+        xs: "auto",
+        sm: "auto",
+        md: `calc(4vw * ${scale})`,
+        lg: `calc(14.5vw * ${scale})`,
+      },
+    },
+
     nav: {
       [theme.breakpoints.down("md")]: {
         display: "none",
       },
-
       alignContent: "center",
     },
 
@@ -115,7 +130,6 @@ const style = (theme, scale = 1) => {
       display: { xs: "none", sm: "none", md: "flex" },
       position: "absolute",
       right: "0px",
-      //left: `calc(51vw * ${scale})`,
       alignContent: "end",
       justifyContent: "flex-end",
     },
@@ -126,7 +140,6 @@ const style = (theme, scale = 1) => {
       display: { xs: "flex", sm: "flex", md: "none" },
       position: "absolute",
       right: "0px",
-      //left: `calc(51vw * ${scale})`,
       alignContent: "end",
       justifyContent: "flex-end",
     },

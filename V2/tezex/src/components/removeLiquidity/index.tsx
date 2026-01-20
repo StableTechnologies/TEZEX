@@ -80,7 +80,7 @@ export const RemoveLiquidity: FC<IRemoveLiquidity> = (props) => {
 
       return network.getAsset(pool.lpToken);
     },
-    [network]
+    [network.network]
   );
 
   const [assets, setAssets] = useState<[Asset, Asset, Asset]>([
@@ -120,7 +120,7 @@ export const RemoveLiquidity: FC<IRemoveLiquidity> = (props) => {
   // Fetch balances for all pools
   useEffect(() => {
     const fetchBalances = async () => {
-      if (!wallet.address || !wallet.toolkit) return;
+      if (!wallet.address || !network.toolkit) return;
 
       const balances = new Map<string, string>();
       const pools = network.getAllPools();
@@ -129,7 +129,7 @@ export const RemoveLiquidity: FC<IRemoveLiquidity> = (props) => {
         try {
           const lpToken = network.getAsset(pool.lpToken);
           const balance = await getBalance(
-            wallet.toolkit,
+            network.toolkit,
             wallet.address,
             lpToken
           );
@@ -143,7 +143,7 @@ export const RemoveLiquidity: FC<IRemoveLiquidity> = (props) => {
     };
 
     fetchBalances();
-  }, [wallet.address, wallet.toolkit, network]);
+  }, [wallet.address, network.toolkit, network]);
 
   const getPoolBalance = (poolId: string): string => {
     return poolBalances.get(poolId) || "0";
@@ -249,6 +249,10 @@ export const RemoveLiquidity: FC<IRemoveLiquidity> = (props) => {
     if (session.activeComponent !== TransactingComponent.REMOVE_LIQUIDITY)
       session.loadComponent(TransactingComponent.REMOVE_LIQUIDITY);
   });
+  useEffect(() => {
+    setLoading(true);
+  }, [network.network]);
+
   useEffect(() => {
     // get active transaction
     const transaction = transactionOps.getActiveTransaction();
