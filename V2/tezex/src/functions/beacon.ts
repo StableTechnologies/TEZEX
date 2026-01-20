@@ -1,11 +1,11 @@
 import { WalletInfo } from "../contexts/wallet";
 import { INetwork } from "../contexts/network";
-import { BeaconWallet } from "@taquito/beacon-wallet";
-import { TezosToolkit, MichelCodecPacker } from "@taquito/taquito";
+import { TezosToolkit } from "@taquito/taquito";
 import { BigNumber } from "bignumber.js";
 
 import { Token, Asset, Balance } from "../types/general";
 import { balanceBuilder } from "./util";
+import { DAppClient } from "@airgap/beacon-dapp";
 
 export async function getBalance(
   toolkit: TezosToolkit,
@@ -16,7 +16,7 @@ export async function getBalance(
     if (asset.name === Token.XTZ) {
       return await toolkit.tz.getBalance(address);
     } else {
-      const contract = await toolkit.wallet.at(asset.address);
+      const contract = await toolkit.contract.at(asset.address);
       return await contract.views.getBalance(address).read();
     }
   };
@@ -44,21 +44,16 @@ export default async function connectWallet(
   walletInfo: WalletInfo,
   network: INetwork
 ) {
-  const beaconWallet = new BeaconWallet({
+  const dAppClient = new DAppClient({
     name: "Tezex",
+    network: { type: network.network },
     preferredNetwork: network.network,
   });
 
-  const tezos = new TezosToolkit(network.info.tezosServer);
   let err = false;
   try {
-    await beaconWallet.requestPermissions({
-      network: { type: network.network },
-    });
-    const activeAccount = await beaconWallet.client.getActiveAccount();
-
-    tezos.setPackerProvider(new MichelCodecPacker());
-    tezos.setWalletProvider(beaconWallet);
+    await dAppClient.requestPermissions();
+    const activeAccount = await dAppClient.getActiveAccount();
     if (!activeAccount) {
       throw new Error("Could not connect");
     } else {
@@ -70,29 +65,8 @@ export default async function connectWallet(
   } finally {
     if (err) {
       walletInfo.setClient(null);
-      walletInfo.setToolkit(null);
     } else {
-      walletInfo.setClient(beaconWallet.client);
-      walletInfo.setToolkit(tezos);
+      walletInfo.setClient(dAppClient);
     }
-  }
-}
-
-export async function reconnectWallet(
-  walletInfo: WalletInfo,
-  network: INetwork
-) {
-  const beaconWallet = new BeaconWallet({
-    name: "Tezex",
-    preferredNetwork: network.network,
-  });
-  const activeAccount = await beaconWallet.client.getActiveAccount();
-  if (activeAccount) {
-    const tezos = new TezosToolkit(network.info.tezosServer);
-    tezos.setPackerProvider(new MichelCodecPacker());
-    tezos.setWalletProvider(beaconWallet);
-    walletInfo.setAddress(activeAccount.address);
-    walletInfo.setClient(beaconWallet.client);
-    walletInfo.setToolkit(tezos);
   }
 }

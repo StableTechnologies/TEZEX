@@ -1,8 +1,14 @@
-import React, { useCallback, createContext, useEffect, useState } from "react";
+import React, {
+  useCallback,
+  createContext,
+  useEffect,
+  useState,
+  useRef,
+} from "react";
 import { Draft } from "immer";
 import { useImmer } from "use-immer";
 import { Mutex } from "async-mutex";
-import { DAppClient } from "@airgap/beacon-dapp";
+import { DAppClient, NetworkType } from "@airgap/beacon-dapp";
 import {
   Transaction,
   Asset,
@@ -14,7 +20,6 @@ import {
   AssetOrAssetPair,
   Errors,
 } from "../types/general";
-import { TezosToolkit } from "@taquito/taquito";
 import { eq, isNumber } from "lodash";
 import { processTransaction } from "../functions/transactions";
 import { useNetwork } from "../hooks/network";
@@ -44,8 +49,6 @@ export enum WalletStatus {
 export interface WalletInfo {
   client: DAppClient | null;
   setClient: React.Dispatch<React.SetStateAction<DAppClient | null>>;
-  toolkit: TezosToolkit | null;
-  setToolkit: React.Dispatch<React.SetStateAction<TezosToolkit | null>>;
   address: string | null;
   setAddress: React.Dispatch<React.SetStateAction<string | null>>;
   isWalletConnected: boolean;
@@ -81,10 +84,6 @@ const defaultWalletInfo: WalletInfo = {
   client: null,
   setClient: () => {
     throw new Error("setClient called outside of wallet provider");
-  },
-  toolkit: null,
-  setToolkit: () => {
-    throw new Error("setToolkit called outside of wallet provider");
   },
   address: null,
   setAddress: () => {
@@ -143,8 +142,8 @@ export function WalletProvider(props: IWalletProvider) {
 
   const [isWalletConnected, setIsWalletConnected] = useState(false);
   const [client, setClient] = useState<DAppClient | null>(null);
-  const [toolkit, setToolkit] = useState<TezosToolkit | null>(null);
   const [address, setAddress] = useState<string | null>(null);
+  const hasReconnectedRef = useRef(false);
 
   const [assetBalances, setAssetBalances] = useState<AssetBalance[]>(
     network.info.assets.map((asset) => {
@@ -192,14 +191,65 @@ export function WalletProvider(props: IWalletProvider) {
     [findAssetBalance]
   );
 
+  useEffect(() => {
+    setTransactions({});
+  }, [network.network, setTransactions]);
+
+  // Auto-reconnect on mount (ONCE)
+  useEffect(() => {
+    const autoReconnect = async () => {
+      if (hasReconnectedRef.current) {
+        return;
+      }
+
+      hasReconnectedRef.current = true;
+
+      try {
+        const dAppClient = new DAppClient({
+          name: "TEZEX",
+          network: { type: network.network },
+          preferredNetwork: network.network,
+        });
+
+        const activeAccount = await dAppClient.getActiveAccount();
+
+        if (activeAccount && activeAccount.network.type === network.network) {
+          setAddress(activeAccount.address);
+          setClient(dAppClient);
+        } else {
+          await dAppClient.clearActiveAccount();
+          await dAppClient.destroy();
+        }
+      } catch (error) {
+        console.error("Auto-reconnect failed:", error);
+      }
+    };
+
+    autoReconnect();
+  }, []);
+
+  // Reset balances when network changes
+  useEffect(() => {
+    setAssetBalances(
+      network.info.assets.map((asset) => ({
+        balance: undefined,
+        asset: asset,
+      }))
+    );
+  }, [network.network]);
+
   // callback to update state of asset balances
   const updateBalances = useCallback(async () => {
-    if (address && toolkit && client) {
+    if (address && network.toolkit && client) {
       // get balances of all assets by mapping over current asset balances
       const _assetBalances: AssetBalance[] = await Promise.all(
         assetBalances.map(async (assetBalance: AssetBalance) => {
           return {
-            balance: await getBalance(toolkit, address, assetBalance.asset),
+            balance: await getBalance(
+              network.toolkit,
+              address,
+              assetBalance.asset
+            ),
             asset: assetBalance.asset,
           };
         })
@@ -207,7 +257,7 @@ export function WalletProvider(props: IWalletProvider) {
       //only update if balances have changed
       if (!eq(_assetBalances, assetBalances)) setAssetBalances(_assetBalances);
     }
-  }, [assetBalances, address, toolkit, client]);
+  }, [assetBalances, address, network.toolkit, client]);
 
   // load / update balances on wallet connection
   useEffect(() => {
@@ -216,6 +266,32 @@ export function WalletProvider(props: IWalletProvider) {
     };
     _updateBalances();
   }, [isWalletConnected]);
+
+  // Track previous network to detect changes
+  const previousNetworkRef = useRef<NetworkType>(network.network);
+
+  // Disconnect wallet when network changes
+  useEffect(() => {
+    const handleNetworkSwitch = async () => {
+      // Check if network actually changed
+      if (previousNetworkRef.current !== network.network) {
+        if (client && address && network.toolkit) {
+          try {
+            await client.clearActiveAccount();
+            await client.destroy();
+          } catch (error) {
+            console.error("Error clearing Beacon account:", error);
+          }
+
+          setAddress(null);
+          setClient(null);
+        }
+        previousNetworkRef.current = network.network;
+      }
+    };
+
+    handleNetworkSwitch();
+  }, [network.network, client, address]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -237,13 +313,13 @@ export function WalletProvider(props: IWalletProvider) {
   const transact = useCallback(
     async (transaction: Transaction): Promise<Transaction> => {
       // if the wallet is connected and the toolkit is defined
-      if (address && toolkit) {
+      if (address && network.toolkit && client) {
         // if the transaction is pending process it
         if (transaction.transactionStatus === TransactionStatus.PENDING) {
           const t: Transaction = await processTransaction(
             transaction,
             address,
-            toolkit
+            { toolkit: network.toolkit, client }
           )
             .then((success) => {
               // if the transaction is successful set success alert and update balances
@@ -271,7 +347,7 @@ export function WalletProvider(props: IWalletProvider) {
         }
       } else throw Error("wallet not Connected");
     },
-    [address, session.setAlert, toolkit]
+    [address, session.setAlert, network.toolkit]
   );
 
   // Effect to monitor transactions and send them for processing
@@ -371,6 +447,7 @@ export function WalletProvider(props: IWalletProvider) {
           ? receiveAmount
           : initBalance(receiveAsset);
 
+        console.log("initialise tx called for: ", network.network);
         const _transaction: Transaction = {
           id: uuidv4(),
 
@@ -390,12 +467,11 @@ export function WalletProvider(props: IWalletProvider) {
         };
 
         let transaction: Transaction = _transaction;
-        const _toolkit: TezosToolkit = toolkit || network.toolkit;
 
         const adapter = network.getPoolAdapter(poolId);
         transaction = await estimateWithAdapter(
           _transaction,
-          _toolkit,
+          network.toolkit,
           adapter
         );
 
@@ -682,6 +758,7 @@ export function WalletProvider(props: IWalletProvider) {
   const disconnect = async () => {
     if (client) {
       await client.clearActiveAccount();
+      await client.destroy();
     }
     setClient(null);
     setAddress(null);
@@ -690,8 +767,6 @@ export function WalletProvider(props: IWalletProvider) {
   const walletInfo: WalletInfo = {
     client,
     setClient,
-    toolkit,
-    setToolkit,
     address,
     setAddress,
     isWalletConnected,

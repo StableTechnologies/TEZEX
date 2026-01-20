@@ -1,6 +1,6 @@
 import { BigNumber } from "bignumber.js";
 import { TezosToolkit } from "@taquito/taquito";
-import { Token } from "./general";
+import { ExecutionKit, Token } from "./general";
 
 export enum PoolType {
   SIRIUS = "SIRIUS",
@@ -68,7 +68,7 @@ export interface IPoolAdapter {
   ): Promise<RemoveLiquidityEstimate>;
 
   executeSwap(
-    toolkit: TezosToolkit,
+    kit: ExecutionKit,
     userAddress: string,
     inputToken: Token,
     inputAmount: BigNumber,
@@ -77,7 +77,7 @@ export interface IPoolAdapter {
   ): Promise<string>; //  opHash
 
   executeAddLiquidity(
-    toolkit: TezosToolkit,
+    kit: ExecutionKit,
     userAddress: string,
     tokenAAmount: BigNumber,
     tokenBAmount: BigNumber,
@@ -86,7 +86,7 @@ export interface IPoolAdapter {
   ): Promise<string>; //  opHash
 
   executeRemoveLiquidity(
-    toolkit: TezosToolkit,
+    kit: ExecutionKit,
     userAddress: string,
     lpTokenAmount: BigNumber
   ): Promise<string>; //  opHash

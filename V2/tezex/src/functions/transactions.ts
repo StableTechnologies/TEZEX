@@ -5,33 +5,40 @@ import {
   Transaction,
   Token,
   TransactingComponent,
+  ExecutionKit,
 } from "../types/general";
-import { TezosToolkit } from "@taquito/taquito";
+import { TransferParams } from "@taquito/taquito";
 import { PoolRegistry } from "../adapters/poolRegistry";
 import { IPoolAdapter } from "../types/pools";
+import {
+  PartialTezosTransactionOperation,
+  TezosOperationType,
+} from "@airgap/beacon-sdk";
+
+const MUTEZ_IN_TEZ = 1_000_000;
 
 export async function processTransaction(
   transaction: Transaction,
   userAddress: string,
-  toolkit: TezosToolkit
+  kit: ExecutionKit
 ): Promise<SuccessRecord> {
   const adapter = PoolRegistry.getAdapter(transaction.poolId);
 
   switch (transaction.component) {
     case TransactingComponent.SWAP:
-      return await swapTransaction(transaction, userAddress, toolkit, adapter);
+      return await swapTransaction(transaction, userAddress, kit, adapter);
     case TransactingComponent.ADD_LIQUIDITY:
       return await addLiquidityTransaction(
         transaction,
         userAddress,
-        toolkit,
+        kit,
         adapter
       );
     case TransactingComponent.REMOVE_LIQUIDITY:
       return await removeLiquidityTransaction(
         transaction,
         userAddress,
-        toolkit,
+        kit,
         adapter
       );
   }
@@ -40,7 +47,7 @@ export async function processTransaction(
 const swapTransaction = async (
   transaction: Transaction,
   userAddress: string,
-  toolkit: TezosToolkit,
+  kit: ExecutionKit,
   adapter: IPoolAdapter
 ): Promise<SuccessRecord> => {
   const inputToken = transaction.sendAsset[0].name as Token;
@@ -49,7 +56,7 @@ const swapTransaction = async (
   const slippage = transaction.slippage;
 
   const opHash = await adapter.executeSwap(
-    toolkit,
+    kit,
     userAddress,
     inputToken,
     inputAmount,
@@ -66,7 +73,7 @@ const swapTransaction = async (
 const addLiquidityTransaction = async (
   transaction: Transaction,
   userAddress: string,
-  toolkit: TezosToolkit,
+  kit: ExecutionKit,
   adapter: IPoolAdapter
 ): Promise<SuccessRecord> => {
   if (!transaction.sendAmount[1] || !transaction.sendAsset[1]) {
@@ -91,7 +98,7 @@ const addLiquidityTransaction = async (
   const slippage = transaction.slippage;
 
   const opHash = await adapter.executeAddLiquidity(
-    toolkit,
+    kit,
     userAddress,
     tokenAAmount,
     tokenBAmount,
@@ -108,13 +115,13 @@ const addLiquidityTransaction = async (
 const removeLiquidityTransaction = async (
   transaction: Transaction,
   userAddress: string,
-  toolkit: TezosToolkit,
+  kit: ExecutionKit,
   adapter: IPoolAdapter
 ): Promise<SuccessRecord> => {
   const lpTokenAmount = transaction.sendAmount[0].mantissa;
 
   const opHash = await adapter.executeRemoveLiquidity(
-    toolkit,
+    kit,
     userAddress,
     lpTokenAmount
   );
@@ -155,4 +162,42 @@ export function tokenDecimalToMantissa(
     .decimalPlaces(0, 1);
 
   return mantissa;
+}
+
+/**
+ * Convert Taquito TransferParams to Beacon TezosTransactionOperation
+ */
+export function transferParamsToBeaconOp(
+  transferParams: TransferParams
+): PartialTezosTransactionOperation {
+  // Convert amount to mutez string
+  const amountInMutez = transferParams.mutez
+    ? transferParams.amount.toString()
+    : (transferParams.amount * MUTEZ_IN_TEZ).toString();
+
+  const operation: PartialTezosTransactionOperation = {
+    kind: TezosOperationType.TRANSACTION,
+    destination: transferParams.to,
+    amount: amountInMutez,
+  };
+
+  // Add optional fields if present
+  if (transferParams.parameter) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    operation.parameters = transferParams.parameter as any;
+  }
+
+  if (transferParams.fee !== undefined) {
+    operation.fee = transferParams.fee.toString();
+  }
+
+  if (transferParams.gasLimit !== undefined) {
+    operation.gas_limit = transferParams.gasLimit.toString();
+  }
+
+  if (transferParams.storageLimit !== undefined) {
+    operation.storage_limit = transferParams.storageLimit.toString();
+  }
+
+  return operation;
 }

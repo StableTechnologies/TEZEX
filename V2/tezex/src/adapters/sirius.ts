@@ -1,4 +1,4 @@
-import { OpKind, TezosToolkit } from "@taquito/taquito";
+import { TezosToolkit } from "@taquito/taquito";
 import {
   AddLiquidityEstimate,
   IPoolAdapter,
@@ -8,11 +8,12 @@ import {
   SwapEstimate,
 } from "../types/pools";
 import BigNumber from "bignumber.js";
-import { Errors, Token } from "../types/general";
+import { Errors, ExecutionKit, Token } from "../types/general";
 import { PoolRegistry } from "./poolRegistry";
 import { PoolDataCache } from "../utils/poolDataCache";
 import { getTxDeadline } from "../functions/util";
-import { WalletContract } from "@taquito/taquito";
+import { DAppClient } from "@airgap/beacon-dapp";
+import { transferParamsToBeaconOp } from "../functions/transactions";
 
 export class SiriusAdapter implements IPoolAdapter {
   private readonly FEE = 999; // 0.1% fee
@@ -125,13 +126,14 @@ export class SiriusAdapter implements IPoolAdapter {
   }
 
   async executeSwap(
-    toolkit: TezosToolkit,
+    kit: ExecutionKit,
     userAddress: string,
     inputToken: Token,
     inputAmount: BigNumber,
     minOutputAmount: BigNumber,
     slippage: number
   ): Promise<string> {
+    const { client, toolkit } = kit;
     const isXtzInput = inputToken === Token.XTZ;
 
     const minWithSlippage = this.removeSlippage(slippage, minOutputAmount);
@@ -139,6 +141,7 @@ export class SiriusAdapter implements IPoolAdapter {
     let opHash: string;
     if (isXtzInput) {
       opHash = await this.executeXtzToToken(
+        client,
         toolkit,
         userAddress,
         inputAmount,
@@ -146,6 +149,7 @@ export class SiriusAdapter implements IPoolAdapter {
       );
     } else {
       opHash = await this.executeTokenToXtz(
+        client,
         toolkit,
         userAddress,
         inputAmount,
@@ -157,23 +161,20 @@ export class SiriusAdapter implements IPoolAdapter {
   }
 
   async executeAddLiquidity(
-    toolkit: TezosToolkit,
+    kit: ExecutionKit,
     userAddress: string,
     tokenAAmount: BigNumber,
     tokenBAmount: BigNumber,
     minLpTokens: BigNumber,
     slippage: number
   ): Promise<string> {
+    const { client, toolkit } = kit;
     try {
       const deadline = getTxDeadline().toISOString();
       const tokenAddress = PoolRegistry.getAssetAddress(this.poolConfig.tokenB);
 
-      const lbContract: WalletContract = await toolkit.wallet.at(
-        this.poolConfig.address
-      );
-      const tokenContract: WalletContract = await toolkit.wallet.at(
-        tokenAddress
-      );
+      const lbContract = await toolkit.contract.at(this.poolConfig.address);
+      const tokenContract = await toolkit.contract.at(tokenAddress);
 
       // Calculate max tokens with slippage
       const maxTokensSold = this.addSlippage(
@@ -197,74 +198,24 @@ export class SiriusAdapter implements IPoolAdapter {
         deadline,
       });
 
-      const estimate = await toolkit.estimate
-        .batch([
-          { kind: OpKind.TRANSACTION, ...approve0.toTransferParams() },
-          { kind: OpKind.TRANSACTION, ...approve1.toTransferParams() },
-          {
-            kind: OpKind.TRANSACTION,
-            ...addLiq.toTransferParams(),
+      // Convert to Beacon format
+      const operations = [
+        transferParamsToBeaconOp(approve0.toTransferParams()),
+        transferParamsToBeaconOp(approve1.toTransferParams()),
+        transferParamsToBeaconOp(
+          addLiq.toTransferParams({
             amount: tokenAAmount.toNumber(),
             mutez: true,
-          },
-          { kind: OpKind.TRANSACTION, ...approve0.toTransferParams() },
-        ])
-        .catch((error) => {
-          console.error("Gas estimation failed:", error);
-          throw Errors.GAS_ESTIMATION;
-        });
-      if (!estimate) {
-        throw Errors.GAS_ESTIMATION;
-      }
-
-      // Execute batch
-      const batch = toolkit.wallet.batch().with([
-        {
-          kind: OpKind.TRANSACTION,
-          ...approve0.toTransferParams({
-            fee: estimate[0].suggestedFeeMutez,
-            gasLimit: estimate[0].gasLimit,
-            storageLimit: estimate[0].storageLimit,
-          }),
-        },
-        {
-          kind: OpKind.TRANSACTION,
-          ...approve1.toTransferParams({
-            fee: estimate[1].suggestedFeeMutez,
-            gasLimit: estimate[1].gasLimit,
-            storageLimit: estimate[1].storageLimit,
-          }),
-        },
-        {
-          kind: OpKind.TRANSACTION,
-          ...addLiq.toTransferParams({
-            fee: estimate[2].suggestedFeeMutez,
-            gasLimit: estimate[2].gasLimit,
-            storageLimit: estimate[2].storageLimit,
-          }),
-          amount: tokenAAmount.toNumber(),
-          mutez: true,
-        },
-        {
-          kind: OpKind.TRANSACTION,
-          ...approve0.toTransferParams({
-            fee: estimate[3].suggestedFeeMutez,
-            gasLimit: estimate[3].gasLimit,
-            storageLimit: estimate[3].storageLimit,
-          }),
-        },
-      ]);
-
-      const batchOp = await batch.send().catch((error) => {
-        console.error("Batch send failed:", error);
-        throw Errors.TRANSACTION_FAILED;
+          })
+        ),
+        transferParamsToBeaconOp(approve0.toTransferParams()),
+      ];
+      const response = await client.requestOperation({
+        operationDetails: operations,
       });
-      await batchOp.confirmation().catch((error) => {
-        console.error("Batch confirmation failed:", error);
-        throw Errors.TRANSACTION_FAILED;
-      });
+
       await this.getPoolData(toolkit, true);
-      return batchOp.opHash;
+      return response.transactionHash;
     } catch (error) {
       if (Object.values(Errors).includes(error as Errors)) {
         throw error;
@@ -274,10 +225,11 @@ export class SiriusAdapter implements IPoolAdapter {
   }
 
   async executeRemoveLiquidity(
-    toolkit: TezosToolkit,
+    kit: ExecutionKit,
     userAddress: string,
     lpTokenAmount: BigNumber
   ): Promise<string> {
+    const { client, toolkit } = kit;
     try {
       // Entrypoint signature:
       // removeLiquidity(address to, nat lqtBurned, mutez minXtzWithdrawn, nat minTokensWithdrawn, timestamp deadline)
@@ -291,65 +243,27 @@ export class SiriusAdapter implements IPoolAdapter {
 
       const lbContract = await toolkit.wallet.at(this.poolConfig.address);
 
-      // Estimate gas
-      const gasEstimate = await toolkit.estimate
-        .transfer(
-          lbContract.methodsObject
-            .removeLiquidity({
-              to: userAddress,
-              lqtBurned: lpTokenAmount
-                .integerValue(BigNumber.ROUND_DOWN)
-                .toNumber(),
-              minXtzWithdrawn: estimate.tokenAAmount
-                .integerValue(BigNumber.ROUND_DOWN)
-                .toNumber(),
-              minTokensWithdrawn: estimate.tokenBAmount
-                .integerValue(BigNumber.ROUND_DOWN)
-                .toNumber(),
-              deadline,
-            })
-            .toTransferParams()
-        )
-        .catch((error) => {
-          console.error("Gas estimation failed:", error);
-          throw Errors.GAS_ESTIMATION;
-        });
-
-      if (!gasEstimate) {
-        throw Errors.GAS_ESTIMATION;
-      }
-
-      // Execute
-      const op = await lbContract.methodsObject
-        .removeLiquidity({
-          to: userAddress,
-          lqtBurned: lpTokenAmount
-            .integerValue(BigNumber.ROUND_DOWN)
-            .toNumber(),
-          minXtzWithdrawn: estimate.tokenAAmount
-            .integerValue(BigNumber.ROUND_DOWN)
-            .toNumber(),
-          minTokensWithdrawn: estimate.tokenBAmount
-            .integerValue(BigNumber.ROUND_DOWN)
-            .toNumber(),
-          deadline,
-        })
-        .send({
-          fee: gasEstimate.suggestedFeeMutez,
-          gasLimit: gasEstimate.gasLimit,
-          storageLimit: gasEstimate.storageLimit,
-        })
-        .catch((error) => {
-          console.error("Transaction send failed:", error);
-          throw Errors.TRANSACTION_FAILED;
-        });
-
-      await op.confirmation().catch((error) => {
-        console.error("Transaction confirmation failed:", error);
-        throw Errors.TRANSACTION_FAILED;
+      const operation = lbContract.methodsObject.removeLiquidity({
+        to: userAddress,
+        lqtBurned: lpTokenAmount.integerValue(BigNumber.ROUND_DOWN).toNumber(),
+        minXtzWithdrawn: estimate.tokenAAmount
+          .integerValue(BigNumber.ROUND_DOWN)
+          .toNumber(),
+        minTokensWithdrawn: estimate.tokenBAmount
+          .integerValue(BigNumber.ROUND_DOWN)
+          .toNumber(),
+        deadline,
       });
+      // Execute
+      const operationRequest = transferParamsToBeaconOp(
+        operation.toTransferParams()
+      );
+      const response = await client.requestOperation({
+        operationDetails: [operationRequest],
+      });
+
       await this.getPoolData(toolkit, true);
-      return op.opHash;
+      return response.transactionHash;
     } catch (error) {
       if (Object.values(Errors).includes(error as Errors)) {
         throw error;
@@ -428,6 +342,7 @@ export class SiriusAdapter implements IPoolAdapter {
   }
 
   private async executeXtzToToken(
+    client: DAppClient,
     toolkit: TezosToolkit,
     userAddress: string,
     xtzAmount: BigNumber,
@@ -437,55 +352,26 @@ export class SiriusAdapter implements IPoolAdapter {
       const deadline = getTxDeadline().toISOString();
       // Entrypoint signature:
       // xtzToToken(address to, nat minTokensBought, timestamp deadline)
-      const lbContract = await toolkit.wallet.at(this.poolConfig.address);
+      const lbContract = await toolkit.contract.at(this.poolConfig.address);
 
-      // Estimate gas
-      const estimate = await toolkit.estimate
-        .transfer(
-          lbContract.methodsObject
-            .xtzToToken({
-              to: userAddress,
-              minTokensBought: minTokensBought.toNumber(),
-              deadline,
-            })
-            .toTransferParams({
-              amount: xtzAmount.toNumber(),
-              mutez: true,
-            })
-        )
-        .catch((error) => {
-          console.error("Gas estimation failed:", error);
-          throw Errors.GAS_ESTIMATION;
-        });
-
-      if (!estimate) {
-        throw Errors.GAS_ESTIMATION;
-      }
-
-      const op = await lbContract.methodsObject
-        .xtzToToken({
-          to: userAddress,
-          minTokensBought: minTokensBought.toNumber(),
-          deadline,
-        })
-        .send({
-          amount: xtzAmount.toNumber(),
-          mutez: true,
-          fee: estimate.suggestedFeeMutez,
-          gasLimit: estimate.gasLimit,
-          storageLimit: estimate.storageLimit,
-        })
-        .catch((error) => {
-          console.error("Transaction send failed:", error);
-          throw Errors.TRANSACTION_FAILED;
-        });
-
-      await op.confirmation().catch((error) => {
-        console.error("Transaction confirmation failed:", error);
-        throw Errors.TRANSACTION_FAILED;
+      const operation = lbContract.methodsObject.xtzToToken({
+        to: userAddress,
+        minTokensBought: minTokensBought.toNumber(),
+        deadline,
       });
 
-      return op.opHash;
+      // Convert to Beacon format
+      const operationRequest = transferParamsToBeaconOp(
+        operation.toTransferParams({
+          amount: xtzAmount.toNumber(),
+          mutez: true,
+        })
+      );
+      const response = await client.requestOperation({
+        operationDetails: [operationRequest],
+      });
+
+      return response.transactionHash;
     } catch (error) {
       if (Object.values(Errors).includes(error as Errors)) {
         throw error;
@@ -495,6 +381,7 @@ export class SiriusAdapter implements IPoolAdapter {
   }
 
   private async executeTokenToXtz(
+    client: DAppClient,
     toolkit: TezosToolkit,
     userAddress: string,
     tokenAmount: BigNumber,
@@ -506,8 +393,8 @@ export class SiriusAdapter implements IPoolAdapter {
       // tokenToXtz(address to, nat tokensSold, mutez minXtzBought, timestamp deadline)
       const tokenAddress = PoolRegistry.getAssetAddress(this.poolConfig.tokenB);
 
-      const lbContract = await toolkit.wallet.at(this.poolConfig.address);
-      const tokenContract = await toolkit.wallet.at(tokenAddress);
+      const lbContract = await toolkit.contract.at(this.poolConfig.address);
+      const tokenContract = await toolkit.contract.at(tokenAddress);
 
       // Prepare operations
       const approve0 = tokenContract.methodsObject.approve({
@@ -525,56 +412,16 @@ export class SiriusAdapter implements IPoolAdapter {
         deadline,
       });
 
-      // Estimate gas
-      const estimate = await toolkit.estimate
-        .batch([
-          { kind: OpKind.TRANSACTION, ...approve0.toTransferParams() },
-          { kind: OpKind.TRANSACTION, ...approve.toTransferParams() },
-          { kind: OpKind.TRANSACTION, ...transfer.toTransferParams() },
-        ])
-        .catch((error) => {
-          console.error("Gas estimation failed:", error);
-          throw Errors.GAS_ESTIMATION;
-        });
-      if (!estimate) throw Errors.GAS_ESTIMATION;
-
-      // Execute batch
-      const batch = toolkit.wallet.batch().with([
-        {
-          kind: OpKind.TRANSACTION,
-          ...approve0.toTransferParams({
-            fee: estimate[0].suggestedFeeMutez,
-            gasLimit: estimate[0].gasLimit,
-            storageLimit: estimate[0].storageLimit,
-          }),
-        },
-        {
-          kind: OpKind.TRANSACTION,
-          ...approve.toTransferParams({
-            fee: estimate[1].suggestedFeeMutez,
-            gasLimit: estimate[1].gasLimit,
-            storageLimit: estimate[1].storageLimit,
-          }),
-        },
-        {
-          kind: OpKind.TRANSACTION,
-          ...transfer.toTransferParams({
-            fee: estimate[2].suggestedFeeMutez,
-            gasLimit: estimate[2].gasLimit,
-            storageLimit: estimate[2].storageLimit,
-          }),
-        },
-      ]);
-
-      const batchOp = await batch.send().catch((error) => {
-        console.error("Batch send failed:", error);
-        throw Errors.TRANSACTION_FAILED;
+      // Convert to Beacon format
+      const operations = [
+        transferParamsToBeaconOp(approve0.toTransferParams()),
+        transferParamsToBeaconOp(approve.toTransferParams()),
+        transferParamsToBeaconOp(transfer.toTransferParams()),
+      ];
+      const response = await client.requestOperation({
+        operationDetails: operations,
       });
-      await batchOp.confirmation().catch((error) => {
-        console.error("Batch confirmation failed:", error);
-        throw Errors.TRANSACTION_FAILED;
-      });
-      return batchOp.opHash;
+      return response.transactionHash;
     } catch (error) {
       if (Object.values(Errors).includes(error as Errors)) {
         throw error;
