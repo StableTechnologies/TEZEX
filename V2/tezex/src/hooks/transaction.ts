@@ -21,7 +21,8 @@ import {
 import { debounce, eq } from "lodash";
 import { useDebounce } from "usehooks-ts";
 import { PoolRegistry } from "../adapters/poolRegistry";
-import { NetworkContext } from "../contexts/network";
+import { useNetwork } from "./network";
+
 export interface TransactionOps {
   initialize: (
     sendAsset: AssetOrAssetPair,
@@ -58,7 +59,7 @@ export function useTransaction(
   }
 ): TransactionOps {
   const wallet = useContext(WalletContext);
-  const network = useContext(NetworkContext);
+  const network = useNetwork();
   const [counter, setCounter] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [assetStates, setAssetStates] = useState<AssetState[]>([]);
@@ -281,10 +282,9 @@ export function useTransaction(
                   transaction.sendAmount[1],
                 ],
           };
-          const toolkit = wallet.toolkit || network.toolkit;
           const _transaction: Transaction = await estimateWithAdapter(
             updatedTransaction,
-            toolkit,
+            network.toolkit,
             adapter
           );
           updated = await wallet.updateAmount(

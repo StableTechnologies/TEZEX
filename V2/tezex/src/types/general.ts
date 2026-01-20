@@ -1,6 +1,7 @@
 import { BigNumber } from "bignumber.js";
 
-import { NetworkType } from "@airgap/beacon-sdk";
+import { DAppClient, NetworkType } from "@airgap/beacon-sdk";
+import { TezosToolkit } from "@taquito/taquito";
 
 export interface Breakpoints {
   breakpoints: {
@@ -109,6 +110,11 @@ export enum Errors {
 export interface FailedRecord {
   reason: Errors;
 }
+
+export type ExecutionKit = {
+  toolkit: TezosToolkit;
+  client: DAppClient;
+};
 
 export interface SuccessRecord {
   opHash: string;

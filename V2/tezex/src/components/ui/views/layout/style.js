@@ -65,6 +65,28 @@ const style = (theme, scale = 1) => {
       display: "flex",
       bottom: "0%",
       width: "100%",
+      justifyContent: "center",
+      padding: { xs: "8px 0", md: "10px 0" },
+    },
+
+    bottomSpaceText: {
+      fontSize: { xs: "10px", md: "11px" },
+      color: "#94a3b8",
+      fontWeight: 400,
+    },
+
+    bottomSpaceLink: {
+      fontSize: { xs: "10px", md: "11px" },
+      color: "#64748b",
+      fontWeight: 500,
+      marginLeft: "4px",
+      cursor: "pointer",
+      textDecoration: "none",
+      transition: "color 0.2s ease",
+      "&:hover": {
+        color: "#475569",
+        textDecoration: "underline",
+      },
     },
     headerAndMainWindow: {
       height: "100vh",

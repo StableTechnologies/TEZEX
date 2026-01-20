@@ -122,6 +122,10 @@ export const Swap: FC<ISwapToken> = (props) => {
     }
   }, [swappingFileds, assets, transactionOps]);
 
+  useEffect(() => {
+    setLoading(true);
+  }, [network.network]);
+
   // Effect to handle loading of transaction
   useEffect(() => {
     // get active transaction

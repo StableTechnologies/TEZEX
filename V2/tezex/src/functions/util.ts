@@ -13,6 +13,7 @@ import {
 } from "../types/general";
 
 import { tokenDecimalToMantissa, tokenMantissaToDecimal } from "./scaling";
+import { NetworkType } from "@airgap/beacon-sdk";
 
 const DEADLINE_OFFSET_MS = 60000;
 
@@ -200,4 +201,18 @@ export function formatWithSubscript(
 
 export function getTxDeadline(): Date {
   return new Date(Date.now() + DEADLINE_OFFSET_MS);
+}
+
+export type SupportedNetwork = NetworkType.MAINNET | NetworkType.SHADOWNET;
+
+export const EXPLORERS: Record<SupportedNetwork, string> = {
+  [NetworkType.MAINNET]: "https://tzkt.io/",
+  [NetworkType.SHADOWNET]: "https://shadownet.tzkt.io/",
+};
+
+export function getExplorer(network: NetworkType): string {
+  if (network in EXPLORERS) {
+    return EXPLORERS[network as SupportedNetwork];
+  }
+  throw new Error(`Unsupported network: ${network}`);
 }

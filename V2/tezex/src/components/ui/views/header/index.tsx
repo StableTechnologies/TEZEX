@@ -14,6 +14,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import Container from "@mui/material/Container";
 import style from "./style";
 import useStyles from "../../../../hooks/styles";
+import { NetworkSelector } from "../../elements/selectors/networkSelector/NetworkSelector";
 
 export interface IHeader {
   openMenu: boolean;
@@ -35,7 +36,7 @@ export const Header: FC<IHeader> = (props) => {
           sx={styles.isMobile ? styles.toolbar.mobile : styles.toolbar}
         >
           <Grid2 container sx={styles.container}>
-            <Grid2 sm={3}>
+            <Grid2>
               <Box
                 component="img"
                 sx={styles.logoLarge}
@@ -49,6 +50,10 @@ export const Header: FC<IHeader> = (props) => {
                 src={logoSmall}
                 alt="Logo"
               />
+            </Grid2>
+
+            <Grid2 sx={styles.networkSelector}>
+              <NetworkSelector />
             </Grid2>
 
             <Grid2 sx={styles.nav}>

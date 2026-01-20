@@ -1,7 +1,10 @@
 import { useContext } from "react";
-import { NetworkContext, INetwork } from "../contexts/network";
+import { INetwork, NetworkContext } from "../contexts/network";
 
-export function useNetwork(): INetwork {
-  const network = useContext(NetworkContext);
-  return network;
-}
+export const useNetwork = (): INetwork => {
+  const context = useContext(NetworkContext);
+  if (!context) {
+    throw new Error("useNetwork must be used within NetworkProvider");
+  }
+  return context;
+};

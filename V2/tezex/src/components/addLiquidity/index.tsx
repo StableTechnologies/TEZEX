@@ -140,6 +140,10 @@ export const AddLiquidity: FC<IAddLiquidity> = (props) => {
       session.loadComponent(TransactingComponent.ADD_LIQUIDITY);
   }, [session]);
 
+  useEffect(() => {
+    setLoading(true);
+  }, [network.network]);
+
   // Effect to handle initial loading of transaction
   useEffect(() => {
     // get active transaction
@@ -181,7 +185,7 @@ export const AddLiquidity: FC<IAddLiquidity> = (props) => {
   // Fetch balances for all pools
   useEffect(() => {
     const fetchBalances = async () => {
-      if (!wallet.address || !wallet.toolkit) return;
+      if (!wallet.address || !network.toolkit) return;
 
       const balances = new Map<string, string>();
       const pools = network.getAllPools();
@@ -190,7 +194,7 @@ export const AddLiquidity: FC<IAddLiquidity> = (props) => {
         try {
           const lpToken = network.getAsset(pool.lpToken);
           const balance = await getBalance(
-            wallet.toolkit,
+            network.toolkit,
             wallet.address,
             lpToken
           );
@@ -204,7 +208,7 @@ export const AddLiquidity: FC<IAddLiquidity> = (props) => {
     };
 
     fetchBalances();
-  }, [wallet.address, wallet.toolkit, network]);
+  }, [wallet.address, network.toolkit, network.network]);
 
   const getPoolBalance = (poolId: string): string => {
     return poolBalances.get(poolId) || "0";
@@ -378,7 +382,9 @@ export const AddLiquidity: FC<IAddLiquidity> = (props) => {
                     You will recieve about{" "}
                     <img
                       style={styles.infoTextIcon}
-                      src={getLPToken(currentPool).logo}
+                      src={
+                        process.env.PUBLIC_URL + getLPToken(currentPool).logo
+                      }
                       alt="LPLogo"
                     />
                     <Typography sx={styles.infoRecieve}>
@@ -516,7 +522,9 @@ export const AddLiquidity: FC<IAddLiquidity> = (props) => {
                       You will recieve about{" "}
                       <img
                         style={styles.infoTextIcon}
-                        src={getLPToken(currentPool).logo}
+                        src={
+                          process.env.PUBLIC_URL + getLPToken(currentPool).logo
+                        }
                         alt="LPLogo"
                       />
                       <Typography sx={styles.infoRecieve}>

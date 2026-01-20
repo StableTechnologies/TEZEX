@@ -71,7 +71,7 @@ export const PoolSelector: FC<PoolSelectorProps> = ({
         {/* Token logos */}
         <Box display="flex" alignItems="center" position="relative">
           <img
-            src={tokenA.logo}
+            src={process.env.PUBLIC_URL + tokenA.logo}
             alt={tokenA.label}
             style={{
               width: s.logoSize,
@@ -84,7 +84,7 @@ export const PoolSelector: FC<PoolSelectorProps> = ({
             }}
           />
           <img
-            src={tokenB.logo}
+            src={process.env.PUBLIC_URL + tokenB.logo}
             alt={tokenB.label}
             style={{
               width: s.logoSize,
@@ -143,7 +143,7 @@ export const PoolSelector: FC<PoolSelectorProps> = ({
         {/* Token logos */}
         <Box display="flex" alignItems="center" position="relative">
           <img
-            src={tokenA.logo}
+            src={process.env.PUBLIC_URL + tokenA.logo}
             alt={tokenA.label}
             style={{
               width: s.logoSize,
@@ -155,7 +155,7 @@ export const PoolSelector: FC<PoolSelectorProps> = ({
             }}
           />
           <img
-            src={tokenB.logo}
+            src={process.env.PUBLIC_URL + tokenB.logo}
             alt={tokenB.label}
             style={{
               width: s.logoSize,

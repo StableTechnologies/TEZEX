@@ -4,10 +4,10 @@
   "homepage": ".",
   "private": true,
   "dependencies": {
-    "@airgap/beacon-core": "^4.0.12",
-    "@airgap/beacon-dapp": "4.0.12",
-    "@airgap/beacon-sdk": "^4.0.12",
-    "@airgap/beacon-wallet": "^4.0.12",
+    "@airgap/beacon-core": "^4.6.4",
+    "@airgap/beacon-dapp": "^4.6.4",
+    "@airgap/beacon-sdk": "^4.6.4",
+    "@airgap/beacon-wallet": "^4.6.4",
     "@emotion/css": "^11.10.6",
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
@@ -18,8 +18,8 @@
     "@mui/material": "^5.11.0",
     "@mui/styled-engine-sc": "^5.11.0",
     "@mui/system": "^5.11.4",
-    "@taquito/beacon-wallet": "^17.3.2",
-    "@taquito/taquito": "^17.3.2",
+    "@taquito/beacon-wallet": "^24.0.1",
+    "@taquito/taquito": "^24.0.1",
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^13.1.1",
     "@testing-library/user-event": "^13.5.0",
@@ -100,9 +100,9 @@
     "@types/ua-parser-js": "^0.7.37",
     "@typescript-eslint/eslint-plugin": "^5.54.0",
     "@typescript-eslint/parser": "^5.54.0",
-    "assert": "^2.0.0",
+    "assert": "^2.1.0",
     "buffer": "^6.0.3",
-    "crypto-browserify": "^3.12.0",
+    "crypto-browserify": "^3.12.1",
     "eslint": "^8.35.0",
     "eslint-config-prettier": "^8.6.0",
     "eslint-plugin-react": "^7.32.2",
@@ -116,6 +116,7 @@
     "react-app-rewired": "^2.2.1",
     "stream-browserify": "^3.0.0",
     "stream-http": "^3.2.0",
-    "url": "^0.11.0"
+    "url": "^0.11.4",
+    "vm-browserify": "^1.1.2"
   }
 }

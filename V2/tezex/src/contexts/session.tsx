@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useState } from "react";
 import { WalletProvider } from "./wallet";
-import { NetworkContext, networkDefaults } from "./network";
+import { NetworkProvider } from "./network";
 import { Alert } from "../components/ui/elements/dialogs/Alerts";
 import {
   AppConfig,
@@ -112,10 +112,10 @@ export function SessionProvider(props: ISession) {
         appConfig: props.config,
       }}
     >
-      <NetworkContext.Provider value={networkDefaults}>
+      <NetworkProvider>
         <WalletProvider>{props.children}</WalletProvider>
         <Alert completionRecord={showAlert(_alert)} clear={clearAlert} />
-      </NetworkContext.Provider>
+      </NetworkProvider>
     </SessionContext.Provider>
   );
 }

@@ -1,6 +1,6 @@
-import { OpKind, TezosToolkit } from "@taquito/taquito";
+import { TezosToolkit } from "@taquito/taquito";
 import BigNumber from "bignumber.js";
-import { Token, Errors } from "../types/general";
+import { Token, Errors, ExecutionKit } from "../types/general";
 import {
   AddLiquidityEstimate,
   IPoolAdapter,
@@ -12,6 +12,8 @@ import {
 import { PoolRegistry } from "./poolRegistry";
 import { PoolDataCache } from "../utils/poolDataCache";
 import { getTxDeadline } from "../functions/util";
+import { DAppClient } from "@airgap/beacon-sdk";
+import { transferParamsToBeaconOp } from "../functions/transactions";
 
 const viewCaller = "tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU";
 
@@ -157,16 +159,15 @@ export class TezexAdapter implements IPoolAdapter {
   }
 
   async executeSwap(
-    toolkit: TezosToolkit,
+    kit: ExecutionKit,
     userAddress: string,
     inputToken: Token,
     inputAmount: BigNumber,
     minOutputAmount: BigNumber,
     slippage: number
   ): Promise<string> {
+    const { client, toolkit } = kit;
     try {
-      const deadline = getTxDeadline().toISOString();
-      const contract = await toolkit.wallet.at(this.poolConfig.address);
       const isXtzInput = inputToken === Token.XTZ;
 
       // Apply slippage to minOutputAmount
@@ -177,80 +178,23 @@ export class TezexAdapter implements IPoolAdapter {
       if (isXtzInput) {
         // XTZ -> Token swap
         // xtzToToken(address to, nat minTokensBought, timestamp deadline)
-        const operation = contract.methods
-          .xtzToToken(userAddress, minWithSlippage.toNumber(), deadline)
-          .toTransferParams({ amount: inputAmount.toNumber(), mutez: true });
-
-        const estimate = await toolkit.estimate.transfer(operation);
-        if (estimate) {
-          operation.fee = estimate.suggestedFeeMutez;
-          operation.gasLimit = estimate.gasLimit;
-          operation.storageLimit = estimate.storageLimit;
-          const opResult = await toolkit.wallet.transfer(operation).send();
-          await opResult.confirmation();
-          await this.getPoolData(toolkit, true);
-          return opResult.opHash;
-        } else throw Errors.GAS_ESTIMATION;
+        return await this.executeXtzToToken(
+          client,
+          toolkit,
+          userAddress,
+          inputAmount,
+          minWithSlippage
+        );
       } else {
         // Token -> XTZ swap
         // tokenToXtz(address to, nat tokensSold, mutez minXtzBought, timestamp deadline)
-        const tokenAddress = this.getTokenAddress(this.poolConfig.tokenB);
-        const tokenContract = await toolkit.wallet.at(tokenAddress);
-
-        // Estimate gas for batch
-        const approve0 = tokenContract.methods.approve(
-          this.poolConfig.address,
-          0
-        );
-        const approve = tokenContract.methods.approve(
-          this.poolConfig.address,
-          inputAmount.integerValue(BigNumber.ROUND_DOWN).toNumber()
-        );
-        const swap = contract.methods.tokenToXtz(
+        return await this.executeTokenToXtz(
+          client,
+          toolkit,
           userAddress,
-          inputAmount.integerValue(BigNumber.ROUND_DOWN).toNumber(),
-          minWithSlippage.toNumber(),
-          deadline
+          inputAmount,
+          minWithSlippage
         );
-
-        const estimate = await toolkit.estimate.batch([
-          { kind: OpKind.TRANSACTION, ...approve0.toTransferParams() },
-          { kind: OpKind.TRANSACTION, ...approve.toTransferParams() },
-          { kind: OpKind.TRANSACTION, ...swap.toTransferParams() },
-        ]);
-
-        // Execute batch
-        const batch = toolkit.wallet.batch().with([
-          {
-            kind: OpKind.TRANSACTION,
-            ...approve0.toTransferParams({
-              fee: estimate[0].suggestedFeeMutez,
-              gasLimit: estimate[0].gasLimit,
-              storageLimit: estimate[0].storageLimit,
-            }),
-          },
-          {
-            kind: OpKind.TRANSACTION,
-            ...approve.toTransferParams({
-              fee: estimate[1].suggestedFeeMutez,
-              gasLimit: estimate[1].gasLimit,
-              storageLimit: estimate[1].storageLimit,
-            }),
-          },
-          {
-            kind: OpKind.TRANSACTION,
-            ...swap.toTransferParams({
-              fee: estimate[2].suggestedFeeMutez,
-              gasLimit: estimate[2].gasLimit,
-              storageLimit: estimate[2].storageLimit,
-            }),
-          },
-        ]);
-
-        const batchOp = await batch.send();
-        await batchOp.confirmation();
-        await this.getPoolData(toolkit, true);
-        return batchOp.opHash;
       }
     } catch (error) {
       console.error("Error executing swap:", error);
@@ -259,18 +203,19 @@ export class TezexAdapter implements IPoolAdapter {
   }
 
   async executeAddLiquidity(
-    toolkit: TezosToolkit,
+    kit: ExecutionKit,
     userAddress: string,
     tokenAAmount: BigNumber,
     tokenBAmount: BigNumber,
     minLpTokens: BigNumber,
     slippage: number
   ): Promise<string> {
+    const { client, toolkit } = kit;
     try {
-      const contract = await toolkit.wallet.at(this.poolConfig.address);
+      const contract = await toolkit.contract.at(this.poolConfig.address);
       const deadline = getTxDeadline().toISOString();
       const tokenAddress = this.getTokenAddress(this.poolConfig.tokenB);
-      const tokenContract = await toolkit.wallet.at(tokenAddress);
+      const tokenContract = await toolkit.contract.at(tokenAddress);
 
       // Calculate max tokens with slippage
       const maxTokensDeposited = tokenBAmount
@@ -278,76 +223,38 @@ export class TezexAdapter implements IPoolAdapter {
         .integerValue(BigNumber.ROUND_DOWN);
 
       // addLiquidity(address owner, nat minLqtMinted, nat maxTokensDeposited, timestamp deadline)
-      const approve0 = tokenContract.methods.approve(
-        this.poolConfig.address,
-        0
-      );
-      const approve = tokenContract.methods.approve(
-        this.poolConfig.address,
-        maxTokensDeposited.toNumber()
-      );
-      const addLiq = contract.methods.addLiquidity(
-        userAddress,
-        minLpTokens.integerValue(BigNumber.ROUND_DOWN).toNumber(),
-        maxTokensDeposited.toNumber(),
-        deadline
-      );
+      const approve0 = tokenContract.methodsObject.approve({
+        spender: this.poolConfig.address,
+        value: 0,
+      });
+      const approve = tokenContract.methodsObject.approve({
+        spender: this.poolConfig.address,
+        value: maxTokensDeposited.toNumber(),
+      });
+      const addLiq = contract.methodsObject.addLiquidity({
+        owner: userAddress,
+        minLqtMinted: minLpTokens.integerValue(BigNumber.ROUND_DOWN).toNumber(),
+        maxTokensDeposited: maxTokensDeposited.toNumber(),
+        deadline,
+      });
 
-      // Estimate gas
-      const estimate = await toolkit.estimate.batch([
-        { kind: OpKind.TRANSACTION, ...approve0.toTransferParams() },
-        { kind: OpKind.TRANSACTION, ...approve.toTransferParams() },
-        {
-          kind: OpKind.TRANSACTION,
-          ...addLiq.toTransferParams(),
-          amount: tokenAAmount.toNumber(),
-          mutez: true,
-        },
-        { kind: OpKind.TRANSACTION, ...approve0.toTransferParams() },
-      ]);
+      const operations = [
+        transferParamsToBeaconOp(approve0.toTransferParams()),
+        transferParamsToBeaconOp(approve.toTransferParams()),
+        transferParamsToBeaconOp(
+          addLiq.toTransferParams({
+            amount: tokenAAmount.toNumber(),
+            mutez: true,
+          })
+        ),
+        transferParamsToBeaconOp(approve0.toTransferParams()),
+      ];
+      const response = await client.requestOperation({
+        operationDetails: operations,
+      });
 
-      // Execute batch with XTZ amount
-      const batch = toolkit.wallet.batch().with([
-        {
-          kind: OpKind.TRANSACTION,
-          ...approve0.toTransferParams({
-            fee: estimate[0].suggestedFeeMutez,
-            gasLimit: estimate[0].gasLimit,
-            storageLimit: estimate[0].storageLimit,
-          }),
-        },
-        {
-          kind: OpKind.TRANSACTION,
-          ...approve.toTransferParams({
-            fee: estimate[1].suggestedFeeMutez,
-            gasLimit: estimate[1].gasLimit,
-            storageLimit: estimate[1].storageLimit,
-          }),
-        },
-        {
-          kind: OpKind.TRANSACTION,
-          ...addLiq.toTransferParams({
-            fee: estimate[2].suggestedFeeMutez,
-            gasLimit: estimate[2].gasLimit,
-            storageLimit: estimate[2].storageLimit,
-          }),
-          amount: tokenAAmount.toNumber(),
-          mutez: true,
-        },
-        {
-          kind: OpKind.TRANSACTION,
-          ...approve0.toTransferParams({
-            fee: estimate[3].suggestedFeeMutez,
-            gasLimit: estimate[3].gasLimit,
-            storageLimit: estimate[3].storageLimit,
-          }),
-        },
-      ]);
-
-      const batchOp = await batch.send();
-      await batchOp.confirmation();
       await this.getPoolData(toolkit, true);
-      return batchOp.opHash;
+      return response.transactionHash;
     } catch (error) {
       console.error("Error executing add liquidity:", error);
       throw Errors.TRANSACTION_FAILED;
@@ -355,12 +262,13 @@ export class TezexAdapter implements IPoolAdapter {
   }
 
   async executeRemoveLiquidity(
-    toolkit: TezosToolkit,
+    kit: ExecutionKit,
     userAddress: string,
     lpTokenAmount: BigNumber
   ): Promise<string> {
+    const { client, toolkit } = kit;
     try {
-      const contract = await toolkit.wallet.at(this.poolConfig.address);
+      const contract = await toolkit.contract.at(this.poolConfig.address);
       const deadline = getTxDeadline().toISOString();
 
       // Get estimates for min amounts
@@ -378,19 +286,23 @@ export class TezexAdapter implements IPoolAdapter {
         .integerValue(BigNumber.ROUND_DOWN);
 
       // removeLiquidity(address to, nat lqtBurned, mutez minXtzWithdrawn, nat minTokensWithdrawn, timestamp deadline)
-      const operation = await contract.methods
-        .removeLiquidity(
-          userAddress,
-          lpTokenAmount.integerValue(BigNumber.ROUND_DOWN).toNumber(),
-          minTokenA.toNumber(), // mutez
-          minTokenB.toNumber(), // nat
-          deadline
-        )
-        .send();
+      const operation = contract.methodsObject.removeLiquidity({
+        to: userAddress,
+        lqtBurned: lpTokenAmount.integerValue(BigNumber.ROUND_DOWN).toNumber(),
+        minXtzWithdrawn: minTokenA.toNumber(), // mutez
+        minTokensWithdrawn: minTokenB.toNumber(), // nat
+        deadline,
+      });
 
-      await operation.confirmation();
+      const operationRequest = transferParamsToBeaconOp(
+        operation.toTransferParams()
+      );
+      const response = await client.requestOperation({
+        operationDetails: [operationRequest],
+      });
+
       await this.getPoolData(toolkit, true);
-      return operation.opHash;
+      return response.transactionHash;
     } catch (error) {
       console.error("Error executing remove liquidity:", error);
       throw Errors.TRANSACTION_FAILED;
@@ -438,6 +350,83 @@ export class TezexAdapter implements IPoolAdapter {
     } catch (error) {
       console.error("Error getting pool data:", error);
       throw Errors.LB_CONTRACT_STORAGE;
+    }
+  }
+
+  private async executeXtzToToken(
+    client: DAppClient,
+    toolkit: TezosToolkit,
+    userAddress: string,
+    xtzAmount: BigNumber,
+    minTokensBought: BigNumber
+  ): Promise<string> {
+    const deadline = getTxDeadline().toISOString();
+    const contract = await toolkit.contract.at(this.poolConfig.address);
+
+    const operation = contract.methodsObject.xtzToToken({
+      to: userAddress,
+      minTokensBought: minTokensBought.toNumber(),
+      deadline,
+    });
+
+    const operationRequest = transferParamsToBeaconOp(
+      operation.toTransferParams({
+        amount: xtzAmount.toNumber(),
+        mutez: true,
+      })
+    );
+    const response = await client.requestOperation({
+      operationDetails: [operationRequest],
+    });
+    await this.getPoolData(toolkit, true);
+    return response.transactionHash;
+  }
+
+  private async executeTokenToXtz(
+    client: DAppClient,
+    toolkit: TezosToolkit,
+    userAddress: string,
+    tokenAmount: BigNumber,
+    minXtzBought: BigNumber
+  ): Promise<string> {
+    try {
+      const deadline = getTxDeadline().toISOString();
+      const tokenAddress = this.getTokenAddress(this.poolConfig.tokenB);
+
+      const contract = await toolkit.contract.at(this.poolConfig.address);
+      const tokenContract = await toolkit.contract.at(tokenAddress);
+
+      const approve0 = tokenContract.methodsObject.approve({
+        spender: this.poolConfig.address,
+        value: 0,
+      });
+
+      const approve = tokenContract.methodsObject.approve({
+        spender: this.poolConfig.address,
+        value: tokenAmount.integerValue(BigNumber.ROUND_DOWN).toNumber(),
+      });
+
+      const swap = contract.methodsObject.tokenToXtz({
+        to: userAddress,
+        tokensSold: tokenAmount.integerValue(BigNumber.ROUND_DOWN).toNumber(),
+        minXtzBought: minXtzBought.toNumber(),
+        deadline,
+      });
+
+      // Convert to Beacon format
+      const operations = [
+        transferParamsToBeaconOp(approve0.toTransferParams()),
+        transferParamsToBeaconOp(approve.toTransferParams({})),
+        transferParamsToBeaconOp(swap.toTransferParams({})),
+      ];
+      const response = await client.requestOperation({
+        operationDetails: operations,
+      });
+
+      await this.getPoolData(toolkit, true);
+      return response.transactionHash;
+    } catch (error) {
+      throw Errors.TRANSACTION_FAILED;
     }
   }
 
