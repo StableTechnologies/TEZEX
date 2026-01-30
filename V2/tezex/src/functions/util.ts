@@ -203,11 +203,15 @@ export function getTxDeadline(): Date {
   return new Date(Date.now() + DEADLINE_OFFSET_MS);
 }
 
-export type SupportedNetwork = NetworkType.MAINNET | NetworkType.SHADOWNET;
+export type SupportedNetwork =
+  | NetworkType.MAINNET
+  | NetworkType.SHADOWNET
+  | NetworkType.TEZLINK_SHADOWNET;
 
 export const EXPLORERS: Record<SupportedNetwork, string> = {
   [NetworkType.MAINNET]: "https://tzkt.io/",
   [NetworkType.SHADOWNET]: "https://shadownet.tzkt.io/",
+  [NetworkType.TEZLINK_SHADOWNET]: "https://shadownet.tezlink.tzkt.io/",
 };
 
 export function getExplorer(network: NetworkType): string {
@@ -216,3 +220,16 @@ export function getExplorer(network: NetworkType): string {
   }
   throw new Error(`Unsupported network: ${network}`);
 }
+
+export const getTzktApiUrl = (networkType: NetworkType): string => {
+  switch (networkType) {
+    case NetworkType.MAINNET:
+      return "https://api.tzkt.io";
+    case NetworkType.SHADOWNET:
+      return "https://api.shadownet.tzkt.io";
+    case NetworkType.TEZLINK_SHADOWNET:
+      return "https://api.shadownet.tezlink.tzkt.io";
+    default:
+      return "https://api.tzkt.io";
+  }
+};

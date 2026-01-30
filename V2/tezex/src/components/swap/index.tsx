@@ -1,7 +1,6 @@
 import React, { FC, useState, useEffect, useCallback } from "react";
 
 import {
-  Token,
   Asset,
   TransactingComponent,
   TransferType,
@@ -65,10 +64,18 @@ export const Swap: FC<ISwapToken> = (props) => {
   );
 
   const currentPool = availablePools.find((p) => p.id === selectedPoolId);
-  const [assets, setAssets] = useState<[Asset, Asset]>([
-    network.getAsset(currentPool?.tokenA || Token.XTZ),
-    network.getAsset(currentPool?.tokenB || Token.TzBTC),
-  ]);
+  const [assets, setAssets] = useState<[Asset, Asset]>(() => {
+    if (currentPool) {
+      return [
+        network.getAsset(currentPool.tokenA),
+        network.getAsset(currentPool.tokenB),
+      ];
+    }
+    return [
+      network.getAsset(availablePools[0]?.tokenA),
+      network.getAsset(availablePools[0]?.tokenB),
+    ];
+  });
 
   const [swappingFileds, setSwappingFileds] = useState<boolean>(false);
   const session = useSession();
@@ -76,6 +83,21 @@ export const Swap: FC<ISwapToken> = (props) => {
   const [canUpdate, setCanUpdate] = useState<boolean>(false);
 
   const active = walletOps.getActiveTransaction();
+
+  useEffect(() => {
+    const pools = network.getAllPools();
+    if (pools.length > 0) {
+      const newPoolId = pools[0].id;
+      setSelectedPoolId(newPoolId);
+
+      setAssets([
+        network.getAsset(pools[0].tokenA),
+        network.getAsset(pools[0].tokenB),
+      ]);
+
+      setLoading(true);
+    }
+  }, [network.network]);
 
   const handlePoolChange = useCallback(
     async (newPoolId: string) => {
@@ -121,10 +143,6 @@ export const Swap: FC<ISwapToken> = (props) => {
       setLoading(false);
     }
   }, [swappingFileds, assets, transactionOps]);
-
-  useEffect(() => {
-    setLoading(true);
-  }, [network.network]);
 
   // Effect to handle loading of transaction
   useEffect(() => {

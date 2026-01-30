@@ -4,40 +4,42 @@ import { TezosToolkit } from "@taquito/taquito";
 import { BigNumber } from "bignumber.js";
 
 import { Token, Asset, Balance } from "../types/general";
-import { balanceBuilder } from "./util";
-import { DAppClient } from "@airgap/beacon-dapp";
+import { balanceBuilder, getTzktApiUrl } from "./util";
+import { DAppClient, NetworkType } from "@airgap/beacon-dapp";
 
 export async function getBalance(
   toolkit: TezosToolkit,
+  network: NetworkType,
   address: string,
   asset: Asset
 ): Promise<Balance> {
+  // NOTE: For now some of the RPC operations that we use fail on TezLink Shadownet
+  // like getting a value from bigmap. So we handle it by using TzKT API to get the balance.
+  // In future, when TezLink Shadownet supports all RPC operations, we can remove this workaround.
+  // We also need to pass the network type to this function to get the correct TzKT API URL.
   const getBalance = async () => {
     if (asset.name === Token.XTZ) {
       return await toolkit.tz.getBalance(address);
     } else {
-      const contract = await toolkit.contract.at(asset.address);
-      return await contract.views.getBalance(address).read();
+      try {
+        const contract = await toolkit.contract.at(asset.address);
+        return await contract.views.getBalance(address).read();
+      } catch {
+        // Fallback to TzKT API
+        const api = getTzktApiUrl(network);
+        const response = await fetch(
+          `${api}/v1/tokens/balances?account=${address}&token.contract=${asset.address}`
+        );
+        const data = await response.json();
+        return data[0]?.balance
+          ? new BigNumber(data[0].balance)
+          : new BigNumber(0);
+      }
     }
   };
 
   const balance = await getBalance();
   return balanceBuilder(balance, asset, true);
-}
-
-export async function hasSufficientBalance(
-  minimumBalance: BigNumber,
-  toolkit: TezosToolkit,
-  address: string,
-  asset: Asset,
-  mantissa = false
-): Promise<boolean> {
-  const balance = await getBalance(toolkit, address, asset);
-  if (!mantissa) {
-    return minimumBalance.isLessThanOrEqualTo(balance.mantissa);
-  } else {
-    return minimumBalance.isLessThanOrEqualTo(balance.decimal);
-  }
 }
 
 export default async function connectWallet(

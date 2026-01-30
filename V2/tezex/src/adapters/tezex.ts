@@ -15,8 +15,6 @@ import { getTxDeadline } from "../functions/util";
 import { DAppClient } from "@airgap/beacon-sdk";
 import { transferParamsToBeaconOp } from "../functions/transactions";
 
-const viewCaller = "tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU";
-
 export class TezexAdapter implements IPoolAdapter {
   constructor(public poolConfig: PoolConfig) {}
 
@@ -321,21 +319,12 @@ export class TezexAdapter implements IPoolAdapter {
         }
       }
       const contract = await toolkit.contract.at(this.poolConfig.address);
+      // eslint-disable-next-line
+      const storage = await contract.storage<any>();
 
-      // Get reserves using view
-      const reservesResult = await contract.contractViews
-        .get_reserves(null)
-        .executeView({ viewCaller });
-
-      // Get total LP supply
-      const lqtTotalResult = await contract.contractViews
-        .get_lqt_total(null)
-        .executeView({ viewCaller });
-
-      // Parse reserves (format: {nat_0: xtz, nat_1: token})
-      const tokenAPool = new BigNumber(reservesResult[0]);
-      const tokenBPool = new BigNumber(reservesResult[1]);
-      const lpTokenSupply = new BigNumber(lqtTotalResult);
+      const tokenAPool = new BigNumber(storage.xtzPool);
+      const tokenBPool = new BigNumber(storage.tokenPool);
+      const lpTokenSupply = new BigNumber(storage.lqtTotal);
 
       const poolData: PoolData = {
         tokenAPool,
