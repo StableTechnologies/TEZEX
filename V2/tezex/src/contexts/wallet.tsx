@@ -247,6 +247,7 @@ export function WalletProvider(props: IWalletProvider) {
           return {
             balance: await getBalance(
               network.toolkit,
+              network.network,
               address,
               assetBalance.asset
             ),

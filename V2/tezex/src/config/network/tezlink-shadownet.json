@@ -1,0 +1,37 @@
+{
+  "tezosServer": "https://rpc.shadownet.tezlink.nomadic-labs.com",
+  "pools": [
+    {
+      "id": "xtz-usdtz-tezex",
+      "name": "TEZEX",
+      "type": "TEZEX XTZ-USDtz",
+      "address": "KT1E6gohX5FcRh1JZmnN3BaxDEJjFecUh5iE",
+      "tokenA": "XTZ",
+      "tokenB": "USDtz",
+      "lpToken": "LP_XTZUSDtz"
+    }
+  ],
+  "assets": [
+    {
+      "name": "XTZ",
+      "label": "Tez",
+      "logo": "/assets/tzlogo.svg",
+      "address": "",
+      "decimals": 6
+    },
+    {
+      "name": "USDtz",
+      "label": "USDtz",
+      "logo": "/assets/usdtzLogo.svg",
+      "address": "KT1HRnweEo9nXsA6vgFc29hmrCvW47hhTjQg",
+      "decimals": 6
+    },
+    {
+      "name": "LP_XTZUSDtz",
+      "label": "LP-XTZUSDtz",
+      "logo": "/assets/lpxtzusdtzLogo.svg",
+      "address": "KT1N5bVTAFwZTUweTBWXdUSTmSkkbxKz72Ce",
+      "decimals": 6
+    }
+  ]
+}

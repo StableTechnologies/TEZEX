@@ -130,6 +130,7 @@ export const RemoveLiquidity: FC<IRemoveLiquidity> = (props) => {
           const lpToken = network.getAsset(pool.lpToken);
           const balance = await getBalance(
             network.toolkit,
+            network.network,
             wallet.address,
             lpToken
           );

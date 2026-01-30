@@ -10,7 +10,7 @@ import { useTheme } from "@mui/material/styles";
 import { NetworkType } from "@airgap/beacon-sdk";
 import { getNetworkSelectorStyles } from "./style";
 import { useNetwork } from "../../../../../hooks/network";
-import { getExplorer } from "../../../../../functions/util";
+import { getExplorer, getTzktApiUrl } from "../../../../../functions/util";
 
 interface NetworkOption {
   type: NetworkType;
@@ -32,18 +32,8 @@ interface CycleInfo {
 const networks: NetworkOption[] = [
   { type: NetworkType.MAINNET, label: "Mainnet" },
   { type: NetworkType.SHADOWNET, label: "Shadownet" },
+  { type: NetworkType.TEZLINK_SHADOWNET, label: "Tezlink" },
 ];
-
-const getTzktApiUrl = (networkType: NetworkType): string => {
-  switch (networkType) {
-    case NetworkType.MAINNET:
-      return "https://api.tzkt.io";
-    case NetworkType.SHADOWNET:
-      return "https://api.shadownet.tzkt.io";
-    default:
-      return "https://api.tzkt.io";
-  }
-};
 
 const formatTimeRemaining = (seconds: number): string => {
   if (seconds < 60) return `in ${seconds}s`;

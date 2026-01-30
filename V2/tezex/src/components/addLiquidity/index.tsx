@@ -195,6 +195,7 @@ export const AddLiquidity: FC<IAddLiquidity> = (props) => {
           const lpToken = network.getAsset(pool.lpToken);
           const balance = await getBalance(
             network.toolkit,
+            network.network,
             wallet.address,
             lpToken
           );
