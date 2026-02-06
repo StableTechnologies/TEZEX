@@ -1,4 +1,4 @@
-import React, { FC } from "react";
+import React, { FC, useEffect } from "react";
 import { useNetwork } from "../../../hooks/network";
 import { PoolConfig } from "../../../types/pools";
 import FormControl from "@mui/material/FormControl";
@@ -10,7 +10,6 @@ import { SxProps, Theme } from "@mui/material/styles";
 import useStyles from "../../../hooks/styles";
 
 export interface PoolSelectorProps {
-  selectedPoolId: string;
   onChange: (poolId: string) => void;
   disabled?: boolean;
   sx?: SxProps<Theme>;
@@ -41,7 +40,6 @@ const poolSelectorStyles = (theme: any, scale = 1) => ({
 });
 
 export const PoolSelector: FC<PoolSelectorProps> = ({
-  selectedPoolId,
   onChange,
   disabled = false,
   sx = {},
@@ -51,8 +49,15 @@ export const PoolSelector: FC<PoolSelectorProps> = ({
 }) => {
   const network = useNetwork();
   const availablePools = network.getAllPools();
+  const selectedPool = network.selectedPool;
 
   const styles = useStyles(poolSelectorStyles, scalingKey);
+
+  useEffect(() => {
+    if (!selectedPool && availablePools.length > 0) {
+      network.setSelectedPool(availablePools[0]);
+    }
+  }, [selectedPool, availablePools, network]);
 
   const handleChange = (event: SelectChangeEvent<string>) => {
     onChange(event.target.value);
@@ -232,7 +237,7 @@ export const PoolSelector: FC<PoolSelectorProps> = ({
   return (
     <FormControl sx={sx}>
       <Select
-        value={selectedPoolId}
+        value={selectedPool?.id}
         onChange={handleChange}
         disabled={disabled}
         size="small"

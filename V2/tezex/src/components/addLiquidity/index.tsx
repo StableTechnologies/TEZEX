@@ -1,4 +1,4 @@
-import React, { FC, useState, useEffect, useCallback } from "react";
+import React, { FC, useState, useEffect, useCallback, useRef } from "react";
 import plusIcon from "../../assets/plusIcon.svg";
 
 import { Wallet } from "../wallet";
@@ -62,12 +62,8 @@ export const AddLiquidity: FC<IAddLiquidity> = (props) => {
   const send2 = 1;
   const receive = 2;
 
-  const availablePools = network.getAllPools();
+  const currentPool = network.selectedPool;
 
-  const [selectedPoolId, setSelectedPoolId] = useState<string>(
-    transactionOps.getActiveTransaction()?.poolId || availablePools[0]?.id || ""
-  );
-  const currentPool = availablePools.find((p) => p.id === selectedPoolId);
   const [poolBalances, setPoolBalances] = useState<Map<string, string>>(
     new Map()
   );
@@ -86,12 +82,39 @@ export const AddLiquidity: FC<IAddLiquidity> = (props) => {
     getLPToken(currentPool),
   ]);
 
+  const previousPoolIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!currentPool) return;
+
+    const poolId = currentPool.id;
+
+    if (previousPoolIdRef.current === poolId) {
+      return;
+    }
+
+    previousPoolIdRef.current = poolId;
+
+    const newAssets: [Asset, Asset, Asset] = [
+      network.getAsset(currentPool.tokenA),
+      network.getAsset(currentPool.tokenB),
+      getLPToken(currentPool),
+    ];
+
+    setAssets(newAssets);
+
+    transactionOps
+      .initialize([newAssets[0], newAssets[1]], [newAssets[2]], poolId)
+      .catch((error) => {
+        console.error("Transaction init failed:", error);
+      });
+  }, [currentPool?.id, network, transactionOps]);
+
   const handlePoolChange = useCallback(
     async (newPoolId: string) => {
       const pool = network.getAllPools().find((p) => p.id === newPoolId);
       if (!pool) return;
 
-      setSelectedPoolId(newPoolId);
+      network.setSelectedPool(pool);
       const newAssets: [Asset, Asset, Asset] = [
         network.getAsset(pool.tokenA),
         network.getAsset(pool.tokenB),
@@ -125,7 +148,7 @@ export const AddLiquidity: FC<IAddLiquidity> = (props) => {
     const transactionInitialized = await transactionOps.initialize(
       [assets[send1], assets[send2]],
       [assets[receive]],
-      selectedPoolId
+      currentPool?.id || ""
     );
 
     //if transaction initialized update balance and set loading params to false
@@ -313,7 +336,6 @@ export const AddLiquidity: FC<IAddLiquidity> = (props) => {
                     <NavLiquidity scalingKey={scalingKey} />
 
                     <PoolSelector
-                      selectedPoolId={selectedPoolId}
                       onChange={handlePoolChange}
                       disabled={!canUpdate}
                       sx={styles.poolSelector}
@@ -474,7 +496,6 @@ export const AddLiquidity: FC<IAddLiquidity> = (props) => {
                       <NavLiquidity scalingKey={scalingKey} />
 
                       <PoolSelector
-                        selectedPoolId={selectedPoolId}
                         onChange={handlePoolChange}
                         disabled={!canUpdate}
                         sx={styles.poolSelector}

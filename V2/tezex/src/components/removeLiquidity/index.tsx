@@ -1,4 +1,4 @@
-import React, { FC, useState, useEffect, useCallback } from "react";
+import React, { FC, useState, useEffect, useCallback, useRef } from "react";
 
 import {
   Token,
@@ -60,15 +60,7 @@ export const RemoveLiquidity: FC<IRemoveLiquidity> = (props) => {
   const receive1 = 1;
   const receive2 = 2;
 
-  const availablePools = network.getAllPools();
-
-  // Selected pool state
-  const [selectedPoolId, setSelectedPoolId] = useState<string>(
-    transactionOps.getActiveTransaction()?.poolId || availablePools[0]?.id || ""
-  );
-
-  // Get current pool config
-  const currentPool = availablePools.find((p) => p.id === selectedPoolId);
+  const currentPool = network.selectedPool;
   const [poolBalances, setPoolBalances] = useState<Map<string, string>>(
     new Map()
   );
@@ -95,12 +87,36 @@ export const RemoveLiquidity: FC<IRemoveLiquidity> = (props) => {
   const [id, setId] = useState<Id | undefined>(undefined);
   const [reloading, setReloading] = useState<boolean>(true);
 
+  const previousPoolIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!currentPool) return;
+    const poolId = currentPool.id;
+    if (previousPoolIdRef.current === poolId) {
+      return;
+    }
+
+    previousPoolIdRef.current = poolId;
+
+    const newAssets: [Asset, Asset, Asset] = [
+      getLPToken(currentPool),
+      network.getAsset(currentPool.tokenA),
+      network.getAsset(currentPool.tokenB),
+    ];
+    setAssets(newAssets);
+
+    transactionOps
+      .initialize([newAssets[0]], [newAssets[1], newAssets[2]], poolId)
+      .catch((error) => {
+        console.error("Transaction init failed:", error);
+      });
+  }, [currentPool?.id, network, transactionOps]);
+
   const handlePoolChange = useCallback(
     async (newPoolId: string) => {
       const pool = network.getAllPools().find((p) => p.id === newPoolId);
       if (!pool) return;
 
-      setSelectedPoolId(newPoolId);
+      network.setSelectedPool(pool);
       const newAssets: [Asset, Asset, Asset] = [
         getLPToken(pool),
         network.getAsset(pool.tokenA),
@@ -239,7 +255,7 @@ export const RemoveLiquidity: FC<IRemoveLiquidity> = (props) => {
     const transaction = await transactionOps.initialize(
       [assets[send]],
       [assets[receive1], assets[receive2]],
-      selectedPoolId
+      currentPool?.id || ""
     );
     if (transaction) {
       setLoading(false);
@@ -378,7 +394,6 @@ export const RemoveLiquidity: FC<IRemoveLiquidity> = (props) => {
         >
           <Grid2 sx={{ width: "100%" }}>
             <PoolSelector
-              selectedPoolId={selectedPoolId}
               onChange={handlePoolChange}
               disabled={!canUpdate}
               sx={styles.poolSelector}

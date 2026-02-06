@@ -29,6 +29,8 @@ export interface INetwork {
   network: NetworkType;
   info: NetworkInfo;
   toolkit: TezosToolkit;
+  selectedPool: PoolConfig | null;
+  setSelectedPool: (pool: PoolConfig) => void;
   getAsset: (name: string) => Asset;
   getPoolAdapter: (poolId: string) => IPoolAdapter;
   getPoolsByTokenPair: (tokenA: string, tokenB: string) => PoolConfig[];
@@ -42,10 +44,15 @@ export const networks: NetworkMap = {
   [NetworkType.TEZLINK_SHADOWNET as string]: tezlink_shadownet as NetworkInfo,
 };
 
-PoolRegistry.initializeFromConfig(
-  (mainnet as NetworkInfo).pools,
-  (mainnet as NetworkInfo).assets
-);
+// Initialize PoolRegistry immediately on module load
+const initialNetwork = mainnet as NetworkInfo;
+PoolRegistry.initializeFromConfig(initialNetwork.pools, initialNetwork.assets);
+
+// Get first pool
+const initialPool =
+  initialNetwork.pools.length > 0
+    ? PoolRegistry.getPoolById(initialNetwork.pools[0].id) || null
+    : null;
 
 export const NetworkContext = createContext<INetwork | undefined>(undefined);
 
@@ -60,6 +67,9 @@ export const NetworkProvider: React.FC<{ children: React.ReactNode }> = ({
   );
   const [toolkit, setToolkit] = useState<TezosToolkit>(
     new TezosToolkit((mainnet as NetworkInfo).tezosServer)
+  );
+  const [selectedPool, setSelectedPoolState] = useState<PoolConfig | null>(
+    initialPool
   );
 
   const switchNetwork = useCallback((network: NetworkType) => {
@@ -91,6 +101,19 @@ export const NetworkProvider: React.FC<{ children: React.ReactNode }> = ({
     setActiveNetwork(network);
     setNetworkInfo(newNetworkInfo);
     setToolkit(newToolkit);
+
+    if (newNetworkInfo.pools.length > 0) {
+      const firstPool = PoolRegistry.getPoolById(newNetworkInfo.pools[0].id);
+      if (firstPool) {
+        setSelectedPoolState(firstPool);
+      }
+    } else {
+      setSelectedPoolState(null);
+    }
+  }, []);
+
+  const setSelectedPool = useCallback((pool: PoolConfig) => {
+    setSelectedPoolState(pool);
   }, []);
 
   const getAsset = useCallback((name: string): Asset => {
@@ -116,6 +139,8 @@ export const NetworkProvider: React.FC<{ children: React.ReactNode }> = ({
     network: activeNetwork,
     info: networkInfo,
     toolkit,
+    selectedPool,
+    setSelectedPool,
     getAsset,
     getPoolAdapter,
     getPoolsByTokenPair,

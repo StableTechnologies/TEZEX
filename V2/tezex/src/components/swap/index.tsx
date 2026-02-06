@@ -1,4 +1,4 @@
-import React, { FC, useState, useEffect, useCallback } from "react";
+import React, { FC, useState, useEffect, useCallback, useRef } from "react";
 
 import {
   Asset,
@@ -59,11 +59,8 @@ export const Swap: FC<ISwapToken> = (props) => {
   const receive = 1;
 
   const availablePools = network.getAllPools();
-  const [selectedPoolId, setSelectedPoolId] = useState<string>(
-    availablePools[0]?.id || ""
-  );
+  const currentPool = network.selectedPool;
 
-  const currentPool = availablePools.find((p) => p.id === selectedPoolId);
   const [assets, setAssets] = useState<[Asset, Asset]>(() => {
     if (currentPool) {
       return [
@@ -83,13 +80,36 @@ export const Swap: FC<ISwapToken> = (props) => {
   const [canUpdate, setCanUpdate] = useState<boolean>(false);
 
   const active = walletOps.getActiveTransaction();
+  const previousPoolIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!currentPool) return;
+
+    const poolId = currentPool.id;
+
+    if (previousPoolIdRef.current === poolId) {
+      return;
+    }
+
+    previousPoolIdRef.current = poolId;
+
+    const newAssets: [Asset, Asset] = [
+      network.getAsset(currentPool.tokenA),
+      network.getAsset(currentPool.tokenB),
+    ];
+
+    setAssets(newAssets);
+
+    transactionOps
+      .initialize([newAssets[0]], [newAssets[1]], poolId)
+      .catch((error) => {
+        console.error("Transaction init failed:", error);
+      });
+  }, [currentPool?.id, network, transactionOps]);
 
   useEffect(() => {
     const pools = network.getAllPools();
     if (pools.length > 0) {
-      const newPoolId = pools[0].id;
-      setSelectedPoolId(newPoolId);
-
       setAssets([
         network.getAsset(pools[0].tokenA),
         network.getAsset(pools[0].tokenB),
@@ -103,8 +123,7 @@ export const Swap: FC<ISwapToken> = (props) => {
     async (newPoolId: string) => {
       const pool = network.getAllPools().find((p) => p.id === newPoolId);
       if (!pool) return;
-
-      setSelectedPoolId(newPoolId);
+      network.setSelectedPool(pool);
       setAssets([network.getAsset(pool.tokenA), network.getAsset(pool.tokenB)]);
       // Re-initialize transaction with new pool
       await transactionOps.initialize(
@@ -134,7 +153,7 @@ export const Swap: FC<ISwapToken> = (props) => {
     const transaction = await transactionOps.initialize(
       [assets[send]],
       [assets[receive]],
-      selectedPoolId
+      currentPool?.id || ""
     );
 
     //if transaction initialized update balance and set loading params to false
@@ -262,7 +281,6 @@ export const Swap: FC<ISwapToken> = (props) => {
                   </Typography>
 
                   <PoolSelector
-                    selectedPoolId={selectedPoolId}
                     onChange={handlePoolChange}
                     disabled={!canUpdate}
                     sx={styles.poolSelector}
