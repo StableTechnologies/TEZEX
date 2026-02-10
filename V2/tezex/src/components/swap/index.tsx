@@ -1,4 +1,4 @@
-import React, { FC, useState, useEffect, useCallback, useRef } from "react";
+import React, { FC, useState, useEffect, useCallback } from "react";
 
 import {
   Asset,
@@ -11,7 +11,7 @@ import {
 import { UserAmountField, Slippage } from "../../components/ui/elements/inputs";
 import { Wallet } from "../wallet";
 import { useSession } from "../../hooks/session";
-import { useWalletOps, WalletOps } from "../../hooks/wallet";
+import { useWallet, useWalletOps, WalletOps } from "../../hooks/wallet";
 import { SwapUpDownToggle } from "../../components/ui/elements/Toggles";
 import { SlippageLabel } from "../../components/ui/elements/Labels";
 import { useNetwork } from "../../hooks/network";
@@ -42,6 +42,7 @@ export const Swap: FC<ISwapToken> = (props) => {
   // load styles and apply responsive scaling for component
   const styles = useStyles(style, scalingKey);
   const network = useNetwork();
+  const wallet = useWallet();
   // load wallet operations for component
   const walletOps: WalletOps = useWalletOps(TransactingComponent.SWAP, true);
   // load transaction operations for component
@@ -80,32 +81,6 @@ export const Swap: FC<ISwapToken> = (props) => {
   const [canUpdate, setCanUpdate] = useState<boolean>(false);
 
   const active = walletOps.getActiveTransaction();
-  const previousPoolIdRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    if (!currentPool) return;
-
-    const poolId = currentPool.id;
-
-    if (previousPoolIdRef.current === poolId) {
-      return;
-    }
-
-    previousPoolIdRef.current = poolId;
-
-    const newAssets: [Asset, Asset] = [
-      network.getAsset(currentPool.tokenA),
-      network.getAsset(currentPool.tokenB),
-    ];
-
-    setAssets(newAssets);
-
-    transactionOps
-      .initialize([newAssets[0]], [newAssets[1]], poolId)
-      .catch((error) => {
-        console.error("Transaction init failed:", error);
-      });
-  }, [currentPool?.id, network, transactionOps]);
 
   useEffect(() => {
     const pools = network.getAllPools();
@@ -125,6 +100,9 @@ export const Swap: FC<ISwapToken> = (props) => {
       if (!pool) return;
       network.setSelectedPool(pool);
       setAssets([network.getAsset(pool.tokenA), network.getAsset(pool.tokenB)]);
+
+      wallet.clearTransaction(TransactingComponent.ADD_LIQUIDITY);
+      wallet.clearTransaction(TransactingComponent.REMOVE_LIQUIDITY);
       // Re-initialize transaction with new pool
       await transactionOps.initialize(
         [network.getAsset(pool.tokenA)],

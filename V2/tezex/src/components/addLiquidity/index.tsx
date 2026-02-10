@@ -1,4 +1,4 @@
-import React, { FC, useState, useEffect, useCallback, useRef } from "react";
+import React, { FC, useState, useEffect, useCallback } from "react";
 import plusIcon from "../../assets/plusIcon.svg";
 
 import { Wallet } from "../wallet";
@@ -82,33 +82,6 @@ export const AddLiquidity: FC<IAddLiquidity> = (props) => {
     getLPToken(currentPool),
   ]);
 
-  const previousPoolIdRef = useRef<string | null>(null);
-  useEffect(() => {
-    if (!currentPool) return;
-
-    const poolId = currentPool.id;
-
-    if (previousPoolIdRef.current === poolId) {
-      return;
-    }
-
-    previousPoolIdRef.current = poolId;
-
-    const newAssets: [Asset, Asset, Asset] = [
-      network.getAsset(currentPool.tokenA),
-      network.getAsset(currentPool.tokenB),
-      getLPToken(currentPool),
-    ];
-
-    setAssets(newAssets);
-
-    transactionOps
-      .initialize([newAssets[0], newAssets[1]], [newAssets[2]], poolId)
-      .catch((error) => {
-        console.error("Transaction init failed:", error);
-      });
-  }, [currentPool?.id, network, transactionOps]);
-
   const handlePoolChange = useCallback(
     async (newPoolId: string) => {
       const pool = network.getAllPools().find((p) => p.id === newPoolId);
@@ -122,6 +95,8 @@ export const AddLiquidity: FC<IAddLiquidity> = (props) => {
       ];
       setAssets(newAssets);
 
+      wallet.clearTransaction(TransactingComponent.SWAP);
+      wallet.clearTransaction(TransactingComponent.REMOVE_LIQUIDITY);
       // Re-initialize transaction with new pool
       await transactionOps.initialize(
         [newAssets[0], newAssets[1]],
