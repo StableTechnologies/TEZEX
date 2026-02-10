@@ -78,6 +78,7 @@ export interface WalletInfo {
   getActiveTransaction: (
     component: TransactingComponent
   ) => Transaction | undefined;
+  clearTransaction: (component: TransactingComponent) => void;
 }
 
 const defaultWalletInfo: WalletInfo = {
@@ -109,6 +110,9 @@ const defaultWalletInfo: WalletInfo = {
   },
   getActiveTransaction: () => {
     throw new Error("getActiveTransaction called outside of wallet provider");
+  },
+  clearTransaction: () => {
+    throw new Error("clearTransaction called outside of wallet provider");
   },
 };
 
@@ -308,6 +312,15 @@ export function WalletProvider(props: IWalletProvider) {
       return transactions[component];
     },
     [transactions]
+  );
+
+  const clearTransaction = useCallback(
+    (component: TransactingComponent) => {
+      setTransactions((draft) => {
+        delete draft[component];
+      });
+    },
+    [setTransactions]
   );
 
   // calback to send a transaction for final processing
@@ -776,6 +789,7 @@ export function WalletProvider(props: IWalletProvider) {
     updateAmount,
     getActiveTransaction,
     disconnect,
+    clearTransaction,
   };
 
   return (
