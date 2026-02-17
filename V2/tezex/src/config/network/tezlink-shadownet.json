@@ -5,7 +5,7 @@
       "id": "xtz-usdtz-tezex",
       "name": "TEZEX",
       "type": "TEZEX XTZ-USDtz",
-      "address": "KT1BhDKpBn3twndrAHpWPZaxL9phF78GREoH",
+      "address": "KT1SWve14sCJxgoVUETGuVm5eXKzD7ZgpY5A",
       "tokenA": "XTZ",
       "tokenB": "USDtz",
       "lpToken": "LP_XTZUSDtz"
@@ -23,14 +23,14 @@
       "name": "USDtz",
       "label": "USDtz",
       "logo": "/assets/usdtzLogo.svg",
-      "address": "KT1TYwaY6uuEo3kRPEmm9qiRArGvTksoTgQm",
+      "address": "KT1RfMCz7jonKzH9pkHD3Rko8pf4wnDaiM95",
       "decimals": 6
     },
     {
       "name": "LP_XTZUSDtz",
       "label": "LP-XTZUSDtz",
       "logo": "/assets/lpxtzusdtzLogo.svg",
-      "address": "KT1TNY6tAp2Xugn99wVQTK5ZPZfioDcfNkZS",
+      "address": "KT19AZwYwYeV2SFoyZEPLz3Bc4q7emPg9ZKu",
       "decimals": 6
     }
   ]
