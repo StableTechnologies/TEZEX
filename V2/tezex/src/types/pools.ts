@@ -4,7 +4,8 @@ import { ExecutionKit, Token } from "./general";
 
 export enum PoolType {
   SIRIUS = "SIRIUS",
-  TEZEX_XTZUSDTZ = "TEZEX XTZ-USDtz",
+  TEZEX = "TEZEX",
+  STABLE = "STABLE",
 }
 
 export interface PoolConfig {
@@ -15,6 +16,12 @@ export interface PoolConfig {
   tokenA: Token;
   tokenB: Token;
   lpToken: Token;
+}
+
+export interface StablePoolConfig extends PoolConfig {
+  poolId: number; // pool_id inside Standalone DEX
+  tokenAIdx: number; // tokenA (i)
+  tokenBIdx: number; // tokenB (j)
 }
 
 export interface SwapEstimate {
