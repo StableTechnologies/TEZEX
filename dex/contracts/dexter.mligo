@@ -459,9 +459,9 @@ module Dexter = struct
           // we trust the FA2 to provide the expected balance. there are no BFS
           // shenanigans to worry about unless the token contract misbehaves
           let token_pool =
-            match token_pool with
-            | [] -> (failwith error_INVALID_FA2_BALANCE_RESPONSE : nat)
-            | x :: xs -> x.1 in
+            match List.head token_pool with
+                None -> (failwith error_INVALID_FA2_BALANCE_RESPONSE : nat)
+                | Some ((_addr, _token_id), balance) -> balance in
   #endif
           let storage = {storage with tokenPool = token_pool ; selfIsUpdatingTokenPool = false} in
           (([ ] : operation list), storage)
@@ -544,7 +544,11 @@ module Dexter = struct
   type build_storage =
   { lqtTotal : nat;
     manager : address;
-    tokenAddress : address }
+    tokenAddress : address;
+#if FA2
+    tokenId : nat;
+#endif
+  }
 
   let build_storage (build : build_storage) : storage =
   { tokenPool = 0n ;
@@ -554,6 +558,9 @@ module Dexter = struct
     freezeBaker = false ;
     manager = build.manager ;
     tokenAddress = build.tokenAddress ;
+    #if FA2
+    tokenId = 0n ;
+    #endif
     lqtAddress = ("tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU" : address) ;
   }
 
