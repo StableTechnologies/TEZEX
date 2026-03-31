@@ -82,6 +82,9 @@ Edit `.env` with your settings (parameters and their description are described i
 # Compile DEX contract
 ligo compile contract ./contracts/dexter.mligo -o ./compiled_contracts/pool.tz -D DEPLOY --no-warn
 
+# Compile DEX contract with underlying FA2
+ligo compile contract contracts/dexter.mligo -o ./compiled_contracts/pool_fa2.tz -D DEPLOY,FA2 --no-warn
+
 # Compile LQT contract
 ligo compile contract ./contracts/lqt_fa12.mligo -o ./compiled_contracts/lqt.tz --no-warn
 ```
