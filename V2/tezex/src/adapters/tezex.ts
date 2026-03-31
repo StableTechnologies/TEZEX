@@ -1,6 +1,6 @@
 import { TezosToolkit } from "@taquito/taquito";
 import BigNumber from "bignumber.js";
-import { Token, Errors, ExecutionKit } from "../types/general";
+import { Token, Errors, ExecutionKit, TokenType } from "../types/general";
 import {
   AddLiquidityEstimate,
   IPoolAdapter,
@@ -12,8 +12,14 @@ import {
 import { PoolRegistry } from "./poolRegistry";
 import { PoolDataCache } from "../utils/poolDataCache";
 import { getTxDeadline } from "../functions/util";
-import { DAppClient } from "@airgap/beacon-sdk";
-import { transferParamsToBeaconOp } from "../functions/transactions";
+import {
+  DAppClient,
+  PartialTezosTransactionOperation,
+} from "@airgap/beacon-sdk";
+import {
+  buildApproveOp,
+  transferParamsToBeaconOp,
+} from "../functions/transactions";
 
 export class TezexAdapter implements IPoolAdapter {
   constructor(public poolConfig: PoolConfig) {}
@@ -212,8 +218,8 @@ export class TezexAdapter implements IPoolAdapter {
     try {
       const contract = await toolkit.contract.at(this.poolConfig.address);
       const deadline = getTxDeadline().toISOString();
-      const tokenAddress = this.getTokenAddress(this.poolConfig.tokenB);
-      const tokenContract = await toolkit.contract.at(tokenAddress);
+      const asset = PoolRegistry.getAsset(this.poolConfig.tokenB);
+      const tokenContract = await toolkit.contract.at(asset.address);
 
       // Calculate max tokens with slippage
       const maxTokensDeposited = tokenBAmount
@@ -221,32 +227,46 @@ export class TezexAdapter implements IPoolAdapter {
         .integerValue(BigNumber.ROUND_DOWN);
 
       // addLiquidity(address owner, nat minLqtMinted, nat maxTokensDeposited, timestamp deadline)
-      const approve0 = tokenContract.methodsObject.approve({
-        spender: this.poolConfig.address,
-        value: 0,
+      const operations: PartialTezosTransactionOperation[] = [];
+
+      const approve0 = buildApproveOp({
+        tokenContract,
+        token: asset,
+        ownerAddress: userAddress,
+        spenderAddress: this.poolConfig.address,
+        amount: 0,
       });
-      const approve = tokenContract.methodsObject.approve({
-        spender: this.poolConfig.address,
-        value: maxTokensDeposited.toNumber(),
+      if (
+        PoolRegistry.getAsset(this.poolConfig.tokenB).type === TokenType.FA12
+      ) {
+        operations.push(transferParamsToBeaconOp(approve0));
+      }
+
+      const approve = buildApproveOp({
+        tokenContract,
+        token: asset,
+        ownerAddress: userAddress,
+        spenderAddress: this.poolConfig.address,
+        amount: maxTokensDeposited.toNumber(),
       });
+      operations.push(transferParamsToBeaconOp(approve));
+
       const addLiq = contract.methodsObject.addLiquidity({
         owner: userAddress,
         minLqtMinted: minLpTokens.integerValue(BigNumber.ROUND_DOWN).toNumber(),
         maxTokensDeposited: maxTokensDeposited.toNumber(),
         deadline,
       });
-
-      const operations = [
-        transferParamsToBeaconOp(approve0.toTransferParams()),
-        transferParamsToBeaconOp(approve.toTransferParams()),
+      operations.push(
         transferParamsToBeaconOp(
           addLiq.toTransferParams({
             amount: tokenAAmount.toNumber(),
             mutez: true,
           })
-        ),
-        transferParamsToBeaconOp(approve0.toTransferParams()),
-      ];
+        )
+      );
+      operations.push(transferParamsToBeaconOp(approve0));
+
       const response = await client.requestOperation({
         operationDetails: operations,
       });
@@ -385,29 +405,52 @@ export class TezexAdapter implements IPoolAdapter {
       const contract = await toolkit.contract.at(this.poolConfig.address);
       const tokenContract = await toolkit.contract.at(tokenAddress);
 
-      const approve0 = tokenContract.methodsObject.approve({
-        spender: this.poolConfig.address,
-        value: 0,
-      });
+      const tokenAmountInt = tokenAmount
+        .integerValue(BigNumber.ROUND_DOWN)
+        .toNumber();
+      const asset = PoolRegistry.getAsset(this.poolConfig.tokenB);
 
-      const approve = tokenContract.methodsObject.approve({
-        spender: this.poolConfig.address,
-        value: tokenAmount.integerValue(BigNumber.ROUND_DOWN).toNumber(),
-      });
+      const operations: PartialTezosTransactionOperation[] = [];
 
-      const swap = contract.methodsObject.tokenToXtz({
-        to: userAddress,
-        tokensSold: tokenAmount.integerValue(BigNumber.ROUND_DOWN).toNumber(),
-        minXtzBought: minXtzBought.toNumber(),
-        deadline,
-      });
+      if (asset.type === TokenType.FA12) {
+        operations.push(
+          transferParamsToBeaconOp(
+            buildApproveOp({
+              tokenContract,
+              token: asset,
+              ownerAddress: userAddress,
+              spenderAddress: this.poolConfig.address,
+              amount: 0,
+            })
+          )
+        );
+      }
 
-      // Convert to Beacon format
-      const operations = [
-        transferParamsToBeaconOp(approve0.toTransferParams()),
-        transferParamsToBeaconOp(approve.toTransferParams({})),
-        transferParamsToBeaconOp(swap.toTransferParams({})),
-      ];
+      operations.push(
+        transferParamsToBeaconOp(
+          buildApproveOp({
+            tokenContract,
+            token: asset,
+            ownerAddress: userAddress,
+            spenderAddress: this.poolConfig.address,
+            amount: tokenAmountInt,
+          })
+        )
+      );
+
+      operations.push(
+        transferParamsToBeaconOp(
+          contract.methodsObject
+            .tokenToXtz({
+              to: userAddress,
+              tokensSold: tokenAmountInt,
+              minXtzBought: minXtzBought.toNumber(),
+              deadline,
+            })
+            .toTransferParams()
+        )
+      );
+
       const response = await client.requestOperation({
         operationDetails: operations,
       });

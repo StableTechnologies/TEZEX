@@ -106,9 +106,13 @@ const TokenInput: FC<IRigthInput> = (props) => {
     if (amount) {
       //update value if different
       setValue((value) => {
-        if (toNumber(value) === toNumber(amount)) return value;
-        else if (props.readOnly && toNumber(amount) === 0) return "0.00";
-        else return amount;
+        const truncated = amount.includes(".")
+          ? amount.slice(0, amount.indexOf(".") + 9)
+          : amount;
+
+        if (toNumber(value) === toNumber(truncated)) return value;
+        else if (props.readOnly && toNumber(truncated) === 0) return "0.00";
+        else return truncated;
       });
       setLoadingFalse();
     }
@@ -126,8 +130,12 @@ const TokenInput: FC<IRigthInput> = (props) => {
     if (balance) {
       //update balance if different
       setTransactionBalance((_balance: string | undefined) => {
-        if (_balance === balance) return _balance;
-        else return balance;
+        const truncated = balance.includes(".")
+          ? balance.slice(0, balance.indexOf(".") + 7)
+          : balance;
+
+        if (_balance === truncated) return _balance;
+        else return truncated;
       });
     }
   }, [transactionOps.trackedAsset?.balance?.string]);
@@ -190,8 +198,11 @@ const TokenInput: FC<IRigthInput> = (props) => {
   useEffect(() => {
     const assetState = transactionOps.trackedAsset;
     if (assetState && assetState.balance) {
-      !eq(assetState.balance.string, transactionBalance) &&
-        setTransactionBalance(assetState.balance.string);
+      const balance = assetState.balance.string;
+      const truncated = balance.includes(".")
+        ? balance.slice(0, balance.indexOf(".") + 7)
+        : balance;
+      !eq(truncated, transactionBalance) && setTransactionBalance(truncated);
     }
   }, [transactionOps.trackedAsset]);
 

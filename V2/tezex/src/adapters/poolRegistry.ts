@@ -1,7 +1,13 @@
-import { IPoolAdapter, PoolConfig, PoolType } from "../types/pools";
+import {
+  IPoolAdapter,
+  PoolConfig,
+  PoolType,
+  StablePoolConfig,
+} from "../types/pools";
 import { Asset, Token } from "../types/general";
 import { SiriusAdapter } from "./sirius";
 import { TezexAdapter } from "./tezex";
+import { StableSwapAdapter } from "./tezexStable";
 
 export class PoolRegistry {
   private static adapters: Map<string, IPoolAdapter> = new Map();
@@ -63,8 +69,10 @@ export class PoolRegistry {
     switch (config.type) {
       case PoolType.SIRIUS:
         return new SiriusAdapter(config);
-      case PoolType.TEZEX_XTZUSDTZ:
+      case PoolType.TEZEX:
         return new TezexAdapter(config);
+      case PoolType.STABLE:
+        return new StableSwapAdapter(config as StablePoolConfig);
       default:
         throw new Error(`Unknown pool type: ${config.type}`);
     }

@@ -10,6 +10,7 @@ import {
   Transaction,
   AssetState,
   TransferType,
+  TokenType,
 } from "../types/general";
 
 import { tokenDecimalToMantissa, tokenMantissaToDecimal } from "./scaling";
@@ -233,3 +234,28 @@ export const getTzktApiUrl = (networkType: NetworkType): string => {
       return "https://api.tzkt.io";
   }
 };
+
+export async function getBalanceFromTzKT(
+  network: NetworkType,
+  address: string,
+  asset: Asset
+): Promise<BigNumber> {
+  const api = getTzktApiUrl(network);
+  switch (asset.type) {
+    case TokenType.XTZ: {
+      const response = await fetch(`${api}/v1/accounts/${address}/balance`);
+      const data = await response.json();
+      return data != null ? new BigNumber(data) : new BigNumber(0);
+    }
+    case TokenType.FA12:
+    case TokenType.FA2: {
+      const response = await fetch(
+        `${api}/v1/tokens/balances?account=${address}&token.contract=${asset.address}`
+      );
+      const data = await response.json();
+      return data[0]?.balance
+        ? new BigNumber(data[0].balance)
+        : new BigNumber(0);
+    }
+  }
+}

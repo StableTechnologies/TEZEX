@@ -32,6 +32,7 @@ import { useTransaction } from "../../hooks/transaction";
 import { eq } from "lodash";
 import { PoolSelector } from "../ui/elements/PoolSelector";
 import { getBalance } from "../../functions/beacon";
+import { BigNumber } from "bignumber.js";
 
 export interface IAddLiquidity {
   orientation: "portrait" | "landscape";
@@ -176,8 +177,9 @@ export const AddLiquidity: FC<IAddLiquidity> = (props) => {
   const getLiquidityTokens = useCallback((): string => {
     const transaction = transactionOps.getActiveTransaction();
     // liquidity tokens
-    const lqt = transaction?.receiveAmount[0].string;
-    return lqt || "0";
+    const lqt = transaction?.receiveAmount[0].string || "0";
+    const bn = new BigNumber(lqt);
+    return bn.toFixed(6).replace(/\.?0+$/, "");
   }, [transactionOps.getActiveTransaction]);
 
   // Fetch balances for all pools
