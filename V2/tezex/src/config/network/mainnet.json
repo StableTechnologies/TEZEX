@@ -13,7 +13,7 @@
     {
       "id": "xtz-usdtz-tezex",
       "name": "TEZEX",
-      "type": "TEZEX XTZ-USDtz",
+      "type": "TEZEX",
       "address": "KT1VqphtqcszFRi9gzhLTgMBopDw1xQ1UzBd",
       "tokenA": "XTZ",
       "tokenB": "USDtz",
@@ -26,35 +26,40 @@
       "label": "Tez",
       "logo": "/assets/tzlogo.svg",
       "address": "",
-      "decimals": 6
+      "decimals": 6,
+      "type": "XTZ"
     },
     {
       "name": "Sirs",
       "label": "Sirs",
       "logo": "/assets/sirsLogo.svg",
       "address": "KT1AafHA1C1vk959wvHWBispY9Y2f3fxBUUo",
-      "decimals": 0
+      "decimals": 0,
+      "type": "FA1.2"
     },
     {
       "name": "TzBTC",
       "label": "tzBTC",
       "logo": "/assets/tzbtcLogo.svg",
       "address": "KT1PWx2mnDueood7fEmfbBDKx1D9BAnnXitn",
-      "decimals": 8
+      "decimals": 8,
+      "type": "FA1.2"
     },
     {
       "name": "USDtz",
       "label": "USDtz",
       "logo": "/assets/usdtzLogo.svg",
       "address": "KT1LN4LPSqTMS7Sd2CJw4bbDGRkMv2t68Fy9",
-      "decimals": 6
+      "decimals": 6,
+      "type": "FA1.2"
     },
     {
       "name": "LP_XTZUSDtz",
       "label": "LP-XTZUSDtz",
       "logo": "/assets/lpxtzusdtzLogo.svg",
       "address": "KT1Np5pCBF6vkvPTGxUVFZZpUaqPQfKjEsLQ",
-      "decimals": 6
+      "decimals": 6,
+      "type": "FA1.2"
     }
   ]
 }

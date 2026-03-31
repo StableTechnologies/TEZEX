@@ -13,11 +13,62 @@
     {
       "id": "xtz-usdtz-tezex",
       "name": "TEZEX",
-      "type": "TEZEX XTZ-USDtz",
+      "type": "TEZEX",
       "address": "KT1VqeZKCx8yfBD9cQESD1P1tSctJQGx5ofZ",
       "tokenA": "XTZ",
       "tokenB": "USDtz",
       "lpToken": "LP_XTZUSDtz"
+    },
+    {
+      "id": "xtz-usdt-tezex",
+      "name": "TEZEX",
+      "type": "TEZEX",
+      "address": "KT1S5BN865wjQo8GSityGbxE4WWGHT8iDwFt",
+      "tokenA": "XTZ",
+      "tokenB": "USDt",
+      "lpToken": "LP_XTZUSDt"
+    },
+    {
+      "id": "xtz-btctz-tezex",
+      "name": "TEZEX",
+      "type": "TEZEX",
+      "address": "KT1AqvHLEuTBJtm2q3H622UuNfi3QL27dQtm",
+      "tokenA": "XTZ",
+      "tokenB": "BTCtz",
+      "lpToken": "LP_XTZBTCtz"
+    },
+    {
+      "id": "xtz-ethtz-tezex",
+      "name": "TEZEX",
+      "type": "TEZEX",
+      "address": "KT1PB1Ze8zdsuAuDoi7C88ghpAXndYSaoyvc",
+      "tokenA": "XTZ",
+      "tokenB": "ETHtz",
+      "lpToken": "LP_XTZETHtz"
+    },
+    {
+      "id": "usdtz-usdt-tezex",
+      "name": "TEZEX",
+      "type": "STABLE",
+      "address": "KT1FCcx1N5gk2G9hS2xhkGuoJjYtz6jnSKD4",
+      "lpToken": "LP_USDtzUSDt",
+      "tokenA": "USDtz",
+      "tokenB": "USDt",
+      "poolId": 0,
+      "tokenAIdx": 0,
+      "tokenBIdx": 1
+    },
+    {
+      "id": "tzBTC-BTCtz-tezex",
+      "name": "TEZEX",
+      "type": "STABLE",
+      "address": "KT1FCcx1N5gk2G9hS2xhkGuoJjYtz6jnSKD4",
+      "lpToken": "LP_tzBTCBTCtz",
+      "tokenA": "tzBTC",
+      "tokenB": "BTCtz",
+      "poolId": 1,
+      "tokenAIdx": 0,
+      "tokenBIdx": 1
     }
   ],
   "assets": [
@@ -26,35 +77,116 @@
       "label": "Tez",
       "logo": "/assets/tzlogo.svg",
       "address": "",
-      "decimals": 6
+      "decimals": 6,
+      "type": "XTZ"
     },
     {
       "name": "Sirs",
       "label": "Sirs",
       "logo": "/assets/sirsLogo.svg",
       "address": "KT1AafHA1C1vk959wvHWBispY9Y2f3fxBUUo",
-      "decimals": 0
+      "decimals": 0,
+      "type": "FA1.2"
     },
     {
       "name": "TzBTC",
       "label": "tzBTC",
       "logo": "/assets/tzbtcLogo.svg",
       "address": "KT1VqarPDicMFn1ejmQqqshUkUXTCTXwmkCN",
-      "decimals": 8
+      "decimals": 8,
+      "type": "FA1.2"
     },
     {
       "name": "USDtz",
       "label": "USDtz",
       "logo": "/assets/usdtzLogo.svg",
       "address": "KT1RBgHqPFPQX2TWzRAkQDqW5Fvnu3hC2FJb",
-      "decimals": 6
+      "decimals": 6,
+      "type": "FA1.2"
     },
     {
       "name": "LP_XTZUSDtz",
       "label": "LP-XTZUSDtz",
       "logo": "/assets/lpxtzusdtzLogo.svg",
       "address": "KT1WpCpKizBWsvhec7WEMSgKFsWRJDdZZ2Zr",
-      "decimals": 6
+      "decimals": 6,
+      "type": "FA1.2"
+    },
+    {
+      "name": "USDt",
+      "label": "USDt",
+      "logo": "/assets/usdtLogo.svg",
+      "address": "KT1UhW3RdZ6qDMhkCbztVxFFY4eZ8uzfT5aN",
+      "decimals": 6,
+      "type": "FA2",
+      "tokenId": 0
+    },
+    {
+      "name": "LP_XTZUSDt",
+      "label": "LP-XTZUSDt",
+      "logo": "/assets/lpxtzusdtzLogo.svg",
+      "address": "KT1ByJNorbqnfELdDubUWRMxENsJXfJeSDVp",
+      "decimals": 6,
+      "type": "FA1.2"
+    },
+    {
+      "name": "BTCtz",
+      "label": "BTCtz",
+      "logo": "/assets/btctzLogo.svg",
+      "address": "KT1TduX8M94j4Bik6cgADkVtMkxpyQwUjHJ1",
+      "decimals": 8,
+      "type": "FA2",
+      "tokenId": 0
+    },
+    {
+      "name": "LP_XTZBTCtz",
+      "label": "LP-XTZBTCtz",
+      "logo": "/assets/lpxtzusdtzLogo.svg",
+      "address": "KT1KXKsRSob8PYKKU3PFYmh3KhFGVuRpUsAv",
+      "decimals": 6,
+      "type": "FA1.2"
+    },
+    {
+      "name": "ETHtz",
+      "label": "ETHtz",
+      "logo": "/assets/ethtzLogo.svg",
+      "address": "KT1DpuwPTCf7hGAAiBmjHfzs7ufK9kJ1cNoa",
+      "decimals": 18,
+      "type": "FA1.2"
+    },
+    {
+      "name": "LP_XTZETHtz",
+      "label": "LP-XTZETHtz",
+      "logo": "/assets/lpxtzusdtzLogo.svg",
+      "address": "KT1MtKQZe5XKtaBXGbGkey3usvRopgcqsrM6",
+      "decimals": 12,
+      "type": "FA1.2"
+    },
+    {
+      "name": "LP_USDtzUSDt",
+      "label": "LP_USDtzUSDt",
+      "logo": "/assets/lpxtzusdtzLogo.svg",
+      "address": "KT1FCcx1N5gk2G9hS2xhkGuoJjYtz6jnSKD4",
+      "decimals": 18,
+      "type": "FA2",
+      "tokenId": 0
+    },
+    {
+      "name": "LP_tzBTCBTCtz",
+      "label": "LP_tzBTCBTCtz",
+      "logo": "/assets/lpxtzusdtzLogo.svg",
+      "address": "KT1FCcx1N5gk2G9hS2xhkGuoJjYtz6jnSKD4",
+      "decimals": 18,
+      "type": "FA2",
+      "tokenId": 1
+    },
+    {
+      "name": "tzBTC",
+      "label": "tzBTC",
+      "logo": "/assets/tzbtcLogo.svg",
+      "address": "KT18xKQ3jqtAyK2ycqoYm44e8ckjNi2WUY2C",
+      "decimals": 8,
+      "type": "FA1.2"
     }
   ]
 }
