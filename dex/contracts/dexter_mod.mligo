@@ -151,8 +151,7 @@ module Dexter = struct
   [@inline] let error_ONLY_RECIPIENT_CAN_CLAIM_PROTOCOL_FEE = 39n
   [@inline] let error_NO_PROTOCOL_FEE_TO_CLAIM = 40n
   [@inline] let error_ONLY_MANAGER_CAN_SET_PROTOCOL_FEE_RECIPIENT = 41n
-
-
+  [@inline] let error_ACCUMULATED_FEE_EXCEEDS_TOKEN_POOL = 42n
 
   // =============================================================================
   // Functions
@@ -290,7 +289,7 @@ module Dexter = struct
               let xtz_pool_nat = mutez_to_natural storage.xtzPool in
               let xtz_withdrawn_nat = mutez_to_natural xtz_withdrawn in
               let new_xtz_pool_nat = match is_nat (xtz_pool_nat - xtz_withdrawn_nat) with
-                  | None -> (failwith "XTZ pool underflow" : nat)
+                  | None -> (failwith error_XTZ_POOL_UNDERFLOW : nat)
                   | Some n -> n in
               let new_xtzPool = natural_to_mutez new_xtz_pool_nat in
                                   
@@ -376,7 +375,7 @@ module Dexter = struct
           let xtz_pool_nat = mutez_to_natural storage.xtzPool in
           let xtz_bought_nat = mutez_to_natural xtz_bought in
           let new_xtz_pool_nat = match is_nat (xtz_pool_nat - xtz_bought_nat) with
-              | None -> (failwith "XTZ pool underflow" : nat)
+              | None -> (failwith error_XTZ_POOL_UNDERFLOW : nat)
               | Some n -> n in
           let new_xtzPool = natural_to_mutez new_xtz_pool_nat in
 
@@ -498,7 +497,13 @@ module Dexter = struct
                 None -> (failwith error_INVALID_FA2_BALANCE_RESPONSE : nat)
                 | Some ((_addr, _token_id), balance) -> balance in
   #endif
-          let storage = {storage with tokenPool = token_pool ; selfIsUpdatingTokenPool = false} in
+          // Subtract accumulated token fee from the real balance to get the true pool size.
+          // The contract holds tokenPool + accumulated_protocol_fee_token tokens in total,
+          // but only tokenPool participates in AMM calculations.
+          let adjusted_token_pool = match is_nat (token_pool - storage.accumulated_protocol_fee_token) with
+              | None -> (failwith error_ACCUMULATED_FEE_EXCEEDS_TOKEN_POOL : nat)
+              | Some n -> n in
+          let storage = {storage with tokenPool = adjusted_token_pool ; selfIsUpdatingTokenPool = false} in
           (([ ] : operation list), storage)
 
   [@entry]

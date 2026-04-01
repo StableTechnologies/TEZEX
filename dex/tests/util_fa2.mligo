@@ -96,7 +96,6 @@ let setup_full_dex () =
   let lqt_orig = deploy_lqt 1000000n (src ()) dex_addr in
   let lqt_addr = Test.Typed_address.to_address lqt_orig.taddr in
 
-  (* FA2: добавляем DEX как оператора вместо approve *)
   let add_op : FA2.update_operators =
     [ Add_operator
         { owner    = src () ;
@@ -105,30 +104,22 @@ let setup_full_dex () =
   let _ : nat =
     Test.Typed_address.transfer_exn tok_orig.taddr (Update_operators add_op) 0tez in
 
-  (* Депозит XTZ *)
   let _ : nat =
     Test.Typed_address.transfer_exn dex_orig.taddr (Default_ ()) 1tez in
 
-  (* Перевод токенов на DEX *)
   let transfer_param : FA2.transfer =
     [ { from_ = src () ;
         txs   = [ { to_ = dex_addr ; token_id = token_id ; amount = 1000000n } ] } ] in
   let _ : nat =
     Test.Typed_address.transfer_exn tok_orig.taddr (Transfer transfer_param) 0tez in
 
-  (* Синхронизируем tokenPool через balance_of *)
   let _ : nat =
     Test.Typed_address.transfer_exn dex_orig.taddr (UpdateTokenPool ()) 0tez in
 
-  (* Устанавливаем адрес LQT *)
   let _ : nat =
     Test.Typed_address.transfer_exn dex_orig.taddr (SetLqtAddress lqt_addr) 0tez in
 
   (dex_orig, lqt_orig, tok_orig)
-
-(* =========================================================================== *)
-(* DEX с selfIsUpdatingTokenPool = true                                         *)
-(* =========================================================================== *)
 
 let setup_dex_with_updating_pool () =
   let () = clean () in

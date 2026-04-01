@@ -1,6 +1,5 @@
 import { TezosToolkit } from "@taquito/taquito";
 import { TransferParams } from "./types";
-import BigNumber from "bignumber.js";
 
 export function prepareTokenTransfer(
     tokenStandard: string,

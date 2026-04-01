@@ -278,7 +278,17 @@
                                       COMPARE ;
                                       GT ;
                                       IF { PUSH nat 10 ; FAILWITH }
-                                         { UPDATE 1 ; PUSH bool False ; UPDATE 7 ; NIL operation ; PAIR } } }
+                                         { DUP 2 ;
+                                           GET 22 ;
+                                           SWAP ;
+                                           SUB ;
+                                           ISNAT ;
+                                           IF_NONE { PUSH nat 42 ; FAILWITH } {} ;
+                                           UPDATE 1 ;
+                                           PUSH bool False ;
+                                           UPDATE 7 ;
+                                           NIL operation ;
+                                           PAIR } } }
                                { IF_LEFT
                                    { DROP ;
                                      SOURCE ;
@@ -443,7 +453,7 @@
                                                                         SWAP ;
                                                                         SUB ;
                                                                         ISNAT ;
-                                                                        IF_NONE { PUSH string "XTZ pool underflow" ; FAILWITH } {} ;
+                                                                        IF_NONE { PUSH nat 36 ; FAILWITH } {} ;
                                                                         PUSH mutez 1 ;
                                                                         SWAP ;
                                                                         MUL ;
@@ -652,7 +662,7 @@
                                                                                           SWAP ;
                                                                                           SUB ;
                                                                                           ISNAT ;
-                                                                                          IF_NONE { PUSH string "XTZ pool underflow" ; FAILWITH } {} ;
+                                                                                          IF_NONE { PUSH nat 36 ; FAILWITH } {} ;
                                                                                           PUSH mutez 1 ;
                                                                                           SWAP ;
                                                                                           MUL ;

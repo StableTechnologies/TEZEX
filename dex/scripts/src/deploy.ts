@@ -19,7 +19,7 @@ import {
 } from "./types.js";
 import { Parser } from "@taquito/michel-codec";
 import { MichelsonMap, Schema } from "@taquito/michelson-encoder";
-import { getTokenBalance } from "./util.js";
+import { getTokenBalance, prepareTokenTransfer } from "./util.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -234,13 +234,16 @@ async function updateTokenPool(tezos: TezosToolkit, dex_address: string, config:
     const dex_contract = await tezos.contract.at(dex_address);
     const token_contract = await tezos.contract.at(config.tokenAddress);
 
+    const transferParams = prepareTokenTransfer(config.tokenStandard, {
+        from: managerAddress,
+        to: dex_address,
+        amount: config.seedAmount.token,
+        tokenId: config.tokenStandard === "FA2" ? config.tokenId : undefined,
+    });
+
     // First transfer token to DEX contract
     const transferOp = await token_contract.methodsObject
-        .transfer({
-            from: managerAddress,
-            to: dex_address,
-            value: config.seedAmount.token,
-        })
+        .transfer(transferParams.transfer)
         .send();
 
     console.log(`Token transfer operation: ${transferOp.hash}`);
