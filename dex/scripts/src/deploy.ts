@@ -7,6 +7,9 @@ import { fileURLToPath } from "url";
 import { dirname } from "path";
 import {
     dexStorageType,
+    dexStorageTypeFA2,
+    dexStorageTypeFA2Mod,
+    dexStorageTypeMod,
     lqtStorageType,
     type DexStorage,
     type LqtStorage,
@@ -16,6 +19,7 @@ import {
 } from "./types.js";
 import { Parser } from "@taquito/michel-codec";
 import { MichelsonMap, Schema } from "@taquito/michelson-encoder";
+import { getTokenBalance, prepareTokenTransfer } from "./util.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -83,13 +87,21 @@ async function deployLQT(tezos: TezosToolkit, dexAddress: string, config: FullCo
 async function deployDEX(tezos: TezosToolkit, config: FullConfig): Promise<string> {
     console.log("\nDeploying DEX contract...");
 
-    const dexCode = loadCompiledContract("pool.tz");
+    const contractFile =
+        config.tokenStandard === "FA2"
+            ? (config.poolType === "mod" ? "pool_fa2_mod.tz" : "pool_fa2.tz")
+            : (config.poolType === "mod" ? "pool_mod.tz" : "pool.tz");
+    const dexCode = loadCompiledContract(contractFile);
     const parser = new Parser();
     const parsedMichelson = parser.parseScript(dexCode);
 
     const lqtTotal = Math.floor(Math.sqrt(+config.seedAmount.xtz * +config.seedAmount.token));
 
-    const storageSchema = new Schema(dexStorageType);
+    const storageSchema = new Schema(
+        config.poolType === "mod"
+            ? (config.tokenStandard === "FA2" ? dexStorageTypeFA2Mod : dexStorageTypeMod)
+            : (config.tokenStandard === "FA2" ? dexStorageTypeFA2 : dexStorageType)
+    );
     const dexStorage: DexStorage = {
         tokenPool: 0,
         xtzPool: 0,
@@ -99,6 +111,14 @@ async function deployDEX(tezos: TezosToolkit, config: FullConfig): Promise<strin
         manager: config.manager,
         tokenAddress: config.tokenAddress,
         lqtAddress: "tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU",
+        tokenId: config.tokenStandard === "FA2" ? config.tokenId : undefined,
+
+        ...(config.poolType === "mod" && {
+            protocol_fee_bp: config.protocol_fee_bp!,
+            protocol_fee_recipient: config.protocol_fee_recipient!,
+            accumulated_protocol_fee_xtz: 0,
+            accumulated_protocol_fee_token: 0,
+        }),
     };
     const michelsonData = storageSchema.Encode(dexStorage);
 
@@ -164,22 +184,25 @@ async function checkBalance(config: FullConfig, tezos: TezosToolkit): Promise<vo
     if (balance.toNumber() < requiredBalance) {
         throw new Error(
             `Insufficient XTZ balance (${balance.toNumber()} XTZ). ` +
-                `Required: ${requiredBalance} XTZ. ` +
-                `Please fund the account ${pkh} on ${config.name} network.`
+            `Required: ${requiredBalance} XTZ. ` +
+            `Please fund the account ${pkh} on ${config.name} network.`
         );
     }
 
     // Check if token balance is sufficient
-    const tokenContract = await tezos.contract.at(config.tokenAddress);
-    const tokenStorage: any = await tokenContract.storage();
-    const ledgerEntry = await tokenStorage.ledger?.get(pkh);
-    const tokenBalance = ledgerEntry?.balance?.toNumber() ?? 0;
+    const tokenBalance = await getTokenBalance(
+        tezos,
+        config.tokenAddress,
+        pkh,
+        config.tokenStandard,
+        config.tokenId
+    );
 
     if (tokenBalance < seedToken) {
         throw new Error(
             `Insufficient token balance (${tokenBalance}). ` +
-                `Required: ${seedToken} tokens. ` +
-                `Please fund the account ${pkh} on ${config.name} network.`
+            `Required: ${seedToken} tokens. ` +
+            `Please fund the account ${pkh} on ${config.name} network.`
         );
     }
 
@@ -211,13 +234,16 @@ async function updateTokenPool(tezos: TezosToolkit, dex_address: string, config:
     const dex_contract = await tezos.contract.at(dex_address);
     const token_contract = await tezos.contract.at(config.tokenAddress);
 
+    const transferParams = prepareTokenTransfer(config.tokenStandard, {
+        from: managerAddress,
+        to: dex_address,
+        amount: config.seedAmount.token,
+        tokenId: config.tokenStandard === "FA2" ? config.tokenId : undefined,
+    });
+
     // First transfer token to DEX contract
     const transferOp = await token_contract.methodsObject
-        .transfer({
-            from: managerAddress,
-            to: dex_address,
-            value: config.seedAmount.token,
-        })
+        .transfer(transferParams.transfer)
         .send();
 
     console.log(`Token transfer operation: ${transferOp.hash}`);

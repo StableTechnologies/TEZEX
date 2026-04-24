@@ -6,8 +6,14 @@ import {
   Token,
   TransactingComponent,
   ExecutionKit,
+  TokenType,
+  Asset,
 } from "../types/general";
-import { TransferParams } from "@taquito/taquito";
+import {
+  ContractAbstraction,
+  ContractProvider,
+  TransferParams,
+} from "@taquito/taquito";
 import { PoolRegistry } from "../adapters/poolRegistry";
 import { IPoolAdapter } from "../types/pools";
 import {
@@ -139,6 +145,14 @@ export const decimals = {
   Sirs: 0,
   USDtz: 6,
   LP_XTZUSDtz: 6,
+  USDt: 6,
+  LP_XTZUSDt: 6,
+  BTCtz: 8,
+  LP_XTZBTCtz: 8,
+  ETHtz: 18,
+  LP_XTZETHtz: 12,
+  LP_tzBTCBTCtz: 18,
+  LP_USDtzUSDt: 18,
 };
 
 export function tokenMantissaToDecimal(
@@ -200,4 +214,32 @@ export function transferParamsToBeaconOp(
   }
 
   return operation;
+}
+
+interface BuildApproveOpParams {
+  tokenContract: ContractAbstraction<ContractProvider>;
+  token: Asset;
+  ownerAddress: string;
+  spenderAddress: string;
+  amount: number; // For FA2 tokens, this will be 0 for revocation and any other number for approval.
+}
+
+export function buildApproveOp(params: BuildApproveOpParams): TransferParams {
+  if (params.token.type === TokenType.FA12) {
+    return params.tokenContract.methodsObject
+      .approve({ spender: params.spenderAddress, value: params.amount })
+      .toTransferParams();
+  }
+
+  const operatorParam = {
+    owner: params.ownerAddress,
+    operator: params.spenderAddress,
+    token_id: params.token.tokenId,
+  };
+
+  const action = params.amount === 0 ? "remove_operator" : "add_operator";
+
+  return params.tokenContract.methodsObject
+    .update_operators([{ [action]: operatorParam }])
+    .toTransferParams();
 }

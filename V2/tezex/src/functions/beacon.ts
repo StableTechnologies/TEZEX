@@ -1,10 +1,9 @@
 import { WalletInfo } from "../contexts/wallet";
 import { INetwork } from "../contexts/network";
 import { TezosToolkit } from "@taquito/taquito";
-import { BigNumber } from "bignumber.js";
 
-import { Token, Asset, Balance } from "../types/general";
-import { balanceBuilder, getTzktApiUrl } from "./util";
+import { Asset, Balance, TokenType } from "../types/general";
+import { balanceBuilder, getBalanceFromTzKT } from "./util";
 import { DAppClient, NetworkType } from "@airgap/beacon-dapp";
 
 export async function getBalance(
@@ -18,23 +17,24 @@ export async function getBalance(
   // In future, when TezLink Shadownet supports all RPC operations, we can remove this workaround.
   // We also need to pass the network type to this function to get the correct TzKT API URL.
   const getBalance = async () => {
-    if (asset.name === Token.XTZ) {
-      return await toolkit.tz.getBalance(address);
-    } else {
-      try {
-        const contract = await toolkit.contract.at(asset.address);
-        return await contract.views.getBalance(address).read();
-      } catch {
-        // Fallback to TzKT API
-        const api = getTzktApiUrl(network);
-        const response = await fetch(
-          `${api}/v1/tokens/balances?account=${address}&token.contract=${asset.address}`
-        );
-        const data = await response.json();
-        return data[0]?.balance
-          ? new BigNumber(data[0].balance)
-          : new BigNumber(0);
+    try {
+      switch (asset.type) {
+        case TokenType.XTZ:
+          return await toolkit.tz.getBalance(address);
+        case TokenType.FA12: {
+          const contract = await toolkit.contract.at(asset.address);
+          return await contract.views.getBalance(address).read();
+        }
+        case TokenType.FA2: {
+          const contract = await toolkit.contract.at(asset.address);
+          const result = await contract.views
+            .balance_of([{ owner: address, token_id: asset.tokenId ?? 0 }])
+            .read();
+          return result[0].balance;
+        }
       }
+    } catch {
+      return await getBalanceFromTzKT(network, address, asset);
     }
   };
 

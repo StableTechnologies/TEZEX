@@ -36,6 +36,12 @@ export enum Token {
   Sirs = "Sirs",
   USDtz = "USDtz",
   LP_XTZUSDtz = "LP_XTZUSDtz",
+  USDt = "USDt",
+  LP_XTZUSDt = "LP_XTZUSDt",
+  BTCtz = "BTCtz",
+  LP_XTZBTCtz = "LP_XTZBTCtz",
+  LP_tzBTCBTCtz = "LP_tzBTCBTCtz",
+  LP_USDtzUSDt = "LP_USDtzUSDt",
 }
 
 export interface Balance {
@@ -45,12 +51,20 @@ export interface Balance {
   greaterOrEqualTo: (balance: Balance) => boolean;
 }
 
+export enum TokenType {
+  FA12 = "FA1.2",
+  FA2 = "FA2",
+  XTZ = "XTZ",
+}
+
 export interface Asset {
   name: Token;
   label: string;
   logo: string;
   address: string;
   decimals: number;
+  type: TokenType;
+  tokenId?: number; // Only for FA2 tokens
 }
 
 export enum TransferType {

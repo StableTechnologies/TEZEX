@@ -72,6 +72,10 @@ module Dexter = struct
       tokenId : nat ;
   #endif
       lqtAddress : address ;
+      protocol_fee_bp : nat ;           // fee in basis points (1 bp = 0.01%).
+      protocol_fee_recipient : address ; // address authorised to claim the accumulated fee
+      accumulated_protocol_fee_xtz : tez ;  // total XTZ fee accumulated since last claim
+      accumulated_protocol_fee_token : nat ; // total token fee accumulated since last claim
     }
 
   // =============================================================================
@@ -139,7 +143,15 @@ module Dexter = struct
   [@inline] let error_INVALID_INTERMEDIATE_CONTRACT = 31n
   [@inline] let error_INVALID_FA2_BALANCE_RESPONSE = 32n
   [@inline] let error_UNEXPECTED_REENTRANCE_IN_UPDATE_TOKEN_POOL = 33n
-
+  [@inline] let error_PROTOCOL_FEE_EXCEEDS_AMOUNT = 34n
+  [@inline] let error_PROTOCOL_FEE_EXCEEDS_XTZ_BOUGHT = 35n
+  [@inline] let error_XTZ_POOL_UNDERFLOW = 36n
+  [@inline] let error_ONLY_MANAGER_CAN_SET_PROTOCOL_FEE = 37n
+  [@inline] let error_PROTOCOL_FEE_TOO_HIGH = 38n
+  [@inline] let error_ONLY_RECIPIENT_CAN_CLAIM_PROTOCOL_FEE = 39n
+  [@inline] let error_NO_PROTOCOL_FEE_TO_CLAIM = 40n
+  [@inline] let error_ONLY_MANAGER_CAN_SET_PROTOCOL_FEE_RECIPIENT = 41n
+  [@inline] let error_ACCUMULATED_FEE_EXCEEDS_TOKEN_POOL = 42n
 
   // =============================================================================
   // Functions
@@ -188,6 +200,10 @@ module Dexter = struct
       | None -> (failwith error_INVALID_TO_ADDRESS : unit contract)
       | Some c -> c in
       Tezos.transaction () amount_ to_contract
+
+  [@inline]
+  let compute_protocol_fee (amount_nat : nat) (fee_bp : nat) : nat =
+      (amount_nat * fee_bp) / 10000n
 
   // =============================================================================
   // Entrypoint Functions
@@ -273,7 +289,7 @@ module Dexter = struct
               let xtz_pool_nat = mutez_to_natural storage.xtzPool in
               let xtz_withdrawn_nat = mutez_to_natural xtz_withdrawn in
               let new_xtz_pool_nat = match is_nat (xtz_pool_nat - xtz_withdrawn_nat) with
-                  | None -> (failwith "XTZ pool underflow" : nat)
+                  | None -> (failwith error_XTZ_POOL_UNDERFLOW : nat)
                   | Some n -> n in
               let new_xtzPool = natural_to_mutez new_xtz_pool_nat in
                                   
@@ -300,8 +316,14 @@ module Dexter = struct
           // unless all liquidity has been removed
           let xtzPool = mutez_to_natural storage.xtzPool in
           let nat_amount = mutez_to_natural (Tezos.get_amount ()) in
+
+          let protocol_fee = compute_protocol_fee nat_amount storage.protocol_fee_bp in
+          let net_amount : nat = match is_nat (nat_amount - protocol_fee) with
+              | None -> (failwith error_PROTOCOL_FEE_EXCEEDS_AMOUNT : nat)
+              | Some n -> n in
+
           let tokens_bought = 
-              (let bought = (nat_amount * 997n * storage.tokenPool) / (xtzPool * 1000n + (nat_amount * 997n)) in
+              (let bought = (net_amount * 997n * storage.tokenPool) / (xtzPool * 1000n + (net_amount * 997n)) in
               if bought < minTokensBought then
                   (failwith error_TOKENS_BOUGHT_MUST_BE_GREATER_THAN_OR_EQUAL_TO_MIN_TOKENS_BOUGHT : nat)
               else
@@ -311,8 +333,14 @@ module Dexter = struct
               | None -> (failwith error_TOKEN_POOL_MINUS_TOKENS_BOUGHT_IS_NEGATIVE : nat)
               | Some difference -> difference) in
 
+          // Only the net amount enters the xtzPool; fee sits in accumulated_protocol_fee
+          let fee_tez : tez = natural_to_mutez protocol_fee in
+          let net_tez : tez = natural_to_mutez net_amount in
           // update xtzPool
-          let storage = { storage with xtzPool = storage.xtzPool + Tezos.get_amount () ; tokenPool = new_tokenPool } in
+          let storage = { storage with
+              xtzPool = storage.xtzPool + net_tez ;
+              tokenPool = new_tokenPool ;
+              accumulated_protocol_fee_xtz = storage.accumulated_protocol_fee_xtz + fee_tez } in
           // send tokens_withdrawn to to address
           // if tokens_bought is greater than storage.tokenPool, this will fail
           let op = token_transfer storage (Tezos.get_self_address ()) to_ tokens_bought in
@@ -335,21 +363,27 @@ module Dexter = struct
       else
           // we don't check that tokenPool > 0, because that is impossible
           // unless all liquidity has been removed
+          let protocol_fee = compute_protocol_fee tokensSold storage.protocol_fee_bp in
+          let net_tokens_sold : nat = match is_nat (tokensSold - protocol_fee) with
+              | None -> (failwith error_PROTOCOL_FEE_EXCEEDS_AMOUNT : nat)
+              | Some n -> n in
+          
           let xtz_bought = 
-              let bought = natural_to_mutez (((tokensSold * 997n * (mutez_to_natural storage.xtzPool)) / (storage.tokenPool * 1000n + (tokensSold * 997n)))) in
+              let bought = natural_to_mutez (((net_tokens_sold * 997n * (mutez_to_natural storage.xtzPool)) / (storage.tokenPool * 1000n + (net_tokens_sold * 997n)))) in
                   if bought < minXtzBought then (failwith error_XTZ_BOUGHT_MUST_BE_GREATER_THAN_OR_EQUAL_TO_MIN_XTZ_BOUGHT : tez) else bought in
 
           let xtz_pool_nat = mutez_to_natural storage.xtzPool in
           let xtz_bought_nat = mutez_to_natural xtz_bought in
           let new_xtz_pool_nat = match is_nat (xtz_pool_nat - xtz_bought_nat) with
-              | None -> (failwith "XTZ pool underflow" : nat)
+              | None -> (failwith error_XTZ_POOL_UNDERFLOW : nat)
               | Some n -> n in
           let new_xtzPool = natural_to_mutez new_xtz_pool_nat in
 
           let op_token = token_transfer storage (Tezos.get_sender ()) (Tezos.get_self_address ()) tokensSold in
           let op_tez = xtz_transfer to_ xtz_bought in
-          let storage = {storage with tokenPool = storage.tokenPool + tokensSold ;
-                                      xtzPool = new_xtzPool} in
+          let storage = {storage with tokenPool = storage.tokenPool + net_tokens_sold ;
+                                      xtzPool = new_xtzPool ;
+                                      accumulated_protocol_fee_token = storage.accumulated_protocol_fee_token + protocol_fee} in
           ([op_token ; op_tez], storage)
 
   // entrypoint to allow depositing funds
@@ -463,7 +497,13 @@ module Dexter = struct
                 None -> (failwith error_INVALID_FA2_BALANCE_RESPONSE : nat)
                 | Some ((_addr, _token_id), balance) -> balance in
   #endif
-          let storage = {storage with tokenPool = token_pool ; selfIsUpdatingTokenPool = false} in
+          // Subtract accumulated token fee from the real balance to get the true pool size.
+          // The contract holds tokenPool + accumulated_protocol_fee_token tokens in total,
+          // but only tokenPool participates in AMM calculations.
+          let adjusted_token_pool = match is_nat (token_pool - storage.accumulated_protocol_fee_token) with
+              | None -> (failwith error_ACCUMULATED_FEE_EXCEEDS_TOKEN_POOL : nat)
+              | Some n -> n in
+          let storage = {storage with tokenPool = adjusted_token_pool ; selfIsUpdatingTokenPool = false} in
           (([ ] : operation list), storage)
 
   [@entry]
@@ -487,15 +527,24 @@ module Dexter = struct
         (failwith error_THE_CURRENT_TIME_MUST_BE_LESS_THAN_THE_DEADLINE : result)
       else 
           // we don't check that tokenPool > 0, because that is impossible unless all liquidity has been removed
-          let xtz_bought = natural_to_mutez (((tokensSold * 997n * (mutez_to_natural storage.xtzPool)) / (storage.tokenPool * 1000n + (tokensSold * 997n)))) in
+          let protocol_fee = compute_protocol_fee tokensSold storage.protocol_fee_bp in
+          let net_tokens_sold : nat = match is_nat (tokensSold - protocol_fee) with
+              | None -> (failwith error_PROTOCOL_FEE_EXCEEDS_AMOUNT : nat)
+              | Some n -> n in
+          let xtz_bought_nat =
+              (net_tokens_sold * 997n * (mutez_to_natural storage.xtzPool)) / (storage.tokenPool * 1000n + (net_tokens_sold * 997n)) in
+
           let xtz_pool_nat = mutez_to_natural storage.xtzPool in
-          let xtz_bought_nat = mutez_to_natural xtz_bought in
           let new_xtz_pool_nat = match is_nat (xtz_pool_nat - xtz_bought_nat) with
-              | None -> (failwith "XTZ pool underflow" : nat)
+              | None -> (failwith error_XTZ_POOL_UNDERFLOW : nat)
               | Some n -> n in
           let new_xtzPool = natural_to_mutez new_xtz_pool_nat in
+          let xtz_bought = natural_to_mutez xtz_bought_nat in
 
-          let storage = {storage with tokenPool = storage.tokenPool + tokensSold ; xtzPool = new_xtzPool}  in
+          let storage = {storage with
+              tokenPool = storage.tokenPool + net_tokens_sold ;
+              xtzPool = new_xtzPool ;
+              accumulated_protocol_fee_token = storage.accumulated_protocol_fee_token + protocol_fee } in
           
           let op1 = token_transfer storage (Tezos.get_sender ()) (Tezos.get_self_address ()) tokensSold in
           let op2 =
@@ -504,6 +553,63 @@ module Dexter = struct
               xtz_bought
               outputDexterContract_contract in
           ([op1; op2] , storage)
+
+    [@entry]
+    let setProtocolFee (new_fee_bp : nat) (storage : storage) : result =
+        if storage.selfIsUpdatingTokenPool then
+            (failwith error_SELF_IS_UPDATING_TOKEN_POOL_MUST_BE_FALSE : result)
+        else if Tezos.get_amount () > 0mutez then
+            (failwith error_AMOUNT_MUST_BE_ZERO : result)
+        else if Tezos.get_sender () <> storage.manager then
+            (failwith error_ONLY_MANAGER_CAN_SET_PROTOCOL_FEE : result)
+        else if new_fee_bp > 1000n then
+            // Hard cap at 10% (1000 bp) to prevent accidental misconfigurations
+            (failwith error_PROTOCOL_FEE_TOO_HIGH : result)
+        else
+            (([] : operation list), {storage with protocol_fee_bp = new_fee_bp})
+
+    [@entry]
+    let setProtocolFeeRecipient (new_recipient : address) (storage : storage) : result =
+        if storage.selfIsUpdatingTokenPool then
+            (failwith error_SELF_IS_UPDATING_TOKEN_POOL_MUST_BE_FALSE : result)
+        else if Tezos.get_amount () > 0mutez then
+            (failwith error_AMOUNT_MUST_BE_ZERO : result)
+        else if Tezos.get_sender () <> storage.manager then
+            (failwith error_ONLY_MANAGER_CAN_SET_PROTOCOL_FEE_RECIPIENT : result)
+        else
+            (([] : operation list), {storage with protocol_fee_recipient = new_recipient})
+
+    [@entry]
+    let claimProtocolFeeXtz (_ : unit) (storage : storage) : result =
+        if storage.selfIsUpdatingTokenPool then
+            (failwith error_SELF_IS_UPDATING_TOKEN_POOL_MUST_BE_FALSE : result)
+        else if Tezos.get_amount () > 0mutez then
+            (failwith error_AMOUNT_MUST_BE_ZERO : result)
+        else if Tezos.get_sender () <> storage.protocol_fee_recipient then
+            (failwith error_ONLY_RECIPIENT_CAN_CLAIM_PROTOCOL_FEE : result)
+        else if storage.accumulated_protocol_fee_xtz = 0mutez then
+            (failwith error_NO_PROTOCOL_FEE_TO_CLAIM : result)
+        else
+            let amount_to_send = storage.accumulated_protocol_fee_xtz in
+            let storage = {storage with accumulated_protocol_fee_xtz = 0mutez} in
+            let op = xtz_transfer storage.protocol_fee_recipient amount_to_send in
+            ([op], storage)
+
+    [@entry]
+    let claimProtocolFeeToken (_ : unit) (storage : storage) : result =
+        if storage.selfIsUpdatingTokenPool then
+            (failwith error_SELF_IS_UPDATING_TOKEN_POOL_MUST_BE_FALSE : result)
+        else if Tezos.get_amount () > 0mutez then
+            (failwith error_AMOUNT_MUST_BE_ZERO : result)
+        else if Tezos.get_sender () <> storage.protocol_fee_recipient then
+            (failwith error_ONLY_RECIPIENT_CAN_CLAIM_PROTOCOL_FEE : result)
+        else if storage.accumulated_protocol_fee_token = 0n then
+            (failwith error_NO_PROTOCOL_FEE_TO_CLAIM : result)
+        else
+            let amount_to_send = storage.accumulated_protocol_fee_token in
+            let storage = {storage with accumulated_protocol_fee_token = 0n} in
+            let op = token_transfer storage (Tezos.get_self_address ()) storage.protocol_fee_recipient amount_to_send in
+            ([op], storage)
 
   // =============================================================================
   // On-chain Views
@@ -520,8 +626,8 @@ module Dexter = struct
       storage.lqtTotal
 
   [@view]
-  let get_fee_bp (_ : unit) (storage : storage) : nat =
-      30n
+  let get_fee_bp (_ : unit) (storage : storage) : (nat * nat * nat) =
+      (30n, storage.protocol_fee_bp, 30n + storage.protocol_fee_bp)
 
   [@view]
   let quote_tez_to_token (tez_in : nat) (storage : storage) : nat =
@@ -530,7 +636,13 @@ module Dexter = struct
       if tez_in = 0n or a = 0n or b = 0n then
           0n
       else
-        (tez_in * 997n * b) / (a * 1000n + tez_in * 997n)
+        // Deduct protocol fee from tez_in before quoting so the returned
+        // value matches what the user will actually receive
+        let fee : nat = compute_protocol_fee tez_in storage.protocol_fee_bp in
+        let net_tez_in : nat = match is_nat (tez_in - fee) with
+            | None -> 0n
+            | Some n -> n in
+        (net_tez_in * 997n * b) / (a * 1000n + net_tez_in * 997n)
 
   [@view]
   let quote_token_to_tez (token_in : nat) (storage : storage) : nat =
@@ -539,7 +651,11 @@ module Dexter = struct
       if token_in = 0n or a = 0n or b = 0n then
           0n
       else
-        (token_in * 997n * a) / (b * 1000n + token_in * 997n)
+        let fee : nat = compute_protocol_fee token_in storage.protocol_fee_bp in
+        let net_token_in : nat = match is_nat (token_in - fee) with
+            | None -> 0n
+            | Some n -> n in
+        (net_token_in * 997n * a) / (b * 1000n + net_token_in * 997n)
 
   type build_storage =
   { lqtTotal : nat;
@@ -548,6 +664,8 @@ module Dexter = struct
 #if FA2
     tokenId : nat;
 #endif
+    protocol_fee_bp : nat ;
+    protocol_fee_recipient : address ;
   }
 
   let build_storage (build : build_storage) : storage =
@@ -562,6 +680,10 @@ module Dexter = struct
     tokenId = 0n ;
     #endif
     lqtAddress = ("tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU" : address) ;
+    protocol_fee_bp = build.protocol_fee_bp ;
+    protocol_fee_recipient = build.protocol_fee_recipient ;
+    accumulated_protocol_fee_xtz = 0mutez ;
+    accumulated_protocol_fee_token = 0n ;
   }
 
 end

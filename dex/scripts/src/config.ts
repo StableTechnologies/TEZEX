@@ -10,16 +10,21 @@ interface NetworkConfig {
 }
 
 interface SeedAmount {
-    xtz?: number;
-    token?: number;
+    xtz: number;
+    token: number;
 }
 
 interface Config {
     tokenAddress: string;
     seedAmount: SeedAmount;
     manager: string;
-    metadata_uri?: string;
-    token_metadata_uri?: string;
+    tokenStandard: string; // e.g. "FA1.2" or "FA2"
+    metadata_uri: string;
+    token_metadata_uri: string;
+    tokenId: number; // Only for FA2
+    poolType: "base" | "mod", // "base" for no fee functionality, "mod" for fee functionality
+    protocol_fee_bp?: number; // Protocol fee in basis points
+    protocol_fee_recipient?: string; // Address to receive protocol fees
 }
 
 export const networks: Record<NetworkName, NetworkConfig> = {
@@ -35,16 +40,24 @@ export const networks: Record<NetworkName, NetworkConfig> = {
     },
 };
 
-export const config: Config = {
-    tokenAddress: process.env.TOKEN_ADDRESS || "",
+const poolType = getRequiredEnv("POOL_TYPE") as "base" | "mod";
+
+const config: Config = {
+    tokenAddress: getRequiredEnv("TOKEN_ADDRESS"),
+    tokenId: getRequiredIntEnv("TOKEN_ID"),
+    tokenStandard: getRequiredEnv("TOKEN_STANDARD"),
     seedAmount: {
-        xtz: parseInt(process.env.SEED_XTZ || "0"),
-        token: parseInt(process.env.SEED_TOKEN || "0"),
-        // NOTE: LQT amount will be calculated using formula lqtTotal = sqrt(xtzAmount * tokenAmount)
+        xtz: getRequiredIntEnv("SEED_XTZ"),
+        token: getRequiredIntEnv("SEED_TOKEN"),
     },
-    manager: process.env.MANAGER || "",
-    metadata_uri: process.env.METADATA_URI,
-    token_metadata_uri: process.env.TOKEN_METADATA_URI,
+    manager: getRequiredEnv("MANAGER"),
+    metadata_uri: getRequiredEnv("METADATA_URI"),
+    token_metadata_uri: getRequiredEnv("TOKEN_METADATA_URI"),
+    poolType,
+    ...(poolType === "mod" && {
+        protocol_fee_bp: getRequiredIntEnv("PROTOCOL_FEE_BP"),
+        protocol_fee_recipient: getRequiredEnv("PROTOCOL_FEE_RECIPIENT"),
+    }),
 };
 
 export interface FullConfig extends NetworkConfig, Config {
@@ -68,16 +81,12 @@ export function getConfig(networkName: NetworkName): FullConfig {
         );
     }
 
-    if (!config.tokenAddress) {
-        throw new Error(`Token address not configured. Set TOKEN_ADDRESS in .env file.`);
-    }
-
     if (config.seedAmount.xtz === 0 || config.seedAmount.token === 0) {
         throw new Error(`Seed amounts not configured properly. Set SEED_XTZ and SEED_TOKEN in .env file.`);
     }
 
-    if (!config.metadata_uri || !config.token_metadata_uri) {
-        throw new Error("Metadata is not configured. Please set METADATA_URI and TOKEN_METADATA_URI.");
+    if (config.tokenStandard !== "FA1.2" && config.tokenStandard !== "FA2") {
+        throw new Error(`Invalid token standard: ${config.tokenStandard}. Use 'FA1.2' or 'FA2'.`);
     }
 
     return {
@@ -89,4 +98,25 @@ export function getConfig(networkName: NetworkName): FullConfig {
             token: config.seedAmount.token!,
         },
     };
+}
+
+function getRequiredEnv(key: string): string {
+    const value = process.env[key];
+    if (!value || value.trim() === "") {
+        throw new Error(`Required environment variable ${key} is not set or empty`);
+    }
+    return value;
+}
+
+function getRequiredIntEnv(key: string, defaultValue?: number): number {
+    const value = process.env[key];
+    if (!value || value.trim() === "") {
+        if (defaultValue !== undefined) return defaultValue;
+        throw new Error(`Required environment variable ${key} is not set`);
+    }
+    const num = parseInt(value, 10);
+    if (isNaN(num)) {
+        throw new Error(`Environment variable ${key} must be a number, got: ${value}`);
+    }
+    return num;
 }
