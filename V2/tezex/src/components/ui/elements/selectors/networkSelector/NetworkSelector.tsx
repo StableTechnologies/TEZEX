@@ -32,7 +32,7 @@ interface CycleInfo {
 const networks: NetworkOption[] = [
   { type: NetworkType.MAINNET, label: "Mainnet" },
   { type: NetworkType.SHADOWNET, label: "Shadownet" },
-  { type: NetworkType.TEZLINK_SHADOWNET, label: "Tezlink" },
+  { type: NetworkType.CUSTOM, label: "Previewnet" },
 ];
 
 const formatTimeRemaining = (seconds: number): string => {

@@ -1,0 +1,138 @@
+{
+  "tezosServer": "https://michelson.previewnet.tezosx.nomadic-labs.com",
+  "pools": [
+    {
+      "id": "xtz-usdt-tezex",
+      "name": "TEZEX",
+      "type": "TEZEX",
+      "address": "KT1Vxk9m4kkfeH8sP8VnDvH2tjTFz2kL1ofE",
+      "tokenA": "XTZ",
+      "tokenB": "USDt",
+      "lpToken": "LP_XTZUSDt"
+    },
+    {
+      "id": "xtz-usdtz-tezex",
+      "name": "TEZEX",
+      "type": "TEZEX",
+      "address": "KT1RjhYTShmRGfBTHrzxjcLnWuxbuTyKqThw",
+      "tokenA": "XTZ",
+      "tokenB": "USDtz",
+      "lpToken": "LP_XTZUSDtz"
+    },
+    {
+      "id": "xtz-btctz-tezex",
+      "name": "TEZEX",
+      "type": "TEZEX",
+      "address": "KT1TVBRajhqhboj9ag2z1bu7Co9sjpvi5oQq",
+      "tokenA": "XTZ",
+      "tokenB": "BTCtz",
+      "lpToken": "LP_XTZBTCtz"
+    },
+    {
+      "id": "xtz-ethtz-tezex",
+      "name": "TEZEX",
+      "type": "TEZEX",
+      "address": "KT1HVqzCghUP9q4VCLX67pu1e3rqGyKwzjpB",
+      "tokenA": "XTZ",
+      "tokenB": "ETHtz",
+      "lpToken": "LP_XTZETHtz"
+    },
+    {
+      "id": "usdtz-usdt-tezex",
+      "name": "TEZEX",
+      "type": "STABLE",
+      "address": "KT1T78BnBguxKJjG98As1nwwYYxE8XkWkXUE",
+      "lpToken": "LP_USDtzUSDt",
+      "tokenA": "USDtz",
+      "tokenB": "USDt",
+      "poolId": 0,
+      "tokenAIdx": 0,
+      "tokenBIdx": 1
+    }
+  ],
+  "assets": [
+    {
+      "name": "XTZ",
+      "label": "Tez",
+      "logo": "/assets/tzlogo.svg",
+      "address": "",
+      "decimals": 6,
+      "type": "XTZ"
+    },
+    {
+      "name": "USDt",
+      "label": "USDt",
+      "logo": "/assets/usdtLogo.svg",
+      "address": "KT1QC9jwGx6oUDFiTVDY97rbsHc3UDuBPJBH",
+      "decimals": 6,
+      "type": "FA2",
+      "tokenId": 0
+    },
+    {
+      "name": "LP_XTZUSDt",
+      "label": "LP-XTZUSDt",
+      "logo": "/assets/lpxtzusdtzLogo.svg",
+      "address": "KT1PkcBKx1jf2QcnZgFmVUysMCN66qjuzT6k",
+      "decimals": 6,
+      "type": "FA1.2"
+    },
+    {
+      "name": "USDtz",
+      "label": "USDtz",
+      "logo": "/assets/usdtzLogo.svg",
+      "address": "KT1Ho6NbeyyGExTcq74VAEh4vwis51AXrE16",
+      "decimals": 6,
+      "type": "FA1.2"
+    },
+    {
+      "name": "LP_XTZUSDtz",
+      "label": "LP-XTZUSDtz",
+      "logo": "/assets/lpxtzusdtzLogo.svg",
+      "address": "KT1Xm52eeRDn2cDAWMo3bk5MjRmUbVjanxic",
+      "decimals": 6,
+      "type": "FA1.2"
+    },
+    {
+      "name": "BTCtz",
+      "label": "BTCtz",
+      "logo": "/assets/btctzLogo.svg",
+      "address": "KT1SWMmJvoRtAHNW6pbWLXsNDvXRqQmQ5jXD",
+      "decimals": 8,
+      "type": "FA2",
+      "tokenId": 0
+    },
+    {
+      "name": "LP_XTZBTCtz",
+      "label": "LP-XTZBTCtz",
+      "logo": "/assets/lpxtzusdtzLogo.svg",
+      "address": "KT1VdAZipAG93bos3na5k9Ac7inWdWME1Jjd",
+      "decimals": 6,
+      "type": "FA1.2"
+    },
+    {
+      "name": "ETHtz",
+      "label": "ETHtz",
+      "logo": "/assets/ethtzLogo.svg",
+      "address": "KT1GVRhpjnVityzEfss7r8NhqUorACPRpL4y",
+      "decimals": 18,
+      "type": "FA1.2"
+    },
+    {
+      "name": "LP_XTZETHtz",
+      "label": "LP-XTZETHtz",
+      "logo": "/assets/lpxtzusdtzLogo.svg",
+      "address": "KT1PEUQUkp3wzUSwwTn1L92VHVVugjnojWSx",
+      "decimals": 12,
+      "type": "FA1.2"
+    },
+    {
+      "name": "LP_USDtzUSDt",
+      "label": "LP_USDtzUSDt",
+      "logo": "/assets/lpxtzusdtzLogo.svg",
+      "address": "KT1T78BnBguxKJjG98As1nwwYYxE8XkWkXUE",
+      "decimals": 18,
+      "type": "FA2",
+      "tokenId": 0
+    }
+  ]
+}

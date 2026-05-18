@@ -2,7 +2,7 @@ import { createContext, useCallback, useState } from "react";
 import { NetworkType } from "@airgap/beacon-sdk";
 import mainnet from "../config/network/mainnet.json";
 import shadownet from "../config/network/shadownet.json";
-import tezlink_shadownet from "../config/network/tezlink-shadownet.json";
+import previewnet from "../config/network/previewnet.json";
 import { Asset } from "../types/general";
 import { MichelCodecPacker, TezosToolkit } from "@taquito/taquito";
 import { IPoolAdapter, PoolConfig } from "../types/pools";
@@ -41,7 +41,7 @@ export interface INetwork {
 export const networks: NetworkMap = {
   [NetworkType.MAINNET as string]: mainnet as NetworkInfo,
   [NetworkType.SHADOWNET as string]: shadownet as NetworkInfo,
-  [NetworkType.TEZLINK_SHADOWNET as string]: tezlink_shadownet as NetworkInfo,
+  [NetworkType.CUSTOM as string]: previewnet as NetworkInfo,
 };
 
 // Initialize PoolRegistry immediately on module load

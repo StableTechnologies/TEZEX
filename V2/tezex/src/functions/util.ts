@@ -15,8 +15,54 @@ import {
 
 import { tokenDecimalToMantissa, tokenMantissaToDecimal } from "./scaling";
 import { NetworkType } from "@airgap/beacon-sdk";
+import { MichelCodecPacker, TezosToolkit } from "@taquito/taquito";
 
 const DEADLINE_OFFSET_MS = 60000;
+
+/**
+ * Dummy signer that provides only publicKeyHash and publicKey for fee estimation.
+ * No signing ever occurs — sign() throws immediately.
+ */
+class EstimationSigner {
+  constructor(private pkh: string) {}
+  async publicKeyHash() {
+    return this.pkh;
+  }
+  async publicKey() {
+    return "edpkvGfYw3LyB1UcCahKQk4rF2tvbMUk8GFiTuMjL75uGXrpvKXhjn";
+  }
+  async sign(): Promise<{
+    bytes: string;
+    sig: string;
+    prefixSig: string;
+    sbytes: string;
+  }> {
+    throw new Error("EstimationSigner: signing not supported");
+  }
+  async secretKey(): Promise<string | undefined> {
+    return undefined;
+  }
+}
+
+/**
+ * Build a throw-away TezosToolkit configured for fee estimation via node RPC.
+ * Uses EstimationSigner so no wallet extension is needed — the node simulates
+ * the operation and returns gas/storage/fee estimates.
+ */
+export function makeEstimationToolkit(
+  toolkit: TezosToolkit,
+  userAddress: string
+): TezosToolkit {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const rpcUrl = (toolkit.rpc as unknown as Record<string, unknown>)[
+    "url"
+  ] as string;
+  const est = new TezosToolkit(rpcUrl);
+  est.setPackerProvider(new MichelCodecPacker());
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  est.setProvider({ signer: new EstimationSigner(userAddress) as any });
+  return est;
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function debounce<F extends (...args: any[]) => any>(
@@ -207,12 +253,12 @@ export function getTxDeadline(): Date {
 export type SupportedNetwork =
   | NetworkType.MAINNET
   | NetworkType.SHADOWNET
-  | NetworkType.TEZLINK_SHADOWNET;
+  | NetworkType.CUSTOM;
 
 export const EXPLORERS: Record<SupportedNetwork, string> = {
   [NetworkType.MAINNET]: "https://tzkt.io/",
   [NetworkType.SHADOWNET]: "https://shadownet.tzkt.io/",
-  [NetworkType.TEZLINK_SHADOWNET]: "https://shadownet.tezlink.tzkt.io/",
+  [NetworkType.CUSTOM]: "https://previewnet.tezosx.tzkt.io/",
 };
 
 export function getExplorer(network: NetworkType): string {
@@ -228,8 +274,8 @@ export const getTzktApiUrl = (networkType: NetworkType): string => {
       return "https://api.tzkt.io";
     case NetworkType.SHADOWNET:
       return "https://api.shadownet.tzkt.io";
-    case NetworkType.TEZLINK_SHADOWNET:
-      return "https://api.shadownet.tezlink.tzkt.io";
+    case NetworkType.CUSTOM:
+      return "https://api.previewnet.tezosx.tzkt.io";
     default:
       return "https://api.tzkt.io";
   }

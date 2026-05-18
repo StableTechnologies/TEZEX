@@ -1,4 +1,4 @@
-import { TezosToolkit } from "@taquito/taquito";
+import { OpKind, TezosToolkit } from "@taquito/taquito";
 import BigNumber from "bignumber.js";
 import { Token, Errors, ExecutionKit, TokenType } from "../types/general";
 import {
@@ -11,7 +11,7 @@ import {
 } from "../types/pools";
 import { PoolRegistry } from "./poolRegistry";
 import { PoolDataCache } from "../utils/poolDataCache";
-import { getTxDeadline } from "../functions/util";
+import { getTxDeadline, makeEstimationToolkit } from "../functions/util";
 import {
   DAppClient,
   PartialTezosTransactionOperation,
@@ -20,6 +20,7 @@ import {
   buildApproveOp,
   transferParamsToBeaconOp,
 } from "../functions/transactions";
+import { TransferParams } from "@taquito/taquito";
 
 export class TezexAdapter implements IPoolAdapter {
   constructor(public poolConfig: PoolConfig) {}
@@ -30,25 +31,32 @@ export class TezexAdapter implements IPoolAdapter {
     inputAmount: BigNumber
   ): Promise<SwapEstimate> {
     try {
-      const { tokenAPool: xtzPool, tokenBPool: tokenPool } =
-        await this.getPoolData(toolkit);
+      const {
+        tokenAPool: xtzPool,
+        tokenBPool: tokenPool,
+        protocolFeeBp,
+      } = await this.getPoolData(toolkit);
 
+      // protocol_fee = floor(amount * fee_bp / 10000); net_amount = amount - fee → AMM
+      const feeBp = new BigNumber(protocolFeeBp ?? 0);
       const isXtzInput = inputToken === Token.XTZ;
+
+      const protocolFee = inputAmount
+        .times(feeBp)
+        .div(10000)
+        .integerValue(BigNumber.ROUND_DOWN);
+      const netAmount = inputAmount.minus(protocolFee);
 
       let outputAmount: BigNumber;
       if (isXtzInput) {
-        // (tez_in * 997n * b) / (a * 1000n + tez_in * 997n)
-        // where: a - xtz pool, b - token pool
-        const numerator = inputAmount.times(997).times(tokenPool);
-        const denominator = xtzPool.times(1000).plus(inputAmount.times(997));
+        const numerator = netAmount.times(997).times(tokenPool);
+        const denominator = xtzPool.times(1000).plus(netAmount.times(997));
         outputAmount = numerator
           .dividedBy(denominator)
           .integerValue(BigNumber.ROUND_DOWN);
       } else {
-        // (token_in * 997n * a) / (b * 1000n + token_in * 997n)
-        // where: a - xtz pool, b - token pool
-        const numerator = inputAmount.times(997).times(xtzPool);
-        const denominator = tokenPool.times(1000).plus(inputAmount.times(997));
+        const numerator = netAmount.times(997).times(xtzPool);
+        const denominator = tokenPool.times(1000).plus(netAmount.times(997));
         outputAmount = numerator
           .dividedBy(denominator)
           .integerValue(BigNumber.ROUND_DOWN);
@@ -225,9 +233,13 @@ export class TezexAdapter implements IPoolAdapter {
       const maxTokensDeposited = tokenBAmount
         .times(1 + slippage / 100)
         .integerValue(BigNumber.ROUND_DOWN);
+      // Apply slippage to minLqtMinted so small pool changes between estimate and submit don't fail
+      const minLqtWithSlippage = minLpTokens
+        .times(1 - slippage / 100)
+        .integerValue(BigNumber.ROUND_DOWN);
 
       // addLiquidity(address owner, nat minLqtMinted, nat maxTokensDeposited, timestamp deadline)
-      const operations: PartialTezosTransactionOperation[] = [];
+      const allTransferParams: TransferParams[] = [];
 
       const approve0 = buildApproveOp({
         tokenContract,
@@ -239,7 +251,7 @@ export class TezexAdapter implements IPoolAdapter {
       if (
         PoolRegistry.getAsset(this.poolConfig.tokenB).type === TokenType.FA12
       ) {
-        operations.push(transferParamsToBeaconOp(approve0));
+        allTransferParams.push(approve0);
       }
 
       const approve = buildApproveOp({
@@ -249,23 +261,44 @@ export class TezexAdapter implements IPoolAdapter {
         spenderAddress: this.poolConfig.address,
         amount: maxTokensDeposited.toNumber(),
       });
-      operations.push(transferParamsToBeaconOp(approve));
+      allTransferParams.push(approve);
 
       const addLiq = contract.methodsObject.addLiquidity({
         owner: userAddress,
-        minLqtMinted: minLpTokens.integerValue(BigNumber.ROUND_DOWN).toNumber(),
+        minLqtMinted: minLqtWithSlippage.toNumber(),
         maxTokensDeposited: maxTokensDeposited.toNumber(),
         deadline,
       });
-      operations.push(
-        transferParamsToBeaconOp(
-          addLiq.toTransferParams({
-            amount: tokenAAmount.toNumber(),
-            mutez: true,
-          })
-        )
+      allTransferParams.push(
+        addLiq.toTransferParams({
+          amount: tokenAAmount.toNumber(),
+          mutez: true,
+        })
       );
-      operations.push(transferParamsToBeaconOp(approve0));
+      allTransferParams.push(approve0);
+
+      let estimatedParams = allTransferParams;
+      try {
+        const estToolkit = makeEstimationToolkit(toolkit, userAddress);
+        const estimates = await estToolkit.estimate.batch(
+          allTransferParams.map((tp) => ({ kind: OpKind.TRANSACTION, ...tp }))
+        );
+        estimatedParams = allTransferParams.map((tp, i) => ({
+          ...tp,
+          fee: estimates[i].suggestedFeeMutez,
+          gasLimit: estimates[i].gasLimit,
+          storageLimit: estimates[i].storageLimit,
+        }));
+      } catch (estimationError) {
+        console.warn(
+          "[addLiquidity] Batch fee estimation failed, using wallet defaults:",
+          estimationError
+        );
+      }
+
+      const operations = estimatedParams.map((tp) =>
+        transferParamsToBeaconOp(tp)
+      );
 
       const response = await client.requestOperation({
         operationDetails: operations,
@@ -303,20 +336,37 @@ export class TezexAdapter implements IPoolAdapter {
         .times(0.995)
         .integerValue(BigNumber.ROUND_DOWN);
 
-      // removeLiquidity(address to, nat lqtBurned, mutez minXtzWithdrawn, nat minTokensWithdrawn, timestamp deadline)
-      const operation = contract.methodsObject.removeLiquidity({
-        to: userAddress,
-        lqtBurned: lpTokenAmount.integerValue(BigNumber.ROUND_DOWN).toNumber(),
-        minXtzWithdrawn: minTokenA.toNumber(), // mutez
-        minTokensWithdrawn: minTokenB.toNumber(), // nat
-        deadline,
-      });
+      const removeLiqParams = contract.methodsObject
+        .removeLiquidity({
+          to: userAddress,
+          lqtBurned: lpTokenAmount
+            .integerValue(BigNumber.ROUND_DOWN)
+            .toNumber(),
+          minXtzWithdrawn: minTokenA.toNumber(),
+          minTokensWithdrawn: minTokenB.toNumber(),
+          deadline,
+        })
+        .toTransferParams();
 
-      const operationRequest = transferParamsToBeaconOp(
-        operation.toTransferParams()
-      );
+      let estimatedRemoveParams = removeLiqParams;
+      try {
+        const estToolkit = makeEstimationToolkit(toolkit, userAddress);
+        const estimate = await estToolkit.estimate.transfer(removeLiqParams);
+        estimatedRemoveParams = {
+          ...removeLiqParams,
+          fee: estimate.suggestedFeeMutez,
+          gasLimit: estimate.gasLimit,
+          storageLimit: estimate.storageLimit,
+        };
+      } catch (estimationError) {
+        console.warn(
+          "[removeLiquidity] Fee estimation failed, using wallet defaults:",
+          estimationError
+        );
+      }
+
       const response = await client.requestOperation({
-        operationDetails: [operationRequest],
+        operationDetails: [transferParamsToBeaconOp(estimatedRemoveParams)],
       });
 
       await this.getPoolData(toolkit, true);
@@ -346,10 +396,18 @@ export class TezexAdapter implements IPoolAdapter {
       const tokenBPool = new BigNumber(storage.tokenPool);
       const lpTokenSupply = new BigNumber(storage.lqtTotal);
 
+      // Read protocol_fee_bp directly from contract storage.
+      // Undefined means this is a classic pool (no fee field) → treat as 0.
+      const protocolFeeBp: number =
+        storage.protocol_fee_bp !== undefined
+          ? Number(storage.protocol_fee_bp)
+          : 0;
+
       const poolData: PoolData = {
         tokenAPool,
         tokenBPool,
         lpTokenSupply,
+        protocolFeeBp,
       };
 
       // Update cache
@@ -378,12 +436,33 @@ export class TezexAdapter implements IPoolAdapter {
       deadline,
     });
 
-    const operationRequest = transferParamsToBeaconOp(
-      operation.toTransferParams({
+    let transferParams: TransferParams = operation.toTransferParams({
+      amount: xtzAmount.toNumber(),
+      mutez: true,
+    });
+
+    try {
+      const estToolkit = makeEstimationToolkit(toolkit, userAddress);
+      const estimate = await estToolkit.estimate.transfer({
+        to: this.poolConfig.address,
         amount: xtzAmount.toNumber(),
         mutez: true,
-      })
-    );
+        parameter: transferParams.parameter,
+      });
+      transferParams = {
+        ...transferParams,
+        fee: estimate.suggestedFeeMutez,
+        gasLimit: estimate.gasLimit,
+        storageLimit: estimate.storageLimit,
+      };
+    } catch (estimationError) {
+      console.warn(
+        "[xtzToToken] Fee estimation failed, using wallet defaults:",
+        estimationError
+      );
+    }
+
+    const operationRequest = transferParamsToBeaconOp(transferParams);
     const response = await client.requestOperation({
       operationDetails: [operationRequest],
     });
@@ -410,46 +489,62 @@ export class TezexAdapter implements IPoolAdapter {
         .toNumber();
       const asset = PoolRegistry.getAsset(this.poolConfig.tokenB);
 
-      const operations: PartialTezosTransactionOperation[] = [];
+      const allTransferParams: TransferParams[] = [];
 
       if (asset.type === TokenType.FA12) {
-        operations.push(
-          transferParamsToBeaconOp(
-            buildApproveOp({
-              tokenContract,
-              token: asset,
-              ownerAddress: userAddress,
-              spenderAddress: this.poolConfig.address,
-              amount: 0,
-            })
-          )
-        );
-      }
-
-      operations.push(
-        transferParamsToBeaconOp(
+        allTransferParams.push(
           buildApproveOp({
             tokenContract,
             token: asset,
             ownerAddress: userAddress,
             spenderAddress: this.poolConfig.address,
-            amount: tokenAmountInt,
+            amount: 0,
           })
-        )
+        );
+      }
+
+      allTransferParams.push(
+        buildApproveOp({
+          tokenContract,
+          token: asset,
+          ownerAddress: userAddress,
+          spenderAddress: this.poolConfig.address,
+          amount: tokenAmountInt,
+        })
       );
 
-      operations.push(
-        transferParamsToBeaconOp(
-          contract.methodsObject
-            .tokenToXtz({
-              to: userAddress,
-              tokensSold: tokenAmountInt,
-              minXtzBought: minXtzBought.toNumber(),
-              deadline,
-            })
-            .toTransferParams()
-        )
+      allTransferParams.push(
+        contract.methodsObject
+          .tokenToXtz({
+            to: userAddress,
+            tokensSold: tokenAmountInt,
+            minXtzBought: minXtzBought.toNumber(),
+            deadline,
+          })
+          .toTransferParams()
       );
+
+      let estimatedParams = allTransferParams;
+      try {
+        const estToolkit = makeEstimationToolkit(toolkit, userAddress);
+        const estimates = await estToolkit.estimate.batch(
+          allTransferParams.map((tp) => ({ kind: OpKind.TRANSACTION, ...tp }))
+        );
+        estimatedParams = allTransferParams.map((tp, i) => ({
+          ...tp,
+          fee: estimates[i].suggestedFeeMutez,
+          gasLimit: estimates[i].gasLimit,
+          storageLimit: estimates[i].storageLimit,
+        }));
+      } catch (estimationError) {
+        console.warn(
+          "[tokenToXtz] Batch fee estimation failed, using wallet defaults:",
+          estimationError
+        );
+      }
+
+      const operations: PartialTezosTransactionOperation[] =
+        estimatedParams.map((tp) => transferParamsToBeaconOp(tp));
 
       const response = await client.requestOperation({
         operationDetails: operations,
@@ -458,6 +553,7 @@ export class TezexAdapter implements IPoolAdapter {
       await this.getPoolData(toolkit, true);
       return response.transactionHash;
     } catch (error) {
+      console.error("Error executing tokenToXtz:", error);
       throw Errors.TRANSACTION_FAILED;
     }
   }

@@ -33,7 +33,8 @@ export async function getBalance(
           return result[0].balance;
         }
       }
-    } catch {
+    } catch (e) {
+      console.warn(`[getBalance] outer catch for ${asset.name}:`, e);
       return await getBalanceFromTzKT(network, address, asset);
     }
   };
@@ -42,15 +43,34 @@ export async function getBalance(
   return balanceBuilder(balance, asset, true);
 }
 
-export default async function connectWallet(
-  walletInfo: WalletInfo,
-  network: INetwork
-) {
-  const dAppClient = new DAppClient({
+/**
+ * Returns a DAppClient configured for the given network.
+ * For custom networks (e.g. Previewnet), uses the rpcUrl from network info.
+ */
+export function createDAppClient(network: INetwork): DAppClient {
+  if (network.network === NetworkType.CUSTOM) {
+    return new DAppClient({
+      name: "Tezex",
+      network: {
+        type: NetworkType.CUSTOM,
+        rpcUrl: network.info.tezosServer,
+        name: "Previewnet",
+      },
+      preferredNetwork: NetworkType.CUSTOM,
+    });
+  }
+  return new DAppClient({
     name: "Tezex",
     network: { type: network.network },
     preferredNetwork: network.network,
   });
+}
+
+export default async function connectWallet(
+  walletInfo: WalletInfo,
+  network: INetwork
+) {
+  const dAppClient = createDAppClient(network);
 
   let err = false;
   try {
