@@ -1,6 +1,11 @@
-import { MichelsonMap, TezosToolkit } from "@taquito/taquito";
+import {
+  MichelCodecPacker,
+  MichelsonMap,
+  OpKind,
+  TezosToolkit,
+  TransferParams,
+} from "@taquito/taquito";
 import BigNumber from "bignumber.js";
-import { PartialTezosTransactionOperation } from "@airgap/beacon-sdk";
 import { Token, Errors, ExecutionKit, TokenType } from "../types/general";
 import {
   AddLiquidityEstimate,
@@ -17,6 +22,44 @@ import {
   buildApproveOp,
   transferParamsToBeaconOp,
 } from "../functions/transactions";
+
+// Dummy signer for fee estimation only — no real signing.
+class EstimationSigner {
+  constructor(private pkh: string) {}
+  async publicKeyHash() {
+    return this.pkh;
+  }
+  async publicKey() {
+    return "edpkvGfYw3LyB1UcCahKQk4rF2tvbMUk8GFiTuMjL75uGXrpvKXhjn";
+  }
+  async sign(): Promise<{
+    bytes: string;
+    sig: string;
+    prefixSig: string;
+    sbytes: string;
+  }> {
+    throw new Error("EstimationSigner: signing not supported");
+  }
+  async secretKey(): Promise<string | undefined> {
+    return undefined;
+  }
+}
+
+// Build a throw-away toolkit for fee estimation via node RPC (no wallet extension).
+function makeEstimationToolkit(
+  toolkit: TezosToolkit,
+  userAddress: string
+): TezosToolkit {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const rpcUrl = (toolkit.rpc as unknown as Record<string, unknown>)[
+    "url"
+  ] as string;
+  const est = new TezosToolkit(rpcUrl);
+  est.setPackerProvider(new MichelCodecPacker());
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  est.setProvider({ signer: new EstimationSigner(userAddress) as any });
+  return est;
+}
 
 // Types
 interface StableTokenInfo {
@@ -380,51 +423,71 @@ export class StableSwapAdapter implements IPoolAdapter {
 
       const fromAsset = PoolRegistry.getAsset(fromToken);
       const fromContract = await toolkit.contract.at(fromAsset.address);
-      const operations: PartialTezosTransactionOperation[] = [];
+      const allTransferParams: TransferParams[] = [];
 
-      const approve0 = transferParamsToBeaconOp(
+      const approve0 = buildApproveOp({
+        tokenContract: fromContract,
+        token: fromAsset,
+        ownerAddress: userAddress,
+        spenderAddress: this.poolConfig.address,
+        amount: 0,
+      });
+      if (fromAsset.type === TokenType.FA12) {
+        allTransferParams.push(approve0);
+      }
+
+      allTransferParams.push(
         buildApproveOp({
           tokenContract: fromContract,
           token: fromAsset,
           ownerAddress: userAddress,
           spenderAddress: this.poolConfig.address,
-          amount: 0,
+          amount: inputAmount.toNumber(),
         })
       );
-      if (fromAsset.type === TokenType.FA12) {
-        operations.push(approve0);
+
+      allTransferParams.push(
+        contract.methodsObject
+          .swap({
+            pool_id: this.poolConfig.poolId,
+            idx_from: i,
+            idx_to: j,
+            amount: inputAmount,
+            min_amount_out: minWithSlippage,
+            receiver: userAddress,
+            referral: null,
+            deadline,
+          })
+          .toTransferParams()
+      );
+
+      allTransferParams.push(approve0); // Reset approval
+
+      let estimatedParams = allTransferParams;
+      try {
+        const estToolkit = makeEstimationToolkit(toolkit, userAddress);
+        const estimates = await estToolkit.estimate.batch(
+          allTransferParams.map((tp) => ({
+            kind: OpKind.TRANSACTION as const,
+            ...tp,
+          }))
+        );
+        estimatedParams = allTransferParams.map((tp, idx) => ({
+          ...tp,
+          fee: estimates[idx].suggestedFeeMutez,
+          gasLimit: estimates[idx].gasLimit,
+          storageLimit: estimates[idx].storageLimit,
+        }));
+      } catch (estimationError) {
+        console.warn(
+          "[stableSwap] Batch fee estimation failed, using wallet defaults:",
+          estimationError
+        );
       }
 
-      operations.push(
-        transferParamsToBeaconOp(
-          buildApproveOp({
-            tokenContract: fromContract,
-            token: fromAsset,
-            ownerAddress: userAddress,
-            spenderAddress: this.poolConfig.address,
-            amount: inputAmount.toNumber(),
-          })
-        )
+      const operations = estimatedParams.map((tp) =>
+        transferParamsToBeaconOp(tp)
       );
-
-      operations.push(
-        transferParamsToBeaconOp(
-          contract.methodsObject
-            .swap({
-              pool_id: this.poolConfig.poolId,
-              idx_from: i,
-              idx_to: j,
-              amount: inputAmount,
-              min_amount_out: minWithSlippage,
-              receiver: userAddress,
-              referral: null,
-              deadline,
-            })
-            .toTransferParams()
-        )
-      );
-
-      operations.push(approve0); // Reset approval
 
       const response = await client.requestOperation({
         operationDetails: operations,
@@ -454,60 +517,52 @@ export class StableSwapAdapter implements IPoolAdapter {
         .times(1 - slippage / 100)
         .integerValue(BigNumber.ROUND_DOWN);
 
-      const operations: PartialTezosTransactionOperation[] = [];
+      const allTransferParams: TransferParams[] = [];
 
       const assetA = PoolRegistry.getAsset(this.poolConfig.tokenA);
       const contractA = await toolkit.contract.at(assetA.address);
       const assetB = PoolRegistry.getAsset(this.poolConfig.tokenB);
       const contractB = await toolkit.contract.at(assetB.address);
 
-      const approveA0 = transferParamsToBeaconOp(
+      const approveA0 = buildApproveOp({
+        tokenContract: contractA,
+        token: assetA,
+        ownerAddress: userAddress,
+        spenderAddress: this.poolConfig.address,
+        amount: 0,
+      });
+      const approveB0 = buildApproveOp({
+        tokenContract: contractB,
+        token: assetB,
+        ownerAddress: userAddress,
+        spenderAddress: this.poolConfig.address,
+        amount: 0,
+      });
+
+      if (assetA.type === TokenType.FA12) {
+        allTransferParams.push(approveA0);
+      }
+      if (assetB.type === TokenType.FA12) {
+        allTransferParams.push(approveB0);
+      }
+
+      allTransferParams.push(
         buildApproveOp({
           tokenContract: contractA,
           token: assetA,
           ownerAddress: userAddress,
           spenderAddress: this.poolConfig.address,
-          amount: 0,
+          amount: tokenAAmount.toNumber(),
         })
       );
-      const approveB0 = transferParamsToBeaconOp(
+      allTransferParams.push(
         buildApproveOp({
           tokenContract: contractB,
           token: assetB,
           ownerAddress: userAddress,
           spenderAddress: this.poolConfig.address,
-          amount: 0,
+          amount: tokenBAmount.toNumber(),
         })
-      );
-
-      if (assetA.type === TokenType.FA12) {
-        operations.push(approveA0);
-      }
-      if (assetB.type === TokenType.FA12) {
-        operations.push(approveB0);
-      }
-
-      operations.push(
-        transferParamsToBeaconOp(
-          buildApproveOp({
-            tokenContract: contractA,
-            token: assetA,
-            ownerAddress: userAddress,
-            spenderAddress: this.poolConfig.address,
-            amount: tokenAAmount.toNumber(),
-          })
-        )
-      );
-      operations.push(
-        transferParamsToBeaconOp(
-          buildApproveOp({
-            tokenContract: contractB,
-            token: assetB,
-            ownerAddress: userAddress,
-            spenderAddress: this.poolConfig.address,
-            amount: tokenBAmount.toNumber(),
-          })
-        )
       );
 
       const inAmounts = new MichelsonMap({
@@ -517,21 +572,45 @@ export class StableSwapAdapter implements IPoolAdapter {
       inAmounts.set(this.poolConfig.tokenAIdx, tokenAAmount);
       inAmounts.set(this.poolConfig.tokenBIdx, tokenBAmount);
 
-      operations.push(
-        transferParamsToBeaconOp(
-          contract.methodsObject
-            .invest({
-              pool_id: this.poolConfig.poolId,
-              shares: minLpWithSlippage,
-              in_amounts: inAmounts,
-              deadline,
-            })
-            .toTransferParams()
-        )
+      allTransferParams.push(
+        contract.methodsObject
+          .invest({
+            pool_id: this.poolConfig.poolId,
+            shares: minLpWithSlippage,
+            in_amounts: inAmounts,
+            deadline,
+          })
+          .toTransferParams()
       );
 
-      operations.push(approveA0); // Reset approval for token A
-      operations.push(approveB0); // Reset approval for token B
+      allTransferParams.push(approveA0); // Reset approval for token A
+      allTransferParams.push(approveB0); // Reset approval for token B
+
+      let estimatedParams = allTransferParams;
+      try {
+        const estToolkit = makeEstimationToolkit(toolkit, userAddress);
+        const estimates = await estToolkit.estimate.batch(
+          allTransferParams.map((tp) => ({
+            kind: OpKind.TRANSACTION as const,
+            ...tp,
+          }))
+        );
+        estimatedParams = allTransferParams.map((tp, idx) => ({
+          ...tp,
+          fee: estimates[idx].suggestedFeeMutez,
+          gasLimit: estimates[idx].gasLimit,
+          storageLimit: estimates[idx].storageLimit,
+        }));
+      } catch (estimationError) {
+        console.warn(
+          "[stableAddLiquidity] Batch fee estimation failed, using wallet defaults:",
+          estimationError
+        );
+      }
+
+      const operations = estimatedParams.map((tp) =>
+        transferParamsToBeaconOp(tp)
+      );
 
       const response = await client.requestOperation({
         operationDetails: operations,
@@ -570,19 +649,34 @@ export class StableSwapAdapter implements IPoolAdapter {
         ],
       ]);
 
-      const operation = transferParamsToBeaconOp(
-        contract.methodsObject
-          .divest({
-            pool_id: this.poolConfig.poolId,
-            shares: lpTokenAmount,
-            min_amounts: minAmounts,
-            deadline,
-          })
-          .toTransferParams()
-      );
+      const removeLiqParams = contract.methodsObject
+        .divest({
+          pool_id: this.poolConfig.poolId,
+          shares: lpTokenAmount,
+          min_amounts: minAmounts,
+          deadline,
+        })
+        .toTransferParams();
+
+      let estimatedParams = removeLiqParams;
+      try {
+        const estToolkit = makeEstimationToolkit(toolkit, userAddress);
+        const est = await estToolkit.estimate.transfer(removeLiqParams);
+        estimatedParams = {
+          ...removeLiqParams,
+          fee: est.suggestedFeeMutez,
+          gasLimit: est.gasLimit,
+          storageLimit: est.storageLimit,
+        };
+      } catch (estimationError) {
+        console.warn(
+          "[stableRemoveLiquidity] Fee estimation failed, using wallet defaults:",
+          estimationError
+        );
+      }
 
       const response = await client.requestOperation({
-        operationDetails: [operation],
+        operationDetails: [transferParamsToBeaconOp(estimatedParams)],
       });
       await this.getStablePoolData(toolkit, true);
       return response.transactionHash;

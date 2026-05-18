@@ -45,6 +45,7 @@ export interface PoolData {
   tokenAPool: BigNumber;
   tokenBPool: BigNumber;
   lpTokenSupply: BigNumber;
+  protocolFeeBp?: number; // 0 for classic pools, >0 for mod pools with protocol fee
 }
 
 export interface IPoolAdapter {
