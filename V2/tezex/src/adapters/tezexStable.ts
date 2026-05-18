@@ -1,5 +1,4 @@
 import {
-  MichelCodecPacker,
   MichelsonMap,
   OpKind,
   TezosToolkit,
@@ -17,49 +16,11 @@ import {
 } from "../types/pools";
 import { PoolRegistry } from "./poolRegistry";
 import { PoolDataCache } from "../utils/poolDataCache";
-import { getTxDeadline } from "../functions/util";
+import { getTxDeadline, makeEstimationToolkit } from "../functions/util";
 import {
   buildApproveOp,
   transferParamsToBeaconOp,
 } from "../functions/transactions";
-
-// Dummy signer for fee estimation only — no real signing.
-class EstimationSigner {
-  constructor(private pkh: string) {}
-  async publicKeyHash() {
-    return this.pkh;
-  }
-  async publicKey() {
-    return "edpkvGfYw3LyB1UcCahKQk4rF2tvbMUk8GFiTuMjL75uGXrpvKXhjn";
-  }
-  async sign(): Promise<{
-    bytes: string;
-    sig: string;
-    prefixSig: string;
-    sbytes: string;
-  }> {
-    throw new Error("EstimationSigner: signing not supported");
-  }
-  async secretKey(): Promise<string | undefined> {
-    return undefined;
-  }
-}
-
-// Build a throw-away toolkit for fee estimation via node RPC (no wallet extension).
-function makeEstimationToolkit(
-  toolkit: TezosToolkit,
-  userAddress: string
-): TezosToolkit {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const rpcUrl = (toolkit.rpc as unknown as Record<string, unknown>)[
-    "url"
-  ] as string;
-  const est = new TezosToolkit(rpcUrl);
-  est.setPackerProvider(new MichelCodecPacker());
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  est.setProvider({ signer: new EstimationSigner(userAddress) as any });
-  return est;
-}
 
 // Types
 interface StableTokenInfo {

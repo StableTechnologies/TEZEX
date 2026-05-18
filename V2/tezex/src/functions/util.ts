@@ -15,8 +15,54 @@ import {
 
 import { tokenDecimalToMantissa, tokenMantissaToDecimal } from "./scaling";
 import { NetworkType } from "@airgap/beacon-sdk";
+import { MichelCodecPacker, TezosToolkit } from "@taquito/taquito";
 
 const DEADLINE_OFFSET_MS = 60000;
+
+/**
+ * Dummy signer that provides only publicKeyHash and publicKey for fee estimation.
+ * No signing ever occurs — sign() throws immediately.
+ */
+class EstimationSigner {
+  constructor(private pkh: string) {}
+  async publicKeyHash() {
+    return this.pkh;
+  }
+  async publicKey() {
+    return "edpkvGfYw3LyB1UcCahKQk4rF2tvbMUk8GFiTuMjL75uGXrpvKXhjn";
+  }
+  async sign(): Promise<{
+    bytes: string;
+    sig: string;
+    prefixSig: string;
+    sbytes: string;
+  }> {
+    throw new Error("EstimationSigner: signing not supported");
+  }
+  async secretKey(): Promise<string | undefined> {
+    return undefined;
+  }
+}
+
+/**
+ * Build a throw-away TezosToolkit configured for fee estimation via node RPC.
+ * Uses EstimationSigner so no wallet extension is needed — the node simulates
+ * the operation and returns gas/storage/fee estimates.
+ */
+export function makeEstimationToolkit(
+  toolkit: TezosToolkit,
+  userAddress: string
+): TezosToolkit {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const rpcUrl = (toolkit.rpc as unknown as Record<string, unknown>)[
+    "url"
+  ] as string;
+  const est = new TezosToolkit(rpcUrl);
+  est.setPackerProvider(new MichelCodecPacker());
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  est.setProvider({ signer: new EstimationSigner(userAddress) as any });
+  return est;
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function debounce<F extends (...args: any[]) => any>(
