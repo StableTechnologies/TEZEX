@@ -1,5 +1,5 @@
 {
-  "tezosServer": "https://mainnet.api.tez.ie",
+  "tezosServer": "https://rpc.tzkt.io/mainnet",
   "pools": [
     {
       "id": "xtz-tzbtc-sirius",
