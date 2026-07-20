@@ -1,4 +1,5 @@
 import React, { FC, useState, useEffect, useCallback } from "react";
+import BigNumber from "bignumber.js";
 
 import {
   Asset,
@@ -7,27 +8,26 @@ import {
   TransactionStatus,
   Id,
 } from "../../types/general";
+import { PoolType } from "../../types/pools";
 
 import { UserAmountField, Slippage } from "../../components/ui/elements/inputs";
 import { Wallet } from "../wallet";
 import { useSession } from "../../hooks/session";
 import { useWallet, useWalletOps, WalletOps } from "../../hooks/wallet";
 import { SwapUpDownToggle } from "../../components/ui/elements/Toggles";
-import { SlippageLabel } from "../../components/ui/elements/Labels";
 import { useNetwork } from "../../hooks/network";
+import { getExplorer } from "../../functions/util";
 
 import Box from "@mui/material/Box";
-import Grid2 from "@mui/material/Unstable_Grid2";
 import Card from "@mui/material/Card";
 import CardActions from "@mui/material/CardActions";
 import CardContent from "@mui/material/CardContent";
-import CardHeader from "@mui/material/CardHeader";
-import Paper from "@mui/material/Paper";
+import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 
 import style from "./style";
+import { TransactionProgress } from "./TransactionProgress";
 import useStyles from "../../hooks/styles";
-
 import { useTransaction } from "../../hooks/transaction";
 import { eq } from "lodash";
 import { PoolSelector } from "../ui/elements/PoolSelector";
@@ -36,21 +36,54 @@ export interface ISwapToken {
   orientation: "portrait" | "landscape";
 }
 
-// TODO: track id change and set loading to true
-export const Swap: FC<ISwapToken> = (props) => {
+const formatAmount = (value: BigNumber | undefined, decimals = 6): string => {
+  if (!value || !value.isFinite()) return "—";
+
+  const fixed = value
+    .decimalPlaces(Math.min(Math.max(decimals, 2), 8), BigNumber.ROUND_DOWN)
+    .toFixed();
+
+  return fixed.includes(".")
+    ? fixed.replace(/(\.\d*?[1-9])0+$/, "$1").replace(/\.0+$/, "")
+    : fixed;
+};
+
+const getStatusLabel = (status?: TransactionStatus): string => {
+  switch (status) {
+    case TransactionStatus.MODIFIED:
+      return "Requesting price";
+    case TransactionStatus.INSUFFICIENT_BALANCE:
+      return "Insufficient balance";
+    case TransactionStatus.INVALID_SLIPPAGE:
+      return "Check slippage";
+    case TransactionStatus.SUFFICIENT_BALANCE:
+      return "Ready to swap";
+    case TransactionStatus.PENDING:
+      return "Approve in wallet";
+    case TransactionStatus.SUBMITTED:
+      return "Confirming on Tezos";
+    case TransactionStatus.CONFIRMATION_UNKNOWN:
+      return "Check operation status";
+    case TransactionStatus.COMPLETED:
+      return "Swap complete";
+    case TransactionStatus.FAILED:
+      return "Ready to retry";
+    case TransactionStatus.ZERO_AMOUNT:
+    case TransactionStatus.INITIALIZED:
+    case TransactionStatus.UNINITIALIZED:
+      return "Enter an amount";
+    default:
+      return "Preparing request";
+  }
+};
+
+export const Swap: FC<ISwapToken> = () => {
   const scalingKey = "swap";
-  // load styles and apply responsive scaling for component
   const styles = useStyles(style, scalingKey);
   const network = useNetwork();
   const wallet = useWallet();
-  // load wallet operations for component
   const walletOps: WalletOps = useWalletOps(TransactingComponent.SWAP, true);
-  // load transaction operations for component
-  const transactionOps = useTransaction(
-    TransactingComponent.SWAP
-    //  undefined,
-    //  true
-  );
+  const transactionOps = useTransaction(TransactingComponent.SWAP);
 
   const [id, setId] = useState<Id | undefined>(undefined);
   const [loading, setLoading] = useState<boolean>(true);
@@ -76,8 +109,8 @@ export const Swap: FC<ISwapToken> = (props) => {
   });
 
   const [swappingFileds, setSwappingFileds] = useState<boolean>(false);
+  const [sendInputValue, setSendInputValue] = useState("0.00");
   const session = useSession();
-
   const [canUpdate, setCanUpdate] = useState<boolean>(false);
 
   const active = walletOps.getActiveTransaction();
@@ -89,44 +122,38 @@ export const Swap: FC<ISwapToken> = (props) => {
         network.getAsset(pools[0].tokenA),
         network.getAsset(pools[0].tokenB),
       ]);
-
       setLoading(true);
     }
   }, [network.network]);
 
   const handlePoolChange = useCallback(
     async (newPoolId: string) => {
-      const pool = network.getAllPools().find((p) => p.id === newPoolId);
+      const pool = network.getAllPools().find((item) => item.id === newPoolId);
       if (!pool) return;
+
       network.setSelectedPool(pool);
       setAssets([network.getAsset(pool.tokenA), network.getAsset(pool.tokenB)]);
 
       wallet.clearTransaction(TransactingComponent.ADD_LIQUIDITY);
       wallet.clearTransaction(TransactingComponent.REMOVE_LIQUIDITY);
-      // Re-initialize transaction with new pool
       await transactionOps.initialize(
         [network.getAsset(pool.tokenA)],
         [network.getAsset(pool.tokenB)],
         newPoolId
       );
     },
-    [network, transactionOps]
+    [network, transactionOps, wallet]
   );
 
-  // Callback to process transaction
   const transact = useCallback(async () => {
     await walletOps.sendTransaction();
-  }, [walletOps.sendTransaction]);
+  }, [walletOps]);
 
-  // Callback to swap fields
   const swapFields = useCallback(async () => {
-    // swap assets
     setAssets([assets[1], assets[0]]);
-    // swap transaction fields
     await transactionOps.swapFields();
   }, [assets, transactionOps]);
 
-  // callback to create new transaction
   const newTransaction = useCallback(async () => {
     const transaction = await transactionOps.initialize(
       [assets[send]],
@@ -134,196 +161,306 @@ export const Swap: FC<ISwapToken> = (props) => {
       currentPool?.id || ""
     );
 
-    //if transaction initialized update balance and set loading params to false
     if (transaction) {
       if (swappingFileds) setSwappingFileds(false);
       setLoading(false);
     }
-  }, [swappingFileds, assets, transactionOps]);
+  }, [swappingFileds, assets, transactionOps, currentPool]);
 
-  // Effect to handle loading of transaction
   useEffect(() => {
-    // get active transaction
     const transaction = transactionOps.getActiveTransaction();
-    // if loading and no transaction, create new transaction
     if (loading && !transaction) {
       newTransaction();
-    } else if (loading) {
-      // if loading and transaction,
-      // update balance  , assets and set loading to false
-      if (transaction) {
-        //grab assets from transaction
-        const _assets: [Asset, Asset] = [
-          transaction.sendAsset[0],
-          transaction.receiveAsset[0],
-        ];
-        // Load assets if transaction assets are different from current assets
-        !eq(_assets, assets) && setAssets(_assets);
-        setLoading(false);
-      }
+    } else if (loading && transaction) {
+      const nextAssets: [Asset, Asset] = [
+        transaction.sendAsset[0],
+        transaction.receiveAsset[0],
+      ];
+      !eq(nextAssets, assets) && setAssets(nextAssets);
+      setLoading(false);
     }
-  }, [loading]);
+  }, [loading, newTransaction, transactionOps, assets]);
 
   useEffect(() => {
-    if (session.activeComponent !== TransactingComponent.SWAP)
+    if (session.activeComponent !== TransactingComponent.SWAP) {
       session.loadComponent(TransactingComponent.SWAP);
+    }
   }, [session]);
 
-  //callback to handle transaction status changes
   const monitorStatus = useCallback(() => {
     const transaction = transactionOps.getActiveTransaction();
-    const _canUpdate: boolean = (() => {
-      if (transaction) {
-        switch (transaction.transactionStatus) {
-          case TransactionStatus.PENDING:
-            return false;
-          case TransactionStatus.UNINITIALIZED:
-            return false;
-          case TransactionStatus.COMPLETED:
-            return false;
-          default:
-            return true;
-        }
-      } else {
-        return false;
+    const nextCanUpdate = (() => {
+      if (!transaction) return false;
+
+      switch (transaction.transactionStatus) {
+        case TransactionStatus.PENDING:
+        case TransactionStatus.SUBMITTED:
+        case TransactionStatus.CONFIRMATION_UNKNOWN:
+        case TransactionStatus.UNINITIALIZED:
+        case TransactionStatus.COMPLETED:
+          return false;
+        default:
+          return true;
       }
     })();
 
-    setCanUpdate((canUpdate) => {
-      if (canUpdate === _canUpdate) return canUpdate;
-      return _canUpdate;
-    });
+    setCanUpdate((current) =>
+      current === nextCanUpdate ? current : nextCanUpdate
+    );
 
-    // current transaction id in wallet context
     const transactionId = transaction?.id;
-
-    // if no id and transaction id, set id and set reloading to true
     if (!id && transactionId) {
       setId(transactionId);
       setReloading(true);
     }
-    // if id and transaction id and different, set id and set reloading to true
     if (id && transactionId && id !== transactionId) {
       setId(transactionId);
       setReloading(true);
     }
-  }, [transactionOps.getActiveTransaction, id]);
+  }, [transactionOps, id]);
 
-  // effect to monitor transaction status by calling monitorStatus
   useEffect(() => {
     monitorStatus();
   }, [monitorStatus]);
 
-  // Effect to reload new transactions
   useEffect(() => {
     const timer = setTimeout(() => {
-      // get active transaction
-      const t = transactionOps.getActiveTransaction();
-      // if loading and no transaction, create new transaction
-      if (reloading && t) {
-        // if loading and transaction,
-        // update balance, assets and set loading to false
-        //grab assets from transaction
-        const _assets: [Asset, Asset] = [t.sendAsset[0], t.receiveAsset[0]];
-        // reload assets
-        setAssets(_assets);
+      const transaction = transactionOps.getActiveTransaction();
+      if (reloading && transaction) {
+        setAssets([transaction.sendAsset[0], transaction.receiveAsset[0]]);
         setReloading(false);
       }
     }, 100);
     return () => clearTimeout(timer);
-  }, [transactionOps.getActiveTransaction, assets, reloading]);
+  }, [transactionOps, assets, reloading]);
 
-  // get loading status for child compoenents
-  const isLoaded = useCallback(() => {
-    return !loading && !reloading;
-  }, [loading, reloading]);
+  const isLoaded = useCallback(
+    () => !loading && !reloading,
+    [loading, reloading]
+  );
 
-  // if loading return empty div else render component
-  if (loading) {
-    return <div> </div>;
-  } else {
-    return (
-      <Box sx={styles.boxRoot}>
-        <Grid2 container sx={styles.root}>
-          <Card sx={styles.card}>
-            <CardHeader
-              sx={styles.cardHeader}
-              title={
-                <Box
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="space-between"
-                >
-                  <Typography sx={styles.cardHeaderTypography}>
-                    {"Swap"}
-                  </Typography>
+  if (loading) return <Box sx={styles.loadingSpace} />;
 
-                  <PoolSelector
-                    onChange={handlePoolChange}
-                    disabled={!canUpdate}
-                    sx={styles.poolSelector}
-                  />
-                </Box>
-              }
-            />
-            <CardContent sx={styles.cardcontent}>
-              <Grid2 xs={11.2} sx={styles.input1}>
-                <UserAmountField
-                  component={TransactingComponent.SWAP}
-                  transferType={TransferType.SEND}
-                  asset={assets[send]}
-                  readOnly={!canUpdate}
-                  scalingKey={scalingKey}
-                  loading={!isLoaded()}
-                />
-              </Grid2>
+  const transaction = transactionOps.getActiveTransaction() || active;
+  const sendAmount = transaction?.sendAmount[0]?.decimal;
+  const receiveAmount = transaction?.receiveAmount[0]?.decimal;
+  const hasEnteredAmount = new BigNumber(sendInputValue || 0).isGreaterThan(0);
+  const hasQuote = Boolean(
+    hasEnteredAmount &&
+      sendAmount &&
+      receiveAmount &&
+      sendAmount.isGreaterThan(0)
+  );
+  const exchangeRate = hasQuote
+    ? receiveAmount?.dividedBy(sendAmount as BigNumber)
+    : undefined;
+  const slippage = transaction?.slippage ?? 0.5;
+  const minimumReceived = receiveAmount
+    ? BigNumber.maximum(
+        receiveAmount.times(new BigNumber(1).minus(slippage / 100)),
+        0
+      )
+    : undefined;
+  const status = transaction?.transactionStatus;
+  const statusLabel = hasQuote ? getStatusLabel(status) : "Enter an amount";
+  const statusStep =
+    status === TransactionStatus.COMPLETED
+      ? 3
+      : hasQuote &&
+        (status === TransactionStatus.PENDING ||
+          status === TransactionStatus.SUBMITTED ||
+          status === TransactionStatus.CONFIRMATION_UNKNOWN)
+      ? 2
+      : 1;
 
-              <Box sx={styles.swapToggle}>
-                <SwapUpDownToggle toggle={swapFields} scalingKey={scalingKey} />
-              </Box>
-
-              <Grid2 xs={11.2} sx={styles.input2}>
-                <UserAmountField
-                  component={TransactingComponent.SWAP}
-                  transferType={TransferType.RECEIVE}
-                  asset={assets[receive]}
-                  readOnly={true}
-                  scalingKey={scalingKey}
-                  loading={!isLoaded()}
-                />
-              </Grid2>
-            </CardContent>
-            <CardActions sx={styles.cardAction}>
-              <Box sx={styles.transact}>
-                <Wallet
-                  component={TransactingComponent.SWAP}
-                  transaction={active}
-                  callback={transact}
-                  scalingKey={scalingKey}
-                >
-                  {"Swap Tokens"}
-                </Wallet>
-              </Box>
-            </CardActions>
-          </Card>
-
-          <Paper variant="outlined" sx={styles.paper} square>
-            <Box sx={styles.paperBox}>
-              <Grid2 xs={4}>
-                <SlippageLabel scalingKey={scalingKey} />
-              </Grid2>
-
-              <Grid2 xs={7}>
-                <Slippage
-                  component={TransactingComponent.SWAP}
-                  transferType={TransferType.RECEIVE}
-                  scalingKey={scalingKey}
-                />
-              </Grid2>
+  const routeLabel = `${assets[send].label} → ${assets[receive].label}`;
+  const feeLabel =
+    currentPool?.type === PoolType.SIRIUS
+      ? "0.1% fee + 0.1% XTZ burn"
+      : currentPool?.type === PoolType.TEZEX
+      ? "0.30% pool fee"
+      : "Pool-defined";
+  const contractLabel = currentPool?.address
+    ? `${currentPool.address.slice(0, 7)}…${currentPool.address.slice(-6)}`
+    : "—";
+  const explorerUrl = currentPool?.address
+    ? `${getExplorer(network.network)}${currentPool.address}`
+    : undefined;
+  return (
+    <Box sx={styles.boxRoot}>
+      <Box sx={styles.root}>
+        <Card sx={styles.card}>
+          <Box sx={styles.cardHeader}>
+            <Box sx={styles.cardTitleGroup}>
+              <Typography sx={styles.eyebrow}>SWAP</Typography>
+              <Typography sx={styles.cardTitle}>Trade on Tezos</Typography>
             </Box>
-          </Paper>
-        </Grid2>
+            <PoolSelector
+              onChange={handlePoolChange}
+              disabled={!canUpdate}
+              sx={styles.poolSelector}
+              variant="dark"
+            />
+          </Box>
+
+          <CardContent sx={styles.cardContent}>
+            <Box sx={styles.amountField}>
+              <UserAmountField
+                component={TransactingComponent.SWAP}
+                transferType={TransferType.SEND}
+                asset={assets[send]}
+                onChange={setSendInputValue}
+                readOnly={!canUpdate}
+                scalingKey={scalingKey}
+                loading={!isLoaded()}
+                label="You pay"
+                visualVariant="tezex"
+              />
+            </Box>
+
+            <Box sx={styles.swapToggle}>
+              <SwapUpDownToggle toggle={swapFields} scalingKey={scalingKey} />
+            </Box>
+
+            <Box sx={styles.amountField}>
+              <UserAmountField
+                component={TransactingComponent.SWAP}
+                transferType={TransferType.RECEIVE}
+                asset={assets[receive]}
+                readOnly
+                forceZero={!hasEnteredAmount}
+                scalingKey={scalingKey}
+                loading={!isLoaded()}
+                label="You receive"
+                visualVariant="tezex"
+              />
+            </Box>
+
+            <Box sx={styles.quoteLine} aria-live="polite">
+              <Typography sx={styles.quoteText}>
+                {exchangeRate
+                  ? `1 ${assets[send].label} = ${formatAmount(
+                      exchangeRate,
+                      assets[receive].decimals
+                    )} ${assets[receive].label}`
+                  : "Enter an amount to load a live pool quote"}
+              </Typography>
+              <Typography sx={styles.quoteStatus}>{statusLabel}</Typography>
+            </Box>
+          </CardContent>
+
+          <CardActions sx={styles.cardActions}>
+            <Wallet
+              component={TransactingComponent.SWAP}
+              transaction={active}
+              callback={transact}
+              scalingKey={scalingKey}
+              visualVariant="dark"
+            >
+              Swap
+            </Wallet>
+          </CardActions>
+
+          <Box sx={styles.slippageRow}>
+            <Box>
+              <Typography sx={styles.slippageLabel}>
+                Slippage tolerance
+              </Typography>
+              <Typography sx={styles.slippageHelp}>
+                Maximum accepted price movement
+              </Typography>
+            </Box>
+            <Slippage
+              component={TransactingComponent.SWAP}
+              transferType={TransferType.RECEIVE}
+              scalingKey={scalingKey}
+              visualVariant="dark"
+            />
+          </Box>
+        </Card>
+
+        <Box sx={styles.contextColumn}>
+          <Box sx={styles.detailsPanel}>
+            <Box sx={styles.panelHeader}>
+              <Box>
+                <Typography sx={styles.eyebrow}>SWAP DETAILS</Typography>
+                <Typography sx={styles.panelTitle}>{routeLabel}</Typography>
+              </Box>
+              <Box sx={styles.liveBadge}>
+                <Box sx={styles.liveDot} />
+                {network.network.toString().toLowerCase()}
+              </Box>
+            </Box>
+
+            <Box sx={styles.detailList}>
+              <Box sx={styles.detailRow}>
+                <Typography sx={styles.detailLabel}>Pool</Typography>
+                <Typography sx={styles.detailValue}>
+                  {currentPool?.name ?? "—"}
+                </Typography>
+              </Box>
+              <Box sx={styles.detailRow}>
+                <Typography sx={styles.detailLabel}>Pool cost</Typography>
+                <Typography sx={styles.detailValue}>{feeLabel}</Typography>
+              </Box>
+              <Box sx={styles.detailRow}>
+                <Typography sx={styles.detailLabel}>
+                  Minimum received
+                </Typography>
+                <Typography sx={styles.detailValueMono}>
+                  {hasQuote && minimumReceived
+                    ? `${formatAmount(
+                        minimumReceived,
+                        assets[receive].decimals
+                      )} ${assets[receive].label}`
+                    : "—"}
+                </Typography>
+              </Box>
+              <Box sx={styles.detailRow}>
+                <Typography sx={styles.detailLabel}>Slippage</Typography>
+                <Typography sx={styles.detailValueMono}>
+                  {slippage.toFixed(1)}%
+                </Typography>
+              </Box>
+              <Box sx={styles.detailRow}>
+                <Typography sx={styles.detailLabel}>Pool contract</Typography>
+                {explorerUrl ? (
+                  <Link
+                    href={explorerUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    sx={styles.contractLink}
+                  >
+                    {contractLabel}
+                  </Link>
+                ) : (
+                  <Typography sx={styles.detailValueMono}>—</Typography>
+                )}
+              </Box>
+            </Box>
+
+            <Box sx={styles.trustNote}>
+              Quotes come from the selected on-chain pool. Review every amount
+              and destination in your wallet before approving.
+            </Box>
+          </Box>
+
+          <Box sx={styles.statusPanel} aria-live="polite">
+            <Box sx={styles.statusHeader}>
+              <Typography sx={styles.eyebrow}>TRANSACTION STATUS</Typography>
+              <Typography sx={styles.statusText}>{statusLabel}</Typography>
+            </Box>
+
+            <TransactionProgress statusStep={statusStep} styles={styles} />
+
+            <Typography sx={styles.statusFootnote}>
+              Request gets a live pool price. Swap covers wallet approval and
+              on-chain execution. Complete means the operation is confirmed on
+              Tezos.
+            </Typography>
+          </Box>
+        </Box>
       </Box>
-    );
-  }
+    </Box>
+  );
 };

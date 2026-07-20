@@ -8,7 +8,7 @@ import React, {
 import { Draft } from "immer";
 import { useImmer } from "use-immer";
 import { Mutex } from "async-mutex";
-import { DAppClient, NetworkType } from "@airgap/beacon-dapp";
+import { BeaconEvent, DAppClient, NetworkType } from "@airgap/beacon-dapp";
 import {
   Transaction,
   Asset,
@@ -18,7 +18,8 @@ import {
   TransactingComponent,
   Amount,
   AssetOrAssetPair,
-  Errors,
+  CompletionState,
+  Token,
 } from "../types/general";
 import { eq, isNumber } from "lodash";
 import { processTransaction } from "../functions/transactions";
@@ -33,6 +34,10 @@ import {
 } from "../functions/util";
 import { WritableDraft } from "immer/dist/types/types-external";
 import { estimateWithAdapter } from "../functions/estimates";
+import {
+  isValidSlippage,
+  XTZ_FEE_RESERVE_TEZ,
+} from "../functions/transactionSafety";
 
 export enum WalletStatus {
   ESTIMATING_SIRS = "Estimating Sirs",
@@ -138,8 +143,9 @@ interface IWalletProvider {
 export function WalletProvider(props: IWalletProvider) {
   const network = useNetwork();
   const session = useSession();
-  const transactionMutex = new Mutex();
-  const transactionUpdateMutex = new Mutex();
+  const transactionMutex = useRef(new Mutex()).current;
+  const transactionUpdateMutex = useRef(new Mutex()).current;
+  const processingTransactionIds = useRef(new Set<string>()).current;
   const [transactions, setTransactions] = useImmer<{
     [key in TransactingComponent]?: Transaction;
   }>({});
@@ -214,6 +220,18 @@ export function WalletProvider(props: IWalletProvider) {
           network: { type: network.network },
           preferredNetwork: network.network,
         });
+
+        await dAppClient.subscribeToEvent(
+          BeaconEvent.ACTIVE_ACCOUNT_SET,
+          async (account) => {
+            setAddress(account?.address ?? null);
+            if (!account) {
+              setClient((currentClient) =>
+                currentClient === dAppClient ? null : currentClient
+              );
+            }
+          }
+        );
 
         const activeAccount = await dAppClient.getActiveAccount();
 
@@ -330,42 +348,93 @@ export function WalletProvider(props: IWalletProvider) {
       if (address && network.toolkit && client) {
         // if the transaction is pending process it
         if (transaction.transactionStatus === TransactionStatus.PENDING) {
-          const t: Transaction = await processTransaction(
-            transaction,
-            address,
-            { toolkit: network.toolkit, client }
-          )
-            .then((success) => {
-              // if the transaction is successful set success alert and update balances
-              session.setAlert(completionRecordSuccess(success), true);
-              return updateBalances();
-            })
-            .then(() => {
-              // set transaction status to completed
-              return {
-                ...transaction,
-                transactionStatus: TransactionStatus.COMPLETED,
-              };
-            })
-            .catch((e) => {
-              // if the transaction fails set failed alert and status to failed
-              session.setAlert(completionRecordFailed(e as Errors), true);
-              return {
-                ...transaction,
-                transactionStatus: TransactionStatus.FAILED,
-              };
-            });
-          return t;
+          let submittedHash: string | undefined;
+
+          try {
+            const success = await processTransaction(
+              transaction,
+              address,
+              { toolkit: network.toolkit, client },
+              {
+                onSubmitted: (opHash) => {
+                  submittedHash = opHash;
+                  setTransactions((draft) => {
+                    const activeTransaction = draft[transaction.component];
+                    if (activeTransaction?.id !== transaction.id) return;
+
+                    activeTransaction.operationHash = opHash;
+                    activeTransaction.transactionStatus =
+                      TransactionStatus.SUBMITTED;
+                    activeTransaction.lastModified = new Date();
+                  });
+                },
+              }
+            );
+
+            session.setAlert(completionRecordSuccess(success), true);
+            try {
+              await updateBalances();
+            } catch (balanceError) {
+              // Confirmation is authoritative. A secondary balance refresh
+              // must never turn a confirmed operation into a retryable failure.
+              console.warn(
+                "Post-confirmation balance refresh failed:",
+                balanceError
+              );
+            }
+
+            return {
+              ...transaction,
+              operationHash: success.opHash,
+              transactionStatus: TransactionStatus.COMPLETED,
+            };
+          } catch (error: unknown) {
+            const completionRecord = completionRecordFailed(
+              error,
+              transaction.component,
+              transaction.network
+            );
+            session.setAlert(completionRecord, true);
+
+            const failure =
+              completionRecord[0] === CompletionState.FAILED
+                ? completionRecord[1]
+                : undefined;
+            const confirmationUnknown =
+              failure?.submitted && failure.safeToRetry === false;
+
+            return {
+              ...transaction,
+              operationHash: failure?.opHash ?? submittedHash,
+              transactionStatus: confirmationUnknown
+                ? TransactionStatus.CONFIRMATION_UNKNOWN
+                : TransactionStatus.FAILED,
+            };
+          }
         } else {
           return transaction;
         }
       } else throw Error("wallet not Connected");
     },
-    [address, session.setAlert, network.toolkit]
+    [address, client, network.toolkit, session, setTransactions, updateBalances]
   );
 
   // Effect to monitor transactions and send them for processing
   useEffect(() => {
+    processingTransactionIds.forEach((transactionId) => {
+      const activeTransaction = Object.values(transactions).find(
+        (transaction) => transaction?.id === transactionId
+      );
+
+      if (
+        !activeTransaction ||
+        (activeTransaction.transactionStatus !== TransactionStatus.PENDING &&
+          activeTransaction.transactionStatus !== TransactionStatus.SUBMITTED)
+      ) {
+        processingTransactionIds.delete(transactionId);
+      }
+    });
+
     // process a transaction
     const proc = async (component: TransactingComponent) => {
       return transactionMutex.runExclusive(async () => {
@@ -374,8 +443,12 @@ export function WalletProvider(props: IWalletProvider) {
         if (
           currentTransaction &&
           currentTransaction.transactionStatus === TransactionStatus.PENDING &&
-          !currentTransaction.locked
+          !currentTransaction.locked &&
+          !processingTransactionIds.has(currentTransaction.id)
         ) {
+          // React can re-run effects with a stale transaction snapshot. Keep an
+          // attempt-level guard so the same transaction cannot be submitted twice.
+          processingTransactionIds.add(currentTransaction.id);
           // lock transaction
           setTransactions((draft) => {
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -495,29 +568,50 @@ export function WalletProvider(props: IWalletProvider) {
   );
 
   // function to check if a user has sufficient balance
-  const checkSufficientBalance = (
-    userBalance: Amount,
-    requiredAmount: Amount
-  ): TransactionStatus => {
-    // Amounts to compare must be of same length( currently : a single asset or an asset pair)
-    if (userBalance.length !== requiredAmount.length) {
-      throw Error("Error: balance check asset pair mismatch");
-    }
-    // check if the user has sufficient balance by comparing the two amounts
-    const checks: boolean[] = Array.from(userBalance, (assetBalance, index) => {
-      const required = requiredAmount[index];
-      if (required) {
-        return assetBalance.greaterOrEqualTo(required);
-      } else throw Error("Amount indexs don't match / align");
-    });
-    // if all checks are true return sufficient balance else return insufficient balance
-    const hasSufficientBalance = !checks.includes(false);
-    if (hasSufficientBalance) {
-      return TransactionStatus.SUFFICIENT_BALANCE;
-    } else {
-      return TransactionStatus.INSUFFICIENT_BALANCE;
-    }
-  };
+  const checkSufficientBalance = useCallback(
+    (
+      userBalance: Amount,
+      requiredAmount: Amount,
+      requiredAssets: AssetOrAssetPair
+    ): TransactionStatus => {
+      // Amounts to compare must be of same length( currently : a single asset or an asset pair)
+      if (userBalance.length !== requiredAmount.length) {
+        throw Error("Error: balance check asset pair mismatch");
+      }
+      // check if the user has sufficient balance by comparing the two amounts
+      const checks: boolean[] = Array.from(
+        userBalance,
+        (assetBalance, index) => {
+          const required = requiredAmount[index];
+          if (required) {
+            return assetBalance.greaterOrEqualTo(required);
+          } else throw Error("Amount indexs don't match / align");
+        }
+      );
+      const xtzAsset = network.info.assets.find(
+        (asset) => asset.name === Token.XTZ
+      );
+      const requiredXtz = requiredAssets.reduce((total, asset, index) => {
+        if (asset.name !== Token.XTZ) return total;
+        return total.plus(requiredAmount[index]?.decimal ?? 0);
+      }, new BigNumber(0));
+      const hasFeeReserve = xtzAsset
+        ? findAssetBalance(xtzAsset).decimal.isGreaterThanOrEqualTo(
+            requiredXtz.plus(XTZ_FEE_RESERVE_TEZ)
+          )
+        : false;
+
+      // Every operation is paid in tez, including token-only swaps. Require a
+      // small fee reserve in addition to the assets sent to the pool.
+      const hasSufficientBalance = !checks.includes(false) && hasFeeReserve;
+      if (hasSufficientBalance) {
+        return TransactionStatus.SUFFICIENT_BALANCE;
+      } else {
+        return TransactionStatus.INSUFFICIENT_BALANCE;
+      }
+    },
+    [findAssetBalance, network.info.assets]
+  );
 
   // callback to update balances and status of a transaction balance for a given transaction
   const TranscationWithUpdatedBalance = useCallback(
@@ -530,7 +624,8 @@ export function WalletProvider(props: IWalletProvider) {
       );
       const balanceStatus = checkSufficientBalance(
         sendAssetBalance,
-        transaction.sendAmount
+        transaction.sendAmount,
+        transaction.sendAsset
       );
       return {
         ...transaction,
@@ -539,7 +634,7 @@ export function WalletProvider(props: IWalletProvider) {
         transactionStatus: balanceStatus,
       };
     },
-    [getBalancesOfAssets]
+    [checkSufficientBalance, getBalancesOfAssets]
   );
 
   // callback to update balances of all transactions
@@ -606,6 +701,7 @@ export function WalletProvider(props: IWalletProvider) {
   const updateTransactionBalance = useCallback(
     async (component: TransactingComponent): Promise<boolean> => {
       const transaction = getActiveTransaction(component);
+      const transactionId = transaction?.id;
       let updated = false;
       transaction &&
         (await transactionUpdateMutex.runExclusive(() => {
@@ -616,7 +712,7 @@ export function WalletProvider(props: IWalletProvider) {
               if (
                 transaction &&
                 transaction.id &&
-                transaction.id === transaction.id
+                transaction.id === transactionId
               ) {
                 transaction.sendAssetBalance = _transaction.sendAssetBalance;
                 transaction.receiveAssetBalance =
@@ -677,7 +773,8 @@ export function WalletProvider(props: IWalletProvider) {
       if (isWalletConnected) {
         transaction.transactionStatus = checkSufficientBalance(
           sendAssetBalance,
-          amountUpdateSend
+          amountUpdateSend,
+          transaction.sendAsset as AssetOrAssetPair
         );
       }
       return true;
@@ -694,7 +791,11 @@ export function WalletProvider(props: IWalletProvider) {
     if (!transaction) return false;
     if (
       transaction.locked ||
-      transaction.transactionStatus === TransactionStatus.PENDING
+      transaction.transactionStatus === TransactionStatus.PENDING ||
+      transaction.transactionStatus === TransactionStatus.SUBMITTED ||
+      transaction.transactionStatus ===
+        TransactionStatus.CONFIRMATION_UNKNOWN ||
+      transaction.transactionStatus === TransactionStatus.COMPLETED
     )
       return false;
     // else safe to update, run the updater
@@ -732,7 +833,19 @@ export function WalletProvider(props: IWalletProvider) {
                 isNumber(slippageUpdate) &&
                 transaction.slippage !== slippageUpdate
               ) {
-                transaction.slippage = slippageUpdate;
+                if (isValidSlippage(slippageUpdate)) {
+                  transaction.slippage = slippageUpdate;
+                  if (isWalletConnected) {
+                    transaction.transactionStatus = checkSufficientBalance(
+                      transaction.sendAssetBalance as Amount,
+                      transaction.sendAmount as Amount,
+                      transaction.sendAsset as AssetOrAssetPair
+                    );
+                  }
+                } else {
+                  transaction.transactionStatus =
+                    TransactionStatus.INVALID_SLIPPAGE;
+                }
                 updated = true;
               }
               // update the transaction status based on the new balance
@@ -755,7 +868,7 @@ export function WalletProvider(props: IWalletProvider) {
       });
       return updated;
     },
-    [setTransactions, isWalletConnected]
+    [checkSufficientBalance, setTransactions, isWalletConnected]
   );
 
   // update the wallet connection state

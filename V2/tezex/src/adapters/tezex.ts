@@ -210,7 +210,7 @@ export class TezexAdapter implements IPoolAdapter {
       }
     } catch (error) {
       console.error("Error executing swap:", error);
-      throw Errors.TRANSACTION_FAILED;
+      throw error;
     }
   }
 
@@ -304,18 +304,21 @@ export class TezexAdapter implements IPoolAdapter {
         operationDetails: operations,
       });
 
-      await this.getPoolData(toolkit, true);
+      void this.getPoolData(toolkit, true).catch((error) => {
+        console.warn("Post-submit TEZEX pool refresh failed:", error);
+      });
       return response.transactionHash;
     } catch (error) {
       console.error("Error executing add liquidity:", error);
-      throw Errors.TRANSACTION_FAILED;
+      throw error;
     }
   }
 
   async executeRemoveLiquidity(
     kit: ExecutionKit,
     userAddress: string,
-    lpTokenAmount: BigNumber
+    lpTokenAmount: BigNumber,
+    slippage: number
   ): Promise<string> {
     const { client, toolkit } = kit;
     try {
@@ -328,12 +331,11 @@ export class TezexAdapter implements IPoolAdapter {
         lpTokenAmount
       );
 
-      // Apply 0.5% slippage protection
       const minTokenA = estimate.tokenAAmount
-        .times(0.995)
+        .times(1 - slippage / 100)
         .integerValue(BigNumber.ROUND_DOWN);
       const minTokenB = estimate.tokenBAmount
-        .times(0.995)
+        .times(1 - slippage / 100)
         .integerValue(BigNumber.ROUND_DOWN);
 
       const removeLiqParams = contract.methodsObject
@@ -369,11 +371,13 @@ export class TezexAdapter implements IPoolAdapter {
         operationDetails: [transferParamsToBeaconOp(estimatedRemoveParams)],
       });
 
-      await this.getPoolData(toolkit, true);
+      void this.getPoolData(toolkit, true).catch((error) => {
+        console.warn("Post-submit TEZEX pool refresh failed:", error);
+      });
       return response.transactionHash;
     } catch (error) {
       console.error("Error executing remove liquidity:", error);
-      throw Errors.TRANSACTION_FAILED;
+      throw error;
     }
   }
 
@@ -466,7 +470,9 @@ export class TezexAdapter implements IPoolAdapter {
     const response = await client.requestOperation({
       operationDetails: [operationRequest],
     });
-    await this.getPoolData(toolkit, true);
+    void this.getPoolData(toolkit, true).catch((error) => {
+      console.warn("Post-submit TEZEX pool refresh failed:", error);
+    });
     return response.transactionHash;
   }
 
@@ -550,11 +556,13 @@ export class TezexAdapter implements IPoolAdapter {
         operationDetails: operations,
       });
 
-      await this.getPoolData(toolkit, true);
+      void this.getPoolData(toolkit, true).catch((error) => {
+        console.warn("Post-submit TEZEX pool refresh failed:", error);
+      });
       return response.transactionHash;
     } catch (error) {
       console.error("Error executing tokenToXtz:", error);
-      throw Errors.TRANSACTION_FAILED;
+      throw error;
     }
   }
 

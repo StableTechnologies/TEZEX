@@ -16,11 +16,12 @@ import {
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 
-import style from "./style";
+import style, { darkStyle } from "./style";
 import useStyles from "../../../../hooks/styles";
 import { useTransaction } from "../../../../hooks/transaction";
 import TextField from "@mui/material/TextField";
 import InputAdornment from "@mui/material/InputAdornment";
+import Tooltip from "@mui/material/Tooltip";
 import { useDebounce } from "usehooks-ts";
 import {
   cleanNumericString,
@@ -28,14 +29,22 @@ import {
   toNumber,
 } from "../../../../functions/util";
 import lodash, { isNumber } from "lodash";
+import {
+  getSlippageValidationMessage,
+  HIGH_SLIPPAGE_PERCENT,
+} from "../../../../functions/transactionSafety";
 export interface ISlippage {
   component: TransactingComponent;
   transferType: TransferType;
   scalingKey?: string;
+  visualVariant?: "default" | "dark";
 }
 
 const SlippageInput: FC<ISlippage> = (props) => {
-  const styles = useStyles(style, props.scalingKey);
+  const styles = useStyles(
+    props.visualVariant === "dark" ? darkStyle : style,
+    props.scalingKey
+  );
   const [selectedId, setSelectedId] = useState("1");
   const [loading, setLoading] = useState(true);
   const [input, setInput] = useState<string>("0.5");
@@ -140,12 +149,13 @@ const SlippageInput: FC<ISlippage> = (props) => {
   useEffect(() => {
     // get curent slippage of transaction in context
     const slippage = transactionOps.getActiveTransaction()?.slippage;
+    const validationMessage = getSlippageValidationMessage(debouncedValue);
 
     // if slippage is different from slippage in context update slippage
     if (
       isNumber(slippage) &&
-      isNumeric(debouncedValue) &&
-      slippage !== toNumber(debouncedValue)
+      ((selectedId === "input" && Boolean(validationMessage)) ||
+        (isNumeric(debouncedValue) && slippage !== toNumber(debouncedValue)))
     ) {
       const timeoutId = setTimeout(() => {
         updateAmount(debouncedValue);
@@ -156,7 +166,12 @@ const SlippageInput: FC<ISlippage> = (props) => {
         clearTimeout(timeoutId);
       };
     }
-  }, [transactionOps.getActiveTransaction, debouncedValue, updateAmount]);
+  }, [
+    transactionOps.getActiveTransaction,
+    debouncedValue,
+    selectedId,
+    updateAmount,
+  ]);
 
   //calback to check if input is selected
   const isInputSelected = useCallback(() => {
@@ -202,74 +217,111 @@ const SlippageInput: FC<ISlippage> = (props) => {
         break;
     }
   };
+
+  const selectedIndex = selectedId === "0" ? 0 : selectedId === "1" ? 1 : 2;
+  const validationMessage =
+    selectedId === "input" ? getSlippageValidationMessage(input) : undefined;
+  const highSlippage =
+    !validationMessage && Number(input) > HIGH_SLIPPAGE_PERCENT
+      ? "Higher slippage allows more price movement before execution."
+      : undefined;
+
   return (
-    <Box sx={styles.slippageTabsRoot}>
-      <>
-        <Box
-          sx={{
-            marginLeft: "2%",
-          }}
+    <Box
+      sx={{
+        ...styles.slippageTabsRoot,
+        ...(validationMessage
+          ? { borderColor: "var(--tezex-text-secondary)" }
+          : {}),
+      }}
+      role="group"
+      aria-label="Slippage tolerance"
+    >
+      <Box
+        aria-hidden="true"
+        sx={{
+          ...styles.slippageThumb,
+          transform: `translateX(${selectedIndex * 100}%)`,
+        }}
+      />
+
+      <Box sx={styles.slippageSegment}>
+        <Button
+          disableRipple
+          aria-pressed={selectedId === "0"}
           onClick={() => handleSlippageTabClick("0")}
-        >
-          <Button disabled={selectedId !== "0"} sx={styles.slippageTab}>
-            0.5%
-          </Button>
-        </Box>
-        <Box onClick={() => handleSlippageTabClick("1")}>
-          <Button disabled={selectedId !== "1"} sx={styles.slippageTab}>
-            1.0%
-          </Button>
-        </Box>
-        <Box
           sx={{
-            display: "flex",
-            justifyContent: "center",
-            height: "100%",
-            // width: "100%",
+            ...styles.slippageTab,
+            ...(selectedId === "0" ? styles.slippageTabSelected : {}),
           }}
-          onClick={() => handleSlippageTabClick("input")}
         >
-          <Box sx={styles.slippageInput.box}>
-            {selectedId === "input" ? (
-              <TextField
-                ref={inputRef}
-                autoComplete="off"
-                autoFocus
-                disabled={selectedId !== "input"}
-                onChange={handleChange}
-                value={input}
-                sx={{ ...styles.slippageInput, zindex: 10 }}
-                InputProps={{
-                  disableUnderline: true,
-                  endAdornment: (
-                    <InputAdornment
-                      sx={styles.slippageInput.endAdornment}
-                      position="start"
-                    >
-                      %
-                    </InputAdornment>
-                  ),
-                  sx: styles.slippageInput.inputProps,
-                }}
-                inputProps={{
-                  inputMode: "decimal",
-                }}
-                size="small"
-                variant="standard"
-              />
-            ) : (
-              <Box
-                sx={styles.slippageTab}
-                onClick={() => handleSlippageTabClick("input")}
-              >
-                <Button disabled={true} sx={styles.slippageTab}>
-                  {input}%
-                </Button>
-              </Box>
-            )}
-          </Box>
-        </Box>
-      </>
+          0.5%
+        </Button>
+      </Box>
+
+      <Box sx={styles.slippageSegment}>
+        <Button
+          disableRipple
+          aria-pressed={selectedId === "1"}
+          onClick={() => handleSlippageTabClick("1")}
+          sx={{
+            ...styles.slippageTab,
+            ...(selectedId === "1" ? styles.slippageTabSelected : {}),
+          }}
+        >
+          1.0%
+        </Button>
+      </Box>
+
+      <Box sx={styles.slippageSegment}>
+        {selectedId === "input" ? (
+          <Tooltip
+            arrow
+            placement="top"
+            title={validationMessage ?? highSlippage ?? ""}
+            open={validationMessage ? true : undefined}
+          >
+            <TextField
+              inputRef={inputRef}
+              autoComplete="off"
+              autoFocus
+              onChange={handleChange}
+              value={input}
+              sx={styles.slippageInput}
+              InputProps={{
+                disableUnderline: true,
+                endAdornment: (
+                  <InputAdornment
+                    sx={styles.slippageEndAdornment}
+                    position="end"
+                  >
+                    %
+                  </InputAdornment>
+                ),
+                sx: styles.slippageInputProps,
+              }}
+              inputProps={{
+                inputMode: "decimal",
+                min: 0.1,
+                max: 5,
+                "aria-label": "Custom slippage percentage",
+                "aria-invalid": Boolean(validationMessage),
+              }}
+              size="small"
+              variant="standard"
+            />
+          </Tooltip>
+        ) : (
+          <Button
+            disableRipple
+            aria-pressed={false}
+            onClick={() => handleSlippageTabClick("input")}
+            sx={styles.slippageTab}
+          >
+            Custom
+          </Button>
+        )}
+      </Box>
     </Box>
   );
 };

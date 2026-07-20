@@ -5,7 +5,7 @@ import { useNetwork } from "../../hooks/network";
 import { WalletInfo } from "../../contexts/wallet";
 import { WalletConnected } from "../session/WalletConnected";
 import { WalletDisconnected } from "../session/WalletDisconnected";
-import { shorten } from "../../functions/util";
+import { getExplorer, shorten } from "../../functions/util";
 import CircularProgress from "@mui/material/CircularProgress";
 
 import Typography from "@mui/material/Typography";
@@ -27,6 +27,7 @@ interface IWallet {
   variant?: "header" | "card";
   children?: string;
   scalingKey?: string;
+  visualVariant?: "default" | "dark";
 }
 
 export const Wallet: FC<IWallet> = (props) => {
@@ -63,6 +64,11 @@ export const Wallet: FC<IWallet> = (props) => {
         setSpinner(false);
         setWalletText(transactionStatus);
         break;
+      case TransactionStatus.INVALID_SLIPPAGE:
+        setDisabled(true);
+        setSpinner(false);
+        setWalletText("Check slippage");
+        break;
       case TransactionStatus.MODIFIED:
         setDisabled(true);
         setSpinner(true);
@@ -73,6 +79,35 @@ export const Wallet: FC<IWallet> = (props) => {
         setSpinner(false);
         setWalletText(props.children);
         break;
+      case TransactionStatus.FAILED:
+        setDisabled(false);
+        setSpinner(false);
+        setWalletText(
+          props.component === TransactingComponent.SWAP
+            ? "Retry swap"
+            : "Try again"
+        );
+        break;
+      case TransactionStatus.PENDING:
+        setDisabled(true);
+        setSpinner(true);
+        setWalletText("Confirm in wallet");
+        break;
+      case TransactionStatus.SUBMITTED:
+        setDisabled(true);
+        setSpinner(true);
+        setWalletText("Confirming on Tezos");
+        break;
+      case TransactionStatus.CONFIRMATION_UNKNOWN:
+        setDisabled(false);
+        setSpinner(false);
+        setWalletText("View on TzKT");
+        break;
+      case TransactionStatus.COMPLETED:
+        setDisabled(true);
+        setSpinner(false);
+        setWalletText("Confirmed");
+        break;
       default:
         setDisabled(true);
         setSpinner(true);
@@ -81,6 +116,18 @@ export const Wallet: FC<IWallet> = (props) => {
   }, [transactionStatus, props.children]);
 
   const transact = async () => {
+    if (transactionStatus === TransactionStatus.CONFIRMATION_UNKNOWN) {
+      const operationHash = walletOps?.getActiveTransaction()?.operationHash;
+      if (operationHash) {
+        window.open(
+          `${getExplorer(networkInfo.network)}${operationHash}`,
+          "_blank",
+          "noopener,noreferrer"
+        );
+      }
+      return;
+    }
+
     if (props.callback) {
       await props.callback();
     }
@@ -102,7 +149,11 @@ export const Wallet: FC<IWallet> = (props) => {
       return (
         <Button
           size="small"
-          sx={styles.walletDisconnectedHeader}
+          sx={
+            props.visualVariant === "dark"
+              ? styles.walletDisconnectedHeaderDark
+              : styles.walletDisconnectedHeader
+          }
           onClick={connect}
         >
           Connect Wallet
@@ -110,7 +161,15 @@ export const Wallet: FC<IWallet> = (props) => {
       );
     } else {
       return (
-        <Button size="large" sx={styles.transactDisabled} onClick={connect}>
+        <Button
+          size="large"
+          sx={
+            props.visualVariant === "dark"
+              ? styles.transactDark
+              : styles.transactDisabled
+          }
+          onClick={connect}
+        >
           Connect Wallet
         </Button>
       );
@@ -119,8 +178,14 @@ export const Wallet: FC<IWallet> = (props) => {
   const WalletVariantConnected: FC = () => {
     if (props.variant && props.variant === "header") {
       return (
-        <Button onClick={disconnect}>
-          <Box sx={styles.walletConnectedHeader}>
+        <Button onClick={disconnect} sx={styles.headerButtonReset}>
+          <Box
+            sx={
+              props.visualVariant === "dark"
+                ? styles.walletConnectedHeaderDark
+                : styles.walletConnectedHeader
+            }
+          >
             <img
               src={tzwalletlogo}
               style={styles.walletConnectedHeader.logo}
@@ -137,7 +202,15 @@ export const Wallet: FC<IWallet> = (props) => {
         <Button
           size="large"
           onClick={transact}
-          sx={disabled ? styles.transactDisabled : styles.transact}
+          sx={
+            props.visualVariant === "dark"
+              ? disabled
+                ? styles.transactDisabledDark
+                : styles.transactDark
+              : disabled
+              ? styles.transactDisabled
+              : styles.transact
+          }
           disabled={disabled}
         >
           <Box sx={styles.walletBox}>

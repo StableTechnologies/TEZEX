@@ -8,7 +8,7 @@ import {
   SwapEstimate,
 } from "../types/pools";
 import BigNumber from "bignumber.js";
-import { Errors, ExecutionKit, Token } from "../types/general";
+import { ExecutionKit, Token } from "../types/general";
 import { PoolRegistry } from "./poolRegistry";
 import { PoolDataCache } from "../utils/poolDataCache";
 import { getTxDeadline } from "../functions/util";
@@ -156,7 +156,9 @@ export class SiriusAdapter implements IPoolAdapter {
         minWithSlippage
       );
     }
-    await this.getPoolData(toolkit, true);
+    void this.getPoolData(toolkit, true).catch((error) => {
+      console.warn("Post-submit Sirius pool refresh failed:", error);
+    });
     return opHash;
   }
 
@@ -214,20 +216,21 @@ export class SiriusAdapter implements IPoolAdapter {
         operationDetails: operations,
       });
 
-      await this.getPoolData(toolkit, true);
+      void this.getPoolData(toolkit, true).catch((error) => {
+        console.warn("Post-submit Sirius pool refresh failed:", error);
+      });
       return response.transactionHash;
     } catch (error) {
-      if (Object.values(Errors).includes(error as Errors)) {
-        throw error;
-      }
-      throw Errors.INTERNAL;
+      console.error("Error executing Sirius add liquidity:", error);
+      throw error;
     }
   }
 
   async executeRemoveLiquidity(
     kit: ExecutionKit,
     userAddress: string,
-    lpTokenAmount: BigNumber
+    lpTokenAmount: BigNumber,
+    slippage: number
   ): Promise<string> {
     const { client, toolkit } = kit;
     try {
@@ -246,10 +249,10 @@ export class SiriusAdapter implements IPoolAdapter {
       const operation = lbContract.methodsObject.removeLiquidity({
         to: userAddress,
         lqtBurned: lpTokenAmount.integerValue(BigNumber.ROUND_DOWN).toNumber(),
-        minXtzWithdrawn: estimate.tokenAAmount
+        minXtzWithdrawn: this.removeSlippage(slippage, estimate.tokenAAmount)
           .integerValue(BigNumber.ROUND_DOWN)
           .toNumber(),
-        minTokensWithdrawn: estimate.tokenBAmount
+        minTokensWithdrawn: this.removeSlippage(slippage, estimate.tokenBAmount)
           .integerValue(BigNumber.ROUND_DOWN)
           .toNumber(),
         deadline,
@@ -262,13 +265,13 @@ export class SiriusAdapter implements IPoolAdapter {
         operationDetails: [operationRequest],
       });
 
-      await this.getPoolData(toolkit, true);
+      void this.getPoolData(toolkit, true).catch((error) => {
+        console.warn("Post-submit Sirius pool refresh failed:", error);
+      });
       return response.transactionHash;
     } catch (error) {
-      if (Object.values(Errors).includes(error as Errors)) {
-        throw error;
-      }
-      throw Errors.INTERNAL;
+      console.error("Error executing Sirius remove liquidity:", error);
+      throw error;
     }
   }
 
@@ -373,10 +376,8 @@ export class SiriusAdapter implements IPoolAdapter {
 
       return response.transactionHash;
     } catch (error) {
-      if (Object.values(Errors).includes(error as Errors)) {
-        throw error;
-      }
-      throw Errors.INTERNAL;
+      console.error("Error executing Sirius XTZ-to-token swap:", error);
+      throw error;
     }
   }
 
@@ -423,10 +424,8 @@ export class SiriusAdapter implements IPoolAdapter {
       });
       return response.transactionHash;
     } catch (error) {
-      if (Object.values(Errors).includes(error as Errors)) {
-        throw error;
-      }
-      throw Errors.INTERNAL;
+      console.error("Error executing Sirius token-to-XTZ swap:", error);
+      throw error;
     }
   }
 

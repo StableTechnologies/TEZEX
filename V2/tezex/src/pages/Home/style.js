@@ -4,8 +4,8 @@ const style = (theme, scale = 1) => {
     nav: {
       "&.MuiGrid2-root": {
         position: "relative",
-        marginTop: `calc(3.89vw * ${scale})`,
-        marginBottom: `calc(2.22vw * ${scale})`,
+        marginTop: { xs: "24px", md: "34px" },
+        marginBottom: { xs: "20px", md: "26px" },
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
@@ -14,8 +14,8 @@ const style = (theme, scale = 1) => {
       mobile: {
         "&.MuiGrid2-root": {
           position: "relative",
-          marginTop: `calc(3.89vw * ${scale})`,
-          marginBottom: `calc(2.22vw * ${scale})`,
+          marginTop: "22px",
+          marginBottom: "18px",
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
@@ -27,7 +27,9 @@ const style = (theme, scale = 1) => {
     homeContainer: {
       display: "flex",
       flexDirection: "column",
-      justifyContent: "center",
+      justifyContent: "flex-start",
+      width: "100%",
+      padding: { xs: "0 16px", md: "0 28px" },
     },
   };
 };

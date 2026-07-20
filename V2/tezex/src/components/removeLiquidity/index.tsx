@@ -36,11 +36,11 @@ export interface IRemoveLiquidity {
   orientation: "portrait" | "landscape";
 }
 
-export const RemoveLiquidity: FC<IRemoveLiquidity> = (props) => {
+export const RemoveLiquidity: FC<IRemoveLiquidity> = () => {
   //return <div>Remove Liquidity</div>;
   const scalingKey = "removeLiquidity";
   // load styles and apply responsive scaling for component
-  const styles = useStyles(style, scalingKey, false, props.orientation);
+  const styles = useStyles(style, scalingKey, false);
   const network = useNetwork();
   // load wallet operations for component
   const walletOps: WalletOps = useWalletOps(
@@ -161,13 +161,14 @@ export const RemoveLiquidity: FC<IRemoveLiquidity> = (props) => {
     if (
       !transaction ||
       !transaction.receiveAmount[0] ||
-      !transaction.receiveAmount[1]
+      !transaction.receiveAmount[1] ||
+      !transaction.receiveAsset[1]
     ) {
       return <span>0 tokens</span>;
     }
 
     const token1 = transaction.receiveAsset[0];
-    const token2 = transaction.receiveAsset[1]!;
+    const token2 = transaction.receiveAsset[1];
 
     const amount1 = trimZeros(
       formatWithDecimals(
@@ -284,6 +285,8 @@ export const RemoveLiquidity: FC<IRemoveLiquidity> = (props) => {
       if (transaction) {
         switch (transaction.transactionStatus) {
           case TransactionStatus.PENDING:
+          case TransactionStatus.SUBMITTED:
+          case TransactionStatus.CONFIRMATION_UNKNOWN:
             return false;
           case TransactionStatus.UNINITIALIZED:
             return false;
@@ -358,28 +361,23 @@ export const RemoveLiquidity: FC<IRemoveLiquidity> = (props) => {
         <CardHeader
           sx={styles.cardHeader}
           title={
-            <Box>
-              <NavLiquidity scalingKey={scalingKey} />
+            <Box sx={styles.headerContent}>
+              <Box sx={styles.titleGroup}>
+                <Typography sx={styles.eyebrow}>LIQUIDITY</Typography>
+                <NavLiquidity scalingKey={scalingKey} />
+              </Box>
+
+              <PoolSelector
+                onChange={handlePoolChange}
+                disabled={!canUpdate}
+                sx={styles.poolSelector}
+                showBalance={true}
+                getPoolBalance={getPoolBalance}
+                variant="dark"
+              />
             </Box>
           }
         />
-
-        {/* Pool Selector */}
-        <Grid2
-          container
-          justifyContent="center"
-          sx={styles.poolSelectorContainer}
-        >
-          <Grid2 sx={{ width: "100%" }}>
-            <PoolSelector
-              onChange={handlePoolChange}
-              disabled={!canUpdate}
-              sx={styles.poolSelector}
-              showBalance={true}
-              getPoolBalance={getPoolBalance}
-            />
-          </Grid2>
-        </Grid2>
 
         <CardContent sx={styles.cardcontent}>
           <Box sx={styles.cardContentBox}>
@@ -389,13 +387,17 @@ export const RemoveLiquidity: FC<IRemoveLiquidity> = (props) => {
                 transferType={TransferType.SEND}
                 component={TransactingComponent.REMOVE_LIQUIDITY}
                 readOnly={useMax || !canUpdate}
-                variant="LeftInput"
+                label="LP tokens to redeem"
                 scalingKey={scalingKey}
                 loading={!isLoaded()}
+                visualVariant="tezex"
               />
             </Box>
             <Button
-              sx={styles.useMax}
+              sx={{
+                ...styles.useMax,
+                ...(useMax ? styles.useMaxActive : {}),
+              }}
               onClick={(event) => {
                 event.preventDefault();
                 setUseMax((prev) => !prev);
@@ -428,8 +430,9 @@ export const RemoveLiquidity: FC<IRemoveLiquidity> = (props) => {
               transaction={active}
               callback={transact}
               scalingKey={scalingKey}
+              visualVariant="dark"
             >
-              {"Sell Shares"}
+              Remove Liquidity
             </Wallet>
           </Box>
         </CardActions>

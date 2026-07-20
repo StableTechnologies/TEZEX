@@ -1,6 +1,89 @@
 // eslint-disable-next-line
 export const style = (theme, scale = 1) => {
   return {
+    tezex: {
+      root: {
+        width: "100%",
+        minHeight: { xs: "108px", sm: "116px" },
+        padding: { xs: "16px", sm: "17px 18px" },
+        border: "1px solid var(--tezex-line)",
+        borderRadius: "17px",
+        background: "var(--tezex-field)",
+        transition: "border-color 160ms ease, background-color 160ms ease",
+        "&:focus-within": {
+          borderColor: "var(--tezex-line-strong)",
+          background: "var(--tezex-field)",
+        },
+      },
+      header: {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        minHeight: "18px",
+        marginBottom: "12px",
+      },
+      label: {
+        color: "var(--tezex-muted)",
+        fontSize: "11px",
+        fontWeight: 700,
+        letterSpacing: "0.12em",
+        textTransform: "uppercase",
+      },
+      balance: {
+        color: "var(--tezex-muted)",
+        fontFamily: '"Red Hat Mono", monospace',
+        fontSize: "11px",
+        fontWeight: 400,
+      },
+      amountRow: {
+        display: "flex",
+        alignItems: "center",
+        gap: "14px",
+      },
+      textField: {
+        minWidth: 0,
+        flex: 1,
+        "& .MuiInputBase-root": {
+          color: "var(--tezex-text)",
+        },
+        "& .MuiInputBase-input": {
+          padding: 0,
+          color: "var(--tezex-text)",
+          fontFamily: '"Red Hat Mono", monospace',
+          fontSize: { xs: "25px", sm: "29px" },
+          fontWeight: 500,
+          lineHeight: 1.15,
+          letterSpacing: "-0.03em",
+          textAlign: "left",
+          textOverflow: "ellipsis",
+        },
+        "& .MuiInputBase-input[readonly]": { cursor: "default" },
+      },
+      tokenPill: {
+        display: "flex",
+        alignItems: "center",
+        flexShrink: 0,
+        gap: "8px",
+        minHeight: "38px",
+        padding: "5px 12px 5px 7px",
+        background: "var(--tezex-panel-subtle)",
+        border: "1px solid var(--tezex-line)",
+        borderRadius: "999px",
+      },
+      tokenIcon: {
+        width: "26px",
+        height: "26px",
+        objectFit: "contain",
+        borderRadius: "50%",
+        background: "#FFFFFF",
+      },
+      tokenLabel: {
+        color: "var(--tezex-text)",
+        fontSize: "13px",
+        fontWeight: 700,
+        letterSpacing: "0.02em",
+      },
+    },
     leftInput: {
       gridContainter: {
         flexDirection: "row",

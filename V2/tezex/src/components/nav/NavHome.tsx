@@ -2,7 +2,7 @@ import React, { FC, useState, useEffect, useCallback } from "react";
 
 import { useNavigate } from "react-router-dom";
 import Tabs from "@mui/material/Tabs";
-import Tab from "@mui/material/Tab";
+import Tab, { TabProps } from "@mui/material/Tab";
 import { useSession } from "../../hooks/session";
 
 import { TransactingComponent } from "../../types/general";
@@ -10,28 +10,23 @@ import { TransactingComponent } from "../../types/general";
 import style from "./style";
 import useStyles from "../../hooks/styles";
 
-interface NavTabProps {
-  label: string;
+interface NavTabProps extends Omit<TabProps, "onClick"> {
   href: string;
   scalingKey?: string;
 }
 
-function NavTab(props: NavTabProps) {
+function NavTab({ href, scalingKey, ...tabProps }: NavTabProps) {
   const navigate = useNavigate();
-
-  const _props = {
-    label: props.label,
-    href: props.href,
-  };
-  const styles = useStyles(style, props.scalingKey);
+  const styles = useStyles(style, scalingKey);
   return (
     <Tab
+      {...tabProps}
+      disableRipple
       sx={styles.navHome.tab}
-      onClick={(event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
+      onClick={(event) => {
         event.preventDefault();
-        navigate(props.href);
+        navigate(href);
       }}
-      {..._props}
     />
   );
 }

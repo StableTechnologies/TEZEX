@@ -96,7 +96,8 @@ export interface IPoolAdapter {
   executeRemoveLiquidity(
     kit: ExecutionKit,
     userAddress: string,
-    lpTokenAmount: BigNumber
+    lpTokenAmount: BigNumber,
+    slippage: number
   ): Promise<string>; //  opHash
 
   getPoolData(toolkit: TezosToolkit, forceRefresh?: boolean): Promise<PoolData>;

@@ -2,7 +2,6 @@ import { BigNumber } from "bignumber.js";
 import {
   Asset,
   Balance,
-  Errors,
   CompletionRecord,
   SuccessRecord,
   CompletionState,
@@ -11,13 +10,14 @@ import {
   AssetState,
   TransferType,
   TokenType,
+  TransactingComponent,
 } from "../types/general";
 
 import { tokenDecimalToMantissa, tokenMantissaToDecimal } from "./scaling";
 import { NetworkType } from "@airgap/beacon-sdk";
 import { MichelCodecPacker, TezosToolkit } from "@taquito/taquito";
-
-const DEADLINE_OFFSET_MS = 60000;
+import { normalizeTransactionFailure } from "./failures";
+import { TRANSACTION_DEADLINE_MS } from "./transactionSafety";
 
 /**
  * Dummy signer that provides only publicKeyHash and publicKey for fee estimation.
@@ -142,26 +142,21 @@ export function completionRecordSuccess(
   return [CompletionState.SUCCESS, success] as CompletionRecord;
 }
 
-export function completionRecordFailed(e: Errors): CompletionRecord {
-  return [CompletionState.FAILED, { reason: e }] as CompletionRecord;
+export function completionRecordFailed(
+  error: unknown,
+  component?: TransactingComponent,
+  network?: NetworkType
+): CompletionRecord {
+  return [
+    CompletionState.FAILED,
+    normalizeTransactionFailure(error, component, network),
+  ] as CompletionRecord;
 }
 
 export function showAlert(
   record: CompletionRecord | undefined
 ): CompletionRecord | undefined {
-  if (record && record[0] === CompletionState.FAILED) {
-    switch (record[1].reason) {
-      case Errors.TRANSACTION_FAILED:
-        return record;
-      case Errors.GAS_ESTIMATION:
-        return [
-          CompletionState.FAILED,
-          { reason: Errors.TRANSACTION_FAILED },
-        ] as CompletionRecord;
-      default:
-        return undefined;
-    }
-  } else return record;
+  return record;
 }
 
 export function transactionToAssetStates(
@@ -227,7 +222,7 @@ export function formatWithSubscript(
   if (value.gte(0.01) || value.isZero()) {
     return value.isInteger() ? value.toString() : value.toFixed(decimals);
   }
-  const nOfDecimals = value.decimalPlaces()!;
+  const nOfDecimals = value.decimalPlaces() ?? 0;
   const significantDigits = value.sd();
   const nOfZeroes = nOfDecimals - significantDigits;
 
@@ -247,7 +242,7 @@ export function formatWithSubscript(
 }
 
 export function getTxDeadline(): Date {
-  return new Date(Date.now() + DEADLINE_OFFSET_MS);
+  return new Date(Date.now() + TRANSACTION_DEADLINE_MS);
 }
 
 export type SupportedNetwork =
