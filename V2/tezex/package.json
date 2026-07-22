@@ -43,11 +43,15 @@
     "extends": null
   },
   "scripts": {
-    "predeploy": "npm run build",
+    "predeploy": "npm run verify",
     "deploy": "gh-pages -d build",
     "start": "react-app-rewired start",
     "build": "react-app-rewired build",
     "test": "react-app-rewired test",
+    "test:ci": "npm test -- --watchAll=false --runInBand",
+    "typecheck": "tsc --noEmit",
+    "audit:production": "npm audit --omit=dev --audit-level=high",
+    "verify": "npm run audit:production && npm run typecheck && npm run test:ci && npm run build",
     "eject": "react-scripts eject",
     "prepare": "cd ../.. && husky install .husky/"
   },
