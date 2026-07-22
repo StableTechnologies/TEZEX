@@ -1,5 +1,6 @@
 import BigNumber from "bignumber.js";
-import { formatWithSubscript } from "./util";
+import { formatWithSubscript, getTxDeadline } from "./util";
+import { TRANSACTION_DEADLINE_MS } from "./transactionSafety";
 
 describe("formatWithSubscript", () => {
   it("should format regular decimal values correctly", () => {
@@ -33,5 +34,16 @@ describe("formatWithSubscript", () => {
     expect(formatWithSubscript(new BigNumber("123"), 2)).toBe("123");
     expect(formatWithSubscript(new BigNumber("1000"), 2)).toBe("1000");
     expect(formatWithSubscript(new BigNumber("1"), 2)).toBe("1");
+  });
+});
+
+describe("getTxDeadline", () => {
+  it("allows enough time for a mobile wallet approval", () => {
+    const now = Date.parse("2026-07-20T12:00:00Z");
+    jest.spyOn(Date, "now").mockReturnValue(now);
+
+    expect(getTxDeadline().getTime()).toBe(now + TRANSACTION_DEADLINE_MS);
+
+    jest.restoreAllMocks();
   });
 });

@@ -61,6 +61,8 @@ export async function estimateWithAdapter(
     }
 
     case TransactingComponent.REMOVE_LIQUIDITY: {
+      if (!receiveAsset[1]) throw Error("second receive asset not supplied");
+
       const estimate = await adapter.estimateRemoveLiquidity(
         toolkit,
         sendAmount[0].mantissa
@@ -70,7 +72,7 @@ export async function estimateWithAdapter(
         ...transaction,
         receiveAmount: [
           balanceBuilder(estimate.tokenAAmount, receiveAsset[0], true),
-          balanceBuilder(estimate.tokenBAmount, receiveAsset[1]!, true),
+          balanceBuilder(estimate.tokenBAmount, receiveAsset[1], true),
         ] as Amount,
       };
     }

@@ -3,7 +3,7 @@ import { NetworkType } from "@airgap/beacon-sdk";
 import mainnet from "../config/network/mainnet.json";
 import shadownet from "../config/network/shadownet.json";
 import previewnet from "../config/network/previewnet.json";
-import { Asset } from "../types/general";
+import { Asset, Token } from "../types/general";
 import { MichelCodecPacker, TezosToolkit } from "@taquito/taquito";
 import { IPoolAdapter, PoolConfig } from "../types/pools";
 import { PoolRegistry } from "../adapters/poolRegistry";
@@ -31,9 +31,9 @@ export interface INetwork {
   toolkit: TezosToolkit;
   selectedPool: PoolConfig | null;
   setSelectedPool: (pool: PoolConfig) => void;
-  getAsset: (name: string) => Asset;
+  getAsset: (name: Token) => Asset;
   getPoolAdapter: (poolId: string) => IPoolAdapter;
-  getPoolsByTokenPair: (tokenA: string, tokenB: string) => PoolConfig[];
+  getPoolsByTokenPair: (tokenA: Token, tokenB: Token) => PoolConfig[];
   getAllPools: () => PoolConfig[];
   switchNetwork: (network: NetworkType) => void;
 }
@@ -116,8 +116,8 @@ export const NetworkProvider: React.FC<{ children: React.ReactNode }> = ({
     setSelectedPoolState(pool);
   }, []);
 
-  const getAsset = useCallback((name: string): Asset => {
-    return PoolRegistry.getAssetByName(name);
+  const getAsset = useCallback((name: Token): Asset => {
+    return PoolRegistry.getAsset(name);
   }, []);
 
   const getPoolAdapter = useCallback((poolId: string): IPoolAdapter => {
@@ -125,8 +125,8 @@ export const NetworkProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   const getPoolsByTokenPair = useCallback(
-    (tokenA: string, tokenB: string): PoolConfig[] => {
-      return PoolRegistry.getPoolsByTokenPair(tokenA as any, tokenB as any);
+    (tokenA: Token, tokenB: Token): PoolConfig[] => {
+      return PoolRegistry.getPoolsByTokenPair(tokenA, tokenB);
     },
     []
   );
