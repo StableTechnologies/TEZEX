@@ -13,7 +13,6 @@ import {
 } from "../../types/general";
 
 import { UserAmountField, Slippage } from "../../components/ui/elements/inputs";
-import { SlippageLabel } from "../../components/ui/elements/Labels";
 import { useSession } from "../../hooks/session";
 import { useWallet, useWalletOps, WalletOps } from "../../hooks/wallet";
 import { useNetwork } from "../../hooks/network";
@@ -27,7 +26,6 @@ import Typography from "@mui/material/Typography";
 import style from "./style";
 import useStyles from "../../hooks/styles";
 import Box from "@mui/material/Box";
-import { BrowserView, MobileView } from "react-device-detect";
 import { useTransaction } from "../../hooks/transaction";
 import { eq } from "lodash";
 import { PoolSelector } from "../ui/elements/PoolSelector";
@@ -37,12 +35,11 @@ import { BigNumber } from "bignumber.js";
 export interface IAddLiquidity {
   orientation: "portrait" | "landscape";
 }
-export const AddLiquidity: FC<IAddLiquidity> = (props) => {
+export const AddLiquidity: FC<IAddLiquidity> = () => {
   //return <div> Add Liquidity</div>;
   const scalingKey = "addLiquidity";
   // load styles and apply responsive scaling for component
-  const styles = useStyles(style, scalingKey, false, props.orientation);
-  const walletGridSize = styles.isLandScape ? 5 : 12;
+  const styles = useStyles(style, scalingKey, false);
   const network = useNetwork();
   const wallet = useWallet();
 
@@ -224,6 +221,8 @@ export const AddLiquidity: FC<IAddLiquidity> = (props) => {
       if (transaction) {
         switch (transaction.transactionStatus) {
           case TransactionStatus.PENDING:
+          case TransactionStatus.SUBMITTED:
+          case TransactionStatus.CONFIRMATION_UNKNOWN:
             return false;
           case TransactionStatus.UNINITIALIZED:
             return false;
@@ -297,271 +296,110 @@ export const AddLiquidity: FC<IAddLiquidity> = (props) => {
     return <div> </div>;
   } else {
     return (
-      <>
-        <MobileView>
-          <Grid2
-            container
-            sx={!styles.isMobileLandscape ? styles.root.mobile : styles.root}
-          >
-            <Card
-              sx={!styles.isMobileLandscape ? styles.card.mobile : styles.card}
-            >
-              <CardHeader
-                sx={styles.cardHeader}
-                title={
-                  <Box display="flex" flexDirection="column" gap={1}>
-                    <NavLiquidity scalingKey={scalingKey} />
-
-                    <PoolSelector
-                      onChange={handlePoolChange}
-                      disabled={!canUpdate}
-                      sx={styles.poolSelector}
-                      showBalance={true}
-                      getPoolBalance={getPoolBalance}
-                    />
-                  </Box>
-                }
-              />
-              <CardContent
-                sx={
-                  !styles.isMobileLandscape
-                    ? styles.cardContent.mobile
-                    : styles.cardContent
-                }
-              >
-                <Grid2
-                  xs={12}
-                  sx={
-                    !styles.isMobileLandscape
-                      ? styles.cardContendGrid.mobile
-                      : styles.cardContendGrid
-                  }
-                >
-                  <Grid2
-                    xs={!styles.isMobileLandscape ? 12 : 5}
-                    sx={styles.isMobile ? styles.input.mobile : styles.input}
-                  >
-                    <UserAmountField
-                      asset={assets[send1]}
-                      component={TransactingComponent.ADD_LIQUIDITY}
-                      transferType={TransferType.SEND}
-                      label="Enter Amount"
-                      readOnly={!canUpdate}
-                      scalingKey={scalingKey}
-                      loading={!isLoaded()}
-                    />
-                  </Grid2>
-
-                  <Grid2 xs={1} sx={styles.plusIconGrid}>
-                    <img
-                      src={plusIcon}
-                      style={styles.plusIcon}
-                      alt="plusIcon"
-                    />
-                  </Grid2>
-
-                  <Grid2
-                    xs={!styles.isMobileLandscape ? 12 : 5}
-                    sx={styles.isMobile ? styles.input.mobile : styles.input}
-                  >
-                    <UserAmountField
-                      asset={assets[send2]}
-                      component={TransactingComponent.ADD_LIQUIDITY}
-                      transferType={TransferType.SEND}
-                      readOnly={true}
-                      label="Required Deposit"
-                      darker={true}
-                      scalingKey={scalingKey}
-                      loading={!isLoaded()}
-                    />
-                  </Grid2>
-                </Grid2>
-
-                <Grid2 xs={12} sx={styles.infoGrid}>
-                  <Typography noWrap sx={styles.infoText}>
-                    You will recieve about{" "}
-                    <img
-                      style={styles.infoTextIcon}
-                      src={
-                        process.env.PUBLIC_URL + getLPToken(currentPool).logo
-                      }
-                      alt="LPLogo"
-                    />
-                    <Typography sx={styles.infoRecieve}>
-                      {" "}
-                      {getLiquidityTokens()} {getLPToken(currentPool).label}
-                    </Typography>
-                    for this deposit
-                  </Typography>
-                </Grid2>
-              </CardContent>
-              <CardActions
-                sx={
-                  !styles.isMobileLandscape
-                    ? styles.cardAction.mobile
-                    : styles.cardAction
-                }
-              >
-                <Box
-                  sx={
-                    !styles.isMobileLandscape
-                      ? styles.slippageBox.mobile
-                      : styles.slippageBox
-                  }
-                >
-                  <Grid2
-                    sm={1.3}
-                    md={1.3}
-                    lg={1.3}
-                    xl={1.3}
-                    sx={styles.slippageComponent}
-                  >
-                    <SlippageLabel scalingKey={scalingKey} />
-                  </Grid2>
-                  <Grid2
-                    sm={6}
-                    md={5.5}
-                    lg={5.5}
-                    xl={5.5}
-                    sx={styles.slippageComponent}
-                  >
-                    <Slippage
-                      transferType={TransferType.RECEIVE}
-                      component={TransactingComponent.ADD_LIQUIDITY}
-                      scalingKey={scalingKey}
-                    />
-                  </Grid2>
+      <Grid2 container sx={styles.root}>
+        <Card sx={styles.card}>
+          <CardHeader
+            sx={styles.cardHeader}
+            title={
+              <Box sx={styles.headerContent}>
+                <Box sx={styles.titleGroup}>
+                  <Typography sx={styles.eyebrow}>LIQUIDITY</Typography>
+                  <NavLiquidity scalingKey={scalingKey} />
                 </Box>
 
-                <Grid2
-                  sx={
-                    !styles.isMobileLandscape
-                      ? styles.wallet.mobile
-                      : styles.wallet
-                  }
-                  xs={walletGridSize}
-                  sm={walletGridSize}
-                  md={walletGridSize}
-                  lg={6}
-                >
-                  <Wallet
-                    component={TransactingComponent.ADD_LIQUIDITY}
-                    transaction={transactionOps.getActiveTransaction()}
-                    callback={transact}
-                    scalingKey={scalingKey}
-                  >
-                    {"Add Liquidity"}
-                  </Wallet>
-                </Grid2>
-              </CardActions>
-            </Card>
-          </Grid2>
-        </MobileView>
-        <BrowserView>
-          <Grid2 container sx={styles.root}>
-            <Grid2>
-              <Card sx={styles.card}>
-                <CardHeader
-                  sx={styles.cardHeader}
-                  title={
-                    <Box
-                      display="flex"
-                      alignItems="center"
-                      justifyContent="space-between"
-                      gap={1.5}
-                    >
-                      <NavLiquidity scalingKey={scalingKey} />
-
-                      <PoolSelector
-                        onChange={handlePoolChange}
-                        disabled={!canUpdate}
-                        sx={styles.poolSelector}
-                      />
-                    </Box>
-                  }
+                <PoolSelector
+                  onChange={handlePoolChange}
+                  disabled={!canUpdate}
+                  sx={styles.poolSelector}
+                  showBalance={true}
+                  getPoolBalance={getPoolBalance}
+                  variant="dark"
                 />
-                <CardContent sx={styles.cardContent}>
-                  <Grid2 xs={12} sx={styles.cardContendGrid}>
-                    <Grid2 xs={5} sx={styles.input}>
-                      <UserAmountField
-                        component={TransactingComponent.ADD_LIQUIDITY}
-                        transferType={TransferType.SEND}
-                        asset={assets[send1]}
-                        label="Enter Amount"
-                        readOnly={!canUpdate}
-                        scalingKey={scalingKey}
-                        loading={!isLoaded()}
-                      />
-                    </Grid2>
+              </Box>
+            }
+          />
 
-                    <Grid2 xs={1} sx={styles.plusIconGrid}>
-                      <img
-                        src={plusIcon}
-                        style={styles.plusIcon}
-                        alt="plusIcon"
-                      />
-                    </Grid2>
+          <CardContent sx={styles.cardContent}>
+            <Box sx={styles.fieldsRow}>
+              <Box sx={styles.input}>
+                <UserAmountField
+                  component={TransactingComponent.ADD_LIQUIDITY}
+                  transferType={TransferType.SEND}
+                  asset={assets[send1]}
+                  label="You deposit"
+                  readOnly={!canUpdate}
+                  scalingKey={scalingKey}
+                  loading={!isLoaded()}
+                  visualVariant="tezex"
+                />
+              </Box>
 
-                    <Grid2 xs={5} sx={styles.input}>
-                      <UserAmountField
-                        component={TransactingComponent.ADD_LIQUIDITY}
-                        transferType={TransferType.SEND}
-                        asset={assets[send2]}
-                        readOnly={true}
-                        label="Required Deposit"
-                        darker={true}
-                        scalingKey={scalingKey}
-                        loading={!isLoaded()}
-                      />
-                    </Grid2>
-                  </Grid2>
+              <Box sx={styles.plusIconGrid} aria-hidden="true">
+                <Box component="img" src={plusIcon} sx={styles.plusIcon} />
+              </Box>
 
-                  <Grid2 xs={12} sx={styles.infoGrid}>
-                    <Typography noWrap sx={styles.infoText}>
-                      You will recieve about{" "}
-                      <img
-                        style={styles.infoTextIcon}
-                        src={
-                          process.env.PUBLIC_URL + getLPToken(currentPool).logo
-                        }
-                        alt="LPLogo"
-                      />
-                      <Typography sx={styles.infoRecieve}>
-                        {" "}
-                        {getLiquidityTokens()} {getLPToken(currentPool).label}
-                      </Typography>
-                      for this deposit
-                    </Typography>
-                  </Grid2>
-                </CardContent>
-                <CardActions sx={styles.cardAction}>
-                  <Grid2 xs={1.3} sx={styles.slippageComponent}>
-                    <SlippageLabel scalingKey={scalingKey} />
-                  </Grid2>
-                  <Grid2 xs={5.5} sx={styles.slippageComponent}>
-                    <Slippage
-                      transferType={TransferType.RECEIVE}
-                      component={TransactingComponent.ADD_LIQUIDITY}
-                      scalingKey={scalingKey}
-                    />
-                  </Grid2>
+              <Box sx={styles.input}>
+                <UserAmountField
+                  component={TransactingComponent.ADD_LIQUIDITY}
+                  transferType={TransferType.SEND}
+                  asset={assets[send2]}
+                  readOnly={true}
+                  label="Required deposit"
+                  scalingKey={scalingKey}
+                  loading={!isLoaded()}
+                  visualVariant="tezex"
+                />
+              </Box>
+            </Box>
 
-                  <Grid2 sx={{}} xs={6}>
-                    <Wallet
-                      component={TransactingComponent.ADD_LIQUIDITY}
-                      transaction={active}
-                      callback={transact}
-                      scalingKey={scalingKey}
-                    >
-                      {"Add Liquidity"}
-                    </Wallet>
-                  </Grid2>
-                </CardActions>
-              </Card>
-            </Grid2>
-          </Grid2>
-        </BrowserView>
-      </>
+            <Box sx={styles.infoGrid}>
+              <Typography component="span" sx={styles.infoText}>
+                Estimated pool shares
+              </Typography>
+              <Box
+                component="img"
+                sx={styles.infoTextIcon}
+                src={process.env.PUBLIC_URL + getLPToken(currentPool).logo}
+                alt=""
+              />
+              <Typography component="span" sx={styles.infoReceive}>
+                {getLiquidityTokens()} {getLPToken(currentPool).label}
+              </Typography>
+            </Box>
+          </CardContent>
+
+          <CardActions sx={styles.cardAction}>
+            <Box sx={styles.wallet}>
+              <Wallet
+                component={TransactingComponent.ADD_LIQUIDITY}
+                transaction={active}
+                callback={transact}
+                scalingKey={scalingKey}
+                visualVariant="dark"
+              >
+                Add Liquidity
+              </Wallet>
+            </Box>
+
+            <Box sx={styles.slippageBox}>
+              <Box sx={styles.slippageCopy}>
+                <Typography sx={styles.slippageLabel}>
+                  Slippage tolerance
+                </Typography>
+                <Typography sx={styles.slippageHelp}>
+                  Maximum accepted price movement
+                </Typography>
+              </Box>
+              <Slippage
+                transferType={TransferType.RECEIVE}
+                component={TransactingComponent.ADD_LIQUIDITY}
+                scalingKey={scalingKey}
+                visualVariant="dark"
+              />
+            </Box>
+          </CardActions>
+        </Card>
+      </Grid2>
     );
   }
 };

@@ -2,19 +2,20 @@ import React, { FC } from "react";
 import { Wallet } from "../../../wallet/Wallet";
 import { NavApp } from "../../../nav";
 
-import Grid2 from "@mui/material/Unstable_Grid2"; // Grid version 2
 import Box from "@mui/material/Box";
 import logo from "../../../../assets/TezexLogo.svg";
-import logoSmall from "../../../../assets/tezexIcon.svg";
 
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import IconButton from "@mui/material/IconButton";
 import MenuIcon from "@mui/icons-material/Menu";
+import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
+import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import Container from "@mui/material/Container";
 import style from "./style";
 import useStyles from "../../../../hooks/styles";
 import { NetworkSelector } from "../../elements/selectors/networkSelector/NetworkSelector";
+import { useColorMode } from "../../../../contexts/color-mode";
 
 export interface IHeader {
   openMenu: boolean;
@@ -23,6 +24,8 @@ export interface IHeader {
 export const Header: FC<IHeader> = (props) => {
   const scalingKey = "header";
   const styles = useStyles(style, scalingKey);
+  const { mode, toggleMode } = useColorMode();
+  const isLight = mode === "light";
 
   return (
     <AppBar
@@ -30,44 +33,60 @@ export const Header: FC<IHeader> = (props) => {
       color="transparent"
       position="static"
     >
-      <Container maxWidth={false}>
+      <Container maxWidth={false} sx={styles.shell}>
         <Toolbar
           disableGutters
           sx={styles.isMobile ? styles.toolbar.mobile : styles.toolbar}
         >
-          <Grid2 container sx={styles.container}>
-            <Grid2>
-              <Box
-                component="img"
-                sx={styles.logoLarge}
-                src={logo}
-                alt="Logo"
-              />
+          <Box sx={styles.container}>
+            <Box component="img" sx={styles.logoLarge} src={logo} alt="TEZEX" />
 
-              <Box
-                component="img"
-                sx={styles.logoSmall}
-                src={logoSmall}
-                alt="Logo"
-              />
-            </Grid2>
-
-            <Grid2 sx={styles.networkSelector}>
+            <Box sx={styles.networkSelector}>
               <NetworkSelector />
-            </Grid2>
+            </Box>
 
-            <Grid2 sx={styles.nav}>
+            <Box sx={styles.nav}>
               <NavApp scalingKey={scalingKey} />
-            </Grid2>
-            <Grid2 md={2} sx={styles.wallet}>
-              <Wallet variant={"header"} scalingKey={scalingKey} />
-            </Grid2>
-            <Grid2 md={1} sx={props.openMenu ? styles.hide : styles.menu}>
-              <IconButton onClick={props.toggleMenu}>
-                <MenuIcon />
+            </Box>
+            <Box sx={styles.actions}>
+              <Box
+                component="button"
+                type="button"
+                role="switch"
+                aria-checked={isLight}
+                aria-label={`Switch to ${isLight ? "dark" : "light"} mode`}
+                title={`Switch to ${isLight ? "dark" : "light"} mode`}
+                onClick={toggleMode}
+                sx={styles.themeToggle}
+              >
+                <LightModeOutlinedIcon sx={styles.themeIcon} />
+                <DarkModeOutlinedIcon sx={styles.themeIcon} />
+                <Box
+                  component="span"
+                  sx={{
+                    ...styles.themeToggleKnob,
+                    transform: isLight ? "translateX(0)" : "translateX(24px)",
+                  }}
+                />
+              </Box>
+              <Box sx={styles.wallet}>
+                <Wallet
+                  variant={"header"}
+                  scalingKey={scalingKey}
+                  visualVariant="dark"
+                />
+              </Box>
+            </Box>
+            <Box sx={props.openMenu ? styles.hide : styles.menu}>
+              <IconButton
+                onClick={props.toggleMenu}
+                aria-label="Open navigation"
+                sx={styles.menuButton}
+              >
+                <MenuIcon fontSize="small" />
               </IconButton>
-            </Grid2>
-          </Grid2>
+            </Box>
+          </Box>
         </Toolbar>
       </Container>
     </AppBar>

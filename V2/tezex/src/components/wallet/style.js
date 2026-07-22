@@ -18,11 +18,19 @@ const style = (theme, scale = 1) => {
       color: "#A1E3FF",
     },
     walletBox: {
-      width: `calc(20vw * ${scale})`,
+      width: "100%",
       display: "flex",
       flexDirection: "row",
       justifyContent: "center",
       alignItems: "center",
+    },
+    headerButtonReset: {
+      minWidth: 0,
+      height: "36px",
+      minHeight: "36px",
+      maxHeight: "36px",
+      padding: 0,
+      borderRadius: "999px",
     },
 
     walletConnectedHeader: {
@@ -48,6 +56,38 @@ const style = (theme, scale = 1) => {
       lineHeight: `calc(1.34vw * ${scale})`,
 
       textTransform: "none",
+    },
+    walletConnectedHeaderDark: {
+      logo: {
+        height: "18px",
+        filter: "var(--tezex-wallet-logo-filter)",
+      },
+      color: "var(--tezex-text)",
+      background: "var(--tezex-panel)",
+      border: "1px solid var(--tezex-line)",
+      display: "flex",
+      gap: "10px",
+      alignItems: "center",
+      justifyContent: "center",
+      height: "36px",
+      minHeight: "36px",
+      maxHeight: "36px",
+      minWidth: "150px",
+      padding: "0 18px",
+      borderRadius: "999px",
+      fontWeight: 600,
+      fontSize: "13px",
+      lineHeight: 1,
+      textTransform: "none",
+      transition: "border-color 160ms ease, background-color 160ms ease",
+      "&:hover": {
+        background: "var(--tezex-hover)",
+        borderColor: "var(--tezex-line-strong)",
+      },
+      "&.Mui-focusVisible": {
+        outline: "2px solid var(--tezex-text-secondary)",
+        outlineOffset: "-3px",
+      },
     },
 
     transactDisabled: {
@@ -97,6 +137,41 @@ const style = (theme, scale = 1) => {
         background: "#000",
       },
     },
+    transactDark: {
+      width: "100%",
+      minHeight: "54px",
+      background: "var(--tezex-action)",
+      color: "var(--tezex-action-text)",
+      border: "1px solid var(--tezex-action)",
+      borderRadius: "999px",
+      fontFamily: "Inter",
+      fontWeight: 700,
+      fontSize: "15px",
+      letterSpacing: "0.08em",
+      textTransform: "uppercase",
+      transition: "background-color 160ms ease, transform 160ms ease",
+      "&:hover": {
+        background: "var(--tezex-action-hover)",
+        transform: "translateY(-1px)",
+      },
+    },
+    transactDisabledDark: {
+      width: "100%",
+      minHeight: "54px",
+      background: "var(--tezex-panel-subtle)",
+      color: "var(--tezex-muted)",
+      border: "1px solid var(--tezex-line)",
+      borderRadius: "999px",
+      fontFamily: "Inter",
+      fontWeight: 700,
+      fontSize: "15px",
+      letterSpacing: "0.05em",
+      textTransform: "uppercase",
+      "&.Mui-disabled": {
+        color: "var(--tezex-muted)",
+        background: "var(--tezex-panel-subtle)",
+      },
+    },
     walletDisconnectedHeader: {
       "&.MuiButton-root.Mui-disabled": {
         color: "white",
@@ -115,6 +190,30 @@ const style = (theme, scale = 1) => {
       textTransform: "none",
       "&:hover": {
         background: "#000",
+      },
+    },
+    walletDisconnectedHeaderDark: {
+      height: "36px",
+      minHeight: "36px",
+      maxHeight: "36px",
+      minWidth: "150px",
+      padding: "0 18px",
+      background: "transparent",
+      color: "var(--tezex-text)",
+      border: "1px solid var(--tezex-text)",
+      borderRadius: "999px",
+      fontWeight: 600,
+      fontSize: "13px",
+      lineHeight: 1,
+      textTransform: "none",
+      transition: "background-color 160ms ease, color 160ms ease",
+      "&:hover": {
+        background: "var(--tezex-action)",
+        color: "var(--tezex-action-text)",
+      },
+      "&.Mui-focusVisible": {
+        outline: "2px solid var(--tezex-text-secondary)",
+        outlineOffset: "-3px",
       },
     },
     walletDisconnectedCard: {

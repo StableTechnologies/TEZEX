@@ -7,11 +7,11 @@ import reportWebVitals from "./reportWebVitals";
 import { SessionProvider } from "./contexts/session";
 import ReactDOM from "react-dom/client";
 import { createHashRouter, RouterProvider } from "react-router-dom";
-import "./index.css";
 
 import { AppConfig } from "./types/general";
 import appConfig from "./config/app.json";
 import { Home } from "./pages/Home";
+import { ColorModeProvider } from "./contexts/color-mode";
 
 const router = createHashRouter([
   {
@@ -42,9 +42,14 @@ const root = ReactDOM.createRoot(document.getElementById("root") as Element);
 root.render(
   <React.StrictMode>
     <SessionProvider config={appConfig as AppConfig}>
-      <ThemeProvider theme={theme}>
-        <RouterProvider router={router} />
-      </ThemeProvider>
+      <ColorModeProvider>
+        <ThemeProvider theme={theme}>
+          <RouterProvider
+            router={router}
+            future={{ v7_startTransition: true }}
+          />
+        </ThemeProvider>
+      </ColorModeProvider>
     </SessionProvider>
   </React.StrictMode>
 );

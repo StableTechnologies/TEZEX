@@ -1,244 +1,148 @@
 import { Theme } from "@mui/material/styles";
-import { NetworkType } from "@airgap/beacon-sdk";
 
-type ColorScheme = {
-  button: {
-    background: string;
-    hoverBackground: string;
-    border: string;
-  };
-  iconCircle: {
-    background: string;
-    border: string;
-    color: string;
-  };
-  text: {
-    primary: string;
-    secondary: string;
-  };
-  infoSection: {
-    valueColor: string;
-    linkColor: string;
-    linkHoverColor: string;
-  };
-  listItem: {
-    selectedTextColor: string;
-    selectedBorderColor: string;
-  };
-};
-
-export const getNetworkSelectorStyles = (
-  theme: Theme,
-  network: NetworkType
-) => {
-  const commonPopoverStyles = {
-    popover: {
-      background:
-        "linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%)",
-    },
-    infoSection: {
-      background:
-        "linear-gradient(135deg, rgba(248, 250, 252, 0.5) 0%, rgba(241, 245, 249, 0.5) 100%)",
-      border: "rgba(226, 232, 240, 0.6)",
-    },
-    selectedItem: {
-      background:
-        "linear-gradient(90deg, rgba(226, 232, 240, 0.6) 0%, rgba(241, 245, 249, 0.3) 100%)",
-      hoverBackground:
-        "linear-gradient(90deg, rgba(226, 232, 240, 0.8) 0%, rgba(241, 245, 249, 0.4) 100%)",
-    },
-  };
-
-  const defaultScheme: ColorScheme = {
-    button: {
-      background:
-        "linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.1) 100%)",
-      hoverBackground:
-        "linear-gradient(135deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0.15) 100%)",
-      border: "rgba(255, 255, 255, 0.3)",
-    },
-    iconCircle: {
-      background:
-        "linear-gradient(135deg, rgba(100, 100, 100, 0.2) 0%, rgba(80, 80, 80, 0.15) 100%)",
-      border: "rgba(255, 255, 255, 0.2)",
-      color: "#4a5568",
-    },
-    text: {
-      primary: "#4a5568",
-      secondary: "#64748b",
-    },
-    infoSection: {
-      valueColor: "#475569",
-      linkColor: "#64748b",
-      linkHoverColor: "#475569",
-    },
-    listItem: {
-      selectedTextColor: "#475569",
-      selectedBorderColor: "#64748b",
-    },
-  };
-
-  const colorSchemes: Partial<Record<NetworkType, ColorScheme>> = {
-    [NetworkType.MAINNET]: {
-      button: {
-        background:
-          "linear-gradient(135deg, rgba(59, 130, 246, 0.25) 0%, rgba(37, 99, 235, 0.15) 100%)",
-        hoverBackground:
-          "linear-gradient(135deg, rgba(59, 130, 246, 0.35) 0%, rgba(37, 99, 235, 0.2) 100%)",
-        border: "rgba(59, 130, 246, 0.3)",
-      },
-      iconCircle: {
-        background: "transparent",
-        border: "rgba(255, 255, 255, 0.55)",
-        color: "#1e40af",
-      },
-      text: {
-        primary: "#1e40af",
-        secondary: "#3b82f6",
-      },
-      infoSection: {
-        valueColor: "#1e3a8a",
-        linkColor: "#1e40af",
-        linkHoverColor: "#1e3a8a",
-      },
-      listItem: {
-        selectedTextColor: "#1e40af",
-        selectedBorderColor: "#2563eb",
-      },
-    },
-    [NetworkType.SHADOWNET]: defaultScheme,
-  };
-
-  const colors = colorSchemes[network] ?? defaultScheme;
+export const getNetworkSelectorStyles = (theme: Theme) => {
+  void theme;
 
   return {
     button: {
-      display: "flex",
+      height: "36px",
+      minHeight: "36px",
+      maxHeight: "36px",
+      padding: "0 10px",
+      display: "inline-flex",
       alignItems: "center",
-      gap: { xs: 0.5, sm: 0.6, md: 0.8 },
-      padding: { xs: "4px 10px", sm: "5px 12px", md: "6px 14px" },
-      background: colors.button.background,
-      backdropFilter: "blur(12px)",
-      WebkitBackdropFilter: "blur(12px)",
-      border: `1px solid ${colors.button.border}`,
-      borderRadius: { xs: "14px", md: "18px" },
+      gap: "8px",
+      color: "var(--tezex-text)",
+      background: "transparent",
+      border: "1px solid var(--tezex-line-soft)",
+      borderRadius: "999px",
+      boxShadow: "none",
+      appearance: "none",
       cursor: "pointer",
-      transition: "all 0.3s ease",
-      boxShadow: "0 4px 16px rgba(0, 0, 0, 0.08)",
+      transition:
+        "background-color 160ms ease, border-color 160ms ease, color 160ms ease",
       "&:hover": {
-        background: colors.button.hoverBackground,
-        boxShadow: "0 6px 20px rgba(0, 0, 0, 0.12)",
-        transform: "translateY(-1px)",
+        background: "var(--tezex-hover)",
+        borderColor: "var(--tezex-line-strong)",
+      },
+      "&:focus-visible": {
+        outline: "2px solid var(--tezex-text-secondary)",
+        outlineOffset: "-3px",
       },
     },
 
-    iconCircle: {
-      width: { xs: 24, sm: 28, md: 32 },
-      height: { xs: 24, sm: 28, md: 32 },
-      borderRadius: "50%",
-      background: colors.iconCircle.background,
-      border: `3px solid ${colors.iconCircle.border}`,
+    liveSignal: {
+      position: "relative",
+      width: "8px",
+      height: "8px",
+      flexShrink: 0,
+      background: "var(--tezex-text-secondary)",
+      borderRadius: "999px",
+      "&::after": {
+        content: '""',
+        position: "absolute",
+        inset: "-5px",
+        border: "1px solid var(--tezex-text-secondary)",
+        borderRadius: "999px",
+        animation: "tezexNetworkLivePulse 1.8s ease-out infinite",
+      },
+      "@keyframes tezexNetworkLivePulse": {
+        "0%": { transform: "scale(0.45)", opacity: 0.65 },
+        "70%, 100%": { transform: "scale(1.15)", opacity: 0 },
+      },
+      "@media (prefers-reduced-motion: reduce)": {
+        "&::after": { animation: "none", opacity: 0.28 },
+      },
+    },
+
+    networkIdentity: {
+      display: "flex",
+      alignItems: "center",
+    },
+    networkLabel: {
+      color: "var(--tezex-muted)",
+      fontSize: "12px",
+      fontWeight: 600,
+      lineHeight: 1,
+      letterSpacing: "0.01em",
+      userSelect: "none",
+    },
+    arrow: {
+      width: "10px",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      fontSize: { xs: "11px", sm: "12px", md: "14px" },
-      fontWeight: 600,
-      color: colors.iconCircle.color,
-      boxShadow: "inset 0 1px 3px rgba(0, 0, 0, 0.1)",
-    },
-
-    networkLabel: {
-      color: colors.text.primary,
-      fontSize: { xs: "13px", sm: "14px", md: "15px" },
-      fontWeight: 600,
-      userSelect: "none",
-      display: "block",
-      letterSpacing: "0.2px",
-    },
-
-    arrow: {
-      color: colors.text.secondary,
-      fontSize: { xs: "10px", sm: "11px", md: "12px" },
-      transition: "transform 0.3s ease",
+      color: "var(--tezex-muted)",
+      fontSize: "10px",
+      lineHeight: 1,
+      transition: "transform 180ms ease",
+      "@media (prefers-reduced-motion: reduce)": { transition: "none" },
     },
 
     popover: {
-      marginTop: 1.5,
-      minWidth: { xs: 180, sm: 200, md: 220 },
-      background: commonPopoverStyles.popover.background,
-      backdropFilter: "blur(20px)",
-      WebkitBackdropFilter: "blur(20px)",
-      borderRadius: { xs: "6px", md: "6px" },
-      boxShadow:
-        "0px 8px 32px rgba(0, 0, 0, 0.12), 0px 2px 8px rgba(0, 0, 0, 0.08)",
-      border: "1px solid rgba(255, 255, 255, 0.6)",
+      width: "240px",
+      marginTop: "8px",
       overflow: "hidden",
+      color: "var(--tezex-text)",
+      background: "var(--tezex-panel)",
+      border: "1px solid var(--tezex-line)",
+      borderRadius: "18px",
+      boxShadow: "var(--tezex-menu-shadow)",
     },
-
     infoSection: {
-      padding: { xs: "10px 14px", md: "12px 18px" },
-      borderBottom: `1px solid ${commonPopoverStyles.infoSection.border}`,
-      background: commonPopoverStyles.infoSection.background,
-      backdropFilter: "blur(8px)",
-      WebkitBackdropFilter: "blur(8px)",
+      padding: "15px 16px",
+      background: "var(--tezex-panel-subtle)",
+      borderBottom: "1px solid var(--tezex-line-soft)",
     },
-
     infoRow: {
+      minHeight: "28px",
       display: "flex",
-      justifyContent: "space-between",
       alignItems: "center",
-      mb: 0.7,
-      "&:last-child": {
-        mb: 0,
-      },
+      justifyContent: "space-between",
+      gap: "16px",
     },
-
     infoLabel: {
-      fontSize: { xs: "11px", md: "12px" },
-      color: "#94a3b8",
+      color: "var(--tezex-muted)",
+      fontSize: "11px",
       fontWeight: 500,
     },
-
     infoValue: {
-      fontSize: { xs: "11px", md: "12px" },
-      fontWeight: 600,
-      color: colors.infoSection.valueColor,
+      color: "var(--tezex-text-secondary)",
+      fontFamily: '"Red Hat Mono", monospace',
+      fontSize: "11px",
+      fontWeight: 500,
     },
-
     infoLink: {
-      fontSize: { xs: "11px", md: "12px" },
-      fontWeight: 600,
-      color: colors.infoSection.linkColor,
-      cursor: "pointer",
-      transition: "color 0.2s ease",
+      color: "var(--tezex-text-secondary)",
+      fontFamily: '"Red Hat Mono", monospace',
+      fontSize: "11px",
+      fontWeight: 500,
+      textDecorationColor: "var(--tezex-faint)",
+      textUnderlineOffset: "3px",
       "&:hover": {
-        color: colors.infoSection.linkHoverColor,
-        textDecoration: "underline",
+        color: "var(--tezex-text)",
+        textDecorationColor: "var(--tezex-text)",
       },
     },
-
     listItem: {
-      padding: { xs: "10px 14px", md: "12px 18px" },
-      borderRadius: "6px",
-      transition: "all 0.2s ease",
-      borderLeft: "3px solid transparent",
-      "&.Mui-selected": {
-        background: commonPopoverStyles.selectedItem.background,
-        borderLeft: `3px solid ${colors.listItem.selectedBorderColor}`,
-        "&:hover": {
-          background: commonPopoverStyles.selectedItem.hoverBackground,
-        },
-      },
+      minHeight: "44px",
+      padding: "0 16px",
+      color: "var(--tezex-muted)",
+      transition: "background-color 150ms ease, color 150ms ease",
       "&:hover": {
-        background: "rgba(248, 250, 252, 0.6)",
-        backdropFilter: "blur(8px)",
-        WebkitBackdropFilter: "blur(8px)",
+        color: "var(--tezex-text)",
+        background: "var(--tezex-hover)",
+      },
+      "&.Mui-selected": {
+        color: "var(--tezex-text)",
+        background: "var(--tezex-panel-subtle)",
+        "&:hover": { background: "var(--tezex-hover)" },
       },
     },
-
     listItemText: {
-      fontSize: { xs: "13px", md: "14px" },
-      letterSpacing: "0.2px",
+      color: "inherit",
+      fontSize: "12px",
+      letterSpacing: "0.01em",
     },
   };
 };

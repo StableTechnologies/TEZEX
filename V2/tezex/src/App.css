@@ -1,11 +1,12 @@
 .App {
   text-align: center;
-  align: center;
-  height: 100vh;
-  width: 100vw;
+  min-height: 100vh;
+  width: 100%;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
+  background: var(--tezex-bg);
+  color: var(--tezex-text);
 }
 
 .mainCon {

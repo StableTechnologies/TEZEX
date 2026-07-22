@@ -8,6 +8,7 @@ import {
   CompletionRecord,
   FailedRecord,
   SuccessRecord,
+  TransactingComponent,
 } from "../../../../types/general";
 
 import {
@@ -21,14 +22,12 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import Typography from "@mui/material/Typography";
-import alertIcon from "../../../../assets/alert.svg";
 import tick from "../../../../assets/tick.svg";
 import copyIcon from "../../../../assets/copyIcon.svg";
 import EastIcon from "@mui/icons-material/East";
 import AddIcon from "@mui/icons-material/Add";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
-import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import BigNumber from "bignumber.js";
 import { Collapse, Link } from "@mui/material";
 
@@ -107,7 +106,7 @@ const SuccessAlert: FC<ISuccessAlert> = (props) => {
           width: "100%",
         }}
       >
-        <Typography sx={styles.title}>Transaction submitted</Typography>
+        <Typography sx={styles.title}>Transaction confirmed</Typography>
         <Box sx={styles.transferResults}>
           {sendInfo}
           <EastIcon style={styles.assetIcon} />
@@ -149,55 +148,102 @@ const SuccessAlert: FC<ISuccessAlert> = (props) => {
 const ErrorAlert: FC<IErrorAlert> = (props) => {
   const styles = useStyles(style, props.scalingKey);
   const [expanded, setExpanded] = useState(false);
+  const isSwap = props.failureRecord.component === TransactingComponent.SWAP;
+  const confirmationUnknown =
+    props.failureRecord.submitted && props.failureRecord.safeToRetry === false;
+  const submittedFailure =
+    props.failureRecord.submitted && props.failureRecord.safeToRetry === true;
+  const title = confirmationUnknown
+    ? "Confirmation not verified"
+    : isSwap
+    ? "Swap failed"
+    : "Transaction failed";
+  const reason = confirmationUnknown
+    ? "Your wallet submitted this operation, but TEZEX could not verify its final status."
+    : props.failureRecord.reason.trim();
+  const explorerLink =
+    props.failureRecord.opHash && props.failureRecord.network
+      ? `${getExplorer(props.failureRecord.network)}${
+          props.failureRecord.opHash
+        }`
+      : undefined;
 
   return (
-    <DialogContent sx={styles.dialogContent}>
-      <Box sx={styles.errorContentBox}>
-        <Box sx={styles.alertIconBox}>
-          <img style={styles.alertIcon} src={alertIcon} alt="Alert Icon" />
+    <DialogContent sx={styles.failureContent}>
+      <Box sx={styles.failureMark} aria-hidden="true">
+        <Typography component="span" sx={styles.failureMarkGlyph}>
+          !
+        </Typography>
+      </Box>
+
+      <Typography sx={styles.failureEyebrow}>
+        {confirmationUnknown
+          ? "STATUS NEEDS VERIFICATION"
+          : "TRANSACTION NOT COMPLETED"}
+      </Typography>
+      <Typography
+        component="h2"
+        id="alert-dialog-title"
+        sx={styles.failureTitle}
+      >
+        {title}
+      </Typography>
+      <DialogContentText
+        id="alert-dialog-description"
+        sx={styles.failureReason}
+      >
+        {reason}
+      </DialogContentText>
+
+      {(isSwap || confirmationUnknown || submittedFailure) && (
+        <Box sx={styles.failureGuidance}>
+          <Typography sx={styles.failureGuidanceTitle}>
+            {confirmationUnknown ? "Do not retry yet" : "Before you retry"}
+          </Typography>
+          <Typography sx={styles.failureGuidanceText}>
+            {confirmationUnknown
+              ? "Open the operation on TzKT. Retry only if the explorer shows that it failed or never appeared."
+              : submittedFailure
+              ? "The submitted operation did not apply. Review the wallet result and amounts before trying again."
+              : "The wallet did not submit a confirmed operation. Review the amount and try again when ready."}
+          </Typography>
+          {explorerLink && (
+            <Link
+              href={explorerLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              sx={styles.failureExplorerLink}
+            >
+              View operation on TzKT
+            </Link>
+          )}
         </Box>
+      )}
 
-        <DialogContentText
-          sx={styles.errorContentBox}
-          id="alert-dialog-description"
-        >
-          <Box sx={styles.errorContentBox}>
-            <Typography align="center" sx={styles.errorText}>
-              {"Error: The request couldn’t be completed. Please try again."}
-            </Typography>
-          </Box>
-        </DialogContentText>
-
-        <Box sx={styles.errorDetailsContainer}>
+      {props.failureRecord.detail && (
+        <Box sx={styles.failureDetailsContainer}>
           <Button
             onClick={() => setExpanded(!expanded)}
+            aria-expanded={expanded}
             endIcon={
               expanded ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />
             }
-            sx={styles.errorDetails}
+            sx={styles.failureDetailsButton}
           >
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 0.5,
-              }}
-            >
-              <ErrorOutlineIcon />
-              Error details
-            </Box>
+            Technical details
           </Button>
 
           <Collapse in={expanded}>
-            <Box sx={styles.errorDetailsContent}>
-              <Typography variant="body2" color="text.secondary">
+            <Box sx={styles.failureDetailsContent}>
+              <Typography sx={styles.failureDetailsText}>
                 {props.failureRecord.reason}
+                {": "}
+                {props.failureRecord.detail}
               </Typography>
             </Box>
           </Collapse>
         </Box>
-      </Box>
+      )}
     </DialogContent>
   );
 };
@@ -213,6 +259,13 @@ export const Alert: FC<IAlert> = (props) => {
   useEffect(() => {
     props.completionRecord && setOpen(true);
   }, [props.completionRecord]);
+  const isFailure = props.completionRecord?.[0] === CompletionState.FAILED;
+  const failureRecord = isFailure
+    ? (props.completionRecord?.[1] as FailedRecord)
+    : undefined;
+  const isSwapFailure = failureRecord?.component === TransactingComponent.SWAP;
+  const confirmationUnknown =
+    failureRecord?.submitted && failureRecord.safeToRetry === false;
 
   const AlertContent = () => {
     if (props.completionRecord) {
@@ -237,26 +290,30 @@ export const Alert: FC<IAlert> = (props) => {
 
   return (
     <Dialog
-      sx={styles.dialog}
+      sx={[styles.dialog, ...(isFailure ? [styles.failureDialog] : [])]}
       open={open}
       onClose={handleClose}
       aria-labelledby="alert-dialog-title"
       aria-describedby="alert-dialog-description"
     >
       <AlertContent />
-      <DialogActions sx={styles.action}>
+      <DialogActions
+        sx={[styles.action, ...(isFailure ? [styles.failureActions] : [])]}
+      >
         <Button
           sx={[
             styles.button,
-            props.completionRecord?.[0] === CompletionState.SUCCESS
-              ? styles.buttonSuccess
-              : styles.buttonError,
+            !isFailure ? styles.buttonSuccess : styles.failureButton,
           ]}
           onClick={handleClose}
         >
-          {props.completionRecord?.[0] === CompletionState.SUCCESS
+          {!isFailure
             ? "Close"
-            : "Dismiss"}
+            : confirmationUnknown
+            ? "Close"
+            : isSwapFailure
+            ? "Review swap"
+            : "Review transaction"}
         </Button>
       </DialogActions>
     </Dialog>

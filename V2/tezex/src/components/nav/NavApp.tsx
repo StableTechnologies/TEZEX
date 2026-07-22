@@ -60,7 +60,7 @@ function NavTab(props: NavTabProps) {
             background: "transparent",
             backdropFilter: "blur(1px)",
             WebkitBackdropFilter: "blur(1px)",
-            color: "black",
+            color: "var(--tezex-muted)",
             fontSize: { xs: "8px", md: "9px" },
             fontWeight: 700,
             padding: "3px 10px",

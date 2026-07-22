@@ -16,9 +16,10 @@ export interface PoolSelectorProps {
   scalingKey?: string;
   showBalance?: boolean;
   getPoolBalance?: (poolId: string) => string;
+  variant?: "default" | "dark";
 }
 
-const poolSelectorStyles = (theme: any, scale = 1) => ({
+const poolSelectorStyles = (_theme: Theme, scale = 1) => ({
   selectedValue: {
     logoSize: scale * 20,
     logoBorder: scale * 1.5,
@@ -46,12 +47,14 @@ export const PoolSelector: FC<PoolSelectorProps> = ({
   scalingKey = "default",
   showBalance = false,
   getPoolBalance,
+  variant = "default",
 }) => {
   const network = useNetwork();
   const availablePools = network.getAllPools();
   const selectedPool = network.selectedPool;
 
   const styles = useStyles(poolSelectorStyles, scalingKey);
+  const isDark = variant === "dark";
 
   useEffect(() => {
     if (!selectedPool && availablePools.length > 0) {
@@ -82,7 +85,9 @@ export const PoolSelector: FC<PoolSelectorProps> = ({
               width: s.logoSize,
               height: s.logoSize,
               borderRadius: "50%",
-              border: `${s.logoBorder}px solid #E1E1E1`,
+              border: `${s.logoBorder}px solid ${
+                isDark ? "var(--tezex-line)" : "#E1E1E1"
+              }`,
               position: "relative",
               zIndex: 2,
               backgroundColor: "white",
@@ -95,7 +100,9 @@ export const PoolSelector: FC<PoolSelectorProps> = ({
               width: s.logoSize,
               height: s.logoSize,
               borderRadius: "50%",
-              border: `${s.logoBorder}px solid #E1E1E1`,
+              border: `${s.logoBorder}px solid ${
+                isDark ? "var(--tezex-line)" : "#E1E1E1"
+              }`,
               marginLeft: s.logoOverlap,
               position: "relative",
               zIndex: 1,
@@ -105,22 +112,33 @@ export const PoolSelector: FC<PoolSelectorProps> = ({
         </Box>
 
         {/* Pool text - two lines */}
-        <Box display="flex" flexDirection="column" gap={0.1}>
+        <Box
+          display="flex"
+          flexDirection="column"
+          alignItems="flex-start"
+          minWidth={0}
+          gap={0.1}
+          sx={{ textAlign: "left" }}
+        >
           <Typography
             sx={{
+              width: "100%",
+              textAlign: "left",
               fontWeight: 600,
               fontSize: s.titleFontSize,
               lineHeight: 1.1,
-              color: "#1E1E1E",
+              color: isDark ? "var(--tezex-text)" : "#1E1E1E",
             }}
           >
             {pool.name}
           </Typography>
           <Typography
             sx={{
+              width: "100%",
+              textAlign: "left",
               fontSize: s.subtitleFontSize,
               lineHeight: 1,
-              color: "#888",
+              color: isDark ? "var(--tezex-muted)" : "#888",
             }}
           >
             {tokenA.label}/{tokenB.label}
@@ -154,7 +172,10 @@ export const PoolSelector: FC<PoolSelectorProps> = ({
               width: s.logoSize,
               height: s.logoSize,
               borderRadius: "50%",
-              border: `${s.logoBorder}px solid #E1E1E1`,
+              border: `${s.logoBorder}px solid ${
+                isDark ? "var(--tezex-line)" : "#E1E1E1"
+              }`,
+              backgroundColor: "white",
               position: "relative",
               zIndex: 2,
             }}
@@ -166,23 +187,36 @@ export const PoolSelector: FC<PoolSelectorProps> = ({
               width: s.logoSize,
               height: s.logoSize,
               borderRadius: "50%",
-              border: `${s.logoBorder}px solid #E1E1E1`,
+              border: `${s.logoBorder}px solid ${
+                isDark ? "var(--tezex-line)" : "#E1E1E1"
+              }`,
               marginLeft: s.logoOverlap,
               position: "relative",
               zIndex: 1,
+              backgroundColor: "white",
             }}
           />
         </Box>
 
         {/* Pool info */}
-        <Box display="flex" flexDirection="column" gap={0.25} flex={1}>
+        <Box
+          display="flex"
+          flexDirection="column"
+          alignItems="flex-start"
+          minWidth={0}
+          gap={0.25}
+          flex={1}
+          sx={{ textAlign: "left" }}
+        >
           <Typography
             variant="body2"
             sx={{
+              width: "100%",
+              textAlign: "left",
               fontWeight: 600,
               fontSize: s.titleFontSize,
               lineHeight: 1.2,
-              color: "#1E1E1E",
+              color: isDark ? "var(--tezex-text)" : "#1E1E1E",
             }}
           >
             {pool.name}
@@ -190,9 +224,11 @@ export const PoolSelector: FC<PoolSelectorProps> = ({
           <Typography
             variant="caption"
             sx={{
+              width: "100%",
+              textAlign: "left",
               fontSize: s.subtitleFontSize,
               lineHeight: 1,
-              color: "#666666",
+              color: isDark ? "var(--tezex-muted)" : "#666666",
               opacity: 0.9,
             }}
           >
@@ -211,7 +247,7 @@ export const PoolSelector: FC<PoolSelectorProps> = ({
               sx={{
                 fontSize: s.balanceLabelFontSize,
                 lineHeight: 1.2,
-                color: "#999",
+                color: isDark ? "var(--tezex-muted)" : "#999",
                 fontWeight: 500,
               }}
             >
@@ -219,9 +255,9 @@ export const PoolSelector: FC<PoolSelectorProps> = ({
             </Typography>
             <Typography
               sx={{
-                fontSize: s.balanceFontSize,
+                fontSize: s.balanceValueFontSize,
                 lineHeight: 1.2,
-                color: "#333",
+                color: isDark ? "var(--tezex-text-secondary)" : "#333",
                 fontWeight: 400,
                 whiteSpace: "nowrap",
               }}
@@ -237,23 +273,37 @@ export const PoolSelector: FC<PoolSelectorProps> = ({
   return (
     <FormControl sx={sx}>
       <Select
+        inputProps={{ "aria-label": "Select liquidity pool" }}
         value={selectedPool?.id}
         onChange={handleChange}
         disabled={disabled}
         size="small"
         renderValue={renderSelectedValue}
         sx={{
-          borderRadius: 3,
+          borderRadius: "999px",
+          minHeight: 42,
+          color: isDark ? "var(--tezex-text)" : "#1E1E1E",
+          backgroundColor: isDark ? "var(--tezex-panel-subtle)" : "#FAFAFA",
+          border: `1px solid ${isDark ? "var(--tezex-line)" : "#E1E1E1"}`,
           "& .MuiSelect-select": {
             display: "flex",
             alignItems: "center",
+            padding: "7px 38px 7px 12px",
+          },
+          "& .MuiSelect-icon": {
+            color: isDark ? "var(--tezex-muted)" : "inherit",
           },
           "& .MuiOutlinedInput-notchedOutline": {
             border: "none",
           },
+          "&:hover": {
+            borderColor: isDark ? "var(--tezex-line-strong)" : "#CCCCCC",
+          },
           "&.Mui-disabled": {
-            backgroundColor: "rgba(0, 0, 0, 0.02)",
-            opacity: 0.6,
+            backgroundColor: isDark
+              ? "var(--tezex-panel-subtle)"
+              : "rgba(0, 0, 0, 0.02)",
+            opacity: 0.72,
           },
         }}
         MenuProps={{
@@ -261,24 +311,28 @@ export const PoolSelector: FC<PoolSelectorProps> = ({
             sx: {
               borderRadius: 2,
               mt: 0.5,
-              backgroundColor: "#FFFFFF",
-              border: "1px solid #E1E1E1",
-              boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
+              backgroundColor: isDark ? "var(--tezex-panel)" : "#FFFFFF",
+              border: `1px solid ${isDark ? "var(--tezex-line)" : "#E1E1E1"}`,
+              boxShadow: isDark
+                ? "var(--tezex-menu-shadow)"
+                : "0px 18px 48px rgba(0, 0, 0, 0.18)",
               maxHeight: 400,
               "& .MuiMenuItem-root": {
                 paddingY: 1,
                 paddingX: 1.5,
                 minHeight: 48,
-                color: "#1E1E1E",
+                color: isDark ? "var(--tezex-text)" : "#1E1E1E",
 
                 "&:hover": {
-                  backgroundColor: "#F5F5F5",
+                  backgroundColor: isDark ? "var(--tezex-hover)" : "#F5F5F5",
                 },
 
                 "&.Mui-selected": {
-                  backgroundColor: "#E8E8E8",
+                  backgroundColor: isDark
+                    ? "var(--tezex-line-soft)"
+                    : "#E8E8E8",
                   "&:hover": {
-                    backgroundColor: "#DDDDDD",
+                    backgroundColor: isDark ? "var(--tezex-line)" : "#DDDDDD",
                   },
                 },
               },
