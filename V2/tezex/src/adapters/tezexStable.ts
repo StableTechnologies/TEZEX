@@ -29,6 +29,36 @@ interface StableTokenInfo {
   reserves: BigNumber;
 }
 
+interface StableAmplificationSchedule {
+  initial_A_time: string | number | Date;
+  future_A_time: string | number | Date;
+  initial_A_f: BigNumber.Value;
+  future_A_f: BigNumber.Value;
+}
+
+interface StableStorageTokenInfo {
+  rate_f: BigNumber.Value;
+  precision_multiplier_f: BigNumber.Value;
+  reserves: BigNumber.Value;
+}
+
+interface StableStoragePool extends StableAmplificationSchedule {
+  tokens_info: { get: (key: string) => StableStorageTokenInfo };
+  total_supply: BigNumber.Value;
+  fee: {
+    lp_f: BigNumber.Value;
+    stakers_f: BigNumber.Value;
+    ref_f: BigNumber.Value;
+  };
+}
+
+interface StableContractStorage {
+  storage: {
+    pools: { get: (key: string) => Promise<StableStoragePool> };
+    dev_store: { dev_fee_f: BigNumber.Value };
+  };
+}
+
 interface StablePoolData extends PoolData {
   tokensInfo: StableTokenInfo[];
   ampF: BigNumber;
@@ -64,7 +94,7 @@ function getXP(tokensInfo: StableTokenInfo[]): BigNumber[] {
   );
 }
 
-function getCurrentA(pool: any): BigNumber {
+function getCurrentA(pool: StableAmplificationSchedule): BigNumber {
   const now = Math.floor(Date.now() / 1000);
 
   const t0 = Math.floor(new Date(pool.initial_A_time).getTime() / 1000);
@@ -453,11 +483,13 @@ export class StableSwapAdapter implements IPoolAdapter {
       const response = await client.requestOperation({
         operationDetails: operations,
       });
-      await this.getStablePoolData(toolkit, true);
+      void this.getStablePoolData(toolkit, true).catch((error) => {
+        console.warn("Post-submit stable pool refresh failed:", error);
+      });
       return response.transactionHash;
     } catch (error) {
       console.error("Error executing stable swap:", error);
-      throw Errors.TRANSACTION_FAILED;
+      throw error;
     }
   }
 
@@ -576,18 +608,21 @@ export class StableSwapAdapter implements IPoolAdapter {
       const response = await client.requestOperation({
         operationDetails: operations,
       });
-      await this.getStablePoolData(toolkit, true);
+      void this.getStablePoolData(toolkit, true).catch((error) => {
+        console.warn("Post-submit stable pool refresh failed:", error);
+      });
       return response.transactionHash;
     } catch (error) {
       console.error("Error executing add liquidity:", error);
-      throw Errors.TRANSACTION_FAILED;
+      throw error;
     }
   }
 
   async executeRemoveLiquidity(
     kit: ExecutionKit,
     userAddress: string,
-    lpTokenAmount: BigNumber
+    lpTokenAmount: BigNumber,
+    slippage: number
   ): Promise<string> {
     const { client, toolkit } = kit;
     try {
@@ -602,11 +637,15 @@ export class StableSwapAdapter implements IPoolAdapter {
       const minAmounts = new Map<number, BigNumber>([
         [
           this.poolConfig.tokenAIdx,
-          estimate.tokenAAmount.times(0.995).integerValue(BigNumber.ROUND_DOWN),
+          estimate.tokenAAmount
+            .times(1 - slippage / 100)
+            .integerValue(BigNumber.ROUND_DOWN),
         ],
         [
           this.poolConfig.tokenBIdx,
-          estimate.tokenBAmount.times(0.995).integerValue(BigNumber.ROUND_DOWN),
+          estimate.tokenBAmount
+            .times(1 - slippage / 100)
+            .integerValue(BigNumber.ROUND_DOWN),
         ],
       ]);
 
@@ -639,11 +678,13 @@ export class StableSwapAdapter implements IPoolAdapter {
       const response = await client.requestOperation({
         operationDetails: [transferParamsToBeaconOp(estimatedParams)],
       });
-      await this.getStablePoolData(toolkit, true);
+      void this.getStablePoolData(toolkit, true).catch((error) => {
+        console.warn("Post-submit stable pool refresh failed:", error);
+      });
       return response.transactionHash;
     } catch (error) {
       console.error("Error executing remove liquidity:", error);
-      throw Errors.TRANSACTION_FAILED;
+      throw error;
     }
   }
 
@@ -665,7 +706,7 @@ export class StableSwapAdapter implements IPoolAdapter {
       }
 
       const contract = await toolkit.contract.at(this.poolConfig.address);
-      const storage = await contract.storage<any>();
+      const storage = await contract.storage<StableContractStorage>();
 
       const pool = await storage.storage.pools.get(
         this.poolConfig.poolId.toString()

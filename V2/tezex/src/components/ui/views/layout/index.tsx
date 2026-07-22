@@ -32,7 +32,7 @@ export const Layout: FC<ILayout> = (props) => {
     const handleResize = () => {
       const screenWidth = window.innerWidth;
       //To be adjusted
-      if (screenWidth > 1024) {
+      if (screenWidth >= 1200) {
         setOpenMenu(false);
       }
     };

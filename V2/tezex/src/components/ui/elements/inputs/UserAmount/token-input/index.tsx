@@ -31,6 +31,7 @@ export interface IRigthInput {
   component: TransactingComponent;
   transferType: TransferType;
   asset: Asset;
+  onChange?: (value: string) => void;
   variant?: "LeftInput" | "RightInput";
   swap?: React.MutableRefObject<() => Promise<void>>;
   label?: string;
@@ -38,6 +39,8 @@ export interface IRigthInput {
   readOnly?: boolean;
   scalingKey?: string;
   loading?: boolean;
+  forceZero?: boolean;
+  visualVariant?: "default" | "tezex";
 }
 
 const TokenInput: FC<IRigthInput> = (props) => {
@@ -104,12 +107,14 @@ const TokenInput: FC<IRigthInput> = (props) => {
   const loadValue = useCallback(() => {
     const amount = transactionOps.trackedAsset?.amount?.string;
     if (amount) {
+      const truncated = amount.includes(".")
+        ? amount.slice(0, amount.indexOf(".") + 9)
+        : amount;
+
+      if (!props.readOnly) props.onChange?.(truncated);
+
       //update value if different
       setValue((value) => {
-        const truncated = amount.includes(".")
-          ? amount.slice(0, amount.indexOf(".") + 9)
-          : amount;
-
         if (toNumber(value) === toNumber(truncated)) return value;
         else if (props.readOnly && toNumber(truncated) === 0) return "0.00";
         else return truncated;
@@ -122,6 +127,7 @@ const TokenInput: FC<IRigthInput> = (props) => {
     props.readOnly,
     setLoadingFalse,
     transactionOps.trackedAsset,
+    props.onChange,
   ]);
 
   //callback to update balance
@@ -218,8 +224,9 @@ const TokenInput: FC<IRigthInput> = (props) => {
     if (props.readOnly || loading) return;
     if (value === "" || toNumber(value) === 0) {
       setValue("0.00");
+      props.onChange?.("0.00");
     }
-  }, [props.readOnly, loading, value]);
+  }, [props.readOnly, props.onChange, loading, value]);
 
   // callback for when the user changes the input value
   const handleChange = useCallback(
@@ -230,17 +237,74 @@ const TokenInput: FC<IRigthInput> = (props) => {
 
       if (newValue.length < value.length) {
         setValue(newValue);
+        props.onChange?.(newValue);
       } else {
         const result = cleanNumericString(newValue);
-        if (isNumeric(result)) setValue(result);
+        if (isNumeric(result)) {
+          setValue(result);
+          props.onChange?.(result);
+        }
       }
     },
-    [props.readOnly, loading, value]
+    [props.readOnly, props.onChange, loading, value]
   );
 
   const amountNotEntered: () => boolean = useCallback(() => {
     return value === "0.00";
   }, [value]);
+
+  if (props.visualVariant === "tezex") {
+    const inputId =
+      `${props.component}-${props.transferType}-${props.asset.name}`
+        .toLowerCase()
+        .replace(/\s+/g, "-");
+
+    return (
+      <Box sx={styles.tezex.root}>
+        <Box sx={styles.tezex.header}>
+          <Box component="label" htmlFor={inputId} sx={styles.tezex.label}>
+            {props.label}
+          </Box>
+          <WalletConnected>
+            <Typography hidden={!transactionBalance} sx={styles.tezex.balance}>
+              Balance {transactionBalance ? String(transactionBalance) : "—"}
+            </Typography>
+          </WalletConnected>
+        </Box>
+
+        <Box sx={styles.tezex.amountRow}>
+          <TextField
+            id={inputId}
+            autoComplete="off"
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            onChange={handleChange}
+            value={props.forceZero ? "0.00" : value}
+            sx={styles.tezex.textField}
+            inputProps={{
+              inputMode: "decimal",
+              readOnly: props.readOnly,
+              "aria-label": `${props.label || props.transferType} amount`,
+            }}
+            variant="standard"
+            InputProps={{ disableUnderline: true }}
+          />
+
+          <Box sx={styles.tezex.tokenPill} aria-label={props.asset.label}>
+            <Box
+              component="img"
+              sx={styles.tezex.tokenIcon}
+              src={process.env.PUBLIC_URL + props.asset.logo}
+              alt=""
+            />
+            <Typography sx={styles.tezex.tokenLabel}>
+              {props.asset.label}
+            </Typography>
+          </Box>
+        </Box>
+      </Box>
+    );
+  }
 
   if (props.variant === "LeftInput") {
     return (

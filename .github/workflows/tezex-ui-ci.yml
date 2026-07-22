@@ -1,0 +1,51 @@
+name: TEZEX UI release gate
+
+on:
+  pull_request:
+    paths:
+      - "V2/tezex/**"
+      - ".github/workflows/tezex-ui-ci.yml"
+  push:
+    branches:
+      - trunk
+    paths:
+      - "V2/tezex/**"
+      - ".github/workflows/tezex-ui-ci.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: V2/tezex
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: V2/tezex/package-lock.json
+
+      - name: Install locked dependencies
+        run: npm ci
+        env:
+          HUSKY: 0
+
+      - name: Audit production dependencies
+        run: npm run audit:production
+
+      - name: Type-check
+        run: npm run typecheck
+
+      - name: Run tests
+        run: npm run test:ci
+
+      - name: Build release artifact
+        run: npm run build

@@ -26,7 +26,6 @@ interface BlockchainStats {
 interface CycleInfo {
   index: number;
   endTime: string;
-  startTime: string;
 }
 
 const networks: NetworkOption[] = [
@@ -48,30 +47,24 @@ const formatTimeRemaining = (seconds: number): string => {
   return `in ${minutes}min`;
 };
 
-const formatCycleTimeShort = (seconds: number): string =>
-  `${Math.floor(seconds / 3600)}h`;
-
 const formatNumber = (num: number): string => num.toLocaleString();
 
 export const NetworkSelector: FC = () => {
   const theme = useTheme();
   const network = useNetwork();
-  const styles = getNetworkSelectorStyles(theme, network.network);
+  const styles = getNetworkSelectorStyles(theme);
 
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [stats, setStats] = useState<BlockchainStats | null>(null);
   const [cycleInfo, setCycleInfo] = useState<CycleInfo | null>(null);
-  const [loading, setLoading] = useState(false);
 
   const [timeToNextCycle, setTimeToNextCycle] = useState(0);
   const [timeToNextBlock, setTimeToNextBlock] = useState(8);
 
   const [displayLevel, setDisplayLevel] = useState(0);
   const [blockTimestamp, setBlockTimestamp] = useState<number | null>(null);
-  const [cycleProgress, setCycleProgress] = useState<number>(0); // Cycle progress 0-100
 
   const fetchStats = async () => {
-    setLoading(true);
     try {
       const apiUrl = getTzktApiUrl(network.network);
 
@@ -93,12 +86,9 @@ export const NetworkSelector: FC = () => {
       setCycleInfo({
         index: cycle.index,
         endTime: cycle.endTime,
-        startTime: cycle.startTime,
       });
     } catch (e) {
       console.error("Error fetching blockchain stats:", e);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -107,32 +97,6 @@ export const NetworkSelector: FC = () => {
     const interval = setInterval(fetchStats, 30_000);
     return () => clearInterval(interval);
   }, [network.network]);
-
-  useEffect(() => {
-    if (!cycleInfo) return;
-
-    const updateCycleTimer = () => {
-      const now = new Date().getTime();
-      const startTime = new Date(cycleInfo.startTime).getTime();
-      const endTime = new Date(cycleInfo.endTime).getTime();
-      const totalDuration = endTime - startTime;
-      const elapsed = now - startTime;
-
-      const remainingSeconds = Math.max(0, Math.floor((endTime - now) / 1000));
-      setTimeToNextCycle(remainingSeconds);
-
-      const progress = Math.min(
-        100,
-        Math.max(0, (elapsed / totalDuration) * 100)
-      );
-      setCycleProgress(progress);
-    };
-
-    updateCycleTimer();
-    const timer = setInterval(updateCycleTimer, 10000);
-
-    return () => clearInterval(timer);
-  }, [cycleInfo]);
 
   useEffect(() => {
     if (!cycleInfo) return;
@@ -174,56 +138,29 @@ export const NetworkSelector: FC = () => {
   return (
     <>
       {/* Network button */}
-      <Box onClick={(e) => setAnchorEl(e.currentTarget)} sx={styles.button}>
-        <Box sx={{ position: "relative", display: "flex" }}>
-          <svg
-            viewBox="0 0 100 100"
-            style={{
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%) rotate(-90deg)",
-              width: "calc(100% + 4px)",
-              height: "calc(100% + 4px)",
-              pointerEvents: "none",
-            }}
-          >
-            <circle
-              cx="48"
-              cy="48"
-              r="45"
-              fill="none"
-              stroke={
-                network.network === NetworkType.MAINNET ? "#3b82f6" : "#64748b"
-              }
-              strokeWidth="7"
-              strokeLinecap="round"
-              strokeDasharray={`${2 * Math.PI * (50 - 3)}`}
-              strokeDashoffset={`${
-                2 * Math.PI * (50 - 3) * (1 - cycleProgress / 100)
-              }`}
-              style={{ transition: "stroke-dashoffset 1s linear" }}
-            />
-          </svg>
+      <Box
+        component="button"
+        type="button"
+        aria-label={`Network: ${currentNetwork?.label ?? "Mainnet"}, live`}
+        onClick={(e) => setAnchorEl(e.currentTarget)}
+        sx={styles.button}
+      >
+        <Box aria-hidden="true" sx={styles.liveSignal} />
 
-          <Box sx={styles.iconCircle}>
-            {loading || !cycleInfo
-              ? "..."
-              : formatCycleTimeShort(timeToNextCycle)}
-          </Box>
+        <Box data-network-label sx={styles.networkIdentity}>
+          <Typography sx={styles.networkLabel}>
+            {currentNetwork?.label ?? "Mainnet"}
+          </Typography>
         </Box>
 
-        <Typography sx={styles.networkLabel}>
-          {currentNetwork?.label ?? "Mainnet"}
-        </Typography>
-
         <Box
+          data-network-arrow
           sx={{
             ...styles.arrow,
             transform: open ? "rotate(180deg)" : "rotate(0deg)",
           }}
         >
-          ▼
+          ⌄
         </Box>
       </Box>
 

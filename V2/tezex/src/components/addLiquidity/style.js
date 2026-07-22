@@ -1,303 +1,168 @@
 // eslint-disable-next-line
 const style = (theme, scale = 1) => {
   return {
-    infoRecieve: {
-      marginRight: `calc(.37vw * ${scale})`,
-      fontSize: `calc(.97vw * ${scale})`,
-      fontWeight: "700",
-      lineHeight: `calc(1.18vw * ${scale})`,
-      paddingLeft: "3px",
-    },
-    infoTextIcon: {
-      width: `calc(1.11vw * ${scale})`,
-      marginLeft: `calc(.27vw * ${scale})`,
-      marginRightblockblock: `calc(.27vw * ${scale})`,
-    },
-    infoText: {
-      display: "inline-flex",
-      fontSize: `calc(.97vw * ${scale})`,
-      fontWeight: "400",
-      lineHeight: `calc(1.18vw * ${scale})`,
-    },
-    infoGrid: {
-      marginTop: `calc(0.694vw * ${scale})`,
-      flexDirection: "row",
-      display: "inline-flex",
-      alignItems: "flex-start",
-    },
-    plusIcon: {
-      width: `calc(.97vw * ${scale})`,
-    },
-    plusIconGrid: {
-      position: "relative",
-    },
-    cardContendGrid: {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      flexDirection: "row",
-
-      mobile: {
-        [theme.breakpoints.down("md")]: {
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexDirection: "column",
-        },
-      },
-    },
-    cardHeaderTypography: {
-      fontSize: `calc(1.4vw * ${scale})`,
-    },
-    cardHeader: {
-      paddingTop: `calc(2.22vw * ${scale})`,
-      paddingBottom: `calc(0vw * ${scale})`,
-      paddingLeft: `calc(2.22vw * ${scale})`,
-      paddingRight: `calc(2.22vw * ${scale})`,
-      fontSize: `calc(1vw * ${scale})`,
-      textAlign: "left",
-      [theme.breakpoints.down("md")]: {
-        paddingLeft: theme.spacing(2),
-        paddingRight: theme.spacing(2),
-      },
-    },
-
-    input: {
-      width: `calc(28.34vw * ${scale})`,
-      height: `calc(8.61vw * ${scale})`,
-      "& .MuiFormControl-root": {
-        width: `calc(28.34vw * ${scale})`,
-        height: `calc(8.61vw * ${scale})`,
-      },
-      mobile: {
-        width: "100%",
-        height: `calc(8.61vw * ${scale})`,
-
-        "& .MuiFormControl-root": {
-          width: "100%",
-          height: `calc(8.61vw * ${scale})`,
-        },
-      },
-    },
-    slippageBox: {
-      "& .MuiGrid2-root": {},
-      display: "flex",
-      flexDirection: "row",
-      justifyContent: "space-between",
-      mobile: {
-        [theme.breakpoints.down("md")]: {
-          display: "flex",
-          flexDirection: "row",
-          justifyContent: "space-between",
-          width: "100%",
-        },
-      },
-    },
-    slippageComponent: {
-      "&.MuiGrid2-root": {
-        position: "relative",
-        paddingTop: `calc(1.46vw * ${scale})`,
-      },
-    },
-    slippage: {
-      text: {},
-    },
-
-    slippageInfo: {
-      icon: {
-        height: `calc(.925vw * ${scale})`,
-        width: `calc(.925vw * ${scale})`,
-      },
-      tooltip: {
-        color: "#1E1E1E",
-        backgroundColor: "#FFFFFF",
-        padding: "0px 0px 0px 0px ",
-        fontSize: `calc(.83vw * ${scale})`,
-        lineHeight: `calc(1.25vw * ${scale})`,
-
-        display: "flex",
-        alignItems: "center",
-
-        textAlign: "center",
-        justifyContent: "center",
-
-        border: "0.069vw solid #E1E1E1",
-        "&.MuiTooltip-tooltip": {
-          minWidth: `calc(17.22vw * ${scale})`,
-          maxWidth: `calc(17.22vw * ${scale})`,
-          minHeight: `calc(4.166vw * ${scale})`,
-          maxHeight: `calc(4.166vw * ${scale})`,
-        },
-      },
-    },
-    tokens: {
-      display: "flex",
+    root: {
       width: "100%",
-      paddingTop: `calc(1.16vw * ${scale})`,
-      paddingLeft: `calc(2.22vw * ${scale})`,
-    },
-    cardContent: {
-      "&.MuiCardContent-root": {
-        paddingTop: `calc(2.22vw * ${scale})`,
-        paddingBottom: `calc(0vw * ${scale})`,
-
-        paddingLeft: `calc(1.597vw * ${scale})`,
-        paddingRight: `calc(1.597vw * ${scale})`,
-      },
-      flexDirection: "column",
-      paddingTop: `calc(10vw * ${scale})`,
-      alignItems: "center",
+      maxWidth: "760px",
+      margin: "0 auto",
       display: "flex",
-      mobile: {
-        paddingTop: `calc(2vw * ${scale})`,
-        [theme.breakpoints.down("md")]: {
-          alignItems: "center",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-around",
-          height: "100%",
-          "&.MuiCardActions-root": {
-            paddingTop: `calc(2.54vw * ${scale})`,
-
-            //  paddingRight: `calc(0 * ${scale})`,
-            //  paddingLeft: `calc(0 * ${scale})`,
-            //  paddingRight: `calc(1.597vw * ${scale})`,
-            //  paddingLeft: `calc(1.597vw * ${scale})`,
-          },
-        },
-      },
+      justifyContent: "center",
+      paddingBottom: { xs: "24px", md: "36px" },
     },
     card: {
+      width: "100%",
+      overflow: "hidden",
+      color: "var(--tezex-text)",
+      background: "var(--tezex-panel)",
+      border: "1px solid var(--tezex-line)",
+      borderRadius: { xs: "20px", sm: "24px" },
+      boxShadow: "var(--tezex-shadow)",
+      "&.MuiPaper-root": { boxShadow: "var(--tezex-shadow)" },
+    },
+    cardHeader: {
+      padding: { xs: "18px", sm: "20px 22px" },
+      borderBottom: "1px solid var(--tezex-line-soft)",
+      "& .MuiCardHeader-content": { width: "100%" },
+    },
+    headerContent: {
+      width: "100%",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: "18px",
+      "@media (max-width: 620px)": {
+        alignItems: "stretch",
+        flexDirection: "column",
+      },
+    },
+    titleGroup: {
+      minWidth: 0,
       display: "flex",
       flexDirection: "column",
-      minHeight: `calc(32.57vw * ${scale})`,
-      maxHeight: `calc(32.57vw * ${scale})`,
-      minWidth: `calc(63.88vw * ${scale})`,
-      maxWidth: `calc(63.88vw * ${scale})`,
-      borderRadius: `calc(1.38vw * ${scale})`,
-      zIndex: 5,
-      background: "#FFFFFF",
-      border: `calc(.069vw * ${scale}) solid #E1E1E1`,
-      "&.MuiPaper-root": {
-        boxShadow: "0",
-      },
-      "& .MuiCardContent-root": {},
-
-      mobile: {
-        [theme.breakpoints.down("md")]: {
-          display: "flex",
-          flexDirection: "column",
-          //minHeight: "calc(70vw + 60vh) ",
-          //maxHeight: "80vh",
-          height: "100%",
-          // minHeight: `calc(55.57vw * ${scale})`,
-          // maxHeight: `calc(55.57vw * ${scale})`,
-          width: "95vw",
-          // minWidth: `calc(32.88vw * ${scale})`,
-          // maxWidth: `calc(32.88vw * ${scale})`,
-          // minHeight: `calc(32.57vw * ${scale})`,
-          //  height: `calc(28.49vw * ${scale})`,
-          //  maxWidth: `calc(30.56vw * ${scale})`,
-          //  maxWidth: `calc(63.88vw * ${scale})`,
-
-          borderRadius: `calc(1.38vw * ${scale})`,
-          zIndex: 5,
-          background: "#FFFFFF",
-          border: `calc(.069vw * ${scale}) solid #E1E1E1`,
-          "&.MuiPaper-root": {
-            boxShadow: "0",
-          },
-        },
-      },
+      gap: "8px",
     },
-    cardAction: {
-      justifyContent: "space-between",
-
-      "&.MuiCardActions-root": {
-        paddingTop: `calc(3.54vw * ${scale})`,
-
-        paddingRight: `calc(1.597vw * ${scale})`,
-        paddingLeft: `calc(1.597vw * ${scale})`,
-      },
-
-      mobile: {
-        [theme.breakpoints.down("md")]: {
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-around",
-          height: "100%",
-          "&.MuiCardActions-root": {
-            paddingTop: `calc(1.54vw * ${scale})`,
-
-            paddingRight: `calc(1.597vw * ${scale})`,
-            paddingLeft: `calc(1.597vw * ${scale})`,
-          },
-        },
-      },
-    },
-    wallet: {
-      mobile: {
-        [theme.breakpoints.down("md")]: {
-          marginTop: "20%",
-          paddingBottom: "20%",
-        },
-      },
-    },
-    root: {
-      position: "relative",
-      justifyContent: "center",
-
-      mobile: {
-        [theme.breakpoints.down("md")]: {
-          position: "relative",
-          justifyContent: "center",
-          display: "flex",
-          height: "100%",
-        },
-      },
+    eyebrow: {
+      color: "var(--tezex-muted)",
+      fontSize: "10px",
+      fontWeight: 700,
+      letterSpacing: "0.18em",
+      lineHeight: 1.2,
     },
     poolSelector: {
-      minWidth: `calc(10.5vw * ${scale})`,
-
-      "& .MuiSelect-select": {
-        fontSize: `calc(0.75vw * ${scale})`,
-        paddingY: `calc(0.6vw * ${scale})`,
-        paddingX: `calc(0.9vw * ${scale})`,
+      width: { xs: "100%", sm: "220px" },
+      minWidth: { xs: 0, sm: "220px" },
+      flexShrink: 0,
+    },
+    cardContent: {
+      padding: { xs: "16px", sm: "20px" },
+      "&.MuiCardContent-root:last-child": {
+        paddingBottom: { xs: "16px", sm: "20px" },
       },
-
-      "& .MuiOutlinedInput-root": {
-        height: `calc(2.6vw * ${scale})`,
-        backgroundColor: "#FAFAFA",
-        border: "1px solid #E1E1E1",
-        transition: "all 0.2s ease",
-
-        "&:hover": {
-          backgroundColor: "#F5F5F5",
-          borderColor: "#CCCCCC",
-        },
-
-        "&.Mui-focused": {
-          backgroundColor: "#FFFFFF",
-          borderColor: "#999999",
-        },
+    },
+    fieldsRow: {
+      display: "grid",
+      gridTemplateColumns: "minmax(0, 1fr) 38px minmax(0, 1fr)",
+      alignItems: "center",
+      gap: "10px",
+      "@media (max-width: 620px)": {
+        gridTemplateColumns: "minmax(0, 1fr)",
+        gap: "8px",
       },
-
-      // Mobile
-      [theme.breakpoints.down("md")]: {
-        minWidth: `calc(25vw * ${scale})`,
-        width: "100%",
-        paddingTop: `calc(1vw * ${scale})`,
-
-        "& .MuiSelect-select": {
-          fontSize: `calc(1.2vw * ${scale})`,
-          paddingY: `calc(1vw * ${scale})`,
-          paddingX: `calc(1.5vw * ${scale})`,
-        },
-
-        "& .MuiOutlinedInput-root": {
-          height: `calc(4.5vw * ${scale})`,
-        },
+    },
+    input: {
+      width: "100%",
+      minWidth: 0,
+    },
+    plusIconGrid: {
+      width: "38px",
+      height: "38px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      justifySelf: "center",
+      color: "var(--tezex-text-secondary)",
+      background: "var(--tezex-panel-subtle)",
+      border: "1px solid var(--tezex-line)",
+      borderRadius: "50%",
+      "@media (max-width: 620px)": {
+        width: "34px",
+        height: "34px",
+        margin: "-4px 0",
+        zIndex: 2,
       },
+    },
+    plusIcon: {
+      width: "13px",
+      height: "13px",
+      filter: "var(--tezex-logo-filter)",
+      opacity: 0.8,
+    },
+    infoGrid: {
+      marginTop: "14px",
+      padding: "0 4px",
+      display: "flex",
+      alignItems: "center",
+      flexWrap: "wrap",
+      gap: "5px",
+      color: "var(--tezex-muted)",
+    },
+    infoText: {
+      color: "var(--tezex-muted)",
+      fontFamily: '"Red Hat Mono", monospace',
+      fontSize: "11px",
+      lineHeight: 1.5,
+    },
+    infoTextIcon: {
+      width: "17px",
+      height: "17px",
+      objectFit: "contain",
+    },
+    infoReceive: {
+      color: "var(--tezex-text-secondary)",
+      fontFamily: '"Red Hat Mono", monospace',
+      fontSize: "11px",
+      fontWeight: 600,
+      lineHeight: 1.5,
+    },
+    cardAction: {
+      padding: 0,
+      display: "flex",
+      alignItems: "stretch",
+      flexDirection: "column",
+    },
+    wallet: {
+      width: "100%",
+      padding: { xs: "0 16px 16px", sm: "0 20px 20px" },
+    },
+    slippageBox: {
+      width: "100%",
+      padding: { xs: "15px 16px", sm: "16px 20px" },
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: "14px",
+      background: "var(--tezex-panel-subtle)",
+      borderTop: "1px solid var(--tezex-line-soft)",
+      "@media (max-width: 420px)": {
+        alignItems: "stretch",
+        flexDirection: "column",
+      },
+    },
+    slippageCopy: {
+      display: "flex",
+      flexDirection: "column",
+      gap: "2px",
+    },
+    slippageLabel: {
+      color: "var(--tezex-text-secondary)",
+      fontSize: "12px",
+      fontWeight: 600,
+      lineHeight: 1.35,
+    },
+    slippageHelp: {
+      color: "var(--tezex-faint)",
+      fontSize: "10px",
+      lineHeight: 1.45,
     },
   };
 };

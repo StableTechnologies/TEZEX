@@ -16,12 +16,17 @@ import {
   TransferType,
   Asset,
   Amount,
+  Token,
 } from "../types/general";
 
 import { debounce, eq } from "lodash";
 import { useDebounce } from "usehooks-ts";
 import { PoolRegistry } from "../adapters/poolRegistry";
 import { useNetwork } from "./network";
+import {
+  getSlippageValidationMessage,
+  getSpendableXtz,
+} from "../functions/transactionSafety";
 
 export interface TransactionOps {
   initialize: (
@@ -258,16 +263,25 @@ export function useTransaction(
       // if transaction exists and is not locked
       if (transaction && !transaction.locked) {
         // handle slippage update
-        if (slippage) {
-          const _slippage = new BigNumber(slippage).toNumber();
-          updated =
-            updated ||
-            (await wallet.updateAmount(
+        if (slippage !== undefined) {
+          const validationMessage = getSlippageValidationMessage(slippage);
+          if (validationMessage) {
+            await wallet.updateStatus(
               component,
-              undefined,
-              undefined,
-              _slippage
-            ));
+              TransactionStatus.INVALID_SLIPPAGE
+            );
+            updated = true;
+          } else {
+            const _slippage = new BigNumber(slippage).toNumber();
+            updated =
+              updated ||
+              (await wallet.updateAmount(
+                component,
+                undefined,
+                undefined,
+                _slippage
+              ));
+          }
         }
         // handle send amount update
         if (sendAmount) {
@@ -303,7 +317,7 @@ export function useTransaction(
   const updateAmount = useCallback(
     async (sendAmount?: string, slippage?: string) => {
       // check if slippage or send amount is being updated
-      if (sendAmount || slippage) {
+      if (sendAmount !== undefined || slippage !== undefined) {
         //check if update was successful
         if (await _updateAmount(sendAmount, slippage)) {
           // if update was successful and pending update exists
@@ -323,18 +337,16 @@ export function useTransaction(
   //callback to set transaction with max send amount
   const useMax = useCallback(async () => {
     const transaction = getActiveTransaction();
-    // if transaction exists and send amount is not equal to send balance
-    if (
-      transaction &&
-      !eq(
-        JSON.stringify(transaction.sendAmount[0]),
-        JSON.stringify(transaction.sendAssetBalance[0])
-      ) &&
-      !transaction.sendAssetBalance[0].decimal.isZero()
-    ) {
-      await updateAmount(transaction.sendAssetBalance[0].string);
+    if (transaction && !transaction.sendAssetBalance[0].decimal.isZero()) {
+      const maxAmount =
+        transaction.sendAsset[0].name === Token.XTZ
+          ? getSpendableXtz(transaction.sendAssetBalance[0].decimal).toFixed()
+          : transaction.sendAssetBalance[0].string;
+      if (!transaction.sendAmount[0].decimal.eq(maxAmount)) {
+        await updateAmount(maxAmount);
+      }
     }
-  }, [getActiveTransaction, updateAmount, initialize]);
+  }, [getActiveTransaction, updateAmount]);
 
   return {
     initialize,

@@ -1,147 +1,171 @@
 // eslint-disable-next-line
 const style = (theme, scale = 1) => {
   return {
-    header: {
-      headerBox: {
-        fontSize: "1.5vw",
-        display: "flex",
-        alignItems: "center",
-        width: "100%",
-        minHeight: "5vw",
-        maxHeight: "5vw",
-        left: "0px",
-        top: "0px",
-        background: "#FFFFFF",
-        marginBottom: ".28vw",
-        boxShadow: ".28vw .28vw .28vw rgba(204, 204, 204, 0.25)",
-      },
-
-      logo: {
-        position: "relative",
-        maxWidth: "11.35vw",
-        marginLeft: "1.39vw",
-        top: ".17vw",
-      },
-
-      nav: {
-        alignContent: "center",
-      },
-
-      wallet: {
-        position: "relative",
-        left: "51vw",
-        justifyContent: "flexend",
-        display: "flex",
-      },
-    },
     appBar: {
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      alignContent: "center",
-      height: `calc(5vw * ${scale})`,
-      background: theme.palette.primary.main,
+      minHeight: "68px",
+      background: "var(--tezex-header)",
+      borderBottom: "1px solid var(--tezex-line-soft)",
+      backdropFilter: "blur(16px)",
       "&.MuiPaper-root": {
-        boxShadow: `calc(.28vw * ${scale}) calc(.28vw * ${scale}) calc(.28vw * ${scale}) rgba(204, 204, 204, 0.25)`,
+        boxShadow: "none",
       },
+      "@media (min-width: 1200px)": { minHeight: "76px" },
       mobile: {
+        minHeight: "68px",
+        background: "var(--tezex-header)",
+        borderBottom: "1px solid var(--tezex-line-soft)",
         "&.MuiPaper-root": {
-          boxShadow: "0px 0px 0px 0px",
+          boxShadow: "none",
         },
       },
     },
+    shell: {
+      maxWidth: "1180px",
+      padding: "0 16px",
+      "@media (min-width: 1200px)": { padding: "0 28px" },
+    },
     toolbar: {
       alignItems: "center",
-      alignContent: "center",
-      height: "100%",
+      minHeight: "68px",
       display: "flex",
-      justifyContent: "flex-start",
+      "@media (min-width: 1200px)": { minHeight: "76px" },
       mobile: {
-        height: "100%",
-        transition: "all 0.5s ease",
-        [theme.breakpoints.down("sm")]: {
-          height: "15vh",
-        },
+        minHeight: "68px",
+        display: "flex",
+        alignItems: "center",
       },
     },
     logoLarge: {
       display: "flex",
-      width: `calc(11.35vw * ${scale})`,
-      "@media screen and (max-width: 246px)": {
-        display: "none",
-      },
-    },
-    logoSmall: {
-      display: "none",
-      "@media screen and (max-width: 246px)": {
-        display: "flex",
-      },
+      width: "126px",
+      height: "auto",
+      filter: "var(--tezex-logo-filter)",
+      flexShrink: 0,
+      "@media (min-width: 1200px)": { width: "144px" },
     },
     container: {
-      alignItems: "center",
-      justifyContent: "flex-start",
-      alignContent: "center",
-      flexGrow: 1,
-    },
-    headerBox: {
-      fontSize: `calc(1.5vw * ${scale})`,
-      display: "flex",
-      alignItems: "center",
       width: "100%",
-      left: "0px",
-      top: "0px",
-      background: "#FFFFFF",
-      marginBottom: `calc(.28vw * ${scale})`,
-      boxShadow: ".28vw .28vw .28vw rgba(204, 204, 204, 0.25)",
-      [theme.breakpoints.down("sm")]: {
-        boxShadow: "0px 0px 0px 0px",
-      },
+      alignItems: "center",
+      display: "flex",
+      gap: "12px",
+      "@media (min-width: 1200px)": { gap: "18px" },
     },
-
     networkSelector: {
       display: "flex",
       alignItems: "center",
-      justifyContent: "flex-start",
       flexShrink: 0,
-
-      paddingLeft: {
-        xs: `calc(2vw * ${scale})`,
-        sm: `calc(3vw * ${scale})`,
-        md: `calc(1.5vw * ${scale})`,
-        lg: `calc(1.8vw * ${scale})`,
-      },
-
-      marginRight: {
-        xs: "auto",
-        sm: "auto",
-        md: `calc(4vw * ${scale})`,
-        lg: `calc(14.5vw * ${scale})`,
+      "@media (max-width: 519px)": {
+        "& > .MuiBox-root": {
+          width: "36px",
+          height: "36px",
+          minHeight: "36px",
+          maxHeight: "36px",
+          padding: 0,
+          justifyContent: "center",
+          borderRadius: "999px",
+        },
+        "& [data-network-label]": { display: "none" },
+        "& [data-network-arrow]": { display: "none" },
       },
     },
-
     nav: {
-      [theme.breakpoints.down("md")]: {
-        display: "none",
-      },
-      alignContent: "center",
+      display: "none",
+      flex: 1,
+      justifyContent: "center",
+      "@media (min-width: 1200px)": { display: "flex" },
     },
-
     wallet: {
-      display: { xs: "none", sm: "none", md: "flex" },
-      position: "absolute",
-      right: "0px",
-      alignContent: "end",
+      display: "none",
       justifyContent: "flex-end",
+      "@media (min-width: 1200px)": { display: "flex" },
+    },
+    actions: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "flex-end",
+      marginLeft: "auto",
+      gap: "8px",
+      flexShrink: 0,
+      "@media (min-width: 1200px)": { marginLeft: 0, gap: "10px" },
+    },
+    themeToggle: {
+      position: "relative",
+      width: "60px",
+      height: "36px",
+      minHeight: "36px",
+      maxHeight: "36px",
+      padding: "0 8px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      flexShrink: 0,
+      color: "var(--tezex-muted)",
+      background: "var(--tezex-panel)",
+      border: "1px solid var(--tezex-line)",
+      borderRadius: "999px",
+      cursor: "pointer",
+      transition:
+        "background-color 180ms ease, border-color 180ms ease, color 180ms ease",
+      "&:hover": {
+        color: "var(--tezex-text)",
+        borderColor: "var(--tezex-line-strong)",
+      },
+      "&:focus-visible": {
+        outline: "2px solid var(--tezex-text-secondary)",
+        outlineOffset: "-3px",
+      },
+    },
+    themeIcon: {
+      position: "relative",
+      zIndex: 1,
+      width: "14px",
+      height: "14px",
+      pointerEvents: "none",
+    },
+    themeToggleKnob: {
+      position: "absolute",
+      zIndex: 2,
+      top: "2px",
+      left: "2px",
+      width: "32px",
+      height: "32px",
+      background: "var(--tezex-action)",
+      borderRadius: "50%",
+      boxShadow: "0 2px 8px rgba(0, 0, 0, 0.18)",
+      pointerEvents: "none",
+      transition: "transform 240ms cubic-bezier(.3,.8,.3,1)",
+      "@media (prefers-reduced-motion: reduce)": { transition: "none" },
     },
     hide: {
       display: "none",
     },
     menu: {
-      display: { xs: "flex", sm: "flex", md: "none" },
-      position: "absolute",
-      right: "0px",
-      alignContent: "end",
+      display: "flex",
       justifyContent: "flex-end",
+      flexShrink: 0,
+      "@media (min-width: 1200px)": { display: "none" },
+    },
+    menuButton: {
+      width: "36px",
+      height: "36px",
+      minWidth: "36px",
+      minHeight: "36px",
+      maxWidth: "36px",
+      maxHeight: "36px",
+      color: "var(--tezex-text)",
+      border: "1px solid var(--tezex-line)",
+      borderRadius: "999px",
+      "&:hover": {
+        background: "var(--tezex-hover)",
+        borderColor: "var(--tezex-line-strong)",
+      },
+      "&.Mui-focusVisible": {
+        outline: "2px solid var(--tezex-text-secondary)",
+        outlineOffset: "-3px",
+      },
     },
   };
 };

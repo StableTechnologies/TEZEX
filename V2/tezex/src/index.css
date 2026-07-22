@@ -1,21 +1,108 @@
-@import url("https://fonts.googleapis.com/css2?family=Pacifico&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Red+Hat+Mono:wght@400;500;600&display=swap");
+
+:root,
+:root[data-theme="dark"] {
+  --tezex-bg: #090909;
+  --tezex-header: rgba(9, 9, 9, 0.96);
+  --tezex-panel: #111111;
+  --tezex-panel-subtle: #0e0e0e;
+  --tezex-field: #0a0a0a;
+  --tezex-hover: #1b1b1b;
+  --tezex-line: #282828;
+  --tezex-line-soft: #252525;
+  --tezex-line-strong: #3a3a3a;
+  --tezex-text: #f7f7f5;
+  --tezex-text-secondary: #d5d5d2;
+  --tezex-muted: #858585;
+  --tezex-faint: #646464;
+  --tezex-action: #f7f7f5;
+  --tezex-action-text: #090909;
+  --tezex-action-hover: #dcdcd8;
+  --tezex-positive: #8fd9a8;
+  --tezex-focus-ring: rgba(247, 247, 245, 0.12);
+  --tezex-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+  --tezex-menu-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+  --tezex-logo-filter: invert(1);
+  --tezex-wallet-logo-filter: grayscale(1) brightness(2);
+}
+
+:root[data-theme="light"] {
+  --tezex-bg: #ffffff;
+  --tezex-header: rgba(255, 255, 255, 0.96);
+  --tezex-panel: #f6f6f4;
+  --tezex-panel-subtle: #efefec;
+  --tezex-field: #ffffff;
+  --tezex-hover: #ebebe8;
+  --tezex-line: #deded9;
+  --tezex-line-soft: #e5e5e1;
+  --tezex-line-strong: #c8c8c4;
+  --tezex-text: #0a0a0a;
+  --tezex-text-secondary: #30302e;
+  --tezex-muted: #6f6f6f;
+  --tezex-faint: #9a9a96;
+  --tezex-action: #0a0a0a;
+  --tezex-action-text: #ffffff;
+  --tezex-action-hover: #2e2e2e;
+  --tezex-positive: #1f8a4c;
+  --tezex-focus-ring: rgba(10, 10, 10, 0.1);
+  --tezex-shadow: 0 24px 64px rgba(28, 28, 24, 0.08);
+  --tezex-menu-shadow: 0 18px 42px rgba(28, 28, 24, 0.14);
+  --tezex-logo-filter: none;
+  --tezex-wallet-logo-filter: grayscale(1) brightness(0.25);
+}
 
 html,
 body {
-  height: 100vh;
-  width: 100vw;
+  min-height: 100%;
+  width: 100%;
   margin: 0;
   font-family: "Inter", sans-serif;
+  background: var(--tezex-bg);
+  color: var(--tezex-text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 #root {
-  height: 100vh;
-  width: 100vw;
+  min-height: 100vh;
+  width: 100%;
 }
+
+* {
+  box-sizing: border-box;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+::selection {
+  background: var(--tezex-action);
+  color: var(--tezex-action-text);
+}
+
+body,
+button,
+input,
+select,
+textarea {
+  transition: background-color 180ms ease, border-color 180ms ease,
+    color 180ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body,
+  button,
+  input,
+  select,
+  textarea {
+    transition: none;
+  }
+}
+
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
-    monospace;
+  font-family: "Red Hat Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
 }

@@ -7,14 +7,21 @@ import { useMobileOrientation } from "react-device-detect";
 
 export const App: FC = () => {
   const { isLandscape } = useMobileOrientation();
+  const getOrientation = () =>
+    screen.orientation?.type ??
+    (window.innerWidth > window.innerHeight
+      ? "landscape-primary"
+      : "portrait-primary");
   // State to trigger re-render
-  const [orientation, setOrientation] = useState(screen.orientation.type);
+  const [orientation, setOrientation] = useState(getOrientation);
 
   useEffect(() => {
     // Handler to set new orientation
     const handleOrientationChange = () => {
-      setOrientation(screen.orientation.type);
+      setOrientation(getOrientation());
     };
+
+    if (!screen.orientation) return;
 
     // Add event listener
     screen.orientation.addEventListener("change", handleOrientationChange);
