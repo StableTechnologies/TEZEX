@@ -1,5 +1,7 @@
 import BigNumber from "bignumber.js";
 
+import { TransactionStatus } from "../types/general";
+
 export const MIN_SLIPPAGE_PERCENT = 0.1;
 export const MAX_SLIPPAGE_PERCENT = 5;
 export const HIGH_SLIPPAGE_PERCENT = 1;
@@ -18,6 +20,21 @@ export const isValidSlippage = (value: number): boolean =>
   Number.isFinite(value) &&
   value >= MIN_SLIPPAGE_PERCENT &&
   value <= MAX_SLIPPAGE_PERCENT;
+
+export const shouldApplyTransactionStatus = (
+  currentStatus: TransactionStatus,
+  nextStatus: TransactionStatus
+): boolean => currentStatus !== nextStatus;
+
+export const shouldApplySlippageUpdate = (
+  currentSlippage: number,
+  nextSlippage: number,
+  currentStatus: TransactionStatus
+): boolean =>
+  isValidSlippage(nextSlippage)
+    ? currentSlippage !== nextSlippage ||
+      currentStatus === TransactionStatus.INVALID_SLIPPAGE
+    : currentStatus !== TransactionStatus.INVALID_SLIPPAGE;
 
 export const getSpendableXtz = (
   balance: BigNumber,

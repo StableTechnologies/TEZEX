@@ -6,8 +6,11 @@ import {
   isValidSlippage,
   MAX_SLIPPAGE_PERCENT,
   MIN_SLIPPAGE_PERCENT,
+  shouldApplySlippageUpdate,
+  shouldApplyTransactionStatus,
   XTZ_FEE_RESERVE_TEZ,
 } from "./transactionSafety";
+import { TransactionStatus } from "../types/general";
 
 describe("transaction safety limits", () => {
   it("accepts the supported slippage range and rejects unsafe values", () => {
@@ -22,6 +25,52 @@ describe("transaction safety limits", () => {
     expect(getSlippageValidationMessage("0.01")).toMatch(/at least/i);
     expect(getSlippageValidationMessage("50")).toMatch(/capped/i);
     expect(getSlippageValidationMessage("0.5")).toBeUndefined();
+  });
+
+  it("restores transaction state when invalid slippage is corrected", () => {
+    expect(
+      shouldApplySlippageUpdate(
+        0.5,
+        0.5,
+        TransactionStatus.INVALID_SLIPPAGE
+      )
+    ).toBe(true);
+    expect(
+      shouldApplySlippageUpdate(
+        0.5,
+        1,
+        TransactionStatus.INVALID_SLIPPAGE
+      )
+    ).toBe(true);
+    expect(
+      shouldApplySlippageUpdate(
+        0.5,
+        0.5,
+        TransactionStatus.SUFFICIENT_BALANCE
+      )
+    ).toBe(false);
+  });
+
+  it("does not reapply an unchanged invalid transaction status", () => {
+    expect(
+      shouldApplyTransactionStatus(
+        TransactionStatus.INVALID_SLIPPAGE,
+        TransactionStatus.INVALID_SLIPPAGE
+      )
+    ).toBe(false);
+    expect(
+      shouldApplySlippageUpdate(
+        0.5,
+        MAX_SLIPPAGE_PERCENT + 1,
+        TransactionStatus.INVALID_SLIPPAGE
+      )
+    ).toBe(false);
+    expect(
+      shouldApplyTransactionStatus(
+        TransactionStatus.SUFFICIENT_BALANCE,
+        TransactionStatus.INVALID_SLIPPAGE
+      )
+    ).toBe(true);
   });
 
   it("reserves tez for fees when calculating a max amount", () => {

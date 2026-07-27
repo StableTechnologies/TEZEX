@@ -36,6 +36,8 @@ import { WritableDraft } from "immer/dist/types/types-external";
 import { estimateWithAdapter } from "../functions/estimates";
 import {
   isValidSlippage,
+  shouldApplySlippageUpdate,
+  shouldApplyTransactionStatus,
   XTZ_FEE_RESERVE_TEZ,
 } from "../functions/transactionSafety";
 
@@ -743,6 +745,15 @@ export function WalletProvider(props: IWalletProvider) {
             draft[component],
             // update function
             (transaction) => {
+              if (
+                !shouldApplyTransactionStatus(
+                  transaction.transactionStatus,
+                  transactionStatus
+                )
+              ) {
+                return false;
+              }
+
               transaction.transactionStatus = transactionStatus;
               // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
               draft[component]!.lastModified = new Date();
@@ -831,7 +842,11 @@ export function WalletProvider(props: IWalletProvider) {
               // if slippage has changed update the transaction
               if (
                 isNumber(slippageUpdate) &&
-                transaction.slippage !== slippageUpdate
+                shouldApplySlippageUpdate(
+                  transaction.slippage,
+                  slippageUpdate,
+                  transaction.transactionStatus
+                )
               ) {
                 if (isValidSlippage(slippageUpdate)) {
                   transaction.slippage = slippageUpdate;
