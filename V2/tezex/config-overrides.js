@@ -2,7 +2,7 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 const webpack = require("webpack");
 
-module.exports = function override(config) {
+const webpackOverride = (config) => {
   const fallback = config.resolve.fallback || {};
   Object.assign(fallback, {
     crypto: require.resolve("crypto-browserify"),
@@ -25,4 +25,18 @@ module.exports = function override(config) {
   ]);
   config.ignoreWarnings = [/Failed to parse source map/];
   return config;
+};
+
+module.exports = {
+  webpack: webpackOverride,
+  jest: (config) => {
+    // Unit tests exercise TEZEX's wallet boundaries rather than Beacon's own
+    // crypto/transport implementation. Mapping Beacon to a small local double
+    // avoids CRA 5/Jest 27's inability to load Beacon's modern ESM graph.
+    config.moduleNameMapper = {
+      ...(config.moduleNameMapper || {}),
+      "^@airgap/beacon-(?:sdk|dapp)$": "<rootDir>/src/test/beaconMock.ts",
+    };
+    return config;
+  },
 };
