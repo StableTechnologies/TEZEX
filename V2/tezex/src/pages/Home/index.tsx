@@ -9,6 +9,13 @@ import { RemoveLiquidity } from "../../components/removeLiquidity";
 
 import Grid2 from "@mui/material/Unstable_Grid2"; // Grid version 2
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import Link from "@mui/material/Link";
+import Typography from "@mui/material/Typography";
+import { NetworkType } from "@airgap/beacon-sdk";
+import { useNetwork } from "../../hooks/network";
 
 import style from "./style";
 import useStyles from "../../hooks/styles";
@@ -58,6 +65,7 @@ export const Home: FC<IHome> = (props) => {
   const { orientation } = useMobileOrientation();
   const styles = useStyles(style);
   const navigate = useNavigate();
+  const network = useNetwork();
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [displayedPath, setDisplayedPath] = useState<HomePaths>(props.path);
   const viewportRef = useRef<HTMLDivElement | null>(null);
@@ -193,6 +201,44 @@ export const Home: FC<IHome> = (props) => {
   );
 
   const Comp = (() => {
+    const availability = network.info.tradingAvailability;
+    if (availability && !availability.enabled) {
+      return (
+        <Card sx={styles.networkNotice} data-testid="network-unavailable">
+          <CardContent sx={styles.networkNoticeContent}>
+            <Typography sx={styles.networkNoticeEyebrow}>
+              Previewnet status
+            </Typography>
+            <Typography component="h1" sx={styles.networkNoticeTitle}>
+              {availability.title}
+            </Typography>
+            <Typography sx={styles.networkNoticeMessage}>
+              {availability.message}
+            </Typography>
+            <Box sx={styles.networkNoticeActions}>
+              <Button
+                variant="contained"
+                onClick={() => network.switchNetwork(NetworkType.MAINNET)}
+                sx={styles.networkNoticeButton}
+              >
+                Return to Mainnet
+              </Button>
+              {availability.statusUrl && (
+                <Link
+                  href={availability.statusUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  sx={styles.networkNoticeLink}
+                >
+                  View Previewnet status
+                </Link>
+              )}
+            </Box>
+          </CardContent>
+        </Card>
+      );
+    }
+
     switch (displayedPath) {
       case "add":
         return <AddLiquidity orientation={orientation} />;
