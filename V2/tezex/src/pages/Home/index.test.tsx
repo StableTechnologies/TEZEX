@@ -98,22 +98,17 @@ const renderHome = () =>
     </MemoryRouter>
   );
 
-const originalStartViewTransition = document.startViewTransition;
+const originalAnimate = HTMLElement.prototype.animate;
 
 beforeEach(() => {
   window.matchMedia = jest.fn().mockReturnValue({ matches: false });
-  Object.defineProperty(document, "startViewTransition", {
-    configurable: true,
-    value: undefined,
-  });
+  delete (HTMLElement.prototype as Partial<HTMLElement>).animate;
 });
 
 afterEach(() => {
-  Object.defineProperty(document, "startViewTransition", {
-    configurable: true,
-    value: originalStartViewTransition,
-  });
+  HTMLElement.prototype.animate = originalAnimate;
   delete document.documentElement.dataset.modeTransition;
+  document.documentElement.style.overflowX = "";
 });
 
 test("changes modes immediately when browser animation is unavailable", () => {
@@ -125,32 +120,58 @@ test("changes modes immediately when browser animation is unavailable", () => {
   expect(screen.getByText("Liquidity workspace")).toBeInTheDocument();
 });
 
-test("runs a full-workspace view transition when modes change", async () => {
+test("moves outgoing and incoming workspaces on one continuous track", async () => {
   let finishTransition: () => void = () => undefined;
   const finished = new Promise<void>((resolve) => {
     finishTransition = resolve;
   });
-  const startViewTransition = jest.fn((update: () => void) => {
-    update();
-    return { finished };
-  });
-  Object.defineProperty(document, "startViewTransition", {
-    configurable: true,
-    value: startViewTransition,
-  });
+  const cancel = jest.fn();
+  const animate = jest.fn(() => ({ finished, cancel } as unknown as Animation));
+  HTMLElement.prototype.animate = animate;
 
   renderHome();
   fireEvent.click(screen.getByRole("button", { name: "Liquidity" }));
 
-  expect(startViewTransition).toHaveBeenCalledTimes(1);
-  expect(screen.getByTestId("location")).toHaveTextContent("/home/add");
+  expect(screen.getByTestId("location")).toHaveTextContent("/home/swap");
+  expect(screen.getByText("Liquidity workspace")).toBeInTheDocument();
+  expect(
+    document.querySelector('[data-workspace-snapshot="true"]')
+  ).toHaveTextContent("Swap workspace");
   expect(document.documentElement.dataset.modeTransition).toBe("forward");
   expect(screen.getByRole("button", { name: "Swap" })).toBeDisabled();
+  expect(animate).toHaveBeenNthCalledWith(
+    1,
+    [
+      { transform: "translate3d(0, 0, 0)" },
+      { transform: "translate3d(-100%, 0, 0)" },
+    ],
+    {
+      duration: 420,
+      easing: "cubic-bezier(0.65, 0, 0.35, 1)",
+      fill: "both",
+    }
+  );
+  expect(animate).toHaveBeenNthCalledWith(
+    2,
+    [
+      { transform: "translate3d(100%, 0, 0)" },
+      { transform: "translate3d(0, 0, 0)" },
+    ],
+    {
+      duration: 420,
+      easing: "cubic-bezier(0.65, 0, 0.35, 1)",
+      fill: "both",
+    }
+  );
 
   await act(async () => finishTransition());
 
   await waitFor(() =>
     expect(document.documentElement.dataset.modeTransition).toBeUndefined()
   );
+  expect(screen.getByTestId("location")).toHaveTextContent("/home/add");
+  expect(
+    document.querySelector('[data-workspace-snapshot="true"]')
+  ).not.toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Swap" })).toBeEnabled();
 });
