@@ -98,12 +98,22 @@ const renderHome = () =>
     </MemoryRouter>
   );
 
+const originalStartViewTransition = document.startViewTransition;
+
 beforeEach(() => {
   window.matchMedia = jest.fn().mockReturnValue({ matches: false });
+  Object.defineProperty(document, "startViewTransition", {
+    configurable: true,
+    value: undefined,
+  });
 });
 
 afterEach(() => {
-  delete (HTMLElement.prototype as Partial<HTMLElement>).animate;
+  Object.defineProperty(document, "startViewTransition", {
+    configurable: true,
+    value: originalStartViewTransition,
+  });
+  delete document.documentElement.dataset.modeTransition;
 });
 
 test("changes modes immediately when browser animation is unavailable", () => {
@@ -115,41 +125,32 @@ test("changes modes immediately when browser animation is unavailable", () => {
   expect(screen.getByText("Liquidity workspace")).toBeInTheDocument();
 });
 
-test("slides the current workspace out before the next workspace enters", async () => {
-  let finishExit: () => void = () => undefined;
-  const exitFinished = new Promise<void>((resolve) => {
-    finishExit = resolve;
+test("runs a full-workspace view transition when modes change", async () => {
+  let finishTransition: () => void = () => undefined;
+  const finished = new Promise<void>((resolve) => {
+    finishTransition = resolve;
   });
-  const animate = jest
-    .fn()
-    .mockReturnValueOnce({ finished: exitFinished, cancel: jest.fn() })
-    .mockReturnValue({ finished: Promise.resolve(), cancel: jest.fn() });
-  HTMLElement.prototype.animate = animate;
+  const startViewTransition = jest.fn((update: () => void) => {
+    update();
+    return { finished };
+  });
+  Object.defineProperty(document, "startViewTransition", {
+    configurable: true,
+    value: startViewTransition,
+  });
 
   renderHome();
   fireEvent.click(screen.getByRole("button", { name: "Liquidity" }));
 
-  expect(screen.getByTestId("location")).toHaveTextContent("/home/swap");
-  expect(animate).toHaveBeenNthCalledWith(
-    1,
-    [
-      { opacity: 1, transform: "translate3d(0, 0, 0)" },
-      { opacity: 0.35, transform: "translate3d(-18px, 0, 0)" },
-    ],
-    { duration: 140, easing: "cubic-bezier(.4,0,.7,.2)" }
-  );
+  expect(startViewTransition).toHaveBeenCalledTimes(1);
+  expect(screen.getByTestId("location")).toHaveTextContent("/home/add");
+  expect(document.documentElement.dataset.modeTransition).toBe("forward");
+  expect(screen.getByRole("button", { name: "Swap" })).toBeDisabled();
 
-  await act(async () => finishExit());
+  await act(async () => finishTransition());
 
   await waitFor(() =>
-    expect(screen.getByTestId("location")).toHaveTextContent("/home/add")
+    expect(document.documentElement.dataset.modeTransition).toBeUndefined()
   );
-  expect(animate).toHaveBeenNthCalledWith(
-    2,
-    [
-      { opacity: 0.35, transform: "translate3d(18px, 0, 0)" },
-      { opacity: 1, transform: "translate3d(0, 0, 0)" },
-    ],
-    { duration: 220, easing: "cubic-bezier(.22,.8,.24,1)" }
-  );
+  expect(screen.getByRole("button", { name: "Swap" })).toBeEnabled();
 });

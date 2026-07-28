@@ -93,6 +93,66 @@ textarea {
     color 180ms ease;
 }
 
+@keyframes tezex-workspace-exit-left {
+  to {
+    transform: translateX(-104%);
+  }
+}
+
+@keyframes tezex-workspace-enter-right {
+  from {
+    transform: translateX(104%);
+  }
+}
+
+@keyframes tezex-workspace-exit-right {
+  to {
+    transform: translateX(104%);
+  }
+}
+
+@keyframes tezex-workspace-enter-left {
+  from {
+    transform: translateX(-104%);
+  }
+}
+
+html[data-mode-transition] {
+  view-transition-name: none;
+}
+
+html[data-mode-transition="forward"]::view-transition-old(
+    tezex-trading-workspace
+  ) {
+  animation: 360ms cubic-bezier(0.22, 1, 0.36, 1) both tezex-workspace-exit-left;
+}
+
+html[data-mode-transition="forward"]::view-transition-new(
+    tezex-trading-workspace
+  ) {
+  animation: 360ms cubic-bezier(0.22, 1, 0.36, 1) both
+    tezex-workspace-enter-right;
+}
+
+html[data-mode-transition="backward"]::view-transition-old(
+    tezex-trading-workspace
+  ) {
+  animation: 360ms cubic-bezier(0.22, 1, 0.36, 1) both
+    tezex-workspace-exit-right;
+}
+
+html[data-mode-transition="backward"]::view-transition-new(
+    tezex-trading-workspace
+  ) {
+  animation: 360ms cubic-bezier(0.22, 1, 0.36, 1) both
+    tezex-workspace-enter-left;
+}
+
+::view-transition-old(tezex-trading-workspace),
+::view-transition-new(tezex-trading-workspace) {
+  mix-blend-mode: normal;
+}
+
 @media (prefers-reduced-motion: reduce) {
   body,
   button,
@@ -100,6 +160,11 @@ textarea {
   select,
   textarea {
     transition: none;
+  }
+
+  ::view-transition-old(tezex-trading-workspace),
+  ::view-transition-new(tezex-trading-workspace) {
+    animation: none;
   }
 }
 
