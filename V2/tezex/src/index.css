@@ -24,6 +24,8 @@
   --tezex-menu-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
   --tezex-logo-filter: invert(1);
   --tezex-wallet-logo-filter: grayscale(1) brightness(2);
+  --tezex-token-light-body: #ffffff;
+  --tezex-token-hairline: transparent;
 }
 
 :root[data-theme="light"] {
@@ -49,6 +51,8 @@
   --tezex-menu-shadow: 0 18px 42px rgba(28, 28, 24, 0.14);
   --tezex-logo-filter: none;
   --tezex-wallet-logo-filter: grayscale(1) brightness(0.25);
+  --tezex-token-light-body: #ffffff;
+  --tezex-token-hairline: rgba(0, 0, 0, 0.08);
 }
 
 html,

@@ -70,13 +70,6 @@ export const style = (theme, scale = 1) => {
         border: "1px solid var(--tezex-line)",
         borderRadius: "999px",
       },
-      tokenIcon: {
-        width: "26px",
-        height: "26px",
-        objectFit: "contain",
-        borderRadius: "50%",
-        background: "#FFFFFF",
-      },
       tokenLabel: {
         color: "var(--tezex-text)",
         fontSize: "13px",

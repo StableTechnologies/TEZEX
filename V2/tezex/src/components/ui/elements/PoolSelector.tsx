@@ -8,6 +8,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { SxProps, Theme } from "@mui/material/styles";
 import useStyles from "../../../hooks/styles";
+import { TokenPair } from "./TokenIcon";
 
 export interface PoolSelectorProps {
   onChange: (poolId: string) => void;
@@ -21,17 +22,13 @@ export interface PoolSelectorProps {
 
 const poolSelectorStyles = (_theme: Theme, scale = 1) => ({
   selectedValue: {
-    logoSize: scale * 20,
-    logoBorder: scale * 1.5,
-    logoOverlap: scale * -6,
+    logoSize: scale * 28,
     titleFontSize: `calc(0.75rem * ${scale})`,
     subtitleFontSize: `calc(0.6rem * ${scale})`,
     gap: scale * 0.8,
   },
   menuOption: {
     logoSize: scale * 24,
-    logoBorder: scale * 2,
-    logoOverlap: scale * -8,
     titleFontSize: `calc(0.875rem * ${scale})`,
     subtitleFontSize: `calc(0.75rem * ${scale})`,
     balanceLabelFontSize: `calc(0.75rem * ${scale})`,
@@ -76,40 +73,13 @@ export const PoolSelector: FC<PoolSelectorProps> = ({
 
     return (
       <Box display="flex" alignItems="center" gap={s.gap}>
-        {/* Token logos */}
-        <Box display="flex" alignItems="center" position="relative">
-          <img
-            src={process.env.PUBLIC_URL + tokenA.logo}
-            alt={tokenA.label}
-            style={{
-              width: s.logoSize,
-              height: s.logoSize,
-              borderRadius: "50%",
-              border: `${s.logoBorder}px solid ${
-                isDark ? "var(--tezex-line)" : "#E1E1E1"
-              }`,
-              position: "relative",
-              zIndex: 2,
-              backgroundColor: "white",
-            }}
-          />
-          <img
-            src={process.env.PUBLIC_URL + tokenB.logo}
-            alt={tokenB.label}
-            style={{
-              width: s.logoSize,
-              height: s.logoSize,
-              borderRadius: "50%",
-              border: `${s.logoBorder}px solid ${
-                isDark ? "var(--tezex-line)" : "#E1E1E1"
-              }`,
-              marginLeft: s.logoOverlap,
-              position: "relative",
-              zIndex: 1,
-              backgroundColor: "white",
-            }}
-          />
-        </Box>
+        <TokenPair
+          tokenA={tokenA}
+          tokenB={tokenB}
+          size={s.logoSize}
+          surface="var(--token-pair-surface)"
+          decorative
+        />
 
         {/* Pool text - two lines */}
         <Box
@@ -163,40 +133,13 @@ export const PoolSelector: FC<PoolSelectorProps> = ({
         gap={s.gap}
         sx={{ py: 0.5, width: "100%" }}
       >
-        {/* Token logos */}
-        <Box display="flex" alignItems="center" position="relative">
-          <img
-            src={process.env.PUBLIC_URL + tokenA.logo}
-            alt={tokenA.label}
-            style={{
-              width: s.logoSize,
-              height: s.logoSize,
-              borderRadius: "50%",
-              border: `${s.logoBorder}px solid ${
-                isDark ? "var(--tezex-line)" : "#E1E1E1"
-              }`,
-              backgroundColor: "white",
-              position: "relative",
-              zIndex: 2,
-            }}
-          />
-          <img
-            src={process.env.PUBLIC_URL + tokenB.logo}
-            alt={tokenB.label}
-            style={{
-              width: s.logoSize,
-              height: s.logoSize,
-              borderRadius: "50%",
-              border: `${s.logoBorder}px solid ${
-                isDark ? "var(--tezex-line)" : "#E1E1E1"
-              }`,
-              marginLeft: s.logoOverlap,
-              position: "relative",
-              zIndex: 1,
-              backgroundColor: "white",
-            }}
-          />
-        </Box>
+        <TokenPair
+          tokenA={tokenA}
+          tokenB={tokenB}
+          size={s.logoSize}
+          surface="var(--token-pair-surface)"
+          decorative
+        />
 
         {/* Pool info */}
         <Box
@@ -280,6 +223,9 @@ export const PoolSelector: FC<PoolSelectorProps> = ({
         size="small"
         renderValue={renderSelectedValue}
         sx={{
+          "--token-pair-surface": isDark
+            ? "var(--tezex-panel-subtle)"
+            : "#FAFAFA",
           borderRadius: "999px",
           minHeight: 42,
           color: isDark ? "var(--tezex-text)" : "#1E1E1E",
@@ -318,20 +264,32 @@ export const PoolSelector: FC<PoolSelectorProps> = ({
                 : "0px 18px 48px rgba(0, 0, 0, 0.18)",
               maxHeight: 400,
               "& .MuiMenuItem-root": {
+                "--token-pair-surface": isDark
+                  ? "var(--tezex-panel)"
+                  : "#FFFFFF",
                 paddingY: 1,
                 paddingX: 1.5,
                 minHeight: 48,
                 color: isDark ? "var(--tezex-text)" : "#1E1E1E",
 
                 "&:hover": {
+                  "--token-pair-surface": isDark
+                    ? "var(--tezex-hover)"
+                    : "#F5F5F5",
                   backgroundColor: isDark ? "var(--tezex-hover)" : "#F5F5F5",
                 },
 
                 "&.Mui-selected": {
+                  "--token-pair-surface": isDark
+                    ? "var(--tezex-line-soft)"
+                    : "#E8E8E8",
                   backgroundColor: isDark
                     ? "var(--tezex-line-soft)"
                     : "#E8E8E8",
                   "&:hover": {
+                    "--token-pair-surface": isDark
+                      ? "var(--tezex-line)"
+                      : "#DDDDDD",
                     backgroundColor: isDark ? "var(--tezex-line)" : "#DDDDDD",
                   },
                 },
