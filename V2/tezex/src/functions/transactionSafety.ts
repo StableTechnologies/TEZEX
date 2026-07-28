@@ -26,6 +26,14 @@ export const shouldApplyTransactionStatus = (
   nextStatus: TransactionStatus
 ): boolean => currentStatus !== nextStatus;
 
+export const getStatusAfterBalanceCheck = (
+  currentStatus: TransactionStatus,
+  balanceStatus: TransactionStatus
+): TransactionStatus =>
+  currentStatus === TransactionStatus.INVALID_SLIPPAGE
+    ? currentStatus
+    : balanceStatus;
+
 export const shouldApplySlippageUpdate = (
   currentSlippage: number,
   nextSlippage: number,

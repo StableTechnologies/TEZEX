@@ -35,6 +35,7 @@ import {
 import { WritableDraft } from "immer/dist/types/types-external";
 import { estimateWithAdapter } from "../functions/estimates";
 import {
+  getStatusAfterBalanceCheck,
   isValidSlippage,
   shouldApplySlippageUpdate,
   shouldApplyTransactionStatus,
@@ -633,7 +634,10 @@ export function WalletProvider(props: IWalletProvider) {
         ...transaction,
         sendAssetBalance,
         receiveAssetBalance,
-        transactionStatus: balanceStatus,
+        transactionStatus: getStatusAfterBalanceCheck(
+          transaction.transactionStatus,
+          balanceStatus
+        ),
       };
     },
     [checkSufficientBalance, getBalancesOfAssets]
@@ -782,10 +786,13 @@ export function WalletProvider(props: IWalletProvider) {
     ) {
       transaction.sendAmount = amountUpdateSend;
       if (isWalletConnected) {
-        transaction.transactionStatus = checkSufficientBalance(
-          sendAssetBalance,
-          amountUpdateSend,
-          transaction.sendAsset as AssetOrAssetPair
+        transaction.transactionStatus = getStatusAfterBalanceCheck(
+          transaction.transactionStatus,
+          checkSufficientBalance(
+            sendAssetBalance,
+            amountUpdateSend,
+            transaction.sendAsset as AssetOrAssetPair
+          )
         );
       }
       return true;

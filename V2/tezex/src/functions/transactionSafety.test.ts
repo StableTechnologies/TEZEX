@@ -1,6 +1,7 @@
 import BigNumber from "bignumber.js";
 
 import {
+  getStatusAfterBalanceCheck,
   getSlippageValidationMessage,
   getSpendableXtz,
   isValidSlippage,
@@ -29,25 +30,13 @@ describe("transaction safety limits", () => {
 
   it("restores transaction state when invalid slippage is corrected", () => {
     expect(
-      shouldApplySlippageUpdate(
-        0.5,
-        0.5,
-        TransactionStatus.INVALID_SLIPPAGE
-      )
+      shouldApplySlippageUpdate(0.5, 0.5, TransactionStatus.INVALID_SLIPPAGE)
     ).toBe(true);
     expect(
-      shouldApplySlippageUpdate(
-        0.5,
-        1,
-        TransactionStatus.INVALID_SLIPPAGE
-      )
+      shouldApplySlippageUpdate(0.5, 1, TransactionStatus.INVALID_SLIPPAGE)
     ).toBe(true);
     expect(
-      shouldApplySlippageUpdate(
-        0.5,
-        0.5,
-        TransactionStatus.SUFFICIENT_BALANCE
-      )
+      shouldApplySlippageUpdate(0.5, 0.5, TransactionStatus.SUFFICIENT_BALANCE)
     ).toBe(false);
   });
 
@@ -71,6 +60,27 @@ describe("transaction safety limits", () => {
         TransactionStatus.INVALID_SLIPPAGE
       )
     ).toBe(true);
+  });
+
+  it("keeps invalid slippage authoritative during balance refreshes", () => {
+    expect(
+      getStatusAfterBalanceCheck(
+        TransactionStatus.INVALID_SLIPPAGE,
+        TransactionStatus.SUFFICIENT_BALANCE
+      )
+    ).toBe(TransactionStatus.INVALID_SLIPPAGE);
+    expect(
+      getStatusAfterBalanceCheck(
+        TransactionStatus.INVALID_SLIPPAGE,
+        TransactionStatus.INSUFFICIENT_BALANCE
+      )
+    ).toBe(TransactionStatus.INVALID_SLIPPAGE);
+    expect(
+      getStatusAfterBalanceCheck(
+        TransactionStatus.MODIFIED,
+        TransactionStatus.SUFFICIENT_BALANCE
+      )
+    ).toBe(TransactionStatus.SUFFICIENT_BALANCE);
   });
 
   it("reserves tez for fees when calculating a max amount", () => {
