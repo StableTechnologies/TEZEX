@@ -20,31 +20,30 @@ export interface IAmountField {
   swap?: React.MutableRefObject<() => Promise<void>>;
   scalingKey?: string;
   loading?: boolean;
+  forceZero?: boolean;
+  visualVariant?: "default" | "tezex";
 }
 
 const AmountField: FC<IAmountField> = (props) => {
-  const Variant = () => {
-    switch (props.variant) {
-      default:
-        return (
-          <TokenAmountInput
-            component={props.component}
-            transferType={props.transferType}
-            asset={props.asset}
-            readOnly={props.readOnly}
-            darker={props.darker}
-            variant={props.variant}
-            swap={props.swap}
-            label={props.label}
-            scalingKey={props.scalingKey}
-            loading={props.loading}
-          />
-        );
-    }
-  };
-  if (props.loading) {
-    return <div></div>;
-  } else return <Variant />;
+  if (props.loading) return <div />;
+
+  return (
+    <TokenAmountInput
+      component={props.component}
+      transferType={props.transferType}
+      asset={props.asset}
+      onChange={props.onChange}
+      readOnly={props.readOnly}
+      darker={props.darker}
+      variant={props.variant}
+      swap={props.swap}
+      label={props.label}
+      scalingKey={props.scalingKey}
+      loading={props.loading}
+      forceZero={props.forceZero}
+      visualVariant={props.visualVariant}
+    />
+  );
 };
 
 export const UserAmountField = memo(AmountField);

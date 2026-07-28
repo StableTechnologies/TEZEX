@@ -1,172 +1,150 @@
-// eslint-disable-next-line
-const style = (theme, scale = 1) => {
-  return {
-    slippageTabsRoot: {
-      "&.MuiBox-root": {
-        background: "#FFFFFF",
-        display: "inline-flex",
-        position: "relative",
-        flexDirection: "row",
-        height: `calc(3vw * ${scale})`,
-        alignItems: "center",
-        alignContent: "center",
-        justifyContent: "space-between",
-        width: `calc(15.2vw * ${scale})`,
-        maxHeight: `calc(2.7vw * ${scale})`,
-        minHeight: `calc(2.7vw * ${scale})`,
-        borderRadius: `calc(.55vw * ${scale})`,
+const segmentedSlippageStyle = () => ({
+  slippageTabsRoot: {
+    width: "190px",
+    minWidth: "190px",
+    height: "36px",
+    minHeight: "36px",
+    maxHeight: "36px",
+    padding: "3px",
+    position: "relative",
+    display: "grid",
+    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+    alignItems: "center",
+    overflow: "hidden",
+    boxSizing: "border-box",
+    background: "var(--tezex-field)",
+    border: "1px solid var(--tezex-line)",
+    borderRadius: "999px",
+  },
+  slippageThumb: {
+    position: "absolute",
+    top: "3px",
+    left: "3px",
+    width: "calc((100% - 6px) / 3)",
+    height: "28px",
+    background: "var(--tezex-action)",
+    borderRadius: "999px",
+    pointerEvents: "none",
+    transition: "transform 240ms cubic-bezier(.22,.8,.24,1)",
+    "@media (prefers-reduced-motion: reduce)": { transition: "none" },
+  },
+  slippageSegment: {
+    position: "relative",
+    zIndex: 1,
+    minWidth: 0,
+    height: "28px",
+    minHeight: "28px",
+    maxHeight: "28px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  slippageTab: {
+    "&.MuiButtonBase-root": {
+      width: "100%",
+      minWidth: 0,
+      height: "28px",
+      minHeight: "28px",
+      maxHeight: "28px",
+      padding: "0 8px",
+      color: "var(--tezex-muted)",
+      background: "transparent",
+      borderRadius: "999px",
+      fontFamily: "Inter",
+      fontWeight: 600,
+      fontSize: "11px",
+      lineHeight: 1,
+      textTransform: "none",
+      transition: "color 160ms ease",
+      "&:hover": {
+        color: "var(--tezex-text-secondary)",
+        background: "transparent",
       },
-      border: "0.07vw solid #EDEDED",
-    },
-    slippageTab: {
-      box: {
-        "&.MuiBox-root": {
-          background: "#FFFFFF",
-          display: "flex",
-          position: "relative",
-          alignItems: "center",
-          alignContent: "center",
-          justifyContent: "center",
-
-          minWidth: `calc(4.2vw * ${scale})`,
-          maxWidth: `calc(4.2vw * ${scale})`,
-        },
+      "&.Mui-disabled": {
+        color: "var(--tezex-faint)",
       },
-      "&.MuiButton-root.Mui-disabled": {
-        backgroundColor: "transparent",
-
-        fontFamily: "Inter",
-        fontStyle: "normal",
-        fontWeight: "500",
-        fontSize: `calc(.83vw * ${scale})`,
-        lineHeight: `calc(1vw * ${scale})`,
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        alignContent: "center",
-        textAlign: "center",
-
-        minHeight: `calc(2.2vw * ${scale})`,
-        maxHeight: `calc(2.2vw * ${scale})`,
-
-        zIndex: 10,
-      },
-      "&.MuiButtonBase-root": {
-        position: "relative",
-
-        fontFamily: "Inter",
-        fontStyle: "normal",
-        fontWeight: "500",
-        fontSize: `calc(.83vw * ${scale})`,
-        lineHeight: `calc(1vw * ${scale})`,
-        display: "inline-flex",
-        justifyContent: "center",
-        alignItems: "center",
-        alignContent: "center",
-        textAlign: "center",
-        minHeight: `calc(2.2vw * ${scale})`,
-        maxHeight: `calc(2.2vw * ${scale})`,
-
-        minWidth: `calc(4.2vw * ${scale})`,
-        maxWidth: `calc(4.2vw * ${scale})`,
-        zIndex: 10,
-
-        backgroundColor: "selectedHomeTab.main",
-        color: "text.primary",
-        textTransform: "initial",
-      },
-      wrapper: {
-        textTransform: "initial",
+      "&.Mui-focusVisible": {
+        outline: "2px solid var(--tezex-text)",
+        outlineOffset: "-4px",
       },
     },
-
-    slippageInput: {
-      box: {
-        "&.MuiBox-root": {
-          paddingTop: `calc(.28vw * ${scale})`,
-          display: "inline-flex",
-          position: "relative",
-          flexDirection: "row",
-          // minWidth: "4ch",
-          //maxWidth: "6ch",
-          alignItems: "baseline",
-          justifyContent: "center",
-          alignContent: "center",
-          //justifyContent: "space-between",
-        },
+  },
+  slippageTabSelected: {
+    "&.MuiButtonBase-root": {
+      color: "var(--tezex-action-text)",
+      "&:hover": { color: "var(--tezex-action-text)" },
+      "&.Mui-disabled": {
+        color: "var(--tezex-action-text)",
+        opacity: 0.72,
       },
-      inputProps: {
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-      },
-      endAdornment: {
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        right: `calc(.7vw * ${scale})`,
-        padding: "0px 0px 0px 0px",
-      },
-      "& .MuiButtonBase-root": {
-        zIndex: 3,
-      },
-      "& .MuiInputAdornment-root": {
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        alignContent: "center",
-        position: "relative",
-        bottom: `calc(.13vw * ${scale})`,
-
-        //paddingRight: `calc(.13vw * ${scale})`,
-        paddingLeft: "0%",
-        marginRight: "2%", //`calc(.53vw * ${scale})`,
-      },
-
-      "& .MuiTypography-root": {
-        fontFamily: "Inter",
-        fontStyle: "normal",
-        fontWeight: "500",
-
-        fontSize: `calc(.83vw * ${scale})`,
-        lineHeight: `calc(1vw * ${scale})`,
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        alignContent: "center",
-        textAlign: "center",
-      },
-
-      "& .MuiFormControl-root": {
-        display: "flex",
-
-        alignItems: "center",
-        justifyContent: "center",
-        alignContent: "center",
-        textAlign: "center",
-      },
-
-      "& .MuiInputBase-root": {
-        paddingTop: "12%",
-        fontFamily: "Inter",
-        fontStyle: "normal",
-        fontWeight: "500",
-        fontSize: `calc(.83vw * ${scale})`,
-        lineHeight: `calc(1vw * ${scale})`,
-        width: "6ch",
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        alignContent: "center",
-        textAlign: "center",
-
-        zIndex: 1,
-
-        color: "text.primary",
-        textTransform: "initial",
+      "&.Mui-focusVisible": {
+        outlineColor: "var(--tezex-panel)",
       },
     },
-  };
-};
+  },
+  slippageInput: {
+    width: "100%",
+    minWidth: 0,
+    height: "28px",
+    minHeight: "28px",
+    maxHeight: "28px",
+    margin: 0,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+    boxSizing: "border-box",
+    zIndex: 1,
+    "& .MuiInputBase-root": {
+      margin: 0,
+    },
+    "& .MuiInputBase-input": {
+      minWidth: 0,
+      height: "28px",
+      minHeight: "28px",
+      maxHeight: "28px",
+      padding: 0,
+      boxSizing: "border-box",
+      color: "var(--tezex-action-text)",
+      WebkitTextFillColor: "var(--tezex-action-text)",
+      fontFamily: "Inter",
+      fontWeight: 700,
+      fontSize: "11px",
+      lineHeight: 1,
+      textAlign: "right",
+    },
+  },
+  slippageInputProps: {
+    width: "100%",
+    height: "28px",
+    minHeight: "28px",
+    maxHeight: "28px",
+    padding: "0 9px",
+    margin: 0,
+    overflow: "hidden",
+    boxSizing: "border-box",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    color: "var(--tezex-action-text)",
+    background: "transparent",
+    borderRadius: "999px",
+  },
+  slippageEndAdornment: {
+    height: "28px",
+    maxHeight: "28px",
+    marginLeft: "2px",
+    color: "var(--tezex-action-text)",
+    "& .MuiTypography-root": {
+      color: "inherit",
+      fontFamily: "Inter",
+      fontWeight: 700,
+      fontSize: "11px",
+      lineHeight: 1,
+    },
+  },
+});
 
-export default style;
+export const darkStyle = segmentedSlippageStyle;
+
+export default segmentedSlippageStyle;

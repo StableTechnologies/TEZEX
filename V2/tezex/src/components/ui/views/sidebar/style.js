@@ -2,14 +2,15 @@
 const style = (theme, scale = 1) => {
   return {
     drawer: {
-      width: "60vw",
+      width: "min(88vw, 360px)",
       flexShrink: 0,
       "& .MuiDrawer-paper": {
-        width: "60vw",
+        width: "min(88vw, 360px)",
         boxSizing: "border-box",
-        backgroundColor: theme.palette.primary.main,
-        boxShadow: `0px 0px calc(0.7vw * ${scale}) 0px rgba(0,0,0,0.15)`,
-        borderRight: "0px",
+        backgroundColor: "var(--tezex-panel)",
+        color: "var(--tezex-text)",
+        boxShadow: "var(--tezex-menu-shadow)",
+        borderLeft: "1px solid var(--tezex-line)",
       },
     },
     drawerClosed: {
@@ -21,21 +22,43 @@ const style = (theme, scale = 1) => {
     menuButton: {
       padding: 0,
       gap: 1,
+      color: "var(--tezex-text)",
     },
     homeItem: {
-      paddingTop: "10%",
+      paddingTop: "8px",
+    },
+    utilityItem: {
+      padding: "6px 16px 14px",
+    },
+    utilityPanel: {
+      width: "100%",
+      padding: "14px",
+      background: "var(--tezex-panel-subtle)",
+      border: "1px solid var(--tezex-line)",
+      borderRadius: "16px",
+    },
+    utilityLabel: {
+      marginBottom: "10px",
+      color: "var(--tezex-muted)",
+      fontSize: "10px",
+      fontWeight: 700,
+      letterSpacing: "0.16em",
+    },
+    walletControl: {
+      width: "100%",
+      "& .MuiButtonBase-root": { width: "100%" },
     },
     listItem: {
-      backgroundColor: theme.palette.primary.main,
+      backgroundColor: "var(--tezex-panel)",
       "& .MuiButtonBase-root": {
-        color: theme.palette.text.disabled,
+        color: "var(--tezex-muted)",
         "&:hover": {
-          backgroundColor: theme.palette.primary.main,
-          color: theme.palette.text.primary,
+          backgroundColor: "var(--tezex-hover)",
+          color: "var(--tezex-text)",
         },
         "&.Mui-selected": {
-          backgroundColor: theme.palette.primary.main,
-          color: theme.palette.text.primary,
+          backgroundColor: "var(--tezex-hover)",
+          color: "var(--tezex-text)",
         },
       },
     },
@@ -48,7 +71,8 @@ const style = (theme, scale = 1) => {
     listItemText: {
       textAlign: "right",
       "& .MuiTypography-root": {
-        fontSize: `calc(3vw * ${scale})`,
+        fontSize: "14px",
+        fontWeight: 600,
       },
     },
     swapButton: {
@@ -58,7 +82,7 @@ const style = (theme, scale = 1) => {
       textAlign: "right",
       paddingRight: 4,
       "& .MuiTypography-root": {
-        fontSize: `calc(2.9vw * ${scale})`,
+        fontSize: "14px",
       },
     },
     liquidityButton: {
@@ -68,7 +92,7 @@ const style = (theme, scale = 1) => {
       textAlign: "right",
       paddingRight: 4,
       "& .MuiTypography-root": {
-        fontSize: `calc(2.9vw * ${scale})`,
+        fontSize: "14px",
       },
     },
     nestedButton: {
@@ -78,7 +102,7 @@ const style = (theme, scale = 1) => {
       textAlign: "right",
       paddingRight: 7,
       "& .MuiTypography-root": {
-        fontSize: `calc(2.8vw * ${scale})`,
+        fontSize: "13px",
       },
     },
     logo: {
@@ -86,6 +110,7 @@ const style = (theme, scale = 1) => {
       justifyContent: "center",
       alignItems: "center",
       width: "100%",
+      filter: "var(--tezex-logo-filter)",
       "@media (max-width: 900px) and (orientation: landscape)": {
         display: "flex",
       },

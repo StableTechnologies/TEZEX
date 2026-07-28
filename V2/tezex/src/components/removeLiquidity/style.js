@@ -1,237 +1,149 @@
 // eslint-disable-next-line
 const style = (theme, scale = 1) => {
   return {
-    wallet: {
-      width: `calc(28.33vw * ${scale})`,
-      height: `calc(4.16vw * ${scale})`,
-
-      position: "absolute",
-      bottom: "0%",
-      justifyContent: "center",
-      paddingBottom: `calc(2.22vw * ${scale})`,
-    },
-    useMax: {
-      "&.MuiButtonBase-root": {
-        marginLeft: "0px",
-
-        justifyContent: "flex-start",
-        paddingLeft: `calc(1.11vw * ${scale})`,
-      },
-      "&.MuiTouchRipple-root": {
-        width: `calc(2vw * ${scale})`,
-      },
-    },
-    useMaxTypographyDisabled: {
-      fontSize: `calc(.97vw * ${scale})`,
-      lineHeight: `calc(1.176vw * ${scale})`,
-      color: "#999999;",
-    },
-    useMaxTypographyEnabled: {
-      fontSize: `calc(.97vw * ${scale})`,
-      lineHeight: `calc(1.176vw * ${scale})`,
-      color: "#00A0E4",
-    },
-    cardContentBox: {
+    root: {
+      width: "100%",
+      maxWidth: "760px",
+      margin: "0 auto",
       display: "flex",
-      flexDirection: "row",
-      alignItems: "center",
-
-      paddingTop: `calc(4vw * ${scale})`,
-      paddingRight: `calc(1vw * ${scale})`,
-
-      // spacing between input and button
-      gap: `calc(0.5vw * ${scale})`,
-    },
-    headerTypography: {
-      fontSize: `calc(1.4vw * ${scale})`,
-    },
-    cardHeader: {
-      paddingLeft: `calc(2.22vw * ${scale})`,
-      paddingTop: `calc(2.22vw * ${scale})`,
-      fontSize: `calc(1vw * ${scale})`,
-      textAlign: "left",
-    },
-    cardcontent: {
-      "&.MuiCardContent-root": {
-        display: "flex",
-        flexDirection: "column",
-        paddingLeft: `calc(2.22vw * ${scale})`,
-        paddingRight: `calc(2.22vw * ${scale})`,
-      },
-    },
-    cardAction: {
       justifyContent: "center",
-    },
-    slippageContainer: {
-      background: "black",
-      flexDirection: "row",
-      position: "absolute",
-      zIndex: 5,
-      display: "flex",
-      alignItems: "center",
-      minWidth: 408,
-      bottom: "17%",
-      "& .MuiGrid2-root": {},
-    },
-
-    slippageComponent: {
-      "& .MuiGrid2-root": {},
-    },
-    slippage: {
-      text: {},
-    },
-
-    input1: {
-      position: "relative",
-
-      "& .MuiFormControl-root": {
-        width: `calc(21.45vw * ${scale})`,
-        height: `calc(3.8vw * ${scale})`,
-      },
+      paddingBottom: { xs: "24px", md: "36px" },
     },
     card: {
+      width: "100%",
       overflow: "hidden",
-      position: "relative",
-      height: `calc(32.04vw * ${scale})`,
-      width: `calc(30.56vw * ${scale})`,
-      borderRadius: `calc(1.38vw * ${scale})`,
-      zIndex: 5,
-      background: "#FFFFFF",
-      border: "0.07vw solid #E1E1E1",
-
-      "&.MuiPaper-root": {
-        boxShadow: "0",
-      },
-      "& .MuiCardContent-root": {
-        padding: "8px",
-      },
+      color: "var(--tezex-text)",
+      background: "var(--tezex-panel)",
+      border: "1px solid var(--tezex-line)",
+      borderRadius: { xs: "20px", sm: "24px" },
+      boxShadow: "var(--tezex-shadow)",
+      "&.MuiPaper-root": { boxShadow: "var(--tezex-shadow)" },
     },
-    paper: {
-      background: "#F9F9F9",
-      borderRadius: "20px",
-      border: "1px solid #E1E1E1",
-      minHeight: "146px",
-      position: "relative",
-      bottom: "10%",
-      zIndex: -1,
-      marginBottom: "20px",
+    cardHeader: {
+      padding: { xs: "18px", sm: "20px 22px" },
+      borderBottom: "1px solid var(--tezex-line-soft)",
+      "& .MuiCardHeader-content": { width: "100%" },
     },
-    root: {
-      display: "flex",
-      position: "relative",
-      justifyContent: "center",
-    },
-    poolSelectorContainer: {
-      display: "flex",
+    headerContent: {
       width: "100%",
-      justifyContent: "center",
-      paddingLeft: `calc(2.22vw * ${scale})`,
-      paddingRight: `calc(2.22vw * ${scale})`,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: "18px",
+      "@media (max-width: 620px)": {
+        alignItems: "stretch",
+        flexDirection: "column",
+      },
     },
-
+    titleGroup: {
+      minWidth: 0,
+      display: "flex",
+      flexDirection: "column",
+      gap: "8px",
+    },
+    eyebrow: {
+      color: "var(--tezex-muted)",
+      fontSize: "10px",
+      fontWeight: 700,
+      letterSpacing: "0.18em",
+      lineHeight: 1.2,
+    },
     poolSelector: {
-      minWidth: `calc(10.5vw * ${scale})`,
+      width: { xs: "100%", sm: "220px" },
+      minWidth: { xs: 0, sm: "220px" },
+      flexShrink: 0,
+    },
+    cardcontent: {
+      padding: { xs: "16px", sm: "20px" },
+      "&.MuiCardContent-root:last-child": {
+        paddingBottom: { xs: "16px", sm: "20px" },
+      },
+    },
+    cardContentBox: {
+      display: "grid",
+      gridTemplateColumns: "minmax(0, 1fr) auto",
+      alignItems: "center",
+      gap: "12px",
+      "@media (max-width: 440px)": {
+        gridTemplateColumns: "minmax(0, 1fr)",
+      },
+    },
+    input1: {
       width: "100%",
-
-      "& .MuiSelect-select": {
-        fontSize: `calc(0.75vw * ${scale})`,
-        paddingY: `calc(0.6vw * ${scale})`,
-        paddingX: `calc(0.9vw * ${scale})`,
+      minWidth: 0,
+    },
+    useMax: {
+      minWidth: "78px",
+      minHeight: "36px",
+      padding: "0 14px",
+      color: "var(--tezex-text-secondary)",
+      background: "var(--tezex-panel-subtle)",
+      border: "1px solid var(--tezex-line)",
+      borderRadius: "999px",
+      textTransform: "none",
+      "&:hover": {
+        color: "var(--tezex-text)",
+        background: "var(--tezex-hover)",
+        borderColor: "var(--tezex-line-strong)",
       },
-
-      "& .MuiOutlinedInput-root": {
-        height: `calc(2.6vw * ${scale})`,
-        backgroundColor: "#FAFAFA",
-        border: "1px solid #E1E1E1",
-        transition: "all 0.2s ease",
-        textAlign: "start",
-
-        "&:hover": {
-          backgroundColor: "#F5F5F5",
-          borderColor: "#CCCCCC",
-        },
-
-        "&.Mui-focused": {
-          backgroundColor: "#FFFFFF",
-          borderColor: "#999999",
-        },
-      },
-
-      // Mobile
-      [theme.breakpoints.down("md")]: {
-        width: "100%",
-        maxWidth: "100%",
-
-        "& .MuiSelect-select": {
-          fontSize: `calc(2vw * ${scale})`,
-          paddingY: `calc(1.5vw * ${scale})`,
-          paddingX: `calc(2vw * ${scale})`,
-        },
-
-        "& .MuiOutlinedInput-root": {
-          minHeight: `calc(3vw * ${scale})`,
-        },
+      "@media (max-width: 440px)": { justifySelf: "end" },
+    },
+    useMaxTypographyDisabled: {
+      color: "inherit",
+      fontSize: "11px",
+      fontWeight: 700,
+    },
+    useMaxTypographyEnabled: {
+      color: "var(--tezex-action-text)",
+      fontSize: "11px",
+      fontWeight: 700,
+    },
+    useMaxActive: {
+      color: "var(--tezex-action-text)",
+      background: "var(--tezex-action)",
+      borderColor: "var(--tezex-action)",
+      "&:hover": {
+        color: "var(--tezex-action-text)",
+        background: "var(--tezex-action-hover)",
       },
     },
     receiveInfo: {
-      marginTop: `calc(0.6vw * ${scale})`,
-      paddingLeft: `calc(0.3vw * ${scale})`,
-      paddingRight: `calc(2.22vw * ${scale})`,
+      marginTop: "14px",
+      padding: "14px 16px",
       display: "flex",
-      justifyContent: "flex-start",
-      flexDirection: "column",
+      alignItems: "center",
+      background: "var(--tezex-panel-subtle)",
+      border: "1px solid var(--tezex-line-soft)",
+      borderRadius: "15px",
     },
-
     receiveText: {
-      display: "inline-flex",
-      fontSize: `calc(0.97vw * ${scale})`,
-      fontWeight: "400",
-      lineHeight: `calc(1.18vw * ${scale})`,
-      color: "#666",
-      alignItems: "flex-start",
-      flexWrap: "wrap",
-      gap: `calc(0.3vw * ${scale})`,
-      marginBottom: `calc(0.5vw * ${scale})`,
-      receiveAmountGap: `calc(0.4vw * ${scale})`,
-      flexDirection: "column",
-      receiveTokenGap: `calc(0.5vw * ${scale})`,
+      color: "var(--tezex-muted)",
+      fontFamily: '"Red Hat Mono", monospace',
+      fontSize: "11px",
+      lineHeight: 1.5,
     },
     receiveTokenAmount: {
-      fontSize: "0.8rem",
-      [theme.breakpoints.up("lg")]: {
-        fontSize: "1rem",
-      },
+      color: "var(--tezex-text-secondary)",
+      fontFamily: '"Red Hat Mono", monospace',
+      fontSize: "11px",
+      fontWeight: 600,
     },
-
     receiveIcons: {
-      width: `calc(1.2vw * ${scale})`,
-      height: `calc(1.2vw * ${scale})`,
-      marginLeft: `calc(0.3vw * ${scale})`,
-      marginRight: `calc(0.1vw * ${scale})`,
-      maxWidth: 24,
-      maxHeight: 24,
-      minWidth: 16,
-      minHeight: 16,
+      width: "18px",
+      height: "18px",
+      margin: "0 5px",
+      objectFit: "contain",
     },
     receivePlus: {
-      paddingLeft: `calc(0.3vw * ${scale})`,
-      paddingRight: `calc(0.1vw * ${scale})`,
+      padding: "0 5px",
+      color: "var(--tezex-muted)",
     },
-
-    [theme.breakpoints.down("md")]: {
-      receiveInfo: {
-        marginTop: `calc(3vw * ${scale})`,
-      },
-
-      receiveText: {
-        fontSize: `calc(2vw * ${scale})`,
-        lineHeight: `calc(2.5vw * ${scale})`,
-      },
-
-      receiveAmount: {
-        fontSize: `calc(2vw * ${scale})`,
-        lineHeight: `calc(2.5vw * ${scale})`,
-      },
+    cardAction: {
+      padding: { xs: "0 16px 16px", sm: "0 20px 20px" },
+      display: "block",
+    },
+    wallet: {
+      width: "100%",
     },
   };
 };

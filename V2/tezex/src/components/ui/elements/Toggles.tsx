@@ -13,8 +13,12 @@ export interface IToggle {
 export const SwapUpDownToggle: FC<IToggle> = (props) => {
   const styles = useStyles(style, props.scalingKey);
   return (
-    <Button sx={styles.button} onClick={props.toggle}>
-      <img style={styles.icon} src={swapIcon} alt="swapIcon" />
+    <Button
+      sx={styles.button}
+      onClick={props.toggle}
+      aria-label="Reverse swap direction"
+    >
+      <img style={styles.icon} src={swapIcon} alt="" />
     </Button>
   );
 };
