@@ -13,9 +13,10 @@ import useStyles from "../../hooks/styles";
 interface NavTabProps extends Omit<TabProps, "onClick"> {
   href: string;
   scalingKey?: string;
+  onNavigate?: (href: string) => void;
 }
 
-function NavTab({ href, scalingKey, ...tabProps }: NavTabProps) {
+function NavTab({ href, scalingKey, onNavigate, ...tabProps }: NavTabProps) {
   const navigate = useNavigate();
   const styles = useStyles(style, scalingKey);
   return (
@@ -25,7 +26,8 @@ function NavTab({ href, scalingKey, ...tabProps }: NavTabProps) {
       sx={styles.navHome.tab}
       onClick={(event) => {
         event.preventDefault();
-        navigate(href);
+        if (onNavigate) onNavigate(href);
+        else navigate(href);
       }}
     />
   );
@@ -33,6 +35,8 @@ function NavTab({ href, scalingKey, ...tabProps }: NavTabProps) {
 
 export interface INavHome {
   scalingKey?: string;
+  onNavigate?: (href: string) => void;
+  isTransitioning?: boolean;
 }
 export const NavHome: FC<INavHome> = (props) => {
   const styles = useStyles(style, props.scalingKey);
@@ -68,12 +72,21 @@ export const NavHome: FC<INavHome> = (props) => {
       sx={styles.navHome.root}
       onChange={handleChange}
       aria-label="nav-home-tabs"
+      aria-busy={props.isTransitioning}
     >
-      <NavTab label="Swap" href="/home/swap" scalingKey={props.scalingKey} />
+      <NavTab
+        label="Swap"
+        href="/home/swap"
+        scalingKey={props.scalingKey}
+        onNavigate={props.onNavigate}
+        disabled={props.isTransitioning}
+      />
       <NavTab
         label="Liquidity"
         href={liquidityHref()}
         scalingKey={props.scalingKey}
+        onNavigate={props.onNavigate}
+        disabled={props.isTransitioning}
       />
     </Tabs>
   );

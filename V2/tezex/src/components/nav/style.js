@@ -145,6 +145,13 @@ const style = (theme, scale = 1) => {
           "&.Mui-selected": {
             color: "var(--tezex-action-text)",
           },
+          "&.Mui-disabled": {
+            opacity: 1,
+            color: "var(--tezex-muted)",
+          },
+          "&.Mui-selected.Mui-disabled": {
+            color: "var(--tezex-action-text)",
+          },
           "&.Mui-selected.Mui-focusVisible": {
             outlineColor: "var(--tezex-panel)",
           },
