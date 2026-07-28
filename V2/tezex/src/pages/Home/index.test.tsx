@@ -125,7 +125,16 @@ test("moves outgoing and incoming workspaces on one continuous track", async () 
   const finished = new Promise<void>((resolve) => {
     finishTransition = resolve;
   });
-  const cancel = jest.fn();
+  const snapshotPresentWhenCancelled: boolean[] = [];
+  const incomingTransformsWhenCancelled: string[] = [];
+  const cancel = jest.fn(() => {
+    snapshotPresentWhenCancelled.push(
+      Boolean(document.querySelector('[data-workspace-snapshot="true"]'))
+    );
+    incomingTransformsWhenCancelled.push(
+      screen.getByTestId("trading-workspace").style.transform
+    );
+  });
   const animate = jest.fn(() => ({ finished, cancel } as unknown as Animation));
   HTMLElement.prototype.animate = animate;
 
@@ -173,5 +182,10 @@ test("moves outgoing and incoming workspaces on one continuous track", async () 
   expect(
     document.querySelector('[data-workspace-snapshot="true"]')
   ).not.toBeInTheDocument();
+  expect(snapshotPresentWhenCancelled).toEqual([false, false]);
+  expect(incomingTransformsWhenCancelled).toEqual([
+    "translate3d(0, 0, 0)",
+    "translate3d(0, 0, 0)",
+  ]);
   expect(screen.getByRole("button", { name: "Swap" })).toBeEnabled();
 });

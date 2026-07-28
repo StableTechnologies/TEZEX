@@ -101,9 +101,14 @@ export const Home: FC<IHome> = (props) => {
         if (cleanedUp) return;
         cleanedUp = true;
 
-        animations.forEach((animation) => animation.cancel());
+        // Remove the outgoing copy and pin the incoming panel to its final
+        // position before cancelling the fill-mode animations. Cancelling
+        // first briefly restores their pre-animation styles, which can expose
+        // the workspace we just slid away for a single frame.
         outgoingSnapshot.remove();
         viewport.style.height = "";
+        incomingPanel?.style.setProperty("transform", "translate3d(0, 0, 0)");
+        animations.forEach((animation) => animation.cancel());
         incomingPanel?.style.removeProperty("transform");
         incomingPanel?.style.removeProperty("will-change");
         document.documentElement.style.overflowX = previousOverflowX;
