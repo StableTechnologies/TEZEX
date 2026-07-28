@@ -12,6 +12,8 @@
     "@mui/icons-material": "^5.11.0",
     "@mui/material": "^5.11.0",
     "@mui/system": "^5.11.4",
+    "@taquito/http-utils": "^24.3.0",
+    "@taquito/rpc": "^24.3.0",
     "@taquito/taquito": "^24.3.0",
     "async-mutex": "^0.4.0",
     "bignumber.js": "^9.1.0",

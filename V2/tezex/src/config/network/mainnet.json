@@ -1,5 +1,7 @@
 {
   "tezosServer": "https://rpc.tzkt.io/mainnet",
+  "rpcFallbacks": ["https://tezos-mainnet.octez.io"],
+  "chainId": "NetXdQprcVkpaWU",
   "pools": [
     {
       "id": "xtz-tzbtc-sirius",

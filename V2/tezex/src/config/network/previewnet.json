@@ -1,5 +1,7 @@
 {
   "tezosServer": "https://michelson.previewnet.tezosx.nomadic-labs.com",
+  "rpcFallbacks": [],
+  "chainId": "NetXY2oPPzkxUW1",
   "tradingAvailability": {
     "enabled": false,
     "title": "Previewnet contracts require redeployment",

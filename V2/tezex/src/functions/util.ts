@@ -53,11 +53,8 @@ export function makeEstimationToolkit(
   toolkit: TezosToolkit,
   userAddress: string
 ): TezosToolkit {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const rpcUrl = (toolkit.rpc as unknown as Record<string, unknown>)[
-    "url"
-  ] as string;
-  const est = new TezosToolkit(rpcUrl);
+  // Reuse the same RPC client so estimates inherit endpoint failover behavior.
+  const est = new TezosToolkit(toolkit.rpc);
   est.setPackerProvider(new MichelCodecPacker());
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   est.setProvider({ signer: new EstimationSigner(userAddress) as any });
