@@ -40,6 +40,7 @@ const style = (theme, scale = 1) => {
       display: "flex",
       flexDirection: "column",
       gap: "8px",
+      textAlign: "left",
     },
     eyebrow: {
       color: "var(--tezex-muted)",
