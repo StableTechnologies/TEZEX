@@ -93,9 +93,9 @@ const style = (theme, scale = 1) => {
     swapToggle: {
       position: "relative",
       zIndex: 3,
-      width: "42px",
-      height: "26px",
-      margin: "-2px auto 8px",
+      width: "44px",
+      height: "44px",
+      margin: "0 auto",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
