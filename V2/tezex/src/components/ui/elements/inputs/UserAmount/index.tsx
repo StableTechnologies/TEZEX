@@ -25,8 +25,6 @@ export interface IAmountField {
 }
 
 const AmountField: FC<IAmountField> = (props) => {
-  if (props.loading) return <div />;
-
   return (
     <TokenAmountInput
       component={props.component}
