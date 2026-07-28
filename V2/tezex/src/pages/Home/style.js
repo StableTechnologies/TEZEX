@@ -31,6 +31,12 @@ const style = (theme, scale = 1) => {
       width: "100%",
       padding: { xs: "0 16px", md: "0 28px" },
     },
+    contentViewport: {
+      width: "100%",
+    },
+    modePanel: {
+      width: "100%",
+    },
   };
 };
 
