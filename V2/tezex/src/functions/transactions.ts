@@ -20,32 +20,139 @@ import {
   PartialTezosTransactionOperation,
   TezosOperationType,
 } from "@airgap/beacon-sdk";
+import { SubmittedOperationError } from "./failures";
+import { isValidSlippage } from "./transactionSafety";
 
 const MUTEZ_IN_TEZ = 1_000_000;
+
+export interface TransactionLifecycle {
+  onSubmitted?: (opHash: string) => void;
+}
+
+type SubmittedOperation = {
+  confirmation: (confirmations?: number) => Promise<unknown>;
+  operationResults: () => Promise<unknown>;
+};
+
+const asRecord = (value: unknown): Record<string, unknown> | undefined =>
+  typeof value === "object" && value !== null
+    ? (value as Record<string, unknown>)
+    : undefined;
+
+const readOperationStatus = (result: unknown): string | undefined => {
+  const metadata = asRecord(asRecord(result)?.metadata);
+  const operationResult = asRecord(metadata?.operation_result);
+  return typeof operationResult?.status === "string"
+    ? operationResult.status
+    : undefined;
+};
+
+const getOperationState = async (
+  operation: SubmittedOperation
+): Promise<"applied" | "failed" | "unknown"> => {
+  try {
+    const results = await operation.operationResults();
+    const statuses = Array.isArray(results)
+      ? results
+          .map(readOperationStatus)
+          .filter((status): status is string => Boolean(status))
+      : [];
+
+    if (statuses.some((status) => status !== "applied")) return "failed";
+    if (statuses.length > 0) return "applied";
+  } catch (_error) {
+    // A secondary status lookup must never hide the original confirmation
+    // error. Falling through keeps the operation in the safe unknown state.
+  }
+
+  return "unknown";
+};
+
+const confirmSubmittedOperation = async (
+  opHash: string,
+  kit: ExecutionKit,
+  lifecycle?: TransactionLifecycle
+): Promise<void> => {
+  lifecycle?.onSubmitted?.(opHash);
+
+  let operation: SubmittedOperation;
+  try {
+    operation = await kit.toolkit.operation.createOperation(opHash);
+  } catch (error) {
+    throw new SubmittedOperationError(opHash, "unknown", error);
+  }
+
+  try {
+    await operation.confirmation(1);
+    const state = await getOperationState(operation);
+    if (state === "failed") {
+      throw new SubmittedOperationError(
+        opHash,
+        "failed",
+        new Error("The operation was included with a non-applied status.")
+      );
+    }
+    if (state !== "applied") {
+      throw new SubmittedOperationError(
+        opHash,
+        "unknown",
+        new Error(
+          "The operation was confirmed, but its applied status was unavailable."
+        )
+      );
+    }
+  } catch (error) {
+    if (error instanceof SubmittedOperationError) throw error;
+
+    const state = await getOperationState(operation);
+    if (state === "applied") return;
+    throw new SubmittedOperationError(
+      opHash,
+      state === "failed" ? "failed" : "unknown",
+      error
+    );
+  }
+};
+
+const assertSafeSlippage = (transaction: Transaction): void => {
+  if (!isValidSlippage(transaction.slippage)) {
+    throw new Error("The selected slippage tolerance is outside safe limits.");
+  }
+};
 
 export async function processTransaction(
   transaction: Transaction,
   userAddress: string,
-  kit: ExecutionKit
+  kit: ExecutionKit,
+  lifecycle?: TransactionLifecycle
 ): Promise<SuccessRecord> {
+  assertSafeSlippage(transaction);
   const adapter = PoolRegistry.getAdapter(transaction.poolId);
 
   switch (transaction.component) {
     case TransactingComponent.SWAP:
-      return await swapTransaction(transaction, userAddress, kit, adapter);
+      return await swapTransaction(
+        transaction,
+        userAddress,
+        kit,
+        adapter,
+        lifecycle
+      );
     case TransactingComponent.ADD_LIQUIDITY:
       return await addLiquidityTransaction(
         transaction,
         userAddress,
         kit,
-        adapter
+        adapter,
+        lifecycle
       );
     case TransactingComponent.REMOVE_LIQUIDITY:
       return await removeLiquidityTransaction(
         transaction,
         userAddress,
         kit,
-        adapter
+        adapter,
+        lifecycle
       );
   }
 }
@@ -54,7 +161,8 @@ const swapTransaction = async (
   transaction: Transaction,
   userAddress: string,
   kit: ExecutionKit,
-  adapter: IPoolAdapter
+  adapter: IPoolAdapter,
+  lifecycle?: TransactionLifecycle
 ): Promise<SuccessRecord> => {
   const inputToken = transaction.sendAsset[0].name as Token;
   const inputAmount = transaction.sendAmount[0].mantissa;
@@ -70,6 +178,8 @@ const swapTransaction = async (
     slippage
   );
 
+  await confirmSubmittedOperation(opHash, kit, lifecycle);
+
   return {
     opHash,
     tx: transaction,
@@ -80,7 +190,8 @@ const addLiquidityTransaction = async (
   transaction: Transaction,
   userAddress: string,
   kit: ExecutionKit,
-  adapter: IPoolAdapter
+  adapter: IPoolAdapter,
+  lifecycle?: TransactionLifecycle
 ): Promise<SuccessRecord> => {
   if (!transaction.sendAmount[1] || !transaction.sendAsset[1]) {
     console.log("addLiquidity requires send Pair");
@@ -112,6 +223,8 @@ const addLiquidityTransaction = async (
     slippage
   );
 
+  await confirmSubmittedOperation(opHash, kit, lifecycle);
+
   return {
     opHash,
     tx: transaction,
@@ -122,15 +235,19 @@ const removeLiquidityTransaction = async (
   transaction: Transaction,
   userAddress: string,
   kit: ExecutionKit,
-  adapter: IPoolAdapter
+  adapter: IPoolAdapter,
+  lifecycle?: TransactionLifecycle
 ): Promise<SuccessRecord> => {
   const lpTokenAmount = transaction.sendAmount[0].mantissa;
 
   const opHash = await adapter.executeRemoveLiquidity(
     kit,
     userAddress,
-    lpTokenAmount
+    lpTokenAmount,
+    transaction.slippage
   );
+
+  await confirmSubmittedOperation(opHash, kit, lifecycle);
 
   return {
     opHash,

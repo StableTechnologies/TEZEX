@@ -90,7 +90,10 @@ export enum TransactionStatus {
   MODIFIED = "Estimating",
   INSUFFICIENT_BALANCE = "Insufficient Balance",
   SUFFICIENT_BALANCE = "Sufficient Balance",
-  PENDING = "In Progress",
+  INVALID_SLIPPAGE = "Check Slippage",
+  PENDING = "Awaiting Wallet",
+  SUBMITTED = "Confirming",
+  CONFIRMATION_UNKNOWN = "Confirmation Unknown",
   COMPLETED = "Completed",
   FAILED = "Failed",
 }
@@ -117,12 +120,21 @@ export enum Errors {
   GENERAL = "Network Issues",
   TRANSACTION_FAILED = "An error occurred that prevented the transaction from completing. Please try again. ",
   SLIPPAGE = " This transaction will not succeed due to the network price movement. You can try increasing your slippage percentage.",
+  WALLET_REJECTED = "The request was declined in your wallet.",
+  INSUFFICIENT_FUNDS = "Your wallet did not have enough spendable balance to complete the transaction.",
+  NETWORK_CONFIRMATION = "TEZEX did not receive confirmation from the Tezos network.",
   LB_CONTRACT_STORAGE = "An error was encountered when Querying Dex Storage",
   INTERNAL = "Internal Error",
 }
 
 export interface FailedRecord {
   reason: Errors;
+  detail?: string;
+  component?: TransactingComponent;
+  opHash?: string;
+  network?: NetworkType;
+  submitted?: boolean;
+  safeToRetry?: boolean;
 }
 
 export type ExecutionKit = {
@@ -156,6 +168,7 @@ export interface Transaction {
   slippage: number;
   receiveAssetBalance: Amount;
   transactionStatus: TransactionStatus;
+  operationHash?: string;
   lastModified: Date;
   locked: boolean;
 }

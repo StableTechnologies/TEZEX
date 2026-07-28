@@ -4,7 +4,7 @@ import { TezosToolkit } from "@taquito/taquito";
 
 import { Asset, Balance, TokenType } from "../types/general";
 import { balanceBuilder, getBalanceFromTzKT } from "./util";
-import { DAppClient, NetworkType } from "@airgap/beacon-dapp";
+import { BeaconEvent, DAppClient, NetworkType } from "@airgap/beacon-dapp";
 
 export async function getBalance(
   toolkit: TezosToolkit,
@@ -74,6 +74,13 @@ export default async function connectWallet(
 
   let err = false;
   try {
+    await dAppClient.subscribeToEvent(
+      BeaconEvent.ACTIVE_ACCOUNT_SET,
+      async (account) => {
+        walletInfo.setAddress(account?.address ?? null);
+        if (!account) walletInfo.setClient(null);
+      }
+    );
     await dAppClient.requestPermissions();
     const activeAccount = await dAppClient.getActiveAccount();
     if (!activeAccount) {
