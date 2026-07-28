@@ -34,10 +34,12 @@ const style = (theme, scale = 1) => {
     contentViewport: {
       width: "100%",
       position: "relative",
+      isolation: "isolate",
     },
     modePanel: {
       width: "100%",
-      viewTransitionName: "tezex-trading-workspace",
+      position: "relative",
+      zIndex: 1,
     },
   };
 };
