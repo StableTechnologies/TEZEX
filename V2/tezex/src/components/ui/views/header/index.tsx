@@ -12,6 +12,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import Container from "@mui/material/Container";
+import { Link } from "react-router-dom";
 import style from "./style";
 import useStyles from "../../../../hooks/styles";
 import { NetworkSelector } from "../../elements/selectors/networkSelector/NetworkSelector";
@@ -39,7 +40,14 @@ export const Header: FC<IHeader> = (props) => {
           sx={styles.isMobile ? styles.toolbar.mobile : styles.toolbar}
         >
           <Box sx={styles.container}>
-            <Box component="img" sx={styles.logoLarge} src={logo} alt="TEZEX" />
+            <Box
+              component={Link}
+              to="/home/swap"
+              aria-label="TEZEX home"
+              sx={styles.logoLink}
+            >
+              <Box component="img" sx={styles.logoLarge} src={logo} alt="" />
+            </Box>
 
             <Box sx={styles.networkSelector}>
               <NetworkSelector />

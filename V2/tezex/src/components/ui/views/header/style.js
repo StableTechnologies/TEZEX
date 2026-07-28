@@ -46,6 +46,16 @@ const style = (theme, scale = 1) => {
       flexShrink: 0,
       "@media (min-width: 1200px)": { width: "144px" },
     },
+    logoLink: {
+      display: "flex",
+      flexShrink: 0,
+      borderRadius: "4px",
+      textDecoration: "none",
+      "&:focus-visible": {
+        outline: "2px solid var(--tezex-text-secondary)",
+        outlineOffset: "4px",
+      },
+    },
     container: {
       width: "100%",
       alignItems: "center",
