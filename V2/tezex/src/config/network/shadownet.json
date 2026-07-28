@@ -1,5 +1,10 @@
 {
   "tezosServer": "https://rpc.shadownet.teztnets.com",
+  "rpcFallbacks": [
+    "https://tezos-shadownet.octez.io",
+    "https://rpc.tzkt.io/shadownet"
+  ],
+  "chainId": "NetXsqzbfFenSTS",
   "pools": [
     {
       "id": "xtz-tzbtc-sirius",

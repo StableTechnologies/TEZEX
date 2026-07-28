@@ -8,6 +8,7 @@ import { MichelCodecPacker, TezosToolkit } from "@taquito/taquito";
 import { IPoolAdapter, PoolConfig } from "../types/pools";
 import { PoolRegistry } from "../adapters/poolRegistry";
 import { PoolDataCache } from "../utils/poolDataCache";
+import { createRpcToolkit } from "../functions/rpcFailover";
 import React from "react";
 export interface Address {
   name: string;
@@ -17,6 +18,8 @@ export type Assets = Asset[];
 
 export interface NetworkInfo {
   tezosServer: string;
+  rpcFallbacks: string[];
+  chainId: string;
   pools: PoolConfig[];
   assets: Assets;
   tradingAvailability?: {
@@ -72,7 +75,7 @@ export const NetworkProvider: React.FC<{ children: React.ReactNode }> = ({
     mainnet as NetworkInfo
   );
   const [toolkit, setToolkit] = useState<TezosToolkit>(
-    new TezosToolkit((mainnet as NetworkInfo).tezosServer)
+    createRpcToolkit(mainnet as NetworkInfo)
   );
   const [selectedPool, setSelectedPoolState] = useState<PoolConfig | null>(
     initialPool
@@ -99,7 +102,7 @@ export const NetworkProvider: React.FC<{ children: React.ReactNode }> = ({
     );
 
     // Create new toolkit for new network
-    const newToolkit = new TezosToolkit(newNetworkInfo.tezosServer);
+    const newToolkit = createRpcToolkit(newNetworkInfo);
     // Required, because TezLink Shadownet rpc does not support pack_data yet.
     newToolkit.setPackerProvider(new MichelCodecPacker());
 
