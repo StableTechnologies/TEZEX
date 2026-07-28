@@ -8,6 +8,8 @@ import useStyles from "../../../hooks/styles";
 export interface IToggle {
   toggle: () => Promise<void>;
   scalingKey?: string;
+  disabled?: boolean;
+  ariaLabel?: string;
 }
 
 export const SwapUpDownToggle: FC<IToggle> = (props) => {
@@ -16,7 +18,8 @@ export const SwapUpDownToggle: FC<IToggle> = (props) => {
     <Button
       sx={styles.button}
       onClick={props.toggle}
-      aria-label="Reverse swap direction"
+      disabled={props.disabled}
+      aria-label={props.ariaLabel ?? "Reverse swap direction"}
     >
       <img style={styles.icon} src={swapIcon} alt="" />
     </Button>

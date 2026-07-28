@@ -1,5 +1,4 @@
 import React, { FC, useState, useEffect, useCallback } from "react";
-import plusIcon from "../../assets/plusIcon.svg";
 
 import { Wallet } from "../wallet";
 import { NavLiquidity } from "../nav/NavLiquidity";
@@ -29,6 +28,7 @@ import Box from "@mui/material/Box";
 import { useTransaction } from "../../hooks/transaction";
 import { eq } from "lodash";
 import { PoolSelector } from "../ui/elements/PoolSelector";
+import { SwapUpDownToggle } from "../ui/elements/Toggles";
 import { getBalance } from "../../functions/beacon";
 import { BigNumber } from "bignumber.js";
 
@@ -114,6 +114,19 @@ export const AddLiquidity: FC<IAddLiquidity> = () => {
   const transact = useCallback(async () => {
     await walletOps.sendTransaction();
   }, [walletOps.sendTransaction]);
+
+  const swapDepositOrder = useCallback(async () => {
+    if (!canUpdate || loading || reloading) return;
+
+    const previousAssets = assets;
+    setAssets([assets[send2], assets[send1], assets[receive]]);
+    try {
+      await transactionOps.swapFields();
+    } catch (error) {
+      setAssets(previousAssets);
+      throw error;
+    }
+  }, [assets, canUpdate, loading, reloading, transactionOps.swapFields]);
 
   // callback to create new transaction
   const newTransaction = useCallback(async () => {
@@ -334,8 +347,13 @@ export const AddLiquidity: FC<IAddLiquidity> = () => {
                 />
               </Box>
 
-              <Box sx={styles.plusIconGrid} aria-hidden="true">
-                <Box component="img" src={plusIcon} sx={styles.plusIcon} />
+              <Box sx={styles.depositOrderToggle}>
+                <SwapUpDownToggle
+                  toggle={swapDepositOrder}
+                  scalingKey={scalingKey}
+                  disabled={!canUpdate || !isLoaded()}
+                  ariaLabel="Switch deposit token order"
+                />
               </Box>
 
               <Box sx={styles.input}>

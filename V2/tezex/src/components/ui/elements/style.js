@@ -127,10 +127,11 @@ const style = (theme, scale = 1) => {
     },
     icon: {
       padding: 0,
-      width: "16px",
-      height: "16px",
+      width: "18px",
+      height: "18px",
       filter: "var(--tezex-logo-filter)",
-      transition: "transform 180ms ease",
+      opacity: 0.82,
+      transition: "transform 180ms ease, opacity 180ms ease",
     },
 
     box: {
@@ -142,19 +143,26 @@ const style = (theme, scale = 1) => {
     },
 
     button: {
-      minWidth: "42px",
-      minHeight: "38px",
-      width: "42px",
-      height: "38px",
+      minWidth: "44px",
+      minHeight: "44px",
+      width: "44px",
+      height: "44px",
       padding: 0,
-      boxShadow: "var(--tezex-shadow)",
-      background: "var(--tezex-panel-subtle)",
-      border: "1px solid var(--tezex-line)",
-      borderRadius: "999px",
+      boxShadow: "none",
+      background: "transparent",
+      border: 0,
+      borderRadius: 0,
       "&:hover": {
-        background: "var(--tezex-hover)",
-        borderColor: "var(--tezex-line-strong)",
-        "& img": { transform: "rotate(180deg)" },
+        background: "transparent",
+        "& img": { transform: "rotate(180deg)", opacity: 1 },
+      },
+      "&:focus-visible": {
+        outline: "2px solid var(--tezex-line-strong)",
+        outlineOffset: "-6px",
+        borderRadius: "10px",
+      },
+      "&.Mui-disabled": {
+        opacity: 0.35,
       },
     },
   };
