@@ -14,6 +14,24 @@ import {
   useParams,
 } from "react-router-dom";
 import { Home } from ".";
+import { NetworkType } from "@airgap/beacon-sdk";
+
+const mockSwitchNetwork = jest.fn();
+let mockTradingAvailability:
+  | {
+      enabled: boolean;
+      title: string;
+      message: string;
+      statusUrl?: string;
+    }
+  | undefined;
+
+jest.mock("../../hooks/network", () => ({
+  useNetwork: () => ({
+    info: { tradingAvailability: mockTradingAvailability },
+    switchNetwork: mockSwitchNetwork,
+  }),
+}));
 
 jest.mock("../../components/nav", () => ({
   NavHome: ({
@@ -103,6 +121,8 @@ const originalAnimate = HTMLElement.prototype.animate;
 beforeEach(() => {
   window.matchMedia = jest.fn().mockReturnValue({ matches: false });
   delete (HTMLElement.prototype as Partial<HTMLElement>).animate;
+  mockTradingAvailability = undefined;
+  mockSwitchNetwork.mockReset();
 });
 
 afterEach(() => {
@@ -118,6 +138,28 @@ test("changes modes immediately when browser animation is unavailable", () => {
 
   expect(screen.getByTestId("location")).toHaveTextContent("/home/add");
   expect(screen.getByText("Liquidity workspace")).toBeInTheDocument();
+});
+
+test("shows a safe network notice instead of mounting trading on an unavailable network", () => {
+  mockTradingAvailability = {
+    enabled: false,
+    title: "Previewnet contracts require redeployment",
+    message: "The network reset cleared the previous contracts.",
+    statusUrl: "https://previewnet.example.com",
+  };
+
+  renderHome();
+
+  expect(screen.getByTestId("network-unavailable")).toHaveTextContent(
+    "Previewnet contracts require redeployment"
+  );
+  expect(screen.queryByText("Swap workspace")).not.toBeInTheDocument();
+  expect(
+    screen.getByRole("link", { name: "View Previewnet status" })
+  ).toHaveAttribute("href", "https://previewnet.example.com");
+
+  fireEvent.click(screen.getByRole("button", { name: "Return to Mainnet" }));
+  expect(mockSwitchNetwork).toHaveBeenCalledWith(NetworkType.MAINNET);
 });
 
 test("moves outgoing and incoming workspaces on one continuous track", async () => {

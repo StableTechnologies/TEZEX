@@ -68,7 +68,11 @@ export const NetworkSelector: FC = () => {
     try {
       const apiUrl = getTzktApiUrl(network.network);
 
-      const head = await fetch(`${apiUrl}/v1/head`).then((r) => r.json());
+      const headResponse = await fetch(`${apiUrl}/v1/head`);
+      if (!headResponse.ok) {
+        throw new Error(`TzKT head request failed (${headResponse.status})`);
+      }
+      const head = await headResponse.json();
 
       setStats({
         cycle: head.cycle,
@@ -79,9 +83,15 @@ export const NetworkSelector: FC = () => {
       setDisplayLevel(head.level);
       setBlockTimestamp(new Date(head.timestamp).getTime());
 
-      const cycle = await fetch(`${apiUrl}/v1/cycles/${head.cycle}`).then((r) =>
-        r.json()
-      );
+      const cycleResponse = await fetch(`${apiUrl}/v1/cycles/${head.cycle}`);
+      if (cycleResponse.status === 204) {
+        setCycleInfo(null);
+        return;
+      }
+      if (!cycleResponse.ok) {
+        throw new Error(`TzKT cycle request failed (${cycleResponse.status})`);
+      }
+      const cycle = await cycleResponse.json();
 
       setCycleInfo({
         index: cycle.index,

@@ -1,5 +1,11 @@
 {
   "tezosServer": "https://michelson.previewnet.tezosx.nomadic-labs.com",
+  "tradingAvailability": {
+    "enabled": false,
+    "title": "Previewnet contracts require redeployment",
+    "message": "The July 20 Previewnet reset cleared the previous TEZEX contracts. Trading is unavailable until the pools and tokens are redeployed and their new addresses are verified.",
+    "statusUrl": "https://previewnet.tezosx.nomadic-labs.com/"
+  },
   "pools": [
     {
       "id": "xtz-usdt-tezex",

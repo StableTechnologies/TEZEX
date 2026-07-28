@@ -19,6 +19,12 @@ export interface NetworkInfo {
   tezosServer: string;
   pools: PoolConfig[];
   assets: Assets;
+  tradingAvailability?: {
+    enabled: boolean;
+    title: string;
+    message: string;
+    statusUrl?: string;
+  };
 }
 
 export type NetworkMap = {
