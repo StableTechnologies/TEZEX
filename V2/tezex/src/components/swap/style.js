@@ -70,15 +70,6 @@ const style = (theme, scale = 1) => {
       letterSpacing: "-0.02em",
       lineHeight: 1.2,
     },
-    poolSelector: {
-      minWidth: { xs: "150px", sm: "174px" },
-      maxWidth: "190px",
-      "@media (max-width: 520px)": {
-        width: "100%",
-        minWidth: 0,
-        maxWidth: "none",
-      },
-    },
     cardContent: {
       padding: { xs: "16px", sm: "20px" },
       "&.MuiCardContent-root:last-child": {

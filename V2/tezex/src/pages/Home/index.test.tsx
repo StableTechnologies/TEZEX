@@ -117,6 +117,7 @@ const renderHome = () =>
   );
 
 const originalAnimate = HTMLElement.prototype.animate;
+const originalRequestAnimationFrame = window.requestAnimationFrame;
 
 beforeEach(() => {
   window.matchMedia = jest.fn().mockReturnValue({ matches: false });
@@ -127,6 +128,7 @@ beforeEach(() => {
 
 afterEach(() => {
   HTMLElement.prototype.animate = originalAnimate;
+  window.requestAnimationFrame = originalRequestAnimationFrame;
   delete document.documentElement.dataset.modeTransition;
   document.documentElement.style.overflowX = "";
 });
@@ -179,6 +181,11 @@ test("moves outgoing and incoming workspaces on one continuous track", async () 
   });
   const animate = jest.fn(() => ({ finished, cancel } as unknown as Animation));
   HTMLElement.prototype.animate = animate;
+  const animationFrames: FrameRequestCallback[] = [];
+  window.requestAnimationFrame = jest.fn((callback: FrameRequestCallback) => {
+    animationFrames.push(callback);
+    return animationFrames.length;
+  });
 
   renderHome();
   fireEvent.click(screen.getByRole("button", { name: "Liquidity" }));
@@ -229,5 +236,21 @@ test("moves outgoing and incoming workspaces on one continuous track", async () 
     "translate3d(0, 0, 0)",
     "translate3d(0, 0, 0)",
   ]);
+  expect(screen.getByTestId("trading-workspace")).toHaveStyle({
+    transform: "translate3d(0, 0, 0)",
+  });
+  expect(screen.getByRole("button", { name: "Swap" })).toBeDisabled();
+
+  act(() => animationFrames.shift()?.(0));
+
+  expect(screen.getByTestId("trading-workspace")).toHaveStyle({
+    transform: "translate3d(0, 0, 0)",
+  });
+
+  act(() => animationFrames.shift()?.(16));
+
+  expect(screen.getByTestId("trading-workspace")).not.toHaveStyle({
+    transform: "translate3d(0, 0, 0)",
+  });
   expect(screen.getByRole("button", { name: "Swap" })).toBeEnabled();
 });
