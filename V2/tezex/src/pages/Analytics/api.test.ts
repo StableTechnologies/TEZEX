@@ -2,7 +2,10 @@ import { Token } from "../../types/general";
 import { PoolConfig, PoolType } from "../../types/pools";
 import {
   buildSwapSeries,
+  calculateRemoveLiquidityValueXtz,
   calculateSwapVolumeXtz,
+  convertXtz,
+  formatDenominatedXtz,
   TzktTransaction,
 } from "./api";
 
@@ -79,5 +82,37 @@ describe("analytics calculations", () => {
     expect(series.Fees.reduce((sum, point) => sum + point.value, 0)).toBe(
       0.004
     );
+  });
+
+  it("derives removed liquidity value from the post-operation pool state", () => {
+    const value = calculateRemoveLiquidityValueXtz(
+      transaction({
+        parameter: {
+          entrypoint: "removeLiquidity",
+          value: { lqtBurned: "1000" },
+        },
+        storage: {
+          xtzPool: "900000000",
+          lqtTotal: "9000",
+        },
+      })
+    );
+
+    expect(value).toBe(100);
+  });
+
+  it("converts XTZ values through the same verified quote", () => {
+    const quote = {
+      btcPerXtz: 0.000003,
+      usdPerXtz: 0.2,
+      timestamp: new Date("2026-07-29T00:00:00Z").getTime(),
+    };
+
+    expect(convertXtz(1000, "XTZ", quote)).toBe(1000);
+    expect(convertXtz(1000, "BTC", quote)).toBeCloseTo(0.003);
+    expect(convertXtz(1000, "USD", quote)).toBe(200);
+    expect(formatDenominatedXtz(1000, "XTZ", quote)).toBe("1K XTZ");
+    expect(formatDenominatedXtz(1000, "BTC", quote)).toBe("0.003 BTC");
+    expect(formatDenominatedXtz(1000, "USD", quote)).toBe("$200.00");
   });
 });

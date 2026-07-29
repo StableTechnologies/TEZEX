@@ -4,6 +4,13 @@ import { PoolConfig, PoolType } from "../../types/pools";
 
 export type AnalyticsRange = "24H" | "7D" | "30D" | "90D";
 export type AnalyticsMetric = "Volume" | "TVL" | "Fees";
+export type AnalyticsCurrency = "XTZ" | "BTC" | "USD";
+
+export interface AnalyticsQuote {
+  btcPerXtz: number;
+  usdPerXtz: number;
+  timestamp: number;
+}
 
 export interface AnalyticsPoint {
   timestamp: number;
@@ -41,6 +48,7 @@ export interface AnalyticsActivity {
   tokenB: Asset;
   direction: string;
   value: string;
+  valueXtz: number;
   account: string;
   accountLabel?: string;
   timestamp: number;
@@ -54,6 +62,7 @@ export interface AnalyticsModel {
   activity: AnalyticsActivity[];
   blockLevel: number;
   blockTimestamp: number;
+  quote: AnalyticsQuote;
   loadedAt: number;
 }
 
@@ -87,6 +96,12 @@ interface TzktHead {
   level: number;
   timestamp: string;
   synced: boolean;
+}
+
+interface TzktQuote {
+  timestamp: string;
+  btc: number;
+  usd: number;
 }
 
 interface PoolSnapshot {
@@ -195,6 +210,18 @@ export const calculateSwapVolumeXtz = (
   // pool, the XTZ removed is postXtzPool * effectiveInput / preTokenPool.
   const effectiveInput = tokensSold * poolAmmMultiplier(pool);
   return (postXtzPool * effectiveInput) / preTokenPool / 1_000_000;
+};
+
+export const calculateRemoveLiquidityValueXtz = (
+  transaction: Pick<TzktTransaction, "parameter" | "storage">
+) => {
+  const params = getRecord(transaction.parameter?.value);
+  const storage = getRecord(transaction.storage);
+  const lqtBurned = toNumber(params.lqtBurned);
+  const postXtzPool = toNumber(storage.xtzPool);
+  const postLqtTotal = toNumber(storage.lqtTotal);
+  if (lqtBurned <= 0 || postXtzPool <= 0 || postLqtTotal <= 0) return 0;
+  return (postXtzPool * lqtBurned) / postLqtTotal / 1_000_000;
 };
 
 const percentageDelta = (current: number, previous: number) =>
@@ -344,23 +371,29 @@ const activityFromTransaction = (
   let action: AnalyticsActivity["action"];
   let direction: string;
   let value: string;
+  let valueXtz: number;
 
   if (entrypoint === "xtzToToken") {
     action = "Swap";
     direction = `${tokenA.label} → ${tokenB.label}`;
     value = formatAssetAmount(transaction.amount, tokenA);
+    valueXtz = transaction.amount / 1_000_000;
   } else if (entrypoint === "tokenToXtz") {
     action = "Swap";
     direction = `${tokenB.label} → ${tokenA.label}`;
     value = formatAssetAmount(toNumber(params.tokensSold), tokenB);
+    valueXtz = calculateSwapVolumeXtz(transaction, pool);
   } else if (entrypoint === "addLiquidity") {
     action = "Add";
     direction = `${tokenA.label} + ${tokenB.label}`;
     value = formatAssetAmount(transaction.amount, tokenA);
+    valueXtz = transaction.amount / 1_000_000;
   } else if (entrypoint === "removeLiquidity") {
     action = "Remove";
     direction = `${tokenA.label} + ${tokenB.label}`;
-    value = formatAssetAmount(toNumber(params.lqtBurned), lpToken);
+    const lqtBurned = toNumber(params.lqtBurned);
+    value = formatAssetAmount(lqtBurned, lpToken);
+    valueXtz = calculateRemoveLiquidityValueXtz(transaction);
   } else {
     return null;
   }
@@ -373,6 +406,7 @@ const activityFromTransaction = (
     tokenB,
     direction,
     value,
+    valueXtz,
     account: transaction.sender.address,
     accountLabel: transaction.sender.alias,
     timestamp: new Date(transaction.timestamp).getTime(),
@@ -393,6 +427,7 @@ export const loadAnalytics = async (
   const assets = assetMap(network.assets);
   const addresses = pools.map((pool) => pool.address);
   const headPromise = fetchJson<TzktHead>("/head", signal);
+  const quotePromise = fetchJson<TzktQuote>("/quotes/last", signal);
   const storagePromises = pools.map((pool) =>
     fetchJson<Record<string, unknown>>(
       `/contracts/${pool.address}/storage`,
@@ -409,8 +444,9 @@ export const loadAnalytics = async (
     now - 48 * HOUR
   );
 
-  const [storages, balanceHistories, swaps, recentTransactions] =
+  const [quote, storages, balanceHistories, swaps, recentTransactions] =
     await Promise.all([
+      quotePromise,
       Promise.all(storagePromises),
       Promise.all(balancePromises),
       fetchTransactions(
@@ -544,6 +580,11 @@ export const loadAnalytics = async (
     activity,
     blockLevel: preliminaryHead.level,
     blockTimestamp: now,
+    quote: {
+      btcPerXtz: quote.btc,
+      usdPerXtz: quote.usd,
+      timestamp: new Date(quote.timestamp).getTime(),
+    },
     loadedAt: Date.now(),
   };
 };
@@ -553,6 +594,44 @@ export const formatCompactXtz = (value: number) =>
     notation: value >= 1_000 ? "compact" : "standard",
     maximumFractionDigits: value >= 100 ? 1 : 2,
   }).format(value)} XTZ`;
+
+export const convertXtz = (
+  valueXtz: number,
+  currency: AnalyticsCurrency,
+  quote: AnalyticsQuote
+) => {
+  if (currency === "BTC") return valueXtz * quote.btcPerXtz;
+  if (currency === "USD") return valueXtz * quote.usdPerXtz;
+  return valueXtz;
+};
+
+export const formatDenominatedXtz = (
+  valueXtz: number,
+  currency: AnalyticsCurrency,
+  quote: AnalyticsQuote
+) => {
+  if (currency === "XTZ") return formatCompactXtz(valueXtz);
+
+  const value = convertXtz(valueXtz, currency, quote);
+  if (!Number.isFinite(value)) return "—";
+
+  if (currency === "USD") {
+    if (value > 0 && value < 0.01) return "<$0.01";
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      notation: value >= 1_000 ? "compact" : "standard",
+      maximumFractionDigits: value >= 1_000 ? 1 : 2,
+    }).format(value);
+  }
+
+  if (value > 0 && value < 0.000001) return "<0.000001 BTC";
+  return `${new Intl.NumberFormat("en-US", {
+    notation: value >= 1_000 ? "compact" : "standard",
+    maximumFractionDigits:
+      value >= 100 ? 1 : value >= 1 ? 3 : value >= 0.01 ? 4 : 6,
+  }).format(value)} BTC`;
+};
 
 export const formatDelta = (value: number | null) =>
   value === null

@@ -12,12 +12,14 @@ import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 import { TokenPair } from "../../components/ui/elements/TokenIcon";
 import { useNetwork } from "../../hooks/network";
 import {
+  AnalyticsCurrency,
   AnalyticsMetric,
   AnalyticsModel,
   AnalyticsPoint,
+  AnalyticsQuote,
   AnalyticsRange,
   formatAgo,
-  formatCompactXtz,
+  formatDenominatedXtz,
   formatDelta,
   loadAnalytics,
   shortAddress,
@@ -26,6 +28,7 @@ import "./style.css";
 
 const METRICS: AnalyticsMetric[] = ["Volume", "TVL", "Fees"];
 const RANGES: AnalyticsRange[] = ["24H", "7D", "30D", "90D"];
+const CURRENCIES: AnalyticsCurrency[] = ["XTZ", "BTC", "USD"];
 const CHART_WIDTH = 900;
 const CHART_HEIGHT = 300;
 const CHART_LEFT = 10;
@@ -35,11 +38,6 @@ const CHART_BOTTOM = 34;
 
 const formatNumber = (value: number, maximumFractionDigits = 1) =>
   new Intl.NumberFormat("en-US", { maximumFractionDigits }).format(value);
-
-const metricValue = (metric: AnalyticsMetric, value: number) => {
-  if (metric === "Fees") return formatCompactXtz(value);
-  return formatCompactXtz(value);
-};
 
 const chartDate = (timestamp: number, range: AnalyticsRange) =>
   new Intl.DateTimeFormat(
@@ -71,10 +69,19 @@ interface ChartProps {
   metric: AnalyticsMetric;
   range: AnalyticsRange;
   points: AnalyticsPoint[];
+  currency: AnalyticsCurrency;
+  quote: AnalyticsQuote;
   loading: boolean;
 }
 
-const AnalyticsChart: FC<ChartProps> = ({ metric, range, points, loading }) => {
+const AnalyticsChart: FC<ChartProps> = ({
+  metric,
+  range,
+  points,
+  currency,
+  quote,
+  loading,
+}) => {
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
 
   useEffect(() => setHoverIndex(null), [metric, range]);
@@ -131,7 +138,9 @@ const AnalyticsChart: FC<ChartProps> = ({ metric, range, points, loading }) => {
     <div className={`analytics-chart-shell ${loading ? "is-loading" : ""}`}>
       <div className="analytics-chart-readout" aria-live="polite">
         <strong>
-          {activePoint ? metricValue(metric, activePoint.value) : "—"}
+          {activePoint
+            ? formatDenominatedXtz(activePoint.value, currency, quote)
+            : "—"}
         </strong>
         <span>
           {activePoint
@@ -272,6 +281,12 @@ export const Analytics: FC = () => {
   const network = useNetwork();
   const [metric, setMetric] = useState<AnalyticsMetric>("Volume");
   const [range, setRange] = useState<AnalyticsRange>("7D");
+  const [currency, setCurrency] = useState<AnalyticsCurrency>(() => {
+    const saved = window.localStorage.getItem("tezex-analytics-currency");
+    return CURRENCIES.includes(saved as AnalyticsCurrency)
+      ? (saved as AnalyticsCurrency)
+      : "XTZ";
+  });
   const [model, setModel] = useState<AnalyticsModel>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>();
@@ -281,6 +296,10 @@ export const Analytics: FC = () => {
 
   const isMainnet = network.network === NetworkType.MAINNET;
   const cacheKey = `${network.info.chainId}:${range}`;
+
+  useEffect(() => {
+    window.localStorage.setItem("tezex-analytics-currency", currency);
+  }, [currency]);
 
   useEffect(() => {
     if (!isMainnet) return;
@@ -390,18 +409,38 @@ export const Analytics: FC = () => {
           <h1>On-chain activity</h1>
           <p>Verified activity and liquidity across TEZEX Mainnet pools.</p>
         </div>
-        <div className="analytics-freshness">
-          <span>
-            <i /> Updated {updated}
-          </span>
-          <button
-            type="button"
-            onClick={refresh}
-            disabled={loading}
-            aria-label="Refresh analytics"
+        <div className="analytics-intro__tools">
+          <div
+            className={`analytics-segments analytics-denomination__segments is-${currency.toLowerCase()}`}
+            role="group"
+            aria-label="Display currency"
+            title="Conversions use the latest TzKT XTZ market quote"
           >
-            <RefreshRoundedIcon />
-          </button>
+            {CURRENCIES.map((item) => (
+              <button
+                key={item}
+                type="button"
+                className={currency === item ? "is-active" : ""}
+                aria-pressed={currency === item}
+                onClick={() => setCurrency(item)}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
+          <div className="analytics-freshness">
+            <span>
+              <i /> Updated {updated}
+            </span>
+            <button
+              type="button"
+              onClick={refresh}
+              disabled={loading}
+              aria-label="Refresh analytics"
+            >
+              <RefreshRoundedIcon />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -414,17 +453,25 @@ export const Analytics: FC = () => {
       <section className="analytics-stats" aria-label="Market summary">
         <Stat
           label="Total liquidity"
-          value={formatCompactXtz(summary.tvlXtz)}
+          value={formatDenominatedXtz(summary.tvlXtz, currency, model.quote)}
           delta={summary.tvlDelta}
         />
         <Stat
           label="Volume 24h"
-          value={formatCompactXtz(summary.volume24hXtz)}
+          value={formatDenominatedXtz(
+            summary.volume24hXtz,
+            currency,
+            model.quote
+          )}
           delta={summary.volumeDelta}
         />
         <Stat
           label="Pool fees 24h"
-          value={formatCompactXtz(summary.fees24hXtz)}
+          value={formatDenominatedXtz(
+            summary.fees24hXtz,
+            currency,
+            model.quote
+          )}
           delta={summary.feesDelta}
         />
         <Stat
@@ -481,6 +528,8 @@ export const Analytics: FC = () => {
           metric={metric}
           range={range}
           points={model.chart[metric]}
+          currency={currency}
+          quote={model.quote}
           loading={loading}
         />
       </section>
@@ -527,10 +576,22 @@ export const Analytics: FC = () => {
                       </span>
                     </a>
                   </td>
-                  <td>{formatCompactXtz(pool.tvlXtz)}</td>
-                  <td>{formatCompactXtz(pool.volume24hXtz)}</td>
+                  <td>
+                    {formatDenominatedXtz(pool.tvlXtz, currency, model.quote)}
+                  </td>
+                  <td>
+                    {formatDenominatedXtz(
+                      pool.volume24hXtz,
+                      currency,
+                      model.quote
+                    )}
+                  </td>
                   <td className="analytics-optional">
-                    {formatCompactXtz(pool.fees24hXtz)}
+                    {formatDenominatedXtz(
+                      pool.fees24hXtz,
+                      currency,
+                      model.quote
+                    )}
                   </td>
                   <td>{pool.apr === null ? "—" : `${pool.apr.toFixed(2)}%`}</td>
                 </tr>
@@ -558,44 +619,65 @@ export const Analytics: FC = () => {
             </thead>
             <tbody>
               {model.activity.length ? (
-                model.activity.map((activity) => (
-                  <tr key={activity.id}>
-                    <td>
-                      <span className="analytics-badge">{activity.action}</span>
-                    </td>
-                    <td>
-                      <span className="analytics-pair analytics-pair--plain">
-                        <TokenPair
-                          tokenA={activity.tokenA}
-                          tokenB={activity.tokenB}
-                          size={20}
-                          surface="var(--analytics-row-surface)"
-                        />
-                        <span>
-                          <strong>{activity.direction}</strong>
-                          <small>{activity.poolName}</small>
+                model.activity.map((activity) => {
+                  const displayValue = formatDenominatedXtz(
+                    activity.valueXtz,
+                    currency,
+                    model.quote
+                  );
+                  return (
+                    <tr key={activity.id}>
+                      <td>
+                        <span className="analytics-badge">
+                          {activity.action}
                         </span>
-                      </span>
-                    </td>
-                    <td>{activity.value}</td>
-                    <td
-                      className="analytics-optional analytics-muted"
-                      title={activity.account}
-                    >
-                      {activity.accountLabel ?? shortAddress(activity.account)}
-                    </td>
-                    <td>
-                      <a
-                        className="analytics-operation"
-                        href={`https://tzkt.io/${activity.hash}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      </td>
+                      <td>
+                        <span className="analytics-pair analytics-pair--plain">
+                          <TokenPair
+                            tokenA={activity.tokenA}
+                            tokenB={activity.tokenB}
+                            size={20}
+                            surface="var(--analytics-row-surface)"
+                          />
+                          <span>
+                            <strong>{activity.direction}</strong>
+                            <small>
+                              {activity.poolName}
+                              <span className="analytics-mobile-value">
+                                {" · "}
+                                {displayValue}
+                              </span>
+                            </small>
+                          </span>
+                        </span>
+                      </td>
+                      <td>
+                        <span className="analytics-activity-value">
+                          <strong>{displayValue}</strong>
+                          <small>{activity.value}</small>
+                        </span>
+                      </td>
+                      <td
+                        className="analytics-optional analytics-muted"
+                        title={activity.account}
                       >
-                        {formatAgo(activity.timestamp, model.loadedAt)}
-                      </a>
-                    </td>
-                  </tr>
-                ))
+                        {activity.accountLabel ??
+                          shortAddress(activity.account)}
+                      </td>
+                      <td>
+                        <a
+                          className="analytics-operation"
+                          href={`https://tzkt.io/${activity.hash}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {formatAgo(activity.timestamp, model.loadedAt)}
+                        </a>
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
                   <td colSpan={5} className="analytics-empty">
@@ -613,6 +695,7 @@ export const Analytics: FC = () => {
           <i /> TzKT synced
         </span>
         <span>Block {model.blockLevel.toLocaleString()}</span>
+        <span>Rates {formatAgo(model.quote.timestamp, model.loadedAt)}</span>
         <span>Tezos Mainnet</span>
       </div>
     </main>
