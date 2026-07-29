@@ -325,7 +325,7 @@ export const Swap: FC<ISwapToken> = () => {
                 readOnly={!canUpdate}
                 scalingKey={scalingKey}
                 loading={!isLoaded()}
-                label="You pay"
+                label="Swap from"
                 visualVariant="tezex"
                 selectableAssets={sendAssetOptions}
                 onAssetChange={(asset) => handleAssetChange(send, asset)}
@@ -346,7 +346,7 @@ export const Swap: FC<ISwapToken> = () => {
                 forceZero={!hasEnteredAmount}
                 scalingKey={scalingKey}
                 loading={!isLoaded()}
-                label="You receive"
+                label="Swap to"
                 visualVariant="tezex"
                 selectableAssets={receiveAssetOptions}
                 onAssetChange={(asset) => handleAssetChange(receive, asset)}
