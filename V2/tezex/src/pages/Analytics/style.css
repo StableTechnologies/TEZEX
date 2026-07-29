@@ -20,6 +20,11 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: 24px;
+  text-align: left;
+}
+
+.analytics-intro > div:first-child {
+  min-width: 0;
 }
 
 .analytics-eyebrow,
