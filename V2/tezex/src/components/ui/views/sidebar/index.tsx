@@ -1,5 +1,5 @@
 import React, { FC, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   List,
   ListItem,
@@ -35,6 +35,7 @@ export const SideBar: FC<ISideBarProps> = (props) => {
   const [liquidityOpen, setLiquidityOpen] = React.useState(false);
   const [active, setActive] = React.useState(0);
   const sessionInfo = useSession();
+  const location = useLocation();
   const styles = useStyles(style);
   const { isLandscape } = useMobileOrientation();
 
@@ -178,7 +179,12 @@ export const SideBar: FC<ISideBarProps> = (props) => {
             </Collapse>
 
             <ListItem disablePadding sx={styles.listItem}>
-              <ListItemButton disabled component={Link} to="/Analytics">
+              <ListItemButton
+                component={Link}
+                to="/analytics"
+                onClick={props.toggleMenu}
+                selected={location.pathname.startsWith("/analytics")}
+              >
                 <ListItemText primary="Analytics" sx={styles.listItemText} />
               </ListItemButton>
             </ListItem>
