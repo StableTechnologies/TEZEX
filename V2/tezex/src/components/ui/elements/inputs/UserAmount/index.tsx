@@ -22,6 +22,9 @@ export interface IAmountField {
   loading?: boolean;
   forceZero?: boolean;
   visualVariant?: "default" | "tezex";
+  selectableAssets?: Asset[];
+  onAssetChange?: (asset: Asset) => void;
+  assetSelectionDisabled?: boolean;
 }
 
 const AmountField: FC<IAmountField> = (props) => {
@@ -40,6 +43,9 @@ const AmountField: FC<IAmountField> = (props) => {
       loading={props.loading}
       forceZero={props.forceZero}
       visualVariant={props.visualVariant}
+      selectableAssets={props.selectableAssets}
+      onAssetChange={props.onAssetChange}
+      assetSelectionDisabled={props.assetSelectionDisabled}
     />
   );
 };

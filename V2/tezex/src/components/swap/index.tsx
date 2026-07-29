@@ -30,7 +30,7 @@ import { TransactionProgress } from "./TransactionProgress";
 import useStyles from "../../hooks/styles";
 import { useTransaction } from "../../hooks/transaction";
 import { eq } from "lodash";
-import { PoolSelector } from "../ui/elements/PoolSelector";
+import { findPoolForTokenPair, getCompatibleSwapAssets } from "./tokenRouting";
 
 export interface ISwapToken {
   orientation: "portrait" | "landscape";
@@ -126,23 +126,31 @@ export const Swap: FC<ISwapToken> = () => {
     }
   }, [network.network]);
 
-  const handlePoolChange = useCallback(
-    async (newPoolId: string) => {
-      const pool = network.getAllPools().find((item) => item.id === newPoolId);
+  const handleAssetChange = useCallback(
+    async (side: typeof send | typeof receive, nextAsset: Asset) => {
+      const nextAssets: [Asset, Asset] = [...assets];
+      nextAssets[side] = nextAsset;
+
+      const pool = findPoolForTokenPair(
+        network.getAllPools(),
+        nextAssets[send].name,
+        nextAssets[receive].name
+      );
       if (!pool) return;
 
       network.setSelectedPool(pool);
-      setAssets([network.getAsset(pool.tokenA), network.getAsset(pool.tokenB)]);
+      setAssets(nextAssets);
+      setSendInputValue("0.00");
 
       wallet.clearTransaction(TransactingComponent.ADD_LIQUIDITY);
       wallet.clearTransaction(TransactingComponent.REMOVE_LIQUIDITY);
       await transactionOps.initialize(
-        [network.getAsset(pool.tokenA)],
-        [network.getAsset(pool.tokenB)],
-        newPoolId
+        [nextAssets[send]],
+        [nextAssets[receive]],
+        pool.id
       );
     },
-    [network, transactionOps, wallet]
+    [assets, network, transactionOps, wallet]
   );
 
   const transact = useCallback(async () => {
@@ -242,6 +250,16 @@ export const Swap: FC<ISwapToken> = () => {
   if (loading) return <Box sx={styles.loadingSpace} />;
 
   const transaction = transactionOps.getActiveTransaction() || active;
+  const sendAssetOptions = getCompatibleSwapAssets(
+    availablePools,
+    assets[receive].name,
+    network.getAsset
+  );
+  const receiveAssetOptions = getCompatibleSwapAssets(
+    availablePools,
+    assets[send].name,
+    network.getAsset
+  );
   const sendAmount = transaction?.sendAmount[0]?.decimal;
   const receiveAmount = transaction?.receiveAmount[0]?.decimal;
   const hasEnteredAmount = new BigNumber(sendInputValue || 0).isGreaterThan(0);
@@ -295,12 +313,6 @@ export const Swap: FC<ISwapToken> = () => {
               <Typography sx={styles.eyebrow}>SWAP</Typography>
               <Typography sx={styles.cardTitle}>Trade on Tezos</Typography>
             </Box>
-            <PoolSelector
-              onChange={handlePoolChange}
-              disabled={!canUpdate}
-              sx={styles.poolSelector}
-              variant="dark"
-            />
           </Box>
 
           <CardContent sx={styles.cardContent}>
@@ -315,6 +327,9 @@ export const Swap: FC<ISwapToken> = () => {
                 loading={!isLoaded()}
                 label="You pay"
                 visualVariant="tezex"
+                selectableAssets={sendAssetOptions}
+                onAssetChange={(asset) => handleAssetChange(send, asset)}
+                assetSelectionDisabled={!canUpdate}
               />
             </Box>
 
@@ -333,6 +348,9 @@ export const Swap: FC<ISwapToken> = () => {
                 loading={!isLoaded()}
                 label="You receive"
                 visualVariant="tezex"
+                selectableAssets={receiveAssetOptions}
+                onAssetChange={(asset) => handleAssetChange(receive, asset)}
+                assetSelectionDisabled={!canUpdate}
               />
             </Box>
 
@@ -440,8 +458,9 @@ export const Swap: FC<ISwapToken> = () => {
             </Box>
 
             <Box sx={styles.trustNote}>
-              Quotes come from the selected on-chain pool. Review every amount
-              and destination in your wallet before approving.
+              Quotes come from the on-chain pool matching the selected tokens.
+              Review every amount and destination in your wallet before
+              approving.
             </Box>
           </Box>
 

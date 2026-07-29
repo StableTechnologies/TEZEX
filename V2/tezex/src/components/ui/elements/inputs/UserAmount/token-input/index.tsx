@@ -27,6 +27,7 @@ import {
 import { useDebounce } from "usehooks-ts";
 import { eq, toNumber } from "lodash";
 import { TokenIcon } from "../../../TokenIcon";
+import { TokenSelector } from "../../../TokenSelector";
 
 export interface IRigthInput {
   component: TransactingComponent;
@@ -42,6 +43,9 @@ export interface IRigthInput {
   loading?: boolean;
   forceZero?: boolean;
   visualVariant?: "default" | "tezex";
+  selectableAssets?: Asset[];
+  onAssetChange?: (asset: Asset) => void;
+  assetSelectionDisabled?: boolean;
 }
 
 const TokenInput: FC<IRigthInput> = (props) => {
@@ -291,12 +295,22 @@ const TokenInput: FC<IRigthInput> = (props) => {
             InputProps={{ disableUnderline: true }}
           />
 
-          <Box sx={styles.tezex.tokenPill} aria-label={props.asset.label}>
-            <TokenIcon asset={props.asset} size={26} decorative />
-            <Typography sx={styles.tezex.tokenLabel}>
-              {props.asset.label}
-            </Typography>
-          </Box>
+          {props.onAssetChange && props.selectableAssets?.length ? (
+            <TokenSelector
+              asset={props.asset}
+              options={props.selectableAssets}
+              onChange={props.onAssetChange}
+              disabled={props.assetSelectionDisabled}
+              ariaLabel={`Select ${props.label?.toLowerCase() || "token"}`}
+            />
+          ) : (
+            <Box sx={styles.tezex.tokenPill} aria-label={props.asset.label}>
+              <TokenIcon asset={props.asset} size={26} decorative />
+              <Typography sx={styles.tezex.tokenLabel}>
+                {props.asset.label}
+              </Typography>
+            </Box>
+          )}
         </Box>
       </Box>
     );
