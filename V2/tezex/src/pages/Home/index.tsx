@@ -102,6 +102,7 @@ export const Home: FC<IHome> = (props) => {
       const previousOverflowX = document.documentElement.style.overflowX;
       const animations: Animation[] = [];
       let incomingPanel: HTMLDivElement | null = null;
+      let incomingHeight = outgoingHeight;
       let cleanedUp = false;
       let shouldFinishNavigation = true;
 
@@ -114,15 +115,32 @@ export const Home: FC<IHome> = (props) => {
         // first briefly restores their pre-animation styles, which can expose
         // the workspace we just slid away for a single frame.
         outgoingSnapshot.remove();
-        viewport.style.height = "";
         incomingPanel?.style.setProperty("transform", "translate3d(0, 0, 0)");
+        if (incomingHeight > 0) {
+          viewport.style.height = `${incomingHeight}px`;
+        }
         animations.forEach((animation) => animation.cancel());
-        incomingPanel?.style.removeProperty("transform");
         incomingPanel?.style.removeProperty("will-change");
         document.documentElement.style.overflowX = previousOverflowX;
         delete document.documentElement.dataset.modeTransition;
-        setIsTransitioning(false);
-        cleanupTransitionRef.current = () => undefined;
+
+        const releasePinnedStyles = () => {
+          incomingPanel?.style.removeProperty("transform");
+          viewport.style.height = "";
+          setIsTransitioning(false);
+          cleanupTransitionRef.current = () => undefined;
+        };
+
+        // Keep the incoming workspace pinned through one completed paint.
+        // Releasing the inline transform in the same frame as cancel() can
+        // expose the outgoing workspace for a frame in mobile Safari.
+        if (typeof window.requestAnimationFrame === "function") {
+          window.requestAnimationFrame(() => {
+            window.requestAnimationFrame(releasePinnedStyles);
+          });
+        } else {
+          releasePinnedStyles();
+        }
       };
 
       cleanupTransitionRef.current = () => {
@@ -142,7 +160,7 @@ export const Home: FC<IHome> = (props) => {
         incomingPanel = panelRef.current;
         if (!incomingPanel) throw new Error("Trading workspace is unavailable");
 
-        const incomingHeight = incomingPanel.getBoundingClientRect().height;
+        incomingHeight = incomingPanel.getBoundingClientRect().height;
         const incomingOffset = direction === "forward" ? "100%" : "-100%";
         const outgoingOffset = direction === "forward" ? "-100%" : "100%";
         const options: KeyframeAnimationOptions = {
