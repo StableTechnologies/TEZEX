@@ -1,11 +1,13 @@
 import { Token } from "../../types/general";
 import { PoolConfig, PoolType } from "../../types/pools";
 import {
+  ANALYTICS_RANGES,
   buildSwapSeries,
   calculateRemoveLiquidityValueXtz,
   calculateSwapVolumeXtz,
   convertXtz,
   formatDenominatedXtz,
+  RANGE_CONFIG,
   TzktTransaction,
 } from "./api";
 
@@ -82,6 +84,23 @@ describe("analytics calculations", () => {
     expect(series.Fees.reduce((sum, point) => sum + point.value, 0)).toBe(
       0.004
     );
+  });
+
+  it("builds every preset from the same in-memory transaction history", () => {
+    const now = new Date("2026-07-29T00:00:00Z").getTime();
+
+    ANALYTICS_RANGES.forEach((range) => {
+      const series = buildSwapSeries(
+        [],
+        [siriusPool],
+        range,
+        now,
+        new Map([[siriusPool.id, 0.001]])
+      );
+
+      expect(series.Volume).toHaveLength(RANGE_CONFIG[range].bucketCount);
+      expect(series.Fees).toHaveLength(RANGE_CONFIG[range].bucketCount);
+    });
   });
 
   it("derives removed liquidity value from the post-operation pool state", () => {

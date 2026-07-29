@@ -1,4 +1,5 @@
 import React, {
+  CSSProperties,
   FC,
   useCallback,
   useEffect,
@@ -12,6 +13,7 @@ import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 import { TokenPair } from "../../components/ui/elements/TokenIcon";
 import { useNetwork } from "../../hooks/network";
 import {
+  ANALYTICS_RANGES,
   AnalyticsCurrency,
   AnalyticsMetric,
   AnalyticsModel,
@@ -27,7 +29,6 @@ import {
 import "./style.css";
 
 const METRICS: AnalyticsMetric[] = ["Volume", "TVL", "Fees"];
-const RANGES: AnalyticsRange[] = ["24H", "7D", "30D", "90D"];
 const CURRENCIES: AnalyticsCurrency[] = ["XTZ", "BTC", "USD"];
 const CHART_WIDTH = 900;
 const CHART_HEIGHT = 300;
@@ -43,6 +44,16 @@ const chartDate = (timestamp: number, range: AnalyticsRange) =>
   new Intl.DateTimeFormat(
     "en-US",
     range === "24H" ? { hour: "numeric" } : { month: "short", day: "numeric" }
+  ).format(timestamp);
+
+const rangeBoundaryDate = (timestamp: number, range: AnalyticsRange) =>
+  new Intl.DateTimeFormat(
+    "en-US",
+    range === "24H"
+      ? { month: "short", day: "numeric", hour: "numeric" }
+      : range === "1Y"
+      ? { month: "short", day: "numeric", year: "numeric" }
+      : { month: "short", day: "numeric" }
   ).format(timestamp);
 
 const deltaClass = (value: number | null) =>
@@ -74,6 +85,114 @@ interface ChartProps {
   loading: boolean;
 }
 
+interface RangeWindow {
+  start: number;
+  end: number;
+}
+
+interface RangeScrubberProps {
+  points: AnalyticsPoint[];
+  range: AnalyticsRange;
+  window: RangeWindow;
+  onChange: (window: RangeWindow) => void;
+}
+
+const RangeScrubber: FC<RangeScrubberProps> = ({
+  points,
+  range,
+  window,
+  onChange,
+}) => {
+  const maximumIndex = Math.max(0, points.length - 1);
+  const start = Math.min(window.start, Math.max(0, maximumIndex - 1));
+  const end = Math.max(start + 1, Math.min(window.end, maximumIndex));
+  const divisor = Math.max(1, maximumIndex);
+  const maximumValue = Math.max(...points.map((point) => point.value), 1);
+  const fullRange = start === 0 && end === maximumIndex;
+  const style = {
+    "--range-start": `${(start / divisor) * 100}%`,
+    "--range-end": `${(end / divisor) * 100}%`,
+  } as CSSProperties;
+
+  if (points.length < 2) return null;
+
+  return (
+    <div className="analytics-range-scrubber">
+      <div className="analytics-range-scrubber__meta">
+        <span>VISIBLE RANGE</span>
+        <strong>
+          {rangeBoundaryDate(points[start].timestamp, range)} —{" "}
+          {rangeBoundaryDate(points[end].timestamp, range)}
+        </strong>
+        {!fullRange && (
+          <button
+            type="button"
+            onClick={() => onChange({ start: 0, end: maximumIndex })}
+          >
+            Reset
+          </button>
+        )}
+      </div>
+      <div className="analytics-range-scrubber__track" style={style}>
+        <div className="analytics-range-scrubber__overview" aria-hidden="true">
+          {points.map((point) => (
+            <span
+              key={point.timestamp}
+              style={
+                {
+                  "--overview-height": `${Math.max(
+                    8,
+                    (point.value / maximumValue) * 100
+                  )}%`,
+                } as CSSProperties
+              }
+            />
+          ))}
+        </div>
+        <span className="analytics-range-scrubber__selection" />
+        <input
+          type="range"
+          min={0}
+          max={maximumIndex}
+          value={start}
+          aria-label="Visible range start"
+          onChange={(event) =>
+            onChange({
+              start: Math.min(Number(event.target.value), end - 1),
+              end,
+            })
+          }
+          onInput={(event) =>
+            onChange({
+              start: Math.min(Number(event.currentTarget.value), end - 1),
+              end,
+            })
+          }
+        />
+        <input
+          type="range"
+          min={0}
+          max={maximumIndex}
+          value={end}
+          aria-label="Visible range end"
+          onChange={(event) =>
+            onChange({
+              start,
+              end: Math.max(Number(event.target.value), start + 1),
+            })
+          }
+          onInput={(event) =>
+            onChange({
+              start,
+              end: Math.max(Number(event.currentTarget.value), start + 1),
+            })
+          }
+        />
+      </div>
+    </div>
+  );
+};
+
 const AnalyticsChart: FC<ChartProps> = ({
   metric,
   range,
@@ -84,7 +203,7 @@ const AnalyticsChart: FC<ChartProps> = ({
 }) => {
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
 
-  useEffect(() => setHoverIndex(null), [metric, range]);
+  useEffect(() => setHoverIndex(null), [metric, points, range]);
 
   const geometry = useMemo(() => {
     const values = points.map((point) => point.value);
@@ -281,6 +400,10 @@ export const Analytics: FC = () => {
   const network = useNetwork();
   const [metric, setMetric] = useState<AnalyticsMetric>("Volume");
   const [range, setRange] = useState<AnalyticsRange>("7D");
+  const [rangeWindow, setRangeWindow] = useState<RangeWindow>({
+    start: 0,
+    end: 6,
+  });
   const [currency, setCurrency] = useState<AnalyticsCurrency>(() => {
     const saved = window.localStorage.getItem("tezex-analytics-currency");
     return CURRENCIES.includes(saved as AnalyticsCurrency)
@@ -295,7 +418,7 @@ export const Analytics: FC = () => {
   const refreshTarget = useRef<string>();
 
   const isMainnet = network.network === NetworkType.MAINNET;
-  const cacheKey = `${network.info.chainId}:${range}`;
+  const cacheKey = network.info.chainId;
 
   useEffect(() => {
     window.localStorage.setItem("tezex-analytics-currency", currency);
@@ -316,7 +439,7 @@ export const Analytics: FC = () => {
     let active = true;
     setLoading(true);
     setError(undefined);
-    void loadAnalytics(network.info, range)
+    void loadAnalytics(network.info)
       .then((nextModel) => {
         if (!active) return;
         cache.current.set(cacheKey, nextModel);
@@ -337,13 +460,33 @@ export const Analytics: FC = () => {
     return () => {
       active = false;
     };
-  }, [cacheKey, isMainnet, network.info, range, refreshKey]);
+  }, [cacheKey, isMainnet, network.info, refreshKey]);
+
+  useEffect(() => {
+    if (!model) return;
+    setRangeWindow({
+      start: 0,
+      end: Math.max(0, model.chart[range].Volume.length - 1),
+    });
+  }, [model, range]);
 
   const refresh = useCallback(() => {
     cache.current.delete(cacheKey);
     refreshTarget.current = cacheKey;
     setRefreshKey((key) => key + 1);
   }, [cacheKey]);
+
+  const selectRange = useCallback(
+    (nextRange: AnalyticsRange) => {
+      setRange(nextRange);
+      if (!model) return;
+      setRangeWindow({
+        start: 0,
+        end: Math.max(0, model.chart[nextRange].Volume.length - 1),
+      });
+    },
+    [model]
+  );
 
   if (!isMainnet) {
     return (
@@ -395,6 +538,11 @@ export const Analytics: FC = () => {
   }
 
   const { summary } = model;
+  const selectedSeries = model.chart[range][metric];
+  const visiblePoints = selectedSeries.slice(
+    Math.min(rangeWindow.start, Math.max(0, selectedSeries.length - 1)),
+    Math.min(rangeWindow.end + 1, selectedSeries.length)
+  );
   const updated = new Intl.DateTimeFormat("en-US", {
     hour: "numeric",
     minute: "2-digit",
@@ -510,13 +658,13 @@ export const Analytics: FC = () => {
               role="group"
               aria-label="Chart range"
             >
-              {RANGES.map((item) => (
+              {ANALYTICS_RANGES.map((item) => (
                 <button
                   key={item}
                   type="button"
                   className={range === item ? "is-active" : ""}
                   aria-pressed={range === item}
-                  onClick={() => setRange(item)}
+                  onClick={() => selectRange(item)}
                 >
                   {item}
                 </button>
@@ -527,10 +675,16 @@ export const Analytics: FC = () => {
         <AnalyticsChart
           metric={metric}
           range={range}
-          points={model.chart[metric]}
+          points={visiblePoints}
           currency={currency}
           quote={model.quote}
           loading={loading}
+        />
+        <RangeScrubber
+          points={selectedSeries}
+          range={range}
+          window={rangeWindow}
+          onChange={setRangeWindow}
         />
       </section>
 

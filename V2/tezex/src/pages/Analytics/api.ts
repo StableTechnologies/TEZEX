@@ -2,9 +2,18 @@ import { NetworkInfo } from "../../contexts/network";
 import { Asset, Token } from "../../types/general";
 import { PoolConfig, PoolType } from "../../types/pools";
 
-export type AnalyticsRange = "24H" | "7D" | "30D" | "90D";
+export type AnalyticsRange = "24H" | "7D" | "30D" | "90D" | "6M" | "1Y";
 export type AnalyticsMetric = "Volume" | "TVL" | "Fees";
 export type AnalyticsCurrency = "XTZ" | "BTC" | "USD";
+
+export const ANALYTICS_RANGES: AnalyticsRange[] = [
+  "24H",
+  "7D",
+  "30D",
+  "90D",
+  "6M",
+  "1Y",
+];
 
 export interface AnalyticsQuote {
   btcPerXtz: number;
@@ -57,7 +66,7 @@ export interface AnalyticsActivity {
 
 export interface AnalyticsModel {
   summary: AnalyticsSummary;
-  chart: Record<AnalyticsMetric, AnalyticsPoint[]>;
+  chart: Record<AnalyticsRange, Record<AnalyticsMetric, AnalyticsPoint[]>>;
   pools: AnalyticsPool[];
   activity: AnalyticsActivity[];
   blockLevel: number;
@@ -109,7 +118,7 @@ interface PoolSnapshot {
   tokenA: Asset;
   tokenB: Asset;
   storage: Record<string, unknown>;
-  balanceHistory: TzktBalancePoint[];
+  balanceHistory: Record<AnalyticsRange, TzktBalancePoint[]>;
   feeRate: number;
   currentTvlXtz: number;
 }
@@ -135,6 +144,16 @@ export const RANGE_CONFIG: Record<AnalyticsRange, RangeConfig> = {
   "7D": { windowMs: 7 * DAY, bucketCount: 7, balanceStep: 14_400 },
   "30D": { windowMs: 30 * DAY, bucketCount: 30, balanceStep: 14_400 },
   "90D": { windowMs: 90 * DAY, bucketCount: 30, balanceStep: 43_200 },
+  "6M": { windowMs: 180 * DAY, bucketCount: 26, balanceStep: 57_600 },
+  "1Y": { windowMs: 365 * DAY, bucketCount: 52, balanceStep: 57_600 },
+};
+
+const BALANCE_HISTORY_RANGES: AnalyticsRange[] = ["24H", "30D", "1Y"];
+
+const balanceHistoryRangeFor = (range: AnalyticsRange): AnalyticsRange => {
+  if (range === "24H") return "24H";
+  if (range === "7D" || range === "30D") return "30D";
+  return "1Y";
 };
 
 const toNumber = (value: unknown): number => {
@@ -147,17 +166,43 @@ const getRecord = (value: unknown): Record<string, unknown> =>
     ? (value as Record<string, unknown>)
     : {};
 
-const fetchJson = async <T>(path: string, signal?: AbortSignal): Promise<T> => {
-  const response = await fetch(`${TZKT_API}${path}`, {
-    signal,
-    headers: { Accept: "application/json" },
+const wait = (duration: number, signal?: AbortSignal) =>
+  new Promise<void>((resolve, reject) => {
+    const timeout = window.setTimeout(resolve, duration);
+    signal?.addEventListener(
+      "abort",
+      () => {
+        window.clearTimeout(timeout);
+        reject(new DOMException("Analytics request cancelled", "AbortError"));
+      },
+      { once: true }
+    );
   });
 
-  if (!response.ok) {
+const fetchJson = async <T>(path: string, signal?: AbortSignal): Promise<T> => {
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    const response = await fetch(`${TZKT_API}${path}`, {
+      signal,
+      headers: { Accept: "application/json" },
+    });
+
+    if (response.ok) return (await response.json()) as T;
+
+    if (response.status === 429 && attempt < 3) {
+      const retryAfter = Number(response.headers.get("Retry-After"));
+      await wait(
+        Number.isFinite(retryAfter) && retryAfter > 0
+          ? retryAfter * 1_000
+          : 750 * 2 ** attempt,
+        signal
+      );
+      continue;
+    }
+
     throw new Error(`TzKT request failed (${response.status})`);
   }
 
-  return (await response.json()) as T;
+  throw new Error("TzKT request failed");
 };
 
 const query = (values: Record<string, string | number>) => {
@@ -317,14 +362,22 @@ const buildTvlSeries = (
       ) {
         return total;
       }
-      return total + (valueAt(pool.balanceHistory, bucket.end) * 2) / 1_000_000;
+      return (
+        total +
+        (valueAt(pool.balanceHistory[range], bucket.end) * 2) / 1_000_000
+      );
     }, 0),
   }));
 
 const fetchTransactions = (
   addresses: string[],
   entrypoints: string[],
-  options: { since?: number; limit: number; sort: "asc" | "desc" },
+  options: {
+    since?: number;
+    limit: number;
+    sort: "asc" | "desc";
+    select?: string;
+  },
   signal?: AbortSignal
 ) => {
   const params: Record<string, string | number> = {
@@ -333,7 +386,9 @@ const fetchTransactions = (
     status: "applied",
     limit: options.limit,
     [`sort.${options.sort}`]: "id",
-    select: "id,timestamp,hash,counter,sender,target,amount,parameter,storage",
+    select:
+      options.select ??
+      "id,timestamp,hash,counter,sender,target,amount,parameter,storage",
   };
   if (options.since) params["timestamp.ge"] = dateAt(options.since);
   return fetchJson<TzktTransaction[]>(
@@ -416,7 +471,6 @@ const activityFromTransaction = (
 
 export const loadAnalytics = async (
   network: NetworkInfo,
-  range: AnalyticsRange,
   signal?: AbortSignal
 ): Promise<AnalyticsModel> => {
   const pools = network.pools.filter(
@@ -434,25 +488,35 @@ export const loadAnalytics = async (
       signal
     )
   );
-  const balancePromises = pools.map((pool) =>
-    fetchBalanceHistory(pool, range, signal)
-  );
   const preliminaryHead = await headPromise;
   const now = new Date(preliminaryHead.timestamp).getTime();
-  const requestedSince = Math.min(
-    now - RANGE_CONFIG[range].windowMs,
-    now - 48 * HOUR
-  );
+  const requestedSince = now - RANGE_CONFIG["1Y"].windowMs;
+  const balanceHistoriesPromise = async () => {
+    const histories: TzktBalancePoint[][][] = [];
+    for (const range of BALANCE_HISTORY_RANGES) {
+      histories.push(
+        await Promise.all(
+          pools.map((pool) => fetchBalanceHistory(pool, range, signal))
+        )
+      );
+    }
+    return histories;
+  };
 
   const [quote, storages, balanceHistories, swaps, recentTransactions] =
     await Promise.all([
       quotePromise,
       Promise.all(storagePromises),
-      Promise.all(balancePromises),
+      balanceHistoriesPromise(),
       fetchTransactions(
         addresses,
         SWAP_ENTRYPOINTS,
-        { since: requestedSince, limit: 10_000, sort: "asc" },
+        {
+          since: requestedSince,
+          limit: 10_000,
+          sort: "desc",
+          select: "id,timestamp,target,amount,parameter,storage",
+        },
         signal
       ),
       fetchTransactions(
@@ -466,16 +530,25 @@ export const loadAnalytics = async (
   const snapshots: PoolSnapshot[] = pools.map((pool, index) => {
     const storage = storages[index];
     const currentBalance = toNumber(storage.xtzPool);
-    const history = [...balanceHistories[index]]
-      .sort(
-        (a, b) =>
-          new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-      )
-      .concat({
-        level: preliminaryHead.level,
-        timestamp: preliminaryHead.timestamp,
-        balance: currentBalance,
-      });
+    const history = Object.fromEntries(
+      ANALYTICS_RANGES.map((range) => [
+        range,
+        [
+          ...balanceHistories[
+            BALANCE_HISTORY_RANGES.indexOf(balanceHistoryRangeFor(range))
+          ][index],
+        ]
+          .sort(
+            (a, b) =>
+              new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+          )
+          .concat({
+            level: preliminaryHead.level,
+            timestamp: preliminaryHead.timestamp,
+            balance: currentBalance,
+          }),
+      ])
+    ) as Record<AnalyticsRange, TzktBalancePoint[]>;
     return {
       config: pool,
       tokenA: requireAsset(assets, pool.tokenA),
@@ -491,8 +564,19 @@ export const loadAnalytics = async (
   const feeRates = new Map(
     snapshots.map((snapshot) => [snapshot.config.id, snapshot.feeRate])
   );
-  const series = buildSwapSeries(swaps, pools, range, now, feeRates);
-  const tvlSeries = buildTvlSeries(snapshots, range, now);
+  const chart = Object.fromEntries(
+    ANALYTICS_RANGES.map((range) => {
+      const series = buildSwapSeries(swaps, pools, range, now, feeRates);
+      return [
+        range,
+        {
+          Volume: series.Volume,
+          TVL: buildTvlSeries(snapshots, range, now),
+          Fees: series.Fees,
+        },
+      ];
+    })
+  ) as Record<AnalyticsRange, Record<AnalyticsMetric, AnalyticsPoint[]>>;
   const currentStart = now - DAY;
   const previousStart = now - 2 * DAY;
   const currentSwaps = swaps.filter(
@@ -529,7 +613,8 @@ export const loadAnalytics = async (
   );
   const previousTvl = snapshots.reduce(
     (total, snapshot) =>
-      total + (valueAt(snapshot.balanceHistory, currentStart) * 2) / 1_000_000,
+      total +
+      (valueAt(snapshot.balanceHistory["24H"], currentStart) * 2) / 1_000_000,
     0
   );
 
@@ -575,7 +660,7 @@ export const loadAnalytics = async (
       swaps24h: currentSwaps.length,
       swapsDelta: percentageDelta(currentSwaps.length, previousSwaps.length),
     },
-    chart: { Volume: series.Volume, TVL: tvlSeries, Fees: series.Fees },
+    chart,
     pools: poolRows,
     activity,
     blockLevel: preliminaryHead.level,
