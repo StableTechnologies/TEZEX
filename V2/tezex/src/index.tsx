@@ -11,6 +11,7 @@ import { createHashRouter, RouterProvider } from "react-router-dom";
 import { AppConfig } from "./types/general";
 import appConfig from "./config/app.json";
 import { Home } from "./pages/Home";
+import { Analytics } from "./pages/Analytics";
 import { ColorModeProvider } from "./contexts/color-mode";
 
 const router = createHashRouter([
@@ -32,7 +33,7 @@ const router = createHashRouter([
       },
       {
         path: "analytics",
-        element: <Home path="swap" />,
+        element: <Analytics />,
       },
     ],
   },

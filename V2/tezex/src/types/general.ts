@@ -27,6 +27,7 @@ export enum Pages {
   SWAP = "/home/swap",
   ADD_LIQUIDITY = "/home/add",
   REMOVE_LIQUIDITY = "/home/remove",
+  ANALYTICS = "/analytics",
   ABOUT = "/about",
 }
 
