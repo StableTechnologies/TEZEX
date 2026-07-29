@@ -26,6 +26,7 @@ import {
 } from "../../../../../../functions/util";
 import { useDebounce } from "usehooks-ts";
 import { eq, toNumber } from "lodash";
+import { TokenIcon } from "../../../TokenIcon";
 
 export interface IRigthInput {
   component: TransactingComponent;
@@ -291,12 +292,7 @@ const TokenInput: FC<IRigthInput> = (props) => {
           />
 
           <Box sx={styles.tezex.tokenPill} aria-label={props.asset.label}>
-            <Box
-              component="img"
-              sx={styles.tezex.tokenIcon}
-              src={process.env.PUBLIC_URL + props.asset.logo}
-              alt=""
-            />
+            <TokenIcon asset={props.asset} size={26} decorative />
             <Typography sx={styles.tezex.tokenLabel}>
               {props.asset.label}
             </Typography>
