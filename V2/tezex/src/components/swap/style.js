@@ -46,9 +46,11 @@ const style = (theme, scale = 1) => {
       gap: "16px",
       borderBottom: "1px solid var(--tezex-line-soft)",
       "@media (max-width: 520px)": {
+        minHeight: "auto",
         alignItems: "stretch",
         flexDirection: "column",
-        padding: "18px",
+        justifyContent: "flex-start",
+        padding: "16px 18px",
       },
     },
     cardTitleGroup: {
