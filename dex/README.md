@@ -1,5 +1,11 @@
 # Dexter v2 DEX
 
+## Token-to-token pool
+
+The asset-agnostic FA2-to-FA2 deployment candidate is documented in [TOKEN_TOKEN_POOL.md](./TOKEN_TOKEN_POOL.md). Its internal security review and residual launch gates are in [TOKEN_TOKEN_POOL_SECURITY_REVIEW.md](./TOKEN_TOKEN_POOL_SECURITY_REVIEW.md).
+
+This pool is separate from the native-XTZ Dexter contracts described below. It uses immutable 25 bp LP and 5 bp protocol fees and contains no hardcoded token, administrator, or fee-recipient address.
+
 Decentralized Exchange (DEX) implementation for Tezos blockchain based on Dexter v2 contracts updated to latest Ligo v1.11.5
 
 ## Project Structure

@@ -105,6 +105,7 @@ dist
 
 .vscode
 .idea
+.ligo/
 
 build/
 tmp/
