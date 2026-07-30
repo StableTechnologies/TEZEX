@@ -88,9 +88,9 @@ const statusCopy = (
   }
   if (snapshot.availability === "disabled") {
     return {
-      title: `sTEZ is not active on ${selectedNetwork}`,
+      title: "sTEZ is in testnet preview for now",
       description:
-        "This chain runs a protocol that includes sTEZ, but its native-contract feature flag is off. Shadownet is Tezos's long-running application testnet; Ushuaianet is a separate protocol testnet. TEZEX will unlock these controls automatically when the selected RPC exposes sTEZ.",
+        "Use this interface to familiarize yourself with staking, redemption, and finalization. Transactions will unlock on an sTEZ-enabled test network, and the same flow will become available on Mainnet once a subsequent protocol upgrade activates sTEZ.",
     };
   }
   if (snapshot.availability === "unsupported") {
