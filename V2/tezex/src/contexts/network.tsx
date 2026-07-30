@@ -22,10 +22,6 @@ export interface NetworkInfo {
   chainId: string;
   pools: PoolConfig[];
   assets: Assets;
-  faucet?: {
-    name: string;
-    url: string;
-  };
   tradingAvailability?: {
     enabled: boolean;
     title: string;

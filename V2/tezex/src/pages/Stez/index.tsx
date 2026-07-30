@@ -22,6 +22,7 @@ type StezAction = "Stake" | "Redeem" | "Finalize";
 
 const ZERO = BigInt(0);
 const TOKEN_SCALE = BigInt(1_000_000);
+const SHADOWNET_FAUCET_URL = "https://faucet.shadownet.teztnets.com";
 
 const networkName = (network: NetworkType) => {
   if (network === NetworkType.MAINNET) return "Mainnet";
@@ -137,8 +138,6 @@ export const Stez: FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeAction, setActiveAction] = useState<StezAction>("Stake");
   const [amount, setAmount] = useState("");
-  const [faucetExpanded, setFaucetExpanded] = useState(false);
-  const [addressCopied, setAddressCopied] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -161,11 +160,6 @@ export const Stez: FC = () => {
 
     return () => controller.abort();
   }, [network.info, network.network, wallet.address]);
-
-  useEffect(() => {
-    setFaucetExpanded(false);
-    setAddressCopied(false);
-  }, [network.network, wallet.address]);
 
   const available = snapshot?.availability === "available";
   const walletConnected = wallet.isWalletConnected && Boolean(wallet.address);
@@ -212,12 +206,6 @@ export const Stez: FC = () => {
   const connect = useCallback(async () => {
     await connectWallet(wallet, network);
   }, [network, wallet]);
-
-  const copyWalletAddress = useCallback(async () => {
-    if (!wallet.address || !navigator.clipboard) return;
-    await navigator.clipboard.writeText(wallet.address);
-    setAddressCopied(true);
-  }, [wallet.address]);
 
   const setMaximum = () => {
     const maximum =
@@ -269,72 +257,16 @@ export const Stez: FC = () => {
           <strong>{copy.title}</strong>
           <p>{copy.description}</p>
         </div>
-      </section>
-
-      {network.info.faucet && (
-        <section
-          className={`stez-panel stez-faucet${
-            faucetExpanded ? " is-expanded" : ""
-          }`}
-          aria-labelledby="stez-faucet-title"
+        <a
+          className="stez-availability__faucet-link"
+          href={SHADOWNET_FAUCET_URL}
+          target="_blank"
+          rel="noreferrer"
+          aria-label="Get Shadownet test XTZ from the official faucet"
         >
-          <header className="stez-panel__head">
-            <h2 id="stez-faucet-title">TESTNET FUNDS</h2>
-            <span>{network.info.faucet.name}</span>
-          </header>
-          <div className="stez-faucet__intro">
-            <div>
-              <strong>Get valueless {selectedNetwork} XTZ</strong>
-              <p>
-                Use the official Teztnets faucet here, then return to TEZEX to
-                test an enabled network. Faucet funds do not activate sTEZ where
-                the protocol feature is disabled.
-              </p>
-            </div>
-            <div className="stez-faucet__actions">
-              {walletConnected && (
-                <button
-                  type="button"
-                  className="stez-faucet__secondary"
-                  onClick={copyWalletAddress}
-                >
-                  {addressCopied ? "ADDRESS COPIED" : "COPY WALLET ADDRESS"}
-                </button>
-              )}
-              <button
-                type="button"
-                className="stez-faucet__primary"
-                aria-expanded={faucetExpanded}
-                aria-controls="stez-faucet-interface"
-                onClick={() => setFaucetExpanded((expanded) => !expanded)}
-              >
-                {faucetExpanded ? "HIDE FAUCET" : "GET TEST XTZ"}
-              </button>
-            </div>
-          </div>
-          {faucetExpanded && (
-            <div id="stez-faucet-interface" className="stez-faucet__embed">
-              <div className="stez-faucet__embed-bar">
-                <span>SECURE TEZTNETS FAUCET</span>
-                <a
-                  href={network.info.faucet.url}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  OPEN SEPARATELY ↗
-                </a>
-              </div>
-              <iframe
-                src={network.info.faucet.url}
-                title={`${selectedNetwork} testnet XTZ faucet`}
-                loading="lazy"
-                referrerPolicy="strict-origin-when-cross-origin"
-                sandbox="allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
-              />
-            </div>
-          )}
-        </section>
-      )}
+          GET SHADOWNET TEST XTZ <span aria-hidden="true">↗</span>
+        </a>
+      </section>
 
       <section className="stez-panel" aria-labelledby="stez-position-title">
         <header className="stez-panel__head">
