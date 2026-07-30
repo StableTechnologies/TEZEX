@@ -1,0 +1,767 @@
+.stez-page {
+  width: 100%;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 36px 28px 20px;
+  color: var(--tezex-text);
+  text-align: left;
+  animation: stez-enter 340ms cubic-bezier(0.22, 0.8, 0.24, 1) both;
+}
+
+.stez-page button,
+.stez-page input,
+.stez-page summary {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.stez-hero {
+  min-height: 112px;
+  margin-bottom: 22px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 28px;
+}
+
+.stez-hero > div:first-child {
+  min-width: 0;
+}
+
+.stez-eyebrow,
+.stez-panel__head h2,
+.stez-field-label,
+.stez-amount-field__topline label {
+  display: block;
+  color: var(--tezex-muted);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.2em;
+}
+
+.stez-hero h1 {
+  margin: 10px 0 0;
+  font-size: clamp(31px, 5vw, 48px);
+  font-weight: 650;
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+}
+
+.stez-hero p {
+  max-width: 570px;
+  margin: 11px 0 0;
+  color: var(--tezex-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.stez-rate-summary {
+  min-width: 210px;
+  padding-bottom: 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+}
+
+.stez-rate-summary strong {
+  font-family: "Red Hat Mono", monospace;
+  font-size: clamp(24px, 3.5vw, 31px);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.stez-rate-summary span {
+  margin-top: 7px;
+  color: var(--tezex-muted);
+  font-family: "Red Hat Mono", monospace;
+  font-size: 10px;
+}
+
+.stez-availability {
+  margin-bottom: 18px;
+  padding: 16px 18px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  background: var(--tezex-panel-subtle);
+  border: 1px solid var(--tezex-line);
+  border-radius: 16px;
+}
+
+.stez-availability__signal {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--tezex-faint);
+  box-shadow: 0 0 0 6px var(--tezex-focus-ring);
+}
+
+.stez-availability.is-available .stez-availability__signal {
+  background: var(--tezex-positive);
+}
+
+.stez-availability.is-checking .stez-availability__signal {
+  animation: stez-pulse 1.2s ease-in-out infinite;
+}
+
+.stez-availability strong {
+  display: block;
+  color: var(--tezex-text-secondary);
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.stez-availability p {
+  margin: 4px 0 0;
+  color: var(--tezex-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.stez-availability > button {
+  min-height: 36px;
+  padding: 0 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  color: var(--tezex-text-secondary);
+  background: var(--tezex-panel);
+  border: 1px solid var(--tezex-line);
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  transition: color 160ms ease, border-color 160ms ease;
+}
+
+.stez-availability > button:hover:not(:disabled) {
+  color: var(--tezex-text);
+  border-color: var(--tezex-line-strong);
+}
+
+.stez-availability > button:disabled {
+  cursor: wait;
+  opacity: 0.58;
+}
+
+.stez-availability > button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.stez-panel,
+.stez-protocol-details {
+  margin-bottom: 18px;
+  overflow: hidden;
+  background: var(--tezex-panel);
+  border: 1px solid var(--tezex-line);
+  border-radius: 20px;
+  box-shadow: var(--tezex-shadow);
+}
+
+.stez-panel__head {
+  min-height: 58px;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border-bottom: 1px solid var(--tezex-line);
+}
+
+.stez-panel__head h2 {
+  margin: 0;
+  color: var(--tezex-text-secondary);
+}
+
+.stez-panel__head > span {
+  color: var(--tezex-faint);
+  font-family: "Red Hat Mono", monospace;
+  font-size: 10px;
+  text-align: right;
+}
+
+.stez-position-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.stez-position-cell {
+  min-width: 0;
+  min-height: 128px;
+  padding: 19px 20px 17px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-right: 1px solid var(--tezex-line);
+}
+
+.stez-position-cell:last-child {
+  border-right: 0;
+}
+
+.stez-position-cell__label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  overflow: hidden;
+  color: var(--tezex-muted);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.14em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.stez-position-cell__label span {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.stez-position-cell__label svg {
+  width: 14px;
+  height: 14px;
+}
+
+.stez-position-cell > strong {
+  margin-top: 11px;
+  overflow: hidden;
+  font-family: "Red Hat Mono", monospace;
+  font-size: clamp(18px, 2.25vw, 23px);
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stez-position-cell > strong.is-positive {
+  color: var(--tezex-positive);
+}
+
+.stez-position-cell small {
+  margin-top: 6px;
+  overflow: hidden;
+  color: var(--tezex-faint);
+  font-family: "Red Hat Mono", monospace;
+  font-size: 9px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stez-panel__head--actions {
+  min-height: 66px;
+}
+
+.stez-action-tabs {
+  height: 38px;
+  padding: 3px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  background: var(--tezex-panel-subtle);
+  border: 1px solid var(--tezex-line);
+  border-radius: 999px;
+}
+
+.stez-action-tabs button {
+  min-width: 84px;
+  padding: 0 15px;
+  color: var(--tezex-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: color 160ms ease, background-color 220ms ease;
+}
+
+.stez-action-tabs button:hover {
+  color: var(--tezex-text);
+}
+
+.stez-action-tabs button.is-active {
+  color: var(--tezex-action-text);
+  background: var(--tezex-action);
+}
+
+.stez-action-body {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.stez-amount-field {
+  min-height: 108px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: var(--tezex-field);
+  border: 1px solid var(--tezex-line);
+  border-radius: 15px;
+  transition: border-color 160ms ease;
+}
+
+.stez-amount-field:focus-within {
+  border-color: var(--tezex-line-strong);
+}
+
+.stez-amount-field__topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.stez-amount-field__topline button {
+  padding: 0;
+  color: var(--tezex-muted);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-family: "Red Hat Mono", monospace;
+  font-size: 9px;
+}
+
+.stez-amount-field__topline button:hover:not(:disabled) {
+  color: var(--tezex-text);
+}
+
+.stez-amount-field__topline button:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.stez-amount-field__input,
+.stez-amount-field__value {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.stez-amount-field__input input,
+.stez-amount-field__value strong {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+  color: var(--tezex-text);
+  background: transparent;
+  border: 0;
+  outline: 0;
+  font-family: "Red Hat Mono", monospace;
+  font-size: clamp(24px, 4.5vw, 32px);
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+  text-overflow: ellipsis;
+}
+
+.stez-amount-field__input input:disabled {
+  color: var(--tezex-faint);
+}
+
+.stez-amount-field__input input::placeholder {
+  color: var(--tezex-faint);
+}
+
+.stez-amount-field__input > span,
+.stez-amount-field__value > span {
+  flex-shrink: 0;
+  color: var(--tezex-text-secondary);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.stez-conversion-arrow {
+  width: 20px !important;
+  height: 20px !important;
+  margin: 7px auto;
+  display: block !important;
+  color: var(--tezex-muted);
+}
+
+.stez-action-meta {
+  margin-top: 12px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  color: var(--tezex-faint);
+  font-family: "Red Hat Mono", monospace;
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.stez-action-meta span:last-child {
+  text-align: right;
+}
+
+.stez-primary-action {
+  width: 100%;
+  min-height: 52px;
+  margin-top: 18px;
+  padding: 12px 20px;
+  color: var(--tezex-action-text);
+  background: var(--tezex-action);
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.stez-primary-action:hover:not(:disabled) {
+  background: var(--tezex-action-hover);
+}
+
+.stez-primary-action:disabled {
+  color: var(--tezex-faint);
+  background: var(--tezex-line);
+  cursor: default;
+}
+
+.stez-action-explanation {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 9px;
+  color: var(--tezex-muted);
+}
+
+.stez-action-explanation svg {
+  width: 15px;
+  height: 15px;
+  margin-top: 2px;
+}
+
+.stez-action-explanation p {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.stez-rate-panel {
+  min-height: 210px;
+  display: grid;
+  grid-template-columns: minmax(180px, 0.32fr) minmax(0, 0.68fr);
+}
+
+.stez-rate-panel > div:first-child {
+  padding: 26px 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-right: 1px solid var(--tezex-line);
+}
+
+.stez-rate-panel > div:first-child strong {
+  margin-top: 13px;
+  font-family: "Red Hat Mono", monospace;
+  font-size: clamp(24px, 4vw, 31px);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.stez-rate-panel > div:first-child small {
+  margin-top: 7px;
+  color: var(--tezex-faint);
+  font-family: "Red Hat Mono", monospace;
+  font-size: 9px;
+}
+
+.stez-rate-panel__empty {
+  min-width: 0;
+  padding: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stez-rate-panel__empty p {
+  max-width: 390px;
+  margin: 0;
+  padding: 12px 16px;
+  color: var(--tezex-muted);
+  background: var(--tezex-panel);
+  border: 1px solid var(--tezex-line);
+  border-radius: 12px;
+  font-size: 11px;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.stez-protocol-details summary {
+  min-height: 58px;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--tezex-text-secondary);
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  list-style: none;
+}
+
+.stez-protocol-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.stez-protocol-details summary::after {
+  content: "+";
+  color: var(--tezex-muted);
+  font-family: "Red Hat Mono", monospace;
+  font-size: 16px;
+}
+
+.stez-protocol-details[open] summary {
+  border-bottom: 1px solid var(--tezex-line);
+}
+
+.stez-protocol-details[open] summary::after {
+  content: "−";
+}
+
+.stez-protocol-details > div {
+  padding: 18px 20px 20px;
+}
+
+.stez-protocol-details dl {
+  margin: 0;
+}
+
+.stez-protocol-details dl > div {
+  display: contents;
+}
+
+.stez-protocol-details dt,
+.stez-protocol-details dd {
+  margin: 0;
+  padding: 9px 0;
+  border-bottom: 1px dashed var(--tezex-line);
+  font-family: "Red Hat Mono", monospace;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.stez-protocol-details dt {
+  width: 42%;
+  float: left;
+  clear: left;
+  color: var(--tezex-muted);
+}
+
+.stez-protocol-details dd {
+  margin-left: 42%;
+  color: var(--tezex-text-secondary);
+  text-align: right;
+  word-break: break-word;
+}
+
+.stez-protocol-details p {
+  clear: both;
+  margin: 16px 0 0;
+  color: var(--tezex-muted);
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.stez-sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.stez-page button:focus-visible,
+.stez-page input:focus-visible,
+.stez-page summary:focus-visible {
+  outline: 2px solid var(--tezex-text-secondary);
+  outline-offset: 3px;
+}
+
+@media (max-width: 820px) {
+  .stez-page {
+    padding: 28px 20px 16px;
+  }
+
+  .stez-position-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .stez-position-cell:nth-child(2) {
+    border-right: 0;
+  }
+
+  .stez-position-cell:nth-child(-n + 2) {
+    border-bottom: 1px solid var(--tezex-line);
+  }
+}
+
+@media (max-width: 600px) {
+  .stez-page {
+    padding: 26px 12px 12px;
+  }
+
+  .stez-hero {
+    min-height: 0;
+    margin-bottom: 18px;
+    display: block;
+  }
+
+  .stez-hero h1 {
+    font-size: 34px;
+  }
+
+  .stez-hero p {
+    font-size: 13px;
+  }
+
+  .stez-rate-summary {
+    margin-top: 20px;
+    padding: 14px 16px;
+    align-items: flex-start;
+    background: var(--tezex-panel);
+    border: 1px solid var(--tezex-line);
+    border-radius: 14px;
+    text-align: left;
+  }
+
+  .stez-availability {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: flex-start;
+  }
+
+  .stez-availability > button {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .stez-panel,
+  .stez-protocol-details {
+    border-radius: 18px;
+  }
+
+  .stez-panel__head {
+    min-height: 54px;
+    padding: 11px 16px;
+  }
+
+  .stez-panel__head--actions {
+    padding: 10px 12px;
+    display: block;
+  }
+
+  .stez-panel__head--actions > span {
+    display: block;
+    margin-top: 9px;
+    text-align: left;
+  }
+
+  .stez-action-tabs {
+    width: 100%;
+  }
+
+  .stez-action-tabs button {
+    min-width: 0;
+    padding: 0 9px;
+  }
+
+  .stez-position-cell {
+    min-height: 116px;
+    padding: 16px;
+  }
+
+  .stez-position-cell > strong {
+    font-size: 19px;
+  }
+
+  .stez-action-body {
+    padding: 18px 16px 20px;
+  }
+
+  .stez-amount-field {
+    min-height: 102px;
+  }
+
+  .stez-action-meta {
+    display: block;
+  }
+
+  .stez-action-meta span {
+    display: block;
+  }
+
+  .stez-action-meta span:last-child {
+    margin-top: 5px;
+    text-align: left;
+  }
+
+  .stez-primary-action {
+    min-height: 50px;
+    font-size: 11px;
+    line-height: 1.35;
+  }
+
+  .stez-rate-panel {
+    min-height: 0;
+    display: block;
+  }
+
+  .stez-rate-panel > div:first-child {
+    min-height: 128px;
+    border-right: 0;
+    border-bottom: 1px solid var(--tezex-line);
+  }
+
+  .stez-rate-panel__empty {
+    min-height: 180px;
+    padding: 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stez-page,
+  .stez-availability.is-checking .stez-availability__signal {
+    animation: none;
+  }
+}
+
+@keyframes stez-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes stez-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}

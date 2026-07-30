@@ -12,6 +12,7 @@ import { AppConfig } from "./types/general";
 import appConfig from "./config/app.json";
 import { Home } from "./pages/Home";
 import { Analytics } from "./pages/Analytics";
+import { Stez } from "./pages/Stez";
 import { ColorModeProvider } from "./contexts/color-mode";
 
 const router = createHashRouter([
@@ -34,6 +35,10 @@ const router = createHashRouter([
       {
         path: "analytics",
         element: <Analytics />,
+      },
+      {
+        path: "stez",
+        element: <Stez />,
       },
     ],
   },

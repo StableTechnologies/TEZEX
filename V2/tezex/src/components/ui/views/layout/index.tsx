@@ -9,6 +9,7 @@ import Box from "@mui/material/Box";
 import style from "./style";
 import useStyles from "../../../../hooks/styles";
 import { Link, Typography } from "@mui/material";
+import { useLocation } from "react-router-dom";
 export interface ILayout {
   children:
     | JSX.Element[]
@@ -23,6 +24,7 @@ export interface ILayout {
 
 export const Layout: FC<ILayout> = (props) => {
   const styles = useStyles(style);
+  const location = useLocation();
   const [openMenu, setOpenMenu] = useState(false);
   const toggleMenu = useCallback(() => {
     setOpenMenu(!openMenu);
@@ -68,16 +70,22 @@ export const Layout: FC<ILayout> = (props) => {
           {/* Bottom space for bars or notification */}
           <Box sx={styles.bottomSpace}>
             <Typography sx={styles.bottomSpaceText}>
-              Data provided by
-              <Link
-                href="https://tzkt.io"
-                target="_blank"
-                rel="noopener noreferrer"
-                sx={styles.bottomSpaceLink}
-              >
-                TzKT
-              </Link>
-              API
+              {location.pathname.startsWith("/stez") ? (
+                "sTEZ data read from the selected Tezos RPC"
+              ) : (
+                <>
+                  Data provided by
+                  <Link
+                    href="https://tzkt.io"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    sx={styles.bottomSpaceLink}
+                  >
+                    TzKT
+                  </Link>
+                  API
+                </>
+              )}
             </Typography>
           </Box>
         </Box>

@@ -190,6 +190,17 @@ export const SideBar: FC<ISideBarProps> = (props) => {
             </ListItem>
 
             <ListItem disablePadding sx={styles.listItem}>
+              <ListItemButton
+                component={Link}
+                to="/stez"
+                onClick={props.toggleMenu}
+                selected={location.pathname.startsWith("/stez")}
+              >
+                <ListItemText primary="sTEZ" sx={styles.listItemText} />
+              </ListItemButton>
+            </ListItem>
+
+            <ListItem disablePadding sx={styles.listItem}>
               <ListItemButton href={aboutRedirectUrl}>
                 <ListItemText primary="About" sx={styles.listItemText} />
               </ListItemButton>
