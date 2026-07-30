@@ -5,7 +5,6 @@ import {
     ValidationResult,
     validateAddress,
     validateContractAddress,
-    validateKeyHash,
 } from "@taquito/utils";
 
 dotenv.config();
@@ -30,8 +29,6 @@ interface Config {
     token_metadata_uri: string;
     tokenId: string; // Only for FA2
     poolType: "base" | "mod", // "base" for no fee functionality, "mod" for fee functionality
-    protocol_fee_bp?: number; // Protocol fee in basis points
-    protocol_fee_recipient?: string; // Address to receive protocol fees
 }
 
 export const networks: Record<NetworkName, NetworkConfig> = {
@@ -65,10 +62,6 @@ const config: Config = {
     metadata_uri: getRequiredEnv("METADATA_URI"),
     token_metadata_uri: getRequiredEnv("TOKEN_METADATA_URI"),
     poolType,
-    ...(poolType === "mod" && {
-        protocol_fee_bp: getRequiredIntEnv("PROTOCOL_FEE_BP"),
-        protocol_fee_recipient: getRequiredEnv("PROTOCOL_FEE_RECIPIENT"),
-    }),
 };
 
 export interface FullConfig extends NetworkConfig, Config {
@@ -100,21 +93,11 @@ export function getConfig(networkName: NetworkName): FullConfig {
         throw new Error(`Invalid token standard: ${config.tokenStandard}. Use 'FA1.2' or 'FA2'.`);
     }
 
-    if (config.poolType === "mod" && config.protocol_fee_bp! > 1000) {
-        throw new Error("PROTOCOL_FEE_BP cannot exceed the contract cap of 1000 bp");
-    }
-
     requireValidAddress(
         validateContractAddress(config.tokenAddress),
         "TOKEN_ADDRESS"
     );
-    requireValidAddress(validateKeyHash(config.manager), "MANAGER");
-    if (config.protocol_fee_recipient) {
-        requireValidAddress(
-            validateAddress(config.protocol_fee_recipient),
-            "PROTOCOL_FEE_RECIPIENT"
-        );
-    }
+    requireValidAddress(validateAddress(config.manager), "MANAGER");
 
     return {
         ...networkConfig,
@@ -133,22 +116,6 @@ function getRequiredEnv(key: string): string {
         throw new Error(`Required environment variable ${key} is not set or empty`);
     }
     return value;
-}
-
-function getRequiredIntEnv(key: string, defaultValue?: number): number {
-    const value = process.env[key];
-    if (!value || value.trim() === "") {
-        if (defaultValue !== undefined) return defaultValue;
-        throw new Error(`Required environment variable ${key} is not set`);
-    }
-    if (!/^(0|[1-9][0-9]*)$/.test(value.trim())) {
-        throw new Error(`Environment variable ${key} must be a non-negative integer`);
-    }
-    const num = Number(value);
-    if (!Number.isSafeInteger(num)) {
-        throw new Error(`Environment variable ${key} exceeds JavaScript's safe integer range`);
-    }
-    return num;
 }
 
 function getRequiredNatEnv(key: string): string {

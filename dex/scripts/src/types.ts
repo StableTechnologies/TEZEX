@@ -30,7 +30,6 @@ export interface DexStorage {
   freezeBaker: boolean;
   manager: string;
   tokenId?: string; // Only for FA2
-  protocol_fee_bp?: number; // Modified pools only
   protocol_fee_recipient?: string; // Modified pools only
   accumulated_protocol_fee_xtz?: string; // Modified pools only
   accumulated_protocol_fee_token?: string; // Modified pools only
@@ -233,18 +232,12 @@ export const dexStorageTypeMod = {
                                         {
                                           prim: 'pair',
                                           args: [
-                                            { prim: 'nat', annots: ['%protocol_fee_bp'] },
+                                            { prim: 'address', annots: ['%protocol_fee_recipient'] },
                                             {
                                               prim: 'pair',
                                               args: [
-                                                { prim: 'address', annots: ['%protocol_fee_recipient'] },
-                                                {
-                                                  prim: 'pair',
-                                                  args: [
-                                                    { prim: 'mutez', annots: ['%accumulated_protocol_fee_xtz'] },
-                                                    { prim: 'nat', annots: ['%accumulated_protocol_fee_token'] }
-                                                  ]
-                                                }
+                                                { prim: 'mutez', annots: ['%accumulated_protocol_fee_xtz'] },
+                                                { prim: 'nat', annots: ['%accumulated_protocol_fee_token'] }
                                               ]
                                             }
                                           ]
@@ -317,18 +310,12 @@ export const dexStorageTypeFA2Mod = {
                                             {
                                               prim: 'pair',
                                               args: [
-                                                { prim: 'nat', annots: ['%protocol_fee_bp'] },
+                                                { prim: 'address', annots: ['%protocol_fee_recipient'] },
                                                 {
                                                   prim: 'pair',
                                                   args: [
-                                                    { prim: 'address', annots: ['%protocol_fee_recipient'] },
-                                                    {
-                                                      prim: 'pair',
-                                                      args: [
-                                                        { prim: 'mutez', annots: ['%accumulated_protocol_fee_xtz'] },
-                                                        { prim: 'nat', annots: ['%accumulated_protocol_fee_token'] }
-                                                      ]
-                                                    }
+                                                    { prim: 'mutez', annots: ['%accumulated_protocol_fee_xtz'] },
+                                                    { prim: 'nat', annots: ['%accumulated_protocol_fee_token'] }
                                                   ]
                                                 }
                                               ]

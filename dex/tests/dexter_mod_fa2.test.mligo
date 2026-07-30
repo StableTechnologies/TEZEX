@@ -98,7 +98,6 @@ let deploy_lqt
 let deploy_dex
     (token_address : address)
     (token_id : nat)
-    (protocol_fee_bp : nat)
     (protocol_fee_recipient : address) =
   let dex_storage =
     Dexter.build_storage
@@ -107,7 +106,6 @@ let deploy_dex
        manager = src ();
        tokenAddress = token_address;
        tokenId = token_id;
-       protocol_fee_bp = protocol_fee_bp;
        protocol_fee_recipient = protocol_fee_recipient;
       } in
   Test.Originate.contract (contract_of Dexter) dex_storage 0tez
@@ -126,14 +124,13 @@ let activate_dex (dex_taddr) =
   ()
 
 let prepare_full_dex
-    (protocol_fee_bp : nat)
     (lqt_total_supply : nat)
     (token_id : nat) =
   let () = clean () in
   let () = Test.State.set_source (src ()) in
   let tok_orig = deploy_fa2_token 1001000000n token_id in
   let tok_addr = Test.Typed_address.to_address tok_orig.taddr in
-  let dex_orig = deploy_dex tok_addr token_id protocol_fee_bp (other ()) in
+  let dex_orig = deploy_dex tok_addr token_id (other ()) in
   let dex_addr = Test.Typed_address.to_address dex_orig.taddr in
   let lqt_orig = deploy_lqt lqt_total_supply (src ()) dex_addr in
   let lqt_addr = Test.Typed_address.to_address lqt_orig.taddr in
@@ -181,9 +178,9 @@ let prepare_full_dex
     Test.Typed_address.transfer_exn dex_orig.taddr (UpdateTokenPool ()) 0tez in
   (dex_orig, lqt_orig, tok_orig)
 
-let setup_full_dex (protocol_fee_bp : nat) =
+let setup_full_dex () =
   let (dex_orig, lqt_orig, tok_orig) =
-    prepare_full_dex protocol_fee_bp 1000000n 0n in
+    prepare_full_dex 1000000n 0n in
   let () = activate_dex dex_orig.taddr in
   (dex_orig, lqt_orig, tok_orig)
 
@@ -216,7 +213,6 @@ let test_modified_fa2_pool_is_inactive_by_default =
   let dex_orig =
     deploy_dex
       (Test.Typed_address.to_address tok_orig.taddr)
-      0n
       0n
       (other ()) in
   let storage : Dexter.storage =
@@ -277,7 +273,6 @@ let test_modified_fa2_only_manager_can_seed_inactive_pool =
     deploy_dex
       (Test.Typed_address.to_address tok_orig.taddr)
       0n
-      0n
       (other ()) in
   let () = Test.State.set_source (other ()) in
   let result =
@@ -289,7 +284,7 @@ let test_modified_fa2_only_manager_can_seed_inactive_pool =
 
 let test_modified_fa2_activation_rejects_unexpected_reserves =
   let test_name = "test_modified_fa2_activation_rejects_unexpected_reserves" in
-  let (dex_orig, _, _) = prepare_full_dex 0n 1000000n 0n in
+  let (dex_orig, _, _) = prepare_full_dex 1000000n 0n in
   let activate_param : Dexter.activate_pool =
     {
      expectedXtzPool = 1tez;
@@ -310,7 +305,7 @@ let test_modified_fa2_activation_rejects_unexpected_reserves =
 
 let test_modified_fa2_activation_verifies_lqt_total_supply =
   let test_name = "test_modified_fa2_activation_verifies_lqt_total_supply" in
-  let (dex_orig, _, _) = prepare_full_dex 0n 1000001n 0n in
+  let (dex_orig, _, _) = prepare_full_dex 1000001n 0n in
   let activate_param : Dexter.activate_pool =
     {
      expectedXtzPool = 1tez;
@@ -331,7 +326,7 @@ let test_modified_fa2_activation_verifies_lqt_total_supply =
 
 let test_modified_fa2_activation =
   let test_name = "test_modified_fa2_activation" in
-  let (dex_orig, _, _) = setup_full_dex 0n in
+  let (dex_orig, _, _) = setup_full_dex () in
   let storage : Dexter.storage =
     Test.Typed_address.get_storage dex_orig.taddr in
   if
@@ -362,7 +357,6 @@ let assert_malformed_fa2_response_rejected
   let dex_orig =
     deploy_dex
       (Test.Typed_address.to_address tok_orig.taddr)
-      0n
       0n
       (other ()) in
   let result =
@@ -403,7 +397,7 @@ let test_modified_fa2_rejects_empty_callback_result =
 
 let test_modified_fa2_nonzero_token_id_lifecycle =
   let test_name = "test_modified_fa2_nonzero_token_id_lifecycle" in
-  let (dex_orig, _, _) = prepare_full_dex 0n 1000000n 7n in
+  let (dex_orig, _, _) = prepare_full_dex 1000000n 7n in
   let () = activate_dex dex_orig.taddr in
   let storage : Dexter.storage =
     Test.Typed_address.get_storage dex_orig.taddr in
@@ -413,7 +407,7 @@ let test_modified_fa2_nonzero_token_id_lifecycle =
 
 let test_modified_fa2_cannot_activate_twice =
   let test_name = "test_modified_fa2_cannot_activate_twice" in
-  let (dex_orig, _, _) = setup_full_dex 0n in
+  let (dex_orig, _, _) = setup_full_dex () in
   let activate_param : Dexter.activate_pool =
     {
      expectedXtzPool = 1tez;
@@ -428,7 +422,7 @@ let test_modified_fa2_cannot_activate_twice =
 
 let test_modified_fa2_empty_pool_stays_fail_closed =
   let test_name = "test_modified_fa2_empty_pool_stays_fail_closed" in
-  let (dex_orig, _, _) = setup_full_dex 0n in
+  let (dex_orig, _, _) = setup_full_dex () in
   let remove_param : Dexter.remove_liquidity =
     {
      to_ = src ();
@@ -476,7 +470,6 @@ let test_modified_fa2_one_sided_active_states_fail_closed =
        manager = src ();
        tokenAddress = Test.Typed_address.to_address tok_orig.taddr;
        tokenId = 0n;
-       protocol_fee_bp = 0n;
        protocol_fee_recipient = other ();
       } in
   let xtz_only_storage =
@@ -536,7 +529,7 @@ let test_modified_fa2_one_sided_active_states_fail_closed =
 
 let test_modified_fa2_xtz_fee_claim_preserves_lp_reserve =
   let test_name = "test_modified_fa2_xtz_fee_claim_preserves_lp_reserve" in
-  let (dex_orig, _, _) = setup_full_dex 100n in
+  let (dex_orig, _, _) = setup_full_dex () in
   let swap_param : Dexter.xtz_to_token =
     {
      to_ = src ();
@@ -552,8 +545,8 @@ let test_modified_fa2_xtz_fee_claim_preserves_lp_reserve =
     Test.Typed_address.get_storage dex_orig.taddr in
   let () =
     if
-      storage_after_swap.xtzPool <> 1990000mutez
-      or storage_after_swap.accumulated_protocol_fee_xtz <> 10000mutez
+      storage_after_swap.xtzPool <> 1999500mutez
+      or storage_after_swap.accumulated_protocol_fee_xtz <> 500mutez
     then failwith (test_name ^ ": XTZ fee accounting mismatch")
     else () in
   let () = Test.State.set_source (other ()) in
@@ -572,7 +565,7 @@ let test_modified_fa2_xtz_fee_claim_preserves_lp_reserve =
 
 let test_modified_fa2_token_fee_survives_resynchronization =
   let test_name = "test_modified_fa2_token_fee_survives_resynchronization" in
-  let (dex_orig, _, tok_orig) = setup_full_dex 100n in
+  let (dex_orig, _, tok_orig) = setup_full_dex () in
   let swap_param : Dexter.token_to_xtz =
     {
      to_ = src ();
@@ -589,8 +582,8 @@ let test_modified_fa2_token_fee_survives_resynchronization =
     Test.Typed_address.get_storage dex_orig.taddr in
   let () =
     if
-      storage_after_swap.tokenPool <> 1990000n
-      or storage_after_swap.accumulated_protocol_fee_token <> 10000n
+      storage_after_swap.tokenPool <> 1999500n
+      or storage_after_swap.accumulated_protocol_fee_token <> 500n
     then failwith (test_name ^ ": fee accounting mismatch after swap")
     else () in
   let _ : nat =
@@ -602,8 +595,8 @@ let test_modified_fa2_token_fee_survives_resynchronization =
     Test.Typed_address.get_storage dex_orig.taddr in
   let () =
     if
-      storage_after_update.tokenPool <> 1990000n
-      or storage_after_update.accumulated_protocol_fee_token <> 10000n
+      storage_after_update.tokenPool <> 1999500n
+      or storage_after_update.accumulated_protocol_fee_token <> 500n
     then failwith (test_name ^ ": fee accounting changed during synchronization")
     else () in
   let () = Test.State.set_source (other ()) in
@@ -616,13 +609,13 @@ let test_modified_fa2_token_fee_survives_resynchronization =
     Test.Typed_address.get_storage dex_orig.taddr in
   if
     storage_after_claim.accumulated_protocol_fee_token <> 0n
-    or fa2_balance tok_orig.taddr (other ()) <> 10000n
+    or fa2_balance tok_orig.taddr (other ()) <> 500n
   then failwith (test_name ^ ": fee claim mismatch")
   else ()
 
 let test_modified_fa2_liquidity_lifecycle_after_activation =
   let test_name = "test_modified_fa2_liquidity_lifecycle_after_activation" in
-  let (dex_orig, lqt_orig, _) = setup_full_dex 0n in
+  let (dex_orig, lqt_orig, _) = setup_full_dex () in
   let add_param : Dexter.add_liquidity =
     {
      owner = src ();

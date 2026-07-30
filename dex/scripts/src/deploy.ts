@@ -25,6 +25,7 @@ import {
     formatMutez,
     toSafeNumber,
 } from "./amounts.js";
+import { appendInitializationCalls } from "./initialization.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -92,7 +93,11 @@ async function deployLQT(tezos: TezosToolkit, dexAddress: string, config: FullCo
     return contract.address;
 }
 
-async function deployDEX(tezos: TezosToolkit, config: FullConfig): Promise<string> {
+async function deployDEX(
+    tezos: TezosToolkit,
+    config: FullConfig,
+    deploymentManager: string
+): Promise<string> {
     console.log("\nDeploying DEX contract...");
 
     const contractFile =
@@ -123,14 +128,15 @@ async function deployDEX(tezos: TezosToolkit, config: FullConfig): Promise<strin
         }),
         selfIsUpdatingTokenPool: false,
         freezeBaker: false,
-        manager: config.manager,
+        // The signer manages only the inactive initialization window. The
+        // initialization batch transfers management to config.manager.
+        manager: deploymentManager,
         tokenAddress: config.tokenAddress,
         lqtAddress: "tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU",
         tokenId: config.tokenStandard === "FA2" ? config.tokenId : undefined,
 
         ...(config.poolType === "mod" && {
-            protocol_fee_bp: config.protocol_fee_bp!,
-            protocol_fee_recipient: config.protocol_fee_recipient!,
+            protocol_fee_recipient: config.manager,
             accumulated_protocol_fee_xtz: "0",
             accumulated_protocol_fee_token: "0",
         }),
@@ -155,6 +161,7 @@ function saveDeploymentInfo(
     lqtAddress: string,
     tokenAddress: string,
     initializationOperation: string,
+    deploymentManager: string,
     config: FullConfig
 ): void {
     const lqtTotal = calculateInitialLqt(
@@ -172,13 +179,16 @@ function saveDeploymentInfo(
         initializationOperation,
         configuration: {
             manager: config.manager,
+            deploymentManager,
             tokenStandard: config.tokenStandard,
             tokenId: config.tokenId,
             poolType: config.poolType,
             seedAmount: config.seedAmount,
             lqtTotal,
-            protocolFeeBp: config.protocol_fee_bp,
-            protocolFeeRecipient: config.protocol_fee_recipient,
+            lpFeeBp: config.poolType === "mod" ? 25 : undefined,
+            protocolFeeBp: config.poolType === "mod" ? 5 : undefined,
+            totalFeeBp: config.poolType === "mod" ? 30 : undefined,
+            protocolFeeRecipient: config.poolType === "mod" ? config.manager : undefined,
         },
     };
 
@@ -250,13 +260,6 @@ async function initializePool(
     console.log("\nInitializing pool atomically...");
     const managerAddress = await tezos.signer.publicKeyHash();
 
-    if (managerAddress !== config.manager) {
-        throw new Error(
-            `The deployment signer (${managerAddress}) must match MANAGER (${config.manager}) ` +
-            "to initialize the pool."
-        );
-    }
-
     const dexContract = await tezos.contract.at(dexAddress);
     const tokenContract = await tezos.contract.at(config.tokenAddress);
 
@@ -267,37 +270,29 @@ async function initializePool(
         tokenId: config.tokenStandard === "FA2" ? config.tokenId : undefined,
     });
 
-    let batch = tezos.contract
-        .batch()
-        .withContractCall(dexContract.methodsObject.setLqtAddress(lqtAddress))
-        .withContractCall(dexContract.methodsObject.default(), {
-            amount: toSafeNumber(config.seedAmount.xtz, "SEED_XTZ"),
-            mutez: true,
-        })
-        .withContractCall(tokenContract.methodsObject.transfer(transferParams.transfer))
-        .withContractCall(dexContract.methodsObject.updateTokenPool());
-
-    if (config.poolType === "mod") {
-        const lqtTotal = calculateInitialLqt(
+    const batch = appendInitializationCalls({
+        batch: tezos.contract.batch(),
+        dexContract,
+        tokenContract,
+        tokenTransfer: transferParams.transfer,
+        lqtAddress,
+        seedXtz: toSafeNumber(config.seedAmount.xtz, "SEED_XTZ"),
+        seedToken: config.seedAmount.token,
+        lqtTotal: calculateInitialLqt(
             config.seedAmount.xtz,
             config.seedAmount.token
-        );
-        batch = batch.withContractCall(
-            dexContract.methodsObject.activate({
-                expectedXtzPool: config.seedAmount.xtz,
-                expectedTokenPool: config.seedAmount.token,
-                expectedLqtTotal: lqtTotal,
-            })
-        );
-    }
+        ),
+        poolType: config.poolType,
+        finalManager: config.manager,
+    });
 
     const op = await batch.send();
     console.log(`Pool initialization operation: ${op.hash}`);
     await op.confirmation(1);
     console.log(
         config.poolType === "mod"
-            ? "✓ Pool funded, reserves synchronized, and activated"
-            : "✓ Pool funded and reserves synchronized"
+            ? "✓ Pool funded, activated, and transferred to final manager"
+            : "✓ Pool funded and transferred to final manager"
     );
     return op.hash;
 }
@@ -404,15 +399,9 @@ async function main(): Promise<void> {
 
     await checkBalance(config, tezos);
 
-    const managerAddress = config.manager;
-    if (managerAddress !== pkh) {
-        throw new Error(
-            `MANAGER (${managerAddress}) must match the deployment signer (${pkh}).`
-        );
-    }
-
     console.log(`Token: ${config.tokenAddress}`);
-    console.log(`Manager: ${managerAddress}`);
+    console.log(`Temporary deployment manager: ${pkh}`);
+    console.log(`Final manager and fee recipient: ${config.manager}`);
     console.log(`Seed XTZ: ${config.seedAmount.xtz} mutez`);
     console.log(`Seed Tokens: ${config.seedAmount.token} tokens`);
 
@@ -422,7 +411,7 @@ async function main(): Promise<void> {
     }
 
     try {
-        const dexAddress = await deployDEX(tezos, config);
+        const dexAddress = await deployDEX(tezos, config, pkh);
         const lqtAddress = await deployLQT(tezos, dexAddress, config);
         await new Promise((resolve) => setTimeout(resolve, 5000));
         const initializationOperation =
@@ -434,6 +423,7 @@ async function main(): Promise<void> {
             lqtAddress,
             config.tokenAddress,
             initializationOperation,
+            pkh,
             config
         );
 

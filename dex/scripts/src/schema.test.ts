@@ -49,7 +49,6 @@ test("deployment schemas preserve arbitrary-precision storage integers", () => {
         tokenAddress: token,
         tokenId: exactTokenId,
         lqtAddress: manager,
-        protocol_fee_bp: 5,
         protocol_fee_recipient: manager,
         accumulated_protocol_fee_xtz: "0",
         accumulated_protocol_fee_token: "0",

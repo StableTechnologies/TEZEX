@@ -61,7 +61,6 @@ let deploy_dex
     (manager : address)
     (token_address : address)
     (xtz_amount : tez)
-    (protocol_fee_bp : nat)
     (protocol_fee_recipient : address) =
   let dex_storage =
     DexterMod.Dexter.build_storage
@@ -69,7 +68,6 @@ let deploy_dex
        lqtTotal = lqt_total;
        manager = manager;
        tokenAddress = token_address;
-       protocol_fee_bp = protocol_fee_bp;
        protocol_fee_recipient = protocol_fee_recipient;
       } in
   Test.Originate.contract (contract_of DexterMod.Dexter) dex_storage xtz_amount
@@ -127,43 +125,7 @@ let setup_full_dex () =
   let () = Test.State.set_source (src ()) in
   let tok_orig = deploy_token 1001000000n (src ()) in
   let dex_orig =
-    deploy_dex 1000000n (src ()) (Test.Typed_address.to_address tok_orig.taddr) 0tez 0n (src ()) in
-  let lqt_orig = deploy_lqt 1000000n (src ()) (Test.Typed_address.to_address dex_orig.taddr) in
-  let approve_param : LQT.LQT.approve =
-    {
-     spender = Test.Typed_address.to_address dex_orig.taddr;
-     value = 1000000000000n
-    } in
-  let _ : nat = Test.Typed_address.transfer_exn tok_orig.taddr (Approve approve_param) 0tez in
-  let _ : nat = Test.Typed_address.transfer_exn dex_orig.taddr (Default_ ()) 1tez in
-  let transfer_param : LQT.LQT.transfer =
-    {
-     address_from = src ();
-     address_to = Test.Typed_address.to_address dex_orig.taddr;
-     value = 1000000n
-    } in
-  let _ : nat = Test.Typed_address.transfer_exn tok_orig.taddr (Transfer transfer_param) 0tez in
-  let _ : nat = Test.Typed_address.transfer_exn dex_orig.taddr (UpdateTokenPool ()) 0tez in
-  let _ : nat =
-    Test.Typed_address.transfer_exn
-      dex_orig.taddr
-      (SetLqtAddress (Test.Typed_address.to_address lqt_orig.taddr))
-      0tez in
-  let () = activate_dex dex_orig.taddr 1tez 1000000n 1000000n in
-  (dex_orig, lqt_orig, tok_orig)
-
-let setup_full_dex_with_fee (protocol_fee_bp : nat) =
-  let () = clean () in
-  let () = Test.State.set_source (src ()) in
-  let tok_orig = deploy_token 1001000000n (src ()) in
-  let dex_orig =
-    deploy_dex
-      1000000n
-      (src ())
-      (Test.Typed_address.to_address tok_orig.taddr)
-      0tez
-      protocol_fee_bp
-      (src ()) in
+    deploy_dex 1000000n (src ()) (Test.Typed_address.to_address tok_orig.taddr) 0tez (src ()) in
   let lqt_orig = deploy_lqt 1000000n (src ()) (Test.Typed_address.to_address dex_orig.taddr) in
   let approve_param : LQT.LQT.approve =
     {
@@ -198,7 +160,6 @@ let setup_dex_with_updating_pool () =
        lqtTotal = 1000000n;
        manager = src ();
        tokenAddress = Test.Typed_address.to_address tok_orig.taddr;
-       protocol_fee_bp = 0n;
        protocol_fee_recipient = src ();
       } in
   let dex_storage = {dex_storage with selfIsUpdatingTokenPool = true} in
@@ -218,7 +179,6 @@ let setup_custom_dex (xtz_pool : tez) (token_pool : nat) (lqt_total : nat) =
       (src ())
       (Test.Typed_address.to_address tok_orig.taddr)
       0mutez
-      0n
       (src ()) in
   let _ : nat = Test.Typed_address.transfer_exn dex_orig.taddr (Default_ ()) xtz_pool in
   let lqt_orig = deploy_lqt lqt_total (src ()) (Test.Typed_address.to_address dex_orig.taddr) in

@@ -36,7 +36,8 @@ Decentralized Exchange (DEX) implementation for Tezos blockchain based on Dexter
 - **Views**: On-chain views for quotes and pool state
   - `get_reserves`: Get current pool reserves
   - `get_lqt_total`: Get total liquidity tokens
-  - `get_fee_bp`: Get fee in basis points (30 = 0.3%)
+  - `get_fee_bp`: Get the immutable LP, protocol, and total fees in basis points
+    `(25, 5, 30)`
   - `is_active`: Check whether a modified pool has completed verified initialization
   - `quote_tez_to_token`: Calculate XTZ → Token swap output
   - `quote_token_to_tez`: Calculate Token → XTZ swap output
@@ -112,7 +113,7 @@ math using the following formula, rounded down:
 ```
 lqt = sqrt(xtz_seed * token_seed)
 ``` 
-This amount will be minted to **MANAGER** address (see .env.example)
+This amount will be minted to the final **MANAGER** address (see .env.example).
 Consider burning some initial liquidity (sending to a null address) to ensure the pool is never fully depleted.
 
 
@@ -121,13 +122,17 @@ This will:
 2. Deploy DEX contract
 3. Deploy LQT contract (with DEX as admin)
 4. In one atomic operation group, link the LQT address, fund both reserves,
-   synchronize the token pool, and activate a modified pool
+   synchronize the token pool, activate a modified pool, and transfer DEX
+   management from the deployment signer to `MANAGER`
 5. Verify the resulting on-chain addresses, reserves, balances, LQT supply, and
    activation state
 6. Save the exact integer configuration and initialization operation hash to
    `deployments/testnet-latest.json`
 
-`MANAGER` must match the account identified by the deployment private key.
+For modified pools, the total swap fee is immutable: 25 bp remains with LPs and
+5 bp is accumulated for the protocol fee recipient. `MANAGER` is used as the
+initial recipient. It may be an originated multisig contract; the private-key
+signer only manages the inactive initialization window.
 
 ### 3. Deploy to Mainnet
 
