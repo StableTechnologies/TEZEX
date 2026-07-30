@@ -273,6 +273,24 @@ export const getTzktApiUrl = (networkType: NetworkType): string => {
   }
 };
 
+const assertTzktResponse = (response: Response): void => {
+  if (!response.ok) {
+    throw new Error(`TzKT balance request failed with HTTP ${response.status}`);
+  }
+};
+
+const parseExactBalance = (value: unknown, field: string): BigNumber => {
+  if (typeof value !== "string" || !/^\d+$/.test(value)) {
+    throw new Error(`TzKT returned an invalid ${field}`);
+  }
+  return new BigNumber(value);
+};
+
+const asTzktRecord = (value: unknown): Record<string, unknown> | undefined =>
+  typeof value === "object" && value !== null
+    ? (value as Record<string, unknown>)
+    : undefined;
+
 export async function getBalanceFromTzKT(
   network: NetworkType,
   address: string,
@@ -281,19 +299,53 @@ export async function getBalanceFromTzKT(
   const api = getTzktApiUrl(network);
   switch (asset.type) {
     case TokenType.XTZ: {
-      const response = await fetch(`${api}/v1/accounts/${address}/balance`);
-      const data = await response.json();
-      return data != null ? new BigNumber(data) : new BigNumber(0);
+      const response = await fetch(
+        `${api}/v1/accounts/${encodeURIComponent(address)}/balance`
+      );
+      assertTzktResponse(response);
+      return parseExactBalance((await response.text()).trim(), "XTZ balance");
     }
     case TokenType.FA12:
     case TokenType.FA2: {
-      const response = await fetch(
-        `${api}/v1/tokens/balances?account=${address}&token.contract=${asset.address}`
-      );
-      const data = await response.json();
-      return data[0]?.balance
-        ? new BigNumber(data[0].balance)
-        : new BigNumber(0);
+      const tokenId = asset.tokenId ?? 0;
+      if (!Number.isSafeInteger(tokenId) || tokenId < 0) {
+        throw new Error("Configured token ID must be a non-negative integer");
+      }
+
+      const query = new URLSearchParams({
+        account: address,
+        "token.contract": asset.address,
+        "token.tokenId": tokenId.toString(),
+        limit: "2",
+      });
+      const response = await fetch(`${api}/v1/tokens/balances?${query}`);
+      assertTzktResponse(response);
+
+      const data: unknown = await response.json();
+      if (!Array.isArray(data)) {
+        throw new Error("TzKT returned a malformed token balance response");
+      }
+      if (data.length === 0) return new BigNumber(0);
+      if (data.length !== 1) {
+        throw new Error("TzKT returned an ambiguous token balance response");
+      }
+
+      const balance = asTzktRecord(data[0]);
+      const account = asTzktRecord(balance?.account);
+      const token = asTzktRecord(balance?.token);
+      const contract = asTzktRecord(token?.contract);
+
+      if (
+        account?.address !== address ||
+        contract?.address !== asset.address ||
+        token?.tokenId !== tokenId.toString()
+      ) {
+        throw new Error(
+          "TzKT token balance identity did not match the request"
+        );
+      }
+
+      return parseExactBalance(balance?.balance, "token balance");
     }
   }
 }

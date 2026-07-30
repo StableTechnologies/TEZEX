@@ -23,7 +23,29 @@ import {
 import { SubmittedOperationError } from "./failures";
 import { isValidSlippage } from "./transactionSafety";
 
-const MUTEZ_IN_TEZ = 1_000_000;
+const MUTEZ_IN_TEZ = "1000000";
+
+export const toExactNat = (
+  value: BigNumber.Value,
+  field = "contract amount"
+): string => {
+  const amount = new BigNumber(value);
+  if (!amount.isFinite() || !amount.isInteger() || amount.isNegative()) {
+    throw new Error(`${field} must be a non-negative integer`);
+  }
+  return amount.toFixed(0);
+};
+
+export const withExactMutezAmount = (
+  transferParams: TransferParams,
+  amount: BigNumber.Value
+): TransferParams => ({
+  ...transferParams,
+  // Taquito 24 still declares this field as number, but its runtime and Beacon
+  // serializer use amount.toString(). Preserve the integer through that boundary.
+  amount: toExactNat(amount, "mutez amount") as unknown as number,
+  mutez: true,
+});
 
 export interface TransactionLifecycle {
   onSubmitted?: (opHash: string) => void;
@@ -301,10 +323,13 @@ export function tokenDecimalToMantissa(
 export function transferParamsToBeaconOp(
   transferParams: TransferParams
 ): PartialTezosTransactionOperation {
-  // Convert amount to mutez string
-  const amountInMutez = transferParams.mutez
-    ? transferParams.amount.toString()
-    : (transferParams.amount * MUTEZ_IN_TEZ).toString();
+  const amount = new BigNumber(
+    transferParams.amount as unknown as BigNumber.Value
+  );
+  const amountInMutez = toExactNat(
+    transferParams.mutez ? amount : amount.times(MUTEZ_IN_TEZ),
+    "transaction amount"
+  );
 
   const operation: PartialTezosTransactionOperation = {
     kind: TezosOperationType.TRANSACTION,
@@ -338,23 +363,25 @@ interface BuildApproveOpParams {
   token: Asset;
   ownerAddress: string;
   spenderAddress: string;
-  amount: number; // For FA2 tokens, this will be 0 for revocation and any other number for approval.
+  amount: BigNumber.Value; // For FA2 tokens, zero revokes and a positive value installs the operator.
 }
 
 export function buildApproveOp(params: BuildApproveOpParams): TransferParams {
+  const amount = toExactNat(params.amount, "token approval amount");
+
   if (params.token.type === TokenType.FA12) {
     return params.tokenContract.methodsObject
-      .approve({ spender: params.spenderAddress, value: params.amount })
+      .approve({ spender: params.spenderAddress, value: amount })
       .toTransferParams();
   }
 
   const operatorParam = {
     owner: params.ownerAddress,
     operator: params.spenderAddress,
-    token_id: params.token.tokenId,
+    token_id: params.token.tokenId ?? 0,
   };
 
-  const action = params.amount === 0 ? "remove_operator" : "add_operator";
+  const action = amount === "0" ? "remove_operator" : "add_operator";
 
   return params.tokenContract.methodsObject
     .update_operators([{ [action]: operatorParam }])

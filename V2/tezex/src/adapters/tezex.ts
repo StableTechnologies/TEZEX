@@ -18,7 +18,9 @@ import {
 } from "@airgap/beacon-sdk";
 import {
   buildApproveOp,
+  toExactNat,
   transferParamsToBeaconOp,
+  withExactMutezAmount,
 } from "../functions/transactions";
 import { TransferParams } from "@taquito/taquito";
 
@@ -231,11 +233,11 @@ export class TezexAdapter implements IPoolAdapter {
 
       // Calculate max tokens with slippage
       const maxTokensDeposited = tokenBAmount
-        .times(1 + slippage / 100)
+        .plus(tokenBAmount.times(slippage).div(100))
         .integerValue(BigNumber.ROUND_DOWN);
       // Apply slippage to minLqtMinted so small pool changes between estimate and submit don't fail
       const minLqtWithSlippage = minLpTokens
-        .times(1 - slippage / 100)
+        .minus(minLpTokens.times(slippage).div(100))
         .integerValue(BigNumber.ROUND_DOWN);
 
       // addLiquidity(address owner, nat minLqtMinted, nat maxTokensDeposited, timestamp deadline)
@@ -259,21 +261,21 @@ export class TezexAdapter implements IPoolAdapter {
         token: asset,
         ownerAddress: userAddress,
         spenderAddress: this.poolConfig.address,
-        amount: maxTokensDeposited.toNumber(),
+        amount: maxTokensDeposited,
       });
       allTransferParams.push(approve);
 
       const addLiq = contract.methodsObject.addLiquidity({
         owner: userAddress,
-        minLqtMinted: minLqtWithSlippage.toNumber(),
-        maxTokensDeposited: maxTokensDeposited.toNumber(),
+        minLqtMinted: toExactNat(minLqtWithSlippage, "minimum LQT minted"),
+        maxTokensDeposited: toExactNat(
+          maxTokensDeposited,
+          "maximum tokens deposited"
+        ),
         deadline,
       });
       allTransferParams.push(
-        addLiq.toTransferParams({
-          amount: tokenAAmount.toNumber(),
-          mutez: true,
-        })
+        withExactMutezAmount(addLiq.toTransferParams(), tokenAAmount)
       );
       allTransferParams.push(approve0);
 
@@ -332,20 +334,21 @@ export class TezexAdapter implements IPoolAdapter {
       );
 
       const minTokenA = estimate.tokenAAmount
-        .times(1 - slippage / 100)
+        .minus(estimate.tokenAAmount.times(slippage).div(100))
         .integerValue(BigNumber.ROUND_DOWN);
       const minTokenB = estimate.tokenBAmount
-        .times(1 - slippage / 100)
+        .minus(estimate.tokenBAmount.times(slippage).div(100))
         .integerValue(BigNumber.ROUND_DOWN);
 
       const removeLiqParams = contract.methodsObject
         .removeLiquidity({
           to: userAddress,
-          lqtBurned: lpTokenAmount
-            .integerValue(BigNumber.ROUND_DOWN)
-            .toNumber(),
-          minXtzWithdrawn: minTokenA.toNumber(),
-          minTokensWithdrawn: minTokenB.toNumber(),
+          lqtBurned: toExactNat(
+            lpTokenAmount.integerValue(BigNumber.ROUND_DOWN),
+            "LQT burned"
+          ),
+          minXtzWithdrawn: toExactNat(minTokenA, "minimum XTZ withdrawn"),
+          minTokensWithdrawn: toExactNat(minTokenB, "minimum tokens withdrawn"),
           deadline,
         })
         .toTransferParams();
@@ -436,23 +439,27 @@ export class TezexAdapter implements IPoolAdapter {
 
     const operation = contract.methodsObject.xtzToToken({
       to: userAddress,
-      minTokensBought: minTokensBought.toNumber(),
+      minTokensBought: toExactNat(minTokensBought, "minimum tokens bought"),
       deadline,
     });
 
-    let transferParams: TransferParams = operation.toTransferParams({
-      amount: xtzAmount.toNumber(),
-      mutez: true,
-    });
+    let transferParams: TransferParams = withExactMutezAmount(
+      operation.toTransferParams(),
+      xtzAmount
+    );
 
     try {
       const estToolkit = makeEstimationToolkit(toolkit, userAddress);
-      const estimate = await estToolkit.estimate.transfer({
-        to: this.poolConfig.address,
-        amount: xtzAmount.toNumber(),
-        mutez: true,
-        parameter: transferParams.parameter,
-      });
+      const estimate = await estToolkit.estimate.transfer(
+        withExactMutezAmount(
+          {
+            to: this.poolConfig.address,
+            amount: 0,
+            parameter: transferParams.parameter,
+          },
+          xtzAmount
+        )
+      );
       transferParams = {
         ...transferParams,
         fee: estimate.suggestedFeeMutez,
@@ -490,23 +497,23 @@ export class TezexAdapter implements IPoolAdapter {
       const contract = await toolkit.contract.at(this.poolConfig.address);
       const tokenContract = await toolkit.contract.at(tokenAddress);
 
-      const tokenAmountInt = tokenAmount
-        .integerValue(BigNumber.ROUND_DOWN)
-        .toNumber();
+      const tokenAmountInt = toExactNat(
+        tokenAmount.integerValue(BigNumber.ROUND_DOWN),
+        "tokens sold"
+      );
       const asset = PoolRegistry.getAsset(this.poolConfig.tokenB);
 
       const allTransferParams: TransferParams[] = [];
+      const resetApproval = buildApproveOp({
+        tokenContract,
+        token: asset,
+        ownerAddress: userAddress,
+        spenderAddress: this.poolConfig.address,
+        amount: 0,
+      });
 
       if (asset.type === TokenType.FA12) {
-        allTransferParams.push(
-          buildApproveOp({
-            tokenContract,
-            token: asset,
-            ownerAddress: userAddress,
-            spenderAddress: this.poolConfig.address,
-            amount: 0,
-          })
-        );
+        allTransferParams.push(resetApproval);
       }
 
       allTransferParams.push(
@@ -524,11 +531,13 @@ export class TezexAdapter implements IPoolAdapter {
           .tokenToXtz({
             to: userAddress,
             tokensSold: tokenAmountInt,
-            minXtzBought: minXtzBought.toNumber(),
+            minXtzBought: toExactNat(minXtzBought, "minimum XTZ bought"),
             deadline,
           })
           .toTransferParams()
       );
+
+      allTransferParams.push(resetApproval);
 
       let estimatedParams = allTransferParams;
       try {
