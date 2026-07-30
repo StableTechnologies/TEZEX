@@ -308,7 +308,19 @@ export const Home: FC<IHome> = (props) => {
               sx={[
                 styles.testnetFunding,
                 {
-                  maxWidth: displayedPath === "swap" ? "880px" : "760px",
+                  maxWidth: displayedPath === "swap" ? "470px" : "760px",
+                  "@media (min-width: 960px)": {
+                    maxWidth: displayedPath === "swap" ? "880px" : "760px",
+                  },
+                  ...(displayedPath === "swap"
+                    ? {
+                        "@media (max-width: 959px)": {
+                          alignItems: "stretch",
+                          flexDirection: "column",
+                          gap: "15px",
+                        },
+                      }
+                    : {}),
                   "@media (max-width: 599px)": {
                     paddingLeft: displayedPath === "swap" ? "18px" : "22px",
                     paddingRight: displayedPath === "swap" ? "18px" : "22px",

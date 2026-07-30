@@ -152,6 +152,9 @@ test("shows both Shadownet funding routes on swap and liquidity", () => {
   expect(screen.getByTestId("testnet-funding")).toHaveTextContent(
     "Fund your test wallet"
   );
+  expect(screen.getByTestId("testnet-funding")).toHaveStyle({
+    maxWidth: "470px",
+  });
   expect(
     screen.getByRole("link", { name: "Get Shadownet test XTZ" })
   ).toHaveAttribute("href", "https://faucet.shadownet.teztnets.com");
@@ -160,7 +163,9 @@ test("shows both Shadownet funding routes on swap and liquidity", () => {
   ).toHaveAttribute("href", "https://faucet.stabletez.com");
 
   fireEvent.click(screen.getByRole("button", { name: "Liquidity" }));
-  expect(screen.getByTestId("testnet-funding")).toBeInTheDocument();
+  expect(screen.getByTestId("testnet-funding")).toHaveStyle({
+    maxWidth: "760px",
+  });
   expect(screen.getByText("Liquidity workspace")).toBeInTheDocument();
   expect(
     screen
