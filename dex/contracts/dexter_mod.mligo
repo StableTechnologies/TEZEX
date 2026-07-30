@@ -173,6 +173,7 @@ module Dexter = struct
   [@inline] let error_LQT_CONTRACT_MUST_HAVE_A_GET_TOTAL_SUPPLY_ENTRYPOINT = 48n
   [@inline] let error_INVALID_ACTIVATION_CALLBACK = 49n
   [@inline] let error_LQT_TOTAL_MISMATCH = 50n
+  [@inline] let error_MINIMUM_LQT_MUST_REMAIN_LOCKED = 51n
 
   // =============================================================================
   // Functions
@@ -229,6 +230,7 @@ module Dexter = struct
   [@inline] let protocol_fee_bp : nat = 5n
   [@inline] let total_fee_bp : nat = 30n
   [@inline] let swap_fee_numerator : nat = 997n
+  [@inline] let minimum_lqt : nat = 1000n
 
   [@inline]
   let compute_protocol_fee (amount_nat : nat) : nat =
@@ -239,7 +241,7 @@ module Dexter = struct
       storage.active
       && storage.xtzPool > 0mutez
       && storage.tokenPool > 0n
-      && storage.lqtTotal > 0n
+      && storage.lqtTotal >= minimum_lqt
 
   // =============================================================================
   // Entrypoint Functions
@@ -321,6 +323,10 @@ module Dexter = struct
                   // This check should be unecessary, the fa12 logic normally takes care of it
                   | None -> (failwith error_CANNOT_BURN_MORE_THAN_THE_TOTAL_AMOUNT_OF_LQT : nat)
                   | Some n -> n in
+              let () =
+                  if new_lqtTotal < minimum_lqt
+                  then failwith error_MINIMUM_LQT_MUST_REMAIN_LOCKED
+                  else () in
               // Calculate tokenPool, convert int to nat
               let new_tokenPool = match is_a_nat (storage.tokenPool - tokens_withdrawn) with
                   | None -> (failwith error_TOKEN_POOL_MINUS_TOKENS_WITHDRAWN_IS_NEGATIVE : nat)
@@ -625,7 +631,7 @@ module Dexter = struct
         else if
             param.expectedXtzPool = 0mutez
             or param.expectedTokenPool = 0n
-            or param.expectedLqtTotal = 0n
+            or param.expectedLqtTotal <= minimum_lqt
             or storage.xtzPool <> param.expectedXtzPool
             (* Token contracts can transfer directly to this address while the
                pool is inactive. Treat the configured token seed as a minimum
@@ -680,7 +686,7 @@ module Dexter = struct
         else if
           storage.xtzPool = 0mutez
           or storage.tokenPool = 0n
-          or storage.lqtTotal = 0n
+          or storage.lqtTotal <= minimum_lqt
         then
             (failwith error_INVALID_INITIAL_RESERVES : result)
         else
@@ -743,6 +749,10 @@ module Dexter = struct
   [@view]
   let get_lqt_total (_ : unit) (storage : storage) : nat =
       storage.lqtTotal
+
+  [@view]
+  let get_minimum_lqt (_ : unit) (_storage : storage) : nat =
+      minimum_lqt
 
   [@view]
   let is_active (_ : unit) (storage : storage) : bool =

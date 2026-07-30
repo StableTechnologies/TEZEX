@@ -170,11 +170,11 @@
                                    COMPARE ;
                                    NEQ ;
                                    IF { PUSH nat 50 ; FAILWITH }
-                                      { PUSH nat 0 ;
+                                      { PUSH nat 1000 ;
                                         DUP 2 ;
                                         GET 5 ;
                                         COMPARE ;
-                                        EQ ;
+                                        LE ;
                                         PUSH nat 0 ;
                                         DUP 3 ;
                                         CAR ;
@@ -244,11 +244,11 @@
                                                       GET 3 ;
                                                       COMPARE ;
                                                       NEQ ;
-                                                      PUSH nat 0 ;
+                                                      PUSH nat 1000 ;
                                                       DUP 6 ;
                                                       GET 4 ;
                                                       COMPARE ;
-                                                      EQ ;
+                                                      LE ;
                                                       PUSH nat 0 ;
                                                       DUP 7 ;
                                                       GET 3 ;
@@ -295,11 +295,11 @@
                                  DUP 6 ;
                                  GET 11 ;
                                  IF { PUSH nat 2 ; FAILWITH }
-                                    { PUSH nat 0 ;
+                                    { PUSH nat 1000 ;
                                       DUP 7 ;
                                       GET 5 ;
                                       COMPARE ;
-                                      GT ;
+                                      GE ;
                                       PUSH nat 0 ;
                                       DUP 8 ;
                                       CAR ;
@@ -595,11 +595,11 @@
                                                              DUP 5 ;
                                                              GET 11 ;
                                                              IF { PUSH nat 2 ; FAILWITH }
-                                                                { PUSH nat 0 ;
+                                                                { PUSH nat 1000 ;
                                                                   DUP 6 ;
                                                                   GET 5 ;
                                                                   COMPARE ;
-                                                                  GT ;
+                                                                  GE ;
                                                                   PUSH nat 0 ;
                                                                   DUP 7 ;
                                                                   CAR ;
@@ -732,11 +732,11 @@
                                                                  DUP 4 ;
                                                                  GET 11 ;
                                                                  IF { PUSH nat 2 ; FAILWITH }
-                                                                    { PUSH nat 0 ;
+                                                                    { PUSH nat 1000 ;
                                                                       DUP 5 ;
                                                                       GET 5 ;
                                                                       COMPARE ;
-                                                                      GT ;
+                                                                      GE ;
                                                                       PUSH nat 0 ;
                                                                       DUP 6 ;
                                                                       CAR ;
@@ -855,11 +855,11 @@
                                                                      DUP 6 ;
                                                                      GET 11 ;
                                                                      IF { PUSH nat 2 ; FAILWITH }
-                                                                        { PUSH nat 0 ;
+                                                                        { PUSH nat 1000 ;
                                                                           DUP 7 ;
                                                                           GET 5 ;
                                                                           COMPARE ;
-                                                                          GT ;
+                                                                          GE ;
                                                                           PUSH nat 0 ;
                                                                           DUP 8 ;
                                                                           CAR ;
@@ -923,6 +923,11 @@
                                                                                                    SUB ;
                                                                                                    ISNAT ;
                                                                                                    IF_NONE { PUSH nat 14 ; FAILWITH } {} ;
+                                                                                                   PUSH nat 1000 ;
+                                                                                                   DUP 2 ;
+                                                                                                   COMPARE ;
+                                                                                                   LT ;
+                                                                                                   IF { PUSH nat 51 ; FAILWITH } {} ;
                                                                                                    DUP 2 ;
                                                                                                    DUP 7 ;
                                                                                                    CAR ;
@@ -1006,11 +1011,11 @@
                                                                      DUP 5 ;
                                                                      GET 11 ;
                                                                      IF { PUSH nat 2 ; FAILWITH }
-                                                                        { PUSH nat 0 ;
+                                                                        { PUSH nat 1000 ;
                                                                           DUP 6 ;
                                                                           GET 5 ;
                                                                           COMPARE ;
-                                                                          GT ;
+                                                                          GE ;
                                                                           PUSH nat 0 ;
                                                                           DUP 7 ;
                                                                           CAR ;
@@ -1138,15 +1143,16 @@
          IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
          PAIR } ;
   view "get_lqt_total" unit nat { GET 7 } ;
+  view "get_minimum_lqt" unit nat { DROP ; PUSH nat 1000 } ;
   view "is_active"
        unit
        bool
        { CDR ;
-         PUSH nat 0 ;
+         PUSH nat 1000 ;
          DUP 2 ;
          GET 5 ;
          COMPARE ;
-         GT ;
+         GE ;
          PUSH nat 0 ;
          DUP 3 ;
          CAR ;

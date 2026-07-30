@@ -446,8 +446,8 @@ let test_modified_fa2_cannot_activate_twice =
     Test.Contract.transfer activate_entrypoint activate_param 0tez in
   assert_error test_name Dexter.error_POOL_ALREADY_ACTIVE result
 
-let test_modified_fa2_empty_pool_stays_fail_closed =
-  let test_name = "test_modified_fa2_empty_pool_stays_fail_closed" in
+let test_modified_fa2_complete_withdrawal_is_rejected =
+  let test_name = "test_modified_fa2_complete_withdrawal_is_rejected" in
   let (dex_orig, _, _) = setup_full_dex () in
   let remove_param : Dexter.remove_liquidity =
     {
@@ -457,32 +457,25 @@ let test_modified_fa2_empty_pool_stays_fail_closed =
      minTokensWithdrawn = 1000000n;
      deadline = future;
     } in
-  let _ : nat =
-    Test.Typed_address.transfer_exn
-      dex_orig.taddr
-      (RemoveLiquidity remove_param)
-      0tez in
-  let storage : Dexter.storage =
-    Test.Typed_address.get_storage dex_orig.taddr in
-  let () =
-    if
-      storage.xtzPool <> 0tez
-      or storage.tokenPool <> 0n
-      or storage.lqtTotal <> 0n
-    then failwith (test_name ^ ": pool was not emptied")
-    else () in
-  let swap_param : Dexter.xtz_to_token =
-    {
-     to_ = src ();
-     minTokensBought = 0n;
-     deadline = future;
-    } in
   let result =
     Test.Typed_address.transfer
       dex_orig.taddr
-      (XtzToToken swap_param)
-      1tez in
-  assert_error test_name Dexter.error_POOL_NOT_ACTIVE result
+      (RemoveLiquidity remove_param)
+      0tez in
+  let () =
+    assert_error
+      test_name
+      Dexter.error_MINIMUM_LQT_MUST_REMAIN_LOCKED
+      result in
+  let storage : Dexter.storage =
+    Test.Typed_address.get_storage dex_orig.taddr in
+  if
+    storage.xtzPool <> 1tez
+    or storage.tokenPool <> 1000000n
+    or storage.lqtTotal <> 1000000n
+    or not storage.active
+  then failwith (test_name ^ ": rejected withdrawal changed pool state")
+  else ()
 
 let test_modified_fa2_one_sided_active_states_fail_closed =
   let test_name = "test_modified_fa2_one_sided_active_states_fail_closed" in
@@ -687,3 +680,54 @@ let test_modified_fa2_liquidity_lifecycle_after_activation =
     or lqt_storage.total_supply <> 1500000n
   then failwith (test_name ^ ": remove-liquidity state mismatch")
   else ()
+
+let test_modified_fa2_final_lp_cannot_cross_minimum_lqt =
+  let test_name = "test_modified_fa2_final_lp_cannot_cross_minimum_lqt" in
+  let (dex_orig, lqt_orig, _) = setup_full_dex () in
+  let withdraw_to_floor : Dexter.remove_liquidity =
+    {
+      to_ = src ();
+      lqtBurned = 999000n;
+      minXtzWithdrawn = 999000mutez;
+      minTokensWithdrawn = 999000n;
+      deadline = future;
+    } in
+  let _ : nat =
+    Test.Typed_address.transfer_exn
+      dex_orig.taddr
+      (RemoveLiquidity withdraw_to_floor)
+      0tez in
+  let pool_storage : Dexter.storage =
+    Test.Typed_address.get_storage dex_orig.taddr in
+  let lqt_storage : LQT.LQT.storage =
+    Test.Typed_address.get_storage lqt_orig.taddr in
+  let owner_lqt =
+    match Big_map.find_opt (src ()) lqt_storage.tokens with
+    | Some balance -> balance
+    | None -> 0n in
+  let () =
+    if
+      pool_storage.xtzPool <> 1000mutez
+      or pool_storage.tokenPool <> 1000n
+      or pool_storage.lqtTotal <> Dexter.minimum_lqt
+      or lqt_storage.total_supply <> Dexter.minimum_lqt
+      or owner_lqt <> Dexter.minimum_lqt
+    then failwith (test_name ^ ": minimum state mismatch")
+    else () in
+  let cross_floor : Dexter.remove_liquidity =
+    {
+      to_ = src ();
+      lqtBurned = 1n;
+      minXtzWithdrawn = 0mutez;
+      minTokensWithdrawn = 0n;
+      deadline = future;
+    } in
+  let result =
+    Test.Typed_address.transfer
+      dex_orig.taddr
+      (RemoveLiquidity cross_floor)
+      0tez in
+  assert_error
+    test_name
+    Dexter.error_MINIMUM_LQT_MUST_REMAIN_LOCKED
+    result

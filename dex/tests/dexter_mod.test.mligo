@@ -1069,3 +1069,52 @@ let test_view_quote_token_to_tez_zero =
   match view_result with
     None -> failwith "quote_token_to_tez view failed"
   | Some xtz_out -> Assert.assert (xtz_out = 0n)
+
+let test_view_get_minimum_lqt =
+  let (dex_orig, _, _) = Util.setup_full_dex () in
+  let dex_address = Test.Typed_address.to_address dex_orig.taddr in
+  let view_result : nat option =
+    Tezos.View.call "get_minimum_lqt" () dex_address in
+  match view_result with
+  | Some minimum -> Assert.assert (minimum = 1000n)
+  | None -> failwith "get_minimum_lqt view failed"
+
+let test_final_ordinary_lp_cannot_cross_minimum_lqt =
+  let test_name = "test_final_ordinary_lp_cannot_cross_minimum_lqt" in
+  let (dex_orig, lqt_orig, tok_orig) = Util.setup_full_dex () in
+  let withdraw_to_floor : DexterMod.Dexter.remove_liquidity =
+    {
+      to_ = Util.src ();
+      lqtBurned = 999000n;
+      minXtzWithdrawn = 999000mutez;
+      minTokensWithdrawn = 999000n;
+      deadline = Util.future
+    } in
+  let _ : nat =
+    Test.Typed_address.transfer_exn
+      dex_orig.taddr
+      (RemoveLiquidity withdraw_to_floor)
+      0tez in
+  let () =
+    Util.assert_dex_state dex_orig.taddr test_name 1000mutez 1000n 1000n in
+  let () =
+    Util.assert_token_balance lqt_orig.taddr test_name (Util.src ()) 1000n in
+  let () =
+    Util.assert_token_balance tok_orig.taddr test_name (Util.src ()) 1000999000n in
+  let cross_floor : DexterMod.Dexter.remove_liquidity =
+    {
+      to_ = Util.src ();
+      lqtBurned = 1n;
+      minXtzWithdrawn = 0mutez;
+      minTokensWithdrawn = 0n;
+      deadline = Util.future
+    } in
+  let result =
+    Test.Typed_address.transfer
+      dex_orig.taddr
+      (RemoveLiquidity cross_floor)
+      0tez in
+  Util.assert_error
+    test_name
+    DexterMod.Dexter.error_MINIMUM_LQT_MUST_REMAIN_LOCKED
+    result

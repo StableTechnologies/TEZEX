@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+    allocateInitialLqt,
     calculateInitialLqt,
     formatMutez,
     integerSquareRoot,
@@ -24,6 +25,16 @@ test("calculateInitialLqt remains exact above Number.MAX_SAFE_INTEGER", () => {
         calculateInitialLqt("1000000000000000000", "250000000000000000"),
         "500000000000000000"
     );
+});
+
+test("allocateInitialLqt reserves the permanent floor", () => {
+    assert.deepEqual(allocateInitialLqt("14142135"), {
+        total: "14142135",
+        provider: "14141135",
+        locked: "1000",
+    });
+    assert.throws(() => allocateInitialLqt("1000"), /must exceed/);
+    assert.throws(() => allocateInitialLqt("999"), /must exceed/);
 });
 
 test("parseNat rejects partial, signed, fractional, and exponential inputs", () => {

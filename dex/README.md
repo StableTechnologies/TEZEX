@@ -55,6 +55,8 @@ pass.
 - Minted when liquidity is added
 - Burned when liquidity is removed
 - Represents proportional ownership of the pool
+- Rejects attached XTZ and fails closed if a burn would underflow total supply
+- Modified pools enforce an immutable 1,000-unit permanent liquidity floor
 
 ## Prerequisites
 
@@ -115,8 +117,11 @@ math using the following formula, rounded down:
 ```
 lqt = sqrt(xtz_seed * token_seed)
 ``` 
-This amount will be minted to the final **MANAGER** address (see .env.example).
-Consider burning some initial liquidity (sending to a null address) to ensure the pool is never fully depleted.
+For every deployment, 1,000 LQT units are assigned to the DEX address and are
+permanently excluded from ordinary withdrawals. The remainder is assigned to
+the final **MANAGER** address (see `.env.example`). Initial LQT must therefore
+exceed 1,000 units. Modified pools also enforce the floor in `removeLiquidity`
+and expose it through `get_minimum_lqt`.
 
 
 This will:
@@ -126,8 +131,8 @@ This will:
 4. In one atomic operation group, link the LQT address, fund both reserves,
    synchronize the token pool, activate a modified pool, and transfer DEX
    management from the deployment signer to `MANAGER`
-5. Verify the resulting on-chain addresses, reserves, balances, LQT supply, and
-   activation state
+5. Verify the resulting on-chain addresses, reserves, balances, LQT supply,
+   permanent locked balance, provider balance, and activation state
 6. Save the exact integer configuration and initialization operation hash to
    `deployments/testnet-latest.json`
 

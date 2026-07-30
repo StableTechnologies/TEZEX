@@ -77,11 +77,18 @@ module LQT = struct
 
   type result = operation list * storage
 
+  let err_non_payable = "LQT_NON_PAYABLE"
+  let err_supply_underflow = "LQT_SUPPLY_UNDERFLOW"
+
+  let assert_non_payable () : unit =
+    Assert.Error.assert (Tezos.get_amount () = 0mutez) err_non_payable
+
   [@inline]
   let maybe (n : nat) : nat option = if n = 0n then (None : nat option) else Some n
 
   [@entry]
   let transfer (param : transfer) (storage : storage) : result =
+    let () = assert_non_payable () in
     let allowances = storage.allowances in
     let tokens = storage.tokens in
     let allowances =
@@ -123,6 +130,7 @@ module LQT = struct
 
   [@entry]
   let approve (param : approve) (storage : storage) : result =
+    let () = assert_non_payable () in
     let allowances = storage.allowances in
     let allowance_key =
       {
@@ -144,6 +152,7 @@ module LQT = struct
   [@entry]
   let mintOrBurn (param : mintOrBurn) (storage : storage) : result =
     begin
+      let () = assert_non_payable () in
       if Tezos.get_sender () <> storage.admin
       then failwith "OnlyAdmin"
       else ();
@@ -157,12 +166,16 @@ module LQT = struct
           None -> (failwith "Cannot burn more than the target's balance." : nat)
         | Some bal -> bal in
       let tokens = Big_map.update param.target (maybe new_balance) storage.tokens in
-      let total_supply = abs (storage.total_supply + param.quantity) in
+      let total_supply =
+        match is_nat (storage.total_supply + param.quantity) with
+          None -> (failwith err_supply_underflow : nat)
+        | Some supply -> supply in
       (([] : operation list), {storage with tokens = tokens; total_supply = total_supply})
     end
 
   [@entry]
   let getAllowance (param : getAllowance) (storage : storage) : result =
+    let () = assert_non_payable () in
     let value =
       match Big_map.find_opt param.request storage.allowances with
         Some value -> value
@@ -171,6 +184,7 @@ module LQT = struct
 
   [@entry]
   let getBalance (param : getBalance) (storage : storage) : result =
+    let () = assert_non_payable () in
     let value =
       match Big_map.find_opt param.owner storage.tokens with
         Some value -> value
@@ -179,6 +193,7 @@ module LQT = struct
 
   [@entry]
   let getTotalSupply (param : getTotalSupply) (storage : storage) : result =
+    let () = assert_non_payable () in
     let total = storage.total_supply in
     ([Tezos.transaction total 0mutez param.callback], storage)
   end

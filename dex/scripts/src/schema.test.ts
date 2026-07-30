@@ -8,6 +8,7 @@ import {
     dexStorageTypeMod,
     lqtStorageType,
 } from "./types.js";
+import { allocateInitialLqt } from "./amounts.js";
 
 const parser = new Parser();
 
@@ -54,8 +55,10 @@ test("deployment schemas preserve arbitrary-precision storage integers", () => {
         accumulated_protocol_fee_token: "0",
     });
 
+    const allocation = allocateInitialLqt(exactLqtTotal);
     const tokens = new MichelsonMap<string, string>();
-    tokens.set(manager, exactLqtTotal);
+    tokens.set(manager, allocation.provider);
+    tokens.set(token, allocation.locked);
     const lqtStorage = new Schema(lqtStorageType).Encode({
         tokens,
         allowances: new MichelsonMap(),
@@ -68,4 +71,5 @@ test("deployment schemas preserve arbitrary-precision storage integers", () => {
     const encoded = JSON.stringify([dexStorage, lqtStorage]);
     assert.match(encoded, new RegExp(exactLqtTotal));
     assert.match(encoded, new RegExp(exactTokenId));
+    assert.match(encoded, new RegExp(allocation.provider));
 });
