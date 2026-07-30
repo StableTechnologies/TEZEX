@@ -1,0 +1,304 @@
+.not-found {
+  --not-found-deep: #0d0f13;
+  --not-found-reticle: #5c6470;
+  position: relative;
+  min-height: calc(100svh - 76px);
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+  padding: 42px 20px 28px;
+  color: var(--tezex-text);
+  background: var(--tezex-bg);
+}
+
+:root[data-theme="light"] .not-found {
+  --not-found-deep: #efefec;
+  --not-found-reticle: #9aa0a8;
+}
+
+.not-found__sky {
+  position: absolute;
+  z-index: 0;
+  inset: -4%;
+  width: 108%;
+  height: 108%;
+  color: var(--tezex-text);
+  pointer-events: none;
+}
+
+.not-found__content,
+.not-found__footer {
+  position: relative;
+  z-index: 1;
+}
+
+.not-found__content {
+  width: min(100%, 430px);
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  animation: not-found-enter 340ms cubic-bezier(0.22, 0.8, 0.24, 1) both;
+}
+
+.not-found__scope {
+  width: min(360px, 78vw);
+  color: var(--not-found-reticle);
+}
+
+.not-found__scope-frame,
+.not-found__scope-hairs {
+  stroke: var(--not-found-reticle);
+}
+
+.not-found__scope-ticks {
+  stroke: var(--not-found-reticle);
+  opacity: 0.75;
+}
+
+.not-found__scope-ring {
+  stroke: var(--not-found-reticle);
+  opacity: 0.5;
+  transform-origin: 120px 120px;
+}
+
+.not-found__scope-sweep {
+  color: var(--not-found-reticle);
+  transform-origin: 120px 120px;
+}
+
+.not-found__status {
+  margin: 24px 0 0;
+  color: var(--tezex-muted);
+  font-family: "Red Hat Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.23em;
+  text-align: center;
+}
+
+.not-found h1 {
+  margin: 12px 0 0;
+  color: var(--tezex-text);
+  font-size: 27px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.not-found__description {
+  max-width: 420px;
+  margin: 12px 0 0;
+  color: var(--tezex-muted);
+  font-family: "Red Hat Mono", monospace;
+  font-size: 12.5px;
+  line-height: 1.8;
+  text-align: center;
+}
+
+.not-found__telemetry {
+  width: min(430px, 92vw);
+  margin-top: 28px;
+  padding: 6px 16px;
+  border: 1px solid var(--tezex-line);
+  border-radius: 16px;
+  background: var(--not-found-deep);
+}
+
+.not-found__telemetry-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 9px 0;
+  border-bottom: 1px dashed var(--tezex-line);
+  font-family: "Red Hat Mono", monospace;
+  font-size: 11.5px;
+}
+
+.not-found__telemetry-row:last-child {
+  border-bottom: 0;
+}
+
+.not-found__telemetry-row span {
+  color: var(--tezex-muted);
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.not-found__telemetry-row strong {
+  overflow-wrap: anywhere;
+  color: var(--tezex-text);
+  font-weight: 500;
+  text-align: right;
+}
+
+.not-found__actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 26px;
+}
+
+.not-found__button {
+  display: inline-flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 26px;
+  border: 1.5px solid var(--tezex-text);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-decoration: none;
+  transition: color 180ms ease, background-color 180ms ease,
+    transform 180ms ease;
+}
+
+.not-found__button.is-primary {
+  color: var(--tezex-bg);
+  background: var(--tezex-text);
+}
+
+.not-found__button.is-secondary {
+  color: var(--tezex-text);
+  background: transparent;
+}
+
+.not-found__button:hover {
+  transform: translateY(-1px);
+}
+
+.not-found__button.is-primary:hover {
+  color: var(--tezex-text);
+  background: transparent;
+}
+
+.not-found__button.is-secondary:hover {
+  color: var(--tezex-bg);
+  background: var(--tezex-text);
+}
+
+.not-found__button:focus-visible {
+  outline: 2px solid var(--tezex-text);
+  outline-offset: 3px;
+}
+
+.not-found__footer {
+  margin: 42px 0 0;
+  color: var(--tezex-faint);
+  font-family: "Red Hat Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  text-align: center;
+}
+
+@media (max-width: 700px) {
+  .not-found {
+    min-height: calc(100svh - 68px);
+    justify-content: flex-start;
+    padding: 26px 14px 24px;
+  }
+
+  .not-found__scope {
+    width: min(286px, 74vw);
+  }
+
+  .not-found__status {
+    margin-top: 14px;
+    font-size: 10px;
+  }
+
+  .not-found h1 {
+    margin-top: 10px;
+    font-size: 22px;
+  }
+
+  .not-found__description {
+    font-size: 12px;
+  }
+
+  .not-found__telemetry {
+    margin-top: 24px;
+  }
+
+  .not-found__actions {
+    width: 100%;
+  }
+
+  .not-found__button {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 0 14px;
+    font-size: 12px;
+  }
+
+  .not-found__footer {
+    margin-top: 34px;
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 360px) {
+  .not-found__actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .not-found__sky {
+    animation: not-found-drift 120s ease-in-out infinite alternate;
+  }
+
+  .not-found__scope-sweep {
+    animation: not-found-sweep 7s linear infinite;
+  }
+
+  .not-found__scope-ring {
+    animation: not-found-breathe 7s ease-in-out infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .not-found__content,
+  .not-found__button {
+    animation: none;
+    transition: none;
+  }
+}
+
+@keyframes not-found-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes not-found-drift {
+  to {
+    transform: translate3d(-2.5%, 1.6%, 0);
+  }
+}
+
+@keyframes not-found-sweep {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes not-found-breathe {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}

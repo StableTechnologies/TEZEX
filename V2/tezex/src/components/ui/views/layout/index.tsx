@@ -25,6 +25,10 @@ export interface ILayout {
 export const Layout: FC<ILayout> = (props) => {
   const styles = useStyles(style);
   const location = useLocation();
+  const isStezRoute = location.pathname.startsWith("/stez");
+  const isTzktDataRoute =
+    location.pathname.startsWith("/home") ||
+    location.pathname.startsWith("/analytics");
   const [openMenu, setOpenMenu] = useState(false);
   const toggleMenu = useCallback(() => {
     setOpenMenu(!openMenu);
@@ -67,27 +71,28 @@ export const Layout: FC<ILayout> = (props) => {
         <Box sx={styles.mainWindow}>
           <MainWindow>{props.children}</MainWindow>
 
-          {/* Bottom space for bars or notification */}
-          <Box sx={styles.bottomSpace}>
-            <Typography sx={styles.bottomSpaceText}>
-              {location.pathname.startsWith("/stez") ? (
-                "sTEZ data read from the selected Tezos RPC"
-              ) : (
-                <>
-                  Data provided by
-                  <Link
-                    href="https://tzkt.io"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    sx={styles.bottomSpaceLink}
-                  >
-                    TzKT
-                  </Link>
-                  API
-                </>
-              )}
-            </Typography>
-          </Box>
+          {(isStezRoute || isTzktDataRoute) && (
+            <Box sx={styles.bottomSpace}>
+              <Typography sx={styles.bottomSpaceText}>
+                {isStezRoute ? (
+                  "sTEZ data read from the selected Tezos RPC"
+                ) : (
+                  <>
+                    Data provided by
+                    <Link
+                      href="https://tzkt.io"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      sx={styles.bottomSpaceLink}
+                    >
+                      TzKT
+                    </Link>
+                    API
+                  </>
+                )}
+              </Typography>
+            </Box>
+          )}
         </Box>
       </Box>
 
