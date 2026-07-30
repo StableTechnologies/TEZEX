@@ -6,13 +6,14 @@ import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import { SessionProvider } from "./contexts/session";
 import ReactDOM from "react-dom/client";
-import { createHashRouter, RouterProvider } from "react-router-dom";
+import { createHashRouter, Navigate, RouterProvider } from "react-router-dom";
 
 import { AppConfig } from "./types/general";
 import appConfig from "./config/app.json";
 import { Home } from "./pages/Home";
 import { Analytics } from "./pages/Analytics";
 import { Stez } from "./pages/Stez";
+import { NotFound } from "./pages/NotFound";
 import { ColorModeProvider } from "./contexts/color-mode";
 
 const router = createHashRouter([
@@ -20,6 +21,10 @@ const router = createHashRouter([
     path: "/",
     element: <App />,
     children: [
+      {
+        index: true,
+        element: <Navigate to="/home/swap" replace />,
+      },
       {
         path: "home/swap",
         element: <Home path="swap" />,
@@ -39,6 +44,10 @@ const router = createHashRouter([
       {
         path: "stez",
         element: <Stez />,
+      },
+      {
+        path: "*",
+        element: <NotFound />,
       },
     ],
   },
