@@ -196,7 +196,7 @@ const style = (theme, scale = 1) => {
       width: "6px",
       height: "6px",
       borderRadius: "50%",
-      background: "var(--tezex-muted)",
+      background: "var(--tezex-network-live)",
     },
     detailList: {
       padding: { xs: "8px 18px", sm: "9px 22px" },
