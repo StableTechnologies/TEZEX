@@ -88,9 +88,9 @@ const statusCopy = (
   }
   if (snapshot.availability === "disabled") {
     return {
-      title: "sTEZ is in testnet preview for now",
+      title: "Preview sTEZ before Mainnet",
       description:
-        "Use this interface to familiarize yourself with staking, redemption, and finalization. Transactions will unlock on an sTEZ-enabled test network, and the same flow will become available on Mainnet once a subsequent protocol upgrade activates sTEZ.",
+        "sTEZ is testnet-only for now. Explore the interface and get familiar with staking, redemption, and finalization ahead of its Mainnet release. Mainnet support will follow in a future Tezos protocol upgrade.",
     };
   }
   if (snapshot.availability === "unsupported") {
