@@ -20,12 +20,16 @@ const mockWallet = {
   isWalletConnected: false,
   address: null,
 };
-const mockNetworkType = NetworkType.MAINNET;
+let mockNetworkType = NetworkType.MAINNET;
+let mockFaucet: { name: string; url: string } | undefined;
+let mockNetworkInfoValue: typeof mockNetworkInfo & {
+  faucet?: { name: string; url: string };
+} = mockNetworkInfo;
 
 jest.mock("../../hooks/network", () => ({
   useNetwork: () => ({
     network: mockNetworkType,
-    info: mockNetworkInfo,
+    info: mockNetworkInfoValue,
   }),
 }));
 jest.mock("../../hooks/wallet", () => ({
@@ -59,6 +63,9 @@ const disabledSnapshot: StezSnapshot = {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockNetworkType = NetworkType.MAINNET;
+  mockFaucet = undefined;
+  mockNetworkInfoValue = mockNetworkInfo;
   (loadStezSnapshot as jest.Mock).mockResolvedValue(disabledSnapshot);
 });
 
@@ -92,4 +99,28 @@ test("uses the existing wallet connection flow", async () => {
   fireEvent.click(screen.getByRole("button", { name: "CONNECT WALLET" }));
 
   expect(connectWallet).toHaveBeenCalledTimes(1);
+});
+
+test("embeds the official faucet only for a configured testnet", async () => {
+  mockNetworkType = NetworkType.SHADOWNET;
+  mockFaucet = {
+    name: "Official Shadownet faucet",
+    url: "https://faucet.shadownet.teztnets.com",
+  };
+  mockNetworkInfoValue = { ...mockNetworkInfo, faucet: mockFaucet };
+
+  render(<Stez />);
+  await screen.findByText("sTEZ is not enabled on Shadownet");
+
+  expect(screen.getByText("Get valueless Shadownet XTZ")).toBeInTheDocument();
+  expect(
+    screen.queryByTitle("Shadownet testnet XTZ faucet")
+  ).not.toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole("button", { name: "GET TEST XTZ" }));
+
+  expect(screen.getByTitle("Shadownet testnet XTZ faucet")).toHaveAttribute(
+    "src",
+    "https://faucet.shadownet.teztnets.com"
+  );
 });

@@ -121,6 +121,98 @@
   line-height: 1.5;
 }
 
+.stez-faucet__intro {
+  padding: 18px 20px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 24px;
+}
+
+.stez-faucet__intro strong {
+  display: block;
+  color: var(--tezex-text-secondary);
+  font-size: 15px;
+  line-height: 1.3;
+}
+
+.stez-faucet__intro p {
+  max-width: 590px;
+  margin: 6px 0 0;
+  color: var(--tezex-muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.stez-faucet__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.stez-faucet__actions button {
+  min-height: 38px;
+  padding: 9px 15px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+}
+
+.stez-faucet__secondary {
+  color: var(--tezex-text-secondary);
+  background: transparent;
+  border: 1px solid var(--tezex-line-strong);
+}
+
+.stez-faucet__primary {
+  color: var(--tezex-action-text);
+  background: var(--tezex-action);
+  border: 1px solid var(--tezex-action);
+}
+
+.stez-faucet__secondary:hover,
+.stez-faucet__primary:hover {
+  filter: brightness(0.94);
+}
+
+.stez-faucet__embed {
+  border-top: 1px solid var(--tezex-line);
+  background: #fff;
+}
+
+.stez-faucet__embed-bar {
+  min-height: 40px;
+  padding: 9px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  color: #555;
+  background: #f4f4f2;
+  border-bottom: 1px solid #dededb;
+  font-family: "Red Hat Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+}
+
+.stez-faucet__embed-bar a {
+  color: #111;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.stez-faucet__embed iframe {
+  width: 100%;
+  height: 620px;
+  display: block;
+  background: #fff;
+  border: 0;
+}
+
 .stez-panel,
 .stez-protocol-details {
   margin-bottom: 18px;
@@ -616,6 +708,31 @@
   .stez-availability {
     grid-template-columns: auto minmax(0, 1fr);
     align-items: flex-start;
+  }
+
+  .stez-faucet__intro {
+    padding: 17px 16px;
+    display: block;
+  }
+
+  .stez-faucet__actions {
+    margin-top: 15px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .stez-faucet__actions button:only-child {
+    grid-column: 1 / -1;
+  }
+
+  .stez-faucet__actions button {
+    min-width: 0;
+    padding-inline: 10px;
+    white-space: normal;
+  }
+
+  .stez-faucet__embed iframe {
+    height: 680px;
   }
 
   .stez-panel,

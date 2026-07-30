@@ -5,6 +5,10 @@
     "https://rpc.tzkt.io/shadownet"
   ],
   "chainId": "NetXsqzbfFenSTS",
+  "faucet": {
+    "name": "Official Shadownet faucet",
+    "url": "https://faucet.shadownet.teztnets.com"
+  },
   "pools": [
     {
       "id": "xtz-tzbtc-sirius",
