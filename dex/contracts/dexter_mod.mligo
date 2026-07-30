@@ -49,6 +49,13 @@ module Dexter = struct
       deadline : timestamp ;
     }
 
+  type activate_pool =
+    [@layout:comb]
+    { expectedXtzPool : tez ;
+      expectedTokenPool : nat ;
+      expectedLqtTotal : nat ;
+    }
+
   #if FA2
   type update_token_pool_internal = ((address * nat) * nat) list
   #else
@@ -64,6 +71,8 @@ module Dexter = struct
     { tokenPool : nat ;
       xtzPool : tez ;
       lqtTotal : nat ;
+      active : bool ;
+      activationPending : bool ;
       selfIsUpdatingTokenPool : bool ;
       freezeBaker : bool ;
       manager : address ;
@@ -100,6 +109,11 @@ module Dexter = struct
     [@layout:comb]
     { quantity : int ;
       target : address }
+
+  type getTotalSupply =
+    [@layout:comb]
+    { request : unit ;
+      callback : nat contract }
 
   // =============================================================================
   // Error codes
@@ -152,6 +166,14 @@ module Dexter = struct
   [@inline] let error_NO_PROTOCOL_FEE_TO_CLAIM = 40n
   [@inline] let error_ONLY_MANAGER_CAN_SET_PROTOCOL_FEE_RECIPIENT = 41n
   [@inline] let error_ACCUMULATED_FEE_EXCEEDS_TOKEN_POOL = 42n
+  [@inline] let error_POOL_NOT_ACTIVE = 43n
+  [@inline] let error_POOL_ALREADY_ACTIVE = 44n
+  [@inline] let error_ONLY_MANAGER_CAN_INITIALIZE_POOL = 45n
+  [@inline] let error_LQT_ADDRESS_NOT_CONFIGURED = 46n
+  [@inline] let error_INVALID_INITIAL_RESERVES = 47n
+  [@inline] let error_LQT_CONTRACT_MUST_HAVE_A_GET_TOTAL_SUPPLY_ENTRYPOINT = 48n
+  [@inline] let error_INVALID_ACTIVATION_CALLBACK = 49n
+  [@inline] let error_LQT_TOTAL_MISMATCH = 50n
 
   // =============================================================================
   // Functions
@@ -205,16 +227,21 @@ module Dexter = struct
   let compute_protocol_fee (amount_nat : nat) (fee_bp : nat) : nat =
       (amount_nat * fee_bp) / 10000n
 
+  [@inline]
+  let pool_is_ready (storage : storage) : bool =
+      storage.active
+      && storage.xtzPool > 0mutez
+      && storage.tokenPool > 0n
+      && storage.lqtTotal > 0n
+
   // =============================================================================
   // Entrypoint Functions
   // =============================================================================
 
-  // We assume the contract is originated with at least one liquidity
-  // provider set up already, so lqtTotal, xtzPool and tokenPool will
-  // always be positive after the initial setup, unless all liquidity is
-  // removed, at which point the contract is considered dead and stops working
-  // properly. (To prevent this, at least one address should keep at least a
-  // small amount of liquidity in the contract forever.)
+  // Modified pools originate inactive. The manager seeds the reserves and
+  // activates the pool only after the expected reserves and the LQT contract's
+  // actual total supply have been verified. Each user-funds entrypoint also
+  // checks the lifecycle and positive reserves so an emptied pool fails closed.
 
   [@entry]
   let addLiquidity (param : add_liquidity) (storage: storage) : result =
@@ -225,6 +252,8 @@ module Dexter = struct
 
       if storage.selfIsUpdatingTokenPool then
           (failwith error_SELF_IS_UPDATING_TOKEN_POOL_MUST_BE_FALSE : result)
+      else if not (pool_is_ready storage) then
+          (failwith error_POOL_NOT_ACTIVE : result)
       else if Tezos.get_now () >= deadline then
           (failwith error_THE_CURRENT_TIME_MUST_BE_LESS_THAN_THE_DEADLINE : result)
       else
@@ -261,6 +290,8 @@ module Dexter = struct
 
       if storage.selfIsUpdatingTokenPool then
         (failwith error_SELF_IS_UPDATING_TOKEN_POOL_MUST_BE_FALSE : result)
+      else if not (pool_is_ready storage) then
+        (failwith error_POOL_NOT_ACTIVE : result)
       else if Tezos.get_now () >= deadline then
         (failwith error_THE_CURRENT_TIME_MUST_BE_LESS_THAN_THE_DEADLINE : result)    
       else if Tezos.get_amount () > 0mutez then
@@ -309,6 +340,8 @@ module Dexter = struct
 
       if storage.selfIsUpdatingTokenPool then
           (failwith error_SELF_IS_UPDATING_TOKEN_POOL_MUST_BE_FALSE : result)
+      else if not (pool_is_ready storage) then
+          (failwith error_POOL_NOT_ACTIVE : result)
       else if Tezos.get_now () >= deadline then
           (failwith error_THE_CURRENT_TIME_MUST_BE_LESS_THAN_THE_DEADLINE : result)    
       else begin
@@ -356,6 +389,8 @@ module Dexter = struct
 
       if storage.selfIsUpdatingTokenPool then
           (failwith error_SELF_IS_UPDATING_TOKEN_POOL_MUST_BE_FALSE : result)
+      else if not (pool_is_ready storage) then
+          (failwith error_POOL_NOT_ACTIVE : result)
       else if Tezos.get_now () >= deadline then
           (failwith error_THE_CURRENT_TIME_MUST_BE_LESS_THAN_THE_DEADLINE : result)    
       else if Tezos.get_amount () > 0mutez then
@@ -407,6 +442,8 @@ module Dexter = struct
       // update xtzPool
       if (storage.selfIsUpdatingTokenPool) then
           (failwith error_SELF_IS_UPDATING_TOKEN_POOL_MUST_BE_FALSE: result)
+      else if not storage.active && Tezos.get_sender () <> storage.manager then
+          (failwith error_ONLY_MANAGER_CAN_INITIALIZE_POOL : result)
       else 
           let storage = {storage with xtzPool = storage.xtzPool + Tezos.get_amount () } in
           (([] : operation list), storage)
@@ -461,6 +498,8 @@ module Dexter = struct
         (failwith error_AMOUNT_MUST_BE_ZERO : result)
       else if storage.selfIsUpdatingTokenPool then
         (failwith error_UNEXPECTED_REENTRANCE_IN_UPDATE_TOKEN_POOL : result)
+      else if not storage.active && Tezos.get_sender () <> storage.manager then
+        (failwith error_ONLY_MANAGER_CAN_INITIALIZE_POOL : result)
       else
         let self_addr = Tezos.get_self_address () in
         let cfmm_update_token_pool_internal : update_token_pool_internal contract = 
@@ -490,12 +529,15 @@ module Dexter = struct
         (failwith error_AMOUNT_MUST_BE_ZERO : result)
       else 
   #if FA2
-          // we trust the FA2 to provide the expected balance. there are no BFS
-          // shenanigans to worry about unless the token contract misbehaves
           let token_pool =
-            match List.head token_pool with
-                None -> (failwith error_INVALID_FA2_BALANCE_RESPONSE : nat)
-                | Some ((_addr, _token_id), balance) -> balance in
+            match token_pool with
+              [((owner, token_id), balance)] ->
+                if
+                  owner = Tezos.get_self_address ()
+                  && token_id = storage.tokenId
+                then balance
+                else (failwith error_INVALID_FA2_BALANCE_RESPONSE : nat)
+            | _ -> (failwith error_INVALID_FA2_BALANCE_RESPONSE : nat) in
   #endif
           // Subtract accumulated token fee from the real balance to get the true pool size.
           // The contract holds tokenPool + accumulated_protocol_fee_token tokens in total,
@@ -521,6 +563,8 @@ module Dexter = struct
     
       if storage.selfIsUpdatingTokenPool then
         (failwith error_SELF_IS_UPDATING_TOKEN_POOL_MUST_BE_FALSE : result)
+      else if not (pool_is_ready storage) then
+        (failwith error_POOL_NOT_ACTIVE : result)
       else if Tezos.get_amount () > 0mutez then
         (failwith error_AMOUNT_MUST_BE_ZERO : result)
       else if Tezos.get_now () >= deadline then
@@ -553,6 +597,80 @@ module Dexter = struct
               xtz_bought
               outputDexterContract_contract in
           ([op1; op2] , storage)
+
+    [@entry]
+    let activate (param : activate_pool) (storage : storage) : result =
+        if storage.selfIsUpdatingTokenPool then
+            (failwith error_SELF_IS_UPDATING_TOKEN_POOL_MUST_BE_FALSE : result)
+        else if Tezos.get_amount () > 0mutez then
+            (failwith error_AMOUNT_MUST_BE_ZERO : result)
+        else if Tezos.get_sender () <> storage.manager then
+            (failwith error_ONLY_MANAGER_CAN_INITIALIZE_POOL : result)
+        else if storage.active or storage.activationPending then
+            (failwith error_POOL_ALREADY_ACTIVE : result)
+        else if storage.lqtAddress = ("tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU" : address) then
+            (failwith error_LQT_ADDRESS_NOT_CONFIGURED : result)
+        else if
+            param.expectedXtzPool = 0mutez
+            or param.expectedTokenPool = 0n
+            or param.expectedLqtTotal = 0n
+            or storage.xtzPool <> param.expectedXtzPool
+            or storage.tokenPool <> param.expectedTokenPool
+            or storage.lqtTotal <> param.expectedLqtTotal
+            or Tezos.get_balance () <> param.expectedXtzPool
+        then
+            (failwith error_INVALID_INITIAL_RESERVES : result)
+        else
+            let self_addr = Tezos.get_self_address () in
+            let activate_internal : nat contract =
+                match
+                  (Tezos.get_entrypoint_opt
+                    "%activateInternal"
+                    self_addr
+                    : nat contract option)
+                with
+                | None ->
+                    (failwith "Cannot get activateInternal entrypoint" : nat contract)
+                | Some contract -> contract in
+            let lqt_get_total_supply : getTotalSupply contract =
+                match
+                  (Tezos.get_entrypoint_opt
+                    "%getTotalSupply"
+                    storage.lqtAddress
+                    : getTotalSupply contract option)
+                with
+                | None ->
+                    (failwith
+                      error_LQT_CONTRACT_MUST_HAVE_A_GET_TOTAL_SUPPLY_ENTRYPOINT
+                      : getTotalSupply contract)
+                | Some contract -> contract in
+            let op =
+                Tezos.transaction
+                  {request = (); callback = activate_internal}
+                  0mutez
+                  lqt_get_total_supply in
+            ([op], {storage with activationPending = true})
+
+    [@entry]
+    let activateInternal (actual_lqt_total : nat) (storage : storage) : result =
+        if
+          not storage.activationPending
+          or Tezos.get_sender () <> storage.lqtAddress
+        then
+            (failwith error_INVALID_ACTIVATION_CALLBACK : result)
+        else if Tezos.get_amount () > 0mutez then
+            (failwith error_AMOUNT_MUST_BE_ZERO : result)
+        else if actual_lqt_total <> storage.lqtTotal then
+            (failwith error_LQT_TOTAL_MISMATCH : result)
+        else if
+          storage.xtzPool = 0mutez
+          or storage.tokenPool = 0n
+          or storage.lqtTotal = 0n
+        then
+            (failwith error_INVALID_INITIAL_RESERVES : result)
+        else
+            (([] : operation list),
+             {storage with active = true; activationPending = false})
 
     [@entry]
     let setProtocolFee (new_fee_bp : nat) (storage : storage) : result =
@@ -626,6 +744,10 @@ module Dexter = struct
       storage.lqtTotal
 
   [@view]
+  let is_active (_ : unit) (storage : storage) : bool =
+      pool_is_ready storage
+
+  [@view]
   let get_fee_bp (_ : unit) (storage : storage) : (nat * nat * nat) =
       (30n, storage.protocol_fee_bp, 30n + storage.protocol_fee_bp)
 
@@ -633,7 +755,7 @@ module Dexter = struct
   let quote_tez_to_token (tez_in : nat) (storage : storage) : nat =
       let a : nat = mutez_to_natural storage.xtzPool in
       let b : nat = storage.tokenPool in
-      if tez_in = 0n or a = 0n or b = 0n then
+      if not storage.active or tez_in = 0n or a = 0n or b = 0n then
           0n
       else
         // Deduct protocol fee from tez_in before quoting so the returned
@@ -648,7 +770,7 @@ module Dexter = struct
   let quote_token_to_tez (token_in : nat) (storage : storage) : nat =
       let a : nat = mutez_to_natural storage.xtzPool in
       let b : nat = storage.tokenPool in
-      if token_in = 0n or a = 0n or b = 0n then
+      if not storage.active or token_in = 0n or a = 0n or b = 0n then
           0n
       else
         let fee : nat = compute_protocol_fee token_in storage.protocol_fee_bp in
@@ -672,12 +794,14 @@ module Dexter = struct
   { tokenPool = 0n ;
     xtzPool = 0tz ;
     lqtTotal = build.lqtTotal ;
+    active = false ;
+    activationPending = false ;
     selfIsUpdatingTokenPool = false ;
     freezeBaker = false ;
     manager = build.manager ;
     tokenAddress = build.tokenAddress ;
     #if FA2
-    tokenId = 0n ;
+    tokenId = build.tokenId ;
     #endif
     lqtAddress = ("tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU" : address) ;
     protocol_fee_bp = build.protocol_fee_bp ;

@@ -102,6 +102,26 @@ let deploy_lqt (lqt_amount : nat) (owner : address) (admin : address) =
     } in
   Test.Originate.contract (contract_of LQT.LQT) lqt_storage 0tez
 
+let activate_dex
+    (dex_taddr)
+    (expected_xtz_pool : tez)
+    (expected_token_pool : nat)
+    (expected_lqt_total : nat) =
+  let activate_param : DexterMod.Dexter.activate_pool =
+    {
+     expectedXtzPool = expected_xtz_pool;
+     expectedTokenPool = expected_token_pool;
+     expectedLqtTotal = expected_lqt_total;
+    } in
+  let activate_entrypoint : DexterMod.Dexter.activate_pool contract =
+    Test.Typed_address.get_entrypoint "activate" dex_taddr in
+  let _ : nat =
+    Test.Contract.transfer_exn
+      activate_entrypoint
+      activate_param
+      0tez in
+  ()
+
 let setup_full_dex () =
   let () = clean () in
   let () = Test.State.set_source (src ()) in
@@ -129,6 +149,7 @@ let setup_full_dex () =
       dex_orig.taddr
       (SetLqtAddress (Test.Typed_address.to_address lqt_orig.taddr))
       0tez in
+  let () = activate_dex dex_orig.taddr 1tez 1000000n 1000000n in
   (dex_orig, lqt_orig, tok_orig)
 
 let setup_full_dex_with_fee (protocol_fee_bp : nat) =
@@ -164,6 +185,7 @@ let setup_full_dex_with_fee (protocol_fee_bp : nat) =
       dex_orig.taddr
       (SetLqtAddress (Test.Typed_address.to_address lqt_orig.taddr))
       0tez in
+  let () = activate_dex dex_orig.taddr 1tez 1000000n 1000000n in
   (dex_orig, lqt_orig, tok_orig)
 
 let setup_dex_with_updating_pool () =
@@ -219,6 +241,7 @@ let setup_custom_dex (xtz_pool : tez) (token_pool : nat) (lqt_total : nat) =
     } in
   let _ : nat = Test.Typed_address.transfer_exn tok_orig.taddr (Transfer transfer_param) 0tez in
   let _ : nat = Test.Typed_address.transfer_exn dex_orig.taddr (UpdateTokenPool ()) 0tez in
+  let () = activate_dex dex_orig.taddr xtz_pool token_pool lqt_total in
   (dex_orig, lqt_orig, tok_orig)
 
 (*****************************************************************************)
@@ -267,6 +290,12 @@ let assert_dex_state
     then failwith (test_name ^ ": incorrect lqtTotal, expected: " ^ Test.String.show lqt_total ^ ", got: " ^ Test.String.show storage.lqtTotal)
     else () in
   ()
+
+let assert_dex_active (dex_taddr) (test_name : string) (expected : bool) =
+  let storage : DexterMod.Dexter.storage = Test.Typed_address.get_storage dex_taddr in
+  if storage.active <> expected
+  then failwith (test_name ^ ": incorrect active state")
+  else ()
 
 let assert_accumulated_fee_xtz (dex_taddr) (test_name : string) (expected : tez) =
   let storage : DexterMod.Dexter.storage = Test.Typed_address.get_storage dex_taddr in

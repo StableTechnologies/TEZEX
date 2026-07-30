@@ -19,15 +19,21 @@ export interface DeploymentInfo {
 }
 
 export interface DexStorage {
-  tokenPool: number;
-  xtzPool: number;
-  lqtTotal: number;
+  tokenPool: string;
+  xtzPool: string;
+  lqtTotal: string;
+  active?: boolean; // Modified pools only
+  activationPending?: boolean; // Modified pools only
   tokenAddress: string;
   lqtAddress: string;
   selfIsUpdatingTokenPool: boolean;
   freezeBaker: boolean;
   manager: string;
-  tokenId?: number; // Only for FA2
+  tokenId?: string; // Only for FA2
+  protocol_fee_bp?: number; // Modified pools only
+  protocol_fee_recipient?: string; // Modified pools only
+  accumulated_protocol_fee_xtz?: string; // Modified pools only
+  accumulated_protocol_fee_token?: string; // Modified pools only
 }
 
 export type TokenInfo = MichelsonMap<string, string>; // Map<string, bytes>
@@ -40,10 +46,10 @@ export interface TokenMetadataValue {
 export type TokenMetadata = MichelsonMap<number, TokenMetadataValue>;
 
 export interface LqtStorage {
-  tokens: MichelsonMap<string, number>;
+  tokens: MichelsonMap<string, string>;
   allowances: MichelsonMap<string, MichelsonMap<string, number>>;
   admin: string;
-  total_supply: number;
+  total_supply: string;
   metadata: MichelsonMap<string, string>;
   token_metadata: TokenMetadata;
 }
@@ -53,8 +59,8 @@ export type NetworkName = "testnet" | "mainnet";
 export type TransferParams = {
   from: string;
   to: string;
-  amount: number;
-  tokenId?: number; // For FA2 tokens
+  amount: string;
+  tokenId?: string; // For FA2 tokens
 };
 
 
@@ -199,36 +205,48 @@ export const dexStorageTypeMod = {
             {
               prim: 'pair',
               args: [
-                { prim: 'bool', annots: ['%selfIsUpdatingTokenPool'] },
+                { prim: 'bool', annots: ['%active'] },
                 {
                   prim: 'pair',
                   args: [
-                    { prim: 'bool', annots: ['%freezeBaker'] },
+                    { prim: 'bool', annots: ['%activationPending'] },
                     {
                       prim: 'pair',
                       args: [
-                        { prim: 'address', annots: ['%manager'] },
+                        { prim: 'bool', annots: ['%selfIsUpdatingTokenPool'] },
                         {
                           prim: 'pair',
                           args: [
-                            { prim: 'address', annots: ['%tokenAddress'] },
+                            { prim: 'bool', annots: ['%freezeBaker'] },
                             {
                               prim: 'pair',
                               args: [
-                                { prim: 'address', annots: ['%lqtAddress'] },
+                                { prim: 'address', annots: ['%manager'] },
                                 {
                                   prim: 'pair',
                                   args: [
-                                    { prim: 'nat', annots: ['%protocol_fee_bp'] },
+                                    { prim: 'address', annots: ['%tokenAddress'] },
                                     {
                                       prim: 'pair',
                                       args: [
-                                        { prim: 'address', annots: ['%protocol_fee_recipient'] },
+                                        { prim: 'address', annots: ['%lqtAddress'] },
                                         {
                                           prim: 'pair',
                                           args: [
-                                            { prim: 'mutez', annots: ['%accumulated_protocol_fee_xtz'] },
-                                            { prim: 'nat', annots: ['%accumulated_protocol_fee_token'] }
+                                            { prim: 'nat', annots: ['%protocol_fee_bp'] },
+                                            {
+                                              prim: 'pair',
+                                              args: [
+                                                { prim: 'address', annots: ['%protocol_fee_recipient'] },
+                                                {
+                                                  prim: 'pair',
+                                                  args: [
+                                                    { prim: 'mutez', annots: ['%accumulated_protocol_fee_xtz'] },
+                                                    { prim: 'nat', annots: ['%accumulated_protocol_fee_token'] }
+                                                  ]
+                                                }
+                                              ]
+                                            }
                                           ]
                                         }
                                       ]
@@ -267,40 +285,52 @@ export const dexStorageTypeFA2Mod = {
             {
               prim: 'pair',
               args: [
-                { prim: 'bool', annots: ['%selfIsUpdatingTokenPool'] },
+                { prim: 'bool', annots: ['%active'] },
                 {
                   prim: 'pair',
                   args: [
-                    { prim: 'bool', annots: ['%freezeBaker'] },
+                    { prim: 'bool', annots: ['%activationPending'] },
                     {
                       prim: 'pair',
                       args: [
-                        { prim: 'address', annots: ['%manager'] },
+                        { prim: 'bool', annots: ['%selfIsUpdatingTokenPool'] },
                         {
                           prim: 'pair',
                           args: [
-                            { prim: 'address', annots: ['%tokenAddress'] },
+                            { prim: 'bool', annots: ['%freezeBaker'] },
                             {
                               prim: 'pair',
                               args: [
-                                { prim: 'nat', annots: ['%tokenId'] },
+                                { prim: 'address', annots: ['%manager'] },
                                 {
                                   prim: 'pair',
                                   args: [
-                                    { prim: 'address', annots: ['%lqtAddress'] },
+                                    { prim: 'address', annots: ['%tokenAddress'] },
                                     {
                                       prim: 'pair',
                                       args: [
-                                        { prim: 'nat', annots: ['%protocol_fee_bp'] },
+                                        { prim: 'nat', annots: ['%tokenId'] },
                                         {
                                           prim: 'pair',
                                           args: [
-                                            { prim: 'address', annots: ['%protocol_fee_recipient'] },
+                                            { prim: 'address', annots: ['%lqtAddress'] },
                                             {
                                               prim: 'pair',
                                               args: [
-                                                { prim: 'mutez', annots: ['%accumulated_protocol_fee_xtz'] },
-                                                { prim: 'nat', annots: ['%accumulated_protocol_fee_token'] }
+                                                { prim: 'nat', annots: ['%protocol_fee_bp'] },
+                                                {
+                                                  prim: 'pair',
+                                                  args: [
+                                                    { prim: 'address', annots: ['%protocol_fee_recipient'] },
+                                                    {
+                                                      prim: 'pair',
+                                                      args: [
+                                                        { prim: 'mutez', annots: ['%accumulated_protocol_fee_xtz'] },
+                                                        { prim: 'nat', annots: ['%accumulated_protocol_fee_token'] }
+                                                      ]
+                                                    }
+                                                  ]
+                                                }
                                               ]
                                             }
                                           ]
