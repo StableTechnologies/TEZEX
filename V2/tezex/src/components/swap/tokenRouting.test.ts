@@ -1,5 +1,6 @@
 import { Token, TokenType } from "../../types/general";
 import { PoolConfig, PoolType } from "../../types/pools";
+import { PoolRegistry } from "../../adapters/poolRegistry";
 import { findPoolForTokenPair, getCompatibleSwapAssets } from "./tokenRouting";
 
 const pools: PoolConfig[] = [
@@ -54,5 +55,37 @@ describe("swap token routing", () => {
         (asset) => asset.name
       )
     ).toEqual([Token.XTZ]);
+  });
+
+  it("does not synthesize a token-to-token route through Sirius", () => {
+    expect(
+      findPoolForTokenPair(pools, Token.TzBTC, Token.BTCtz)
+    ).toBeUndefined();
+    expect(
+      getCompatibleSwapAssets(pools, Token.TzBTC, getAsset).map(
+        (asset) => asset.name
+      )
+    ).toEqual([Token.XTZ]);
+  });
+
+  it("rejects and hides a Sirius pool configured without a direct XTZ leg", () => {
+    const unsupported: PoolConfig = {
+      ...pools[0],
+      id: "unsupported-sirius-token-route",
+      tokenA: Token.BTCtz,
+      tokenB: Token.TzBTC,
+    };
+
+    expect(
+      findPoolForTokenPair([unsupported], Token.BTCtz, Token.TzBTC)
+    ).toBeUndefined();
+    expect(
+      getCompatibleSwapAssets([unsupported], Token.BTCtz, getAsset)
+    ).toEqual([]);
+
+    PoolRegistry.clear();
+    expect(() => PoolRegistry.registerPool(unsupported)).toThrow(
+      /unsupported pool configuration/i
+    );
   });
 });

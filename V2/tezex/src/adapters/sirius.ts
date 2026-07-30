@@ -6,6 +6,7 @@ import {
   PoolData,
   RemoveLiquidityEstimate,
   SwapEstimate,
+  isSupportedPoolConfiguration,
 } from "../types/pools";
 import BigNumber from "bignumber.js";
 import { ExecutionKit, Token } from "../types/general";
@@ -14,19 +15,27 @@ import { PoolDataCache } from "../utils/poolDataCache";
 import { getTxDeadline } from "../functions/util";
 import { DAppClient } from "@airgap/beacon-dapp";
 import { transferParamsToBeaconOp } from "../functions/transactions";
+import { isValidSlippage } from "../functions/transactionSafety";
 
 export class SiriusAdapter implements IPoolAdapter {
   private readonly FEE = 999; // 0.1% fee
   private readonly BURN = 999; // 0.1% burned
 
-  constructor(public poolConfig: PoolConfig) {}
+  constructor(public poolConfig: PoolConfig) {
+    if (!isSupportedPoolConfiguration(poolConfig)) {
+      throw new Error("Sirius supports only the direct XTZ/tzBTC pool");
+    }
+  }
 
   async estimateSwap(
     toolkit: TezosToolkit,
     inputToken: Token,
     inputAmount: BigNumber
   ): Promise<SwapEstimate> {
+    this.assertSupportedInputToken(inputToken);
+    this.assertPositiveInteger("swap input", inputAmount);
     const poolData = await this.getPoolData(toolkit);
+    this.assertActivePool(poolData);
     const { tokenAPool: xtzPool, tokenBPool: tokenPool } = poolData;
 
     const isXtzInput = inputToken === Token.XTZ;
@@ -37,6 +46,7 @@ export class SiriusAdapter implements IPoolAdapter {
     } else {
       outputAmount = this.calcTokenToXtz(inputAmount, xtzPool, tokenPool);
     }
+    this.assertPositiveInteger("swap output", outputAmount);
 
     return {
       inputAmount,
@@ -50,7 +60,11 @@ export class SiriusAdapter implements IPoolAdapter {
     tokenAAmount: BigNumber,
     tokenBAmount: BigNumber
   ): Promise<AddLiquidityEstimate> {
+    this.assertSupportedInputToken(inputToken);
+    this.assertPositiveInteger("first liquidity amount", tokenAAmount);
+    this.assertPositiveInteger("second liquidity amount", tokenBAmount);
     const poolData = await this.getPoolData(toolkit);
+    this.assertActivePool(poolData);
     const { tokenAPool: xtzPool, lpTokenSupply: lqtTotal } = poolData;
 
     const xtzAmount = inputToken === Token.XTZ ? tokenAAmount : tokenBAmount;
@@ -60,6 +74,7 @@ export class SiriusAdapter implements IPoolAdapter {
       .times(lqtTotal)
       .dividedBy(xtzPool)
       .integerValue(BigNumber.ROUND_DOWN);
+    this.assertPositiveInteger("SIRS minted", lpTokenAmount);
 
     return {
       tokenAAmount,
@@ -72,15 +87,25 @@ export class SiriusAdapter implements IPoolAdapter {
     toolkit: TezosToolkit,
     lpTokenAmount: BigNumber
   ): Promise<RemoveLiquidityEstimate> {
+    this.assertPositiveInteger("SIRS burned", lpTokenAmount);
     const poolData = await this.getPoolData(toolkit);
+    this.assertActivePool(poolData);
     const {
       tokenAPool: xtzPool,
       tokenBPool: tokenPool,
       lpTokenSupply: lqtTotal,
     } = poolData;
 
-    const xtzReceived = lpTokenAmount.times(xtzPool).dividedBy(lqtTotal);
-    const tokenReceived = lpTokenAmount.times(tokenPool).dividedBy(lqtTotal);
+    const xtzReceived = lpTokenAmount
+      .times(xtzPool)
+      .dividedBy(lqtTotal)
+      .integerValue(BigNumber.ROUND_DOWN);
+    const tokenReceived = lpTokenAmount
+      .times(tokenPool)
+      .dividedBy(lqtTotal)
+      .integerValue(BigNumber.ROUND_DOWN);
+    this.assertPositiveInteger("XTZ withdrawn", xtzReceived);
+    this.assertPositiveInteger("tzBTC withdrawn", tokenReceived);
 
     return {
       lpTokenAmount,
@@ -95,7 +120,10 @@ export class SiriusAdapter implements IPoolAdapter {
     inputAmount: BigNumber
   ): Promise<BigNumber> {
     try {
+      this.assertSupportedInputToken(inputToken);
+      this.assertPositiveInteger("liquidity input", inputAmount);
       const storage = await this.getPoolData(toolkit);
+      this.assertActivePool(storage);
       const { tokenAPool: xtzPool, tokenBPool: tokenPool } = storage;
 
       const isXtzInput = inputToken === Token.XTZ;
@@ -108,15 +136,17 @@ export class SiriusAdapter implements IPoolAdapter {
           .dividedBy(xtzPool)
           .integerValue(BigNumber.ROUND_CEIL);
 
+        this.assertPositiveInteger("required tzBTC", requiredToken);
         return requiredToken;
       } else {
         // User input token, calculate required XTZ
-        // Formula: ceildiv(tokenAmount * xtzPool, tokenPool)
+        // Formula: floordiv(tokenAmount * xtzPool, tokenPool)
         const numerator = inputAmount.times(xtzPool);
         const requiredXtz = numerator
           .dividedBy(tokenPool)
           .integerValue(BigNumber.ROUND_DOWN);
 
+        this.assertPositiveInteger("required XTZ", requiredXtz);
         return requiredXtz;
       }
     } catch (error) {
@@ -134,9 +164,14 @@ export class SiriusAdapter implements IPoolAdapter {
     slippage: number
   ): Promise<string> {
     const { client, toolkit } = kit;
+    this.assertSupportedInputToken(inputToken);
+    this.assertPositiveInteger("swap input", inputAmount);
+    this.assertPositiveInteger("quoted swap output", minOutputAmount);
+    this.assertValidSlippage(slippage);
     const isXtzInput = inputToken === Token.XTZ;
 
     const minWithSlippage = this.removeSlippage(slippage, minOutputAmount);
+    this.assertPositiveInteger("minimum swap output", minWithSlippage);
 
     let opHash: string;
     if (isXtzInput) {
@@ -172,17 +207,24 @@ export class SiriusAdapter implements IPoolAdapter {
   ): Promise<string> {
     const { client, toolkit } = kit;
     try {
+      this.assertPositiveInteger("XTZ deposit", tokenAAmount);
+      this.assertPositiveInteger("tzBTC deposit", tokenBAmount);
+      this.assertPositiveInteger("quoted SIRS", minLpTokens);
+      this.assertValidSlippage(slippage);
       const deadline = getTxDeadline().toISOString();
       const tokenAddress = PoolRegistry.getAssetAddress(this.poolConfig.tokenB);
-
-      const lbContract = await toolkit.contract.at(this.poolConfig.address);
-      const tokenContract = await toolkit.contract.at(tokenAddress);
 
       // Calculate max tokens with slippage
       const maxTokensSold = this.addSlippage(
         new BigNumber(slippage),
         tokenBAmount
       );
+      const minLqtMinted = this.removeSlippage(slippage, minLpTokens);
+      this.assertPositiveInteger("maximum tzBTC deposit", maxTokensSold);
+      this.assertPositiveInteger("minimum SIRS minted", minLqtMinted);
+
+      const lbContract = await toolkit.contract.at(this.poolConfig.address);
+      const tokenContract = await toolkit.contract.at(tokenAddress);
 
       // Prepare operations
       const approve0 = tokenContract.methodsObject.approve({
@@ -191,12 +233,15 @@ export class SiriusAdapter implements IPoolAdapter {
       });
       const approve1 = tokenContract.methodsObject.approve({
         spender: this.poolConfig.address,
-        value: maxTokensSold.toNumber(),
+        value: this.toSafeNumber("maximum tzBTC deposit", maxTokensSold),
       });
       const addLiq = lbContract.methodsObject.addLiquidity({
         owner: userAddress,
-        minLqtMinted: minLpTokens.integerValue(BigNumber.ROUND_DOWN).toNumber(),
-        maxTokensDeposited: maxTokensSold.toNumber(),
+        minLqtMinted: this.toSafeNumber("minimum SIRS minted", minLqtMinted),
+        maxTokensDeposited: this.toSafeNumber(
+          "maximum tzBTC deposit",
+          maxTokensSold
+        ),
         deadline,
       });
 
@@ -206,7 +251,7 @@ export class SiriusAdapter implements IPoolAdapter {
         transferParamsToBeaconOp(approve1.toTransferParams()),
         transferParamsToBeaconOp(
           addLiq.toTransferParams({
-            amount: tokenAAmount.toNumber(),
+            amount: this.toSafeNumber("XTZ deposit", tokenAAmount),
             mutez: true,
           })
         ),
@@ -234,6 +279,8 @@ export class SiriusAdapter implements IPoolAdapter {
   ): Promise<string> {
     const { client, toolkit } = kit;
     try {
+      this.assertPositiveInteger("SIRS burned", lpTokenAmount);
+      this.assertValidSlippage(slippage);
       // Entrypoint signature:
       // removeLiquidity(address to, nat lqtBurned, mutez minXtzWithdrawn, nat minTokensWithdrawn, timestamp deadline)
       const deadline = getTxDeadline().toISOString();
@@ -246,15 +293,28 @@ export class SiriusAdapter implements IPoolAdapter {
 
       const lbContract = await toolkit.wallet.at(this.poolConfig.address);
 
+      const minXtzWithdrawn = this.removeSlippage(
+        slippage,
+        estimate.tokenAAmount
+      );
+      const minTokensWithdrawn = this.removeSlippage(
+        slippage,
+        estimate.tokenBAmount
+      );
+      this.assertPositiveInteger("minimum XTZ withdrawn", minXtzWithdrawn);
+      this.assertPositiveInteger("minimum tzBTC withdrawn", minTokensWithdrawn);
+
       const operation = lbContract.methodsObject.removeLiquidity({
         to: userAddress,
-        lqtBurned: lpTokenAmount.integerValue(BigNumber.ROUND_DOWN).toNumber(),
-        minXtzWithdrawn: this.removeSlippage(slippage, estimate.tokenAAmount)
-          .integerValue(BigNumber.ROUND_DOWN)
-          .toNumber(),
-        minTokensWithdrawn: this.removeSlippage(slippage, estimate.tokenBAmount)
-          .integerValue(BigNumber.ROUND_DOWN)
-          .toNumber(),
+        lqtBurned: this.toSafeNumber("SIRS burned", lpTokenAmount),
+        minXtzWithdrawn: this.toSafeNumber(
+          "minimum XTZ withdrawn",
+          minXtzWithdrawn
+        ),
+        minTokensWithdrawn: this.toSafeNumber(
+          "minimum tzBTC withdrawn",
+          minTokensWithdrawn
+        ),
         deadline,
       });
       // Execute
@@ -316,7 +376,10 @@ export class SiriusAdapter implements IPoolAdapter {
   ): BigNumber {
     // Step 1: Apply burn to input (0.1%)
     // amount_net_burn = (xtzIn * 999) / 1000
-    const amountNetBurn = xtzIn.times(this.BURN).div(1000);
+    const amountNetBurn = xtzIn
+      .times(this.BURN)
+      .div(1000)
+      .integerValue(BigNumber.ROUND_DOWN);
 
     // Step 2: Calculate tokens bought with fee
     // tokens_bought = (amount_net_burn * 999 * tokenPool) / (xtzPool * 1000 + amount_net_burn * 999)
@@ -335,7 +398,9 @@ export class SiriusAdapter implements IPoolAdapter {
     // xtz_bought = (tokensSold * 999 * xtzPool) / (tokenPool * 1000 + tokensSold * 999)
     const numerator = tokenIn.times(this.FEE).times(xtzPool);
     const denominator = tokenPool.times(1000).plus(tokenIn.times(this.FEE));
-    const xtzBought = numerator.div(denominator);
+    const xtzBought = numerator
+      .div(denominator)
+      .integerValue(BigNumber.ROUND_DOWN);
 
     // Step 2: Apply burn to output (0.1%)
     // xtz_bought_net_burn = (xtz_bought * 999) / 1000
@@ -359,14 +424,17 @@ export class SiriusAdapter implements IPoolAdapter {
 
       const operation = lbContract.methodsObject.xtzToToken({
         to: userAddress,
-        minTokensBought: minTokensBought.toNumber(),
+        minTokensBought: this.toSafeNumber(
+          "minimum tzBTC bought",
+          minTokensBought
+        ),
         deadline,
       });
 
       // Convert to Beacon format
       const operationRequest = transferParamsToBeaconOp(
         operation.toTransferParams({
-          amount: xtzAmount.toNumber(),
+          amount: this.toSafeNumber("XTZ sold", xtzAmount),
           mutez: true,
         })
       );
@@ -404,12 +472,12 @@ export class SiriusAdapter implements IPoolAdapter {
       });
       const approve = tokenContract.methodsObject.approve({
         spender: this.poolConfig.address,
-        value: tokenAmount.integerValue(BigNumber.ROUND_DOWN).toNumber(),
+        value: this.toSafeNumber("tzBTC sold", tokenAmount),
       });
       const transfer = lbContract.methodsObject.tokenToXtz({
         to: userAddress,
-        tokensSold: tokenAmount.integerValue(BigNumber.ROUND_DOWN).toNumber(),
-        minXtzBought: minXtzBought.toNumber(),
+        tokensSold: this.toSafeNumber("tzBTC sold", tokenAmount),
+        minXtzBought: this.toSafeNumber("minimum XTZ bought", minXtzBought),
         deadline,
       });
 
@@ -418,6 +486,7 @@ export class SiriusAdapter implements IPoolAdapter {
         transferParamsToBeaconOp(approve0.toTransferParams()),
         transferParamsToBeaconOp(approve.toTransferParams()),
         transferParamsToBeaconOp(transfer.toTransferParams()),
+        transferParamsToBeaconOp(approve0.toTransferParams()),
       ];
       const response = await client.requestOperation({
         operationDetails: operations,
@@ -439,5 +508,37 @@ export class SiriusAdapter implements IPoolAdapter {
     return amount
       .plus(amount.times(slippage).div(100))
       .integerValue(BigNumber.ROUND_DOWN);
+  }
+
+  private assertSupportedInputToken(inputToken: Token): void {
+    if (inputToken !== Token.XTZ && inputToken !== Token.TzBTC) {
+      throw new Error(`Unsupported Sirius input token: ${inputToken}`);
+    }
+  }
+
+  private assertPositiveInteger(name: string, value: BigNumber): void {
+    if (!value.isFinite() || !value.isInteger() || value.lte(0)) {
+      throw new Error(`${name} must be a positive integer`);
+    }
+  }
+
+  private assertActivePool(poolData: PoolData): void {
+    this.assertPositiveInteger("Sirius XTZ reserve", poolData.tokenAPool);
+    this.assertPositiveInteger("Sirius tzBTC reserve", poolData.tokenBPool);
+    this.assertPositiveInteger("Sirius SIRS supply", poolData.lpTokenSupply);
+  }
+
+  private assertValidSlippage(slippage: number): void {
+    if (!isValidSlippage(slippage)) {
+      throw new Error("Sirius slippage tolerance is outside safe limits");
+    }
+  }
+
+  private toSafeNumber(name: string, value: BigNumber): number {
+    this.assertPositiveInteger(name, value);
+    if (value.gt(Number.MAX_SAFE_INTEGER)) {
+      throw new Error(`${name} exceeds the exact JavaScript integer range`);
+    }
+    return value.toNumber();
   }
 }
