@@ -5,7 +5,6 @@ import ArrowDownwardRoundedIcon from "@mui/icons-material/ArrowDownwardRounded";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import LockClockOutlinedIcon from "@mui/icons-material/LockClockOutlined";
-import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 
 import connectWallet from "../../functions/beacon";
 import { useNetwork } from "../../hooks/network";
@@ -90,7 +89,7 @@ const statusCopy = (
     return {
       title: `sTEZ is not enabled on ${selectedNetwork}`,
       description:
-        "The active protocol contains sTEZ, but this network has not activated the native contract. No staking or redemption transaction can be created here.",
+        "The Ushuaia upgrade introduced protocol-native sTEZ for testnet experimentation. Mainnet has not activated it. On a testnet where sTEZ is enabled, use this interface to see how staking, redemption, and finalization work.",
     };
   }
   if (snapshot.availability === "unsupported") {
@@ -136,7 +135,6 @@ export const Stez: FC = () => {
   const selectedNetwork = networkName(network.network);
   const [snapshot, setSnapshot] = useState<StezSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
-  const [refreshNonce, setRefreshNonce] = useState(0);
   const [activeAction, setActiveAction] = useState<StezAction>("Stake");
   const [amount, setAmount] = useState("");
 
@@ -160,7 +158,7 @@ export const Stez: FC = () => {
       });
 
     return () => controller.abort();
-  }, [network.info, network.network, refreshNonce, wallet.address]);
+  }, [network.info, network.network, wallet.address]);
 
   const available = snapshot?.availability === "available";
   const walletConnected = wallet.isWalletConnected && Boolean(wallet.address);
@@ -258,15 +256,6 @@ export const Stez: FC = () => {
           <strong>{copy.title}</strong>
           <p>{copy.description}</p>
         </div>
-        <button
-          type="button"
-          onClick={() => setRefreshNonce((value) => value + 1)}
-          disabled={loading}
-          aria-label="Check sTEZ availability again"
-        >
-          <RefreshRoundedIcon />
-          <span>{loading ? "Checking" : "Check again"}</span>
-        </button>
       </section>
 
       <section className="stez-panel" aria-labelledby="stez-position-title">

@@ -71,6 +71,10 @@ test("renders the real capability gate and keeps action states interactive", asy
       screen.getByText("sTEZ is not enabled on Mainnet")
     ).toBeInTheDocument()
   );
+  expect(screen.getByText(/Ushuaia upgrade introduced/i)).toBeInTheDocument();
+  expect(
+    screen.queryByRole("button", { name: /check stez availability again/i })
+  ).not.toBeInTheDocument();
   expect(screen.getByText(/block 14,286,000/i)).toBeInTheDocument();
 
   fireEvent.click(screen.getByRole("tab", { name: "Redeem" }));

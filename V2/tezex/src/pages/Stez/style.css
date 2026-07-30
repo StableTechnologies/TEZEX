@@ -83,7 +83,7 @@
   margin-bottom: 18px;
   padding: 16px 18px;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: 14px;
   background: var(--tezex-panel-subtle);
@@ -119,38 +119,6 @@
   color: var(--tezex-muted);
   font-size: 12px;
   line-height: 1.5;
-}
-
-.stez-availability > button {
-  min-height: 36px;
-  padding: 0 13px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  color: var(--tezex-text-secondary);
-  background: var(--tezex-panel);
-  border: 1px solid var(--tezex-line);
-  border-radius: 999px;
-  cursor: pointer;
-  font-size: 11px;
-  font-weight: 600;
-  transition: color 160ms ease, border-color 160ms ease;
-}
-
-.stez-availability > button:hover:not(:disabled) {
-  color: var(--tezex-text);
-  border-color: var(--tezex-line-strong);
-}
-
-.stez-availability > button:disabled {
-  cursor: wait;
-  opacity: 0.58;
-}
-
-.stez-availability > button svg {
-  width: 16px;
-  height: 16px;
 }
 
 .stez-panel,
@@ -648,11 +616,6 @@
   .stez-availability {
     grid-template-columns: auto minmax(0, 1fr);
     align-items: flex-start;
-  }
-
-  .stez-availability > button {
-    grid-column: 1 / -1;
-    width: 100%;
   }
 
   .stez-panel,
