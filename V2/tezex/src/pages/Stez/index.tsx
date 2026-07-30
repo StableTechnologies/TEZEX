@@ -279,7 +279,7 @@ export const Stez: FC = () => {
         </header>
         <div className="stez-position-grid">
           <PositionCell
-            label="Liquid sTez"
+            label="Liquid sTEZ"
             value={
               walletConnected
                 ? formatUnits(snapshot?.walletStezUnits ?? null)
@@ -452,7 +452,7 @@ export const Stez: FC = () => {
             <InfoOutlinedIcon aria-hidden="true" />
             {activeAction === "Stake" && (
               <p>
-                Depositing XTZ mints sTez to the sender. sTez is non-rebasing:
+                Depositing XTZ mints sTEZ to the sender. sTEZ is non-rebasing:
                 your token count changes only when you deposit, redeem,
                 transfer, or receive tokens; protocol performance changes its
                 XTZ value.
@@ -460,7 +460,7 @@ export const Stez: FC = () => {
             )}
             {activeAction === "Redeem" && (
               <p>
-                Redeeming burns sTez and moves the XTZ value into the protocol’s
+                Redeeming burns sTEZ and moves the XTZ value into the protocol’s
                 frozen redemption ledger. This is not an instant withdrawal.
               </p>
             )}
@@ -519,7 +519,7 @@ export const Stez: FC = () => {
                 ? snapshot.blockLevel.toLocaleString("en-US")
                 : "Not resolved"}
             </dd>
-            <dt>Total sTez supply</dt>
+            <dt>Total sTEZ supply</dt>
             <dd>{formatUnits(snapshot?.totalSupplyUnits ?? null)}</dd>
             <dt>Total XTZ backing</dt>
             <dd>{formatUnits(snapshot?.totalBackingMutez ?? null)}</dd>

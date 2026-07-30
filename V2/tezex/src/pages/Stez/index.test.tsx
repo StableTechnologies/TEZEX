@@ -71,6 +71,9 @@ test("renders the real capability gate and keeps action states interactive", asy
   );
   expect(screen.getByText(/sTEZ is testnet-only for now/i)).toBeInTheDocument();
   expect(screen.getByText(/Mainnet support will follow/i)).toBeInTheDocument();
+  expect(screen.getByText("Liquid sTEZ")).toBeInTheDocument();
+  expect(screen.getByText(/Depositing XTZ mints sTEZ/)).toBeInTheDocument();
+  expect(screen.getByText("Total sTEZ supply")).toBeInTheDocument();
   expect(
     screen.getByRole("link", {
       name: "Get Shadownet test XTZ from the official faucet",
