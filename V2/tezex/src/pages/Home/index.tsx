@@ -30,6 +30,8 @@ type ModeTransitionDirection = "forward" | "backward";
 
 const MODE_TRANSITION_DURATION = 420;
 const MODE_TRANSITION_EASING = "cubic-bezier(0.65, 0, 0.35, 1)";
+const SHADOWNET_XTZ_FAUCET_URL = "https://faucet.shadownet.teztnets.com";
+const STABLETEZ_TOKEN_FAUCET_URL = "https://faucet.stabletez.com";
 
 const prefersReducedMotion = () =>
   window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
@@ -293,6 +295,51 @@ export const Home: FC<IHome> = (props) => {
           />
         </Grid2>
       </BrowserView>
+      {network.network === NetworkType.SHADOWNET && (
+        <Box
+          component="aside"
+          data-testid="testnet-funding"
+          sx={styles.testnetFunding}
+          aria-labelledby="testnet-funding-title"
+        >
+          <Box sx={styles.testnetFundingCopy}>
+            <Typography sx={styles.testnetFundingEyebrow}>
+              SHADOWNET FUNDS
+            </Typography>
+            <Typography
+              component="h2"
+              id="testnet-funding-title"
+              sx={styles.testnetFundingTitle}
+            >
+              Fund your test wallet
+            </Typography>
+            <Typography sx={styles.testnetFundingMessage}>
+              Get test XTZ for fees, then request the test assets used in TEZEX
+              pools. Testnet tokens have no real value.
+            </Typography>
+          </Box>
+          <Box sx={styles.testnetFundingActions}>
+            <Link
+              href={SHADOWNET_XTZ_FAUCET_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              sx={styles.testnetFundingPrimary}
+              aria-label="Get Shadownet test XTZ"
+            >
+              GET TEST XTZ ↗
+            </Link>
+            <Link
+              href={STABLETEZ_TOKEN_FAUCET_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              sx={styles.testnetFundingSecondary}
+              aria-label="Get StableTez Shadownet test tokens"
+            >
+              GET TEST TOKENS ↗
+            </Link>
+          </Box>
+        </Box>
+      )}
       <Grid2 ref={viewportRef} sx={styles.contentViewport}>
         <Box
           ref={panelRef}

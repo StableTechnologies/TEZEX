@@ -17,6 +17,7 @@ import { Home } from ".";
 import { NetworkType } from "@airgap/beacon-sdk";
 
 const mockSwitchNetwork = jest.fn();
+let mockNetworkType = NetworkType.MAINNET;
 let mockTradingAvailability:
   | {
       enabled: boolean;
@@ -28,6 +29,7 @@ let mockTradingAvailability:
 
 jest.mock("../../hooks/network", () => ({
   useNetwork: () => ({
+    network: mockNetworkType,
     info: { tradingAvailability: mockTradingAvailability },
     switchNetwork: mockSwitchNetwork,
   }),
@@ -123,6 +125,7 @@ beforeEach(() => {
   window.matchMedia = jest.fn().mockReturnValue({ matches: false });
   delete (HTMLElement.prototype as Partial<HTMLElement>).animate;
   mockTradingAvailability = undefined;
+  mockNetworkType = NetworkType.MAINNET;
   mockSwitchNetwork.mockReset();
 });
 
@@ -139,6 +142,25 @@ test("changes modes immediately when browser animation is unavailable", () => {
   fireEvent.click(screen.getByRole("button", { name: "Liquidity" }));
 
   expect(screen.getByTestId("location")).toHaveTextContent("/home/add");
+  expect(screen.getByText("Liquidity workspace")).toBeInTheDocument();
+});
+
+test("shows both Shadownet funding routes on swap and liquidity", () => {
+  mockNetworkType = NetworkType.SHADOWNET;
+  renderHome();
+
+  expect(screen.getByTestId("testnet-funding")).toHaveTextContent(
+    "Fund your test wallet"
+  );
+  expect(
+    screen.getByRole("link", { name: "Get Shadownet test XTZ" })
+  ).toHaveAttribute("href", "https://faucet.shadownet.teztnets.com");
+  expect(
+    screen.getByRole("link", { name: "Get StableTez Shadownet test tokens" })
+  ).toHaveAttribute("href", "https://faucet.stabletez.com");
+
+  fireEvent.click(screen.getByRole("button", { name: "Liquidity" }));
+  expect(screen.getByTestId("testnet-funding")).toBeInTheDocument();
   expect(screen.getByText("Liquidity workspace")).toBeInTheDocument();
 });
 
