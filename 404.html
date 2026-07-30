@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#090909" />
+    <meta name="robots" content="noindex" />
+    <link rel="icon" href="/assets/favicon.ico" />
+    <title>Page not found | TEZEX</title>
+    <script>
+      (function () {
+        var path = window.location.pathname;
+        var isAsset = /\.[a-z0-9]+$/i.test(path);
+        if (path !== "/" && !isAsset) {
+          window.location.replace("/#" + path + window.location.search);
+        }
+      })();
+    </script>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        min-height: 100%;
+        margin: 0;
+      }
+      body {
+        display: grid;
+        place-items: center;
+        padding: 32px;
+        color: #f7f7f5;
+        background: #090909;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+      main {
+        width: min(100%, 760px);
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 72px;
+        font-size: 24px;
+        font-weight: 600;
+        letter-spacing: 0.3em;
+      }
+      .brand img {
+        width: 42px;
+        height: 42px;
+      }
+      .eyebrow {
+        margin: 0 0 20px;
+        color: #858585;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.18em;
+      }
+      h1 {
+        margin: 0;
+        font-size: clamp(52px, 10vw, 104px);
+        letter-spacing: -0.055em;
+        line-height: 0.96;
+      }
+      p {
+        max-width: 520px;
+        margin: 28px 0 44px;
+        color: #858585;
+        font-size: 19px;
+        line-height: 1.5;
+      }
+      a {
+        display: inline-flex;
+        min-height: 56px;
+        align-items: center;
+        gap: 18px;
+        padding: 0 28px;
+        border-radius: 999px;
+        color: #090909;
+        background: #f7f7f5;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="brand">
+        <img src="/assets/favicon.ico" alt="" />
+        <span>TEZEX</span>
+      </div>
+      <p class="eyebrow">ERROR 404</p>
+      <h1>Page not found.</h1>
+      <p>The address may have changed, or the page may no longer exist.</p>
+      <a href="/#/home/swap"
+        >RETURN TO SWAP <span aria-hidden="true">→</span></a
+      >
+    </main>
+  </body>
+</html>
