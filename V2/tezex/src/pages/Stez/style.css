@@ -145,6 +145,12 @@
   background: var(--tezex-action-hover);
 }
 
+.stez-availability__faucet-link svg {
+  width: 13px;
+  height: 13px;
+  flex: 0 0 13px;
+}
+
 .stez-availability__faucet-link:focus-visible {
   outline: 2px solid var(--tezex-text-secondary);
   outline-offset: 3px;

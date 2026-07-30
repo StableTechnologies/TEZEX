@@ -104,6 +104,7 @@ const style = (theme, scale = 1) => {
       display: "inline-flex",
       alignItems: "center",
       justifyContent: "center",
+      gap: "6px",
       color: "var(--tezex-action-text)",
       background: "var(--tezex-action)",
       border: "1px solid var(--tezex-action)",
@@ -115,6 +116,11 @@ const style = (theme, scale = 1) => {
       textAlign: "center",
       textDecoration: "none",
       whiteSpace: "nowrap",
+      "& svg": {
+        width: "13px",
+        height: "13px",
+        flex: "0 0 13px",
+      },
       "&:hover": {
         color: "var(--tezex-action-text)",
         background: "var(--tezex-action-hover)",
@@ -127,6 +133,7 @@ const style = (theme, scale = 1) => {
       display: "inline-flex",
       alignItems: "center",
       justifyContent: "center",
+      gap: "6px",
       color: "var(--tezex-text-secondary)",
       background: "transparent",
       border: "1px solid var(--tezex-line-strong)",
@@ -138,6 +145,11 @@ const style = (theme, scale = 1) => {
       textAlign: "center",
       textDecoration: "none",
       whiteSpace: "nowrap",
+      "& svg": {
+        width: "13px",
+        height: "13px",
+        flex: "0 0 13px",
+      },
       "&:hover": {
         color: "var(--tezex-text)",
         background: "var(--tezex-hover)",
