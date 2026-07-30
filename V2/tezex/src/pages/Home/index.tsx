@@ -14,6 +14,7 @@ import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
+import ArrowOutwardRoundedIcon from "@mui/icons-material/ArrowOutwardRounded";
 import { NetworkType } from "@airgap/beacon-sdk";
 import { useNetwork } from "../../hooks/network";
 
@@ -353,7 +354,8 @@ export const Home: FC<IHome> = (props) => {
                   sx={styles.testnetFundingPrimary}
                   aria-label="Get Shadownet test XTZ"
                 >
-                  GET TEST XTZ ↗
+                  GET TEST XTZ
+                  <ArrowOutwardRoundedIcon aria-hidden="true" />
                 </Link>
                 <Link
                   href={STABLETEZ_TOKEN_FAUCET_URL}
@@ -362,7 +364,8 @@ export const Home: FC<IHome> = (props) => {
                   sx={styles.testnetFundingSecondary}
                   aria-label="Get StableTez Shadownet test tokens"
                 >
-                  GET TEST TOKENS ↗
+                  GET TEST TOKENS
+                  <ArrowOutwardRoundedIcon aria-hidden="true" />
                 </Link>
               </Box>
             </Box>

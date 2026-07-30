@@ -155,12 +155,23 @@ test("shows both Shadownet funding routes on swap and liquidity", () => {
   expect(screen.getByTestId("testnet-funding")).toHaveStyle({
     maxWidth: "470px",
   });
-  expect(
-    screen.getByRole("link", { name: "Get Shadownet test XTZ" })
-  ).toHaveAttribute("href", "https://faucet.shadownet.teztnets.com");
-  expect(
-    screen.getByRole("link", { name: "Get StableTez Shadownet test tokens" })
-  ).toHaveAttribute("href", "https://faucet.stabletez.com");
+  const xtzFaucetLink = screen.getByRole("link", {
+    name: "Get Shadownet test XTZ",
+  });
+  const tokenFaucetLink = screen.getByRole("link", {
+    name: "Get StableTez Shadownet test tokens",
+  });
+  expect(xtzFaucetLink).toHaveAttribute(
+    "href",
+    "https://faucet.shadownet.teztnets.com"
+  );
+  expect(tokenFaucetLink).toHaveAttribute(
+    "href",
+    "https://faucet.stabletez.com"
+  );
+  expect(xtzFaucetLink.querySelector("svg")).toBeInTheDocument();
+  expect(tokenFaucetLink.querySelector("svg")).toBeInTheDocument();
+  expect(screen.getByTestId("testnet-funding")).not.toHaveTextContent("↗");
 
   fireEvent.click(screen.getByRole("button", { name: "Liquidity" }));
   expect(screen.getByTestId("testnet-funding")).toHaveStyle({

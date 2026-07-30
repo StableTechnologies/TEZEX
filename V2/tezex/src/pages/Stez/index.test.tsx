@@ -74,11 +74,15 @@ test("renders the real capability gate and keeps action states interactive", asy
   expect(screen.getByText("Liquid sTEZ")).toBeInTheDocument();
   expect(screen.getByText(/Depositing XTZ mints sTEZ/)).toBeInTheDocument();
   expect(screen.getByText("Total sTEZ supply")).toBeInTheDocument();
-  expect(
-    screen.getByRole("link", {
-      name: "Get Shadownet test XTZ from the official faucet",
-    })
-  ).toHaveAttribute("href", "https://faucet.shadownet.teztnets.com");
+  const faucetLink = screen.getByRole("link", {
+    name: "Get Shadownet test XTZ from the official faucet",
+  });
+  expect(faucetLink).toHaveAttribute(
+    "href",
+    "https://faucet.shadownet.teztnets.com"
+  );
+  expect(faucetLink.querySelector("svg")).toBeInTheDocument();
+  expect(faucetLink).not.toHaveTextContent("↗");
   expect(
     screen.queryByRole("button", { name: /check stez availability again/i })
   ).not.toBeInTheDocument();

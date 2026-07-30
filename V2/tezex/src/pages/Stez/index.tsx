@@ -5,6 +5,7 @@ import ArrowDownwardRoundedIcon from "@mui/icons-material/ArrowDownwardRounded";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import LockClockOutlinedIcon from "@mui/icons-material/LockClockOutlined";
+import ArrowOutwardRoundedIcon from "@mui/icons-material/ArrowOutwardRounded";
 
 import connectWallet from "../../functions/beacon";
 import { useNetwork } from "../../hooks/network";
@@ -264,7 +265,8 @@ export const Stez: FC = () => {
           rel="noreferrer"
           aria-label="Get Shadownet test XTZ from the official faucet"
         >
-          GET SHADOWNET TEST XTZ <span aria-hidden="true">↗</span>
+          GET SHADOWNET TEST XTZ
+          <ArrowOutwardRoundedIcon aria-hidden="true" />
         </a>
       </section>
 
