@@ -162,6 +162,11 @@ test("shows both Shadownet funding routes on swap and liquidity", () => {
   fireEvent.click(screen.getByRole("button", { name: "Liquidity" }));
   expect(screen.getByTestId("testnet-funding")).toBeInTheDocument();
   expect(screen.getByText("Liquidity workspace")).toBeInTheDocument();
+  expect(
+    screen
+      .getByTestId("trading-workspace")
+      .querySelector('[data-testid="testnet-funding"]')
+  ).toBeTruthy();
 });
 
 test("shows a safe network notice instead of mounting trading on an unavailable network", () => {
@@ -187,6 +192,7 @@ test("shows a safe network notice instead of mounting trading on an unavailable 
 });
 
 test("moves outgoing and incoming workspaces on one continuous track", async () => {
+  mockNetworkType = NetworkType.SHADOWNET;
   let finishTransition: () => void = () => undefined;
   const finished = new Promise<void>((resolve) => {
     finishTransition = resolve;
@@ -217,6 +223,12 @@ test("moves outgoing and incoming workspaces on one continuous track", async () 
   expect(
     document.querySelector('[data-workspace-snapshot="true"]')
   ).toHaveTextContent("Swap workspace");
+  expect(
+    document.querySelector('[data-workspace-snapshot="true"]')
+  ).toHaveTextContent("Fund your test wallet");
+  expect(screen.getByTestId("trading-workspace")).toHaveTextContent(
+    "Fund your test wallet"
+  );
   expect(document.documentElement.dataset.modeTransition).toBe("forward");
   expect(screen.getByRole("button", { name: "Swap" })).toBeDisabled();
   expect(animate).toHaveBeenNthCalledWith(
