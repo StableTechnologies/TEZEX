@@ -88,9 +88,9 @@ const statusCopy = (
   }
   if (snapshot.availability === "disabled") {
     return {
-      title: `sTEZ is not enabled on ${selectedNetwork}`,
+      title: `sTEZ is not active on ${selectedNetwork}`,
       description:
-        "The Ushuaia upgrade introduced protocol-native sTEZ for testnet experimentation. Mainnet has not activated it. On a testnet where sTEZ is enabled, use this interface to see how staking, redemption, and finalization work.",
+        "This chain runs a protocol that includes sTEZ, but its native-contract feature flag is off. Shadownet is Tezos's long-running application testnet; Ushuaianet is a separate protocol testnet. TEZEX will unlock these controls automatically when the selected RPC exposes sTEZ.",
     };
   }
   if (snapshot.availability === "unsupported") {
@@ -219,7 +219,7 @@ export const Stez: FC = () => {
 
   const actionButtonCopy = () => {
     if (!walletConnected) return "CONNECT WALLET";
-    if (!available) return `NOT ENABLED ON ${selectedNetwork.toUpperCase()}`;
+    if (!available) return `NOT ACTIVE ON ${selectedNetwork.toUpperCase()}`;
     if (activeAction === "Finalize") {
       return snapshot?.redeemedFinalizableMutez
         ? "FINALIZE AND CLAIM XTZ"
