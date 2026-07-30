@@ -17,6 +17,7 @@ import { Home } from ".";
 import { NetworkType } from "@airgap/beacon-sdk";
 
 const mockSwitchNetwork = jest.fn();
+let mockNetworkType = NetworkType.MAINNET;
 let mockTradingAvailability:
   | {
       enabled: boolean;
@@ -28,6 +29,7 @@ let mockTradingAvailability:
 
 jest.mock("../../hooks/network", () => ({
   useNetwork: () => ({
+    network: mockNetworkType,
     info: { tradingAvailability: mockTradingAvailability },
     switchNetwork: mockSwitchNetwork,
   }),
@@ -123,6 +125,7 @@ beforeEach(() => {
   window.matchMedia = jest.fn().mockReturnValue({ matches: false });
   delete (HTMLElement.prototype as Partial<HTMLElement>).animate;
   mockTradingAvailability = undefined;
+  mockNetworkType = NetworkType.MAINNET;
   mockSwitchNetwork.mockReset();
 });
 
@@ -140,6 +143,35 @@ test("changes modes immediately when browser animation is unavailable", () => {
 
   expect(screen.getByTestId("location")).toHaveTextContent("/home/add");
   expect(screen.getByText("Liquidity workspace")).toBeInTheDocument();
+});
+
+test("shows both Shadownet funding routes on swap and liquidity", () => {
+  mockNetworkType = NetworkType.SHADOWNET;
+  renderHome();
+
+  expect(screen.getByTestId("testnet-funding")).toHaveTextContent(
+    "Fund your test wallet"
+  );
+  expect(screen.getByTestId("testnet-funding")).toHaveStyle({
+    maxWidth: "470px",
+  });
+  expect(
+    screen.getByRole("link", { name: "Get Shadownet test XTZ" })
+  ).toHaveAttribute("href", "https://faucet.shadownet.teztnets.com");
+  expect(
+    screen.getByRole("link", { name: "Get StableTez Shadownet test tokens" })
+  ).toHaveAttribute("href", "https://faucet.stabletez.com");
+
+  fireEvent.click(screen.getByRole("button", { name: "Liquidity" }));
+  expect(screen.getByTestId("testnet-funding")).toHaveStyle({
+    maxWidth: "760px",
+  });
+  expect(screen.getByText("Liquidity workspace")).toBeInTheDocument();
+  expect(
+    screen
+      .getByTestId("trading-workspace")
+      .querySelector('[data-testid="testnet-funding"]')
+  ).toBeTruthy();
 });
 
 test("shows a safe network notice instead of mounting trading on an unavailable network", () => {
@@ -165,6 +197,7 @@ test("shows a safe network notice instead of mounting trading on an unavailable 
 });
 
 test("moves outgoing and incoming workspaces on one continuous track", async () => {
+  mockNetworkType = NetworkType.SHADOWNET;
   let finishTransition: () => void = () => undefined;
   const finished = new Promise<void>((resolve) => {
     finishTransition = resolve;
@@ -195,6 +228,12 @@ test("moves outgoing and incoming workspaces on one continuous track", async () 
   expect(
     document.querySelector('[data-workspace-snapshot="true"]')
   ).toHaveTextContent("Swap workspace");
+  expect(
+    document.querySelector('[data-workspace-snapshot="true"]')
+  ).toHaveTextContent("Fund your test wallet");
+  expect(screen.getByTestId("trading-workspace")).toHaveTextContent(
+    "Fund your test wallet"
+  );
   expect(document.documentElement.dataset.modeTransition).toBe("forward");
   expect(screen.getByRole("button", { name: "Swap" })).toBeDisabled();
   expect(animate).toHaveBeenNthCalledWith(

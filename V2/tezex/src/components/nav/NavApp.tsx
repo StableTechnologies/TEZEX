@@ -52,7 +52,11 @@ interface INavApp {
 export const NavApp: FC<INavApp> = (props) => {
   const styles = useStyles(style, props.scalingKey);
   const location = useLocation();
-  const value = location.pathname.startsWith("/analytics") ? 1 : 0;
+  const value = location.pathname.startsWith("/analytics")
+    ? 1
+    : location.pathname.startsWith("/stez")
+    ? 2
+    : 0;
 
   const aboutRedirectUrl = useSession().appConfig.aboutRedirectUrl;
 
@@ -67,6 +71,7 @@ export const NavApp: FC<INavApp> = (props) => {
     >
       <NavTab label="Home" href="/home/swap" />
       <NavTab label="Analytics" href="/analytics" />
+      <NavTab label="sTEZ" href="/stez" />
       <NavTabExternal label="About" href={aboutRedirectUrl} />
     </Tabs>
   );
