@@ -1,10 +1,15 @@
-import { WalletInfo } from "../contexts/wallet";
-import { INetwork } from "../contexts/network";
+import type { WalletInfo } from "../contexts/wallet";
+import type { INetwork } from "../contexts/network";
 import { TezosToolkit } from "@taquito/taquito";
 
 import { Asset, Balance, TokenType } from "../types/general";
 import { balanceBuilder, getBalanceFromTzKT } from "./util";
-import { BeaconEvent, DAppClient, NetworkType } from "@airgap/beacon-dapp";
+import {
+  AccountInfo,
+  BeaconEvent,
+  DAppClient,
+  NetworkType,
+} from "@airgap/beacon-dapp";
 
 export async function getBalance(
   toolkit: TezosToolkit,
@@ -66,6 +71,21 @@ export interface CustomDAppNetwork {
   name: string;
 }
 
+export async function subscribeToActiveAccount(
+  client: DAppClient,
+  onChange: (account: AccountInfo | undefined) => void
+): Promise<void> {
+  await client.subscribeToEvent(BeaconEvent.ACTIVE_ACCOUNT_SET, onChange);
+}
+
+export async function disposeDAppClient(client: DAppClient): Promise<void> {
+  try {
+    await client.clearActiveAccount();
+  } finally {
+    await client.destroy();
+  }
+}
+
 export function createCustomDAppClient(
   customNetwork: CustomDAppNetwork
 ): DAppClient {
@@ -86,17 +106,21 @@ const connectWithClient = async (
 ) => {
   let err = false;
   try {
-    await dAppClient.subscribeToEvent(
-      BeaconEvent.ACTIVE_ACCOUNT_SET,
-      async (account) => {
-        walletInfo.setAddress(account?.address ?? null);
-        if (!account) walletInfo.setClient(null);
+    await subscribeToActiveAccount(dAppClient, (account) => {
+      const accepted = walletInfo.syncActiveAccount(dAppClient, account);
+      if (account && !accepted) {
+        void disposeDAppClient(dAppClient).catch((cleanupError) =>
+          console.warn(
+            "Could not clean up the rejected Beacon session:",
+            cleanupError
+          )
+        );
       }
-    );
+    });
     await dAppClient.requestPermissions();
     const activeAccount = await dAppClient.getActiveAccount();
-    if (!activeAccount) {
-      throw new Error("Could not connect");
+    if (!walletInfo.syncActiveAccount(dAppClient, activeAccount)) {
+      throw new Error("Could not connect to the configured network");
     }
     walletInfo.setAddress(activeAccount.address);
   } catch (error) {
@@ -104,9 +128,15 @@ const connectWithClient = async (
     err = true;
   } finally {
     if (err) {
-      walletInfo.setClient(null);
-    } else {
-      walletInfo.setClient(dAppClient);
+      walletInfo.syncActiveAccount(dAppClient, undefined);
+      try {
+        await disposeDAppClient(dAppClient);
+      } catch (cleanupError) {
+        console.warn(
+          "Could not clean up the rejected Beacon session:",
+          cleanupError
+        );
+      }
     }
   }
 };

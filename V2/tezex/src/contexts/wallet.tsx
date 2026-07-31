@@ -2,13 +2,14 @@ import React, {
   useCallback,
   createContext,
   useEffect,
+  useMemo,
   useState,
   useRef,
 } from "react";
 import { current, Draft, produce } from "immer";
 import { useImmer } from "use-immer";
 import { Mutex } from "async-mutex";
-import { BeaconEvent, DAppClient, NetworkType } from "@airgap/beacon-dapp";
+import { AccountInfo, DAppClient } from "@airgap/beacon-dapp";
 import {
   Transaction,
   Asset,
@@ -27,7 +28,12 @@ import { useNetwork } from "../hooks/network";
 import { useSession } from "../hooks/session";
 import { v4 as uuidv4 } from "uuid";
 import { BigNumber } from "bignumber.js";
-import { getBalance } from "../functions/beacon";
+import {
+  createDAppClient,
+  disposeDAppClient,
+  getBalance,
+  subscribeToActiveAccount,
+} from "../functions/beacon";
 import {
   completionRecordFailed,
   completionRecordSuccess,
@@ -52,6 +58,13 @@ import {
   shouldApplyTransactionStatus,
   XTZ_FEE_RESERVE_TEZ,
 } from "../functions/transactionSafety";
+import {
+  accountMatchesConfiguredNetwork,
+  createConfiguredNetworkIdentity,
+  createGuardedDAppClient,
+  networkIdentityFingerprint,
+  WalletIdentityError,
+} from "../functions/walletIdentity";
 
 export enum WalletStatus {
   ESTIMATING_SIRS = "Estimating Sirs",
@@ -67,9 +80,11 @@ export enum WalletStatus {
 
 export interface WalletInfo {
   client: DAppClient | null;
-  setClient: React.Dispatch<React.SetStateAction<DAppClient | null>>;
   address: string | null;
-  setAddress: React.Dispatch<React.SetStateAction<string | null>>;
+  syncActiveAccount: (
+    sourceClient: DAppClient,
+    account: AccountInfo | undefined
+  ) => boolean;
   isWalletConnected: boolean;
   disconnect: () => Promise<void>;
   initialiseTransaction: (
@@ -114,12 +129,9 @@ export interface WalletInfo {
 
 const defaultWalletInfo: WalletInfo = {
   client: null,
-  setClient: () => {
-    throw new Error("setClient called outside of wallet provider");
-  },
   address: null,
-  setAddress: () => {
-    throw new Error("setAddress called outside of wallet provider");
+  syncActiveAccount: () => {
+    throw new Error("syncActiveAccount called outside of wallet provider");
   },
   isWalletConnected: false,
   disconnect: () => {
@@ -235,6 +247,81 @@ export function WalletProvider(props: IWalletProvider) {
       return { balance: undefined, asset: asset };
     })
   );
+  const configuredNetworkIdentity = useMemo(
+    () =>
+      createConfiguredNetworkIdentity({
+        type: network.network,
+        chainId: network.info.chainId,
+        primaryRpcUrl: network.info.tezosServer,
+        fallbackRpcUrls: network.info.rpcFallbacks,
+      }),
+    [
+      network.info.chainId,
+      network.info.rpcFallbacks,
+      network.info.tezosServer,
+      network.network,
+    ]
+  );
+  const configuredNetworkFingerprint = networkIdentityFingerprint(
+    configuredNetworkIdentity
+  );
+  const addressRef = useRef<string | null>(null);
+  const activeAccountIdentifierRef = useRef<string | null>(null);
+  const connectionRevisionRef = useRef(0);
+
+  const clearWalletDerivedState = useCallback(() => {
+    processingTransactionIds.clear();
+    latestQuoteRequests.clear();
+    latestTransactionInitializations.clear();
+    setTransactions({});
+    setAssetBalances(
+      networkRef.current.info.assets.map((asset) => ({
+        balance: undefined,
+        asset,
+      }))
+    );
+  }, [
+    latestQuoteRequests,
+    latestTransactionInitializations,
+    processingTransactionIds,
+    setTransactions,
+  ]);
+
+  const syncActiveAccount = useCallback(
+    (sourceClient: DAppClient, account: AccountInfo | undefined): boolean => {
+      connectionRevisionRef.current += 1;
+      clearWalletDerivedState();
+
+      if (
+        !account ||
+        !accountMatchesConfiguredNetwork(
+          account,
+          createConfiguredNetworkIdentity({
+            type: networkRef.current.network,
+            chainId: networkRef.current.info.chainId,
+            primaryRpcUrl: networkRef.current.info.tezosServer,
+            fallbackRpcUrls: networkRef.current.info.rpcFallbacks,
+          })
+        )
+      ) {
+        addressRef.current = null;
+        activeAccountIdentifierRef.current = null;
+        setAddress(null);
+        setClient(null);
+        return false;
+      }
+
+      addressRef.current = account.address;
+      activeAccountIdentifierRef.current = account.accountIdentifier;
+      setAddress(account.address);
+      setClient(sourceClient);
+      return true;
+    },
+    [clearWalletDerivedState]
+  );
+  const syncActiveAccountRef = useRef(syncActiveAccount);
+  syncActiveAccountRef.current = syncActiveAccount;
+  const initialNetworkRef = useRef(network);
 
   // zero balance object
   const zeroBalance: Balance = {
@@ -287,7 +374,6 @@ export function WalletProvider(props: IWalletProvider) {
     network.info.chainId,
     setTransactions,
   ]);
-
   // Auto-reconnect on mount (ONCE)
   useEffect(() => {
     const autoReconnect = async () => {
@@ -298,32 +384,24 @@ export function WalletProvider(props: IWalletProvider) {
       hasReconnectedRef.current = true;
 
       try {
-        const dAppClient = new DAppClient({
-          name: "Tezex",
-          network: { type: network.network },
-          preferredNetwork: network.network,
-        });
+        const dAppClient = createDAppClient(initialNetworkRef.current);
 
-        await dAppClient.subscribeToEvent(
-          BeaconEvent.ACTIVE_ACCOUNT_SET,
-          async (account) => {
-            setAddress(account?.address ?? null);
-            if (!account) {
-              setClient((currentClient) =>
-                currentClient === dAppClient ? null : currentClient
-              );
-            }
+        await subscribeToActiveAccount(dAppClient, (account) => {
+          const accepted = syncActiveAccountRef.current(dAppClient, account);
+          if (account && !accepted) {
+            void disposeDAppClient(dAppClient).catch((cleanupError) =>
+              console.warn(
+                "Could not clean up the rejected Beacon session:",
+                cleanupError
+              )
+            );
           }
-        );
+        });
 
         const activeAccount = await dAppClient.getActiveAccount();
 
-        if (activeAccount && activeAccount.network.type === network.network) {
-          setAddress(activeAccount.address);
-          setClient(dAppClient);
-        } else {
-          await dAppClient.clearActiveAccount();
-          await dAppClient.destroy();
+        if (!syncActiveAccountRef.current(dAppClient, activeAccount)) {
+          await disposeDAppClient(dAppClient);
         }
       } catch (error) {
         console.error("Auto-reconnect failed:", error);
@@ -332,16 +410,6 @@ export function WalletProvider(props: IWalletProvider) {
 
     autoReconnect();
   }, []);
-
-  // Reset balances when network changes
-  useEffect(() => {
-    setAssetBalances(
-      network.info.assets.map((asset) => ({
-        balance: undefined,
-        asset: asset,
-      }))
-    );
-  }, [network.network]);
 
   // callback to update state of asset balances
   const updateBalances = useCallback(async () => {
@@ -373,31 +441,33 @@ export function WalletProvider(props: IWalletProvider) {
     _updateBalances();
   }, [isWalletConnected]);
 
-  // Track previous network to detect changes
-  const previousNetworkRef = useRef<NetworkType>(network.network);
+  // Track the full canonical identity so two CUSTOM networks never compare equal.
+  const previousNetworkRef = useRef(configuredNetworkFingerprint);
 
   // Disconnect wallet when network changes
   useEffect(() => {
     const handleNetworkSwitch = async () => {
-      // Check if network actually changed
-      if (previousNetworkRef.current !== network.network) {
-        if (client && address && network.toolkit) {
+      if (previousNetworkRef.current !== configuredNetworkFingerprint) {
+        previousNetworkRef.current = configuredNetworkFingerprint;
+        connectionRevisionRef.current += 1;
+        addressRef.current = null;
+        activeAccountIdentifierRef.current = null;
+        clearWalletDerivedState();
+        setAddress(null);
+        setClient(null);
+
+        if (client) {
           try {
-            await client.clearActiveAccount();
-            await client.destroy();
+            await disposeDAppClient(client);
           } catch (error) {
             console.error("Error clearing Beacon account:", error);
           }
-
-          setAddress(null);
-          setClient(null);
         }
-        previousNetworkRef.current = network.network;
       }
     };
 
     handleNetworkSwitch();
-  }, [network.network, client, address]);
+  }, [client, clearWalletDerivedState, configuredNetworkFingerprint]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -430,7 +500,7 @@ export function WalletProvider(props: IWalletProvider) {
   const transact = useCallback(
     async (transaction: Transaction): Promise<Transaction> => {
       // if the wallet is connected and the toolkit is defined
-      if (address && network.toolkit && client) {
+      if (networkRef.current.toolkit && client) {
         // if the transaction is pending process it
         if (transaction.transactionStatus === TransactionStatus.PENDING) {
           let submittedHash: string | undefined;
@@ -448,24 +518,70 @@ export function WalletProvider(props: IWalletProvider) {
               );
             }
 
-            const guardedClient = createQuoteGuardedDAppClient({
+            const submission = transaction.submissionContext;
+            if (!submission) {
+              throw new WalletIdentityError(
+                "This transaction was not prepared for the active wallet session."
+              );
+            }
+
+            const activeNetwork = networkRef.current;
+            const adapter = activeNetwork.getPoolAdapter(transaction.poolId);
+            if (adapter.poolConfig.address !== submission.recipient) {
+              throw new WalletIdentityError(
+                "The active pool recipient changed after this transaction was prepared."
+              );
+            }
+
+            const allowedDestinations = Array.from(
+              new Set(
+                [
+                  submission.recipient,
+                  ...transaction.sendAsset.map((asset) => asset.address),
+                  ...transaction.receiveAsset.map((asset) => asset.address),
+                ].filter(Boolean)
+              )
+            );
+            const identityGuardedClient = createGuardedDAppClient({
               client,
+              submission,
+              transactionNetwork: transaction.network,
+              allowedDestinations,
+              getRuntime: () => {
+                const currentNetwork = networkRef.current;
+                return {
+                  address: addressRef.current,
+                  accountIdentifier: activeAccountIdentifierRef.current,
+                  connectionRevision: connectionRevisionRef.current,
+                  network: createConfiguredNetworkIdentity({
+                    type: currentNetwork.network,
+                    chainId: currentNetwork.info.chainId,
+                    primaryRpcUrl: currentNetwork.info.tezosServer,
+                    fallbackRpcUrls: currentNetwork.info.rpcFallbacks,
+                  }),
+                  rpcUrl: currentNetwork.toolkit.rpc.getRpcUrl(),
+                  readChainId: () => currentNetwork.toolkit.rpc.getChainId(),
+                };
+              },
+            });
+            const guardedClient = createQuoteGuardedDAppClient({
+              client: identityGuardedClient,
               transaction,
               getActiveTransaction: () =>
                 transactionsRef.current[transaction.component],
               getRuntime: () => {
-                const activeNetwork = networkRef.current;
+                const currentNetwork = networkRef.current;
                 return {
                   context: { ...quoteContextRef.current },
-                  readChainId: () => activeNetwork.toolkit.rpc.getChainId(),
+                  readChainId: () => currentNetwork.toolkit.rpc.getChainId(),
                 };
               },
             });
 
             const success = await processTransaction(
               transaction,
-              address,
-              { toolkit: network.toolkit, client: guardedClient },
+              submission.owner,
+              { toolkit: activeNetwork.toolkit, client: guardedClient },
               {
                 onSubmitted: (opHash) => {
                   submittedHash = opHash;
@@ -500,6 +616,20 @@ export function WalletProvider(props: IWalletProvider) {
               transactionStatus: TransactionStatus.COMPLETED,
             };
           } catch (error: unknown) {
+            if (error instanceof WalletIdentityError) {
+              connectionRevisionRef.current += 1;
+              addressRef.current = null;
+              activeAccountIdentifierRef.current = null;
+              clearWalletDerivedState();
+              setAddress(null);
+              setClient(null);
+              void disposeDAppClient(client).catch((cleanupError) =>
+                console.warn(
+                  "Could not clean up the stale Beacon session:",
+                  cleanupError
+                )
+              );
+            }
             const completionRecord = completionRecordFailed(
               error,
               transaction.component,
@@ -527,7 +657,7 @@ export function WalletProvider(props: IWalletProvider) {
         }
       } else throw Error("wallet not Connected");
     },
-    [address, client, network.toolkit, session, setTransactions, updateBalances]
+    [clearWalletDerivedState, client, session, setTransactions, updateBalances]
   );
 
   // Effect to monitor transactions and send them for processing
@@ -641,6 +771,14 @@ export function WalletProvider(props: IWalletProvider) {
       latestTransactionInitializations.set(component, initializationToken);
       return await transactionUpdateMutex.runExclusive(async () => {
         const quoteContext = { ...quoteContextRef.current };
+        const activeNetwork = networkRef.current;
+        const adapter = activeNetwork.getPoolAdapter(poolId);
+        const submissionNetwork = createConfiguredNetworkIdentity({
+          type: activeNetwork.network,
+          chainId: activeNetwork.info.chainId,
+          primaryRpcUrl: activeNetwork.info.tezosServer,
+          fallbackRpcUrls: activeNetwork.info.rpcFallbacks,
+        });
         // initialise zeroBalance
         const initBalance = (asset: AssetOrAssetPair): Amount => {
           switch (asset.length) {
@@ -659,7 +797,7 @@ export function WalletProvider(props: IWalletProvider) {
         const _transaction: Transaction = {
           id: uuidv4(),
 
-          network: network.network,
+          network: activeNetwork.network,
           component,
           poolId,
           sendAsset,
@@ -670,6 +808,15 @@ export function WalletProvider(props: IWalletProvider) {
           receiveAssetBalance: initBalance(receiveAsset),
           transactionStatus: TransactionStatus.INITIALIZED,
           slippage: slipppage,
+          submissionContext: {
+            owner: addressRef.current ?? "",
+            accountIdentifier: activeAccountIdentifierRef.current ?? "",
+            recipient: adapter.poolConfig.address,
+            networkType: submissionNetwork.type,
+            chainId: submissionNetwork.chainId,
+            rpcUrl: submissionNetwork.primaryRpcUrl,
+            connectionRevision: connectionRevisionRef.current,
+          },
           lastModified: new Date(),
           locked: false,
           quoteRevision: 0,
@@ -677,10 +824,9 @@ export function WalletProvider(props: IWalletProvider) {
 
         let transaction: Transaction = _transaction;
 
-        const adapter = network.getPoolAdapter(poolId);
         transaction = await estimateWithAdapter(
           _transaction,
-          network.toolkit,
+          activeNetwork.toolkit,
           adapter
         );
 
@@ -709,7 +855,7 @@ export function WalletProvider(props: IWalletProvider) {
         return setActiveTransaction(component, transaction);
       });
     },
-    [network.network, setActiveTransaction]
+    [setActiveTransaction, transactionUpdateMutex]
   );
 
   // function to check if a user has sufficient balance
@@ -1270,9 +1416,12 @@ export function WalletProvider(props: IWalletProvider) {
 
   // disconnect wallet
   const disconnect = async () => {
+    connectionRevisionRef.current += 1;
+    addressRef.current = null;
+    activeAccountIdentifierRef.current = null;
+    clearWalletDerivedState();
     if (client) {
-      await client.clearActiveAccount();
-      await client.destroy();
+      await disposeDAppClient(client);
     }
     setClient(null);
     setAddress(null);
@@ -1280,9 +1429,8 @@ export function WalletProvider(props: IWalletProvider) {
 
   const walletInfo: WalletInfo = {
     client,
-    setClient,
     address,
-    setAddress,
+    syncActiveAccount,
     isWalletConnected,
     initialiseTransaction,
     updateStatus,
