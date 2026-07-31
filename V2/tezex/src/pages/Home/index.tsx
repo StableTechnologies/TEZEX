@@ -39,6 +39,16 @@ const prefersReducedMotion = () =>
 
 const isLiquidityRoute = (path: HomePaths | string) => path !== "swap";
 
+const homePathFromHref = (href: string): HomePaths => {
+  const pathname = href.split(/[?#]/, 1)[0].replace(/\/$/, "");
+
+  if (pathname === "/liquidity/remove" || pathname === "/home/remove") {
+    return "remove";
+  }
+  if (pathname === "/liquidity" || pathname === "/home/add") return "add";
+  return "swap";
+};
+
 const createWorkspaceSnapshot = (panel: HTMLDivElement) => {
   const snapshot = panel.cloneNode(true) as HTMLDivElement;
 
@@ -82,7 +92,7 @@ export const Home: FC<IHome> = (props) => {
 
   const navigateBetweenModes = useCallback(
     (href: string) => {
-      const targetPath = href.split("/").pop() ?? "swap";
+      const targetPath = homePathFromHref(href);
       const currentIsLiquidity = isLiquidityRoute(displayedPath);
       const targetIsLiquidity = isLiquidityRoute(targetPath);
 

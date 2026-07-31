@@ -1,6 +1,9 @@
 import {
   canonicalTezexUrl,
+  canonicalPath,
+  homePathForHost,
   isStezOnlyHost,
+  routeFromLegacyHash,
   STEZ_HOSTNAME,
   stezRouteFromHash,
 } from "./routing";
@@ -13,13 +16,34 @@ describe("hostname-specific routing", () => {
     expect(isStezOnlyHost("stez.tezex.io.example.com")).toBe(false);
   });
 
+  it("uses a redirect route when leaving the dedicated sTEZ hostname", () => {
+    expect(homePathForHost(STEZ_HOSTNAME)).toBe("/swap");
+    expect(homePathForHost("tezex.io")).toBe("/");
+  });
+
   it("moves non-sTEZ routes to the canonical TEZEX origin", () => {
-    expect(canonicalTezexUrl("/home/swap")).toBe(
-      "https://tezex.io/#/home/swap"
-    );
+    expect(canonicalTezexUrl("/home/swap")).toBe("https://tezex.io/");
     expect(canonicalTezexUrl("/analytics", "?range=30d")).toBe(
-      "https://tezex.io/#/analytics?range=30d"
+      "https://tezex.io/analytics?range=30d"
     );
+  });
+
+  it("maps legacy application routes to clean canonical paths", () => {
+    expect(canonicalPath("/home/swap")).toBe("/");
+    expect(canonicalPath("/home/add")).toBe("/liquidity");
+    expect(canonicalPath("/home/remove")).toBe("/liquidity/remove");
+    expect(canonicalPath("/analytics")).toBe("/analytics");
+  });
+
+  it("converts old hash URLs without dropping their query string", () => {
+    expect(routeFromLegacyHash("#/home/swap")).toBe("/");
+    expect(routeFromLegacyHash("#/home/add?pool=sirius")).toBe(
+      "/liquidity?pool=sirius"
+    );
+    expect(routeFromLegacyHash("#/analytics?range=30d")).toBe(
+      "/analytics?range=30d"
+    );
+    expect(routeFromLegacyHash("#section")).toBeNull();
   });
 
   it("maps the clean sTEZ URL to its internal page without exposing a hash", () => {

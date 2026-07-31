@@ -137,7 +137,7 @@ export const NotFound: FC = () => {
         </div>
 
         <div className="not-found__actions">
-          <Link className="not-found__button is-primary" to="/home/swap">
+          <Link className="not-found__button is-primary" to="/">
             BACK TO SWAP
           </Link>
           <Link className="not-found__button is-secondary" to="/analytics">

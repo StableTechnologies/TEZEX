@@ -6,6 +6,7 @@ import tezosLogoBlack from "../../../../assets/TezosLogo_Horizontal_Black.svg";
 import tezosLogoWhite from "../../../../assets/TezosLogo_Horizontal_White.svg";
 import { useSession } from "../../../../hooks/session";
 import "./style.css";
+import { homePathForHost } from "../../../../routing";
 
 const GITHUB_URL = "https://github.com/StableTechnologies/TEZEX";
 const X_URL = "https://x.com/TezosExchange";
@@ -44,6 +45,7 @@ const ExternalLink = ({
 
 export function Footer() {
   const { appConfig } = useSession();
+  const homePath = homePathForHost(window.location.hostname);
 
   return (
     <footer className="tezex-footer">
@@ -51,7 +53,7 @@ export function Footer() {
         <div className="tezex-footer__top">
           <section className="tezex-footer__brand" aria-label="About TEZEX">
             <Link
-              to="/home/swap"
+              to={homePath}
               className="tezex-footer__home"
               aria-label="TEZEX home"
             >
@@ -93,10 +95,10 @@ export function Footer() {
             <h2>Product</h2>
             <ul>
               <li>
-                <Link to="/home/swap">Swap</Link>
+                <Link to={homePath}>Swap</Link>
               </li>
               <li>
-                <Link to="/home/add">Liquidity</Link>
+                <Link to="/liquidity">Liquidity</Link>
               </li>
               <li>
                 <Link to="/analytics">Analytics</Link>

@@ -8,6 +8,7 @@ import useStyles from "../../hooks/styles";
 
 import { useSession } from "../../hooks/session";
 import Box from "@mui/material/Box";
+import { homePathForHost } from "../../routing";
 
 interface NavTabProps {
   label: string;
@@ -59,6 +60,7 @@ export const NavApp: FC<INavApp> = (props) => {
     : 0;
 
   const aboutRedirectUrl = useSession().appConfig.aboutRedirectUrl;
+  const homePath = homePathForHost(window.location.hostname);
 
   return (
     <Tabs
@@ -69,7 +71,7 @@ export const NavApp: FC<INavApp> = (props) => {
         style: { display: "none" },
       }}
     >
-      <NavTab label="Home" href="/home/swap" />
+      <NavTab label="Home" href={homePath} />
       <NavTab label="Analytics" href="/analytics" />
       <NavTab label="sTEZ" href="/stez" />
       <NavTabExternal label="About" href={aboutRedirectUrl} />

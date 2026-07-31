@@ -17,6 +17,7 @@ import style from "./style";
 import useStyles from "../../../../hooks/styles";
 import { NetworkSelector } from "../../elements/selectors/networkSelector/NetworkSelector";
 import { useColorMode } from "../../../../contexts/color-mode";
+import { homePathForHost } from "../../../../routing";
 
 export interface IHeader {
   openMenu: boolean;
@@ -27,6 +28,7 @@ export const Header: FC<IHeader> = (props) => {
   const styles = useStyles(style, scalingKey);
   const { mode, toggleMode } = useColorMode();
   const isLight = mode === "light";
+  const homePath = homePathForHost(window.location.hostname);
 
   return (
     <AppBar
@@ -42,7 +44,7 @@ export const Header: FC<IHeader> = (props) => {
           <Box sx={styles.container}>
             <Box
               component={Link}
-              to="/home/swap"
+              to={homePath}
               aria-label="TEZEX home"
               onMouseDown={(event) => event.preventDefault()}
               sx={styles.logoLink}

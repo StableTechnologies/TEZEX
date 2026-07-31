@@ -80,8 +80,8 @@ export const NavLiquidity: FC<INavLiquidty> = (props) => {
         ),
       }}
     >
-      <NavTab label="Add Liquidity" href="/home/add" />
-      <NavTab label="Remove Liquidity" href="/home/remove" />
+      <NavTab label="Add Liquidity" href="/liquidity" />
+      <NavTab label="Remove Liquidity" href="/liquidity/remove" />
     </Tabs>
   );
 };

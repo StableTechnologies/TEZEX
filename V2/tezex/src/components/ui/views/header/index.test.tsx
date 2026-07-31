@@ -47,7 +47,7 @@ const CurrentLocation = () => {
 test("the TEZEX logo navigates to the swap home route", () => {
   render(
     <MemoryRouter
-      initialEntries={["/home/add"]}
+      initialEntries={["/liquidity"]}
       future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
     >
       <Routes>
@@ -66,5 +66,5 @@ test("the TEZEX logo navigates to the swap home route", () => {
 
   fireEvent.click(screen.getByRole("link", { name: "TEZEX home" }));
 
-  expect(screen.getByTestId("location")).toHaveTextContent("/home/swap");
+  expect(screen.getByTestId("location")).toHaveTextContent("/");
 });

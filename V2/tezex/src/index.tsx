@@ -7,7 +7,7 @@ import reportWebVitals from "./reportWebVitals";
 import { SessionProvider } from "./contexts/session";
 import ReactDOM from "react-dom/client";
 import {
-  createHashRouter,
+  createBrowserRouter,
   createMemoryRouter,
   Navigate,
   RouterProvider,
@@ -24,6 +24,7 @@ import { ColorModeProvider } from "./contexts/color-mode";
 import {
   canonicalTezexUrl,
   isStezOnlyHost,
+  routeFromLegacyHash,
   stezRouteFromHash,
 } from "./routing";
 
@@ -42,19 +43,31 @@ const CanonicalTezexRedirect = () => {
 const standardRoutes = [
   {
     index: true,
-    element: <Navigate to="/home/swap" replace />,
-  },
-  {
-    path: "home/swap",
     element: <Home path="swap" />,
   },
   {
-    path: "home/add",
+    path: "liquidity",
     element: <Home path="add" />,
   },
   {
-    path: "home/remove",
+    path: "liquidity/remove",
     element: <Home path="remove" />,
+  },
+  {
+    path: "home/swap",
+    element: <Navigate to="/" replace />,
+  },
+  {
+    path: "home/add",
+    element: <Navigate to="/liquidity" replace />,
+  },
+  {
+    path: "home/remove",
+    element: <Navigate to="/liquidity/remove" replace />,
+  },
+  {
+    path: "swap",
+    element: <Navigate to="/" replace />,
   },
   {
     path: "analytics",
@@ -90,6 +103,14 @@ const stezOnlyRoutes = [
     element: <CanonicalTezexRedirect />,
   },
   {
+    path: "swap",
+    element: <CanonicalTezexRedirect />,
+  },
+  {
+    path: "liquidity/*",
+    element: <CanonicalTezexRedirect />,
+  },
+  {
     path: "analytics",
     element: <CanonicalTezexRedirect />,
   },
@@ -102,6 +123,13 @@ const stezOnlyRoutes = [
 const stezOnlyHost = isStezOnlyHost(window.location.hostname);
 const stezInitialRoute = stezRouteFromHash(window.location.hash);
 
+if (!stezOnlyHost) {
+  const legacyRoute = routeFromLegacyHash(window.location.hash);
+  if (legacyRoute) {
+    window.history.replaceState(window.history.state, "", legacyRoute);
+  }
+}
+
 if (stezOnlyHost && window.location.href !== `${window.location.origin}/`) {
   window.history.replaceState(window.history.state, "", "/");
 }
@@ -110,7 +138,7 @@ const router = stezOnlyHost
   ? createMemoryRouter(stezOnlyRoutes, {
       initialEntries: [stezInitialRoute],
     })
-  : createHashRouter([
+  : createBrowserRouter([
       {
         path: "/",
         element: <App />,

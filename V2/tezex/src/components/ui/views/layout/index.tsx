@@ -28,7 +28,8 @@ export const Layout: FC<ILayout> = (props) => {
   const location = useLocation();
   const isStezRoute = location.pathname.startsWith("/stez");
   const isTzktDataRoute =
-    location.pathname.startsWith("/home") ||
+    location.pathname === "/" ||
+    location.pathname.startsWith("/liquidity") ||
     location.pathname.startsWith("/analytics");
   const [openMenu, setOpenMenu] = useState(false);
   const toggleMenu = useCallback(() => {

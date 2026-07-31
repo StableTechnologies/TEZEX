@@ -62,8 +62,8 @@ export const NavHome: FC<INavHome> = (props) => {
 
   const liquidityHref: () => string = useCallback(() => {
     if (sessionInfo.activeComponent === TransactingComponent.REMOVE_LIQUIDITY) {
-      return "/home/remove";
-    } else return "/home/add";
+      return "/liquidity/remove";
+    } else return "/liquidity";
   }, [sessionInfo]);
 
   return (
@@ -76,7 +76,7 @@ export const NavHome: FC<INavHome> = (props) => {
     >
       <NavTab
         label="Swap"
-        href="/home/swap"
+        href="/"
         scalingKey={props.scalingKey}
         onNavigate={props.onNavigate}
         disabled={props.isTransitioning}
