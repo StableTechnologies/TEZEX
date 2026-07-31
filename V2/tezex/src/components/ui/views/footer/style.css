@@ -1,0 +1,326 @@
+.tezex-footer {
+  width: 100%;
+  background: var(--tezex-bg);
+  color: var(--tezex-text);
+  border-top: 1px solid var(--tezex-line);
+}
+
+.tezex-footer a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.tezex-footer a:focus-visible {
+  outline: 2px solid var(--tezex-text-secondary);
+  outline-offset: 4px;
+}
+
+.tezex-footer__wrap {
+  width: 100%;
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 0 28px;
+}
+
+.tezex-footer__top {
+  display: grid;
+  grid-template-columns:
+    minmax(280px, 1fr) minmax(112px, auto)
+    minmax(112px, auto) minmax(156px, auto);
+  column-gap: clamp(36px, 5vw, 72px);
+  padding: 40px 0 32px;
+}
+
+.tezex-footer__brand {
+  display: grid;
+  grid-template-columns: minmax(0, 280px);
+  align-content: start;
+  justify-items: start;
+  text-align: left;
+}
+
+.tezex-footer__home {
+  display: inline-flex;
+  border-radius: 4px;
+}
+
+.tezex-footer__tezex-logo {
+  display: block;
+  width: 144px;
+  height: auto;
+  filter: var(--tezex-logo-filter);
+}
+
+.tezex-footer__tagline {
+  margin: 12px 0 0;
+  color: var(--tezex-muted);
+  font-family: "Red Hat Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  letter-spacing: 0.3px;
+}
+
+.tezex-footer__built-on {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-self: end;
+  gap: 8px;
+}
+
+.tezex-footer__kicker,
+.tezex-footer__column h2 {
+  margin: 0;
+  color: var(--tezex-muted);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 2.4px;
+  text-transform: uppercase;
+}
+
+.tezex-footer__tezos-lockup {
+  display: inline-flex;
+  align-items: center;
+  transition: opacity 180ms ease;
+}
+
+.tezex-footer__tezos-lockup:hover {
+  opacity: 0.72;
+}
+
+.tezex-footer__tezos-logo {
+  display: block;
+  width: 114px;
+  height: auto;
+}
+
+.tezex-footer__tezos-logo--black {
+  display: none;
+}
+
+:root[data-theme="light"] .tezex-footer__tezos-logo--white {
+  display: none;
+}
+
+:root[data-theme="light"] .tezex-footer__tezos-logo--black {
+  display: block;
+}
+
+.tezex-footer__socials {
+  display: flex;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.tezex-footer__socials a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  color: var(--tezex-muted);
+  border: 1px solid var(--tezex-line);
+  border-radius: 50%;
+  transition: color 180ms ease, border-color 180ms ease,
+    background-color 180ms ease;
+}
+
+.tezex-footer__socials a:hover {
+  color: var(--tezex-text);
+  background: var(--tezex-hover);
+  border-color: var(--tezex-line-strong);
+}
+
+.tezex-footer__column {
+  min-width: 126px;
+  justify-self: start;
+  text-align: left;
+}
+
+.tezex-footer__column h2 {
+  margin-bottom: 14px;
+}
+
+.tezex-footer__column ul {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tezex-footer__column a {
+  display: inline-flex;
+  min-height: 24px;
+  align-items: center;
+  color: var(--tezex-text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  transition: color 180ms ease;
+}
+
+.tezex-footer__column a:hover {
+  color: var(--tezex-muted);
+}
+
+.tezex-footer__bottom {
+  display: flex;
+  align-items: center;
+  min-height: 58px;
+  padding: 16px 0 20px;
+  border-top: 1px solid var(--tezex-line);
+}
+
+.tezex-footer__bottom p {
+  margin: 0;
+  color: var(--tezex-muted);
+  font-family: "Red Hat Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
+  font-size: 11px;
+  line-height: 1.7;
+  letter-spacing: 0.2px;
+}
+
+.tezex-footer__bottom p span {
+  margin: 0 8px;
+  color: var(--tezex-faint);
+}
+
+@media (max-width: 900px) {
+  .tezex-footer__wrap {
+    padding: 0 20px;
+  }
+
+  .tezex-footer__top {
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    padding: 32px 0 26px;
+  }
+
+  .tezex-footer__brand {
+    grid-column: 1;
+    grid-row: 1;
+    max-width: none;
+  }
+
+  .tezex-footer__column--product {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .tezex-footer__column--resources {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .tezex-footer__built-on {
+    grid-column: 2;
+    grid-row: 1;
+    align-items: flex-end;
+    justify-self: end;
+    margin-top: 0;
+  }
+
+  .tezex-footer__kicker {
+    text-align: right;
+  }
+}
+
+@media (max-width: 560px) {
+  .tezex-footer__wrap {
+    padding: 0 16px;
+  }
+
+  .tezex-footer__top {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 22px;
+    padding: 28px 0 22px;
+  }
+
+  .tezex-footer__brand {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tezex-footer__column--product {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .tezex-footer__column--resources {
+    grid-column: 1 / -1;
+    grid-row: 3;
+  }
+
+  .tezex-footer__tezex-logo {
+    width: 132px;
+  }
+
+  .tezex-footer__tezos-logo {
+    width: 104px;
+  }
+
+  .tezex-footer__column {
+    min-width: 0;
+  }
+
+  .tezex-footer__column h2 {
+    margin-bottom: 10px;
+  }
+
+  .tezex-footer__column ul {
+    flex-flow: row wrap;
+    gap: 8px 18px;
+  }
+
+  .tezex-footer__column a {
+    min-height: 28px;
+    font-size: 13px;
+  }
+
+  .tezex-footer__bottom {
+    padding: 14px 0 20px;
+  }
+}
+
+@media (max-width: 380px) {
+  .tezex-footer__top {
+    grid-template-columns: 1fr;
+  }
+
+  .tezex-footer__brand {
+    grid-column: 1;
+    grid-row: 1;
+    grid-template-columns: 1fr;
+  }
+
+  .tezex-footer__built-on {
+    grid-column: 1;
+    grid-row: 2;
+    align-items: flex-start;
+    justify-self: start;
+    margin-top: 18px;
+  }
+
+  .tezex-footer__column--product {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  .tezex-footer__column--resources {
+    grid-column: 1;
+    grid-row: 4;
+  }
+
+  .tezex-footer__kicker {
+    text-align: left;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tezex-footer__tezos-lockup,
+  .tezex-footer__socials a,
+  .tezex-footer__column a {
+    transition: none;
+  }
+}
