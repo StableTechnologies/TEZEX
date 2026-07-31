@@ -270,270 +270,286 @@ export const Stez: FC = () => {
         </a>
       </section>
 
-      <section className="stez-panel" aria-labelledby="stez-position-title">
-        <header className="stez-panel__head">
-          <h2 id="stez-position-title">YOUR POSITION</h2>
-          <span>
-            {walletConnected
-              ? shortAddress(wallet.address)
-              : "Wallet not connected"}
-          </span>
-        </header>
-        <div className="stez-position-grid">
-          <PositionCell
-            label="Liquid sTEZ"
-            value={
-              walletConnected
-                ? formatUnits(snapshot?.walletStezUnits ?? null)
-                : "—"
-            }
-            note={
-              walletConnected
-                ? `≈ ${formatUnits(walletUnderlying)} XTZ`
-                : "Connect to view"
-            }
-            icon={<AccountBalanceWalletOutlinedIcon />}
-          />
-          <PositionCell
-            label="Available"
-            value={
-              walletConnected
-                ? formatUnits(snapshot?.walletXtzMutez ?? null)
-                : "—"
-            }
-            note="XTZ in wallet"
-            icon={<AccountBalanceWalletOutlinedIcon />}
-          />
-          <PositionCell
-            label="Unbonding"
-            value={
-              walletConnected
-                ? formatUnits(snapshot?.redeemedFrozenMutez ?? null)
-                : "—"
-            }
-            note="XTZ · delay not elapsed"
-            icon={<LockClockOutlinedIcon />}
-          />
-          <PositionCell
-            label="Ready to finalize"
-            value={
-              walletConnected
-                ? formatUnits(snapshot?.redeemedFinalizableMutez ?? null)
-                : "—"
-            }
-            note="XTZ · finalizable now"
-            positive={Boolean(snapshot?.redeemedFinalizableMutez)}
-            icon={<CheckCircleOutlineRoundedIcon />}
-          />
-        </div>
-      </section>
-
-      <section className="stez-panel" aria-labelledby="stez-actions-title">
-        <header className="stez-panel__head stez-panel__head--actions">
-          <h2 id="stez-actions-title" className="stez-sr-only">
-            sTEZ actions
-          </h2>
-          <div
-            className="stez-action-tabs"
-            role="tablist"
-            aria-label="sTEZ action"
-          >
-            {(["Stake", "Redeem", "Finalize"] as StezAction[]).map((action) => (
-              <button
-                key={action}
-                type="button"
-                role="tab"
-                aria-selected={activeAction === action}
-                className={activeAction === action ? "is-active" : undefined}
-                onClick={() => {
-                  setActiveAction(action);
-                  setAmount("");
-                }}
-              >
-                {action}
-              </button>
-            ))}
+      <div className="stez-workspace">
+        <section
+          className="stez-panel stez-workspace__position"
+          aria-labelledby="stez-position-title"
+        >
+          <header className="stez-panel__head">
+            <h2 id="stez-position-title">YOUR POSITION</h2>
+            <span>
+              {walletConnected
+                ? shortAddress(wallet.address)
+                : "Wallet not connected"}
+            </span>
+          </header>
+          <div className="stez-position-grid">
+            <PositionCell
+              label="Liquid sTEZ"
+              value={
+                walletConnected
+                  ? formatUnits(snapshot?.walletStezUnits ?? null)
+                  : "—"
+              }
+              note={
+                walletConnected
+                  ? `≈ ${formatUnits(walletUnderlying)} XTZ`
+                  : "Connect to view"
+              }
+              icon={<AccountBalanceWalletOutlinedIcon />}
+            />
+            <PositionCell
+              label="Available"
+              value={
+                walletConnected
+                  ? formatUnits(snapshot?.walletXtzMutez ?? null)
+                  : "—"
+              }
+              note="XTZ in wallet"
+              icon={<AccountBalanceWalletOutlinedIcon />}
+            />
+            <PositionCell
+              label="Unbonding"
+              value={
+                walletConnected
+                  ? formatUnits(snapshot?.redeemedFrozenMutez ?? null)
+                  : "—"
+              }
+              note="XTZ · delay not elapsed"
+              icon={<LockClockOutlinedIcon />}
+            />
+            <PositionCell
+              label="Ready to finalize"
+              value={
+                walletConnected
+                  ? formatUnits(snapshot?.redeemedFinalizableMutez ?? null)
+                  : "—"
+              }
+              note="XTZ · finalizable now"
+              positive={Boolean(snapshot?.redeemedFinalizableMutez)}
+              icon={<CheckCircleOutlineRoundedIcon />}
+            />
           </div>
-          <span>
-            {selectedNetwork}
-            {snapshot?.blockLevel
-              ? ` · block ${snapshot.blockLevel.toLocaleString("en-US")}`
-              : ""}
-          </span>
-        </header>
+        </section>
 
-        <div className="stez-action-body" role="tabpanel">
-          {activeAction === "Finalize" ? (
-            <>
-              <div className="stez-amount-field">
-                <span className="stez-field-label">READY TO FINALIZE</span>
-                <div className="stez-amount-field__value">
-                  <strong>
-                    {formatUnits(snapshot?.redeemedFinalizableMutez ?? null)}
-                  </strong>
-                  <span>XTZ</span>
-                </div>
-              </div>
-              <div className="stez-action-meta">
-                <span>
-                  Still unbonding:{" "}
-                  {formatUnits(snapshot?.redeemedFrozenMutez ?? null)} XTZ
-                </span>
-                <span>Finalization releases every matured redemption</span>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="stez-amount-field">
-                <div className="stez-amount-field__topline">
-                  <label htmlFor="stez-action-amount">
-                    {activeAction === "Stake" ? "YOU STAKE" : "YOU REDEEM"}
-                  </label>
+        <section
+          className="stez-panel stez-workspace__action"
+          aria-labelledby="stez-actions-title"
+        >
+          <header className="stez-panel__head stez-panel__head--actions">
+            <h2 id="stez-actions-title" className="stez-sr-only">
+              sTEZ actions
+            </h2>
+            <div
+              className="stez-action-tabs"
+              role="tablist"
+              aria-label="sTEZ action"
+            >
+              {(["Stake", "Redeem", "Finalize"] as StezAction[]).map(
+                (action) => (
                   <button
+                    key={action}
                     type="button"
-                    onClick={setMaximum}
-                    disabled={!walletConnected || !available}
-                  >
-                    MAX{" "}
-                    {formatUnits(
-                      activeAction === "Stake"
-                        ? snapshot?.walletXtzMutez ?? null
-                        : snapshot?.walletStezUnits ?? null
-                    )}
-                  </button>
-                </div>
-                <div className="stez-amount-field__input">
-                  <input
-                    id="stez-action-amount"
-                    inputMode="decimal"
-                    placeholder="0.0"
-                    value={amount}
-                    disabled={!available}
-                    onChange={(event) => {
-                      if (/^\d*(?:\.\d{0,6})?$/.test(event.target.value)) {
-                        setAmount(event.target.value);
-                      }
+                    role="tab"
+                    aria-selected={activeAction === action}
+                    className={
+                      activeAction === action ? "is-active" : undefined
+                    }
+                    onClick={() => {
+                      setActiveAction(action);
+                      setAmount("");
                     }}
-                  />
-                  <span>{activeAction === "Stake" ? "XTZ" : "sTez"}</span>
+                  >
+                    {action}
+                  </button>
+                )
+              )}
+            </div>
+            <span>
+              {selectedNetwork}
+              {snapshot?.blockLevel
+                ? ` · block ${snapshot.blockLevel.toLocaleString("en-US")}`
+                : ""}
+            </span>
+          </header>
+
+          <div className="stez-action-body" role="tabpanel">
+            {activeAction === "Finalize" ? (
+              <>
+                <div className="stez-amount-field">
+                  <span className="stez-field-label">READY TO FINALIZE</span>
+                  <div className="stez-amount-field__value">
+                    <strong>
+                      {formatUnits(snapshot?.redeemedFinalizableMutez ?? null)}
+                    </strong>
+                    <span>XTZ</span>
+                  </div>
                 </div>
-              </div>
-
-              <ArrowDownwardRoundedIcon className="stez-conversion-arrow" />
-
-              <div className="stez-amount-field">
-                <span className="stez-field-label">
-                  {activeAction === "Stake"
-                    ? "YOU RECEIVE"
-                    : "REDEMPTION VALUE"}
-                </span>
-                <div className="stez-amount-field__value">
-                  <strong>{formatUnits(quotedOutput)}</strong>
-                  <span>{activeAction === "Stake" ? "sTez" : "XTZ"}</span>
+                <div className="stez-action-meta">
+                  <span>
+                    Still unbonding:{" "}
+                    {formatUnits(snapshot?.redeemedFrozenMutez ?? null)} XTZ
+                  </span>
+                  <span>Finalization releases every matured redemption</span>
                 </div>
-              </div>
-              <div className="stez-action-meta">
-                <span>Rate {rate} · fixed block quote</span>
-                <span>
-                  Exact result is determined when the operation is included
-                </span>
-              </div>
-            </>
-          )}
+              </>
+            ) : (
+              <>
+                <div className="stez-amount-field">
+                  <div className="stez-amount-field__topline">
+                    <label htmlFor="stez-action-amount">
+                      {activeAction === "Stake" ? "YOU STAKE" : "YOU REDEEM"}
+                    </label>
+                    <button
+                      type="button"
+                      onClick={setMaximum}
+                      disabled={!walletConnected || !available}
+                    >
+                      MAX{" "}
+                      {formatUnits(
+                        activeAction === "Stake"
+                          ? snapshot?.walletXtzMutez ?? null
+                          : snapshot?.walletStezUnits ?? null
+                      )}
+                    </button>
+                  </div>
+                  <div className="stez-amount-field__input">
+                    <input
+                      id="stez-action-amount"
+                      inputMode="decimal"
+                      placeholder="0.0"
+                      value={amount}
+                      disabled={!available}
+                      onChange={(event) => {
+                        if (/^\d*(?:\.\d{0,6})?$/.test(event.target.value)) {
+                          setAmount(event.target.value);
+                        }
+                      }}
+                    />
+                    <span>{activeAction === "Stake" ? "XTZ" : "sTez"}</span>
+                  </div>
+                </div>
 
-          <button
-            type="button"
-            className="stez-primary-action"
-            disabled={walletConnected}
-            onClick={walletConnected ? undefined : connect}
-          >
-            {actionButtonCopy()}
-          </button>
+                <ArrowDownwardRoundedIcon className="stez-conversion-arrow" />
 
-          <div className="stez-action-explanation">
-            <InfoOutlinedIcon aria-hidden="true" />
-            {activeAction === "Stake" && (
-              <p>
-                Depositing XTZ mints sTEZ to the sender. sTEZ is non-rebasing:
-                your token count changes only when you deposit, redeem,
-                transfer, or receive tokens; protocol performance changes its
-                XTZ value.
-              </p>
+                <div className="stez-amount-field">
+                  <span className="stez-field-label">
+                    {activeAction === "Stake"
+                      ? "YOU RECEIVE"
+                      : "REDEMPTION VALUE"}
+                  </span>
+                  <div className="stez-amount-field__value">
+                    <strong>{formatUnits(quotedOutput)}</strong>
+                    <span>{activeAction === "Stake" ? "sTez" : "XTZ"}</span>
+                  </div>
+                </div>
+                <div className="stez-action-meta">
+                  <span>Rate {rate} · fixed block quote</span>
+                  <span>
+                    Exact result is determined when the operation is included
+                  </span>
+                </div>
+              </>
             )}
-            {activeAction === "Redeem" && (
-              <p>
-                Redeeming burns sTEZ and moves the XTZ value into the protocol’s
-                frozen redemption ledger. This is not an instant withdrawal.
-              </p>
-            )}
-            {activeAction === "Finalize" && (
-              <p>
-                After the protocol delay, a separate finalization operation
-                releases matured XTZ to the original redeemer. Anyone may submit
-                it, but the funds always go to that redeemer.
-              </p>
-            )}
+
+            <button
+              type="button"
+              className="stez-primary-action"
+              disabled={walletConnected}
+              onClick={walletConnected ? undefined : connect}
+            >
+              {actionButtonCopy()}
+            </button>
+
+            <div className="stez-action-explanation">
+              <InfoOutlinedIcon aria-hidden="true" />
+              {activeAction === "Stake" && (
+                <p>
+                  Depositing XTZ mints sTEZ to the sender. sTEZ is non-rebasing:
+                  your token count changes only when you deposit, redeem,
+                  transfer, or receive tokens; protocol performance changes its
+                  XTZ value.
+                </p>
+              )}
+              {activeAction === "Redeem" && (
+                <p>
+                  Redeeming burns sTEZ and moves the XTZ value into the
+                  protocol’s frozen redemption ledger. This is not an instant
+                  withdrawal.
+                </p>
+              )}
+              {activeAction === "Finalize" && (
+                <p>
+                  After the protocol delay, a separate finalization operation
+                  releases matured XTZ to the original redeemer. Anyone may
+                  submit it, but the funds always go to that redeemer.
+                </p>
+              )}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="stez-panel" aria-labelledby="stez-rate-history-title">
-        <header className="stez-panel__head">
-          <h2 id="stez-rate-history-title">PROTOCOL RATE</h2>
-          <span>Fixed-block RPC data</span>
-        </header>
-        <div className="stez-rate-panel">
+        <section
+          className="stez-panel stez-workspace__rate"
+          aria-labelledby="stez-rate-history-title"
+        >
+          <header className="stez-panel__head">
+            <h2 id="stez-rate-history-title">PROTOCOL RATE</h2>
+            <span>Fixed-block RPC data</span>
+          </header>
+          <div className="stez-rate-panel">
+            <div>
+              <span className="stez-field-label">CURRENT REDEMPTION RATE</span>
+              <strong>{rate}</strong>
+              <small>XTZ per sTez</small>
+            </div>
+            <div className="stez-rate-panel__empty">
+              <p>
+                Historical rate data will appear after TEZEX begins indexing an
+                enabled network. No simulated history or projected APY is shown.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <details className="stez-protocol-details stez-workspace__details">
+          <summary>PROTOCOL DETAILS</summary>
           <div>
-            <span className="stez-field-label">CURRENT REDEMPTION RATE</span>
-            <strong>{rate}</strong>
-            <small>XTZ per sTez</small>
-          </div>
-          <div className="stez-rate-panel__empty">
+            <dl>
+              <dt>Network / chain ID</dt>
+              <dd>
+                {selectedNetwork} ·{" "}
+                {shortAddress(snapshot?.chainId || network.info.chainId, 10, 6)}
+              </dd>
+              <dt>Protocol</dt>
+              <dd>
+                {shortAddress(snapshot?.protocolHash, 12, 8) || "Not resolved"}
+              </dd>
+              <dt>Native contract</dt>
+              <dd>
+                {shortAddress(snapshot?.contractHash, 10, 8) ||
+                  "Not created on this network"}
+              </dd>
+              <dt>Snapshot block</dt>
+              <dd>
+                {snapshot?.blockLevel
+                  ? snapshot.blockLevel.toLocaleString("en-US")
+                  : "Not resolved"}
+              </dd>
+              <dt>Total sTEZ supply</dt>
+              <dd>{formatUnits(snapshot?.totalSupplyUnits ?? null)}</dd>
+              <dt>Total XTZ backing</dt>
+              <dd>{formatUnits(snapshot?.totalBackingMutez ?? null)}</dd>
+            </dl>
             <p>
-              Historical rate data will appear after TEZEX begins indexing an
-              enabled network. No simulated history or projected APY is shown.
+              TEZEX discovers the native contract from the selected chain and
+              reads all values from one resolved block. It never substitutes a
+              testnet contract address or a cached rate when capability
+              detection fails.
             </p>
           </div>
-        </div>
-      </section>
-
-      <details className="stez-protocol-details">
-        <summary>PROTOCOL DETAILS</summary>
-        <div>
-          <dl>
-            <dt>Network / chain ID</dt>
-            <dd>
-              {selectedNetwork} ·{" "}
-              {shortAddress(snapshot?.chainId || network.info.chainId, 10, 6)}
-            </dd>
-            <dt>Protocol</dt>
-            <dd>
-              {shortAddress(snapshot?.protocolHash, 12, 8) || "Not resolved"}
-            </dd>
-            <dt>Native contract</dt>
-            <dd>
-              {shortAddress(snapshot?.contractHash, 10, 8) ||
-                "Not created on this network"}
-            </dd>
-            <dt>Snapshot block</dt>
-            <dd>
-              {snapshot?.blockLevel
-                ? snapshot.blockLevel.toLocaleString("en-US")
-                : "Not resolved"}
-            </dd>
-            <dt>Total sTEZ supply</dt>
-            <dd>{formatUnits(snapshot?.totalSupplyUnits ?? null)}</dd>
-            <dt>Total XTZ backing</dt>
-            <dd>{formatUnits(snapshot?.totalBackingMutez ?? null)}</dd>
-          </dl>
-          <p>
-            TEZEX discovers the native contract from the selected chain and
-            reads all values from one resolved block. It never substitutes a
-            testnet contract address or a cached rate when capability detection
-            fails.
-          </p>
-        </div>
-      </details>
+        </details>
+      </div>
     </main>
   );
 };

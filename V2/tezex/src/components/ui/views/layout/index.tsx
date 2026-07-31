@@ -3,6 +3,7 @@ import { Header } from "../header";
 
 import { BrowserView, MobileView } from "react-device-detect";
 import { MainWindow } from "../main-window";
+import { Footer } from "../footer";
 import { SideBar } from "../sidebar";
 import Box from "@mui/material/Box";
 
@@ -94,6 +95,8 @@ export const Layout: FC<ILayout> = (props) => {
             </Box>
           )}
         </Box>
+
+        <Footer />
       </Box>
 
       <MobileView>
