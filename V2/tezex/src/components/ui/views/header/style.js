@@ -49,11 +49,11 @@ const style = (theme, scale = 1) => {
     logoLink: {
       display: "flex",
       flexShrink: 0,
-      borderRadius: "4px",
       textDecoration: "none",
+      outline: "none",
       "&:focus-visible": {
-        outline: "2px solid var(--tezex-text-secondary)",
-        outlineOffset: "4px",
+        outline: "none",
+        boxShadow: "inset 0 -2px 0 var(--tezex-text-secondary)",
       },
     },
     container: {
