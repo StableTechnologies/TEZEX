@@ -8,6 +8,7 @@ import { SessionProvider } from "./contexts/session";
 import ReactDOM from "react-dom/client";
 import {
   createHashRouter,
+  createMemoryRouter,
   Navigate,
   RouterProvider,
   useLocation,
@@ -20,7 +21,11 @@ import { Analytics } from "./pages/Analytics";
 import { Stez } from "./pages/Stez";
 import { NotFound } from "./pages/NotFound";
 import { ColorModeProvider } from "./contexts/color-mode";
-import { canonicalTezexUrl, isStezOnlyHost } from "./routing";
+import {
+  canonicalTezexUrl,
+  isStezOnlyHost,
+  stezRouteFromHash,
+} from "./routing";
 
 const CanonicalTezexRedirect = () => {
   const location = useLocation();
@@ -94,17 +99,24 @@ const stezOnlyRoutes = [
   },
 ];
 
-const router = createHashRouter(
-  isStezOnlyHost(window.location.hostname)
-    ? stezOnlyRoutes
-    : [
-        {
-          path: "/",
-          element: <App />,
-          children: standardRoutes,
-        },
-      ]
-);
+const stezOnlyHost = isStezOnlyHost(window.location.hostname);
+const stezInitialRoute = stezRouteFromHash(window.location.hash);
+
+if (stezOnlyHost && window.location.href !== `${window.location.origin}/`) {
+  window.history.replaceState(window.history.state, "", "/");
+}
+
+const router = stezOnlyHost
+  ? createMemoryRouter(stezOnlyRoutes, {
+      initialEntries: [stezInitialRoute],
+    })
+  : createHashRouter([
+      {
+        path: "/",
+        element: <App />,
+        children: standardRoutes,
+      },
+    ]);
 const root = ReactDOM.createRoot(document.getElementById("root") as Element);
 
 root.render(

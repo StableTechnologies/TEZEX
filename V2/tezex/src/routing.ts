@@ -6,3 +6,13 @@ export const isStezOnlyHost = (hostname: string) =>
 
 export const canonicalTezexUrl = (pathname: string, search = "") =>
   `${CANONICAL_TEZEX_ORIGIN}/#${pathname}${search}`;
+
+export const stezRouteFromHash = (hash: string) => {
+  const route = hash.replace(/^#/, "");
+
+  if (!route || route === "/" || route === "/stez") {
+    return "/stez";
+  }
+
+  return route.startsWith("/") ? route : `/${route}`;
+};

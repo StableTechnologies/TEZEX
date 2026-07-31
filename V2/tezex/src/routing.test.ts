@@ -1,4 +1,9 @@
-import { canonicalTezexUrl, isStezOnlyHost, STEZ_HOSTNAME } from "./routing";
+import {
+  canonicalTezexUrl,
+  isStezOnlyHost,
+  STEZ_HOSTNAME,
+  stezRouteFromHash,
+} from "./routing";
 
 describe("hostname-specific routing", () => {
   it("recognizes only the dedicated sTEZ hostname", () => {
@@ -14,6 +19,19 @@ describe("hostname-specific routing", () => {
     );
     expect(canonicalTezexUrl("/analytics", "?range=30d")).toBe(
       "https://tezex.io/#/analytics?range=30d"
+    );
+  });
+
+  it("maps the clean sTEZ URL to its internal page without exposing a hash", () => {
+    expect(stezRouteFromHash("")).toBe("/stez");
+    expect(stezRouteFromHash("#/")).toBe("/stez");
+    expect(stezRouteFromHash("#/stez")).toBe("/stez");
+  });
+
+  it("preserves an incoming non-sTEZ route long enough to redirect it", () => {
+    expect(stezRouteFromHash("#/home/swap")).toBe("/home/swap");
+    expect(stezRouteFromHash("#/analytics?range=30d")).toBe(
+      "/analytics?range=30d"
     );
   });
 });
