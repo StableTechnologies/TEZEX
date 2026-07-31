@@ -1,22 +1,24 @@
 {
   "files": {
-    "main.css": "./static/css/main.2f64d56c.css",
-    "main.js": "./static/js/main.16f23665.js",
+    "main.css": "./static/css/main.93d7bdb6.css",
+    "main.js": "./static/js/main.3a955936.js",
     "static/js/488.6a7f7bdd.chunk.js": "./static/js/488.6a7f7bdd.chunk.js",
     "static/media/tick.svg": "./static/media/tick.298f5d82d1a70db591c85004b360e2d3.svg",
+    "static/media/TezosLogo_Horizontal_White.svg": "./static/media/TezosLogo_Horizontal_White.4cace296597ae1e4503a6abbe83c1365.svg",
     "static/media/TezexLogo.svg": "./static/media/TezexLogo.31a5b14146d93e4acab52211d38fd1a2.svg",
     "index.html": "./index.html",
+    "static/media/TezosLogo_Horizontal_Black.svg": "./static/media/TezosLogo_Horizontal_Black.f648148a7de4e01dfc36929d0c46b88d.svg",
     "static/media/liquiditySwapIcon.svg": "./static/media/liquiditySwapIcon.8f1e02de3095483209de196f8517490f.svg",
     "static/media/swapIcon.svg": "./static/media/swapIcon.d8241838b1310217d74263c8853bf23f.svg",
     "static/media/tzwalletlogo.svg": "./static/media/tzwalletlogo.298ee304ca29eec491be48cb5f4a1231.svg",
     "static/media/copyIcon.svg": "./static/media/copyIcon.33a1802d976cc4a100936132200a4e17.svg",
     "static/media/tezexIcon.svg": "./static/media/tezexIcon.3c8afc012f361860a7d52d042c689e72.svg",
-    "main.2f64d56c.css.map": "./static/css/main.2f64d56c.css.map",
-    "main.16f23665.js.map": "./static/js/main.16f23665.js.map",
+    "main.93d7bdb6.css.map": "./static/css/main.93d7bdb6.css.map",
+    "main.3a955936.js.map": "./static/js/main.3a955936.js.map",
     "488.6a7f7bdd.chunk.js.map": "./static/js/488.6a7f7bdd.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.2f64d56c.css",
-    "static/js/main.16f23665.js"
+    "static/css/main.93d7bdb6.css",
+    "static/js/main.3a955936.js"
   ]
 }
