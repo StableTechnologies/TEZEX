@@ -44,6 +44,7 @@ export const Header: FC<IHeader> = (props) => {
               component={Link}
               to="/home/swap"
               aria-label="TEZEX home"
+              onMouseDown={(event) => event.preventDefault()}
               sx={styles.logoLink}
             >
               <Box component="img" sx={styles.logoLarge} src={logo} alt="" />
