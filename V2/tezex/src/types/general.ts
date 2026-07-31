@@ -107,6 +107,14 @@ export enum TransactingComponent {
 
 export type Id = string;
 
+export interface TransactionQuote {
+  revision: number;
+  inputFingerprint: string;
+  resultFingerprint: string;
+  quotedAt: string;
+  preparedForSubmission: boolean;
+}
+
 export type SendOrRecieve = "Send" | "Receive";
 export type Amount = [Balance] | [Balance, Balance];
 export type AssetOrAssetPair = [Asset] | [Asset, Asset];
@@ -170,6 +178,8 @@ export interface Transaction {
   receiveAssetBalance: Amount;
   transactionStatus: TransactionStatus;
   operationHash?: string;
+  quoteRevision?: number;
+  quote?: TransactionQuote;
   lastModified: Date;
   locked: boolean;
 }

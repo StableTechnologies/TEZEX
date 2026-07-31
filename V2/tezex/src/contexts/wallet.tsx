@@ -5,7 +5,7 @@ import React, {
   useState,
   useRef,
 } from "react";
-import { Draft } from "immer";
+import { current, Draft } from "immer";
 import { useImmer } from "use-immer";
 import { Mutex } from "async-mutex";
 import { BeaconEvent, DAppClient, NetworkType } from "@airgap/beacon-dapp";
@@ -34,6 +34,15 @@ import {
 } from "../functions/util";
 import { WritableDraft } from "immer/dist/types/types-external";
 import { estimateWithAdapter } from "../functions/estimates";
+import {
+  applyQuoteResult,
+  createQuoteRequest,
+  createTransactionQuote,
+  hasFreshTransactionQuote,
+  QuoteContext,
+  QuoteRequest,
+  quoteRequestMatches,
+} from "../functions/quoteSafety";
 import {
   getStatusAfterBalanceCheck,
   isValidSlippage,
@@ -83,6 +92,18 @@ export interface WalletInfo {
     amountUpdateReceive?: Amount,
     slippageUpdate?: number
   ) => Promise<boolean>;
+  refreshTransactionQuote: (
+    component: TransactingComponent,
+    amountUpdateSend?: Amount,
+    slippageUpdate?: number
+  ) => Promise<boolean>;
+  prepareTransactionForSubmission: (
+    component: TransactingComponent
+  ) => Promise<boolean>;
+  invalidateTransactionQuote: (
+    component: TransactingComponent,
+    transactionStatus: TransactionStatus
+  ) => Promise<void>;
   getActiveTransaction: (
     component: TransactingComponent
   ) => Transaction | undefined;
@@ -115,6 +136,21 @@ const defaultWalletInfo: WalletInfo = {
   },
   updateAmount: async () => {
     throw new Error("updateAmount  called outside of wallet provider");
+  },
+  refreshTransactionQuote: async () => {
+    throw new Error(
+      "refreshTransactionQuote called outside of wallet provider"
+    );
+  },
+  prepareTransactionForSubmission: async () => {
+    throw new Error(
+      "prepareTransactionForSubmission called outside of wallet provider"
+    );
+  },
+  invalidateTransactionQuote: async () => {
+    throw new Error(
+      "invalidateTransactionQuote called outside of wallet provider"
+    );
   },
   getActiveTransaction: () => {
     throw new Error("getActiveTransaction called outside of wallet provider");
@@ -149,6 +185,12 @@ export function WalletProvider(props: IWalletProvider) {
   const transactionMutex = useRef(new Mutex()).current;
   const transactionUpdateMutex = useRef(new Mutex()).current;
   const processingTransactionIds = useRef(new Set<string>()).current;
+  const latestQuoteRequests = useRef(
+    new Map<TransactingComponent, QuoteRequest>()
+  ).current;
+  const latestTransactionInitializations = useRef(
+    new Map<TransactingComponent, symbol>()
+  ).current;
   const [transactions, setTransactions] = useImmer<{
     [key in TransactingComponent]?: Transaction;
   }>({});
@@ -157,6 +199,16 @@ export function WalletProvider(props: IWalletProvider) {
   const [client, setClient] = useState<DAppClient | null>(null);
   const [address, setAddress] = useState<string | null>(null);
   const hasReconnectedRef = useRef(false);
+  const quoteContextRef = useRef<QuoteContext>({
+    account: address,
+    network: network.network,
+    chainId: network.info.chainId,
+  });
+  quoteContextRef.current = {
+    account: address,
+    network: network.network,
+    chainId: network.info.chainId,
+  };
 
   const [assetBalances, setAssetBalances] = useState<AssetBalance[]>(
     network.info.assets.map((asset) => {
@@ -205,8 +257,16 @@ export function WalletProvider(props: IWalletProvider) {
   );
 
   useEffect(() => {
+    latestQuoteRequests.clear();
+    latestTransactionInitializations.clear();
     setTransactions({});
-  }, [network.network, setTransactions]);
+  }, [
+    latestQuoteRequests,
+    latestTransactionInitializations,
+    network.network,
+    network.info.chainId,
+    setTransactions,
+  ]);
 
   // Auto-reconnect on mount (ONCE)
   useEffect(() => {
@@ -337,11 +397,13 @@ export function WalletProvider(props: IWalletProvider) {
 
   const clearTransaction = useCallback(
     (component: TransactingComponent) => {
+      latestQuoteRequests.delete(component);
+      latestTransactionInitializations.delete(component);
       setTransactions((draft) => {
         delete draft[component];
       });
     },
-    [setTransactions]
+    [latestQuoteRequests, latestTransactionInitializations, setTransactions]
   );
 
   // calback to send a transaction for final processing
@@ -354,6 +416,18 @@ export function WalletProvider(props: IWalletProvider) {
           let submittedHash: string | undefined;
 
           try {
+            if (
+              !hasFreshTransactionQuote(
+                transaction,
+                quoteContextRef.current,
+                true
+              )
+            ) {
+              throw new Error(
+                "Transaction quote changed before wallet submission"
+              );
+            }
+
             const success = await processTransaction(
               transaction,
               address,
@@ -521,7 +595,11 @@ export function WalletProvider(props: IWalletProvider) {
       receiveAmount?: Amount,
       slipppage = 0.5
     ): Promise<boolean> => {
+      const initializationToken = Symbol("transaction initialization");
+      latestQuoteRequests.delete(component);
+      latestTransactionInitializations.set(component, initializationToken);
       return await transactionUpdateMutex.runExclusive(async () => {
+        const quoteContext = { ...quoteContextRef.current };
         // initialise zeroBalance
         const initBalance = (asset: AssetOrAssetPair): Amount => {
           switch (asset.length) {
@@ -553,6 +631,7 @@ export function WalletProvider(props: IWalletProvider) {
           slippage: slipppage,
           lastModified: new Date(),
           locked: false,
+          quoteRevision: 0,
         };
 
         let transaction: Transaction = _transaction;
@@ -563,6 +642,28 @@ export function WalletProvider(props: IWalletProvider) {
           network.toolkit,
           adapter
         );
+
+        const currentQuoteContext = quoteContextRef.current;
+        if (
+          latestTransactionInitializations.get(component) !==
+            initializationToken ||
+          quoteContext.account !== currentQuoteContext.account ||
+          quoteContext.network !== currentQuoteContext.network ||
+          quoteContext.chainId !== currentQuoteContext.chainId
+        ) {
+          return false;
+        }
+
+        const quotedTransaction: Transaction = {
+          ...transaction,
+          quoteRevision: 1,
+        };
+        transaction = {
+          ...quotedTransaction,
+          quote: createTransactionQuote(quotedTransaction, quoteContext, 1),
+        };
+
+        latestTransactionInitializations.delete(component);
 
         return setActiveTransaction(component, transaction);
       });
@@ -821,6 +922,224 @@ export function WalletProvider(props: IWalletProvider) {
     return updater(transaction);
   };
 
+  const invalidateTransactionQuote = useCallback(
+    async (
+      component: TransactingComponent,
+      transactionStatus: TransactionStatus
+    ): Promise<void> => {
+      latestQuoteRequests.delete(component);
+      await transactionUpdateMutex.runExclusive(() => {
+        setTransactions((draft) => {
+          updateTransaction(draft[component], (transaction) => {
+            transaction.quoteRevision = (transaction.quoteRevision ?? 0) + 1;
+            latestQuoteRequests.delete(component);
+            delete transaction.quote;
+            transaction.receiveAmount = transaction.receiveAsset.map(
+              () => zeroBalance
+            ) as Amount;
+            transaction.transactionStatus = transactionStatus;
+            transaction.lastModified = new Date();
+            return true;
+          });
+        });
+      });
+    },
+    [latestQuoteRequests, setTransactions, transactionUpdateMutex]
+  );
+
+  const runTransactionQuote = useCallback(
+    async (
+      component: TransactingComponent,
+      amountUpdateSend?: Amount,
+      slippageUpdate?: number,
+      submitAfterRefresh = false
+    ): Promise<boolean> => {
+      latestQuoteRequests.delete(component);
+      let pending:
+        | { request: QuoteRequest; transaction: Transaction }
+        | undefined;
+      let updated = false;
+
+      await transactionUpdateMutex.runExclusive(() => {
+        setTransactions((draft) => {
+          updated = updateTransaction(draft[component], (transaction) => {
+            latestQuoteRequests.delete(component);
+            if (isNumber(slippageUpdate) && !isValidSlippage(slippageUpdate)) {
+              transaction.quoteRevision = (transaction.quoteRevision ?? 0) + 1;
+              delete transaction.quote;
+              transaction.receiveAmount = transaction.receiveAsset.map(
+                () => zeroBalance
+              ) as Amount;
+              transaction.transactionStatus =
+                TransactionStatus.INVALID_SLIPPAGE;
+              transaction.lastModified = new Date();
+              return true;
+            }
+
+            if (amountUpdateSend) {
+              transaction.sendAmount = amountUpdateSend;
+            }
+            if (isNumber(slippageUpdate)) {
+              transaction.slippage = slippageUpdate;
+            }
+
+            const revision = (transaction.quoteRevision ?? 0) + 1;
+            transaction.quoteRevision = revision;
+            delete transaction.quote;
+            transaction.receiveAmount = transaction.receiveAsset.map(
+              () => zeroBalance
+            ) as Amount;
+            transaction.lastModified = new Date();
+
+            if (transaction.sendAmount[0].mantissa.isZero()) {
+              transaction.transactionStatus = TransactionStatus.ZERO_AMOUNT;
+              return true;
+            }
+
+            transaction.transactionStatus = TransactionStatus.MODIFIED;
+            const transactionSnapshot = current(
+              transaction as Draft<Transaction>
+            ) as Transaction;
+            pending = {
+              request: createQuoteRequest(
+                transactionSnapshot,
+                quoteContextRef.current,
+                revision
+              ),
+              transaction: transactionSnapshot,
+            };
+            latestQuoteRequests.set(component, pending.request);
+            return true;
+          });
+        });
+      });
+
+      if (!pending) return updated;
+      const pendingQuote = pending;
+
+      let estimatedTransaction: Transaction;
+      try {
+        const adapter = network.getPoolAdapter(pendingQuote.transaction.poolId);
+        estimatedTransaction = await estimateWithAdapter(
+          pendingQuote.transaction,
+          network.toolkit,
+          adapter
+        );
+      } catch (error) {
+        await transactionUpdateMutex.runExclusive(() => {
+          setTransactions((draft) => {
+            const activeTransaction = draft[component];
+            if (
+              activeTransaction &&
+              latestQuoteRequests.get(component) === pendingQuote.request &&
+              quoteRequestMatches(
+                current(activeTransaction as Draft<Transaction>) as Transaction,
+                quoteContextRef.current,
+                pendingQuote.request
+              )
+            ) {
+              activeTransaction.transactionStatus = TransactionStatus.FAILED;
+              activeTransaction.lastModified = new Date();
+            }
+          });
+        });
+        console.error("Error refreshing transaction quote:", error);
+        return false;
+      }
+
+      const isLatestRequest =
+        latestQuoteRequests.get(component) === pendingQuote.request;
+      await transactionUpdateMutex.runExclusive(() => {
+        setTransactions((draft) => {
+          const activeTransaction = draft[component];
+          if (!activeTransaction) return;
+          if (latestQuoteRequests.get(component) !== pendingQuote.request) {
+            return;
+          }
+
+          const transactionSnapshot = current(
+            activeTransaction as Draft<Transaction>
+          ) as Transaction;
+          const balanceStatus = isWalletConnected
+            ? checkSufficientBalance(
+                transactionSnapshot.sendAssetBalance,
+                estimatedTransaction.sendAmount,
+                transactionSnapshot.sendAsset
+              )
+            : TransactionStatus.INITIALIZED;
+          const nextStatus =
+            submitAfterRefresh &&
+            balanceStatus === TransactionStatus.SUFFICIENT_BALANCE
+              ? TransactionStatus.PENDING
+              : balanceStatus;
+          const quotedTransaction = applyQuoteResult(
+            transactionSnapshot,
+            estimatedTransaction,
+            quoteContextRef.current,
+            pendingQuote.request,
+            nextStatus,
+            nextStatus === TransactionStatus.PENDING
+          );
+
+          if (quotedTransaction) {
+            draft[component] = quotedTransaction as WritableDraft<Transaction>;
+          }
+        });
+      });
+
+      return isLatestRequest;
+    },
+    [
+      checkSufficientBalance,
+      isWalletConnected,
+      latestQuoteRequests,
+      network,
+      setTransactions,
+      transactionUpdateMutex,
+    ]
+  );
+
+  const refreshTransactionQuote = useCallback(
+    async (
+      component: TransactingComponent,
+      amountUpdateSend?: Amount,
+      slippageUpdate?: number
+    ): Promise<boolean> =>
+      runTransactionQuote(component, amountUpdateSend, slippageUpdate),
+    [runTransactionQuote]
+  );
+
+  const prepareTransactionForSubmission = useCallback(
+    async (component: TransactingComponent): Promise<boolean> =>
+      runTransactionQuote(component, undefined, undefined, true),
+    [runTransactionQuote]
+  );
+
+  const previousQuoteAccountRef = useRef<string | null>(address);
+  useEffect(() => {
+    if (previousQuoteAccountRef.current === address) return;
+    previousQuoteAccountRef.current = address;
+
+    Object.values(TransactingComponent).forEach((component) => {
+      const transaction = transactions[component];
+      if (!transaction) return;
+
+      if (address) {
+        void refreshTransactionQuote(component);
+      } else {
+        const status = transaction.sendAmount[0].mantissa.isZero()
+          ? TransactionStatus.ZERO_AMOUNT
+          : TransactionStatus.INITIALIZED;
+        void invalidateTransactionQuote(component, status);
+      }
+    });
+  }, [
+    address,
+    invalidateTransactionQuote,
+    refreshTransactionQuote,
+    transactions,
+  ]);
+
   // exported callback to update amount of a  single component
   const updateAmount = useCallback(
     async (
@@ -880,9 +1199,15 @@ export function WalletProvider(props: IWalletProvider) {
             }
           );
           // if updated, update the last modified date
-          if (wasUpdated && draft[component]) {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            draft[component]!.lastModified = new Date();
+          const activeTransaction = draft[component];
+          if (wasUpdated && activeTransaction) {
+            activeTransaction.lastModified = new Date();
+            // Any legacy direct amount update invalidates the quote. Quote
+            // results are installed only through the revision-checked path.
+            activeTransaction.quoteRevision =
+              (activeTransaction.quoteRevision ?? 0) + 1;
+            latestQuoteRequests.delete(component);
+            delete activeTransaction.quote;
           } else {
             updated = false;
           }
@@ -922,6 +1247,9 @@ export function WalletProvider(props: IWalletProvider) {
     updateStatus,
     updateTransactionBalance,
     updateAmount,
+    refreshTransactionQuote,
+    prepareTransactionForSubmission,
+    invalidateTransactionQuote,
     getActiveTransaction,
     disconnect,
     clearTransaction,

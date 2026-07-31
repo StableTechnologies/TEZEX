@@ -57,7 +57,7 @@ export function useWalletOps(
   const sendTransaction = useCallback(async () => {
     const _transaction = wallet.getActiveTransaction(component);
     if (wallet && _transaction && !_transaction.locked) {
-      await wallet.updateStatus(component, TransactionStatus.PENDING);
+      await wallet.prepareTransactionForSubmission(component);
     }
   }, [wallet, component, transaction]);
 
