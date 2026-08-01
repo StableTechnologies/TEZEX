@@ -152,8 +152,8 @@ export const Menu: FC = () => {
 
   const liquidityHref: () => string = useCallback(() => {
     if (sessionInfo.activeComponent === TransactingComponent.REMOVE_LIQUIDITY) {
-      return "/home/remove";
-    } else return "/home/add";
+      return "/liquidity/remove";
+    } else return "/liquidity";
   }, [sessionInfo]);
 
   return (
@@ -163,7 +163,7 @@ export const Menu: FC = () => {
       onChange={handleChange}
       aria-label="nav-home-tabs"
     >
-      <MenuItem label="Swap" href="/home/swap" />
+      <MenuItem label="Swap" href="/" />
       <MenuItem label="Liquidity" href={liquidityHref()} />
     </Tabs>
   );

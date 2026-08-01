@@ -6,13 +6,7 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import {
-  MemoryRouter,
-  Route,
-  Routes,
-  useLocation,
-  useParams,
-} from "react-router-dom";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { Home } from ".";
 import { NetworkType } from "@airgap/beacon-sdk";
 
@@ -46,14 +40,14 @@ jest.mock("../../components/nav", () => ({
     <nav>
       <button
         type="button"
-        onClick={() => onNavigate("/home/swap")}
+        onClick={() => onNavigate("/")}
         disabled={isTransitioning}
       >
         Swap
       </button>
       <button
         type="button"
-        onClick={() => onNavigate("/home/add")}
+        onClick={() => onNavigate("/liquidity")}
         disabled={isTransitioning}
       >
         Liquidity
@@ -88,8 +82,13 @@ jest.mock("react-device-detect", () => ({
 }));
 
 const RoutedHome = () => {
-  const { mode = "swap" } = useParams();
-  const path = mode === "remove" ? "remove" : mode === "add" ? "add" : "swap";
+  const location = useLocation();
+  const path =
+    location.pathname === "/liquidity/remove"
+      ? "remove"
+      : location.pathname === "/liquidity"
+      ? "add"
+      : "swap";
   return <Home path={path} />;
 };
 
@@ -101,12 +100,12 @@ const Location = () => {
 const renderHome = () =>
   render(
     <MemoryRouter
-      initialEntries={["/home/swap"]}
+      initialEntries={["/"]}
       future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
     >
       <Routes>
         <Route
-          path="/home/:mode"
+          path="*"
           element={
             <>
               <RoutedHome />
@@ -141,7 +140,7 @@ test("changes modes immediately when browser animation is unavailable", () => {
 
   fireEvent.click(screen.getByRole("button", { name: "Liquidity" }));
 
-  expect(screen.getByTestId("location")).toHaveTextContent("/home/add");
+  expect(screen.getByTestId("location")).toHaveTextContent("/liquidity");
   expect(screen.getByText("Liquidity workspace")).toBeInTheDocument();
 });
 
@@ -234,7 +233,7 @@ test("moves outgoing and incoming workspaces on one continuous track", async () 
   renderHome();
   fireEvent.click(screen.getByRole("button", { name: "Liquidity" }));
 
-  expect(screen.getByTestId("location")).toHaveTextContent("/home/swap");
+  expect(screen.getByTestId("location")).toHaveTextContent("/");
   expect(screen.getByText("Liquidity workspace")).toBeInTheDocument();
   expect(
     document.querySelector('[data-workspace-snapshot="true"]')
@@ -277,7 +276,7 @@ test("moves outgoing and incoming workspaces on one continuous track", async () 
   await waitFor(() =>
     expect(document.documentElement.dataset.modeTransition).toBeUndefined()
   );
-  expect(screen.getByTestId("location")).toHaveTextContent("/home/add");
+  expect(screen.getByTestId("location")).toHaveTextContent("/liquidity");
   expect(
     document.querySelector('[data-workspace-snapshot="true"]')
   ).not.toBeInTheDocument();

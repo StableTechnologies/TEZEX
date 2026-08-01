@@ -12,7 +12,13 @@
         var path = window.location.pathname;
         var isAsset = /\.[a-z0-9]+$/i.test(path);
         if (path !== "/" && !isAsset) {
-          window.location.replace("/#" + path + window.location.search);
+          var route = path + window.location.search + window.location.hash;
+          try {
+            window.sessionStorage.setItem("tezex:spa-route", route);
+            window.location.replace("/");
+          } catch (_) {
+            window.location.replace("/?__route=" + encodeURIComponent(route));
+          }
         }
       })();
     </script>
@@ -95,9 +101,7 @@
       <p class="eyebrow">ERROR 404</p>
       <h1>Page not found.</h1>
       <p>The address may have changed, or the page may no longer exist.</p>
-      <a href="/#/home/swap"
-        >RETURN TO SWAP <span aria-hidden="true">→</span></a
-      >
+      <a href="/">RETURN TO SWAP <span aria-hidden="true">→</span></a>
     </main>
   </body>
 </html>

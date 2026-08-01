@@ -24,6 +24,7 @@ import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
 import logo from "../../../../assets/TezexLogo.svg";
 import logoSmall from "../../../../assets/tezexIcon.svg";
 import { Wallet as WalletControl } from "../../../wallet";
+import { homePathForHost } from "../../../../routing";
 
 export interface ISideBarProps {
   openMenu: boolean;
@@ -38,6 +39,7 @@ export const SideBar: FC<ISideBarProps> = (props) => {
   const location = useLocation();
   const styles = useStyles(style);
   const { isLandscape } = useMobileOrientation();
+  const homePath = homePathForHost(window.location.hostname);
 
   useEffect(() => {
     switch (sessionInfo.activeComponent) {
@@ -124,7 +126,7 @@ export const SideBar: FC<ISideBarProps> = (props) => {
                 <ListItem disablePadding sx={styles.listItem}>
                   <ListItemButton
                     component={Link}
-                    to="/home/swap"
+                    to={homePath}
                     onClick={props.toggleMenu}
                     selected={active === 0}
                     sx={styles.swapButton}
@@ -153,7 +155,7 @@ export const SideBar: FC<ISideBarProps> = (props) => {
                     <ListItem disablePadding sx={styles.listItem}>
                       <ListItemButton
                         component={Link}
-                        to="/home/add"
+                        to="/liquidity"
                         onClick={props.toggleMenu}
                         selected={active === 1}
                         sx={styles.nestedButton}
@@ -165,7 +167,7 @@ export const SideBar: FC<ISideBarProps> = (props) => {
                     <ListItem disablePadding sx={styles.listItem}>
                       <ListItemButton
                         component={Link}
-                        to="/home/remove"
+                        to="/liquidity/remove"
                         onClick={props.toggleMenu}
                         selected={active === 2}
                         sx={styles.nestedButton}

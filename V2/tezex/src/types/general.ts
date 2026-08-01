@@ -23,10 +23,10 @@ export interface AppConfig {
 }
 
 export enum Pages {
-  HOME = "/home/swap",
-  SWAP = "/home/swap",
-  ADD_LIQUIDITY = "/home/add",
-  REMOVE_LIQUIDITY = "/home/remove",
+  HOME = "/",
+  SWAP = "/",
+  ADD_LIQUIDITY = "/liquidity",
+  REMOVE_LIQUIDITY = "/liquidity/remove",
   ANALYTICS = "/analytics",
   ABOUT = "/about",
 }

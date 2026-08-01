@@ -1,7 +1,7 @@
 {
   "name": "Tezex",
   "version": "0.1.0",
-  "homepage": ".",
+  "homepage": "/",
   "private": true,
   "dependencies": {
     "@airgap/beacon-dapp": "^4.8.1",

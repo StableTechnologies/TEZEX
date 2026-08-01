@@ -22,15 +22,15 @@ test("renders the site footer with working product and resource links", () => {
   expect(screen.getByRole("contentinfo")).toBeInTheDocument();
   expect(screen.getByRole("link", { name: "TEZEX home" })).toHaveAttribute(
     "href",
-    "/home/swap"
+    "/"
   );
   expect(screen.getByRole("link", { name: "Swap" })).toHaveAttribute(
     "href",
-    "/home/swap"
+    "/"
   );
   expect(screen.getByRole("link", { name: "Liquidity" })).toHaveAttribute(
     "href",
-    "/home/add"
+    "/liquidity"
   );
   expect(screen.getByRole("link", { name: "Analytics" })).toHaveAttribute(
     "href",
