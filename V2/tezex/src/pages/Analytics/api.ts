@@ -1,8 +1,13 @@
 import { NetworkInfo } from "../../contexts/network";
 import { Asset, Token } from "../../types/general";
 import { PoolConfig, PoolType } from "../../types/pools";
+import {
+  ANALYTICS_HISTORY,
+  ANALYTICS_HISTORY_CUTOFF,
+  AnalyticsHistoryPoint,
+} from "./history";
 
-export type AnalyticsRange = "24H" | "7D" | "30D" | "90D" | "6M" | "1Y";
+export type AnalyticsRange = "24H" | "7D" | "30D" | "90D" | "6M" | "1Y" | "MAX";
 export type AnalyticsMetric = "Volume" | "TVL" | "Fees";
 export type AnalyticsCurrency = "XTZ" | "BTC" | "USD";
 
@@ -13,6 +18,7 @@ export const ANALYTICS_RANGES: AnalyticsRange[] = [
   "90D",
   "6M",
   "1Y",
+  "MAX",
 ];
 
 export interface AnalyticsQuote {
@@ -66,9 +72,15 @@ export interface AnalyticsActivity {
 
 export interface AnalyticsModel {
   summary: AnalyticsSummary;
+  summaryByPool: Record<string, AnalyticsSummary>;
   chart: Record<AnalyticsRange, Record<AnalyticsMetric, AnalyticsPoint[]>>;
+  chartByPool: Record<
+    string,
+    Record<AnalyticsRange, Record<AnalyticsMetric, AnalyticsPoint[]>>
+  >;
   pools: AnalyticsPool[];
   activity: AnalyticsActivity[];
+  activityByPool: Record<string, AnalyticsActivity[]>;
   blockLevel: number;
   blockTimestamp: number;
   quote: AnalyticsQuote;
@@ -121,6 +133,7 @@ interface PoolSnapshot {
   balanceHistory: Record<AnalyticsRange, TzktBalancePoint[]>;
   feeRate: number;
   currentTvlXtz: number;
+  firstBalance: TzktBalancePoint;
 }
 
 interface RangeConfig {
@@ -146,14 +159,14 @@ export const RANGE_CONFIG: Record<AnalyticsRange, RangeConfig> = {
   "90D": { windowMs: 90 * DAY, bucketCount: 30, balanceStep: 43_200 },
   "6M": { windowMs: 180 * DAY, bucketCount: 26, balanceStep: 57_600 },
   "1Y": { windowMs: 365 * DAY, bucketCount: 52, balanceStep: 57_600 },
+  MAX: { windowMs: 0, bucketCount: 60, balanceStep: 14_400 },
 };
 
-const BALANCE_HISTORY_RANGES: AnalyticsRange[] = ["24H", "30D", "1Y"];
+const BALANCE_HISTORY_RANGES: AnalyticsRange[] = ["24H", "MAX"];
 
 const balanceHistoryRangeFor = (range: AnalyticsRange): AnalyticsRange => {
   if (range === "24H") return "24H";
-  if (range === "7D" || range === "30D") return "30D";
-  return "1Y";
+  return "MAX";
 };
 
 const toNumber = (value: unknown): number => {
@@ -293,10 +306,17 @@ const formatAssetAmount = (raw: number, asset: Asset) => {
 const shortAddress = (address: string) =>
   address.length > 12 ? `${address.slice(0, 6)}…${address.slice(-4)}` : address;
 
-const buildBuckets = (range: AnalyticsRange, now: number) => {
+const buildBuckets = (
+  range: AnalyticsRange,
+  now: number,
+  requestedStart?: number
+) => {
   const config = RANGE_CONFIG[range];
-  const start = now - config.windowMs;
-  const width = config.windowMs / config.bucketCount;
+  const start =
+    range === "MAX" && requestedStart !== undefined
+      ? requestedStart
+      : now - (config.windowMs || DAY);
+  const width = Math.max(1, now - start) / config.bucketCount;
   return Array.from({ length: config.bucketCount }, (_, index) => ({
     start: start + index * width,
     end: start + (index + 1) * width,
@@ -309,9 +329,10 @@ export const buildSwapSeries = (
   pools: PoolConfig[],
   range: AnalyticsRange,
   now: number,
-  feeRates: Map<string, number>
+  feeRates: Map<string, number>,
+  requestedStart?: number
 ) => {
-  const buckets = buildBuckets(range, now);
+  const buckets = buildBuckets(range, now, requestedStart);
   const poolByAddress = new Map(pools.map((pool) => [pool.address, pool]));
   const volume = buckets.map((bucket) => ({
     timestamp: bucket.timestamp,
@@ -339,8 +360,66 @@ export const buildSwapSeries = (
   return { Volume: volume, Fees: fees };
 };
 
-const valueAt = (history: TzktBalancePoint[], timestamp: number) => {
-  let selected = history[0]?.balance ?? 0;
+const utcMonthStart = (timestamp: number) => {
+  const date = new Date(timestamp);
+  return Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1);
+};
+
+export const buildAllTimeSwapSeries = (
+  transactions: TzktTransaction[],
+  pools: PoolConfig[],
+  now: number,
+  feeRates: Map<string, number>,
+  requestedStart: number,
+  history: AnalyticsHistoryPoint[] = ANALYTICS_HISTORY
+) => {
+  const firstMonth = utcMonthStart(requestedStart);
+  const lastMonth = utcMonthStart(now);
+  const months: number[] = [];
+  for (let month = firstMonth; month <= lastMonth; ) {
+    months.push(month);
+    const cursor = new Date(month);
+    month = Date.UTC(cursor.getUTCFullYear(), cursor.getUTCMonth() + 1, 1);
+  }
+
+  const poolIds = new Set(pools.map((pool) => pool.id));
+  const poolByAddress = new Map(pools.map((pool) => [pool.address, pool]));
+  const indexByMonth = new Map(
+    months.map((timestamp, index) => [timestamp, index])
+  );
+  const volume = months.map((timestamp) => ({ timestamp, value: 0 }));
+  const fees = months.map((timestamp) => ({ timestamp, value: 0 }));
+
+  history.forEach((point) => {
+    if (!poolIds.has(point.poolId)) return;
+    const index = indexByMonth.get(Date.parse(`${point.month}T00:00:00Z`));
+    if (index === undefined) return;
+    volume[index].value += point.volumeXtz;
+    fees[index].value += point.volumeXtz * (feeRates.get(point.poolId) ?? 0);
+  });
+
+  transactions.forEach((transaction) => {
+    const pool = poolByAddress.get(transaction.target.address);
+    if (!pool) return;
+    const timestamp = new Date(transaction.timestamp).getTime();
+    if (timestamp < ANALYTICS_HISTORY_CUTOFF || timestamp > now) return;
+    const index = indexByMonth.get(utcMonthStart(timestamp));
+    if (index === undefined) return;
+    const transactionVolume = calculateSwapVolumeXtz(transaction, pool);
+    volume[index].value += transactionVolume;
+    fees[index].value += transactionVolume * (feeRates.get(pool.id) ?? 0);
+  });
+
+  return { Volume: volume, Fees: fees };
+};
+
+export const valueAt = (
+  history: Pick<TzktBalancePoint, "timestamp" | "balance">[],
+  timestamp: number
+) => {
+  // A pool has no liquidity before its first on-chain balance. Starting from
+  // the first returned sample creates a false plateau before pool inception.
+  let selected = 0;
   for (const point of history) {
     if (new Date(point.timestamp).getTime() > timestamp) break;
     selected = point.balance;
@@ -351,11 +430,11 @@ const valueAt = (history: TzktBalancePoint[], timestamp: number) => {
 const buildTvlSeries = (
   snapshots: PoolSnapshot[],
   range: AnalyticsRange,
-  now: number
-) =>
-  buildBuckets(range, now).map((bucket) => ({
-    timestamp: bucket.timestamp,
-    value: snapshots.reduce((total, pool) => {
+  now: number,
+  requestedStart?: number
+) => {
+  const tvlAt = (timestamp: number) =>
+    snapshots.reduce((total, pool) => {
       if (
         pool.config.tokenA !== Token.XTZ &&
         pool.config.tokenB !== Token.XTZ
@@ -363,11 +442,18 @@ const buildTvlSeries = (
         return total;
       }
       return (
-        total +
-        (valueAt(pool.balanceHistory[range], bucket.end) * 2) / 1_000_000
+        total + (valueAt(pool.balanceHistory[range], timestamp) * 2) / 1_000_000
       );
-    }, 0),
+    }, 0);
+  const points = buildBuckets(range, now, requestedStart).map((bucket) => ({
+    timestamp: bucket.timestamp,
+    value: tvlAt(bucket.end),
   }));
+
+  return range === "MAX" && requestedStart !== undefined
+    ? [{ timestamp: requestedStart, value: tvlAt(requestedStart) }, ...points]
+    : points;
+};
 
 const fetchTransactions = (
   addresses: string[],
@@ -377,6 +463,7 @@ const fetchTransactions = (
     limit: number;
     sort: "asc" | "desc";
     select?: string;
+    offset?: number;
   },
   signal?: AbortSignal
 ) => {
@@ -390,6 +477,7 @@ const fetchTransactions = (
       options.select ??
       "id,timestamp,hash,counter,sender,target,amount,parameter,storage",
   };
+  if (options.offset) params.offset = options.offset;
   if (options.since) params["timestamp.ge"] = dateAt(options.since);
   return fetchJson<TzktTransaction[]>(
     `/operations/transactions?${query(params)}`,
@@ -397,20 +485,69 @@ const fetchTransactions = (
   );
 };
 
+const fetchTransactionHistory = async (
+  addresses: string[],
+  entrypoints: string[],
+  since: number,
+  select: string,
+  signal?: AbortSignal
+) => {
+  const pageSize = 10_000;
+  const transactions: TzktTransaction[] = [];
+
+  for (let offset = 0; ; offset += pageSize) {
+    const page = await fetchTransactions(
+      addresses,
+      entrypoints,
+      {
+        since,
+        limit: pageSize,
+        offset,
+        sort: "desc",
+        select,
+      },
+      signal
+    );
+    transactions.push(...page);
+    if (page.length < pageSize) break;
+  }
+
+  return transactions;
+};
+
 const fetchBalanceHistory = (
   pool: PoolConfig,
   range: AnalyticsRange,
+  headLevel: number,
   signal?: AbortSignal
 ) => {
   const config = RANGE_CONFIG[range];
+  const isMaximumRange = range === "MAX";
+  const limit = isMaximumRange ? 1_000 : config.bucketCount + 3;
+  const step = isMaximumRange
+    ? Math.max(config.balanceStep, Math.ceil(headLevel / (limit - 3)))
+    : config.balanceStep;
   return fetchJson<TzktBalancePoint[]>(
     `/accounts/${pool.address}/balance_history?${query({
-      step: config.balanceStep,
-      limit: config.bucketCount + 3,
+      step,
+      limit,
       "sort.desc": "level",
     })}`,
     signal
   );
+};
+
+const fetchFirstBalance = async (pool: PoolConfig, signal?: AbortSignal) => {
+  const points = await fetchJson<TzktBalancePoint[]>(
+    `/accounts/${pool.address}/balance_history?${query({
+      limit: 1,
+      "sort.asc": "level",
+    })}`,
+    signal
+  );
+  const point = points[0];
+  if (!point) throw new Error(`Missing balance history for ${pool.name}`);
+  return point;
 };
 
 const activityFromTransaction = (
@@ -482,49 +619,80 @@ export const loadAnalytics = async (
   const addresses = pools.map((pool) => pool.address);
   const headPromise = fetchJson<TzktHead>("/head", signal);
   const quotePromise = fetchJson<TzktQuote>("/quotes/last", signal);
-  const storagePromises = pools.map((pool) =>
-    fetchJson<Record<string, unknown>>(
-      `/contracts/${pool.address}/storage`,
-      signal
-    )
-  );
-  const preliminaryHead = await headPromise;
-  const now = new Date(preliminaryHead.timestamp).getTime();
-  const requestedSince = now - RANGE_CONFIG["1Y"].windowMs;
-  const balanceHistoriesPromise = async () => {
-    const histories: TzktBalancePoint[][][] = [];
-    for (const range of BALANCE_HISTORY_RANGES) {
-      histories.push(
-        await Promise.all(
-          pools.map((pool) => fetchBalanceHistory(pool, range, signal))
+  const storageDataPromise = async () => {
+    const storages: Record<string, unknown>[] = [];
+    for (const pool of pools) {
+      storages.push(
+        await fetchJson<Record<string, unknown>>(
+          `/contracts/${pool.address}/storage`,
+          signal
         )
       );
     }
-    return histories;
+    return storages;
+  };
+  const preliminaryHead = await headPromise;
+  const now = new Date(preliminaryHead.timestamp).getTime();
+  const requestedSince = Math.min(
+    now - RANGE_CONFIG["1Y"].windowMs,
+    ANALYTICS_HISTORY_CUTOFF
+  );
+  const swapsPromise = async () => {
+    const xtzToToken = await fetchTransactionHistory(
+      addresses,
+      ["xtzToToken"],
+      requestedSince,
+      "id,timestamp,target,amount,parameter",
+      signal
+    );
+    const tokenToXtz = await fetchTransactionHistory(
+      addresses,
+      ["tokenToXtz"],
+      requestedSince,
+      "id,timestamp,target,amount,parameter,storage",
+      signal
+    );
+    return [...xtzToToken, ...tokenToXtz];
+  };
+  const balanceDataPromise = async () => {
+    const firstBalances: TzktBalancePoint[] = [];
+    for (const pool of pools) {
+      firstBalances.push(await fetchFirstBalance(pool, signal));
+    }
+    const histories: TzktBalancePoint[][][] = [];
+    for (const range of BALANCE_HISTORY_RANGES) {
+      const rangeHistories: TzktBalancePoint[][] = [];
+      for (const pool of pools) {
+        rangeHistories.push(
+          await fetchBalanceHistory(pool, range, preliminaryHead.level, signal)
+        );
+      }
+      histories.push(rangeHistories);
+    }
+    return { firstBalances, histories };
+  };
+  const recentTransactionsPromise = async () => {
+    const transactions: TzktTransaction[][] = [];
+    for (const pool of pools) {
+      transactions.push(
+        await fetchTransactions(
+          [pool.address],
+          ACTIVITY_ENTRYPOINTS,
+          { limit: 8, sort: "desc" },
+          signal
+        )
+      );
+    }
+    return transactions;
   };
 
-  const [quote, storages, balanceHistories, swaps, recentTransactions] =
+  const [quote, storages, balanceData, swaps, recentTransactionsByPool] =
     await Promise.all([
       quotePromise,
-      Promise.all(storagePromises),
-      balanceHistoriesPromise(),
-      fetchTransactions(
-        addresses,
-        SWAP_ENTRYPOINTS,
-        {
-          since: requestedSince,
-          limit: 10_000,
-          sort: "desc",
-          select: "id,timestamp,target,amount,parameter,storage",
-        },
-        signal
-      ),
-      fetchTransactions(
-        addresses,
-        ACTIVITY_ENTRYPOINTS,
-        { limit: 16, sort: "desc" },
-        signal
-      ),
+      storageDataPromise(),
+      balanceDataPromise(),
+      swapsPromise(),
+      recentTransactionsPromise(),
     ]);
 
   const snapshots: PoolSnapshot[] = pools.map((pool, index) => {
@@ -534,7 +702,8 @@ export const loadAnalytics = async (
       ANALYTICS_RANGES.map((range) => [
         range,
         [
-          ...balanceHistories[
+          balanceData.firstBalances[index],
+          ...balanceData.histories[
             BALANCE_HISTORY_RANGES.indexOf(balanceHistoryRangeFor(range))
           ][index],
         ]
@@ -557,6 +726,7 @@ export const loadAnalytics = async (
       balanceHistory: history,
       feeRate: poolFeeRate(pool, storage),
       currentTvlXtz: currentPoolTvlXtz(pool, storage),
+      firstBalance: balanceData.firstBalances[index],
     };
   });
 
@@ -564,19 +734,50 @@ export const loadAnalytics = async (
   const feeRates = new Map(
     snapshots.map((snapshot) => [snapshot.config.id, snapshot.feeRate])
   );
-  const chart = Object.fromEntries(
-    ANALYTICS_RANGES.map((range) => {
-      const series = buildSwapSeries(swaps, pools, range, now, feeRates);
-      return [
-        range,
-        {
-          Volume: series.Volume,
-          TVL: buildTvlSeries(snapshots, range, now),
-          Fees: series.Fees,
-        },
-      ];
-    })
-  ) as Record<AnalyticsRange, Record<AnalyticsMetric, AnalyticsPoint[]>>;
+  const buildChart = (scopeSnapshots: PoolSnapshot[]) => {
+    const scopePools = scopeSnapshots.map((snapshot) => snapshot.config);
+    const maximumStart = Math.min(
+      ...scopeSnapshots.map((snapshot) =>
+        new Date(snapshot.firstBalance.timestamp).getTime()
+      )
+    );
+
+    return Object.fromEntries(
+      ANALYTICS_RANGES.map((range) => {
+        const requestedStart = range === "MAX" ? maximumStart : undefined;
+        const series =
+          range === "MAX"
+            ? buildAllTimeSwapSeries(
+                swaps,
+                scopePools,
+                now,
+                feeRates,
+                maximumStart
+              )
+            : buildSwapSeries(
+                swaps,
+                scopePools,
+                range,
+                now,
+                feeRates,
+                requestedStart
+              );
+        return [
+          range,
+          {
+            Volume: series.Volume,
+            TVL: buildTvlSeries(scopeSnapshots, range, now, requestedStart),
+            Fees: series.Fees,
+          },
+        ];
+      })
+    ) as Record<AnalyticsRange, Record<AnalyticsMetric, AnalyticsPoint[]>>;
+  };
+
+  const chart = buildChart(snapshots);
+  const chartByPool = Object.fromEntries(
+    snapshots.map((snapshot) => [snapshot.config.id, buildChart([snapshot])])
+  );
   const currentStart = now - DAY;
   const previousStart = now - 2 * DAY;
   const currentSwaps = swaps.filter(
@@ -603,19 +804,49 @@ export const loadAnalytics = async (
       );
     }, 0);
 
-  const volume24hXtz = sumVolume(currentSwaps);
-  const previousVolume = sumVolume(previousSwaps);
-  const fees24hXtz = sumFees(currentSwaps);
-  const previousFees = sumFees(previousSwaps);
-  const tvlXtz = snapshots.reduce(
-    (total, snapshot) => total + snapshot.currentTvlXtz,
-    0
-  );
-  const previousTvl = snapshots.reduce(
-    (total, snapshot) =>
-      total +
-      (valueAt(snapshot.balanceHistory["24H"], currentStart) * 2) / 1_000_000,
-    0
+  const buildSummary = (scopeSnapshots: PoolSnapshot[]): AnalyticsSummary => {
+    const scopeAddresses = new Set(
+      scopeSnapshots.map((snapshot) => snapshot.config.address)
+    );
+    const scopeCurrentSwaps = currentSwaps.filter((transaction) =>
+      scopeAddresses.has(transaction.target.address)
+    );
+    const scopePreviousSwaps = previousSwaps.filter((transaction) =>
+      scopeAddresses.has(transaction.target.address)
+    );
+    const volume24hXtz = sumVolume(scopeCurrentSwaps);
+    const previousVolume = sumVolume(scopePreviousSwaps);
+    const fees24hXtz = sumFees(scopeCurrentSwaps);
+    const previousFees = sumFees(scopePreviousSwaps);
+    const tvlXtz = scopeSnapshots.reduce(
+      (total, snapshot) => total + snapshot.currentTvlXtz,
+      0
+    );
+    const previousTvl = scopeSnapshots.reduce(
+      (total, snapshot) =>
+        total +
+        (valueAt(snapshot.balanceHistory["24H"], currentStart) * 2) / 1_000_000,
+      0
+    );
+
+    return {
+      tvlXtz,
+      tvlDelta: percentageDelta(tvlXtz, previousTvl),
+      volume24hXtz,
+      volumeDelta: percentageDelta(volume24hXtz, previousVolume),
+      fees24hXtz,
+      feesDelta: percentageDelta(fees24hXtz, previousFees),
+      swaps24h: scopeCurrentSwaps.length,
+      swapsDelta: percentageDelta(
+        scopeCurrentSwaps.length,
+        scopePreviousSwaps.length
+      ),
+    };
+  };
+
+  const summary = buildSummary(snapshots);
+  const summaryByPool = Object.fromEntries(
+    snapshots.map((snapshot) => [snapshot.config.id, buildSummary([snapshot])])
   );
 
   const poolRows = snapshots.map((snapshot) => {
@@ -640,29 +871,32 @@ export const loadAnalytics = async (
     };
   });
 
-  const activity = recentTransactions
-    .map((transaction) => {
-      const pool = poolByAddress.get(transaction.target.address);
-      return pool ? activityFromTransaction(transaction, pool, assets) : null;
-    })
-    .filter((item): item is AnalyticsActivity => item !== null)
-    .sort((a, b) => b.timestamp - a.timestamp)
-    .slice(0, 8);
+  const buildActivity = (transactions: TzktTransaction[]) =>
+    transactions
+      .map((transaction) => {
+        const pool = poolByAddress.get(transaction.target.address);
+        return pool ? activityFromTransaction(transaction, pool, assets) : null;
+      })
+      .filter((item): item is AnalyticsActivity => item !== null)
+      .sort((a, b) => b.timestamp - a.timestamp)
+      .slice(0, 8);
+
+  const activity = buildActivity(recentTransactionsByPool.flat());
+  const activityByPool = Object.fromEntries(
+    pools.map((pool, index) => [
+      pool.id,
+      buildActivity(recentTransactionsByPool[index]),
+    ])
+  );
 
   return {
-    summary: {
-      tvlXtz,
-      tvlDelta: percentageDelta(tvlXtz, previousTvl),
-      volume24hXtz,
-      volumeDelta: percentageDelta(volume24hXtz, previousVolume),
-      fees24hXtz,
-      feesDelta: percentageDelta(fees24hXtz, previousFees),
-      swaps24h: currentSwaps.length,
-      swapsDelta: percentageDelta(currentSwaps.length, previousSwaps.length),
-    },
+    summary,
+    summaryByPool,
     chart,
+    chartByPool,
     pools: poolRows,
     activity,
+    activityByPool,
     blockLevel: preliminaryHead.level,
     blockTimestamp: now,
     quote: {
