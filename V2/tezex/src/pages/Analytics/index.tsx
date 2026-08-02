@@ -8,7 +8,9 @@ import React, {
   useState,
 } from "react";
 import { NetworkType } from "@airgap/beacon-sdk";
+import BarChartRoundedIcon from "@mui/icons-material/BarChartRounded";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
+import ShowChartRoundedIcon from "@mui/icons-material/ShowChartRounded";
 
 import { TokenPair } from "../../components/ui/elements/TokenIcon";
 import { useNetwork } from "../../hooks/network";
@@ -30,6 +32,7 @@ import "./style.css";
 
 const METRICS: AnalyticsMetric[] = ["Volume", "TVL", "Fees"];
 const CURRENCIES: AnalyticsCurrency[] = ["XTZ", "BTC", "USD"];
+type AnalyticsChartType = "area" | "bars";
 const CHART_WIDTH = 900;
 const CHART_HEIGHT = 300;
 const CHART_LEFT = 10;
@@ -43,7 +46,11 @@ const formatNumber = (value: number, maximumFractionDigits = 1) =>
 const chartDate = (timestamp: number, range: AnalyticsRange) =>
   new Intl.DateTimeFormat(
     "en-US",
-    range === "24H" ? { hour: "numeric" } : { month: "short", day: "numeric" }
+    range === "24H"
+      ? { hour: "numeric" }
+      : range === "MAX"
+      ? { month: "short", year: "numeric" }
+      : { month: "short", day: "numeric" }
   ).format(timestamp);
 
 const rangeBoundaryDate = (timestamp: number, range: AnalyticsRange) =>
@@ -51,7 +58,7 @@ const rangeBoundaryDate = (timestamp: number, range: AnalyticsRange) =>
     "en-US",
     range === "24H"
       ? { month: "short", day: "numeric", hour: "numeric" }
-      : range === "1Y"
+      : range === "1Y" || range === "MAX"
       ? { month: "short", day: "numeric", year: "numeric" }
       : { month: "short", day: "numeric" }
   ).format(timestamp);
@@ -78,6 +85,7 @@ const Stat: FC<StatProps> = ({ label, value, delta, deltaLabel = "24h" }) => (
 
 interface ChartProps {
   metric: AnalyticsMetric;
+  chartType: AnalyticsChartType;
   range: AnalyticsRange;
   points: AnalyticsPoint[];
   currency: AnalyticsCurrency;
@@ -195,6 +203,7 @@ const RangeScrubber: FC<RangeScrubberProps> = ({
 
 const AnalyticsChart: FC<ChartProps> = ({
   metric,
+  chartType,
   range,
   points,
   currency,
@@ -203,13 +212,14 @@ const AnalyticsChart: FC<ChartProps> = ({
 }) => {
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
 
-  useEffect(() => setHoverIndex(null), [metric, points, range]);
+  useEffect(() => setHoverIndex(null), [chartType, metric, points, range]);
 
   const geometry = useMemo(() => {
     const values = points.map((point) => point.value);
     const maximum = Math.max(...values, 1);
-    const minimum = metric === "TVL" ? Math.min(...values, maximum) : 0;
-    const floor = metric === "TVL" ? Math.max(0, minimum * 0.985) : 0;
+    const canUseFocusedScale = metric === "TVL" && chartType === "area";
+    const minimum = canUseFocusedScale ? Math.min(...values, maximum) : 0;
+    const floor = canUseFocusedScale ? Math.max(0, minimum * 0.985) : 0;
     const ceiling = Math.max(maximum * 1.025, floor + 1);
     const chartHeight = CHART_HEIGHT - CHART_TOP - CHART_BOTTOM;
     const width =
@@ -232,7 +242,7 @@ const AnalyticsChart: FC<ChartProps> = ({
         } Z`
       : "";
     return { width, y, line, area };
-  }, [metric, points]);
+  }, [chartType, metric, points]);
 
   const activeIndex = hoverIndex ?? Math.max(0, points.length - 1);
   const activePoint = points[activeIndex];
@@ -274,7 +284,7 @@ const AnalyticsChart: FC<ChartProps> = ({
           width="100%"
           role="img"
           tabIndex={0}
-          aria-label={`${metric} over ${range}`}
+          aria-label={`${metric} over ${range}, ${chartType} chart`}
           onPointerMove={(event) =>
             points.length &&
             setHoverIndex(indexAt(event.clientX, event.currentTarget))
@@ -321,7 +331,7 @@ const AnalyticsChart: FC<ChartProps> = ({
             className="analytics-chart__baseline"
           />
 
-          {metric === "TVL" ? (
+          {chartType === "area" ? (
             <>
               <path d={geometry.area} className="analytics-chart__area" />
               <path d={geometry.line} className="analytics-chart__line" />
@@ -399,6 +409,10 @@ const AnalyticsChart: FC<ChartProps> = ({
 export const Analytics: FC = () => {
   const network = useNetwork();
   const [metric, setMetric] = useState<AnalyticsMetric>("Volume");
+  const [chartType, setChartType] = useState<AnalyticsChartType>(() => {
+    const saved = window.localStorage.getItem("tezex-analytics-chart-type");
+    return saved === "bars" ? "bars" : "area";
+  });
   const [range, setRange] = useState<AnalyticsRange>("7D");
   const [rangeWindow, setRangeWindow] = useState<RangeWindow>({
     start: 0,
@@ -410,6 +424,9 @@ export const Analytics: FC = () => {
       ? (saved as AnalyticsCurrency)
       : "XTZ";
   });
+  const [scope, setScope] = useState(
+    () => window.localStorage.getItem("tezex-analytics-scope") ?? "all"
+  );
   const [model, setModel] = useState<AnalyticsModel>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>();
@@ -423,6 +440,14 @@ export const Analytics: FC = () => {
   useEffect(() => {
     window.localStorage.setItem("tezex-analytics-currency", currency);
   }, [currency]);
+
+  useEffect(() => {
+    window.localStorage.setItem("tezex-analytics-chart-type", chartType);
+  }, [chartType]);
+
+  useEffect(() => {
+    window.localStorage.setItem("tezex-analytics-scope", scope);
+  }, [scope]);
 
   useEffect(() => {
     if (!isMainnet) return;
@@ -464,11 +489,18 @@ export const Analytics: FC = () => {
 
   useEffect(() => {
     if (!model) return;
+    const scopedChart =
+      scope === "all" ? model.chart : model.chartByPool[scope] ?? model.chart;
     setRangeWindow({
       start: 0,
-      end: Math.max(0, model.chart[range].Volume.length - 1),
+      end: Math.max(0, scopedChart[range][metric].length - 1),
     });
-  }, [model, range]);
+  }, [metric, model, range, scope]);
+
+  useEffect(() => {
+    if (!model || scope === "all") return;
+    if (!model.summaryByPool[scope]) setScope("all");
+  }, [model, scope]);
 
   const refresh = useCallback(() => {
     cache.current.delete(cacheKey);
@@ -482,10 +514,24 @@ export const Analytics: FC = () => {
       if (!model) return;
       setRangeWindow({
         start: 0,
-        end: Math.max(0, model.chart[nextRange].Volume.length - 1),
+        end: Math.max(
+          0,
+          (scope === "all"
+            ? model.chart
+            : model.chartByPool[scope] ?? model.chart)[nextRange][metric]
+            .length - 1
+        ),
       });
     },
-    [model]
+    [metric, model, scope]
+  );
+
+  const selectMetric = useCallback(
+    (nextMetric: AnalyticsMetric) => {
+      setMetric(nextMetric);
+      if (range === "MAX" && nextMetric !== "TVL") setRange("1Y");
+    },
+    [range]
   );
 
   if (!isMainnet) {
@@ -537,8 +583,24 @@ export const Analytics: FC = () => {
     );
   }
 
-  const { summary } = model;
-  const selectedSeries = model.chart[range][metric];
+  const selectedPool =
+    scope === "all" ? undefined : model.pools.find((pool) => pool.id === scope);
+  const summary =
+    scope === "all"
+      ? model.summary
+      : model.summaryByPool[scope] ?? model.summary;
+  const scopedChart =
+    scope === "all" ? model.chart : model.chartByPool[scope] ?? model.chart;
+  const selectedSeries = scopedChart[range][metric];
+  const scopedPools = selectedPool ? [selectedPool] : model.pools;
+  const scopedActivity =
+    scope === "all"
+      ? model.activity
+      : model.activityByPool[scope] ?? model.activity;
+  const availableRanges =
+    metric === "TVL"
+      ? ANALYTICS_RANGES
+      : ANALYTICS_RANGES.filter((item) => item !== "MAX");
   const visiblePoints = selectedSeries.slice(
     Math.min(rangeWindow.start, Math.max(0, selectedSeries.length - 1)),
     Math.min(rangeWindow.end + 1, selectedSeries.length)
@@ -555,9 +617,28 @@ export const Analytics: FC = () => {
         <div>
           <span className="analytics-eyebrow">ANALYTICS</span>
           <h1>On-chain activity</h1>
-          <p>Verified activity and liquidity across TEZEX Mainnet pools.</p>
+          <p>
+            {selectedPool
+              ? `Verified activity and liquidity for ${selectedPool.name}.`
+              : "Verified activity and liquidity across TEZEX Mainnet pools."}
+          </p>
         </div>
         <div className="analytics-intro__tools">
+          <label className="analytics-scope-picker">
+            <span>SCOPE</span>
+            <select
+              value={scope}
+              onChange={(event) => setScope(event.target.value)}
+              aria-label="Analytics pool scope"
+            >
+              <option value="all">All pools</option>
+              {model.pools.map((pool) => (
+                <option key={pool.id} value={pool.id}>
+                  {pool.name} · {pool.tokenA.label}/{pool.tokenB.label}
+                </option>
+              ))}
+            </select>
+          </label>
           <div
             className={`analytics-segments analytics-denomination__segments is-${currency.toLowerCase()}`}
             role="group"
@@ -600,7 +681,7 @@ export const Analytics: FC = () => {
 
       <section className="analytics-stats" aria-label="Market summary">
         <Stat
-          label="Total liquidity"
+          label={selectedPool ? "Pool liquidity" : "Total liquidity"}
           value={formatDenominatedXtz(summary.tvlXtz, currency, model.quote)}
           delta={summary.tvlDelta}
         />
@@ -647,18 +728,42 @@ export const Analytics: FC = () => {
                   type="button"
                   className={metric === item ? "is-active" : ""}
                   aria-pressed={metric === item}
-                  onClick={() => setMetric(item)}
+                  onClick={() => selectMetric(item)}
                 >
                   {item}
                 </button>
               ))}
             </div>
             <div
+              className="analytics-segments analytics-chart-types"
+              role="group"
+              aria-label="Chart type"
+            >
+              <button
+                type="button"
+                className={chartType === "area" ? "is-active" : ""}
+                aria-pressed={chartType === "area"}
+                onClick={() => setChartType("area")}
+              >
+                <ShowChartRoundedIcon />
+                Area
+              </button>
+              <button
+                type="button"
+                className={chartType === "bars" ? "is-active" : ""}
+                aria-pressed={chartType === "bars"}
+                onClick={() => setChartType("bars")}
+              >
+                <BarChartRoundedIcon />
+                Bars
+              </button>
+            </div>
+            <div
               className="analytics-segments"
               role="group"
               aria-label="Chart range"
             >
-              {ANALYTICS_RANGES.map((item) => (
+              {availableRanges.map((item) => (
                 <button
                   key={item}
                   type="button"
@@ -674,6 +779,7 @@ export const Analytics: FC = () => {
         </div>
         <AnalyticsChart
           metric={metric}
+          chartType={chartType}
           range={range}
           points={visiblePoints}
           currency={currency}
@@ -692,7 +798,9 @@ export const Analytics: FC = () => {
         <div className="analytics-panel__head">
           <h2 id="pools-title">POOLS</h2>
           <span className="analytics-panel__meta">
-            Current reserves · 24h activity
+            {selectedPool
+              ? `${selectedPool.name} · Current reserves · 24h activity`
+              : "Current reserves · 24h activity"}
           </span>
         </div>
         <div className="analytics-table-wrap">
@@ -707,7 +815,7 @@ export const Analytics: FC = () => {
               </tr>
             </thead>
             <tbody>
-              {model.pools.map((pool) => (
+              {scopedPools.map((pool) => (
                 <tr key={pool.id}>
                   <td>
                     <a
@@ -758,7 +866,11 @@ export const Analytics: FC = () => {
       <section className="analytics-panel" aria-labelledby="activity-title">
         <div className="analytics-panel__head">
           <h2 id="activity-title">RECENT ACTIVITY</h2>
-          <span className="analytics-panel__meta">Confirmed on Tezos</span>
+          <span className="analytics-panel__meta">
+            {selectedPool
+              ? `${selectedPool.name} · Confirmed on Tezos`
+              : "Confirmed on Tezos"}
+          </span>
         </div>
         <div className="analytics-table-wrap">
           <table className="analytics-table analytics-activity-table">
@@ -772,8 +884,8 @@ export const Analytics: FC = () => {
               </tr>
             </thead>
             <tbody>
-              {model.activity.length ? (
-                model.activity.map((activity) => {
+              {scopedActivity.length ? (
+                scopedActivity.map((activity) => {
                   const displayValue = formatDenominatedXtz(
                     activity.valueXtz,
                     currency,

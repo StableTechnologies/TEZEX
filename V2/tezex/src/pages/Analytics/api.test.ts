@@ -9,6 +9,7 @@ import {
   formatDenominatedXtz,
   RANGE_CONFIG,
   TzktTransaction,
+  valueAt,
 } from "./api";
 
 const siriusPool: PoolConfig = {
@@ -101,6 +102,26 @@ describe("analytics calculations", () => {
       expect(series.Volume).toHaveLength(RANGE_CONFIG[range].bucketCount);
       expect(series.Fees).toHaveLength(RANGE_CONFIG[range].bucketCount);
     });
+  });
+
+  it("does not invent a flat balance before a pool's first on-chain sample", () => {
+    const history = [
+      {
+        timestamp: "2021-08-06T09:29:54Z",
+        balance: 100,
+      },
+      {
+        timestamp: "2021-08-07T09:29:54Z",
+        balance: 2_500_100,
+      },
+    ];
+
+    expect(valueAt(history, new Date("2020-08-06T09:29:54Z").getTime())).toBe(
+      0
+    );
+    expect(valueAt(history, new Date("2021-08-06T12:00:00Z").getTime())).toBe(
+      100
+    );
   });
 
   it("derives removed liquidity value from the post-operation pool state", () => {

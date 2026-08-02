@@ -34,6 +34,48 @@
   gap: 14px;
 }
 
+.analytics-scope-picker {
+  min-width: 204px;
+  height: 38px;
+  padding: 0 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+  background: var(--tezex-panel-subtle);
+  border: 1px solid var(--tezex-line);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+
+.analytics-scope-picker:hover,
+.analytics-scope-picker:focus-within {
+  background: var(--tezex-hover);
+  border-color: var(--tezex-line-strong);
+}
+
+.analytics-scope-picker > span {
+  color: var(--tezex-faint);
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 0.14em;
+}
+
+.analytics-scope-picker select {
+  min-width: 0;
+  height: 100%;
+  flex: 1;
+  color: var(--tezex-text);
+  background: transparent;
+  border: 0;
+  outline: 0;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+}
+
 .analytics-eyebrow,
 .analytics-panel__head h2 {
   display: block;
@@ -224,6 +266,8 @@
 .analytics-controls {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 10px;
 }
 
@@ -259,6 +303,17 @@
 .analytics-segments button.is-active {
   color: var(--tezex-action-text);
   background: var(--tezex-action);
+}
+
+.analytics-chart-types button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.analytics-chart-types svg {
+  width: 15px;
+  height: 15px;
 }
 
 .analytics-denomination__segments {
@@ -341,6 +396,7 @@
 
 .analytics-chart:focus-visible,
 .analytics-segments button:focus-visible,
+.analytics-scope-picker select:focus-visible,
 .analytics-freshness button:focus-visible,
 .analytics-unavailable button:focus-visible,
 .analytics-pair:focus-visible,
@@ -804,7 +860,7 @@
 
   .analytics-controls {
     width: 100%;
-    justify-content: space-between;
+    justify-content: flex-start;
   }
 
   .analytics-table th,
@@ -846,6 +902,10 @@
   }
 
   .analytics-denomination__segments {
+    width: 100%;
+  }
+
+  .analytics-scope-picker {
     width: 100%;
   }
 
