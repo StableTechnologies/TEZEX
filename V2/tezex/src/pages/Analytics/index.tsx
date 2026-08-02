@@ -31,7 +31,7 @@ import {
 import "./style.css";
 
 const METRICS: AnalyticsMetric[] = ["Volume", "TVL", "Fees"];
-const CURRENCIES: AnalyticsCurrency[] = ["XTZ", "BTC", "USD"];
+const CURRENCIES: AnalyticsCurrency[] = ["XTZ", "USD", "BTC"];
 type AnalyticsChartType = "area" | "bars";
 const CHART_WIDTH = 900;
 const CHART_HEIGHT = 300;
@@ -89,6 +89,7 @@ const Stat: FC<StatProps> = ({ label, value, delta, deltaLabel = "24h" }) => (
 interface ChartProps {
   metric: AnalyticsMetric;
   chartType: AnalyticsChartType;
+  onChartTypeChange: (chartType: AnalyticsChartType) => void;
   range: AnalyticsRange;
   points: AnalyticsPoint[];
   currency: AnalyticsCurrency;
@@ -207,6 +208,7 @@ const RangeScrubber: FC<RangeScrubberProps> = ({
 const AnalyticsChart: FC<ChartProps> = ({
   metric,
   chartType,
+  onChartTypeChange,
   range,
   points,
   currency,
@@ -268,6 +270,32 @@ const AnalyticsChart: FC<ChartProps> = ({
 
   return (
     <div className={`analytics-chart-shell ${loading ? "is-loading" : ""}`}>
+      <div
+        className="analytics-chart-types"
+        role="group"
+        aria-label="Chart style"
+      >
+        <button
+          type="button"
+          className={chartType === "area" ? "is-active" : ""}
+          aria-label="Show area chart"
+          aria-pressed={chartType === "area"}
+          title="Area chart"
+          onClick={() => onChartTypeChange("area")}
+        >
+          <ShowChartRoundedIcon aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          className={chartType === "bars" ? "is-active" : ""}
+          aria-label="Show bar chart"
+          aria-pressed={chartType === "bars"}
+          title="Bar chart"
+          onClick={() => onChartTypeChange("bars")}
+        >
+          <BarChartRoundedIcon aria-hidden="true" />
+        </button>
+      </div>
       <div className="analytics-chart-readout" aria-live="polite">
         <strong>
           {activePoint
@@ -621,7 +649,6 @@ export const Analytics: FC = () => {
         </div>
         <div className="analytics-intro__tools">
           <label className="analytics-scope-picker">
-            <span>SCOPE</span>
             <select
               value={scope}
               onChange={(event) => setScope(event.target.value)}
@@ -731,30 +758,6 @@ export const Analytics: FC = () => {
               ))}
             </div>
             <div
-              className="analytics-segments analytics-chart-types"
-              role="group"
-              aria-label="Chart type"
-            >
-              <button
-                type="button"
-                className={chartType === "area" ? "is-active" : ""}
-                aria-pressed={chartType === "area"}
-                onClick={() => setChartType("area")}
-              >
-                <ShowChartRoundedIcon />
-                Area
-              </button>
-              <button
-                type="button"
-                className={chartType === "bars" ? "is-active" : ""}
-                aria-pressed={chartType === "bars"}
-                onClick={() => setChartType("bars")}
-              >
-                <BarChartRoundedIcon />
-                Bars
-              </button>
-            </div>
-            <div
               className="analytics-segments"
               role="group"
               aria-label="Chart range"
@@ -776,6 +779,7 @@ export const Analytics: FC = () => {
         <AnalyticsChart
           metric={metric}
           chartType={chartType}
+          onChartTypeChange={setChartType}
           range={range}
           points={visiblePoints}
           currency={currency}

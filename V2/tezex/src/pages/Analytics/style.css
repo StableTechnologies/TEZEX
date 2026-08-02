@@ -40,7 +40,6 @@
   padding: 0 11px;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
   position: relative;
   background: var(--tezex-panel-subtle);
   border: 1px solid var(--tezex-line);
@@ -53,13 +52,6 @@
 .analytics-scope-picker:focus-within {
   background: var(--tezex-hover);
   border-color: var(--tezex-line-strong);
-}
-
-.analytics-scope-picker > span {
-  color: var(--tezex-faint);
-  font-size: 9px;
-  font-weight: 750;
-  letter-spacing: 0.14em;
 }
 
 .analytics-scope-picker select {
@@ -305,17 +297,6 @@
   background: var(--tezex-action);
 }
 
-.analytics-chart-types button {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.analytics-chart-types svg {
-  width: 15px;
-  height: 15px;
-}
-
 .analytics-denomination__segments {
   position: relative;
   width: 174px;
@@ -336,11 +317,11 @@
   transition: transform 220ms cubic-bezier(0.22, 0.8, 0.24, 1);
 }
 
-.analytics-denomination__segments.is-btc::before {
+.analytics-denomination__segments.is-usd::before {
   transform: translateX(calc(100% + 2px));
 }
 
-.analytics-denomination__segments.is-usd::before {
+.analytics-denomination__segments.is-btc::before {
   transform: translateX(calc(200% + 4px));
 }
 
@@ -354,11 +335,57 @@
 }
 
 .analytics-chart-shell {
+  position: relative;
   transition: opacity 180ms ease;
 }
 
 .analytics-chart-shell.is-loading {
   opacity: 0.74;
+}
+
+.analytics-chart-types {
+  position: absolute;
+  z-index: 2;
+  top: 17px;
+  right: 20px;
+  width: 68px;
+  height: 34px;
+  padding: 3px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2px;
+  background: color-mix(in srgb, var(--tezex-panel-subtle) 90%, transparent);
+  border: 1px solid var(--tezex-line);
+  border-radius: 999px;
+}
+
+.analytics-chart-types button {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--tezex-faint);
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 160ms ease, background-color 160ms ease;
+}
+
+.analytics-chart-types button:hover {
+  color: var(--tezex-text);
+}
+
+.analytics-chart-types button.is-active {
+  color: var(--tezex-action-text);
+  background: var(--tezex-action);
+}
+
+.analytics-chart-types svg {
+  width: 16px;
+  height: 16px;
 }
 
 .analytics-chart-readout {
@@ -396,6 +423,7 @@
 
 .analytics-chart:focus-visible,
 .analytics-segments button:focus-visible,
+.analytics-chart-types button:focus-visible,
 .analytics-scope-picker select:focus-visible,
 .analytics-freshness button:focus-visible,
 .analytics-unavailable button:focus-visible,
@@ -947,6 +975,11 @@
   .analytics-chart-readout {
     min-height: 66px;
     padding: 15px 16px 0;
+  }
+
+  .analytics-chart-types {
+    top: 13px;
+    right: 14px;
   }
 
   .analytics-chart-frame {
