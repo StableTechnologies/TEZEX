@@ -1,24 +1,24 @@
 {
   "files": {
-    "main.css": "./static/css/main.93d7bdb6.css",
-    "main.js": "./static/js/main.ee2bfe78.js",
-    "static/js/523.39173091.chunk.js": "./static/js/523.39173091.chunk.js",
-    "static/media/tick.svg": "./static/media/tick.298f5d82d1a70db591c85004b360e2d3.svg",
-    "static/media/TezosLogo_Horizontal_White.svg": "./static/media/TezosLogo_Horizontal_White.4cace296597ae1e4503a6abbe83c1365.svg",
-    "static/media/TezexLogo.svg": "./static/media/TezexLogo.31a5b14146d93e4acab52211d38fd1a2.svg",
-    "index.html": "./index.html",
-    "static/media/TezosLogo_Horizontal_Black.svg": "./static/media/TezosLogo_Horizontal_Black.f648148a7de4e01dfc36929d0c46b88d.svg",
-    "static/media/liquiditySwapIcon.svg": "./static/media/liquiditySwapIcon.8f1e02de3095483209de196f8517490f.svg",
-    "static/media/swapIcon.svg": "./static/media/swapIcon.d8241838b1310217d74263c8853bf23f.svg",
-    "static/media/tzwalletlogo.svg": "./static/media/tzwalletlogo.298ee304ca29eec491be48cb5f4a1231.svg",
-    "static/media/copyIcon.svg": "./static/media/copyIcon.33a1802d976cc4a100936132200a4e17.svg",
-    "static/media/tezexIcon.svg": "./static/media/tezexIcon.3c8afc012f361860a7d52d042c689e72.svg",
-    "main.93d7bdb6.css.map": "./static/css/main.93d7bdb6.css.map",
-    "main.ee2bfe78.js.map": "./static/js/main.ee2bfe78.js.map",
-    "523.39173091.chunk.js.map": "./static/js/523.39173091.chunk.js.map"
+    "main.css": "/static/css/main.b2f66c96.css",
+    "main.js": "/static/js/main.0d6e3b4f.js",
+    "static/js/523.39173091.chunk.js": "/static/js/523.39173091.chunk.js",
+    "static/media/tick.svg": "/static/media/tick.298f5d82d1a70db591c85004b360e2d3.svg",
+    "static/media/TezosLogo_Horizontal_White.svg": "/static/media/TezosLogo_Horizontal_White.4cace296597ae1e4503a6abbe83c1365.svg",
+    "index.html": "/index.html",
+    "static/media/TezexLogo.svg": "/static/media/TezexLogo.31a5b14146d93e4acab52211d38fd1a2.svg",
+    "static/media/TezosLogo_Horizontal_Black.svg": "/static/media/TezosLogo_Horizontal_Black.f648148a7de4e01dfc36929d0c46b88d.svg",
+    "static/media/liquiditySwapIcon.svg": "/static/media/liquiditySwapIcon.8f1e02de3095483209de196f8517490f.svg",
+    "static/media/swapIcon.svg": "/static/media/swapIcon.d8241838b1310217d74263c8853bf23f.svg",
+    "static/media/tzwalletlogo.svg": "/static/media/tzwalletlogo.298ee304ca29eec491be48cb5f4a1231.svg",
+    "static/media/copyIcon.svg": "/static/media/copyIcon.33a1802d976cc4a100936132200a4e17.svg",
+    "static/media/tezexIcon.svg": "/static/media/tezexIcon.3c8afc012f361860a7d52d042c689e72.svg",
+    "main.b2f66c96.css.map": "/static/css/main.b2f66c96.css.map",
+    "main.0d6e3b4f.js.map": "/static/js/main.0d6e3b4f.js.map",
+    "523.39173091.chunk.js.map": "/static/js/523.39173091.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.93d7bdb6.css",
-    "static/js/main.ee2bfe78.js"
+    "static/css/main.b2f66c96.css",
+    "static/js/main.0d6e3b4f.js"
   ]
 }
