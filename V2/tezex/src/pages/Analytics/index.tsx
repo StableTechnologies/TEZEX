@@ -39,6 +39,7 @@ const CHART_LEFT = 10;
 const CHART_RIGHT = 10;
 const CHART_TOP = 18;
 const CHART_BOTTOM = 34;
+const rangeLabel = (range: AnalyticsRange) => (range === "MAX" ? "ALL" : range);
 
 const formatNumber = (value: number, maximumFractionDigits = 1) =>
   new Intl.NumberFormat("en-US", { maximumFractionDigits }).format(value);
@@ -49,7 +50,7 @@ const chartDate = (timestamp: number, range: AnalyticsRange) =>
     range === "24H"
       ? { hour: "numeric" }
       : range === "MAX"
-      ? { month: "short", year: "numeric" }
+      ? { month: "short", year: "numeric", timeZone: "UTC" }
       : { month: "short", day: "numeric" }
   ).format(timestamp);
 
@@ -58,7 +59,9 @@ const rangeBoundaryDate = (timestamp: number, range: AnalyticsRange) =>
     "en-US",
     range === "24H"
       ? { month: "short", day: "numeric", hour: "numeric" }
-      : range === "1Y" || range === "MAX"
+      : range === "MAX"
+      ? { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }
+      : range === "1Y"
       ? { month: "short", day: "numeric", year: "numeric" }
       : { month: "short", day: "numeric" }
   ).format(timestamp);
@@ -284,7 +287,7 @@ const AnalyticsChart: FC<ChartProps> = ({
           width="100%"
           role="img"
           tabIndex={0}
-          aria-label={`${metric} over ${range}, ${chartType} chart`}
+          aria-label={`${metric} over ${rangeLabel(range)}, ${chartType} chart`}
           onPointerMove={(event) =>
             points.length &&
             setHoverIndex(indexAt(event.clientX, event.currentTarget))
@@ -527,11 +530,8 @@ export const Analytics: FC = () => {
   );
 
   const selectMetric = useCallback(
-    (nextMetric: AnalyticsMetric) => {
-      setMetric(nextMetric);
-      if (range === "MAX" && nextMetric !== "TVL") setRange("1Y");
-    },
-    [range]
+    (nextMetric: AnalyticsMetric) => setMetric(nextMetric),
+    []
   );
 
   if (!isMainnet) {
@@ -597,10 +597,6 @@ export const Analytics: FC = () => {
     scope === "all"
       ? model.activity
       : model.activityByPool[scope] ?? model.activity;
-  const availableRanges =
-    metric === "TVL"
-      ? ANALYTICS_RANGES
-      : ANALYTICS_RANGES.filter((item) => item !== "MAX");
   const visiblePoints = selectedSeries.slice(
     Math.min(rangeWindow.start, Math.max(0, selectedSeries.length - 1)),
     Math.min(rangeWindow.end + 1, selectedSeries.length)
@@ -763,7 +759,7 @@ export const Analytics: FC = () => {
               role="group"
               aria-label="Chart range"
             >
-              {availableRanges.map((item) => (
+              {ANALYTICS_RANGES.map((item) => (
                 <button
                   key={item}
                   type="button"
@@ -771,7 +767,7 @@ export const Analytics: FC = () => {
                   aria-pressed={range === item}
                   onClick={() => selectRange(item)}
                 >
-                  {item}
+                  {rangeLabel(item)}
                 </button>
               ))}
             </div>

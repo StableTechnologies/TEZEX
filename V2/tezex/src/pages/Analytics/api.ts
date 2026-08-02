@@ -1,6 +1,11 @@
 import { NetworkInfo } from "../../contexts/network";
 import { Asset, Token } from "../../types/general";
 import { PoolConfig, PoolType } from "../../types/pools";
+import {
+  ANALYTICS_HISTORY,
+  ANALYTICS_HISTORY_CUTOFF,
+  AnalyticsHistoryPoint,
+} from "./history";
 
 export type AnalyticsRange = "24H" | "7D" | "30D" | "90D" | "6M" | "1Y" | "MAX";
 export type AnalyticsMetric = "Volume" | "TVL" | "Fees";
@@ -355,6 +360,59 @@ export const buildSwapSeries = (
   return { Volume: volume, Fees: fees };
 };
 
+const utcMonthStart = (timestamp: number) => {
+  const date = new Date(timestamp);
+  return Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1);
+};
+
+export const buildAllTimeSwapSeries = (
+  transactions: TzktTransaction[],
+  pools: PoolConfig[],
+  now: number,
+  feeRates: Map<string, number>,
+  requestedStart: number,
+  history: AnalyticsHistoryPoint[] = ANALYTICS_HISTORY
+) => {
+  const firstMonth = utcMonthStart(requestedStart);
+  const lastMonth = utcMonthStart(now);
+  const months: number[] = [];
+  for (let month = firstMonth; month <= lastMonth; ) {
+    months.push(month);
+    const cursor = new Date(month);
+    month = Date.UTC(cursor.getUTCFullYear(), cursor.getUTCMonth() + 1, 1);
+  }
+
+  const poolIds = new Set(pools.map((pool) => pool.id));
+  const poolByAddress = new Map(pools.map((pool) => [pool.address, pool]));
+  const indexByMonth = new Map(
+    months.map((timestamp, index) => [timestamp, index])
+  );
+  const volume = months.map((timestamp) => ({ timestamp, value: 0 }));
+  const fees = months.map((timestamp) => ({ timestamp, value: 0 }));
+
+  history.forEach((point) => {
+    if (!poolIds.has(point.poolId)) return;
+    const index = indexByMonth.get(Date.parse(`${point.month}T00:00:00Z`));
+    if (index === undefined) return;
+    volume[index].value += point.volumeXtz;
+    fees[index].value += point.volumeXtz * (feeRates.get(point.poolId) ?? 0);
+  });
+
+  transactions.forEach((transaction) => {
+    const pool = poolByAddress.get(transaction.target.address);
+    if (!pool) return;
+    const timestamp = new Date(transaction.timestamp).getTime();
+    if (timestamp < ANALYTICS_HISTORY_CUTOFF || timestamp > now) return;
+    const index = indexByMonth.get(utcMonthStart(timestamp));
+    if (index === undefined) return;
+    const transactionVolume = calculateSwapVolumeXtz(transaction, pool);
+    volume[index].value += transactionVolume;
+    fees[index].value += transactionVolume * (feeRates.get(pool.id) ?? 0);
+  });
+
+  return { Volume: volume, Fees: fees };
+};
+
 export const valueAt = (
   history: Pick<TzktBalancePoint, "timestamp" | "balance">[],
   timestamp: number
@@ -575,7 +633,10 @@ export const loadAnalytics = async (
   };
   const preliminaryHead = await headPromise;
   const now = new Date(preliminaryHead.timestamp).getTime();
-  const requestedSince = now - RANGE_CONFIG["1Y"].windowMs;
+  const requestedSince = Math.min(
+    now - RANGE_CONFIG["1Y"].windowMs,
+    ANALYTICS_HISTORY_CUTOFF
+  );
   const swapsPromise = async () => {
     const xtzToToken = await fetchTransactionHistory(
       addresses,
@@ -686,7 +747,13 @@ export const loadAnalytics = async (
         const requestedStart = range === "MAX" ? maximumStart : undefined;
         const series =
           range === "MAX"
-            ? { Volume: [], Fees: [] }
+            ? buildAllTimeSwapSeries(
+                swaps,
+                scopePools,
+                now,
+                feeRates,
+                maximumStart
+              )
             : buildSwapSeries(
                 swaps,
                 scopePools,

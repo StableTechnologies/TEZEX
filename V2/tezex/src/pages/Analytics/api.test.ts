@@ -1,7 +1,9 @@
 import { Token } from "../../types/general";
 import { PoolConfig, PoolType } from "../../types/pools";
+import { ANALYTICS_HISTORY, ANALYTICS_HISTORY_CUTOFF } from "./history";
 import {
   ANALYTICS_RANGES,
+  buildAllTimeSwapSeries,
   buildSwapSeries,
   calculateRemoveLiquidityValueXtz,
   calculateSwapVolumeXtz,
@@ -34,6 +36,20 @@ const transaction = (overrides: Partial<TzktTransaction>): TzktTransaction => ({
 });
 
 describe("analytics calculations", () => {
+  it("keeps the verified historical archive complete through its cutoff", () => {
+    const sumFor = (poolId: string) =>
+      ANALYTICS_HISTORY.filter((point) => point.poolId === poolId).reduce(
+        (sum, point) => sum + point.volumeXtz,
+        0
+      );
+
+    expect(ANALYTICS_HISTORY_CUTOFF).toBe(
+      new Date("2026-08-01T00:00:00Z").getTime()
+    );
+    expect(sumFor("xtz-tzbtc-sirius")).toBeCloseTo(341167267.387464, 5);
+    expect(sumFor("xtz-usdtz-tezex")).toBeCloseTo(29.156105, 5);
+  });
+
   it("uses the transferred tez amount for XTZ-to-token swaps", () => {
     const volume = calculateSwapVolumeXtz(
       transaction({
@@ -102,6 +118,41 @@ describe("analytics calculations", () => {
       expect(series.Volume).toHaveLength(RANGE_CONFIG[range].bucketCount);
       expect(series.Fees).toHaveLength(RANGE_CONFIG[range].bucketCount);
     });
+  });
+
+  it("merges archived and live swaps into a complete all-time series", () => {
+    const now = new Date("2026-08-15T00:00:00Z").getTime();
+    const series = buildAllTimeSwapSeries(
+      [
+        transaction({
+          amount: 4_000_000,
+          timestamp: "2026-08-02T12:00:00Z",
+          parameter: { entrypoint: "xtzToToken" },
+        }),
+      ],
+      [siriusPool],
+      now,
+      new Map([[siriusPool.id, 0.001]]),
+      new Date("2021-08-06T09:29:54Z").getTime(),
+      [
+        {
+          month: "2021-08-01",
+          poolId: siriusPool.id,
+          volumeXtz: 12,
+        },
+        {
+          month: "2021-08-01",
+          poolId: "another-pool",
+          volumeXtz: 100,
+        },
+      ]
+    );
+
+    expect(series.Volume).toHaveLength(61);
+    expect(series.Volume.reduce((sum, point) => sum + point.value, 0)).toBe(16);
+    expect(series.Fees.reduce((sum, point) => sum + point.value, 0)).toBe(
+      0.016
+    );
   });
 
   it("does not invent a flat balance before a pool's first on-chain sample", () => {
