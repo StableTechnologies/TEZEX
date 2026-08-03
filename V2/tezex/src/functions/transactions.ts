@@ -29,6 +29,12 @@ export const toExactNat = (
   value: BigNumber.Value,
   field = "contract amount"
 ): string => {
+  if (typeof value === "number" && !Number.isSafeInteger(value)) {
+    throw new Error(
+      `${field} must use a safe integer number or an exact decimal string`
+    );
+  }
+
   const amount = new BigNumber(value);
   if (!amount.isFinite() || !amount.isInteger() || amount.isNegative()) {
     throw new Error(`${field} must be a non-negative integer`);
@@ -323,11 +329,9 @@ export function tokenDecimalToMantissa(
 export function transferParamsToBeaconOp(
   transferParams: TransferParams
 ): PartialTezosTransactionOperation {
-  const amount = new BigNumber(
-    transferParams.amount as unknown as BigNumber.Value
-  );
+  const amount = transferParams.amount as unknown as BigNumber.Value;
   const amountInMutez = toExactNat(
-    transferParams.mutez ? amount : amount.times(MUTEZ_IN_TEZ),
+    transferParams.mutez ? amount : new BigNumber(amount).times(MUTEZ_IN_TEZ),
     "transaction amount"
   );
 

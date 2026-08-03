@@ -69,6 +69,25 @@ describe("exact transaction encoding", () => {
     expect(transferParamsToBeaconOp(params).amount).toBe("9007199254740993");
   });
 
+  it("rejects unsafe JavaScript numbers before precision is lost", () => {
+    expect(() => toExactNat(Number.MAX_SAFE_INTEGER + 1)).toThrow(
+      /safe integer/i
+    );
+
+    expect(() =>
+      transferParamsToBeaconOp({
+        to: "KT1-pool",
+        amount: Number.MAX_SAFE_INTEGER + 1,
+        mutez: true,
+      })
+    ).toThrow(/safe integer/i);
+  });
+
+  it("accepts the safe-number boundary and exact strings beyond it", () => {
+    expect(toExactNat(Number.MAX_SAFE_INTEGER)).toBe("9007199254740991");
+    expect(toExactNat("9007199254740993")).toBe("9007199254740993");
+  });
+
   it("converts tez to mutez without JavaScript number arithmetic", () => {
     const params = {
       to: "KT1-pool",
