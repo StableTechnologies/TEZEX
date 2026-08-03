@@ -4,6 +4,8 @@ import test from "node:test";
 import { Parser } from "@taquito/michel-codec";
 import { MichelsonMap, Schema } from "@taquito/michelson-encoder";
 import {
+    dexStorageType,
+    dexStorageTypeFA2,
     dexStorageTypeFA2Mod,
     dexStorageTypeMod,
     lqtStorageType,
@@ -27,7 +29,9 @@ function compiledStorageType(filename: string): object {
     return JSON.parse(JSON.stringify(storage.args[0])) as object;
 }
 
-test("deployment schemas match the compiled modified contracts", () => {
+test("deployment schemas match every compiled pool contract", () => {
+    assert.deepEqual(compiledStorageType("pool.tz"), dexStorageType);
+    assert.deepEqual(compiledStorageType("pool_fa2.tz"), dexStorageTypeFA2);
     assert.deepEqual(compiledStorageType("pool_mod.tz"), dexStorageTypeMod);
     assert.deepEqual(compiledStorageType("pool_fa2_mod.tz"), dexStorageTypeFA2Mod);
 });

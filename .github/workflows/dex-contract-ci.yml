@@ -39,6 +39,18 @@ jobs:
             -v "$RUNNER_TEMP/tezex-contracts:/out" \
             -w /project \
             ligolang/ligo:1.11.5 \
+            compile contract dex/contracts/dexter.mligo -o /out/pool.tz -D DEPLOY
+          docker run --rm \
+            -v "$PWD:/project" \
+            -v "$RUNNER_TEMP/tezex-contracts:/out" \
+            -w /project \
+            ligolang/ligo:1.11.5 \
+            compile contract dex/contracts/helpers/dexter_fa2.mligo -o /out/pool_fa2.tz -D DEPLOY
+          docker run --rm \
+            -v "$PWD:/project" \
+            -v "$RUNNER_TEMP/tezex-contracts:/out" \
+            -w /project \
+            ligolang/ligo:1.11.5 \
             compile contract dex/contracts/dexter_mod.mligo -o /out/pool_mod.tz -D DEPLOY
           docker run --rm \
             -v "$PWD:/project" \
@@ -50,10 +62,14 @@ jobs:
       - name: Verify checked-in Michelson artifacts
         run: |
           cmp "$RUNNER_TEMP/tezex-contracts/lqt.tz" dex/compiled_contracts/lqt.tz
+          cmp "$RUNNER_TEMP/tezex-contracts/pool.tz" dex/compiled_contracts/pool.tz
+          cmp "$RUNNER_TEMP/tezex-contracts/pool_fa2.tz" dex/compiled_contracts/pool_fa2.tz
           cmp "$RUNNER_TEMP/tezex-contracts/pool_mod.tz" dex/compiled_contracts/pool_mod.tz
           cmp "$RUNNER_TEMP/tezex-contracts/pool_fa2_mod.tz" dex/compiled_contracts/pool_fa2_mod.tz
           sha256sum \
             dex/compiled_contracts/lqt.tz \
+            dex/compiled_contracts/pool.tz \
+            dex/compiled_contracts/pool_fa2.tz \
             dex/compiled_contracts/pool_mod.tz \
             dex/compiled_contracts/pool_fa2_mod.tz
 
@@ -62,6 +78,18 @@ jobs:
           docker run --rm -v "$PWD:/project" -w /project
           ligolang/ligo:1.11.5
           run test dex/tests/lqt_fa12.test.mligo
+
+      - name: Test base FA1.2 pool
+        run: >-
+          docker run --rm -v "$PWD:/project" -w /project
+          ligolang/ligo:1.11.5
+          run test dex/tests/dexter_v2.test.mligo
+
+      - name: Test base FA2 pool
+        run: >-
+          docker run --rm -v "$PWD:/project" -w /project
+          ligolang/ligo:1.11.5
+          run test dex/tests/dexter_fa2.test.mligo
 
       - name: Test modified FA1.2 pool
         run: >-
