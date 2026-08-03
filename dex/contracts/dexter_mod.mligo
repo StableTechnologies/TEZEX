@@ -246,9 +246,11 @@ module Dexter = struct
   // =============================================================================
 
   // Modified pools originate inactive. The manager seeds the reserves and
-  // activates the pool only after the expected reserves and the LQT contract's
-  // actual total supply have been verified. Each user-funds entrypoint also
-  // checks the lifecycle and positive reserves so an emptied pool fails closed.
+  // activates the pool only after the expected XTZ/LQT reserves, the minimum
+  // token seed, and the LQT contract's actual total supply have been verified.
+  // Any tokens donated before synchronization remain in the pool for LPs and
+  // cannot prevent activation. Each user-funds entrypoint also checks the
+  // lifecycle and positive reserves so an emptied pool fails closed.
 
   [@entry]
   let addLiquidity (param : add_liquidity) (storage: storage) : result =
@@ -625,7 +627,10 @@ module Dexter = struct
             or param.expectedTokenPool = 0n
             or param.expectedLqtTotal = 0n
             or storage.xtzPool <> param.expectedXtzPool
-            or storage.tokenPool <> param.expectedTokenPool
+            (* Token contracts can transfer directly to this address while the
+               pool is inactive. Treat the configured token seed as a minimum
+               so donated excess benefits LPs instead of blocking activation. *)
+            or storage.tokenPool < param.expectedTokenPool
             or storage.lqtTotal <> param.expectedLqtTotal
             or Tezos.get_balance () <> param.expectedXtzPool
         then

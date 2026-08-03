@@ -18,6 +18,43 @@ let test_setup =
     Util.assert_token_balance lqt_orig.taddr test_name (Util.src ()) 1000000n
   end
 
+let test_activation_accepts_donated_token_excess =
+  let test_name = "test_activation_accepts_donated_token_excess" in
+  let () = Util.clean () in
+  let () = Test.State.set_source (Util.src ()) in
+  let tok_orig = Util.deploy_token 1001000001n (Util.src ()) in
+  let tok_addr = Test.Typed_address.to_address tok_orig.taddr in
+  let dex_orig =
+    Util.deploy_dex 1000000n (Util.src ()) tok_addr 0tez (Util.src ()) in
+  let dex_addr = Test.Typed_address.to_address dex_orig.taddr in
+  let lqt_orig = Util.deploy_lqt 1000000n (Util.src ()) dex_addr in
+  let transfer_param : LQT.LQT.transfer =
+    {
+     address_from = Util.src ();
+     address_to = dex_addr;
+     value = 1000001n;
+    } in
+  let _ : nat =
+    Test.Typed_address.transfer_exn
+      dex_orig.taddr
+      (SetLqtAddress (Test.Typed_address.to_address lqt_orig.taddr))
+      0tez in
+  let _ : nat =
+    Test.Typed_address.transfer_exn dex_orig.taddr (Default_ ()) 1tez in
+  let _ : nat =
+    Test.Typed_address.transfer_exn tok_orig.taddr (Transfer transfer_param) 0tez in
+  let _ : nat =
+    Test.Typed_address.transfer_exn dex_orig.taddr (UpdateTokenPool ()) 0tez in
+  let () = Util.activate_dex dex_orig.taddr 1tez 1000000n 1000000n in
+  let storage : DexterMod.Dexter.storage =
+    Test.Typed_address.get_storage dex_orig.taddr in
+  if
+    not storage.active
+    or storage.activationPending
+    or storage.tokenPool <> 1000001n
+  then failwith (test_name ^ ": donated excess did not remain in the pool")
+  else ()
+
 (*****************************************************************************)
 (* Add liquidity tests                                                       *)
 (*****************************************************************************)

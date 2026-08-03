@@ -282,13 +282,13 @@ let test_modified_fa2_only_manager_can_seed_inactive_pool =
     Dexter.error_ONLY_MANAGER_CAN_INITIALIZE_POOL
     result
 
-let test_modified_fa2_activation_rejects_unexpected_reserves =
-  let test_name = "test_modified_fa2_activation_rejects_unexpected_reserves" in
+let test_modified_fa2_activation_rejects_underfunded_reserves =
+  let test_name = "test_modified_fa2_activation_rejects_underfunded_reserves" in
   let (dex_orig, _, _) = prepare_full_dex 1000000n 0n in
   let activate_param : Dexter.activate_pool =
     {
      expectedXtzPool = 1tez;
-     expectedTokenPool = 999999n;
+     expectedTokenPool = 1000001n;
      expectedLqtTotal = 1000000n;
     } in
   let activate_entrypoint : Dexter.activate_pool contract =
@@ -301,6 +301,32 @@ let test_modified_fa2_activation_rejects_unexpected_reserves =
     Test.Typed_address.get_storage dex_orig.taddr in
   if storage.active or storage.activationPending
   then failwith (test_name ^ ": failed activation changed lifecycle state")
+  else ()
+
+let test_modified_fa2_activation_accepts_donated_token_excess =
+  let test_name =
+    "test_modified_fa2_activation_accepts_donated_token_excess" in
+  let (dex_orig, _, tok_orig) = prepare_full_dex 1000000n 0n in
+  let dex_addr = Test.Typed_address.to_address dex_orig.taddr in
+  let donation : FA2.transfer =
+    [
+      {
+       from_ = src ();
+       txs = [{to_ = dex_addr; token_id = 0n; amount = 1n}];
+      }
+    ] in
+  let _ : nat =
+    Test.Typed_address.transfer_exn tok_orig.taddr (Transfer donation) 0tez in
+  let _ : nat =
+    Test.Typed_address.transfer_exn dex_orig.taddr (UpdateTokenPool ()) 0tez in
+  let () = activate_dex dex_orig.taddr in
+  let storage : Dexter.storage =
+    Test.Typed_address.get_storage dex_orig.taddr in
+  if
+    not storage.active
+    or storage.activationPending
+    or storage.tokenPool <> 1000001n
+  then failwith (test_name ^ ": donated excess did not remain in the pool")
   else ()
 
 let test_modified_fa2_activation_verifies_lqt_total_supply =

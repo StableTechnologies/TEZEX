@@ -44,9 +44,11 @@ Decentralized Exchange (DEX) implementation for Tezos blockchain based on Dexter
 
 Modified pools originate inactive. Their manager must seed both reserves, link
 the LQT contract, synchronize the token balance, and call `activate` with the
-expected XTZ, token, and LQT totals. Activation also verifies the actual LQT
-total supply. Swap and liquidity entrypoints remain unavailable until all
-checks pass.
+expected XTZ and LQT totals and the minimum configured token seed. Tokens sent
+directly to the inactive pool before initialization are treated as an LP
+donation and cannot block activation. Activation also verifies the actual LQT
+total supply. Swap and liquidity entrypoints remain unavailable until all checks
+pass.
 
 ### Liquidity Token (lqt_fa12.mligo)
 - FA1.2 compliant token
@@ -133,6 +135,10 @@ For modified pools, the total swap fee is immutable: 25 bp remains with LPs and
 5 bp is accumulated for the protocol fee recipient. `MANAGER` is used as the
 initial recipient. It may be an originated multisig contract; the private-key
 signer only manages the inactive initialization window.
+
+The configured token seed is a minimum for modified-pool activation. Any tokens
+transferred directly to the pool before its initialization batch are included
+in `tokenPool` and benefit LPs rather than forcing the deployment to restart.
 
 ### 3. Deploy to Mainnet
 

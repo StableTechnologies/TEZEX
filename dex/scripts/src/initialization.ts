@@ -49,6 +49,8 @@ export function appendInitializationCalls<TBatch extends BatchLike>({
         next = next.withContractCall(
             dexContract.methodsObject.activate({
                 expectedXtzPool: seedXtz.toString(),
+                // The contract treats this as the minimum configured seed.
+                // Any tokens donated before updateTokenPool remain in the pool.
                 expectedTokenPool: seedToken,
                 expectedLqtTotal: lqtTotal,
             })

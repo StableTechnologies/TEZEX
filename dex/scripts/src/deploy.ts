@@ -26,6 +26,7 @@ import {
     toSafeNumber,
 } from "./amounts.js";
 import { appendInitializationCalls } from "./initialization.js";
+import { verifyAtLeast, verifyEqual } from "./verification.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -308,14 +309,6 @@ function toNatString(value: unknown, field: string): string {
     return BigInt((value as { toString(): string }).toString()).toString();
 }
 
-function verifyEqual(actual: string, expected: string, field: string): void {
-    if (actual !== expected) {
-        throw new Error(
-            `Deployment verification failed for ${field}: expected ${expected}, got ${actual}`
-        );
-    }
-}
-
 async function verifyDeployment(
     tezos: TezosToolkit,
     dexAddress: string,
@@ -333,7 +326,12 @@ async function verifyDeployment(
     );
 
     verifyEqual(toNatString(dexStorage.xtzPool, "DEX xtzPool"), config.seedAmount.xtz, "DEX xtzPool");
-    verifyEqual(toNatString(dexStorage.tokenPool, "DEX tokenPool"), config.seedAmount.token, "DEX tokenPool");
+    const dexTokenPool = toNatString(dexStorage.tokenPool, "DEX tokenPool");
+    if (config.poolType === "mod") {
+        verifyAtLeast(dexTokenPool, config.seedAmount.token, "DEX tokenPool");
+    } else {
+        verifyEqual(dexTokenPool, config.seedAmount.token, "DEX tokenPool");
+    }
     verifyEqual(toNatString(dexStorage.lqtTotal, "DEX lqtTotal"), expectedLqtTotal, "DEX lqtTotal");
     verifyEqual(
         toNatString(lqtStorage.total_supply, "LQT total_supply"),
@@ -376,7 +374,11 @@ async function verifyDeployment(
         config.tokenStandard,
         config.tokenId
     );
-    verifyEqual(dexTokenBalance.toString(), config.seedAmount.token, "DEX token balance");
+    if (config.poolType === "mod") {
+        verifyAtLeast(dexTokenBalance.toString(), dexTokenPool, "DEX token balance");
+    } else {
+        verifyEqual(dexTokenBalance.toString(), config.seedAmount.token, "DEX token balance");
+    }
 
     console.log("✓ On-chain addresses, reserves, balances, supply, and activation verified");
 }

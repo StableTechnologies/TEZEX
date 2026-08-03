@@ -228,7 +228,7 @@
                                                       DUP 5 ;
                                                       CAR ;
                                                       COMPARE ;
-                                                      NEQ ;
+                                                      LT ;
                                                       DUP 4 ;
                                                       CAR ;
                                                       DUP 6 ;
