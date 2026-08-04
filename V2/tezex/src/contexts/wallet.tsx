@@ -62,6 +62,7 @@ import {
   accountMatchesConfiguredNetwork,
   createConfiguredNetworkIdentity,
   createGuardedDAppClient,
+  createOperationRequestPolicy,
   networkIdentityFingerprint,
   WalletIdentityError,
 } from "../functions/walletIdentity";
@@ -533,20 +534,15 @@ export function WalletProvider(props: IWalletProvider) {
               );
             }
 
-            const allowedDestinations = Array.from(
-              new Set(
-                [
-                  submission.recipient,
-                  ...transaction.sendAsset.map((asset) => asset.address),
-                  ...transaction.receiveAsset.map((asset) => asset.address),
-                ].filter(Boolean)
-              )
+            const operationPolicy = createOperationRequestPolicy(
+              transaction,
+              adapter.poolConfig
             );
             const identityGuardedClient = createGuardedDAppClient({
               client,
               submission,
               transactionNetwork: transaction.network,
-              allowedDestinations,
+              operationPolicy,
               getRuntime: () => {
                 const currentNetwork = networkRef.current;
                 return {

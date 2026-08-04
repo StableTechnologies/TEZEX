@@ -20,6 +20,7 @@ import {
 import { IPoolAdapter, PoolType } from "../types/pools";
 import { PoolRegistry } from "../adapters/poolRegistry";
 import { WalletContext, WalletInfo, WalletProvider } from "./wallet";
+import { TRANSACTION_DEADLINE_MS } from "../functions/transactionSafety";
 
 const mockGetPoolAdapter = jest.fn();
 const mockGetBalance = jest.fn();
@@ -244,8 +245,14 @@ describe("WalletProvider account and network lifecycle", () => {
               destination: "KT1-generic-pool",
               amount: "1",
               parameters: {
-                entrypoint: "swap",
-                value: { string: "tz1-first-owner" },
+                entrypoint: "xtzToToken",
+                value: {
+                  owner: "tz1-first-owner",
+                  minimum: "1",
+                  deadline: new Date(
+                    Date.now() + TRANSACTION_DEADLINE_MS
+                  ).toISOString(),
+                },
               },
             },
           ],

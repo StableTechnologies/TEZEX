@@ -632,17 +632,22 @@ export class StableSwapAdapter implements IPoolAdapter {
     kit: ExecutionKit,
     userAddress: string,
     lpTokenAmount: BigNumber,
-    slippage: number
+    slippage: number,
+    quotedTokenAAmount?: BigNumber,
+    quotedTokenBAmount?: BigNumber
   ): Promise<string> {
     const { client, toolkit } = kit;
     try {
       const contract = await toolkit.contract.at(this.poolConfig.address);
       const deadline = getTxDeadline().toISOString();
 
-      const estimate = await this.estimateRemoveLiquidity(
-        toolkit,
-        lpTokenAmount
-      );
+      const estimate =
+        quotedTokenAAmount && quotedTokenBAmount
+          ? {
+              tokenAAmount: quotedTokenAAmount,
+              tokenBAmount: quotedTokenBAmount,
+            }
+          : await this.estimateRemoveLiquidity(toolkit, lpTokenAmount);
 
       const minAmounts = new Map<number, string>([
         [

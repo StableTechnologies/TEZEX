@@ -5,21 +5,36 @@ import {
   RequestOperationInput,
   TezosOperationType,
 } from "@airgap/beacon-dapp";
+import BigNumber from "bignumber.js";
 
-import type { TransactionSubmissionContext } from "../types/general";
+import {
+  Token,
+  TokenType,
+  Transaction,
+  TransactionSubmissionContext,
+  TransactionStatus,
+  TransactingComponent,
+} from "../types/general";
+import { PoolType, StablePoolConfig } from "../types/pools";
 import {
   accountMatchesConfiguredNetwork,
   ConfiguredNetworkIdentity,
   createConfiguredNetworkIdentity,
   createGuardedDAppClient,
+  createOperationRequestPolicy,
+  OperationRequestPolicy,
   WalletIdentityError,
   WalletSubmissionRuntime,
 } from "./walletIdentity";
+import { TRANSACTION_DEADLINE_MS } from "./transactionSafety";
 
 const owner = "tz1-generic-owner";
 const otherOwner = "tz1-other-owner";
 const pool = "KT1-generic-pool";
 const token = "KT1-generic-token";
+
+const deadline = () =>
+  new Date(Date.now() + TRANSACTION_DEADLINE_MS).toISOString();
 
 const mainnet = createConfiguredNetworkIdentity({
   type: NetworkType.MAINNET,
@@ -76,7 +91,7 @@ const validRequest = (): RequestOperationInput =>
         amount: "0",
         parameters: {
           entrypoint: "approve",
-          value: { string: pool },
+          value: { spender: pool, value: "10" },
         },
       },
       {
@@ -85,11 +100,31 @@ const validRequest = (): RequestOperationInput =>
         amount: "1",
         parameters: {
           entrypoint: "swap",
-          value: { string: owner },
+          value: { owner, minimum: "9", deadline: deadline() },
         },
       },
     ],
-  } as RequestOperationInput);
+  } as unknown as RequestOperationInput);
+
+const operationPolicy: OperationRequestPolicy = {
+  recipient: pool,
+  allowedDestinations: [pool, token],
+  operations: [
+    {
+      destination: token,
+      entrypoint: "approve",
+      amount: "0",
+      parameterValues: [pool, "10"],
+    },
+    {
+      destination: pool,
+      entrypoint: "swap",
+      amount: "1",
+      parameterValues: [owner, "9"],
+      hasDeadline: true,
+    },
+  ],
+};
 
 const clientWithAccount = (activeAccount: AccountInfo | undefined) => {
   const requestOperation = jest
@@ -109,7 +144,7 @@ const guardedRequest = async (options?: {
   runtime?: WalletSubmissionRuntime;
   network?: NetworkType;
   request?: RequestOperationInput;
-  allowedDestinations?: string[];
+  operationPolicy?: OperationRequestPolicy;
 }) => {
   const beacon = clientWithAccount(options?.activeAccount ?? account());
   const mismatch = jest.fn();
@@ -117,7 +152,7 @@ const guardedRequest = async (options?: {
     client: beacon.client,
     submission: options?.submission ?? submission,
     transactionNetwork: options?.network ?? NetworkType.MAINNET,
-    allowedDestinations: options?.allowedDestinations ?? [pool, token],
+    operationPolicy: options?.operationPolicy ?? operationPolicy,
     getRuntime: () => options?.runtime ?? runtime(),
     onMismatch: mismatch,
   });
@@ -184,7 +219,7 @@ describe("wallet submission identity", () => {
       client,
       submission,
       transactionNetwork: NetworkType.MAINNET,
-      allowedDestinations: [pool, token],
+      operationPolicy,
       getRuntime: () =>
         runtime({
           readChainId: async () => {
@@ -254,18 +289,221 @@ describe("wallet submission identity", () => {
     expect(request.requestOperation).not.toHaveBeenCalled();
   });
 
-  it("rejects a stale recipient or approval owner before the wallet request", async () => {
-    const staleOwnerRequest = validRequest();
-    const secondOperation = staleOwnerRequest.operationDetails[1];
-    if (secondOperation.kind === TezosOperationType.TRANSACTION) {
-      secondOperation.parameters = {
-        entrypoint: "swap",
-        value: { string: otherOwner },
-      };
-    }
-    const request = await guardedRequest({ request: staleOwnerRequest });
+  it.each([
+    {
+      name: "attached XTZ amount",
+      mutate: (request: RequestOperationInput) => {
+        const operation = request.operationDetails[1];
+        if (operation.kind === TezosOperationType.TRANSACTION) {
+          operation.amount = "9000000";
+        }
+      },
+    },
+    {
+      name: "entrypoint",
+      mutate: (request: RequestOperationInput) => {
+        const operation = request.operationDetails[1];
+        if (
+          operation.kind === TezosOperationType.TRANSACTION &&
+          operation.parameters
+        ) {
+          operation.parameters.entrypoint = "removeLiquidity";
+        }
+      },
+    },
+    {
+      name: "parameter amount",
+      mutate: (request: RequestOperationInput) => {
+        const operation = request.operationDetails[1];
+        if (operation.kind === TezosOperationType.TRANSACTION) {
+          operation.parameters = {
+            entrypoint: "swap",
+            value: {
+              owner,
+              minimum: "9000000",
+              deadline: deadline(),
+            } as never,
+          };
+        }
+      },
+    },
+    {
+      name: "recipient owner",
+      mutate: (request: RequestOperationInput) => {
+        const operation = request.operationDetails[1];
+        if (operation.kind === TezosOperationType.TRANSACTION) {
+          operation.parameters = {
+            entrypoint: "swap",
+            value: {
+              owner: otherOwner,
+              minimum: "9",
+              deadline: deadline(),
+            } as never,
+          };
+        }
+      },
+    },
+  ])("rejects a changed $name", async ({ mutate }) => {
+    const changedRequest = validRequest();
+    mutate(changedRequest);
+    const request = await guardedRequest({ request: changedRequest });
 
     await expect(request.result).rejects.toBeInstanceOf(WalletIdentityError);
     expect(request.requestOperation).not.toHaveBeenCalled();
+  });
+
+  it("rejects an additional same-contract operation", async () => {
+    const extraOperationRequest = validRequest();
+    extraOperationRequest.operationDetails.push({
+      kind: TezosOperationType.TRANSACTION,
+      destination: pool,
+      amount: "9000000",
+      parameters: {
+        entrypoint: "swap",
+        value: { owner, minimum: "9", deadline: deadline() } as never,
+      },
+    });
+    const request = await guardedRequest({ request: extraOperationRequest });
+
+    await expect(request.result).rejects.toBeInstanceOf(WalletIdentityError);
+    expect(request.requestOperation).not.toHaveBeenCalled();
+  });
+
+  it("validates FA2 action and token ID", async () => {
+    const fa2Policy: OperationRequestPolicy = {
+      recipient: pool,
+      allowedDestinations: [pool, token],
+      operations: [
+        {
+          destination: token,
+          entrypoint: "update_operators",
+          amount: "0",
+          parameterValues: [owner, pool, "7"],
+          operatorAction: "add_operator",
+        },
+      ],
+    };
+    const wrongTokenId = {
+      operationDetails: [
+        {
+          kind: TezosOperationType.TRANSACTION,
+          destination: token,
+          amount: "0",
+          parameters: {
+            entrypoint: "update_operators",
+            value: [
+              {
+                add_operator: {
+                  owner,
+                  operator: pool,
+                  token_id: 8,
+                },
+              },
+            ],
+          },
+        },
+      ],
+    } as unknown as RequestOperationInput;
+    const request = await guardedRequest({
+      request: wrongTokenId,
+      operationPolicy: fa2Policy,
+    });
+
+    await expect(request.result).rejects.toBeInstanceOf(WalletIdentityError);
+    expect(request.requestOperation).not.toHaveBeenCalled();
+  });
+
+  it("allows a strictly matched stable divest without an embedded owner", async () => {
+    const stablePool: StablePoolConfig = {
+      id: "stable",
+      name: "Stable",
+      type: PoolType.STABLE,
+      address: pool,
+      tokenA: Token.USDtz,
+      tokenB: Token.USDt,
+      lpToken: Token.LP_USDtzUSDt,
+      poolId: 3,
+      tokenAIdx: 0,
+      tokenBIdx: 1,
+    };
+    const amount = (value: string) =>
+      ({ mantissa: new BigNumber(value) } as never);
+    const stableTransaction = {
+      id: "stable-remove",
+      network: NetworkType.MAINNET,
+      component: TransactingComponent.REMOVE_LIQUIDITY,
+      poolId: stablePool.id,
+      sendAsset: [
+        {
+          name: Token.LP_USDtzUSDt,
+          label: "LP",
+          logo: "",
+          address: "KT1-lp",
+          decimals: 18,
+          type: TokenType.FA12,
+        },
+      ],
+      sendAmount: [amount("100")],
+      sendAssetBalance: [amount("100")],
+      receiveAsset: [
+        {
+          name: Token.USDtz,
+          label: "A",
+          logo: "",
+          address: "KT1-a",
+          decimals: 6,
+          type: TokenType.FA12,
+        },
+        {
+          name: Token.USDt,
+          label: "B",
+          logo: "",
+          address: "KT1-b",
+          decimals: 6,
+          type: TokenType.FA2,
+          tokenId: 7,
+        },
+      ],
+      receiveAmount: [amount("200"), amount("300")],
+      receiveAssetBalance: [amount("0"), amount("0")],
+      slippage: 1,
+      transactionStatus: TransactionStatus.PENDING,
+      submissionContext: submission,
+      lastModified: new Date(),
+      locked: false,
+    } as Transaction;
+    const stablePolicy = createOperationRequestPolicy(
+      stableTransaction,
+      stablePool
+    );
+    const request = await guardedRequest({
+      operationPolicy: stablePolicy,
+      request: {
+        operationDetails: [
+          {
+            kind: TezosOperationType.TRANSACTION,
+            destination: pool,
+            amount: "0",
+            parameters: {
+              entrypoint: "divest",
+              value: {
+                pool_id: 3,
+                shares: 100,
+                min_amounts: new Map([
+                  [0, 198],
+                  [1, 297],
+                ]),
+                deadline: deadline(),
+              },
+            },
+          },
+        ],
+      } as unknown as RequestOperationInput,
+    });
+
+    await expect(request.result).resolves.toEqual({
+      transactionHash: "operation-hash",
+    });
+    expect(request.requestOperation).toHaveBeenCalledTimes(1);
   });
 });
