@@ -1,4 +1,4 @@
-import { NetworkType } from "@airgap/beacon-sdk";
+import { DAppClient, NetworkType } from "@airgap/beacon-sdk";
 
 import {
   Asset,
@@ -17,6 +17,18 @@ export interface QuoteRequest {
   transactionId: string;
   revision: number;
   inputFingerprint: string;
+}
+
+export class QuoteSubmissionContextError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "QuoteSubmissionContextError";
+  }
+}
+
+export interface QuoteSubmissionRuntime {
+  context: QuoteContext;
+  readChainId: () => Promise<string>;
 }
 
 const assetFingerprint = (asset: Asset) => ({
@@ -110,6 +122,66 @@ export const hasFreshTransactionQuote = (
         createQuoteResultFingerprint(transaction, context) &&
       (!requireSubmissionReady || transaction.quote.preparedForSubmission)
   );
+
+const contextsMatch = (left: QuoteContext, right: QuoteContext): boolean =>
+  left.account === right.account &&
+  left.network === right.network &&
+  left.chainId === right.chainId;
+
+export const createQuoteGuardedDAppClient = (input: {
+  client: DAppClient;
+  transaction: Transaction;
+  getRuntime: () => QuoteSubmissionRuntime;
+}): DAppClient => {
+  const guardedClient = Object.create(input.client) as DAppClient;
+
+  guardedClient.requestOperation = async (request) => {
+    const runtimeBefore = input.getRuntime();
+    if (
+      !runtimeBefore.context.account ||
+      !hasFreshTransactionQuote(input.transaction, runtimeBefore.context, true)
+    ) {
+      throw new QuoteSubmissionContextError(
+        "The transaction quote no longer matches the active wallet context."
+      );
+    }
+
+    const chainId = await runtimeBefore.readChainId();
+    const activeAccount = await input.client.getActiveAccount();
+    const runtimeImmediatelyBeforeRequest = input.getRuntime();
+
+    if (
+      !contextsMatch(
+        runtimeBefore.context,
+        runtimeImmediatelyBeforeRequest.context
+      ) ||
+      chainId !== runtimeImmediatelyBeforeRequest.context.chainId ||
+      !activeAccount ||
+      activeAccount.address !==
+        runtimeImmediatelyBeforeRequest.context.account ||
+      activeAccount.network.type !==
+        runtimeImmediatelyBeforeRequest.context.network ||
+      !hasFreshTransactionQuote(
+        input.transaction,
+        runtimeImmediatelyBeforeRequest.context,
+        true
+      )
+    ) {
+      throw new QuoteSubmissionContextError(
+        "The wallet account or network changed during transaction preparation."
+      );
+    }
+
+    return input.client.requestOperation(request);
+  };
+
+  return guardedClient;
+};
+
+export const transactionResultMatchesActive = (
+  activeTransaction: { id: string } | undefined,
+  completedTransaction: { id: string }
+): boolean => activeTransaction?.id === completedTransaction.id;
 
 export const applyQuoteResult = (
   currentTransaction: Transaction | undefined,

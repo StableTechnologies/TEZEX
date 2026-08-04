@@ -36,12 +36,14 @@ import { WritableDraft } from "immer/dist/types/types-external";
 import { estimateWithAdapter } from "../functions/estimates";
 import {
   applyQuoteResult,
+  createQuoteGuardedDAppClient,
   createQuoteRequest,
   createTransactionQuote,
   hasFreshTransactionQuote,
   QuoteContext,
   QuoteRequest,
   quoteRequestMatches,
+  transactionResultMatchesActive,
 } from "../functions/quoteSafety";
 import {
   getStatusAfterBalanceCheck,
@@ -209,6 +211,8 @@ export function WalletProvider(props: IWalletProvider) {
     network: network.network,
     chainId: network.info.chainId,
   };
+  const networkRef = useRef(network);
+  networkRef.current = network;
 
   const [assetBalances, setAssetBalances] = useState<AssetBalance[]>(
     network.info.assets.map((asset) => {
@@ -428,10 +432,22 @@ export function WalletProvider(props: IWalletProvider) {
               );
             }
 
+            const guardedClient = createQuoteGuardedDAppClient({
+              client,
+              transaction,
+              getRuntime: () => {
+                const activeNetwork = networkRef.current;
+                return {
+                  context: { ...quoteContextRef.current },
+                  readChainId: () => activeNetwork.toolkit.rpc.getChainId(),
+                };
+              },
+            });
+
             const success = await processTransaction(
               transaction,
               address,
-              { toolkit: network.toolkit, client },
+              { toolkit: network.toolkit, client: guardedClient },
               {
                 onSubmitted: (opHash) => {
                   submittedHash = opHash;
@@ -540,7 +556,14 @@ export function WalletProvider(props: IWalletProvider) {
             }
           );
           setTransactions((draft) => {
-            draft[component] = updatedTransaction;
+            if (
+              transactionResultMatchesActive(
+                draft[component],
+                updatedTransaction
+              )
+            ) {
+              draft[component] = updatedTransaction;
+            }
           });
         }
       });

@@ -1,4 +1,9 @@
-import { NetworkType } from "@airgap/beacon-sdk";
+import {
+  AccountInfo,
+  DAppClient,
+  NetworkType,
+  TezosOperationType,
+} from "@airgap/beacon-sdk";
 import BigNumber from "bignumber.js";
 
 import {
@@ -12,10 +17,13 @@ import {
 } from "../types/general";
 import {
   applyQuoteResult,
+  createQuoteGuardedDAppClient,
   createQuoteRequest,
   hasFreshTransactionQuote,
   QuoteContext,
   quoteRequestMatches,
+  QuoteSubmissionContextError,
+  transactionResultMatchesActive,
 } from "./quoteSafety";
 
 const balance = (mantissa: string): Balance => {
@@ -197,5 +205,135 @@ describe("quote revision safety", () => {
       receiveAmount: [balance("199")] as Transaction["receiveAmount"],
     };
     expect(hasFreshTransactionQuote(changedMinimum, context, true)).toBe(false);
+  });
+
+  it("re-reads the account and chain immediately before the Beacon request", async () => {
+    const pendingTransaction = makeTransaction("2", "0", 3);
+    const request = createQuoteRequest(pendingTransaction, context, 3);
+    const preparedTransaction = applyQuoteResult(
+      pendingTransaction,
+      makeTransaction("2", "200", 3),
+      context,
+      request,
+      TransactionStatus.PENDING,
+      true
+    ) as Transaction;
+    const requestOperation = jest
+      .fn()
+      .mockResolvedValue({ transactionHash: "operation-hash" });
+    const getActiveAccount = jest.fn().mockResolvedValue({
+      address: context.account,
+      network: { type: context.network },
+    } as AccountInfo);
+    const client = {
+      getActiveAccount,
+      requestOperation,
+    } as unknown as DAppClient;
+    const guardedClient = createQuoteGuardedDAppClient({
+      client,
+      transaction: preparedTransaction,
+      getRuntime: () => ({
+        context,
+        readChainId: async () => context.chainId,
+      }),
+    });
+
+    await expect(
+      guardedClient.requestOperation({
+        operationDetails: [
+          {
+            kind: TezosOperationType.TRANSACTION,
+            destination: "KT1-pool",
+            amount: "1",
+          },
+        ],
+      })
+    ).resolves.toEqual({ transactionHash: "operation-hash" });
+    expect(getActiveAccount).toHaveBeenCalledTimes(1);
+    expect(requestOperation).toHaveBeenCalledTimes(1);
+  });
+
+  it("blocks a last-moment account switch before Beacon receives the operation", async () => {
+    const pendingTransaction = makeTransaction("2", "0", 3);
+    const request = createQuoteRequest(pendingTransaction, context, 3);
+    const preparedTransaction = applyQuoteResult(
+      pendingTransaction,
+      makeTransaction("2", "200", 3),
+      context,
+      request,
+      TransactionStatus.PENDING,
+      true
+    ) as Transaction;
+    const requestOperation = jest.fn();
+    const client = {
+      getActiveAccount: jest.fn().mockResolvedValue({
+        address: "tz1-other",
+        network: { type: context.network },
+      } as AccountInfo),
+      requestOperation,
+    } as unknown as DAppClient;
+    const guardedClient = createQuoteGuardedDAppClient({
+      client,
+      transaction: preparedTransaction,
+      getRuntime: () => ({
+        context,
+        readChainId: async () => context.chainId,
+      }),
+    });
+
+    await expect(
+      guardedClient.requestOperation({ operationDetails: [] })
+    ).rejects.toBeInstanceOf(QuoteSubmissionContextError);
+    expect(requestOperation).not.toHaveBeenCalled();
+  });
+
+  it("blocks a network switch during request preparation", async () => {
+    const pendingTransaction = makeTransaction("2", "0", 3);
+    const request = createQuoteRequest(pendingTransaction, context, 3);
+    const preparedTransaction = applyQuoteResult(
+      pendingTransaction,
+      makeTransaction("2", "200", 3),
+      context,
+      request,
+      TransactionStatus.PENDING,
+      true
+    ) as Transaction;
+    const requestOperation = jest.fn();
+    const client = {
+      getActiveAccount: jest.fn().mockResolvedValue({
+        address: context.account,
+        network: { type: context.network },
+      } as AccountInfo),
+      requestOperation,
+    } as unknown as DAppClient;
+    let activeContext = context;
+    const guardedClient = createQuoteGuardedDAppClient({
+      client,
+      transaction: preparedTransaction,
+      getRuntime: () => ({
+        context: activeContext,
+        readChainId: async () => {
+          activeContext = { ...context, chainId: "NetDifferent" };
+          return context.chainId;
+        },
+      }),
+    });
+
+    await expect(
+      guardedClient.requestOperation({ operationDetails: [] })
+    ).rejects.toBeInstanceOf(QuoteSubmissionContextError);
+    expect(requestOperation).not.toHaveBeenCalled();
+  });
+
+  it("does not apply an asynchronous result over a replacement transaction", () => {
+    const completed = makeTransaction("1", "100", 2);
+    const replacement = {
+      ...makeTransaction("2", "200", 3),
+      id: "replacement-transaction",
+    };
+
+    expect(transactionResultMatchesActive(completed, completed)).toBe(true);
+    expect(transactionResultMatchesActive(replacement, completed)).toBe(false);
+    expect(transactionResultMatchesActive(undefined, completed)).toBe(false);
   });
 });
