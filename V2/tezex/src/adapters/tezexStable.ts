@@ -19,6 +19,7 @@ import { PoolDataCache } from "../utils/poolDataCache";
 import { getTxDeadline, makeEstimationToolkit } from "../functions/util";
 import {
   buildApproveOp,
+  toExactNat,
   transferParamsToBeaconOp,
 } from "../functions/transactions";
 
@@ -409,7 +410,7 @@ export class StableSwapAdapter implements IPoolAdapter {
         : this.poolConfig.tokenB;
 
       const minWithSlippage = minOutputAmount
-        .times(1 - slippage / 100)
+        .minus(minOutputAmount.times(slippage).div(100))
         .integerValue(BigNumber.ROUND_DOWN);
 
       const fromAsset = PoolRegistry.getAsset(fromToken);
@@ -433,7 +434,7 @@ export class StableSwapAdapter implements IPoolAdapter {
           token: fromAsset,
           ownerAddress: userAddress,
           spenderAddress: this.poolConfig.address,
-          amount: inputAmount.toNumber(),
+          amount: inputAmount,
         })
       );
 
@@ -443,8 +444,11 @@ export class StableSwapAdapter implements IPoolAdapter {
             pool_id: this.poolConfig.poolId,
             idx_from: i,
             idx_to: j,
-            amount: inputAmount,
-            min_amount_out: minWithSlippage,
+            amount: toExactNat(inputAmount, "stable swap input"),
+            min_amount_out: toExactNat(
+              minWithSlippage,
+              "stable minimum output"
+            ),
             receiver: userAddress,
             referral: null,
             deadline,
@@ -507,7 +511,7 @@ export class StableSwapAdapter implements IPoolAdapter {
       const deadline = getTxDeadline().toISOString();
 
       const minLpWithSlippage = minLpTokens
-        .times(1 - slippage / 100)
+        .minus(minLpTokens.times(slippage).div(100))
         .integerValue(BigNumber.ROUND_DOWN);
 
       const allTransferParams: TransferParams[] = [];
@@ -545,7 +549,7 @@ export class StableSwapAdapter implements IPoolAdapter {
           token: assetA,
           ownerAddress: userAddress,
           spenderAddress: this.poolConfig.address,
-          amount: tokenAAmount.toNumber(),
+          amount: tokenAAmount,
         })
       );
       allTransferParams.push(
@@ -554,7 +558,7 @@ export class StableSwapAdapter implements IPoolAdapter {
           token: assetB,
           ownerAddress: userAddress,
           spenderAddress: this.poolConfig.address,
-          amount: tokenBAmount.toNumber(),
+          amount: tokenBAmount,
         })
       );
 
@@ -562,14 +566,20 @@ export class StableSwapAdapter implements IPoolAdapter {
         prim: "map",
         args: [{ prim: "nat" }, { prim: "nat" }],
       });
-      inAmounts.set(this.poolConfig.tokenAIdx, tokenAAmount);
-      inAmounts.set(this.poolConfig.tokenBIdx, tokenBAmount);
+      inAmounts.set(
+        this.poolConfig.tokenAIdx,
+        toExactNat(tokenAAmount, "stable token A deposit")
+      );
+      inAmounts.set(
+        this.poolConfig.tokenBIdx,
+        toExactNat(tokenBAmount, "stable token B deposit")
+      );
 
       allTransferParams.push(
         contract.methodsObject
           .invest({
             pool_id: this.poolConfig.poolId,
-            shares: minLpWithSlippage,
+            shares: toExactNat(minLpWithSlippage, "stable minimum LP shares"),
             in_amounts: inAmounts,
             deadline,
           })
@@ -634,25 +644,31 @@ export class StableSwapAdapter implements IPoolAdapter {
         lpTokenAmount
       );
 
-      const minAmounts = new Map<number, BigNumber>([
+      const minAmounts = new Map<number, string>([
         [
           this.poolConfig.tokenAIdx,
-          estimate.tokenAAmount
-            .times(1 - slippage / 100)
-            .integerValue(BigNumber.ROUND_DOWN),
+          toExactNat(
+            estimate.tokenAAmount
+              .minus(estimate.tokenAAmount.times(slippage).div(100))
+              .integerValue(BigNumber.ROUND_DOWN),
+            "stable minimum token A withdrawal"
+          ),
         ],
         [
           this.poolConfig.tokenBIdx,
-          estimate.tokenBAmount
-            .times(1 - slippage / 100)
-            .integerValue(BigNumber.ROUND_DOWN),
+          toExactNat(
+            estimate.tokenBAmount
+              .minus(estimate.tokenBAmount.times(slippage).div(100))
+              .integerValue(BigNumber.ROUND_DOWN),
+            "stable minimum token B withdrawal"
+          ),
         ],
       ]);
 
       const removeLiqParams = contract.methodsObject
         .divest({
           pool_id: this.poolConfig.poolId,
-          shares: lpTokenAmount,
+          shares: toExactNat(lpTokenAmount, "stable LP shares burned"),
           min_amounts: minAmounts,
           deadline,
         })
