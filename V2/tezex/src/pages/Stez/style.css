@@ -18,7 +18,7 @@
   min-height: 112px;
   margin-bottom: 22px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 230px;
+  grid-template-columns: minmax(0, 1fr) 270px;
   align-items: end;
   gap: 28px;
 }
@@ -71,10 +71,11 @@
 
 .stez-rate-summary strong {
   font-family: "Red Hat Mono", monospace;
-  font-size: clamp(24px, 3.5vw, 31px);
+  font-size: clamp(17px, 2.2vw, 21px);
   font-weight: 500;
   line-height: 1;
   letter-spacing: -0.04em;
+  white-space: nowrap;
 }
 
 .stez-rate-summary span {
@@ -540,10 +541,13 @@
 
 .stez-rate-panel > div:first-child strong {
   margin-top: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   font-family: "Red Hat Mono", monospace;
-  font-size: clamp(24px, 4vw, 31px);
+  font-size: clamp(18px, 2.8vw, 24px);
   font-weight: 500;
-  line-height: 1;
+  line-height: 1.15;
   letter-spacing: -0.04em;
 }
 
