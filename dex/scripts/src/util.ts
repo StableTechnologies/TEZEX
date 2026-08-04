@@ -35,18 +35,19 @@ export async function getTokenBalance(
     tokenAddress: string,
     owner: string,
     tokenStandard: string,
-    tokenId: number = 0
-): Promise<number> {
+    tokenId: string = "0"
+): Promise<bigint> {
     const contract = await tezos.contract.at(tokenAddress);
     const storage: any = await contract.storage();
 
     if (tokenStandard.toUpperCase() === 'FA2') {
         const key = { owner, token_id: tokenId };
         const balance = await storage.ledger.get(key);
-        return balance?.toNumber() ?? 0;
+        return BigInt(balance?.toString() ?? "0");
     }
 
     // FA1.2
     const balance = await storage.ledger.get(owner);
-    return balance.balance ?? 0;
+    const value = balance?.balance ?? balance ?? 0;
+    return BigInt(value.toString());
 }

@@ -18,6 +18,43 @@ let test_setup =
     Util.assert_token_balance lqt_orig.taddr test_name (Util.src ()) 1000000n
   end
 
+let test_activation_accepts_donated_token_excess =
+  let test_name = "test_activation_accepts_donated_token_excess" in
+  let () = Util.clean () in
+  let () = Test.State.set_source (Util.src ()) in
+  let tok_orig = Util.deploy_token 1001000001n (Util.src ()) in
+  let tok_addr = Test.Typed_address.to_address tok_orig.taddr in
+  let dex_orig =
+    Util.deploy_dex 1000000n (Util.src ()) tok_addr 0tez (Util.src ()) in
+  let dex_addr = Test.Typed_address.to_address dex_orig.taddr in
+  let lqt_orig = Util.deploy_lqt 1000000n (Util.src ()) dex_addr in
+  let transfer_param : LQT.LQT.transfer =
+    {
+     address_from = Util.src ();
+     address_to = dex_addr;
+     value = 1000001n;
+    } in
+  let _ : nat =
+    Test.Typed_address.transfer_exn
+      dex_orig.taddr
+      (SetLqtAddress (Test.Typed_address.to_address lqt_orig.taddr))
+      0tez in
+  let _ : nat =
+    Test.Typed_address.transfer_exn dex_orig.taddr (Default_ ()) 1tez in
+  let _ : nat =
+    Test.Typed_address.transfer_exn tok_orig.taddr (Transfer transfer_param) 0tez in
+  let _ : nat =
+    Test.Typed_address.transfer_exn dex_orig.taddr (UpdateTokenPool ()) 0tez in
+  let () = Util.activate_dex dex_orig.taddr 1tez 1000000n 1000000n in
+  let storage : DexterMod.Dexter.storage =
+    Test.Typed_address.get_storage dex_orig.taddr in
+  if
+    not storage.active
+    or storage.activationPending
+    or storage.tokenPool <> 1000001n
+  then failwith (test_name ^ ": donated excess did not remain in the pool")
+  else ()
+
 (*****************************************************************************)
 (* Add liquidity tests                                                       *)
 (*****************************************************************************)
@@ -204,7 +241,8 @@ let test_remove_liquidity_error_amount =
 (* XTZ to Token tests                                                        *)
 (*****************************************************************************)
 
-(* With zero fee results must be identical to original Dexter *)
+(* A 1 tez swap is priced at 30 bp total. Of the gross input, 500 mutez
+   (5 bp) accrues to the protocol and the remaining 25 bp stays with LPs. *)
 let test_xtz_to_token =
   let test_name = "test_xtz_to_token" in
   let (dex_orig, lqt_orig, tok_orig) = Util.setup_full_dex () in
@@ -217,11 +255,10 @@ let test_xtz_to_token =
   let _ : nat =
     Test.Typed_address.transfer_exn dex_orig.taddr (XtzToToken swap_param) 1tez in
   begin
-    Util.assert_dex_state dex_orig.taddr test_name 2tez 500752n 1000000n;
+    Util.assert_dex_state dex_orig.taddr test_name 1999500mutez 500752n 1000000n;
     Util.assert_token_balance tok_orig.taddr test_name (Util.src ()) 1000499248n;
     Util.assert_token_balance lqt_orig.taddr test_name (Util.src ()) 1000000n;
-    // No XTZ fee accumulated when fee_bp = 0
-    Util.assert_accumulated_fee_xtz dex_orig.taddr test_name 0mutez
+    Util.assert_accumulated_fee_xtz dex_orig.taddr test_name 500mutez
   end
 
 let test_xtz_to_token_error_deadline =
@@ -273,13 +310,10 @@ let test_xtz_to_token_error_updating_pool =
     DexterMod.Dexter.error_SELF_IS_UPDATING_TOKEN_POOL_MUST_BE_FALSE
     result
 
-(* With fee: only net XTZ enters the pool, fee is accumulated in XTZ
-   fee_bp = 50 (0.5%), amount = 1 tez = 1_000_000 mutez
-   protocol_fee = floor(1_000_000 * 50 / 10_000) = 5_000 mutez
-*)
+(* The protocol share is not charged on top of the 30 bp curve fee. *)
 let test_xtz_to_token_with_fee =
   let test_name = "test_xtz_to_token_with_fee" in
-  let (dex_orig, _, _) = Util.setup_full_dex_with_fee 50n in
+  let (dex_orig, _, _) = Util.setup_full_dex () in
   let swap_param : DexterMod.Dexter.xtz_to_token =
     {
      to_ = Util.src ();
@@ -289,20 +323,18 @@ let test_xtz_to_token_with_fee =
   let _ : nat =
     Test.Typed_address.transfer_exn dex_orig.taddr (XtzToToken swap_param) 1tez in
   begin
-    Util.assert_dex_state dex_orig.taddr test_name 1995000mutez 502005n 1000000n;
-    Util.assert_accumulated_fee_xtz dex_orig.taddr test_name 5000mutez
+    Util.assert_dex_state dex_orig.taddr test_name 1999500mutez 500752n 1000000n;
+    Util.assert_accumulated_fee_xtz dex_orig.taddr test_name 500mutez
   end
 
-(* minTokensBought is checked against the post-fee (net) amount *)
+(* minTokensBought is checked against the exact 30 bp quote. *)
 let test_xtz_to_token_min_tokens_checked_after_fee =
   let test_name = "test_xtz_to_token_min_tokens_checked_after_fee" in
-  let (dex_orig, _, _) = Util.setup_full_dex_with_fee 50n in
+  let (dex_orig, _, _) = Util.setup_full_dex () in
   let swap_param : DexterMod.Dexter.xtz_to_token =
     {
      to_ = Util.src ();
-     // Without fee would get 499_248; with 0.5% fee on input gets ~498_002,
-     // so requesting 499_248 must fail
-     minTokensBought = 499248n;
+     minTokensBought = 499249n;
      deadline = Util.future
     } in
   let result =
@@ -316,7 +348,8 @@ let test_xtz_to_token_min_tokens_checked_after_fee =
 (* Token to XTZ tests                                                        *)
 (*****************************************************************************)
 
-(* With zero fee results must be identical to original Dexter *)
+(* A 500,000 token swap is priced at 30 bp total and records 250 tokens
+   (5 bp) for the protocol. *)
 let test_token_to_xtz =
   let test_name = "test_token_to_xtz" in
   let (dex_orig, lqt_orig, tok_orig) = Util.setup_full_dex () in
@@ -330,12 +363,11 @@ let test_token_to_xtz =
   let _ : nat =
     Test.Typed_address.transfer_exn dex_orig.taddr (TokenToXtz swap_param) 0tez in
   begin
-    Util.assert_dex_state dex_orig.taddr test_name 667335mutez 1500000n 1000000n;
+    Util.assert_dex_state dex_orig.taddr test_name 667335mutez 1499750n 1000000n;
     Util.assert_token_balance tok_orig.taddr test_name (Util.src ()) 999500000n;
     Util.assert_token_balance lqt_orig.taddr test_name (Util.src ()) 1000000n;
-    // No fees accumulated when fee_bp = 0
     Util.assert_accumulated_fee_xtz dex_orig.taddr test_name 0mutez;
-    Util.assert_accumulated_fee_token dex_orig.taddr test_name 0n
+    Util.assert_accumulated_fee_token dex_orig.taddr test_name 250n
   end
 
 let test_token_to_xtz_error_deadline =
@@ -404,14 +436,11 @@ let test_token_to_xtz_error_updating_pool =
     DexterMod.Dexter.error_SELF_IS_UPDATING_TOKEN_POOL_MUST_BE_FALSE
     result
 
-(* With fee: protocol fee is taken in tokens before AMM
-   fee_bp = 100 (1%), tokensSold = 500_000
-   protocol_fee_token = floor(500_000 * 100 / 10_000) = 5_000 tokens
-   net_tokens_sold    = 495_000
-*)
+(* The 5 bp protocol allocation is removed from reserve accounting after the
+   gross input has been priced at the full 30 bp. *)
 let test_token_to_xtz_with_fee =
   let test_name = "test_token_to_xtz_with_fee" in
-  let (dex_orig, _, _) = Util.setup_full_dex_with_fee 100n in
+  let (dex_orig, _, _) = Util.setup_full_dex () in
   let swap_param : DexterMod.Dexter.token_to_xtz =
     {
      to_ = Util.src ();
@@ -422,23 +451,21 @@ let test_token_to_xtz_with_fee =
   let _ : nat =
     Test.Typed_address.transfer_exn dex_orig.taddr (TokenToXtz swap_param) 0tez in
   begin
-    // xtzPool decreases by xtz_bought, tokenPool increases by net_tokens_sold only
-    Util.assert_dex_state dex_orig.taddr test_name 669562mutez 1495000n 1000000n;
+    Util.assert_dex_state dex_orig.taddr test_name 667335mutez 1499750n 1000000n;
     // No XTZ fee - fee is collected in tokens
     Util.assert_accumulated_fee_xtz dex_orig.taddr test_name 0mutez;
-    // Token fee = 1% of 500_000 = 5_000 tokens
-    Util.assert_accumulated_fee_token dex_orig.taddr test_name 5000n
+    Util.assert_accumulated_fee_token dex_orig.taddr test_name 250n
   end
 
-(* minXtzBought is checked against the post-fee (net) XTZ amount *)
+(* minXtzBought is checked against the exact 30 bp quote. *)
 let test_token_to_xtz_min_xtz_checked_after_fee =
   let test_name = "test_token_to_xtz_min_xtz_checked_after_fee" in
-  let (dex_orig, _, _) = Util.setup_full_dex_with_fee 100n in
+  let (dex_orig, _, _) = Util.setup_full_dex () in
   let swap_param : DexterMod.Dexter.token_to_xtz =
     {
      to_ = Util.src ();
      tokensSold = 500000n;
-     minXtzBought = 332665mutez;
+     minXtzBought = 332666mutez;
      deadline = Util.future
     } in
   let result =
@@ -615,7 +642,7 @@ let test_token_to_token =
   let swap_param : DexterMod.Dexter.token_to_token =
     {
      outputDexterContract = Test.Typed_address.to_address dex_orig.taddr;
-     minTokensBought = 497997n;
+     minTokensBought = 497914n;
      to_ = Util.src ();
      tokensSold = 500000n;
      deadline = Util.future
@@ -623,9 +650,11 @@ let test_token_to_token =
   let _ : nat =
     Test.Typed_address.transfer_exn dex_orig.taddr (TokenToToken swap_param) 0tez in
   begin
-    Util.assert_dex_state dex_orig.taddr test_name 1tez 1002003n 1000000n;
-    Util.assert_token_balance tok_orig.taddr test_name (Util.src ()) 999997997n;
-    Util.assert_token_balance lqt_orig.taddr test_name (Util.src ()) 1000000n
+    Util.assert_dex_state dex_orig.taddr test_name 999834mutez 1001836n 1000000n;
+    Util.assert_token_balance tok_orig.taddr test_name (Util.src ()) 999997914n;
+    Util.assert_token_balance lqt_orig.taddr test_name (Util.src ()) 1000000n;
+    Util.assert_accumulated_fee_xtz dex_orig.taddr test_name 166mutez;
+    Util.assert_accumulated_fee_token dex_orig.taddr test_name 250n
   end
 
 let test_token_to_token_error_amount =
@@ -660,68 +689,6 @@ let test_token_to_token_error_deadline =
   Util.assert_error
     test_name
     DexterMod.Dexter.error_THE_CURRENT_TIME_MUST_BE_LESS_THAN_THE_DEADLINE
-    result
-
-(*****************************************************************************)
-(* setProtocolFee tests                                                      *)
-(*****************************************************************************)
-let test_set_protocol_fee =
-  let (dex_orig, _, _) = Util.setup_full_dex () in
-  let param : nat = 50n in
-  let _ : nat =
-    Test.Typed_address.transfer_exn dex_orig.taddr (SetProtocolFee param) 0tez in
-  let storage = Test.Typed_address.get_storage dex_orig.taddr in
-  Assert.assert (storage.protocol_fee_bp = 50n)
-
-let test_set_protocol_fee_zero =
-  let (dex_orig, _, _) = Util.setup_full_dex_with_fee 50n in
-  let param : nat = 0n in
-  let _ : nat =
-    Test.Typed_address.transfer_exn dex_orig.taddr (SetProtocolFee param) 0tez in
-  let storage = Test.Typed_address.get_storage dex_orig.taddr in
-  Assert.assert (storage.protocol_fee_bp = 0n)
-
-let test_set_protocol_fee_max =
-  let (dex_orig, _, _) = Util.setup_full_dex () in
-  let param : nat = 1000n in
-  let _ : nat =
-    Test.Typed_address.transfer_exn dex_orig.taddr (SetProtocolFee param) 0tez in
-  let storage = Test.Typed_address.get_storage dex_orig.taddr in
-  Assert.assert (storage.protocol_fee_bp = 1000n)
-
-let test_set_protocol_fee_error_not_manager =
-  let test_name = "test_set_protocol_fee_error_not_manager" in
-  let (dex_orig, _, _) = Util.setup_full_dex () in
-  let () = Test.State.set_source (Util.other ()) in
-  let param : nat = 50n in
-  let result = Test.Typed_address.transfer dex_orig.taddr (SetProtocolFee param) 0tez in
-  Util.assert_error
-    test_name
-    DexterMod.Dexter.error_ONLY_MANAGER_CAN_SET_PROTOCOL_FEE
-    result
-
-let test_set_protocol_fee_error_amount =
-  let test_name = "test_set_protocol_fee_error_amount" in
-  let (dex_orig, _, _) = Util.setup_full_dex () in
-  let param : nat = 50n in
-  let result = Test.Typed_address.transfer dex_orig.taddr (SetProtocolFee param) 1tez in
-  Util.assert_error test_name DexterMod.Dexter.error_AMOUNT_MUST_BE_ZERO result
-
-let test_set_protocol_fee_error_too_high =
-  let test_name = "test_set_protocol_fee_error_too_high" in
-  let (dex_orig, _, _) = Util.setup_full_dex () in
-  let param : nat = 1001n in
-  let result = Test.Typed_address.transfer dex_orig.taddr (SetProtocolFee param) 0tez in
-  Util.assert_error test_name DexterMod.Dexter.error_PROTOCOL_FEE_TOO_HIGH result
-
-let test_set_protocol_fee_error_updating_pool =
-  let test_name = "test_set_protocol_fee_error_updating_pool" in
-  let (dex_orig, _, _) = Util.setup_dex_with_updating_pool () in
-  let param : nat = 50n in
-  let result = Test.Typed_address.transfer dex_orig.taddr (SetProtocolFee param) 0tez in
-  Util.assert_error
-    test_name
-    DexterMod.Dexter.error_SELF_IS_UPDATING_TOKEN_POOL_MUST_BE_FALSE
     result
 
 (*****************************************************************************)
@@ -770,16 +737,15 @@ let test_set_protocol_fee_recipient_error_updating_pool =
 (* claimProtocolFeeXtz tests                                                 *)
 (*****************************************************************************)
 
-(* Basic XTZ fee claim after xtzToToken swap
-   fee_bp = 50 (0.5%), swap 1 tez → fee = 5_000 mutez *)
+(* Basic XTZ fee claim after xtzToToken swap: 5 bp of 1 tez = 500 mutez. *)
 let test_claim_protocol_fee_xtz =
   let test_name = "test_claim_protocol_fee_xtz" in
-  let (dex_orig, _, _) = Util.setup_full_dex_with_fee 50n in
+  let (dex_orig, _, _) = Util.setup_full_dex () in
   let swap_param : DexterMod.Dexter.xtz_to_token =
     { to_ = Util.src (); minTokensBought = 1n; deadline = Util.future } in
   let _ : nat =
     Test.Typed_address.transfer_exn dex_orig.taddr (XtzToToken swap_param) 1tez in
-  let () = Util.assert_accumulated_fee_xtz dex_orig.taddr test_name 5000mutez in
+  let () = Util.assert_accumulated_fee_xtz dex_orig.taddr test_name 500mutez in
   let balance_before = Test.Typed_address.get_balance dex_orig.taddr in
   let _ : nat =
     Test.Typed_address.transfer_exn dex_orig.taddr (ClaimProtocolFeeXtz ()) 0tez in
@@ -787,22 +753,22 @@ let test_claim_protocol_fee_xtz =
   let balance_after = Test.Typed_address.get_balance dex_orig.taddr in
   begin
     Assert.assert (storage.accumulated_protocol_fee_xtz = 0mutez);
-    Assert.assert (balance_before = balance_after + 5000mutez)
+    Assert.assert (balance_before = balance_after + 500mutez)
   end
 
 (* XTZ fee accumulates correctly over multiple swaps *)
 let test_claim_protocol_fee_xtz_multiple_swaps =
   let test_name = "test_claim_protocol_fee_xtz_multiple_swaps" in
-  let (dex_orig, _, _) = Util.setup_full_dex_with_fee 50n in
+  let (dex_orig, _, _) = Util.setup_full_dex () in
   let xtz_swap : DexterMod.Dexter.xtz_to_token =
     { to_ = Util.src (); minTokensBought = 1n; deadline = Util.future } in
-  // First swap: 1 tez — fee = floor(1_000_000 * 50 / 10_000) = 5_000 mutez
+  // First swap: floor(1_000_000 * 5 / 10_000) = 500 mutez
   let _ : nat =
     Test.Typed_address.transfer_exn dex_orig.taddr (XtzToToken xtz_swap) 1tez in
-  // Second swap: 500_000 mutez — fee = floor(500_000 * 50 / 10_000) = 2_500 mutez
+  // Second swap: floor(500_000 * 5 / 10_000) = 250 mutez
   let _ : nat =
     Test.Typed_address.transfer_exn dex_orig.taddr (XtzToToken xtz_swap) 500000mutez in
-  let () = Util.assert_accumulated_fee_xtz dex_orig.taddr test_name 7500mutez in
+  let () = Util.assert_accumulated_fee_xtz dex_orig.taddr test_name 750mutez in
   let _ : nat =
     Test.Typed_address.transfer_exn dex_orig.taddr (ClaimProtocolFeeXtz ()) 0tez in
   let storage = Test.Typed_address.get_storage dex_orig.taddr in
@@ -811,7 +777,7 @@ let test_claim_protocol_fee_xtz_multiple_swaps =
 (* Only the designated recipient can claim XTZ fee *)
 let test_claim_protocol_fee_xtz_error_not_recipient =
   let test_name = "test_claim_protocol_fee_xtz_error_not_recipient" in
-  let (dex_orig, _, _) = Util.setup_full_dex_with_fee 50n in
+  let (dex_orig, _, _) = Util.setup_full_dex () in
   let swap_param : DexterMod.Dexter.xtz_to_token =
     { to_ = Util.src (); minTokensBought = 1n; deadline = Util.future } in
   let _ : nat =
@@ -826,14 +792,14 @@ let test_claim_protocol_fee_xtz_error_not_recipient =
 (* Cannot claim XTZ fee when nothing has been accumulated *)
 let test_claim_protocol_fee_xtz_error_nothing_to_claim =
   let test_name = "test_claim_protocol_fee_xtz_error_nothing_to_claim" in
-  let (dex_orig, _, _) = Util.setup_full_dex () in // fee_bp = 0
+  let (dex_orig, _, _) = Util.setup_full_dex () in
   let result = Test.Typed_address.transfer dex_orig.taddr (ClaimProtocolFeeXtz ()) 0tez in
   Util.assert_error test_name DexterMod.Dexter.error_NO_PROTOCOL_FEE_TO_CLAIM result
 
 (* Cannot send XTZ when claiming *)
 let test_claim_protocol_fee_xtz_error_amount =
   let test_name = "test_claim_protocol_fee_xtz_error_amount" in
-  let (dex_orig, _, _) = Util.setup_full_dex_with_fee 50n in
+  let (dex_orig, _, _) = Util.setup_full_dex () in
   let swap_param : DexterMod.Dexter.xtz_to_token =
     { to_ = Util.src (); minTokensBought = 1n; deadline = Util.future } in
   let _ : nat =
@@ -844,7 +810,7 @@ let test_claim_protocol_fee_xtz_error_amount =
 (* Double claim: second attempt must fail after first succeeds *)
 let test_claim_protocol_fee_xtz_double_claim =
   let test_name = "test_claim_protocol_fee_xtz_double_claim" in
-  let (dex_orig, _, _) = Util.setup_full_dex_with_fee 50n in
+  let (dex_orig, _, _) = Util.setup_full_dex () in
   let swap_param : DexterMod.Dexter.xtz_to_token =
     { to_ = Util.src (); minTokensBought = 1n; deadline = Util.future } in
   let _ : nat =
@@ -867,7 +833,7 @@ let test_claim_protocol_fee_xtz_error_updating_pool =
 (* Changing recipient takes effect immediately for XTZ fee *)
 let test_claim_xtz_fee_after_recipient_change =
   let test_name = "test_claim_xtz_fee_after_recipient_change" in
-  let (dex_orig, _, _) = Util.setup_full_dex_with_fee 50n in
+  let (dex_orig, _, _) = Util.setup_full_dex () in
   let swap_param : DexterMod.Dexter.xtz_to_token =
     { to_ = Util.src (); minTokensBought = 1n; deadline = Util.future } in
   let _ : nat =
@@ -894,50 +860,47 @@ let test_claim_xtz_fee_after_recipient_change =
 (* claimProtocolFeeToken tests                                               *)
 (*****************************************************************************)
 
-(* Basic token fee claim after tokenToXtz swap
-   fee_bp = 100 (1%), tokensSold = 500_000 → fee = 5_000 tokens *)
+(* Basic token fee claim: 5 bp of 500,000 tokens = 250 tokens. *)
 let test_claim_protocol_fee_token =
   let test_name = "test_claim_protocol_fee_token" in
-  let (dex_orig, _, tok_orig) = Util.setup_full_dex_with_fee 100n in
+  let (dex_orig, _, tok_orig) = Util.setup_full_dex () in
   let swap_param : DexterMod.Dexter.token_to_xtz =
     { to_ = Util.src (); tokensSold = 500000n; minXtzBought = 1mutez; deadline = Util.future } in
   let _ : nat =
     Test.Typed_address.transfer_exn dex_orig.taddr (TokenToXtz swap_param) 0tez in
-  let () = Util.assert_accumulated_fee_token dex_orig.taddr test_name 5000n in
+  let () = Util.assert_accumulated_fee_token dex_orig.taddr test_name 250n in
   let _ : nat =
     Test.Typed_address.transfer_exn dex_orig.taddr (ClaimProtocolFeeToken ()) 0tez in
   let storage = Test.Typed_address.get_storage dex_orig.taddr in
   begin
     Assert.assert (storage.accumulated_protocol_fee_token = 0n) ; 
-    // Recipient receives 5_000 tokens back as fee
-    Util.assert_token_balance tok_orig.taddr test_name (Util.src ()) 999505000n
+    Util.assert_token_balance tok_orig.taddr test_name (Util.src ()) 999500250n
   end
 
 (* Token fee accumulates correctly over multiple swaps *)
 let test_claim_protocol_fee_token_multiple_swaps =
   let test_name = "test_claim_protocol_fee_token_multiple_swaps" in
-  let (dex_orig, _, tok_orig) = Util.setup_full_dex_with_fee 100n in
+  let (dex_orig, _, tok_orig) = Util.setup_full_dex () in
   let swap_param : DexterMod.Dexter.token_to_xtz =
     { to_ = Util.src (); tokensSold = 500000n; minXtzBought = 1mutez; deadline = Util.future } in
-  // First swap: fee = floor(500_000 * 100 / 10_000) = 5_000 tokens
+  // First swap: fee = floor(500_000 * 5 / 10_000) = 250 tokens
   let _ : nat =
     Test.Typed_address.transfer_exn dex_orig.taddr (TokenToXtz swap_param) 0tez in
-  // Second swap: fee = floor(500_000 * 100 / 10_000) = 5_000 tokens
+  // Second swap: fee = 250 tokens
   let _ : nat =
     Test.Typed_address.transfer_exn dex_orig.taddr (TokenToXtz swap_param) 0tez in
-  let () = Util.assert_accumulated_fee_token dex_orig.taddr test_name 10000n in
+  let () = Util.assert_accumulated_fee_token dex_orig.taddr test_name 500n in
   let _ : nat =
     Test.Typed_address.transfer_exn dex_orig.taddr (ClaimProtocolFeeToken ()) 0tez in
   let storage = Test.Typed_address.get_storage dex_orig.taddr in
   begin
     Assert.assert (storage.accumulated_protocol_fee_token = 0n) ;
-    // Recipient receives 10_000 tokens back as accumulated fee
-    Util.assert_token_balance tok_orig.taddr test_name (Util.src ()) 999010000n
+    Util.assert_token_balance tok_orig.taddr test_name (Util.src ()) 999000500n
   end
 (* Only the designated recipient can claim token fee *)
 let test_claim_protocol_fee_token_error_not_recipient =
   let test_name = "test_claim_protocol_fee_token_error_not_recipient" in
-  let (dex_orig, _, _) = Util.setup_full_dex_with_fee 100n in
+  let (dex_orig, _, _) = Util.setup_full_dex () in
   let swap_param : DexterMod.Dexter.token_to_xtz =
     { to_ = Util.src (); tokensSold = 500000n; minXtzBought = 1mutez; deadline = Util.future } in
   let _ : nat =
@@ -952,14 +915,14 @@ let test_claim_protocol_fee_token_error_not_recipient =
 (* Cannot claim token fee when nothing has been accumulated *)
 let test_claim_protocol_fee_token_error_nothing_to_claim =
   let test_name = "test_claim_protocol_fee_token_error_nothing_to_claim" in
-  let (dex_orig, _, _) = Util.setup_full_dex () in // fee_bp = 0
+  let (dex_orig, _, _) = Util.setup_full_dex () in
   let result = Test.Typed_address.transfer dex_orig.taddr (ClaimProtocolFeeToken ()) 0tez in
   Util.assert_error test_name DexterMod.Dexter.error_NO_PROTOCOL_FEE_TO_CLAIM result
 
 (* Cannot send XTZ when claiming token fee *)
 let test_claim_protocol_fee_token_error_amount =
   let test_name = "test_claim_protocol_fee_token_error_amount" in
-  let (dex_orig, _, _) = Util.setup_full_dex_with_fee 100n in
+  let (dex_orig, _, _) = Util.setup_full_dex () in
   let swap_param : DexterMod.Dexter.token_to_xtz =
     { to_ = Util.src (); tokensSold = 500000n; minXtzBought = 1mutez; deadline = Util.future } in
   let _ : nat =
@@ -970,7 +933,7 @@ let test_claim_protocol_fee_token_error_amount =
 (* Double claim: second attempt must fail after first succeeds *)
 let test_claim_protocol_fee_token_double_claim =
   let test_name = "test_claim_protocol_fee_token_double_claim" in
-  let (dex_orig, _, _) = Util.setup_full_dex_with_fee 100n in
+  let (dex_orig, _, _) = Util.setup_full_dex () in
   let swap_param : DexterMod.Dexter.token_to_xtz =
     { to_ = Util.src (); tokensSold = 500000n; minXtzBought = 1mutez; deadline = Util.future } in
   let _ : nat =
@@ -993,7 +956,7 @@ let test_claim_protocol_fee_token_error_updating_pool =
 (* Changing recipient takes effect immediately for token fee *)
 let test_claim_token_fee_after_recipient_change =
   let test_name = "test_claim_token_fee_after_recipient_change" in
-  let (dex_orig, _, _) = Util.setup_full_dex_with_fee 100n in
+  let (dex_orig, _, _) = Util.setup_full_dex () in
   let swap_param : DexterMod.Dexter.token_to_xtz =
     { to_ = Util.src (); tokensSold = 500000n; minXtzBought = 1mutez; deadline = Util.future } in
   let _ : nat =
@@ -1048,22 +1011,9 @@ let test_view_get_fee_bp =
     None -> failwith "get_fee_bp view failed"
   | Some (lp_fee, protocol_fee, total_fee) ->
       begin
-        Assert.assert (lp_fee = 30n);
-        Assert.assert (protocol_fee = 0n);
-        Assert.assert (total_fee = 30n + 0n)
-      end
-
-let test_view_get_fee_bp_with_fee =
-  let (dex_orig, _, _) = Util.setup_full_dex_with_fee 50n in
-  let dex_address = Test.Typed_address.to_address dex_orig.taddr in
-  let view_result : (nat * nat * nat) option = Tezos.View.call "get_fee_bp" () dex_address in
-  match view_result with
-    None -> failwith "get_fee_bp with fee view failed"
-  | Some (lp_fee, protocol_fee, total_fee) ->
-      begin
-        Assert.assert (lp_fee = 30n);
-        Assert.assert (protocol_fee = 50n);
-        Assert.assert (total_fee = 30n + 50n)
+        Assert.assert (lp_fee = 25n);
+        Assert.assert (protocol_fee = 5n);
+        Assert.assert (total_fee = 30n)
       end
 
 let test_view_quote_tez_to_token =
@@ -1076,14 +1026,13 @@ let test_view_quote_tez_to_token =
   | Some tokens_out -> Assert.assert (tokens_out = 499248n)
 
 let test_view_quote_tez_to_token_with_fee =
-  let (dex_orig, _, _) = Util.setup_full_dex_with_fee 50n in
+  let (dex_orig, _, _) = Util.setup_full_dex () in
   let dex_address = Test.Typed_address.to_address dex_orig.taddr in
   let view_result : nat option =
     Tezos.View.call "quote_tez_to_token" 1000000n dex_address in
   match view_result with
     None -> failwith "quote_tez_to_token view failed"
-  | Some tokens_out ->
-      Assert.assert (tokens_out < 499248n)
+  | Some tokens_out -> Assert.assert (tokens_out = 499248n)
 
 let test_view_quote_tez_to_token_zero =
   let (dex_orig, _, _) = Util.setup_full_dex () in
@@ -1104,14 +1053,13 @@ let test_view_quote_token_to_tez =
   | Some xtz_out -> Assert.assert (xtz_out = 332665n)
 
 let test_view_quote_token_to_tez_with_fee =
-  let (dex_orig, _, _) = Util.setup_full_dex_with_fee 100n in
+  let (dex_orig, _, _) = Util.setup_full_dex () in
   let dex_address = Test.Typed_address.to_address dex_orig.taddr in
   let view_result : nat option =
     Tezos.View.call "quote_token_to_tez" 500000n dex_address in
   match view_result with
     None -> failwith "quote_token_to_tez view failed"
-  | Some xtz_out ->
-      Assert.assert (xtz_out < 332665n)
+  | Some xtz_out -> Assert.assert (xtz_out = 332665n)
 
 let test_view_quote_token_to_tez_zero =
   let (dex_orig, _, _) = Util.setup_full_dex () in

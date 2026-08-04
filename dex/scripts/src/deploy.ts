@@ -20,6 +20,13 @@ import {
 import { Parser } from "@taquito/michel-codec";
 import { MichelsonMap, Schema } from "@taquito/michelson-encoder";
 import { getTokenBalance, prepareTokenTransfer } from "./util.js";
+import {
+    calculateInitialLqt,
+    formatMutez,
+    toSafeNumber,
+} from "./amounts.js";
+import { appendInitializationCalls } from "./initialization.js";
+import { verifyAtLeast, verifyEqual } from "./verification.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -48,7 +55,10 @@ async function deployLQT(tezos: TezosToolkit, dexAddress: string, config: FullCo
     const parser = new Parser();
     const parsedMichelson = parser.parseScript(lqtCode);
 
-    let lqtTotal = Math.floor(Math.sqrt(+config.seedAmount.xtz * +config.seedAmount.token));
+    const lqtTotal = calculateInitialLqt(
+        config.seedAmount.xtz,
+        config.seedAmount.token
+    );
 
     let metadata: MichelsonMap<string, string> = new MichelsonMap();
     metadata.set("", Buffer.from(config.metadata_uri!).toString("hex"));
@@ -58,7 +68,7 @@ async function deployLQT(tezos: TezosToolkit, dexAddress: string, config: FullCo
     token_info.set("", Buffer.from(config.token_metadata_uri!).toString("hex"));
     token_metadata.set(0, { token_id: 0, token_info });
 
-    let tokens: MichelsonMap<string, number> = new MichelsonMap();
+    let tokens: MichelsonMap<string, string> = new MichelsonMap();
     tokens.set(config.manager, lqtTotal);
 
     const storageSchema = new Schema(lqtStorageType);
@@ -84,7 +94,11 @@ async function deployLQT(tezos: TezosToolkit, dexAddress: string, config: FullCo
     return contract.address;
 }
 
-async function deployDEX(tezos: TezosToolkit, config: FullConfig): Promise<string> {
+async function deployDEX(
+    tezos: TezosToolkit,
+    config: FullConfig,
+    deploymentManager: string
+): Promise<string> {
     console.log("\nDeploying DEX contract...");
 
     const contractFile =
@@ -95,7 +109,10 @@ async function deployDEX(tezos: TezosToolkit, config: FullConfig): Promise<strin
     const parser = new Parser();
     const parsedMichelson = parser.parseScript(dexCode);
 
-    const lqtTotal = Math.floor(Math.sqrt(+config.seedAmount.xtz * +config.seedAmount.token));
+    const lqtTotal = calculateInitialLqt(
+        config.seedAmount.xtz,
+        config.seedAmount.token
+    );
 
     const storageSchema = new Schema(
         config.poolType === "mod"
@@ -103,21 +120,26 @@ async function deployDEX(tezos: TezosToolkit, config: FullConfig): Promise<strin
             : (config.tokenStandard === "FA2" ? dexStorageTypeFA2 : dexStorageType)
     );
     const dexStorage: DexStorage = {
-        tokenPool: 0,
-        xtzPool: 0,
+        tokenPool: "0",
+        xtzPool: "0",
         lqtTotal,
+        ...(config.poolType === "mod" && {
+            active: false,
+            activationPending: false,
+        }),
         selfIsUpdatingTokenPool: false,
         freezeBaker: false,
-        manager: config.manager,
+        // The signer manages only the inactive initialization window. The
+        // initialization batch transfers management to config.manager.
+        manager: deploymentManager,
         tokenAddress: config.tokenAddress,
         lqtAddress: "tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU",
         tokenId: config.tokenStandard === "FA2" ? config.tokenId : undefined,
 
         ...(config.poolType === "mod" && {
-            protocol_fee_bp: config.protocol_fee_bp!,
-            protocol_fee_recipient: config.protocol_fee_recipient!,
-            accumulated_protocol_fee_xtz: 0,
-            accumulated_protocol_fee_token: 0,
+            protocol_fee_recipient: config.manager,
+            accumulated_protocol_fee_xtz: "0",
+            accumulated_protocol_fee_token: "0",
         }),
     };
     const michelsonData = storageSchema.Encode(dexStorage);
@@ -134,18 +156,19 @@ async function deployDEX(tezos: TezosToolkit, config: FullConfig): Promise<strin
     return contract.address;
 }
 
-async function setLQTAddress(tezos: TezosToolkit, dexAddress: string, lqtAddress: string): Promise<void> {
-    console.log("\nSetting LQT address in DEX...");
-
-    const dex = await tezos.contract.at(dexAddress);
-    const op = await dex.methodsObject.setLqtAddress(lqtAddress).send();
-
-    console.log(`SetLqtAddress operation: ${op.hash}`);
-    await op.confirmation(1);
-    console.log("✓ LQT address set");
-}
-
-function saveDeploymentInfo(network: NetworkName, dexAddress: string, lqtAddress: string, tokenAddress: string): void {
+function saveDeploymentInfo(
+    network: NetworkName,
+    dexAddress: string,
+    lqtAddress: string,
+    tokenAddress: string,
+    initializationOperation: string,
+    deploymentManager: string,
+    config: FullConfig
+): void {
+    const lqtTotal = calculateInitialLqt(
+        config.seedAmount.xtz,
+        config.seedAmount.token
+    );
     const deploymentInfo = {
         network: network,
         timestamp: new Date().toISOString(),
@@ -153,6 +176,20 @@ function saveDeploymentInfo(network: NetworkName, dexAddress: string, lqtAddress
             dex: dexAddress,
             lqt: lqtAddress,
             token: tokenAddress,
+        },
+        initializationOperation,
+        configuration: {
+            manager: config.manager,
+            deploymentManager,
+            tokenStandard: config.tokenStandard,
+            tokenId: config.tokenId,
+            poolType: config.poolType,
+            seedAmount: config.seedAmount,
+            lqtTotal,
+            lpFeeBp: config.poolType === "mod" ? 25 : undefined,
+            protocolFeeBp: config.poolType === "mod" ? 5 : undefined,
+            totalFeeBp: config.poolType === "mod" ? 30 : undefined,
+            protocolFeeRecipient: config.poolType === "mod" ? config.manager : undefined,
         },
     };
 
@@ -176,15 +213,16 @@ async function checkBalance(config: FullConfig, tezos: TezosToolkit): Promise<vo
     const pkh = await tezos.signer.publicKeyHash();
     const balance = await tezos.tz.getBalance(pkh);
 
-    const seedXtz = config.seedAmount.xtz;
-    const seedToken = config.seedAmount.token;
+    const seedXtz = BigInt(config.seedAmount.xtz);
+    const seedToken = BigInt(config.seedAmount.token);
+    const balanceMutez = BigInt(balance.toString());
 
     // Check if balance is sufficient (seed amount + 2 XTZ buffer for fees)
-    const requiredBalance = seedXtz + 2_000_000;
-    if (balance.toNumber() < requiredBalance) {
+    const requiredBalance = seedXtz + 2_000_000n;
+    if (balanceMutez < requiredBalance) {
         throw new Error(
-            `Insufficient XTZ balance (${balance.toNumber()} XTZ). ` +
-            `Required: ${requiredBalance} XTZ. ` +
+            `Insufficient XTZ balance (${balanceMutez} mutez). ` +
+            `Required: ${requiredBalance} mutez. ` +
             `Please fund the account ${pkh} on ${config.name} network.`
         );
     }
@@ -207,56 +245,142 @@ async function checkBalance(config: FullConfig, tezos: TezosToolkit): Promise<vo
     }
 
     console.log(`Balance check passed:`);
-    console.log(`  XTZ: ${balance.toNumber() / 1_000_000} / ${requiredBalance / 1_000_000} required`);
+    console.log(
+        `  XTZ: ${formatMutez(balanceMutez.toString())} / ` +
+        `${formatMutez(requiredBalance.toString())} required`
+    );
     console.log(`  Tokens: ${tokenBalance} / ${seedToken} required`);
 }
 
-async function updateXtzPool(tezos: TezosToolkit, dex_address: string, config: FullConfig) {
-    console.log("\nUpdating XTZ pool...");
-    console.log(`Sending ${config.seedAmount.xtz} XTZ to DEX at ${dex_address}`);
-
-    const contract = await tezos.contract.at(dex_address);
-    const op = await contract.methodsObject.default().send({
-        amount: +config.seedAmount.xtz,
-        mutez: true,
-    });
-
-    console.log(`XTZ pool update operation: ${op.hash}`);
-    await op.confirmation(1);
-    console.log("✓ XTZ pool updated successfully");
-}
-
-async function updateTokenPool(tezos: TezosToolkit, dex_address: string, config: FullConfig) {
-    console.log("\nUpdating Token pool...");
+async function initializePool(
+    tezos: TezosToolkit,
+    dexAddress: string,
+    lqtAddress: string,
+    config: FullConfig
+): Promise<string> {
+    console.log("\nInitializing pool atomically...");
     const managerAddress = await tezos.signer.publicKeyHash();
-    console.log(`Transferring ${config.seedAmount.token} tokens from ${managerAddress} to DEX`);
 
-    const dex_contract = await tezos.contract.at(dex_address);
-    const token_contract = await tezos.contract.at(config.tokenAddress);
+    const dexContract = await tezos.contract.at(dexAddress);
+    const tokenContract = await tezos.contract.at(config.tokenAddress);
 
     const transferParams = prepareTokenTransfer(config.tokenStandard, {
         from: managerAddress,
-        to: dex_address,
+        to: dexAddress,
         amount: config.seedAmount.token,
         tokenId: config.tokenStandard === "FA2" ? config.tokenId : undefined,
     });
 
-    // First transfer token to DEX contract
-    const transferOp = await token_contract.methodsObject
-        .transfer(transferParams.transfer)
-        .send();
+    const batch = appendInitializationCalls({
+        batch: tezos.contract.batch(),
+        dexContract,
+        tokenContract,
+        tokenTransfer: transferParams.transfer,
+        lqtAddress,
+        seedXtz: toSafeNumber(config.seedAmount.xtz, "SEED_XTZ"),
+        seedToken: config.seedAmount.token,
+        lqtTotal: calculateInitialLqt(
+            config.seedAmount.xtz,
+            config.seedAmount.token
+        ),
+        poolType: config.poolType,
+        finalManager: config.manager,
+    });
 
-    console.log(`Token transfer operation: ${transferOp.hash}`);
-    await transferOp.confirmation(1);
-    console.log("✓ Tokens transferred to DEX");
+    const op = await batch.send();
+    console.log(`Pool initialization operation: ${op.hash}`);
+    await op.confirmation(1);
+    console.log(
+        config.poolType === "mod"
+            ? "✓ Pool funded, activated, and transferred to final manager"
+            : "✓ Pool funded and transferred to final manager"
+    );
+    return op.hash;
+}
 
-    // Then update token pool in DEX
-    console.log("Calling updateTokenPool on DEX...");
-    const updateOp = await dex_contract.methodsObject.updateTokenPool().send();
+function toNatString(value: unknown, field: string): string {
+    if (
+        value === null
+        || value === undefined
+        || typeof (value as { toString?: unknown }).toString !== "function"
+    ) {
+        throw new Error(`Missing numeric field ${field} during deployment verification`);
+    }
+    return BigInt((value as { toString(): string }).toString()).toString();
+}
 
-    console.log(`Token pool update operation: ${updateOp.hash}`);
-    await updateOp.confirmation(1);
-    console.log("✓ Token pool updated successfully");
+async function verifyDeployment(
+    tezos: TezosToolkit,
+    dexAddress: string,
+    lqtAddress: string,
+    config: FullConfig
+): Promise<void> {
+    console.log("\nVerifying initialized on-chain state...");
+    const dexContract = await tezos.contract.at(dexAddress);
+    const lqtContract = await tezos.contract.at(lqtAddress);
+    const dexStorage: any = await dexContract.storage();
+    const lqtStorage: any = await lqtContract.storage();
+    const expectedLqtTotal = calculateInitialLqt(
+        config.seedAmount.xtz,
+        config.seedAmount.token
+    );
+
+    verifyEqual(toNatString(dexStorage.xtzPool, "DEX xtzPool"), config.seedAmount.xtz, "DEX xtzPool");
+    const dexTokenPool = toNatString(dexStorage.tokenPool, "DEX tokenPool");
+    if (config.poolType === "mod") {
+        verifyAtLeast(dexTokenPool, config.seedAmount.token, "DEX tokenPool");
+    } else {
+        verifyEqual(dexTokenPool, config.seedAmount.token, "DEX tokenPool");
+    }
+    verifyEqual(toNatString(dexStorage.lqtTotal, "DEX lqtTotal"), expectedLqtTotal, "DEX lqtTotal");
+    verifyEqual(
+        toNatString(lqtStorage.total_supply, "LQT total_supply"),
+        expectedLqtTotal,
+        "LQT total_supply"
+    );
+
+    if (dexStorage.manager !== config.manager) {
+        throw new Error("Deployment verification failed for DEX manager");
+    }
+    if (dexStorage.tokenAddress !== config.tokenAddress) {
+        throw new Error("Deployment verification failed for DEX token address");
+    }
+    if (dexStorage.lqtAddress !== lqtAddress) {
+        throw new Error("Deployment verification failed for DEX LQT address");
+    }
+    if (lqtStorage.admin !== dexAddress) {
+        throw new Error("Deployment verification failed for LQT administrator");
+    }
+    if (
+        config.tokenStandard === "FA2"
+        && toNatString(dexStorage.tokenId, "DEX tokenId") !== config.tokenId
+    ) {
+        throw new Error("Deployment verification failed for DEX token ID");
+    }
+    if (
+        config.poolType === "mod"
+        && (dexStorage.active !== true || dexStorage.activationPending !== false)
+    ) {
+        throw new Error("Deployment verification failed for pool activation state");
+    }
+
+    const dexXtzBalance = await tezos.tz.getBalance(dexAddress);
+    verifyEqual(dexXtzBalance.toString(), config.seedAmount.xtz, "DEX XTZ balance");
+
+    const dexTokenBalance = await getTokenBalance(
+        tezos,
+        config.tokenAddress,
+        dexAddress,
+        config.tokenStandard,
+        config.tokenId
+    );
+    if (config.poolType === "mod") {
+        verifyAtLeast(dexTokenBalance.toString(), dexTokenPool, "DEX token balance");
+    } else {
+        verifyEqual(dexTokenBalance.toString(), config.seedAmount.token, "DEX token balance");
+    }
+
+    console.log("✓ On-chain addresses, reserves, balances, supply, and activation verified");
 }
 
 async function main(): Promise<void> {
@@ -277,10 +401,9 @@ async function main(): Promise<void> {
 
     await checkBalance(config, tezos);
 
-    const managerAddress = config.manager || pkh;
-
     console.log(`Token: ${config.tokenAddress}`);
-    console.log(`Manager: ${managerAddress}`);
+    console.log(`Temporary deployment manager: ${pkh}`);
+    console.log(`Final manager and fee recipient: ${config.manager}`);
     console.log(`Seed XTZ: ${config.seedAmount.xtz} mutez`);
     console.log(`Seed Tokens: ${config.seedAmount.token} tokens`);
 
@@ -290,15 +413,21 @@ async function main(): Promise<void> {
     }
 
     try {
-        const dexAddress = await deployDEX(tezos, config);
+        const dexAddress = await deployDEX(tezos, config, pkh);
         const lqtAddress = await deployLQT(tezos, dexAddress, config);
         await new Promise((resolve) => setTimeout(resolve, 5000));
-        await setLQTAddress(tezos, dexAddress, lqtAddress);
-        await new Promise((resolve) => setTimeout(resolve, 5000));
-        await updateXtzPool(tezos, dexAddress, config);
-        await new Promise((resolve) => setTimeout(resolve, 5000));
-        await updateTokenPool(tezos, dexAddress, config);
-        saveDeploymentInfo(networkName, dexAddress, lqtAddress, config.tokenAddress);
+        const initializationOperation =
+            await initializePool(tezos, dexAddress, lqtAddress, config);
+        await verifyDeployment(tezos, dexAddress, lqtAddress, config);
+        saveDeploymentInfo(
+            networkName,
+            dexAddress,
+            lqtAddress,
+            config.tokenAddress,
+            initializationOperation,
+            pkh,
+            config
+        );
 
         console.log("\nDeployment complete");
         console.log(`DEX: ${dexAddress}`);

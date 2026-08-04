@@ -36,9 +36,19 @@ Decentralized Exchange (DEX) implementation for Tezos blockchain based on Dexter
 - **Views**: On-chain views for quotes and pool state
   - `get_reserves`: Get current pool reserves
   - `get_lqt_total`: Get total liquidity tokens
-  - `get_fee_bp`: Get fee in basis points (30 = 0.3%)
+  - `get_fee_bp`: Get the immutable LP, protocol, and total fees in basis points
+    `(25, 5, 30)`
+  - `is_active`: Check whether a modified pool has completed verified initialization
   - `quote_tez_to_token`: Calculate XTZ → Token swap output
   - `quote_token_to_tez`: Calculate Token → XTZ swap output
+
+Modified pools originate inactive. Their manager must seed both reserves, link
+the LQT contract, synchronize the token balance, and call `activate` with the
+expected XTZ and LQT totals and the minimum configured token seed. Tokens sent
+directly to the inactive pool before initialization are treated as an LP
+donation and cannot block activation. Activation also verifies the actual LQT
+total supply. Swap and liquidity entrypoints remain unavailable until all checks
+pass.
 
 ### Liquidity Token (lqt_fa12.mligo)
 - FA1.2 compliant token
@@ -85,6 +95,10 @@ ligo compile contract ./contracts/dexter.mligo -o ./compiled_contracts/pool.tz -
 # Compile DEX contract with underlying FA2
 ligo compile contract contracts/dexter.mligo -o ./compiled_contracts/pool_fa2.tz -D DEPLOY,FA2 --no-warn
 
+# Compile modified DEX contracts
+ligo compile contract ./contracts/dexter_mod.mligo -o ./compiled_contracts/pool_mod.tz -D DEPLOY --no-warn
+ligo compile contract ./contracts/dexter_mod.mligo -o ./compiled_contracts/pool_fa2_mod.tz -D DEPLOY,FA2 --no-warn
+
 # Compile LQT contract
 ligo compile contract ./contracts/lqt_fa12.mligo -o ./compiled_contracts/lqt.tz --no-warn
 ```
@@ -95,12 +109,13 @@ ligo compile contract ./contracts/lqt_fa12.mligo -o ./compiled_contracts/lqt.tz 
 npm run deploy:testnet
 ```
 
-**NOTE:** initial LQT amount will be calculated using the next formula:
+**NOTE:** the initial LQT amount is calculated with arbitrary-precision integer
+math using the following formula, rounded down:
 
 ```
 lqt = sqrt(xtz_seed * token_seed)
 ``` 
-This amount will be minted to **MANAGER** address (see .env.example)
+This amount will be minted to the final **MANAGER** address (see .env.example).
 Consider burning some initial liquidity (sending to a null address) to ensure the pool is never fully depleted.
 
 
@@ -108,10 +123,22 @@ This will:
 1. Check deployer's XTZ and token balance
 2. Deploy DEX contract
 3. Deploy LQT contract (with DEX as admin)
-4. Link LQT address to DEX
-5. Update DEX contract XTZ pool
-6. Update DEX contract Token pool
-7. Save deployment info to `deployments/testnet-latest.json`
+4. In one atomic operation group, link the LQT address, fund both reserves,
+   synchronize the token pool, activate a modified pool, and transfer DEX
+   management from the deployment signer to `MANAGER`
+5. Verify the resulting on-chain addresses, reserves, balances, LQT supply, and
+   activation state
+6. Save the exact integer configuration and initialization operation hash to
+   `deployments/testnet-latest.json`
+
+For modified pools, the total swap fee is immutable: 25 bp remains with LPs and
+5 bp is accumulated for the protocol fee recipient. `MANAGER` is used as the
+initial recipient. It may be an originated multisig contract; the private-key
+signer only manages the inactive initialization window.
+
+The configured token seed is a minimum for modified-pool activation. Any tokens
+transferred directly to the pool before its initialization batch are included
+in `tokenPool` and benefit LPs rather than forcing the deployment to restart.
 
 ### 3. Deploy to Mainnet
 

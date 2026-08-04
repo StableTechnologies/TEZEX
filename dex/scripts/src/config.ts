@@ -1,5 +1,11 @@
 import dotenv from "dotenv";
 import type { NetworkName } from "./types.ts";
+import { parseNat } from "./amounts.js";
+import {
+    ValidationResult,
+    validateAddress,
+    validateContractAddress,
+} from "@taquito/utils";
 
 dotenv.config();
 
@@ -10,8 +16,8 @@ interface NetworkConfig {
 }
 
 interface SeedAmount {
-    xtz: number;
-    token: number;
+    xtz: string;
+    token: string;
 }
 
 interface Config {
@@ -21,10 +27,8 @@ interface Config {
     tokenStandard: string; // e.g. "FA1.2" or "FA2"
     metadata_uri: string;
     token_metadata_uri: string;
-    tokenId: number; // Only for FA2
+    tokenId: string; // Only for FA2
     poolType: "base" | "mod", // "base" for no fee functionality, "mod" for fee functionality
-    protocol_fee_bp?: number; // Protocol fee in basis points
-    protocol_fee_recipient?: string; // Address to receive protocol fees
 }
 
 export const networks: Record<NetworkName, NetworkConfig> = {
@@ -40,31 +44,31 @@ export const networks: Record<NetworkName, NetworkConfig> = {
     },
 };
 
-const poolType = getRequiredEnv("POOL_TYPE") as "base" | "mod";
+const poolTypeValue = getRequiredEnv("POOL_TYPE");
+if (poolTypeValue !== "base" && poolTypeValue !== "mod") {
+    throw new Error(`Invalid POOL_TYPE: ${poolTypeValue}. Use 'base' or 'mod'.`);
+}
+const poolType: "base" | "mod" = poolTypeValue;
 
 const config: Config = {
     tokenAddress: getRequiredEnv("TOKEN_ADDRESS"),
-    tokenId: getRequiredIntEnv("TOKEN_ID"),
+    tokenId: getRequiredNatEnv("TOKEN_ID"),
     tokenStandard: getRequiredEnv("TOKEN_STANDARD"),
     seedAmount: {
-        xtz: getRequiredIntEnv("SEED_XTZ"),
-        token: getRequiredIntEnv("SEED_TOKEN"),
+        xtz: getRequiredNatEnv("SEED_XTZ"),
+        token: getRequiredNatEnv("SEED_TOKEN"),
     },
     manager: getRequiredEnv("MANAGER"),
     metadata_uri: getRequiredEnv("METADATA_URI"),
     token_metadata_uri: getRequiredEnv("TOKEN_METADATA_URI"),
     poolType,
-    ...(poolType === "mod" && {
-        protocol_fee_bp: getRequiredIntEnv("PROTOCOL_FEE_BP"),
-        protocol_fee_recipient: getRequiredEnv("PROTOCOL_FEE_RECIPIENT"),
-    }),
 };
 
 export interface FullConfig extends NetworkConfig, Config {
     privateKey: string;
     seedAmount: {
-        xtz: number;
-        token: number;
+        xtz: string;
+        token: string;
     };
 }
 
@@ -81,13 +85,19 @@ export function getConfig(networkName: NetworkName): FullConfig {
         );
     }
 
-    if (config.seedAmount.xtz === 0 || config.seedAmount.token === 0) {
+    if (config.seedAmount.xtz === "0" || config.seedAmount.token === "0") {
         throw new Error(`Seed amounts not configured properly. Set SEED_XTZ and SEED_TOKEN in .env file.`);
     }
 
     if (config.tokenStandard !== "FA1.2" && config.tokenStandard !== "FA2") {
         throw new Error(`Invalid token standard: ${config.tokenStandard}. Use 'FA1.2' or 'FA2'.`);
     }
+
+    requireValidAddress(
+        validateContractAddress(config.tokenAddress),
+        "TOKEN_ADDRESS"
+    );
+    requireValidAddress(validateAddress(config.manager), "MANAGER");
 
     return {
         ...networkConfig,
@@ -108,15 +118,12 @@ function getRequiredEnv(key: string): string {
     return value;
 }
 
-function getRequiredIntEnv(key: string, defaultValue?: number): number {
-    const value = process.env[key];
-    if (!value || value.trim() === "") {
-        if (defaultValue !== undefined) return defaultValue;
-        throw new Error(`Required environment variable ${key} is not set`);
+function getRequiredNatEnv(key: string): string {
+    return parseNat(getRequiredEnv(key), key);
+}
+
+function requireValidAddress(result: ValidationResult, name: string): void {
+    if (result !== ValidationResult.VALID) {
+        throw new Error(`${name} is not a valid Tezos address`);
     }
-    const num = parseInt(value, 10);
-    if (isNaN(num)) {
-        throw new Error(`Environment variable ${key} must be a number, got: ${value}`);
-    }
-    return num;
 }
