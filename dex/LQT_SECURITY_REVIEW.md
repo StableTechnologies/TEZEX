@@ -11,8 +11,8 @@ Compiler: LIGO 1.11.5
 | Artifact | SHA-256 |
 | --- | --- |
 | `compiled_contracts/lqt.tz` | `2df971245f3d468ee2668e1ed48797852eedd280348c753e9f2cd1d1bdf23921` |
-| `compiled_contracts/pool_mod.tz` | `1558821ba6bbdb4cee16363e7a4c95d85b02c80d396b08f09c6988eb7df0eab8` |
-| `compiled_contracts/pool_fa2_mod.tz` | `b75892d1c94b13adf5b6f7ad8ce2fe7e135adc30632f01e6f26f60c0c7868519` |
+| `compiled_contracts/pool_mod.tz` | `036cd191ae1a7c4a9594604b6d7a57045c8ae091e1256a32a8ba9a0d858cfd0e` |
+| `compiled_contracts/pool_fa2_mod.tz` | `6b69085ee3bf86c7c9cda562748bf3ddd8e8890fbbdb6dea3d1d5fc36e82cec9` |
 
 The contract CI rebuilds these files with the pinned compiler and compares the generated Michelson byte-for-byte with the checked-in release artifacts. Modified pools are compiled with the `DEPLOY` define so their native XTZ receiver is emitted as `%default`.
 
