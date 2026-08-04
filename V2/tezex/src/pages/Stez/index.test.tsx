@@ -67,12 +67,16 @@ test("renders the real capability gate and keeps action states interactive", asy
 
   expect(screen.getByText("Checking sTEZ availability")).toBeInTheDocument();
   await waitFor(() =>
-    expect(screen.getByText("Preview sTEZ before Mainnet")).toBeInTheDocument()
+    expect(screen.getByText("Read-only protocol preview")).toBeInTheDocument()
   );
-  expect(screen.getByText(/sTEZ is testnet-only for now/i)).toBeInTheDocument();
-  expect(screen.getByText(/Mainnet support will follow/i)).toBeInTheDocument();
-  expect(screen.getByText("Liquid sTEZ")).toBeInTheDocument();
-  expect(screen.getByText(/Depositing XTZ mints sTEZ/)).toBeInTheDocument();
+  expect(
+    screen.getByText(/not active on any public Tezos network/i)
+  ).toBeInTheDocument();
+  expect(
+    screen.getByText(/governance-approved protocol upgrade/i)
+  ).toBeInTheDocument();
+  expect(screen.getByText("sTEZ balance")).toBeInTheDocument();
+  expect(screen.getByText(/Deposit XTZ to mint sTEZ/)).toBeInTheDocument();
   expect(screen.getByText("Total sTEZ supply")).toBeInTheDocument();
   const faucetLink = screen.getByRole("link", {
     name: "Get Shadownet test XTZ from the official faucet",
@@ -98,7 +102,7 @@ test("renders the real capability gate and keeps action states interactive", asy
 
 test("uses the existing wallet connection flow", async () => {
   render(<Stez />);
-  await screen.findByText("Preview sTEZ before Mainnet");
+  await screen.findByText("Read-only protocol preview");
 
   fireEvent.click(screen.getByRole("button", { name: "CONNECT WALLET" }));
 
