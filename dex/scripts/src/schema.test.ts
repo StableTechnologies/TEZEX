@@ -4,10 +4,13 @@ import test from "node:test";
 import { Parser } from "@taquito/michel-codec";
 import { MichelsonMap, Schema } from "@taquito/michelson-encoder";
 import {
+    dexStorageType,
+    dexStorageTypeFA2,
     dexStorageTypeFA2Mod,
     dexStorageTypeMod,
     lqtStorageType,
 } from "./types.js";
+import { allocateInitialLqt } from "./amounts.js";
 
 const parser = new Parser();
 
@@ -26,7 +29,9 @@ function compiledStorageType(filename: string): object {
     return JSON.parse(JSON.stringify(storage.args[0])) as object;
 }
 
-test("deployment schemas match the compiled modified contracts", () => {
+test("deployment schemas match every compiled pool contract", () => {
+    assert.deepEqual(compiledStorageType("pool.tz"), dexStorageType);
+    assert.deepEqual(compiledStorageType("pool_fa2.tz"), dexStorageTypeFA2);
     assert.deepEqual(compiledStorageType("pool_mod.tz"), dexStorageTypeMod);
     assert.deepEqual(compiledStorageType("pool_fa2_mod.tz"), dexStorageTypeFA2Mod);
 });
@@ -54,8 +59,10 @@ test("deployment schemas preserve arbitrary-precision storage integers", () => {
         accumulated_protocol_fee_token: "0",
     });
 
+    const allocation = allocateInitialLqt(exactLqtTotal);
     const tokens = new MichelsonMap<string, string>();
-    tokens.set(manager, exactLqtTotal);
+    tokens.set(manager, allocation.provider);
+    tokens.set(token, allocation.locked);
     const lqtStorage = new Schema(lqtStorageType).Encode({
         tokens,
         allowances: new MichelsonMap(),
@@ -68,4 +75,5 @@ test("deployment schemas preserve arbitrary-precision storage integers", () => {
     const encoded = JSON.stringify([dexStorage, lqtStorage]);
     assert.match(encoded, new RegExp(exactLqtTotal));
     assert.match(encoded, new RegExp(exactTokenId));
+    assert.match(encoded, new RegExp(allocation.provider));
 });

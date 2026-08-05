@@ -1,5 +1,13 @@
 const NAT_PATTERN = /^(0|[1-9][0-9]*)$/;
 
+export const MINIMUM_LQT = 1000n;
+
+export interface InitialLqtAllocation {
+    total: string;
+    provider: string;
+    locked: string;
+}
+
 export function parseNat(value: string, name: string): string {
     const normalized = value.trim();
     if (!NAT_PATTERN.test(normalized)) {
@@ -40,6 +48,20 @@ export function calculateInitialLqt(xtz: string, token: string): string {
     const product = BigInt(parseNat(xtz, "SEED_XTZ"))
         * BigInt(parseNat(token, "SEED_TOKEN"));
     return integerSquareRoot(product).toString();
+}
+
+export function allocateInitialLqt(total: string): InitialLqtAllocation {
+    const parsedTotal = BigInt(parseNat(total, "initial LQT total"));
+    if (parsedTotal <= MINIMUM_LQT) {
+        throw new Error(
+            `Initial LQT total must exceed the permanent ${MINIMUM_LQT}-unit floor`
+        );
+    }
+    return {
+        total: parsedTotal.toString(),
+        provider: (parsedTotal - MINIMUM_LQT).toString(),
+        locked: MINIMUM_LQT.toString(),
+    };
 }
 
 export function formatMutez(value: string): string {

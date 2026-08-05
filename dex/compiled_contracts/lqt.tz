@@ -14,9 +14,26 @@
                       (pair (nat %total_supply)
                             (pair (big_map %metadata string bytes)
                                   (big_map %token_metadata nat (pair (nat %token_id) (map %token_info string bytes)))))))) ;
-  code { UNPAIR ;
+  code { LAMBDA
+           unit
+           unit
+           { DROP ;
+             PUSH string "LQT_NON_PAYABLE" ;
+             PUSH mutez 0 ;
+             AMOUNT ;
+             COMPARE ;
+             EQ ;
+             IF { DROP } { FAILWITH } ;
+             UNIT } ;
+         SWAP ;
+         UNPAIR ;
          IF_LEFT
-           { DUP 2 ;
+           { UNIT ;
+             DIG 3 ;
+             SWAP ;
+             EXEC ;
+             DROP ;
+             DUP 2 ;
              NIL operation ;
              DIG 2 ;
              CDR ;
@@ -26,7 +43,12 @@
              TRANSFER_TOKENS ;
              CONS }
            { IF_LEFT
-               { DUP 2 ;
+               { UNIT ;
+                 DIG 3 ;
+                 SWAP ;
+                 EXEC ;
+                 DROP ;
+                 DUP 2 ;
                  NIL operation ;
                  DUP 3 ;
                  CDR ;
@@ -40,7 +62,12 @@
                  TRANSFER_TOKENS ;
                  CONS }
                { IF_LEFT
-                   { DUP 2 ;
+                   { UNIT ;
+                     DIG 3 ;
+                     SWAP ;
+                     EXEC ;
+                     DROP ;
+                     DUP 2 ;
                      NIL operation ;
                      DUP 3 ;
                      CDR ;
@@ -54,7 +81,12 @@
                      TRANSFER_TOKENS ;
                      CONS }
                    { IF_LEFT
-                       { DUP 2 ;
+                       { UNIT ;
+                         DIG 3 ;
+                         SWAP ;
+                         EXEC ;
+                         DROP ;
+                         DUP 2 ;
                          GET 5 ;
                          SENDER ;
                          COMPARE ;
@@ -78,7 +110,8 @@
                          DUP 4 ;
                          GET 7 ;
                          ADD ;
-                         ABS ;
+                         ISNAT ;
+                         IF_NONE { PUSH string "LQT_SUPPLY_UNDERFLOW" ; FAILWITH } {} ;
                          DIG 3 ;
                          DUP ;
                          CAR ;
@@ -93,7 +126,12 @@
                          SWAP ;
                          UPDATE 7 }
                        { IF_LEFT
-                           { DUP 2 ;
+                           { UNIT ;
+                             DIG 3 ;
+                             SWAP ;
+                             EXEC ;
+                             DROP ;
+                             DUP 2 ;
                              GET 3 ;
                              DUP 2 ;
                              CAR ;
@@ -124,7 +162,12 @@
                              DIG 3 ;
                              UPDATE ;
                              UPDATE 3 }
-                           { DUP 2 ;
+                           { UNIT ;
+                             DIG 3 ;
+                             SWAP ;
+                             EXEC ;
+                             DROP ;
+                             DUP 2 ;
                              GET 3 ;
                              DUP 3 ;
                              CAR ;

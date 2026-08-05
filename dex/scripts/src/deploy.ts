@@ -21,6 +21,7 @@ import { Parser } from "@taquito/michel-codec";
 import { MichelsonMap, Schema } from "@taquito/michelson-encoder";
 import { getTokenBalance, prepareTokenTransfer } from "./util.js";
 import {
+    allocateInitialLqt,
     calculateInitialLqt,
     formatMutez,
     toSafeNumber,
@@ -59,6 +60,7 @@ async function deployLQT(tezos: TezosToolkit, dexAddress: string, config: FullCo
         config.seedAmount.xtz,
         config.seedAmount.token
     );
+    const lqtAllocation = allocateInitialLqt(lqtTotal);
 
     let metadata: MichelsonMap<string, string> = new MichelsonMap();
     metadata.set("", Buffer.from(config.metadata_uri!).toString("hex"));
@@ -69,7 +71,8 @@ async function deployLQT(tezos: TezosToolkit, dexAddress: string, config: FullCo
     token_metadata.set(0, { token_id: 0, token_info });
 
     let tokens: MichelsonMap<string, string> = new MichelsonMap();
-    tokens.set(config.manager, lqtTotal);
+    tokens.set(config.manager, lqtAllocation.provider);
+    tokens.set(dexAddress, lqtAllocation.locked);
 
     const storageSchema = new Schema(lqtStorageType);
     const lqtStorage: LqtStorage = {
@@ -169,6 +172,7 @@ function saveDeploymentInfo(
         config.seedAmount.xtz,
         config.seedAmount.token
     );
+    const lqtAllocation = allocateInitialLqt(lqtTotal);
     const deploymentInfo = {
         network: network,
         timestamp: new Date().toISOString(),
@@ -186,6 +190,8 @@ function saveDeploymentInfo(
             poolType: config.poolType,
             seedAmount: config.seedAmount,
             lqtTotal,
+            minimumLqt: lqtAllocation.locked,
+            initialProviderLqt: lqtAllocation.provider,
             lpFeeBp: config.poolType === "mod" ? 25 : undefined,
             protocolFeeBp: config.poolType === "mod" ? 5 : undefined,
             totalFeeBp: config.poolType === "mod" ? 30 : undefined,
@@ -324,6 +330,7 @@ async function verifyDeployment(
         config.seedAmount.xtz,
         config.seedAmount.token
     );
+    const expectedLqtAllocation = allocateInitialLqt(expectedLqtTotal);
 
     verifyEqual(toNatString(dexStorage.xtzPool, "DEX xtzPool"), config.seedAmount.xtz, "DEX xtzPool");
     const dexTokenPool = toNatString(dexStorage.tokenPool, "DEX tokenPool");
@@ -337,6 +344,16 @@ async function verifyDeployment(
         toNatString(lqtStorage.total_supply, "LQT total_supply"),
         expectedLqtTotal,
         "LQT total_supply"
+    );
+    verifyEqual(
+        toNatString(await lqtStorage.tokens.get(dexAddress), "locked LQT balance"),
+        expectedLqtAllocation.locked,
+        "locked LQT balance"
+    );
+    verifyEqual(
+        toNatString(await lqtStorage.tokens.get(config.manager), "provider LQT balance"),
+        expectedLqtAllocation.provider,
+        "provider LQT balance"
     );
 
     if (dexStorage.manager !== config.manager) {
@@ -390,6 +407,12 @@ async function main(): Promise<void> {
     console.log(`Network: ${networkName}`);
 
     const config = getConfig(networkName);
+
+    // Fail before any origination if the seeds cannot fund both an ordinary
+    // provider position and the permanent liquidity floor.
+    allocateInitialLqt(
+        calculateInitialLqt(config.seedAmount.xtz, config.seedAmount.token)
+    );
 
     const tezos = new TezosToolkit(config.rpc);
     tezos.setProvider({

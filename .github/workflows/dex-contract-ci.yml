@@ -1,0 +1,131 @@
+name: DEX contract release gate
+
+on:
+  pull_request:
+    paths:
+      - "dex/**"
+      - ".github/workflows/dex-contract-ci.yml"
+  push:
+    branches:
+      - trunk
+    paths:
+      - "dex/**"
+      - ".github/workflows/dex-contract-ci.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  contracts:
+    name: Compile and test contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Compile release contracts
+        run: |
+          mkdir -p "$RUNNER_TEMP/tezex-contracts"
+          docker run --rm \
+            -v "$PWD:/project" \
+            -v "$RUNNER_TEMP/tezex-contracts:/out" \
+            -w /project \
+            ligolang/ligo:1.11.5 \
+            compile contract dex/contracts/lqt_fa12.mligo -o /out/lqt.tz
+          docker run --rm \
+            -v "$PWD:/project" \
+            -v "$RUNNER_TEMP/tezex-contracts:/out" \
+            -w /project \
+            ligolang/ligo:1.11.5 \
+            compile contract dex/contracts/dexter.mligo -o /out/pool.tz -D DEPLOY
+          docker run --rm \
+            -v "$PWD:/project" \
+            -v "$RUNNER_TEMP/tezex-contracts:/out" \
+            -w /project \
+            ligolang/ligo:1.11.5 \
+            compile contract dex/contracts/helpers/dexter_fa2.mligo -o /out/pool_fa2.tz -D DEPLOY
+          docker run --rm \
+            -v "$PWD:/project" \
+            -v "$RUNNER_TEMP/tezex-contracts:/out" \
+            -w /project \
+            ligolang/ligo:1.11.5 \
+            compile contract dex/contracts/dexter_mod.mligo -o /out/pool_mod.tz -D DEPLOY
+          docker run --rm \
+            -v "$PWD:/project" \
+            -v "$RUNNER_TEMP/tezex-contracts:/out" \
+            -w /project \
+            ligolang/ligo:1.11.5 \
+            compile contract dex/contracts/helpers/dexter_mod_fa2.mligo -o /out/pool_fa2_mod.tz -D DEPLOY
+
+      - name: Verify checked-in Michelson artifacts
+        run: |
+          cmp "$RUNNER_TEMP/tezex-contracts/lqt.tz" dex/compiled_contracts/lqt.tz
+          cmp "$RUNNER_TEMP/tezex-contracts/pool.tz" dex/compiled_contracts/pool.tz
+          cmp "$RUNNER_TEMP/tezex-contracts/pool_fa2.tz" dex/compiled_contracts/pool_fa2.tz
+          cmp "$RUNNER_TEMP/tezex-contracts/pool_mod.tz" dex/compiled_contracts/pool_mod.tz
+          cmp "$RUNNER_TEMP/tezex-contracts/pool_fa2_mod.tz" dex/compiled_contracts/pool_fa2_mod.tz
+          sha256sum \
+            dex/compiled_contracts/lqt.tz \
+            dex/compiled_contracts/pool.tz \
+            dex/compiled_contracts/pool_fa2.tz \
+            dex/compiled_contracts/pool_mod.tz \
+            dex/compiled_contracts/pool_fa2_mod.tz
+
+      - name: Test LQT contract
+        run: >-
+          docker run --rm -v "$PWD:/project" -w /project
+          ligolang/ligo:1.11.5
+          run test dex/tests/lqt_fa12.test.mligo
+
+      - name: Test base FA1.2 pool
+        run: >-
+          docker run --rm -v "$PWD:/project" -w /project
+          ligolang/ligo:1.11.5
+          run test dex/tests/dexter_v2.test.mligo
+
+      - name: Test base FA2 pool
+        run: >-
+          docker run --rm -v "$PWD:/project" -w /project
+          ligolang/ligo:1.11.5
+          run test dex/tests/dexter_fa2.test.mligo
+
+      - name: Test modified FA1.2 pool
+        run: >-
+          docker run --rm -v "$PWD:/project" -w /project
+          ligolang/ligo:1.11.5
+          run test dex/tests/dexter_mod.test.mligo
+
+      - name: Test modified FA2 pool
+        run: >-
+          docker run --rm -v "$PWD:/project" -w /project
+          ligolang/ligo:1.11.5
+          run test dex/tests/dexter_mod_fa2.test.mligo
+
+  deployment-scripts:
+    name: Test deployment scripts
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dex/scripts
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: dex/scripts/package-lock.json
+
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Type-check
+        run: npm run typecheck
+
+      - name: Run tests
+        run: npm test
