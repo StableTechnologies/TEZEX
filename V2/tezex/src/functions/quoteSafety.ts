@@ -123,6 +123,29 @@ export const hasFreshTransactionQuote = (
       (!requireSubmissionReady || transaction.quote.preparedForSubmission)
   );
 
+export const activeTransactionMatchesPreparedSubmission = (
+  activeTransaction: Transaction | undefined,
+  preparedTransaction: Transaction,
+  context: QuoteContext
+): activeTransaction is Transaction =>
+  Boolean(
+    activeTransaction &&
+      activeTransaction.id === preparedTransaction.id &&
+      activeTransaction.transactionStatus === TransactionStatus.PENDING &&
+      preparedTransaction.transactionStatus === TransactionStatus.PENDING &&
+      activeTransaction.quoteRevision === preparedTransaction.quoteRevision &&
+      activeTransaction.quote?.revision ===
+        preparedTransaction.quote?.revision &&
+      activeTransaction.quote?.inputFingerprint ===
+        preparedTransaction.quote?.inputFingerprint &&
+      activeTransaction.quote?.resultFingerprint ===
+        preparedTransaction.quote?.resultFingerprint &&
+      activeTransaction.quote?.preparedForSubmission === true &&
+      preparedTransaction.quote?.preparedForSubmission === true &&
+      hasFreshTransactionQuote(activeTransaction, context, true) &&
+      hasFreshTransactionQuote(preparedTransaction, context, true)
+  );
+
 const contextsMatch = (left: QuoteContext, right: QuoteContext): boolean =>
   left.account === right.account &&
   left.network === right.network &&
@@ -131,6 +154,7 @@ const contextsMatch = (left: QuoteContext, right: QuoteContext): boolean =>
 export const createQuoteGuardedDAppClient = (input: {
   client: DAppClient;
   transaction: Transaction;
+  getActiveTransaction: () => Transaction | undefined;
   getRuntime: () => QuoteSubmissionRuntime;
 }): DAppClient => {
   const guardedClient = Object.create(input.client) as DAppClient;
@@ -139,16 +163,22 @@ export const createQuoteGuardedDAppClient = (input: {
     const runtimeBefore = input.getRuntime();
     if (
       !runtimeBefore.context.account ||
-      !hasFreshTransactionQuote(input.transaction, runtimeBefore.context, true)
+      !activeTransactionMatchesPreparedSubmission(
+        input.getActiveTransaction(),
+        input.transaction,
+        runtimeBefore.context
+      )
     ) {
       throw new QuoteSubmissionContextError(
-        "The transaction quote no longer matches the active wallet context."
+        "The active transaction no longer matches the prepared submission."
       );
     }
 
     const chainId = await runtimeBefore.readChainId();
     const activeAccount = await input.client.getActiveAccount();
     const runtimeImmediatelyBeforeRequest = input.getRuntime();
+    const activeTransactionImmediatelyBeforeRequest =
+      input.getActiveTransaction();
 
     if (
       !contextsMatch(
@@ -161,14 +191,14 @@ export const createQuoteGuardedDAppClient = (input: {
         runtimeImmediatelyBeforeRequest.context.account ||
       activeAccount.network.type !==
         runtimeImmediatelyBeforeRequest.context.network ||
-      !hasFreshTransactionQuote(
+      !activeTransactionMatchesPreparedSubmission(
+        activeTransactionImmediatelyBeforeRequest,
         input.transaction,
-        runtimeImmediatelyBeforeRequest.context,
-        true
+        runtimeImmediatelyBeforeRequest.context
       )
     ) {
       throw new QuoteSubmissionContextError(
-        "The wallet account or network changed during transaction preparation."
+        "The wallet context or active transaction changed during transaction preparation."
       );
     }
 

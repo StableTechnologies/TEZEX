@@ -5,7 +5,7 @@ import React, {
   useState,
   useRef,
 } from "react";
-import { current, Draft } from "immer";
+import { current, Draft, produce } from "immer";
 import { useImmer } from "use-immer";
 import { Mutex } from "async-mutex";
 import { BeaconEvent, DAppClient, NetworkType } from "@airgap/beacon-dapp";
@@ -193,9 +193,25 @@ export function WalletProvider(props: IWalletProvider) {
   const latestTransactionInitializations = useRef(
     new Map<TransactingComponent, symbol>()
   ).current;
-  const [transactions, setTransactions] = useImmer<{
+  type TransactionState = {
     [key in TransactingComponent]?: Transaction;
-  }>({});
+  };
+  type TransactionStateUpdate =
+    | TransactionState
+    | ((draft: Draft<TransactionState>) => void);
+  const [transactions, setTransactionState] = useImmer<TransactionState>({});
+  const transactionsRef = useRef<TransactionState>({});
+  const setTransactions = useCallback(
+    (update: TransactionStateUpdate): void => {
+      const nextTransactions =
+        typeof update === "function"
+          ? produce(transactionsRef.current, update)
+          : update;
+      transactionsRef.current = nextTransactions;
+      setTransactionState(nextTransactions);
+    },
+    []
+  );
 
   const [isWalletConnected, setIsWalletConnected] = useState(false);
   const [client, setClient] = useState<DAppClient | null>(null);
@@ -394,9 +410,9 @@ export function WalletProvider(props: IWalletProvider) {
   // callback to return the active transaction of a component
   const getActiveTransaction = useCallback(
     (component: TransactingComponent): Transaction | undefined => {
-      return transactions[component];
+      return transactionsRef.current[component];
     },
-    [transactions]
+    []
   );
 
   const clearTransaction = useCallback(
@@ -435,6 +451,8 @@ export function WalletProvider(props: IWalletProvider) {
             const guardedClient = createQuoteGuardedDAppClient({
               client,
               transaction,
+              getActiveTransaction: () =>
+                transactionsRef.current[transaction.component],
               getRuntime: () => {
                 const activeNetwork = networkRef.current;
                 return {

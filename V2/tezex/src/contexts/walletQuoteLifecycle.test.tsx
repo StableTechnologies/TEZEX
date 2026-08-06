@@ -206,4 +206,52 @@ describe("WalletProvider quote lifecycle", () => {
     expect(transaction?.receiveAmount[0].mantissa.toFixed()).toBe("200");
     expect(transaction?.quoteRevision).toBe(3);
   });
+
+  it("removes a cleared transaction from the synchronous active-state ref", async () => {
+    const adapter = {
+      poolConfig: {
+        id: "pool-id",
+        name: "Pool",
+        type: PoolType.TEZEX,
+        address: "KT1-pool",
+        tokenA: Token.XTZ,
+        tokenB: Token.TzBTC,
+        lpToken: Token.Sirs,
+      },
+      estimateSwap: jest.fn().mockResolvedValue({
+        inputAmount: new BigNumber(0),
+        outputAmount: new BigNumber(0),
+      }),
+    } as unknown as IPoolAdapter;
+    mockGetPoolAdapter.mockReturnValue(adapter);
+
+    render(
+      <WalletProvider>
+        <Probe />
+      </WalletProvider>
+    );
+
+    await act(async () => {
+      await wallet.initialiseTransaction(
+        TransactingComponent.SWAP,
+        [xtz],
+        [token],
+        "pool-id",
+        [balance("0")],
+        [balance("0")]
+      );
+    });
+    await waitFor(() =>
+      expect(
+        wallet.getActiveTransaction(TransactingComponent.SWAP)
+      ).toBeDefined()
+    );
+
+    act(() => {
+      wallet.clearTransaction(TransactingComponent.SWAP);
+      expect(
+        wallet.getActiveTransaction(TransactingComponent.SWAP)
+      ).toBeUndefined();
+    });
+  });
 });

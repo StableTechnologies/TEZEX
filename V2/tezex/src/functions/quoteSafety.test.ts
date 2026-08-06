@@ -16,6 +16,7 @@ import {
   TransactingComponent,
 } from "../types/general";
 import {
+  activeTransactionMatchesPreparedSubmission,
   applyQuoteResult,
   createQuoteGuardedDAppClient,
   createQuoteRequest,
@@ -232,6 +233,7 @@ describe("quote revision safety", () => {
     const guardedClient = createQuoteGuardedDAppClient({
       client,
       transaction: preparedTransaction,
+      getActiveTransaction: () => preparedTransaction,
       getRuntime: () => ({
         context,
         readChainId: async () => context.chainId,
@@ -275,6 +277,7 @@ describe("quote revision safety", () => {
     const guardedClient = createQuoteGuardedDAppClient({
       client,
       transaction: preparedTransaction,
+      getActiveTransaction: () => preparedTransaction,
       getRuntime: () => ({
         context,
         readChainId: async () => context.chainId,
@@ -310,6 +313,7 @@ describe("quote revision safety", () => {
     const guardedClient = createQuoteGuardedDAppClient({
       client,
       transaction: preparedTransaction,
+      getActiveTransaction: () => preparedTransaction,
       getRuntime: () => ({
         context: activeContext,
         readChainId: async () => {
@@ -322,6 +326,201 @@ describe("quote revision safety", () => {
     await expect(
       guardedClient.requestOperation({ operationDetails: [] })
     ).rejects.toBeInstanceOf(QuoteSubmissionContextError);
+    expect(requestOperation).not.toHaveBeenCalled();
+  });
+
+  it("requires the active ID, revision, fingerprints, and pending status", () => {
+    const pendingTransaction = makeTransaction("2", "0", 3);
+    const request = createQuoteRequest(pendingTransaction, context, 3);
+    const preparedTransaction = applyQuoteResult(
+      pendingTransaction,
+      makeTransaction("2", "200", 3),
+      context,
+      request,
+      TransactionStatus.PENDING,
+      true
+    ) as Transaction;
+    const quote = preparedTransaction.quote as NonNullable<
+      Transaction["quote"]
+    >;
+
+    expect(
+      activeTransactionMatchesPreparedSubmission(
+        preparedTransaction,
+        preparedTransaction,
+        context
+      )
+    ).toBe(true);
+
+    const changedTransactions: Array<Transaction | undefined> = [
+      undefined,
+      { ...preparedTransaction, id: "replacement-transaction" },
+      { ...preparedTransaction, quoteRevision: 4 },
+      {
+        ...preparedTransaction,
+        quote: { ...quote, inputFingerprint: "changed-input" },
+      },
+      {
+        ...preparedTransaction,
+        quote: { ...quote, resultFingerprint: "changed-result" },
+      },
+      {
+        ...preparedTransaction,
+        transactionStatus: TransactionStatus.SUFFICIENT_BALANCE,
+      },
+    ];
+
+    changedTransactions.forEach((activeTransaction) => {
+      expect(
+        activeTransactionMatchesPreparedSubmission(
+          activeTransaction,
+          preparedTransaction,
+          context
+        )
+      ).toBe(false);
+    });
+  });
+
+  it("blocks a transaction cleared during asynchronous adapter preparation", async () => {
+    const pendingTransaction = makeTransaction("2", "0", 3);
+    const request = createQuoteRequest(pendingTransaction, context, 3);
+    const preparedTransaction = applyQuoteResult(
+      pendingTransaction,
+      makeTransaction("2", "200", 3),
+      context,
+      request,
+      TransactionStatus.PENDING,
+      true
+    ) as Transaction;
+    const adapterPreparation = deferred<void>();
+    const requestOperation = jest.fn();
+    const client = {
+      getActiveAccount: jest.fn().mockResolvedValue({
+        address: context.account,
+        network: { type: context.network },
+      } as AccountInfo),
+      requestOperation,
+    } as unknown as DAppClient;
+    let activeTransaction: Transaction | undefined = preparedTransaction;
+    const guardedClient = createQuoteGuardedDAppClient({
+      client,
+      transaction: preparedTransaction,
+      getActiveTransaction: () => activeTransaction,
+      getRuntime: () => ({
+        context,
+        readChainId: async () => context.chainId,
+      }),
+    });
+
+    const submission = adapterPreparation.promise.then(() =>
+      guardedClient.requestOperation({ operationDetails: [] })
+    );
+    activeTransaction = undefined;
+    adapterPreparation.resolve();
+
+    await expect(submission).rejects.toBeInstanceOf(
+      QuoteSubmissionContextError
+    );
+    expect(requestOperation).not.toHaveBeenCalled();
+  });
+
+  it("re-reads the active transaction immediately before Beacon receives the operation", async () => {
+    const pendingTransaction = makeTransaction("2", "0", 3);
+    const request = createQuoteRequest(pendingTransaction, context, 3);
+    const preparedTransaction = applyQuoteResult(
+      pendingTransaction,
+      makeTransaction("2", "200", 3),
+      context,
+      request,
+      TransactionStatus.PENDING,
+      true
+    ) as Transaction;
+    const chainIdRead = deferred<string>();
+    const requestOperation = jest.fn();
+    const readChainId = jest.fn(() => chainIdRead.promise);
+    const client = {
+      getActiveAccount: jest.fn().mockResolvedValue({
+        address: context.account,
+        network: { type: context.network },
+      } as AccountInfo),
+      requestOperation,
+    } as unknown as DAppClient;
+    let activeTransaction: Transaction | undefined = preparedTransaction;
+    const guardedClient = createQuoteGuardedDAppClient({
+      client,
+      transaction: preparedTransaction,
+      getActiveTransaction: () => activeTransaction,
+      getRuntime: () => ({ context, readChainId }),
+    });
+
+    const submission = guardedClient.requestOperation({ operationDetails: [] });
+    expect(readChainId).toHaveBeenCalledTimes(1);
+    activeTransaction = undefined;
+    chainIdRead.resolve(context.chainId);
+
+    await expect(submission).rejects.toBeInstanceOf(
+      QuoteSubmissionContextError
+    );
+    expect(requestOperation).not.toHaveBeenCalled();
+  });
+
+  it("blocks a valid replacement created during asynchronous adapter preparation", async () => {
+    const pendingTransaction = makeTransaction("2", "0", 3);
+    const request = createQuoteRequest(pendingTransaction, context, 3);
+    const preparedTransaction = applyQuoteResult(
+      pendingTransaction,
+      makeTransaction("2", "200", 3),
+      context,
+      request,
+      TransactionStatus.PENDING,
+      true
+    ) as Transaction;
+    const replacementPending = {
+      ...makeTransaction("5", "0", 4),
+      id: "replacement-transaction",
+    };
+    const replacementRequest = createQuoteRequest(
+      replacementPending,
+      context,
+      4
+    );
+    const replacementTransaction = applyQuoteResult(
+      replacementPending,
+      makeTransaction("5", "500", 4),
+      context,
+      replacementRequest,
+      TransactionStatus.PENDING,
+      true
+    ) as Transaction;
+    const adapterPreparation = deferred<void>();
+    const requestOperation = jest.fn();
+    const client = {
+      getActiveAccount: jest.fn().mockResolvedValue({
+        address: context.account,
+        network: { type: context.network },
+      } as AccountInfo),
+      requestOperation,
+    } as unknown as DAppClient;
+    let activeTransaction = preparedTransaction;
+    const guardedClient = createQuoteGuardedDAppClient({
+      client,
+      transaction: preparedTransaction,
+      getActiveTransaction: () => activeTransaction,
+      getRuntime: () => ({
+        context,
+        readChainId: async () => context.chainId,
+      }),
+    });
+
+    const submission = adapterPreparation.promise.then(() =>
+      guardedClient.requestOperation({ operationDetails: [] })
+    );
+    activeTransaction = replacementTransaction;
+    adapterPreparation.resolve();
+
+    await expect(submission).rejects.toBeInstanceOf(
+      QuoteSubmissionContextError
+    );
     expect(requestOperation).not.toHaveBeenCalled();
   });
 
