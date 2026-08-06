@@ -31,8 +31,6 @@ let deploy_dex
     (token_address : address)
     (token_id : nat)
     (xtz_amount : tez)
-    (lp_fee_bp : nat)
-    (protocol_fee_bp : nat)
     (protocol_fee_recipient : address) =
   let dex_storage =
     Dexter.build_storage
@@ -41,8 +39,6 @@ let deploy_dex
        manager = manager;
        tokenAddress = token_address;
        tokenId = token_id;
-       lp_fee_bp = lp_fee_bp;
-       protocol_fee_bp = protocol_fee_bp;
        protocol_fee_recipient = protocol_fee_recipient;
       } in
   Test.Originate.contract (contract_of Dexter) dex_storage xtz_amount
@@ -75,7 +71,27 @@ let deploy_lqt (lqt_amount : nat) (owner : address) (admin : address) =
     } in
   Test.Originate.contract (contract_of LQT.LQT) lqt_storage 0tez
 
-let setup_full_dex_with_fees (lp_fee_bp : nat) (protocol_fee_bp : nat) =
+let activate_dex
+    (dex_taddr)
+    (expected_xtz_pool : tez)
+    (expected_token_pool : nat)
+    (expected_lqt_total : nat) =
+  let activate_param : Dexter.activate_pool =
+    {
+     expectedXtzPool = expected_xtz_pool;
+     expectedTokenPool = expected_token_pool;
+     expectedLqtTotal = expected_lqt_total;
+    } in
+  let activate_entrypoint : Dexter.activate_pool contract =
+    Test.Typed_address.get_entrypoint "activate" dex_taddr in
+  let _ : nat =
+    Test.Contract.transfer_exn
+      activate_entrypoint
+      activate_param
+      0tez in
+  ()
+
+let setup_full_dex () =
   let () = clean () in
   let () = Test.State.set_source (src ()) in
   let token_id = 0n in
@@ -88,8 +104,6 @@ let setup_full_dex_with_fees (lp_fee_bp : nat) (protocol_fee_bp : nat) =
       tok_addr
       token_id
       0tez
-      lp_fee_bp
-      protocol_fee_bp
       (src ())
   in
   let dex_addr = Test.Typed_address.to_address dex_orig.taddr in
@@ -110,6 +124,7 @@ let setup_full_dex_with_fees (lp_fee_bp : nat) (protocol_fee_bp : nat) =
     Test.Typed_address.transfer_exn dex_orig.taddr (UpdateTokenPool ()) 0tez in
   let _ : nat =
     Test.Typed_address.transfer_exn dex_orig.taddr (SetLqtAddress lqt_addr) 0tez in
+  let () = activate_dex dex_orig.taddr 1tez 1000000n 1000000n in
   (dex_orig, lqt_orig, tok_orig)
 
 let assert_dex_state
