@@ -11,6 +11,9 @@ import {
     dexStorageTypeFA2Mod,
     dexStorageTypeMod,
     lqtStorageType,
+    MOD_LP_FEE_BP,
+    MOD_PROTOCOL_FEE_BP,
+    MOD_TOTAL_FEE_BP,
     type DexStorage,
     type LqtStorage,
     type NetworkName,
@@ -32,13 +35,21 @@ import { verifyAtLeast, verifyEqual } from "./verification.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+const SUPPORTED_NETWORKS: readonly NetworkName[] = [
+    "testnet",
+    "mainnet",
+    "previewnet",
+];
+
 function parseArgs(): NetworkName {
     const args = process.argv.slice(2);
     const networkArg = args.find((arg) => arg.startsWith("--network="));
     const networkName = networkArg ? networkArg.split("=")[1] : "testnet";
 
-    if (networkName !== "testnet" && networkName !== "mainnet") {
-        throw new Error(`Invalid network: ${networkName}. Use 'testnet' or 'mainnet'.`);
+    if (!SUPPORTED_NETWORKS.includes(networkName as NetworkName)) {
+        throw new Error(
+            `Invalid network: ${networkName}. Use 'testnet', 'mainnet', or 'previewnet'.`
+        );
     }
 
     return networkName as NetworkName;
@@ -139,6 +150,8 @@ async function deployDEX(
         lqtAddress: "tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU",
         tokenId: config.tokenStandard === "FA2" ? config.tokenId : undefined,
 
+        // Fees are immutable in contract code (25/5 bp). Only the claim
+        // recipient is configurable; deploy sets it to MANAGER.
         ...(config.poolType === "mod" && {
             protocol_fee_recipient: config.manager,
             accumulated_protocol_fee_xtz: "0",
@@ -192,9 +205,10 @@ function saveDeploymentInfo(
             lqtTotal,
             minimumLqt: lqtAllocation.locked,
             initialProviderLqt: lqtAllocation.provider,
-            lpFeeBp: config.poolType === "mod" ? 25 : undefined,
-            protocolFeeBp: config.poolType === "mod" ? 5 : undefined,
-            totalFeeBp: config.poolType === "mod" ? 30 : undefined,
+            // Recorded for operators; not passed as storage (fees are hardcoded).
+            lpFeeBp: config.poolType === "mod" ? MOD_LP_FEE_BP : undefined,
+            protocolFeeBp: config.poolType === "mod" ? MOD_PROTOCOL_FEE_BP : undefined,
+            totalFeeBp: config.poolType === "mod" ? MOD_TOTAL_FEE_BP : undefined,
             protocolFeeRecipient: config.poolType === "mod" ? config.manager : undefined,
         },
     };
@@ -379,6 +393,14 @@ async function verifyDeployment(
         && (dexStorage.active !== true || dexStorage.activationPending !== false)
     ) {
         throw new Error("Deployment verification failed for pool activation state");
+    }
+    if (
+        config.poolType === "mod"
+        && dexStorage.protocol_fee_recipient !== config.manager
+    ) {
+        throw new Error(
+            "Deployment verification failed for protocol fee recipient (expected MANAGER)"
+        );
     }
 
     const dexXtzBalance = await tezos.tz.getBalance(dexAddress);

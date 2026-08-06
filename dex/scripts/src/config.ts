@@ -42,6 +42,14 @@ export const networks: Record<NetworkName, NetworkConfig> = {
         rpc: process.env.MAINNET_RPC || "https://rpc.tzkt.io/mainnet",
         privateKey: process.env.MAINNET_PRIVATE_KEY,
     },
+    // Optional smoke-test network; only required when deploying with --network=previewnet.
+    previewnet: {
+        name: "Previewnet",
+        rpc:
+            process.env.PREVIEWNET_RPC
+            || "https://michelson.previewnet.tezosx.nomadic-labs.com",
+        privateKey: process.env.PREVIEWNET_PRIVATE_KEY,
+    },
 };
 
 const poolTypeValue = getRequiredEnv("POOL_TYPE");
@@ -76,7 +84,9 @@ export function getConfig(networkName: NetworkName): FullConfig {
     const networkConfig = networks[networkName];
 
     if (!networkConfig) {
-        throw new Error(`Unknown network: ${networkName}. Use 'testnet' or 'mainnet'.`);
+        throw new Error(
+            `Unknown network: ${networkName}. Use 'testnet', 'mainnet', or 'previewnet'.`
+        );
     }
 
     if (!networkConfig.privateKey) {
