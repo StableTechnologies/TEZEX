@@ -17,6 +17,14 @@ import { DAppClient } from "@airgap/beacon-dapp";
 import { transferParamsToBeaconOp } from "../functions/transactions";
 import { isValidSlippage } from "../functions/transactionSafety";
 
+interface SiriusStorage {
+  xtzPool: BigNumber.Value;
+  tokenPool: BigNumber.Value;
+  lqtTotal: BigNumber.Value;
+  tokenAddress: string;
+  lqtAddress: string;
+}
+
 export class SiriusAdapter implements IPoolAdapter {
   private readonly FEE = 999; // 0.1% fee
   private readonly BURN = 999; // 0.1% burned
@@ -348,8 +356,20 @@ export class SiriusAdapter implements IPoolAdapter {
     }
 
     const contract = await toolkit.contract.at(this.poolConfig.address);
-    // eslint-disable-next-line
-    const storage = await contract.storage<any>();
+    const storage = await contract.storage<SiriusStorage>();
+
+    if (storage) {
+      this.assertStorageAddress(
+        "underlying token",
+        storage.tokenAddress,
+        PoolRegistry.getAssetAddress(this.poolConfig.tokenB)
+      );
+      this.assertStorageAddress(
+        "SIRS",
+        storage.lqtAddress,
+        PoolRegistry.getAssetAddress(this.poolConfig.lpToken)
+      );
+    }
 
     const poolData: PoolData = storage
       ? {
@@ -531,6 +551,18 @@ export class SiriusAdapter implements IPoolAdapter {
   private assertValidSlippage(slippage: number): void {
     if (!isValidSlippage(slippage)) {
       throw new Error("Sirius slippage tolerance is outside safe limits");
+    }
+  }
+
+  private assertStorageAddress(
+    name: string,
+    actual: string,
+    expected: string
+  ): void {
+    if (actual !== expected) {
+      throw new Error(
+        `Sirius ${name} storage mismatch: expected ${expected}, received ${actual}`
+      );
     }
   }
 

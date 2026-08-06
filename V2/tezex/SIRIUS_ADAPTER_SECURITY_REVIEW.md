@@ -64,19 +64,23 @@ The focused test suite covers:
 - slippage-adjusted swap, withdrawal, and SIRS minima;
 - approval reset and cleanup ordering in a single wallet request;
 - propagation of a rejected atomic batch without a second cleanup request;
-- cached storage reads and explicit refresh behavior; and
-- canonical mainnet pool, token, SIRS, and decimal configuration.
+- cached storage reads and explicit refresh behavior;
+- canonical mainnet pool, token, SIRS, and decimal configuration;
+- fail-closed runtime checks for the token and SIRS addresses decoded from pool storage; and
+- wrong-chain, raw-storage-address, and wallet-operation-destination rejection.
 
 ## Final no-broadcast release rehearsal
 
-On 2026-08-05, after rebasing onto `400eec2`, the opt-in rehearsal read the configured contracts through the mainnet RPC at block `BLDZn6FGqpZJP6NoLxJjKSJusTrvn9akg776vikUHsLnxkcVS6a`, level `14,370,655`, under the Ushuaia protocol.
+On 2026-08-06, after rebasing onto `400eec2`, the opt-in rehearsal read the configured contracts through the mainnet RPC at block `BKrd5HFbQMu8xa3qkjEQQEMo6wMzF5vp3y87xyiCZTawjW96k4u`, level `14,387,043`, under the Ushuaia protocol.
 
-The live pool still exposed `xtzToToken`, `tokenToXtz`, `addLiquidity`, and `removeLiquidity`, and its storage still pointed to the configured underlying-token and SIRS contracts. A capture-only Beacon client then constructed, but could not sign or broadcast:
+The rehearsal first requires the RPC chain ID to match the configured mainnet chain ID. It reads the pool's raw Micheline storage and requires its underlying-token and SIRS addresses to match the configured canonical contracts. The live pool still exposed `xtzToToken`, `tokenToXtz`, `addLiquidity`, and `removeLiquidity`. A capture-only Beacon client then constructed, but could not sign or broadcast:
 
 - the direct XTZ-to-token operation;
 - the approval-reset, approval, token-to-XTZ, and cleanup batch;
 - the approval-reset, approval, add-liquidity, and cleanup batch; and
 - the remove-liquidity operation.
+
+Every captured operation is also required to target the canonical token or pool address in the expected batch position; checking entrypoint names alone is not sufficient.
 
 The rejection path produced one wallet request and no follow-up cleanup request. Reproduce this release gate with:
 

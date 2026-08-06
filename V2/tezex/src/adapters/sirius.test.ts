@@ -11,6 +11,7 @@ import { SiriusAdapter } from "./sirius";
 
 const POOL_ADDRESS = "KT1-sirius-pool";
 const TOKEN_ADDRESS = "KT1-tzbtc-token";
+const LP_TOKEN_ADDRESS = "KT1-sirs-token";
 const USER_ADDRESS = "tz1-user";
 
 const poolConfig: PoolConfig = {
@@ -27,6 +28,8 @@ const auditedSnapshot = {
   xtzPool: "4210300907572",
   tokenPool: "1356293834",
   lqtTotal: "27188438",
+  tokenAddress: TOKEN_ADDRESS,
+  lqtAddress: LP_TOKEN_ADDRESS,
 };
 
 const integerModel = {
@@ -69,7 +72,7 @@ const makeInvocation = (
   })),
 });
 
-const makeHarness = () => {
+const makeHarness = (storageValue = auditedSnapshot) => {
   const poolMethods = {
     xtzToToken: jest.fn((value) =>
       makeInvocation(POOL_ADDRESS, "xtzToToken", value)
@@ -89,7 +92,7 @@ const makeHarness = () => {
       makeInvocation(TOKEN_ADDRESS, "approve", value)
     ),
   };
-  const storage = jest.fn().mockResolvedValue(auditedSnapshot);
+  const storage = jest.fn().mockResolvedValue(storageValue);
   const poolContract = { methodsObject: poolMethods, storage };
   const tokenContract = { methodsObject: tokenMethods };
   const contractAt = jest.fn(async (address: string) =>
@@ -130,6 +133,14 @@ describe("SiriusAdapter", () => {
           logo: "",
           address: TOKEN_ADDRESS,
           decimals: 8,
+          type: TokenType.FA12,
+        },
+        {
+          name: Token.Sirs,
+          label: "Sirs",
+          logo: "",
+          address: LP_TOKEN_ADDRESS,
+          decimals: 0,
           type: TokenType.FA12,
         },
       ]
@@ -270,6 +281,18 @@ describe("SiriusAdapter", () => {
     expect(storage).toHaveBeenCalledTimes(2);
   });
 
+  it.each([
+    ["underlying token", { tokenAddress: "KT1-wrong-token" }],
+    ["SIRS", { lqtAddress: "KT1-wrong-sirs" }],
+  ])("rejects a mismatched %s storage address", async (label, override) => {
+    const { toolkit } = makeHarness({ ...auditedSnapshot, ...override });
+    const adapter = new SiriusAdapter(poolConfig);
+
+    await expect(adapter.getPoolData(toolkit, true)).rejects.toThrow(
+      new RegExp(`${label} storage mismatch`, "i")
+    );
+  });
+
   it("submits a protected direct XTZ-to-token swap", async () => {
     const { kit, requestOperation, poolMethods } = makeHarness();
     const adapter = new SiriusAdapter(poolConfig);
@@ -292,6 +315,7 @@ describe("SiriusAdapter", () => {
       })
     );
     const operation = requestOperation.mock.calls[0][0].operationDetails[0];
+    expect(operation.destination).toBe(POOL_ADDRESS);
     expect(operation.amount).toBe("1000000");
     expect(operation.parameters.entrypoint).toBe("xtzToToken");
   });
@@ -322,6 +346,11 @@ describe("SiriusAdapter", () => {
         (op: { parameters: { entrypoint: string } }) => op.parameters.entrypoint
       )
     ).toEqual(["approve", "approve", "tokenToXtz", "approve"]);
+    expect(
+      operations.map(
+        (operation: { destination: string }) => operation.destination
+      )
+    ).toEqual([TOKEN_ADDRESS, TOKEN_ADDRESS, POOL_ADDRESS, TOKEN_ADDRESS]);
     expect(operations[0].parameters.value.value).toBe(0);
     expect(operations[1].parameters.value.value).toBe(1);
     expect(operations[3].parameters.value.value).toBe(0);
@@ -353,6 +382,11 @@ describe("SiriusAdapter", () => {
         (op: { parameters: { entrypoint: string } }) => op.parameters.entrypoint
       )
     ).toEqual(["approve", "approve", "addLiquidity", "approve"]);
+    expect(
+      operations.map(
+        (operation: { destination: string }) => operation.destination
+      )
+    ).toEqual([TOKEN_ADDRESS, TOKEN_ADDRESS, POOL_ADDRESS, TOKEN_ADDRESS]);
     expect(operations[2].amount).toBe("1000000");
   });
 
@@ -394,6 +428,9 @@ describe("SiriusAdapter", () => {
       })
     );
     expect(requestOperation).toHaveBeenCalledTimes(1);
+    expect(
+      requestOperation.mock.calls[0][0].operationDetails[0].destination
+    ).toBe(POOL_ADDRESS);
   });
 
   it("propagates a rejected atomic batch without attempting cleanup separately", async () => {
