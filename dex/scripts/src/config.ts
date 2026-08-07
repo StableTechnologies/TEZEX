@@ -12,6 +12,7 @@ dotenv.config();
 interface NetworkConfig {
     name: string;
     rpc: string;
+    tzktApiUrl: string;
     privateKey?: string;
 }
 
@@ -35,11 +36,14 @@ export const networks: Record<NetworkName, NetworkConfig> = {
     testnet: {
         name: "Ghostnet",
         rpc: process.env.TESTNET_RPC || "https://rpc.tzkt.io/ghostnet",
+        tzktApiUrl:
+            process.env.TESTNET_TZKT_API || "https://api.ghostnet.tzkt.io",
         privateKey: process.env.TESTNET_PRIVATE_KEY,
     },
     mainnet: {
         name: "Mainnet",
         rpc: process.env.MAINNET_RPC || "https://rpc.tzkt.io/mainnet",
+        tzktApiUrl: process.env.MAINNET_TZKT_API || "https://api.tzkt.io",
         privateKey: process.env.MAINNET_PRIVATE_KEY,
     },
     // Optional smoke-test network; only required when deploying with --network=previewnet.
@@ -48,6 +52,9 @@ export const networks: Record<NetworkName, NetworkConfig> = {
         rpc:
             process.env.PREVIEWNET_RPC
             || "https://michelson.previewnet.tezosx.nomadic-labs.com",
+        tzktApiUrl:
+            process.env.PREVIEWNET_TZKT_API
+            || "https://api.previewnet.tezosx.tzkt.io",
         privateKey: process.env.PREVIEWNET_PRIVATE_KEY,
     },
 };

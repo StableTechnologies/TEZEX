@@ -22,15 +22,21 @@ import {
 } from "./types.js";
 import { Parser } from "@taquito/michel-codec";
 import { MichelsonMap, Schema } from "@taquito/michelson-encoder";
-import { getTokenBalance, prepareTokenTransfer } from "./util.js";
+import { assertTokenStandardMatchesContract, getTokenBalance, prepareTokenTransfer } from "./util.js";
 import {
     allocateInitialLqt,
     calculateInitialLqt,
     formatMutez,
     toSafeNumber,
 } from "./amounts.js";
-import { appendInitializationCalls } from "./initialization.js";
+import { appendInitializationCalls, initializationOpCount } from "./initialization.js";
 import { verifyAtLeast, verifyEqual } from "./verification.js";
+import {
+    needsExplicitOpLimits,
+    previewnetBatchCallLimits,
+    previewnetFeeBufferMutez,
+    previewnetOriginateLimits,
+} from "./tezosxLimits.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -60,7 +66,12 @@ function loadCompiledContract(filename: string): string {
     return fs.readFileSync(contractPath, "utf8");
 }
 
-async function deployLQT(tezos: TezosToolkit, dexAddress: string, config: FullConfig): Promise<string> {
+async function deployLQT(
+    tezos: TezosToolkit,
+    dexAddress: string,
+    config: FullConfig,
+    networkName: NetworkName
+): Promise<string> {
     console.log("\nDeploying LQT contract...");
 
     const lqtCode = loadCompiledContract("lqt.tz");
@@ -99,6 +110,9 @@ async function deployLQT(tezos: TezosToolkit, dexAddress: string, config: FullCo
     const originationOp = await tezos.contract.originate({
         code: parsedMichelson!,
         init: michelsonData,
+        ...(needsExplicitOpLimits(networkName)
+            ? previewnetOriginateLimits()
+            : {}),
     });
 
     console.log(`LQT operation: ${originationOp.hash}`);
@@ -111,7 +125,8 @@ async function deployLQT(tezos: TezosToolkit, dexAddress: string, config: FullCo
 async function deployDEX(
     tezos: TezosToolkit,
     config: FullConfig,
-    deploymentManager: string
+    deploymentManager: string,
+    networkName: NetworkName
 ): Promise<string> {
     console.log("\nDeploying DEX contract...");
 
@@ -163,6 +178,9 @@ async function deployDEX(
     const originationOp = await tezos.contract.originate({
         code: parsedMichelson!,
         init: michelsonData,
+        ...(needsExplicitOpLimits(networkName)
+            ? previewnetOriginateLimits()
+            : {}),
     });
 
     console.log(`DEX operation: ${originationOp.hash}`);
@@ -229,7 +247,11 @@ function saveDeploymentInfo(
     console.log(`Deployment info saved: ${filepath}`);
 }
 
-async function checkBalance(config: FullConfig, tezos: TezosToolkit): Promise<void> {
+async function checkBalance(
+    config: FullConfig,
+    tezos: TezosToolkit,
+    networkName: NetworkName
+): Promise<void> {
     const pkh = await tezos.signer.publicKeyHash();
     const balance = await tezos.tz.getBalance(pkh);
 
@@ -237,8 +259,11 @@ async function checkBalance(config: FullConfig, tezos: TezosToolkit): Promise<vo
     const seedToken = BigInt(config.seedAmount.token);
     const balanceMutez = BigInt(balance.toString());
 
-    // Check if balance is sufficient (seed amount + 2 XTZ buffer for fees)
-    const requiredBalance = seedXtz + 2_000_000n;
+    // Seed amount + network fee buffer (Previewnet TezosX fees are much higher).
+    const feeBuffer = needsExplicitOpLimits(networkName)
+        ? previewnetFeeBufferMutez()
+        : 2_000_000n;
+    const requiredBalance = seedXtz + feeBuffer;
     if (balanceMutez < requiredBalance) {
         throw new Error(
             `Insufficient XTZ balance (${balanceMutez} mutez). ` +
@@ -253,7 +278,8 @@ async function checkBalance(config: FullConfig, tezos: TezosToolkit): Promise<vo
         config.tokenAddress,
         pkh,
         config.tokenStandard,
-        config.tokenId
+        config.tokenId,
+        config.tzktApiUrl
     );
 
     if (tokenBalance < seedToken) {
@@ -276,7 +302,8 @@ async function initializePool(
     tezos: TezosToolkit,
     dexAddress: string,
     lqtAddress: string,
-    config: FullConfig
+    config: FullConfig,
+    networkName: NetworkName
 ): Promise<string> {
     console.log("\nInitializing pool atomically...");
     const managerAddress = await tezos.signer.publicKeyHash();
@@ -290,6 +317,10 @@ async function initializePool(
         amount: config.seedAmount.token,
         tokenId: config.tokenStandard === "FA2" ? config.tokenId : undefined,
     });
+
+    const callLimits = needsExplicitOpLimits(networkName)
+        ? previewnetBatchCallLimits(initializationOpCount(config.poolType))
+        : undefined;
 
     const batch = appendInitializationCalls({
         batch: tezos.contract.batch(),
@@ -305,6 +336,7 @@ async function initializePool(
         ),
         poolType: config.poolType,
         finalManager: config.manager,
+        callLimits,
     });
 
     const op = await batch.send();
@@ -411,7 +443,8 @@ async function verifyDeployment(
         config.tokenAddress,
         dexAddress,
         config.tokenStandard,
-        config.tokenId
+        config.tokenId,
+        config.tzktApiUrl
     );
     if (config.poolType === "mod") {
         verifyAtLeast(dexTokenBalance.toString(), dexTokenPool, "DEX token balance");
@@ -444,7 +477,12 @@ async function main(): Promise<void> {
     const pkh = await tezos.signer.publicKeyHash();
     console.log(`Deployer: ${pkh}`);
 
-    await checkBalance(config, tezos);
+    await assertTokenStandardMatchesContract(
+        tezos,
+        config.tokenAddress,
+        config.tokenStandard
+    );
+    await checkBalance(config, tezos, networkName);
 
     console.log(`Token: ${config.tokenAddress}`);
     console.log(`Temporary deployment manager: ${pkh}`);
@@ -458,11 +496,11 @@ async function main(): Promise<void> {
     }
 
     try {
-        const dexAddress = await deployDEX(tezos, config, pkh);
-        const lqtAddress = await deployLQT(tezos, dexAddress, config);
+        const dexAddress = await deployDEX(tezos, config, pkh, networkName);
+        const lqtAddress = await deployLQT(tezos, dexAddress, config, networkName);
         await new Promise((resolve) => setTimeout(resolve, 5000));
         const initializationOperation =
-            await initializePool(tezos, dexAddress, lqtAddress, config);
+            await initializePool(tezos, dexAddress, lqtAddress, config, networkName);
         await verifyDeployment(tezos, dexAddress, lqtAddress, config);
         saveDeploymentInfo(
             networkName,

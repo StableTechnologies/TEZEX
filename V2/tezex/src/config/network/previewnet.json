@@ -13,7 +13,7 @@
       "id": "xtz-usdt-tezex",
       "name": "TEZEX",
       "type": "TEZEX",
-      "address": "KT1Vxk9m4kkfeH8sP8VnDvH2tjTFz2kL1ofE",
+      "address": "KT1UD3bR9Dvff2PivruUir3SK1qXZ9TaRPqu",
       "tokenA": "XTZ",
       "tokenB": "USDt",
       "lpToken": "LP_XTZUSDt"
@@ -22,7 +22,7 @@
       "id": "xtz-usdtz-tezex",
       "name": "TEZEX",
       "type": "TEZEX",
-      "address": "KT1RjhYTShmRGfBTHrzxjcLnWuxbuTyKqThw",
+      "address": "KT18vRL21aED4dudU6SiajScSxw33VYNXQsu",
       "tokenA": "XTZ",
       "tokenB": "USDtz",
       "lpToken": "LP_XTZUSDtz"
@@ -31,7 +31,7 @@
       "id": "xtz-btctz-tezex",
       "name": "TEZEX",
       "type": "TEZEX",
-      "address": "KT1TVBRajhqhboj9ag2z1bu7Co9sjpvi5oQq",
+      "address": "KT1LGX2eDqkzUYfaEk8XvHuojXmVUGTSrrFn",
       "tokenA": "XTZ",
       "tokenB": "BTCtz",
       "lpToken": "LP_XTZBTCtz"
@@ -71,7 +71,7 @@
       "name": "USDt",
       "label": "USDt",
       "logo": "/assets/usdtLogo.svg",
-      "address": "KT1QC9jwGx6oUDFiTVDY97rbsHc3UDuBPJBH",
+      "address": "KT1FthanFQC6p8pdhTzw7bStMNFv9FK98P6J",
       "decimals": 6,
       "type": "FA2",
       "tokenId": 0
@@ -80,7 +80,7 @@
       "name": "LP_XTZUSDt",
       "label": "LP-XTZUSDt",
       "logo": "/assets/lpxtzusdtzLogo.svg",
-      "address": "KT1PkcBKx1jf2QcnZgFmVUysMCN66qjuzT6k",
+      "address": "KT1Ea4Wi3qpMakeGt6CBt11MzkrgkSQeEKxb",
       "decimals": 6,
       "type": "FA1.2"
     },
@@ -88,7 +88,7 @@
       "name": "USDtz",
       "label": "USDtz",
       "logo": "/assets/usdtzLogo.svg",
-      "address": "KT1Ho6NbeyyGExTcq74VAEh4vwis51AXrE16",
+      "address": "KT1Wk2ytPg26WKSvcoDpGAPEfPDGDBJyMFwW",
       "decimals": 6,
       "type": "FA1.2"
     },
@@ -96,7 +96,7 @@
       "name": "LP_XTZUSDtz",
       "label": "LP-XTZUSDtz",
       "logo": "/assets/lpxtzusdtzLogo.svg",
-      "address": "KT1Xm52eeRDn2cDAWMo3bk5MjRmUbVjanxic",
+      "address": "KT1SMxK2HEQoJeNRQTAVyZ6QdGVVkgtH3Fez",
       "decimals": 6,
       "type": "FA1.2"
     },
@@ -104,16 +104,15 @@
       "name": "BTCtz",
       "label": "BTCtz",
       "logo": "/assets/btctzLogo.svg",
-      "address": "KT1SWMmJvoRtAHNW6pbWLXsNDvXRqQmQ5jXD",
+      "address": "KT1UvK5MZuzE7jWX66qTmQrbmysjUv6kSeLh",
       "decimals": 8,
-      "type": "FA2",
-      "tokenId": 0
+      "type": "FA1.2"
     },
     {
       "name": "LP_XTZBTCtz",
       "label": "LP-XTZBTCtz",
       "logo": "/assets/lpxtzusdtzLogo.svg",
-      "address": "KT1VdAZipAG93bos3na5k9Ac7inWdWME1Jjd",
+      "address": "KT1PKT4tJafjL4HiqJRyuUP91vNeNeQgr6yf",
       "decimals": 6,
       "type": "FA1.2"
     },
