@@ -1,7 +1,6 @@
 import React, { FC, useState, useEffect, useCallback } from "react";
 
 import {
-  Token,
   Asset,
   TransactingComponent,
   TransferType,
@@ -71,21 +70,28 @@ export const RemoveLiquidity: FC<IRemoveLiquidity> = ({
     new Map()
   );
 
-  // Get LP token for current pool
-  const getLPToken = useCallback(
-    (pool: typeof currentPool): Asset => {
-      if (!pool) return network.getAsset(Token.Sirs);
+  const resolvePool = useCallback(() => {
+    return network.selectedPool ?? network.getAllPools()[0] ?? null;
+  }, [network.selectedPool, network.getAllPools]);
 
-      return network.getAsset(pool.lpToken);
-    },
-    [network.network]
+  const assetsFromPool = useCallback(
+    (
+      pool: NonNullable<ReturnType<typeof resolvePool>>
+    ): [Asset, Asset, Asset] => [
+      network.getAsset(pool.lpToken),
+      network.getAsset(pool.tokenA),
+      network.getAsset(pool.tokenB),
+    ],
+    [network.getAsset]
   );
 
-  const [assets, setAssets] = useState<[Asset, Asset, Asset]>([
-    getLPToken(currentPool),
-    network.getAsset(currentPool?.tokenA || Token.XTZ),
-    network.getAsset(currentPool?.tokenB || Token.TzBTC),
-  ]);
+  const [assets, setAssets] = useState<[Asset, Asset, Asset]>(() => {
+    const pool = resolvePool();
+    if (!pool) {
+      throw new Error("No liquidity pool available on this network");
+    }
+    return assetsFromPool(pool);
+  });
   const session = useSession();
 
   const active = walletOps.getActiveTransaction();
@@ -99,11 +105,7 @@ export const RemoveLiquidity: FC<IRemoveLiquidity> = ({
       if (!pool) return;
 
       network.setSelectedPool(pool);
-      const newAssets: [Asset, Asset, Asset] = [
-        getLPToken(pool),
-        network.getAsset(pool.tokenA),
-        network.getAsset(pool.tokenB),
-      ];
+      const newAssets = assetsFromPool(pool);
       setAssets(newAssets);
       onPoolRouteChange?.(pool);
 
@@ -260,24 +262,36 @@ export const RemoveLiquidity: FC<IRemoveLiquidity> = ({
   }, [useMax, transactionOps.useMax]);
 
   const newTransaction = useCallback(async () => {
+    const pool = resolvePool();
+    if (!pool) return;
+
+    const nextAssets = assetsFromPool(pool);
+    setAssets(nextAssets);
+
     const transaction = await transactionOps.initialize(
-      [assets[send]],
-      [assets[receive1], assets[receive2]],
-      currentPool?.id || ""
+      [nextAssets[send]],
+      [nextAssets[receive1], nextAssets[receive2]],
+      pool.id
     );
     if (transaction) {
       setCanUpdate(true);
       setLoading(false);
     }
-  }, [assets, transactionOps.initialize]);
+  }, [assetsFromPool, resolvePool, transactionOps]);
 
   useEffect(() => {
     if (session.activeComponent !== TransactingComponent.REMOVE_LIQUIDITY)
       session.loadComponent(TransactingComponent.REMOVE_LIQUIDITY);
   });
   useEffect(() => {
+    const pool = resolvePool();
+    if (pool) {
+      setAssets(assetsFromPool(pool));
+    }
     setLoading(true);
-  }, [network.network]);
+    // Re-sync only when network or selected pool changes. Callback identities
+    // are intentionally omitted to avoid update-depth loops in tests.
+  }, [network.network, network.selectedPool?.id]);
 
   useEffect(() => {
     // get active transaction

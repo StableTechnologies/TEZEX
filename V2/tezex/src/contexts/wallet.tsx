@@ -258,7 +258,10 @@ export function WalletProvider(props: IWalletProvider) {
         if (found.balance) return found.balance as Balance;
         // if balance is undefined return zero balance
         return zeroBalance;
-      } else throw Error("Asset : " + asset.name + " not found in Config");
+      }
+      // Stale transactions can still reference assets from a previous network
+      // (e.g. TzBTC after switching Mainnet → Previewnet). Treat as zero.
+      return zeroBalance;
     },
     [assetBalances]
   );
