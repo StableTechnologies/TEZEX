@@ -363,7 +363,9 @@ export const Swap: FC<ISwapToken> = ({ routeSelection, onRouteChange }) => {
     currentPool?.type === PoolType.SIRIUS
       ? "0.1% fee + 0.1% XTZ burn"
       : currentPool?.type === PoolType.TEZEX
-      ? "0.30% pool fee"
+      ? cachedFeeModel === "new-mod"
+        ? "0.30% (0.25% LP / 0.05% TEZEX)"
+        : "0.30% pool fee"
       : "Pool-defined";
   const contractLabel = currentPool?.address
     ? `${currentPool.address.slice(0, 7)}…${currentPool.address.slice(-6)}`

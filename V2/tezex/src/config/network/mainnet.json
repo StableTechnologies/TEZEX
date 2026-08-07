@@ -62,6 +62,15 @@
       "address": "KT1Np5pCBF6vkvPTGxUVFZZpUaqPQfKjEsLQ",
       "decimals": 6,
       "type": "FA1.2"
+    },
+    {
+      "name": "USDt",
+      "label": "USDt",
+      "logo": "/assets/usdtLogo.svg",
+      "address": "KT1XnTn74bUtxHfDtBmm2bGZAQfhPbvKWR8o",
+      "decimals": 6,
+      "type": "FA2",
+      "tokenId": 0
     }
   ]
 }

@@ -41,11 +41,16 @@ export interface RemoveLiquidityEstimate {
   tokenBAmount: BigNumber;
 }
 
+/** TEZEX constant-product fee accounting variant (from storage shape). */
+export type TezexFeeModel = "base" | "legacy-mod" | "new-mod";
+
 export interface PoolData {
   tokenAPool: BigNumber;
   tokenBPool: BigNumber;
   lpTokenSupply: BigNumber;
-  protocolFeeBp?: number; // 0 for classic pools, >0 for mod pools with protocol fee
+  /** Only used for legacy-mod quote math / UI labels; unused for new-mod quotes. */
+  protocolFeeBp?: number;
+  feeModel?: TezexFeeModel;
 }
 
 export const isSupportedPoolConfiguration = (pool: PoolConfig): boolean =>
