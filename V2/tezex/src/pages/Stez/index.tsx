@@ -371,7 +371,7 @@ export const Stez: FC = () => {
           <span className="stez-eyebrow">PROTOCOL-NATIVE LIQUID STAKING</span>
           <h1 id="stez-title">Stake tez, stay liquid.</h1>
           <p>
-            sTEZ is Tezos’s protocol-native liquid staking token. Stake XTZ to
+            sTEZ is Tezos’ protocol-native liquid staking token. Stake XTZ to
             receive sTEZ, a token you can hold, transfer, or use in supported
             applications while its backing XTZ earns staking rewards. The
             protocol automatically assigns the pool’s staking power across
