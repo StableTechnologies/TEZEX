@@ -19,11 +19,12 @@ import {
 } from "./rpc";
 import "./style.css";
 
-type StezAction = "Deposit" | "Redeem" | "Finalize";
+type StezAction = "Stake" | "Redeem" | "Finalize";
 
 const ZERO = BigInt(0);
 const TOKEN_SCALE = BigInt(1_000_000);
 const SHADOWNET_FAUCET_URL = "https://faucet.shadownet.teztnets.com";
+const TRANSACTION_SIGNING_ENABLED = false;
 
 const networkName = (network: NetworkType) => {
   if (network === NetworkType.MAINNET) return "Mainnet";
@@ -72,37 +73,49 @@ const formatRatio = (numerator: bigint | null, denominator: bigint | null) => {
 const statusCopy = (
   snapshot: StezSnapshot | null,
   loading: boolean,
-  selectedNetwork: string
+  selectedNetwork: string,
+  selectedNetworkType: NetworkType
 ) => {
   if (loading || !snapshot) {
     return {
-      title: "Checking sTEZ availability",
+      title: "Loading sTEZ data",
       description:
-        "TEZEX is resolving one fixed Tezos block and checking the native sTEZ capability.",
+        "TEZEX is checking the selected network for current sTEZ protocol data.",
     };
   }
   if (snapshot.availability === "available") {
     return {
-      title: `sTEZ is available on ${selectedNetwork}`,
-      description: snapshot.detail,
+      title: `sTEZ is active on ${selectedNetwork}`,
+      description: `Live sTEZ protocol data was read from block ${snapshot.blockLevel.toLocaleString(
+        "en-US"
+      )}. Transaction signing is not yet enabled in this interface.`,
     };
   }
   if (snapshot.availability === "disabled") {
+    if (selectedNetworkType === NetworkType.MAINNET) {
+      return {
+        title: "sTEZ is not active on Mainnet",
+        description:
+          "This page is a read-only preview of the sTEZ staking flow. You can explore staking, redemption, and finalization, but Mainnet transactions are not enabled. Activation would require a future Tezos protocol upgrade.",
+      };
+    }
     return {
-      title: "Read-only protocol preview",
+      title: `sTEZ is not active on ${selectedNetwork}`,
       description:
-        "Explore how sTEZ deposits, redemptions, and finalization work. Transactions are currently unavailable because sTEZ is not active on any public Tezos network. Mainnet activation would require a future governance-approved protocol upgrade.",
+        "The selected network includes the sTEZ protocol code, but native sTEZ contracts are not enabled. No balances, rates, or transaction controls are shown.",
     };
   }
   if (snapshot.availability === "unsupported") {
     return {
-      title: `sTEZ is unavailable on ${selectedNetwork}`,
-      description: snapshot.detail,
+      title: `sTEZ is not supported on ${selectedNetwork}`,
+      description:
+        "The selected network does not expose a compatible sTEZ implementation. No balances, rates, or transaction controls are shown.",
     };
   }
   return {
-    title: `Could not verify sTEZ on ${selectedNetwork}`,
-    description: snapshot.detail,
+    title: "Unable to load sTEZ data",
+    description:
+      "TEZEX could not verify the sTEZ contract or read its current state from the selected network. No cached or estimated values have been substituted.",
   };
 };
 
@@ -137,7 +150,7 @@ export const Stez: FC = () => {
   const selectedNetwork = networkName(network.network);
   const [snapshot, setSnapshot] = useState<StezSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeAction, setActiveAction] = useState<StezAction>("Deposit");
+  const [activeAction, setActiveAction] = useState<StezAction>("Stake");
   const [amount, setAmount] = useState("");
 
   useEffect(() => {
@@ -190,7 +203,7 @@ export const Stez: FC = () => {
     ) {
       return null;
     }
-    return activeAction === "Deposit"
+    return activeAction === "Stake"
       ? quoteStezDeposit(
           inputUnits,
           snapshot.rateNumeratorMutez,
@@ -202,7 +215,7 @@ export const Stez: FC = () => {
           snapshot.rateDenominatorTokenUnits
         );
   }, [activeAction, available, inputUnits, snapshot]);
-  const copy = statusCopy(snapshot, loading, selectedNetwork);
+  const copy = statusCopy(snapshot, loading, selectedNetwork, network.network);
 
   const connect = useCallback(async () => {
     await connectWallet(wallet, network);
@@ -210,7 +223,7 @@ export const Stez: FC = () => {
 
   const setMaximum = () => {
     const maximum =
-      activeAction === "Deposit"
+      activeAction === "Stake"
         ? snapshot?.walletXtzMutez
         : snapshot?.walletStezUnits;
     if (maximum !== null && maximum !== undefined) {
@@ -220,7 +233,28 @@ export const Stez: FC = () => {
 
   const actionButtonCopy = () => {
     if (!walletConnected) return "CONNECT WALLET";
-    return "TRANSACTIONS NOT ENABLED IN THIS PREVIEW";
+    if (
+      snapshot?.availability === "disabled" &&
+      network.network === NetworkType.MAINNET
+    ) {
+      return "sTEZ NOT ACTIVE ON MAINNET";
+    }
+    if (
+      activeAction === "Finalize" &&
+      (!snapshot?.redeemedFinalizableMutez ||
+        snapshot.redeemedFinalizableMutez <= ZERO)
+    ) {
+      return "NOTHING READY TO FINALIZE";
+    }
+    if (available && activeAction !== "Finalize" && inputUnits <= ZERO) {
+      return "ENTER AN AMOUNT";
+    }
+    if (!TRANSACTION_SIGNING_ENABLED) {
+      return "TRANSACTIONS NOT ENABLED IN THIS PREVIEW";
+    }
+    if (activeAction === "Stake") return "STAKE XTZ";
+    if (activeAction === "Redeem") return "REDEEM sTEZ";
+    return "FINALIZE AND CLAIM XTZ";
   };
 
   return (
@@ -230,14 +264,16 @@ export const Stez: FC = () => {
           <span className="stez-eyebrow">PROTOCOL-NATIVE LIQUID STAKING</span>
           <h1 id="stez-title">Stake tez, stay liquid.</h1>
           <p>
-            sTEZ is a non-rebasing token backed by tez in the protocol-managed
-            liquid staking pool. Rewards, baker fees, and slashing change how
-            much XTZ each sTEZ can redeem for.
+            sTEZ is Tezos’s protocol-native liquid staking token. Stake XTZ to
+            receive sTEZ, a token you can hold, transfer, or use in supported
+            applications while its backing XTZ earns staking rewards. The
+            protocol automatically assigns the pool’s staking power across
+            participating bakers, so you do not need to choose one.
           </p>
         </div>
         <div className="stez-rate-summary">
-          <strong>1 sTEZ = {loading ? "…" : rate} XTZ</strong>
-          <span>Protocol redemption rate</span>
+          <strong>1 sTEZ = {rate} XTZ</strong>
+          <span>Current protocol redemption rate</span>
         </div>
       </section>
 
@@ -252,16 +288,18 @@ export const Stez: FC = () => {
           <strong>{copy.title}</strong>
           <p>{copy.description}</p>
         </div>
-        <a
-          className="stez-availability__faucet-link"
-          href={SHADOWNET_FAUCET_URL}
-          target="_blank"
-          rel="noreferrer"
-          aria-label="Get Shadownet test XTZ from the official faucet"
-        >
-          GET SHADOWNET TEST XTZ
-          <ArrowOutwardRoundedIcon aria-hidden="true" />
-        </a>
+        {available && network.network === NetworkType.SHADOWNET && (
+          <a
+            className="stez-availability__faucet-link"
+            href={SHADOWNET_FAUCET_URL}
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Get Shadownet test XTZ from the official faucet"
+          >
+            GET SHADOWNET TEST XTZ
+            <ArrowOutwardRoundedIcon aria-hidden="true" />
+          </a>
+        )}
       </section>
 
       <div className="stez-workspace">
@@ -279,7 +317,7 @@ export const Stez: FC = () => {
           </header>
           <div className="stez-position-grid">
             <PositionCell
-              label="sTEZ balance"
+              label="sTEZ Balance"
               value={
                 walletConnected
                   ? formatUnits(snapshot?.walletStezUnits ?? null)
@@ -287,7 +325,9 @@ export const Stez: FC = () => {
               }
               note={
                 walletConnected
-                  ? `≈ ${formatUnits(walletUnderlying)} XTZ`
+                  ? `≈ ${formatUnits(
+                      walletUnderlying
+                    )} XTZ at the current protocol rate`
                   : "Connect to view"
               }
               icon={<AccountBalanceWalletOutlinedIcon />}
@@ -299,27 +339,37 @@ export const Stez: FC = () => {
                   ? formatUnits(snapshot?.walletXtzMutez ?? null)
                   : "—"
               }
-              note="Spendable balance"
+              note={
+                walletConnected ? "Available in your wallet" : "Connect to view"
+              }
               icon={<AccountBalanceWalletOutlinedIcon />}
             />
             <PositionCell
-              label="Pending redemption"
+              label="Pending Redemption"
               value={
                 walletConnected
                   ? formatUnits(snapshot?.redeemedFrozenMutez ?? null)
                   : "—"
               }
-              note="XTZ · redemption delay"
+              note={
+                walletConnected
+                  ? "Frozen XTZ awaiting maturity"
+                  : "Connect to view"
+              }
               icon={<LockClockOutlinedIcon />}
             />
             <PositionCell
-              label="Ready to claim"
+              label="Ready to Finalize"
               value={
                 walletConnected
                   ? formatUnits(snapshot?.redeemedFinalizableMutez ?? null)
                   : "—"
               }
-              note="XTZ · finalizable now"
+              note={
+                walletConnected
+                  ? "Matured XTZ ready to claim"
+                  : "Connect to view"
+              }
               positive={Boolean(snapshot?.redeemedFinalizableMutez)}
               icon={<CheckCircleOutlineRoundedIcon />}
             />
@@ -339,7 +389,7 @@ export const Stez: FC = () => {
               role="tablist"
               aria-label="sTEZ action"
             >
-              {(["Deposit", "Redeem", "Finalize"] as StezAction[]).map(
+              {(["Stake", "Redeem", "Finalize"] as StezAction[]).map(
                 (action) => (
                   <button
                     key={action}
@@ -381,10 +431,10 @@ export const Stez: FC = () => {
                 </div>
                 <div className="stez-action-meta">
                   <span>
-                    Still unbonding:{" "}
+                    Still pending:{" "}
                     {formatUnits(snapshot?.redeemedFrozenMutez ?? null)} XTZ
                   </span>
-                  <span>Finalization releases every matured redemption</span>
+                  <span>Finalization releases all matured redemptions</span>
                 </div>
               </>
             ) : (
@@ -392,9 +442,7 @@ export const Stez: FC = () => {
                 <div className="stez-amount-field">
                   <div className="stez-amount-field__topline">
                     <label htmlFor="stez-action-amount">
-                      {activeAction === "Deposit"
-                        ? "YOU DEPOSIT"
-                        : "YOU REDEEM"}
+                      {activeAction === "Stake" ? "YOU STAKE" : "YOU REDEEM"}
                     </label>
                     <button
                       type="button"
@@ -403,7 +451,7 @@ export const Stez: FC = () => {
                     >
                       MAX{" "}
                       {formatUnits(
-                        activeAction === "Deposit"
+                        activeAction === "Stake"
                           ? snapshot?.walletXtzMutez ?? null
                           : snapshot?.walletStezUnits ?? null
                       )}
@@ -422,7 +470,7 @@ export const Stez: FC = () => {
                         }
                       }}
                     />
-                    <span>{activeAction === "Deposit" ? "XTZ" : "sTEZ"}</span>
+                    <span>{activeAction === "Stake" ? "XTZ" : "sTEZ"}</span>
                   </div>
                 </div>
 
@@ -430,20 +478,33 @@ export const Stez: FC = () => {
 
                 <div className="stez-amount-field">
                   <span className="stez-field-label">
-                    {activeAction === "Deposit"
+                    {activeAction === "Stake"
                       ? "YOU RECEIVE"
-                      : "REDEMPTION VALUE"}
+                      : "XTZ ENTERING REDEMPTION"}
                   </span>
                   <div className="stez-amount-field__value">
                     <strong>{formatUnits(quotedOutput)}</strong>
-                    <span>{activeAction === "Deposit" ? "sTEZ" : "XTZ"}</span>
+                    <span>{activeAction === "Stake" ? "sTEZ" : "XTZ"}</span>
                   </div>
                 </div>
                 <div className="stez-action-meta">
-                  <span>Rate {rate} · fixed block quote</span>
-                  <span>
-                    Exact result is determined when the operation is included
-                  </span>
+                  {activeAction === "Stake" ? (
+                    <>
+                      <span>Rate: {rate} XTZ per sTEZ</span>
+                      <span>
+                        Final amount is determined when the operation is
+                        included on-chain
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Quoted at the current protocol rate</span>
+                      <span>
+                        Final XTZ may change if slashing occurs before
+                        finalization
+                      </span>
+                    </>
+                  )}
                 </div>
               </>
             )}
@@ -459,25 +520,29 @@ export const Stez: FC = () => {
 
             <div className="stez-action-explanation">
               <InfoOutlinedIcon aria-hidden="true" />
-              {activeAction === "Deposit" && (
+              {activeAction === "Stake" && (
                 <p>
-                  Deposit XTZ to mint sTEZ at the current protocol rate. sTEZ is
-                  non-rebasing: protocol performance changes its XTZ value, not
-                  the number of tokens in your wallet.
+                  Staking XTZ mints sTEZ at the current protocol rate. The
+                  protocol automatically assigns the pool’s staking power across
+                  participating bakers, so you do not need to choose one. Your
+                  sTEZ remains transferable while the backing XTZ earns staking
+                  rewards.
                 </p>
               )}
               {activeAction === "Redeem" && (
                 <p>
-                  Redeeming burns your sTEZ and begins the protocol redemption
-                  delay. The corresponding XTZ remains frozen and slashable
-                  until it becomes finalizable.
+                  Redeeming burns sTEZ and begins a delayed withdrawal of the
+                  corresponding XTZ. The XTZ remains frozen and slashable until
+                  the redemption delay ends, then must be finalized before it
+                  returns to your wallet.
                 </p>
               )}
               {activeAction === "Finalize" && (
                 <p>
-                  Finalize all matured redemptions and send the XTZ to the
-                  original redeemer. Anyone may submit the operation, but only
-                  the redeemer receives the funds.
+                  After the redemption delay has elapsed, finalization releases
+                  all matured XTZ to the original redeemer. Anyone may submit
+                  the operation, but the funds can only be sent to that
+                  redeemer.
                 </p>
               )}
             </div>
@@ -490,7 +555,9 @@ export const Stez: FC = () => {
         >
           <header className="stez-panel__head">
             <h2 id="stez-rate-history-title">PROTOCOL RATE</h2>
-            <span>Fixed-block RPC data</span>
+            <span>
+              Block {snapshot?.blockLevel.toLocaleString("en-US") ?? "—"}
+            </span>
           </header>
           <div className="stez-rate-panel">
             <div>
@@ -499,12 +566,18 @@ export const Stez: FC = () => {
                 <span>1 sTEZ =</span>
                 <span>{rate} XTZ</span>
               </strong>
-              <small>Protocol rate</small>
+              <small>
+                Rewards do not increase your sTEZ balance. Instead, they
+                increase the amount of XTZ each sTEZ can redeem for. Baker fees
+                reduce the rewards passed through, and slashing can lower the
+                redemption rate.
+              </small>
             </div>
             <div className="stez-rate-panel__empty">
               <p>
-                Historical rate data will appear after TEZEX begins indexing an
-                enabled network. No simulated history or projected APY is shown.
+                Rate history will appear once TEZEX is indexing a live
+                sTEZ-enabled network. No simulated returns or projected APY are
+                shown.
               </p>
             </div>
           </div>
@@ -540,10 +613,10 @@ export const Stez: FC = () => {
               <dd>{formatUnits(snapshot?.totalBackingMutez ?? null)}</dd>
             </dl>
             <p>
-              TEZEX discovers the native contract from the selected chain and
-              reads all values from one resolved block. It never substitutes a
-              testnet contract address or a cached rate when capability
-              detection fails.
+              All values are read directly from the selected Tezos network at
+              the displayed block. TEZEX does not substitute cached rates,
+              guessed values, or hardcoded contract data when sTEZ cannot be
+              verified.
             </p>
           </div>
         </details>
