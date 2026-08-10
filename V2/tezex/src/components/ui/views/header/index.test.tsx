@@ -7,6 +7,18 @@ jest.mock("../../../wallet/Wallet", () => ({
   Wallet: () => <div>Wallet</div>,
 }));
 
+jest.mock("../../../../hooks/wallet", () => ({
+  useWallet: () => ({ client: null, address: "" }),
+}));
+
+jest.mock("../../../../functions/beacon", () => ({
+  connectWalletToCustomNetwork: jest.fn(),
+}));
+
+jest.mock("../../../../pages/Stez/network", () => ({
+  resolveCurrentWeeklynet: jest.fn(),
+}));
+
 jest.mock("../../../nav", () => ({
   NavApp: () => <nav>Navigation</nav>,
 }));

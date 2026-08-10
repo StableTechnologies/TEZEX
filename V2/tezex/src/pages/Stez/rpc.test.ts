@@ -73,6 +73,15 @@ describe("sTEZ RPC adapter", () => {
         return response({ level: 456, timestamp: "2026-07-30T12:00:00Z" });
       }
       if (url.endsWith("/stez/contract_hash")) return response("KT1Native");
+      if (url.endsWith("/contracts/KT1Native/entrypoints")) {
+        return response({
+          entrypoints: {
+            deposit: { prim: "unit" },
+            redeem: { prim: "nat" },
+            finalize_redeem: { prim: "key_hash" },
+          },
+        });
+      }
       if (url.endsWith("/stez/total_supply")) return response("1000000000");
       if (url.endsWith("/stez/total_amount_of_tez")) {
         return response("1040000000");
@@ -102,6 +111,30 @@ describe("sTEZ RPC adapter", () => {
         .filter((url) => url.includes("/blocks/") && !url.includes("/head/"))
         .every((url) => url.includes("/blocks/BFixedHash/"))
     ).toBe(true);
+  });
+
+  it("rejects a detected contract when its transaction interface changes", async () => {
+    jest.spyOn(global, "fetch").mockImplementation((input) => {
+      const url = String(input);
+      if (url.endsWith("/chain_id")) return response("NetXTest");
+      if (url.endsWith("/head/hash")) return response("BFixedHash");
+      if (url.endsWith("/protocols")) {
+        return response({ protocol: "ProtoAlpha" });
+      }
+      if (url.endsWith("/header")) {
+        return response({ level: 456, timestamp: "2026-08-10T12:00:00Z" });
+      }
+      if (url.endsWith("/stez/contract_hash")) return response("KT1Native");
+      if (url.endsWith("/contracts/KT1Native/entrypoints")) {
+        return response({ entrypoints: { deposit: { prim: "unit" } } });
+      }
+      throw new Error(`Unexpected URL: ${url}`);
+    });
+
+    const snapshot = await loadStezSnapshot(network);
+
+    expect(snapshot.availability).toBe("unsupported");
+    expect(snapshot.contractHash).toBeNull();
   });
 
   it("quotes deposit and redemption using integer floor math", () => {

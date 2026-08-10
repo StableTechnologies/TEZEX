@@ -1,5 +1,6 @@
 import React from "react";
 import { render, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { NetworkSelector } from "./NetworkSelector";
 
 jest.mock("../../../../../hooks/network", () => ({
@@ -36,7 +37,11 @@ test("accepts Previewnet's empty cycle response without logging an error", async
     }) as unknown as typeof fetch;
   const consoleError = jest.spyOn(console, "error").mockImplementation();
 
-  render(<NetworkSelector />);
+  render(
+    <MemoryRouter>
+      <NetworkSelector />
+    </MemoryRouter>
+  );
 
   await waitFor(() => expect(global.fetch).toHaveBeenCalledTimes(2));
   expect(cycleJson).not.toHaveBeenCalled();

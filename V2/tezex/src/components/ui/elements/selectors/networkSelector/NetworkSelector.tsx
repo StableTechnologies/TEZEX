@@ -11,6 +11,7 @@ import { NetworkType } from "@airgap/beacon-sdk";
 import { getNetworkSelectorStyles } from "./style";
 import { useNetwork } from "../../../../../hooks/network";
 import { getExplorer, getTzktApiUrl } from "../../../../../functions/util";
+import { useLocation } from "react-router-dom";
 
 interface NetworkOption {
   type: NetworkType;
@@ -53,6 +54,8 @@ export const NetworkSelector: FC = () => {
   const theme = useTheme();
   const network = useNetwork();
   const styles = getNetworkSelectorStyles(theme);
+  const location = useLocation();
+  const isStezRoute = location.pathname.startsWith("/stez");
 
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [stats, setStats] = useState<BlockchainStats | null>(null);
@@ -103,10 +106,11 @@ export const NetworkSelector: FC = () => {
   };
 
   useEffect(() => {
+    if (isStezRoute) return;
     fetchStats();
     const interval = setInterval(fetchStats, 30_000);
     return () => clearInterval(interval);
-  }, [network.network]);
+  }, [isStezRoute, network.network]);
 
   useEffect(() => {
     if (!cycleInfo) return;
@@ -144,6 +148,21 @@ export const NetworkSelector: FC = () => {
 
   const open = Boolean(anchorEl);
   const currentNetwork = networks.find((n) => n.type === network.network);
+
+  if (isStezRoute) {
+    return (
+      <Box
+        component="div"
+        aria-label="Network: Weeklynet, live"
+        sx={{ ...styles.button, cursor: "default" }}
+      >
+        <Box aria-hidden="true" sx={styles.liveSignal} />
+        <Box data-network-label sx={styles.networkIdentity}>
+          <Typography sx={styles.networkLabel}>Weeklynet</Typography>
+        </Box>
+      </Box>
+    );
+  }
 
   return (
     <>

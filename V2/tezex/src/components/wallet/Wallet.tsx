@@ -28,6 +28,7 @@ interface IWallet {
   children?: string;
   scalingKey?: string;
   visualVariant?: "default" | "dark";
+  connectOverride?: () => Promise<void>;
 }
 
 export const Wallet: FC<IWallet> = (props) => {
@@ -134,6 +135,10 @@ export const Wallet: FC<IWallet> = (props) => {
   };
 
   const connect = async () => {
+    if (props.connectOverride) {
+      await props.connectOverride();
+      return;
+    }
     if (walletInfo) {
       await connectWallet(walletInfo, networkInfo);
     }

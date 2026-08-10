@@ -505,6 +505,37 @@
   cursor: default;
 }
 
+.stez-transaction-status {
+  margin-top: 10px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--tezex-muted);
+  background: var(--tezex-panel-subtle);
+  border: 1px solid var(--tezex-line-soft);
+  border-radius: 12px;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.stez-transaction-status.is-confirmed {
+  color: var(--tezex-positive);
+}
+
+.stez-transaction-status.is-failed {
+  color: var(--tezex-text-secondary);
+  border-color: var(--tezex-line-strong);
+}
+
+.stez-transaction-status code {
+  flex-shrink: 0;
+  color: inherit;
+  font-family: "Red Hat Mono", monospace;
+  font-size: 9px;
+}
+
 .stez-action-explanation {
   margin-top: 14px;
   display: grid;

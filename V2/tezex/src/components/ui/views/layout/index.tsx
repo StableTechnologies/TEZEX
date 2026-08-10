@@ -77,7 +77,7 @@ export const Layout: FC<ILayout> = (props) => {
             <Box sx={styles.bottomSpace}>
               <Typography sx={styles.bottomSpaceText}>
                 {isStezRoute ? (
-                  "sTEZ data read from the selected Tezos RPC"
+                  "sTEZ data read from the current Weeklynet RPC"
                 ) : (
                   <>
                     Data provided by

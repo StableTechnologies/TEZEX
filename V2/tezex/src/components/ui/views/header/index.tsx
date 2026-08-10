@@ -1,4 +1,4 @@
-import React, { FC } from "react";
+import React, { FC, useCallback } from "react";
 import { Wallet } from "../../../wallet/Wallet";
 import { NavApp } from "../../../nav";
 
@@ -12,12 +12,15 @@ import MenuIcon from "@mui/icons-material/Menu";
 import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import Container from "@mui/material/Container";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import style from "./style";
 import useStyles from "../../../../hooks/styles";
 import { NetworkSelector } from "../../elements/selectors/networkSelector/NetworkSelector";
 import { useColorMode } from "../../../../contexts/color-mode";
 import { homePathForHost } from "../../../../routing";
+import { useWallet } from "../../../../hooks/wallet";
+import { connectWalletToCustomNetwork } from "../../../../functions/beacon";
+import { resolveCurrentWeeklynet } from "../../../../pages/Stez/network";
 
 export interface IHeader {
   openMenu: boolean;
@@ -29,6 +32,16 @@ export const Header: FC<IHeader> = (props) => {
   const { mode, toggleMode } = useColorMode();
   const isLight = mode === "light";
   const homePath = homePathForHost(window.location.hostname);
+  const location = useLocation();
+  const wallet = useWallet();
+  const isStezRoute = location.pathname.startsWith("/stez");
+  const connectToWeeklynet = useCallback(async () => {
+    const weeklynet = await resolveCurrentWeeklynet();
+    await connectWalletToCustomNetwork(wallet, {
+      name: weeklynet.name,
+      rpcUrl: weeklynet.rpcUrl,
+    });
+  }, [wallet]);
 
   return (
     <AppBar
@@ -85,6 +98,7 @@ export const Header: FC<IHeader> = (props) => {
                   variant={"header"}
                   scalingKey={scalingKey}
                   visualVariant="dark"
+                  connectOverride={isStezRoute ? connectToWeeklynet : undefined}
                 />
               </Box>
             </Box>

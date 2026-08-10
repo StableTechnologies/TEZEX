@@ -60,6 +60,13 @@ interface ExchangeRate {
   denominator: string | number;
 }
 
+interface ContractEntrypoints {
+  entrypoints?: Record<
+    string,
+    { prim?: string; args?: unknown[]; annots?: string[] }
+  >;
+}
+
 const normalizeEndpoint = (endpoint: string) => endpoint.replace(/\/+$/, "");
 
 const endpointsFor = (info: NetworkInfo) =>
@@ -108,6 +115,15 @@ const isFeatureDisabled = (error: unknown) =>
 const toBigInt = (value: string | number | bigint): bigint => {
   if (typeof value === "bigint") return value;
   return BigInt(String(value));
+};
+
+const hasCompatibleTransactionEntrypoints = (response: ContractEntrypoints) => {
+  const entrypoints = response.entrypoints;
+  return (
+    entrypoints?.deposit?.prim === "unit" &&
+    entrypoints?.redeem?.prim === "nat" &&
+    entrypoints?.finalize_redeem?.prim === "key_hash"
+  );
 };
 
 const unavailableSnapshot = (
@@ -235,15 +251,20 @@ export async function loadStezSnapshot(
     );
   }
 
-  if (metadata.protocolHash !== USHUAIA_PROTOCOL) {
-    return unavailableSnapshot(
-      "unsupported",
-      metadata,
-      "sTEZ was detected, but this protocol revision has not yet passed TEZEX compatibility checks."
-    );
-  }
-
   try {
+    const entrypoints = await fetchRpc<ContractEntrypoints>(
+      metadata.endpoint,
+      `${contextPath}/contracts/${contractHash}/entrypoints`,
+      signal
+    );
+    if (!hasCompatibleTransactionEntrypoints(entrypoints)) {
+      return unavailableSnapshot(
+        "unsupported",
+        metadata,
+        "The detected sTEZ contract does not expose the transaction interface required by TEZEX."
+      );
+    }
+
     const accountPath = walletAddress
       ? `${contextPath}/contracts/${walletAddress}`
       : null;
@@ -333,3 +354,39 @@ export const quoteStezRedeem = (
 ) => (tokenUnits * numeratorMutez) / denominatorUnits;
 
 export const stezUnderlyingValue = quoteStezRedeem;
+
+const pause = (milliseconds: number) =>
+  new Promise((resolve) => window.setTimeout(resolve, milliseconds));
+
+export async function waitForStezOperation(
+  endpoint: string,
+  operationHash: string,
+  attempts = 30
+) {
+  const normalized = normalizeEndpoint(endpoint);
+
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    const recentBlocks = await Promise.all(
+      [0, 1, 2].map(async (depth) => {
+        try {
+          return await fetchRpc<string[][]>(
+            normalized,
+            `/chains/main/blocks/head~${depth}/operation_hashes`
+          );
+        } catch {
+          return [];
+        }
+      })
+    );
+
+    if (recentBlocks.some((passes) => passes.flat().includes(operationHash))) {
+      return;
+    }
+
+    if (attempt < attempts - 1) await pause(4_000);
+  }
+
+  throw new Error(
+    "The operation was submitted, but confirmation has not appeared on Weeklynet yet."
+  );
+}
