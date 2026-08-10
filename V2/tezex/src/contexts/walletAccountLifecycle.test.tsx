@@ -14,7 +14,6 @@ import {
   Balance,
   Token,
   TokenType,
-  TransactionStatus,
   TransactingComponent,
 } from "../types/general";
 import { IPoolAdapter, PoolType } from "../types/pools";
@@ -274,10 +273,9 @@ describe("WalletProvider account and network lifecycle", () => {
     // Simulate a wallet that changed accounts without delivering its event.
     activeAccount = account("tz1-second-owner", "second-account");
     await act(async () => {
-      await wallet.updateStatus(
-        TransactingComponent.SWAP,
-        TransactionStatus.PENDING
-      );
+      await expect(
+        wallet.prepareTransactionForSubmission(TransactingComponent.SWAP)
+      ).resolves.toBe(true);
     });
 
     await waitFor(() => expect(wallet.address).toBeNull());

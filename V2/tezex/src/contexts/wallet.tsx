@@ -401,6 +401,11 @@ export function WalletProvider(props: IWalletProvider) {
 
         const activeAccount = await dAppClient.getActiveAccount();
 
+        if (!activeAccount) {
+          await disposeDAppClient(dAppClient);
+          return;
+        }
+
         if (!syncActiveAccountRef.current(dAppClient, activeAccount)) {
           await disposeDAppClient(dAppClient);
         }
@@ -538,8 +543,21 @@ export function WalletProvider(props: IWalletProvider) {
               transaction,
               adapter.poolConfig
             );
-            const identityGuardedClient = createGuardedDAppClient({
+            const quoteGuardedClient = createQuoteGuardedDAppClient({
               client,
+              transaction,
+              getActiveTransaction: () =>
+                transactionsRef.current[transaction.component],
+              getRuntime: () => {
+                const currentNetwork = networkRef.current;
+                return {
+                  context: { ...quoteContextRef.current },
+                  readChainId: () => currentNetwork.toolkit.rpc.getChainId(),
+                };
+              },
+            });
+            const guardedClient = createGuardedDAppClient({
+              client: quoteGuardedClient,
               submission,
               transactionNetwork: transaction.network,
               operationPolicy,
@@ -556,19 +574,6 @@ export function WalletProvider(props: IWalletProvider) {
                     fallbackRpcUrls: currentNetwork.info.rpcFallbacks,
                   }),
                   rpcUrl: currentNetwork.toolkit.rpc.getRpcUrl(),
-                  readChainId: () => currentNetwork.toolkit.rpc.getChainId(),
-                };
-              },
-            });
-            const guardedClient = createQuoteGuardedDAppClient({
-              client: identityGuardedClient,
-              transaction,
-              getActiveTransaction: () =>
-                transactionsRef.current[transaction.component],
-              getRuntime: () => {
-                const currentNetwork = networkRef.current;
-                return {
-                  context: { ...quoteContextRef.current },
                   readChainId: () => currentNetwork.toolkit.rpc.getChainId(),
                 };
               },

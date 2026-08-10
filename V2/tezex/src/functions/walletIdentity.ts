@@ -414,6 +414,7 @@ export function createOperationRequestPolicy(
           parameterValues: [owner, exactNat(inputAmount), minimumOutput],
         })
       );
+      operations.push(reset);
       break;
     }
 
@@ -518,10 +519,7 @@ export function createOperationRequestPolicy(
         tokenBAmount,
         transaction.slippage
       );
-      const minimumLp =
-        poolConfig.type === PoolType.SIRIUS
-          ? exactNat(quotedLp)
-          : removeSlippage(quotedLp, transaction.slippage);
+      const minimumLp = removeSlippage(quotedLp, transaction.slippage);
       operations.push(
         approvalExpectation({
           asset: tokenAsset,
@@ -671,11 +669,9 @@ const isCurrentDeadline = (value: string): boolean => {
   );
 };
 
-const sameScalarMultiset = (actual: string[], expected: string[]): boolean =>
+const sameScalarSequence = (actual: string[], expected: string[]): boolean =>
   actual.length === expected.length &&
-  [...actual]
-    .sort()
-    .every((value, index) => value === [...expected].sort()[index]);
+  actual.every((value, index) => value === expected[index]);
 
 const findOperatorAction = (value: unknown): OperatorAction | undefined => {
   if (Array.isArray(value)) {
@@ -752,7 +748,7 @@ export function assertOperationRequestMatchesSubmission(
     );
     if (
       deadlines.length !== (expected.hasDeadline ? 1 : 0) ||
-      !sameScalarMultiset(ordinaryScalars, expected.parameterValues)
+      !sameScalarSequence(ordinaryScalars, expected.parameterValues)
     ) {
       throw new WalletIdentityError(
         "Wallet operation parameters do not match the prepared transaction."

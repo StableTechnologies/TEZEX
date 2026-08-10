@@ -369,6 +369,167 @@ describe("wallet submission identity", () => {
     expect(request.requestOperation).not.toHaveBeenCalled();
   });
 
+  it("rejects reordered parameters even when every scalar is present", async () => {
+    const reorderedRequest = validRequest();
+    const operation = reorderedRequest.operationDetails[1];
+    if (operation.kind === TezosOperationType.TRANSACTION) {
+      operation.parameters = {
+        entrypoint: "swap",
+        value: {
+          minimum: "9",
+          owner,
+          deadline: deadline(),
+        } as never,
+      };
+    }
+
+    const request = await guardedRequest({ request: reorderedRequest });
+
+    await expect(request.result).rejects.toBeInstanceOf(WalletIdentityError);
+    expect(request.requestOperation).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    {
+      name: "FA1.2",
+      tokenType: TokenType.FA12,
+      expectedEntrypoints: ["approve", "approve", "tokenToXtz", "approve"],
+      expectedActions: [undefined, undefined, undefined, undefined],
+    },
+    {
+      name: "FA2",
+      tokenType: TokenType.FA2,
+      expectedEntrypoints: [
+        "update_operators",
+        "tokenToXtz",
+        "update_operators",
+      ],
+      expectedActions: ["add_operator", undefined, "remove_operator"],
+    },
+  ])(
+    "builds the complete $name token-to-XTZ batch policy",
+    ({ tokenType, expectedEntrypoints, expectedActions }) => {
+      const tokenAsset = {
+        name: Token.USDt,
+        label: "Token",
+        logo: "",
+        address: token,
+        decimals: 6,
+        type: tokenType,
+        tokenId: tokenType === TokenType.FA2 ? 7 : undefined,
+      };
+      const xtzAsset = {
+        name: Token.XTZ,
+        label: "Tez",
+        logo: "",
+        address: "",
+        decimals: 6,
+        type: TokenType.XTZ,
+      };
+      const transaction = {
+        id: "token-to-xtz",
+        network: NetworkType.MAINNET,
+        component: TransactingComponent.SWAP,
+        poolId: "tezex",
+        sendAsset: [tokenAsset],
+        sendAmount: [{ mantissa: new BigNumber("10") }],
+        sendAssetBalance: [{ mantissa: new BigNumber("100") }],
+        receiveAsset: [xtzAsset],
+        receiveAmount: [{ mantissa: new BigNumber("9") }],
+        receiveAssetBalance: [{ mantissa: new BigNumber("0") }],
+        slippage: 0,
+        transactionStatus: TransactionStatus.PENDING,
+        submissionContext: submission,
+        lastModified: new Date(),
+        locked: false,
+      } as Transaction;
+      const policy = createOperationRequestPolicy(transaction, {
+        id: "tezex",
+        name: "TEZEX",
+        type: PoolType.TEZEX,
+        address: pool,
+        tokenA: Token.XTZ,
+        tokenB: Token.USDt,
+        lpToken: Token.LP_XTZUSDt,
+      });
+
+      expect(
+        policy.operations.map((operation) => operation.entrypoint)
+      ).toEqual(expectedEntrypoints);
+      expect(
+        policy.operations.map((operation) => operation.operatorAction)
+      ).toEqual(expectedActions);
+    }
+  );
+
+  it("matches Sirius add-liquidity slippage and approval cleanup", () => {
+    const amount = (value: string) =>
+      ({ mantissa: new BigNumber(value) } as never);
+    const xtzAsset = {
+      name: Token.XTZ,
+      label: "Tez",
+      logo: "",
+      address: "",
+      decimals: 6,
+      type: TokenType.XTZ,
+    };
+    const tokenAsset = {
+      name: Token.TzBTC,
+      label: "tzBTC",
+      logo: "",
+      address: token,
+      decimals: 8,
+      type: TokenType.FA12,
+    };
+    const lpAsset = {
+      name: Token.Sirs,
+      label: "SIRS",
+      logo: "",
+      address: "KT1-sirs",
+      decimals: 0,
+      type: TokenType.FA12,
+    };
+    const transaction = {
+      id: "sirius-add",
+      network: NetworkType.MAINNET,
+      component: TransactingComponent.ADD_LIQUIDITY,
+      poolId: "sirius",
+      sendAsset: [xtzAsset, tokenAsset],
+      sendAmount: [amount("100"), amount("200")],
+      sendAssetBalance: [amount("1000"), amount("1000")],
+      receiveAsset: [lpAsset],
+      receiveAmount: [amount("300")],
+      receiveAssetBalance: [amount("0")],
+      slippage: 1,
+      transactionStatus: TransactionStatus.PENDING,
+      submissionContext: submission,
+      lastModified: new Date(),
+      locked: false,
+    } as Transaction;
+
+    const policy = createOperationRequestPolicy(transaction, {
+      id: "sirius",
+      name: "Sirius",
+      type: PoolType.SIRIUS,
+      address: pool,
+      tokenA: Token.XTZ,
+      tokenB: Token.TzBTC,
+      lpToken: Token.Sirs,
+    });
+
+    expect(policy.operations.map((operation) => operation.entrypoint)).toEqual([
+      "approve",
+      "approve",
+      "addLiquidity",
+      "approve",
+    ]);
+    expect(policy.operations[2]).toMatchObject({
+      amount: "100",
+      parameterValues: [owner, "297", "202"],
+      hasDeadline: true,
+    });
+  });
+
   it("validates FA2 action and token ID", async () => {
     const fa2Policy: OperationRequestPolicy = {
       recipient: pool,

@@ -122,7 +122,6 @@ const connectWithClient = async (
     if (!walletInfo.syncActiveAccount(dAppClient, activeAccount)) {
       throw new Error("Could not connect to the configured network");
     }
-    walletInfo.setAddress(activeAccount.address);
   } catch (error) {
     console.log("\n", "Error encountered in connectWallet : ", error, "\n");
     err = true;
