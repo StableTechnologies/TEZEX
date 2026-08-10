@@ -265,6 +265,7 @@ export const Swap: FC<ISwapToken> = () => {
   const hasEnteredAmount = new BigNumber(sendInputValue || 0).isGreaterThan(0);
   const hasQuote = Boolean(
     hasEnteredAmount &&
+      transaction?.quote &&
       sendAmount &&
       receiveAmount &&
       sendAmount.isGreaterThan(0)

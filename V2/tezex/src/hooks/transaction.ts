@@ -6,7 +6,6 @@ import {
   getAssetStateByTransactionTypeAndAsset,
   transactionToAssetStates,
 } from "../functions/util";
-import { estimateWithAdapter } from "../functions/estimates";
 import {
   Transaction,
   TransactionStatus,
@@ -21,8 +20,6 @@ import {
 
 import { debounce, eq } from "lodash";
 import { useDebounce } from "usehooks-ts";
-import { PoolRegistry } from "../adapters/poolRegistry";
-import { useNetwork } from "./network";
 import {
   getSlippageValidationMessage,
   getSpendableXtz,
@@ -64,7 +61,6 @@ export function useTransaction(
   }
 ): TransactionOps {
   const wallet = useContext(WalletContext);
-  const network = useNetwork();
   const [counter, setCounter] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [assetStates, setAssetStates] = useState<AssetState[]>([]);
@@ -257,58 +253,47 @@ export function useTransaction(
   // calback to handle send amount or slippage updates to transaction in context
   const _updateAmount = useCallback(
     async (sendAmount?: string, slippage?: string): Promise<boolean> => {
-      // variable to track if transaction was updated
-      let updated = false;
       const transaction = getActiveTransaction();
-      // if transaction exists and is not locked
-      if (transaction && !transaction.locked) {
-        // handle slippage update
-        if (slippage !== undefined) {
-          const validationMessage = getSlippageValidationMessage(slippage);
-          if (validationMessage) {
-            await wallet.updateStatus(
-              component,
-              TransactionStatus.INVALID_SLIPPAGE
-            );
-            updated = true;
-          } else {
-            const _slippage = new BigNumber(slippage).toNumber();
-            updated =
-              updated ||
-              (await wallet.updateAmount(
-                component,
-                undefined,
-                undefined,
-                _slippage
-              ));
-          }
-        }
-        // handle send amount update
-        if (sendAmount) {
-          const adapter = PoolRegistry.getAdapter(transaction.poolId);
+      if (!transaction || transaction.locked) return false;
 
-          const updatedTransaction: Transaction = {
-            ...transaction,
-            sendAmount: !transaction.sendAmount[1]
-              ? [balanceBuilder(sendAmount, transaction.sendAsset[0], false)]
-              : [
-                  balanceBuilder(sendAmount, transaction.sendAsset[0], false),
-                  transaction.sendAmount[1],
-                ],
-          };
-          const _transaction: Transaction = await estimateWithAdapter(
-            updatedTransaction,
-            network.toolkit,
-            adapter
+      let slippageUpdate: number | undefined;
+      if (slippage !== undefined) {
+        const validationMessage = getSlippageValidationMessage(slippage);
+        if (validationMessage) {
+          await wallet.invalidateTransactionQuote(
+            component,
+            TransactionStatus.INVALID_SLIPPAGE
           );
-          updated = await wallet.updateAmount(
-            _transaction.component,
-            _transaction.sendAmount,
-            _transaction.receiveAmount
-          );
+          return true;
         }
+        slippageUpdate = new BigNumber(slippage).toNumber();
       }
-      return updated;
+
+      const sendAmountUpdate =
+        sendAmount !== undefined
+          ? ((!transaction.sendAmount[1]
+              ? [
+                  balanceBuilder(
+                    sendAmount || "0",
+                    transaction.sendAsset[0],
+                    false
+                  ),
+                ]
+              : [
+                  balanceBuilder(
+                    sendAmount || "0",
+                    transaction.sendAsset[0],
+                    false
+                  ),
+                  transaction.sendAmount[1],
+                ]) as Amount)
+          : undefined;
+
+      return wallet.refreshTransactionQuote(
+        component,
+        sendAmountUpdate,
+        slippageUpdate
+      );
     },
     [getActiveTransaction, wallet, component]
   );
