@@ -49,14 +49,9 @@ export async function getBalance(
  */
 export function createDAppClient(network: INetwork): DAppClient {
   if (network.network === NetworkType.CUSTOM) {
-    return new DAppClient({
-      name: "Tezex",
-      network: {
-        type: NetworkType.CUSTOM,
-        rpcUrl: network.info.tezosServer,
-        name: "Previewnet",
-      },
-      preferredNetwork: NetworkType.CUSTOM,
+    return createCustomDAppClient({
+      rpcUrl: network.info.tezosServer,
+      name: "Previewnet",
     });
   }
   return new DAppClient({
@@ -66,12 +61,29 @@ export function createDAppClient(network: INetwork): DAppClient {
   });
 }
 
-export default async function connectWallet(
-  walletInfo: WalletInfo,
-  network: INetwork
-) {
-  const dAppClient = createDAppClient(network);
+export interface CustomDAppNetwork {
+  rpcUrl: string;
+  name: string;
+}
 
+export function createCustomDAppClient(
+  customNetwork: CustomDAppNetwork
+): DAppClient {
+  return new DAppClient({
+    name: "Tezex",
+    network: {
+      type: NetworkType.CUSTOM,
+      rpcUrl: customNetwork.rpcUrl,
+      name: customNetwork.name,
+    },
+    preferredNetwork: NetworkType.CUSTOM,
+  });
+}
+
+const connectWithClient = async (
+  walletInfo: WalletInfo,
+  dAppClient: DAppClient
+) => {
   let err = false;
   try {
     await dAppClient.subscribeToEvent(
@@ -85,9 +97,8 @@ export default async function connectWallet(
     const activeAccount = await dAppClient.getActiveAccount();
     if (!activeAccount) {
       throw new Error("Could not connect");
-    } else {
-      walletInfo.setAddress(activeAccount.address);
     }
+    walletInfo.setAddress(activeAccount.address);
   } catch (error) {
     console.log("\n", "Error encountered in connectWallet : ", error, "\n");
     err = true;
@@ -98,4 +109,27 @@ export default async function connectWallet(
       walletInfo.setClient(dAppClient);
     }
   }
+};
+
+export async function connectWalletToCustomNetwork(
+  walletInfo: WalletInfo,
+  customNetwork: CustomDAppNetwork
+) {
+  if (walletInfo.client) {
+    try {
+      await walletInfo.client.clearActiveAccount();
+      await walletInfo.client.destroy();
+    } catch (error) {
+      console.warn("Unable to clear the previous wallet network:", error);
+    }
+  }
+
+  await connectWithClient(walletInfo, createCustomDAppClient(customNetwork));
+}
+
+export default async function connectWallet(
+  walletInfo: WalletInfo,
+  network: INetwork
+) {
+  await connectWithClient(walletInfo, createDAppClient(network));
 }

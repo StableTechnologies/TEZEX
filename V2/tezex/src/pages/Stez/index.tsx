@@ -1,5 +1,4 @@
 import React, { FC, useCallback, useEffect, useMemo, useState } from "react";
-import { NetworkType } from "@airgap/beacon-sdk";
 import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
 import ArrowDownwardRoundedIcon from "@mui/icons-material/ArrowDownwardRounded";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
@@ -7,8 +6,7 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import LockClockOutlinedIcon from "@mui/icons-material/LockClockOutlined";
 import ArrowOutwardRoundedIcon from "@mui/icons-material/ArrowOutwardRounded";
 
-import connectWallet from "../../functions/beacon";
-import { useNetwork } from "../../hooks/network";
+import { connectWalletToCustomNetwork } from "../../functions/beacon";
 import { useWallet } from "../../hooks/wallet";
 import {
   loadStezSnapshot,
@@ -16,21 +14,27 @@ import {
   quoteStezRedeem,
   StezSnapshot,
   stezUnderlyingValue,
+  waitForStezOperation,
 } from "./rpc";
+import {
+  isWeeklynetAccount,
+  resolveCurrentWeeklynet,
+  WeeklynetNetwork,
+} from "./network";
+import { readableStezError, submitStezOperation } from "./transactions";
 import "./style.css";
 
 type StezAction = "Stake" | "Redeem" | "Finalize";
 
 const ZERO = BigInt(0);
 const TOKEN_SCALE = BigInt(1_000_000);
-const SHADOWNET_FAUCET_URL = "https://faucet.shadownet.teztnets.com";
-const TRANSACTION_SIGNING_ENABLED = false;
 
-const networkName = (network: NetworkType) => {
-  if (network === NetworkType.MAINNET) return "Mainnet";
-  if (network === NetworkType.SHADOWNET) return "Shadownet";
-  return "Previewnet";
-};
+type TransactionStage =
+  | "idle"
+  | "requesting"
+  | "submitted"
+  | "confirmed"
+  | "failed";
 
 const shortAddress = (value?: string | null, front = 7, back = 5) => {
   if (!value) return "";
@@ -74,31 +78,32 @@ const statusCopy = (
   snapshot: StezSnapshot | null,
   loading: boolean,
   selectedNetwork: string,
-  selectedNetworkType: NetworkType
+  networkError: string | null
 ) => {
-  if (loading || !snapshot) {
+  if (loading) {
     return {
       title: "Loading sTEZ data",
       description:
-        "TEZEX is checking the selected network for current sTEZ protocol data.",
+        "TEZEX is resolving the current Weeklynet and checking its native sTEZ contract.",
+    };
+  }
+  if (!snapshot) {
+    return {
+      title: "Unable to resolve Weeklynet",
+      description:
+        networkError ??
+        "The current Weeklynet could not be read from the official Teztnets directory.",
     };
   }
   if (snapshot.availability === "available") {
     return {
-      title: `sTEZ is active on ${selectedNetwork}`,
-      description: `Live sTEZ protocol data was read from block ${snapshot.blockLevel.toLocaleString(
+      title: `sTEZ is live on ${selectedNetwork}`,
+      description: `Use test XTZ to stake, redeem, and finalize against the current experimental protocol. Live data was read from block ${snapshot.blockLevel.toLocaleString(
         "en-US"
-      )}. Transaction signing is not yet enabled in this interface.`,
+      )}. Weeklynet resets every Wednesday, so balances and addresses are temporary.`,
     };
   }
   if (snapshot.availability === "disabled") {
-    if (selectedNetworkType === NetworkType.MAINNET) {
-      return {
-        title: "sTEZ is not active on Mainnet",
-        description:
-          "This page is a read-only preview of the sTEZ staking flow. You can explore staking, redemption, and finalization, but Mainnet transactions are not enabled. Activation would require a future Tezos protocol upgrade.",
-      };
-    }
     return {
       title: `sTEZ is not active on ${selectedNetwork}`,
       description:
@@ -145,27 +150,43 @@ const PositionCell: FC<PositionCellProps> = ({
 );
 
 export const Stez: FC = () => {
-  const network = useNetwork();
   const wallet = useWallet();
-  const selectedNetwork = networkName(network.network);
+  const selectedNetwork = "Weeklynet";
+  const [weeklynet, setWeeklynet] = useState<WeeklynetNetwork | null>(null);
   const [snapshot, setSnapshot] = useState<StezSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
+  const [networkError, setNetworkError] = useState<string | null>(null);
+  const [walletReady, setWalletReady] = useState(false);
   const [activeAction, setActiveAction] = useState<StezAction>("Stake");
   const [amount, setAmount] = useState("");
+  const [transactionStage, setTransactionStage] =
+    useState<TransactionStage>("idle");
+  const [transactionMessage, setTransactionMessage] = useState("");
+  const [operationHash, setOperationHash] = useState("");
 
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true);
     setSnapshot(null);
+    setNetworkError(null);
     setAmount("");
 
-    loadStezSnapshot(network.info, wallet.address, controller.signal)
+    resolveCurrentWeeklynet(controller.signal)
+      .then(async (nextWeeklynet) => {
+        if (!controller.signal.aborted) setWeeklynet(nextWeeklynet);
+        return loadStezSnapshot(
+          nextWeeklynet.info,
+          wallet.address,
+          controller.signal
+        );
+      })
       .then((nextSnapshot) => {
         if (!controller.signal.aborted) setSnapshot(nextSnapshot);
       })
       .catch((error) => {
         if (!controller.signal.aborted) {
           console.error("Unable to load sTEZ state", error);
+          setNetworkError(readableStezError(error));
         }
       })
       .finally(() => {
@@ -173,10 +194,35 @@ export const Stez: FC = () => {
       });
 
     return () => controller.abort();
-  }, [network.info, network.network, wallet.address]);
+  }, [wallet.address]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    if (!wallet.client || !weeklynet) {
+      setWalletReady(false);
+      return () => {
+        mounted = false;
+      };
+    }
+
+    wallet.client
+      .getActiveAccount()
+      .then((account) => {
+        if (mounted) setWalletReady(isWeeklynetAccount(account, weeklynet));
+      })
+      .catch(() => {
+        if (mounted) setWalletReady(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [wallet.client, weeklynet]);
 
   const available = snapshot?.availability === "available";
-  const walletConnected = wallet.isWalletConnected && Boolean(wallet.address);
+  const walletConnected =
+    wallet.isWalletConnected && walletReady && Boolean(wallet.address);
   const rate = formatRatio(
     snapshot?.rateNumeratorMutez ?? null,
     snapshot?.rateDenominatorTokenUnits ?? null
@@ -215,11 +261,16 @@ export const Stez: FC = () => {
           snapshot.rateDenominatorTokenUnits
         );
   }, [activeAction, available, inputUnits, snapshot]);
-  const copy = statusCopy(snapshot, loading, selectedNetwork, network.network);
+  const copy = statusCopy(snapshot, loading, selectedNetwork, networkError);
 
   const connect = useCallback(async () => {
-    await connectWallet(wallet, network);
-  }, [network, wallet]);
+    const activeWeeklynet = weeklynet ?? (await resolveCurrentWeeklynet());
+    setWeeklynet(activeWeeklynet);
+    await connectWalletToCustomNetwork(wallet, {
+      name: activeWeeklynet.name,
+      rpcUrl: activeWeeklynet.rpcUrl,
+    });
+  }, [wallet, weeklynet]);
 
   const setMaximum = () => {
     const maximum =
@@ -232,13 +283,10 @@ export const Stez: FC = () => {
   };
 
   const actionButtonCopy = () => {
-    if (!walletConnected) return "CONNECT WALLET";
-    if (
-      snapshot?.availability === "disabled" &&
-      network.network === NetworkType.MAINNET
-    ) {
-      return "sTEZ NOT ACTIVE ON MAINNET";
-    }
+    if (!walletConnected) return "CONNECT WALLET TO WEEKLYNET";
+    if (transactionStage === "requesting") return "CONFIRM IN WALLET";
+    if (transactionStage === "submitted") return "CONFIRMING ON WEEKLYNET";
+    if (transactionStage === "confirmed") return "CONFIRMED";
     if (
       activeAction === "Finalize" &&
       (!snapshot?.redeemedFinalizableMutez ||
@@ -249,13 +297,72 @@ export const Stez: FC = () => {
     if (available && activeAction !== "Finalize" && inputUnits <= ZERO) {
       return "ENTER AN AMOUNT";
     }
-    if (!TRANSACTION_SIGNING_ENABLED) {
-      return "TRANSACTIONS NOT ENABLED IN THIS PREVIEW";
-    }
     if (activeAction === "Stake") return "STAKE XTZ";
     if (activeAction === "Redeem") return "REDEEM sTEZ";
     return "FINALIZE AND CLAIM XTZ";
   };
+
+  const executeAction = useCallback(async () => {
+    if (!walletConnected) {
+      await connect();
+      return;
+    }
+    if (
+      !wallet.client ||
+      !wallet.address ||
+      !weeklynet ||
+      !snapshot?.contractHash
+    ) {
+      return;
+    }
+
+    setTransactionStage("requesting");
+    setTransactionMessage("Review and approve the operation in your wallet.");
+    setOperationHash("");
+
+    try {
+      const hash = await submitStezOperation(wallet.client, {
+        action: activeAction,
+        amountUnits: inputUnits,
+        contractHash: snapshot.contractHash,
+        redeemer: wallet.address,
+      });
+      setOperationHash(hash);
+      setTransactionStage("submitted");
+      setTransactionMessage(
+        "Operation submitted. Waiting for Weeklynet confirmation."
+      );
+      await waitForStezOperation(snapshot.endpoint, hash);
+      const refreshed = await loadStezSnapshot(weeklynet.info, wallet.address);
+      setSnapshot(refreshed);
+      setAmount("");
+      setTransactionStage("confirmed");
+      setTransactionMessage("Operation confirmed on Weeklynet.");
+    } catch (error) {
+      setTransactionStage("failed");
+      setTransactionMessage(readableStezError(error));
+    }
+  }, [
+    activeAction,
+    connect,
+    inputUnits,
+    snapshot,
+    wallet.address,
+    wallet.client,
+    walletConnected,
+    weeklynet,
+  ]);
+
+  const actionDisabled =
+    transactionStage === "requesting" ||
+    transactionStage === "submitted" ||
+    transactionStage === "confirmed" ||
+    (walletConnected &&
+      (!available ||
+        (activeAction === "Finalize"
+          ? !snapshot?.redeemedFinalizableMutez ||
+            snapshot.redeemedFinalizableMutez <= ZERO
+          : inputUnits <= ZERO)));
 
   return (
     <main className="stez-page">
@@ -288,15 +395,15 @@ export const Stez: FC = () => {
           <strong>{copy.title}</strong>
           <p>{copy.description}</p>
         </div>
-        {available && network.network === NetworkType.SHADOWNET && (
+        {weeklynet && (
           <a
             className="stez-availability__faucet-link"
-            href={SHADOWNET_FAUCET_URL}
+            href={weeklynet.faucetUrl}
             target="_blank"
             rel="noreferrer"
-            aria-label="Get Shadownet test XTZ from the official faucet"
+            aria-label="Get Weeklynet test XTZ from the official Teztnets faucet"
           >
-            GET SHADOWNET TEST XTZ
+            GET WEEKLYNET TEST XTZ
             <ArrowOutwardRoundedIcon aria-hidden="true" />
           </a>
         )}
@@ -402,6 +509,9 @@ export const Stez: FC = () => {
                     onClick={() => {
                       setActiveAction(action);
                       setAmount("");
+                      setTransactionStage("idle");
+                      setTransactionMessage("");
+                      setOperationHash("");
                     }}
                   >
                     {action}
@@ -467,6 +577,9 @@ export const Stez: FC = () => {
                       onChange={(event) => {
                         if (/^\d*(?:\.\d{0,6})?$/.test(event.target.value)) {
                           setAmount(event.target.value);
+                          setTransactionStage("idle");
+                          setTransactionMessage("");
+                          setOperationHash("");
                         }
                       }}
                     />
@@ -512,11 +625,27 @@ export const Stez: FC = () => {
             <button
               type="button"
               className="stez-primary-action"
-              disabled={walletConnected}
-              onClick={walletConnected ? undefined : connect}
+              disabled={actionDisabled}
+              aria-busy={
+                transactionStage === "requesting" ||
+                transactionStage === "submitted"
+              }
+              onClick={executeAction}
             >
               {actionButtonCopy()}
             </button>
+
+            {transactionStage !== "idle" && (
+              <div
+                className={`stez-transaction-status is-${transactionStage}`}
+                role={transactionStage === "failed" ? "alert" : "status"}
+              >
+                <span>{transactionMessage}</span>
+                {operationHash && (
+                  <code>{shortAddress(operationHash, 12, 8)}</code>
+                )}
+              </div>
+            )}
 
             <div className="stez-action-explanation">
               <InfoOutlinedIcon aria-hidden="true" />
@@ -590,7 +719,7 @@ export const Stez: FC = () => {
               <dt>Network / chain ID</dt>
               <dd>
                 {selectedNetwork} ·{" "}
-                {shortAddress(snapshot?.chainId || network.info.chainId, 10, 6)}
+                {shortAddress(snapshot?.chainId || weeklynet?.chainId, 10, 6)}
               </dd>
               <dt>Protocol</dt>
               <dd>

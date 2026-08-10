@@ -1,238 +1,175 @@
 import React from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { NetworkType } from "@airgap/beacon-sdk";
 
 import { Stez } from ".";
-import connectWallet from "../../functions/beacon";
-import { loadStezSnapshot, StezSnapshot, USHUAIA_PROTOCOL } from "./rpc";
+import { connectWalletToCustomNetwork } from "../../functions/beacon";
+import { resolveCurrentWeeklynet } from "./network";
+import { loadStezSnapshot, StezSnapshot } from "./rpc";
 
-jest.mock("../../functions/beacon", () => jest.fn());
+jest.mock("../../functions/beacon", () => ({
+  connectWalletToCustomNetwork: jest.fn(),
+}));
 
-const mockNetworkInfo = {
-  tezosServer: "https://rpc.example",
-  rpcFallbacks: [],
-  chainId: "NetXdQprcVkpaWU",
-  pools: [],
-  assets: [],
+const weeklynet = {
+  key: "weeklynet-2026-08-05",
+  name: "Weeklynet" as const,
+  rpcUrl: "https://rpc.weeklynet-2026-08-05.teztnets.com",
+  faucetUrl: "https://faucet.weeklynet-2026-08-05.teztnets.com",
+  chainId: "NetXmT6tP86uFqw",
+  activatedOn: "2026-08-05",
+  info: {
+    tezosServer: "https://rpc.weeklynet-2026-08-05.teztnets.com",
+    rpcFallbacks: [],
+    chainId: "NetXmT6tP86uFqw",
+    pools: [],
+    assets: [],
+  },
+};
+
+const mockClient = {
+  getActiveAccount: jest.fn(),
+  requestOperation: jest.fn(),
 };
 
 const mockWallet: {
   isWalletConnected: boolean;
   address: string | null;
+  client: typeof mockClient | null;
 } = {
   isWalletConnected: false,
   address: null,
+  client: null,
 };
-let mockNetworkType = NetworkType.MAINNET;
 
-jest.mock("../../hooks/network", () => ({
-  useNetwork: () => ({
-    network: mockNetworkType,
-    info: mockNetworkInfo,
-  }),
-}));
 jest.mock("../../hooks/wallet", () => ({
   useWallet: () => mockWallet,
 }));
+jest.mock("./network", () => {
+  const actual = jest.requireActual("./network");
+  return { ...actual, resolveCurrentWeeklynet: jest.fn() };
+});
 jest.mock("./rpc", () => {
   const actual = jest.requireActual("./rpc");
   return { ...actual, loadStezSnapshot: jest.fn() };
 });
 
-const disabledSnapshot: StezSnapshot = {
-  availability: "disabled",
-  endpoint: "https://rpc.example",
-  chainId: "NetXdQprcVkpaWU",
-  protocolHash: USHUAIA_PROTOCOL,
+const baseSnapshot: StezSnapshot = {
+  availability: "available",
+  endpoint: weeklynet.rpcUrl,
+  chainId: weeklynet.chainId,
+  protocolHash: "ProtoALphaALphaALphaALphaALphaALphaALphaALphaDdp3zK",
   blockHash: "BLockHash",
-  blockLevel: BigInt(14_286_000),
-  blockTimestamp: "2026-07-30T12:00:00Z",
-  contractHash: null,
-  totalSupplyUnits: null,
-  totalBackingMutez: null,
-  rateNumeratorMutez: null,
-  rateDenominatorTokenUnits: null,
+  blockLevel: BigInt(2_640),
+  blockTimestamp: "2026-08-10T12:00:00Z",
+  contractHash: "KT1WCsbJx996ebZfutAitHYsZ8FUZFsTdaD7",
+  totalSupplyUnits: BigInt(1_000_000),
+  totalBackingMutez: BigInt(1_100_000),
+  rateNumeratorMutez: BigInt(1_100_000),
+  rateDenominatorTokenUnits: BigInt(1_000_000),
   walletXtzMutez: null,
   walletStezUnits: null,
   redeemedFrozenMutez: null,
   redeemedFinalizableMutez: null,
   checkedAt: Date.now(),
-  detail: "The sTEZ feature is not active.",
-};
-
-const availableSnapshot: StezSnapshot = {
-  ...disabledSnapshot,
-  availability: "available",
-  contractHash: "KT1StezNativeContract",
-  totalSupplyUnits: BigInt(1_000_000),
-  totalBackingMutez: BigInt(1_100_000),
-  rateNumeratorMutez: BigInt(1_100_000),
-  rateDenominatorTokenUnits: BigInt(1_000_000),
-  walletXtzMutez: BigInt(5_000_000),
-  walletStezUnits: BigInt(2_000_000),
-  redeemedFrozenMutez: BigInt(250_000),
-  redeemedFinalizableMutez: BigInt(100_000),
   detail: "sTEZ is active.",
 };
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockNetworkType = NetworkType.MAINNET;
   mockWallet.isWalletConnected = false;
   mockWallet.address = null;
-  (loadStezSnapshot as jest.Mock).mockResolvedValue(disabledSnapshot);
+  mockWallet.client = null;
+  (resolveCurrentWeeklynet as jest.Mock).mockResolvedValue(weeklynet);
+  (loadStezSnapshot as jest.Mock).mockResolvedValue(baseSnapshot);
 });
 
-test("uses the Mainnet preview copy without showing a testnet faucet", async () => {
+test("loads live Weeklynet data and its matching faucet", async () => {
   render(<Stez />);
 
   expect(screen.getByText("Loading sTEZ data")).toBeInTheDocument();
-  await waitFor(() =>
-    expect(
-      screen.getByText("sTEZ is not active on Mainnet")
-    ).toBeInTheDocument()
-  );
+  await screen.findByText("sTEZ is live on Weeklynet");
+
   expect(
-    screen.getByText(
-      "This page is a read-only preview of the sTEZ staking flow. You can explore staking, redemption, and finalization, but Mainnet transactions are not enabled. Activation would require a future Tezos protocol upgrade."
-    )
+    screen.getByText(/Weeklynet resets every Wednesday/)
   ).toBeInTheDocument();
   expect(screen.getByText("Stake tez, stay liquid.")).toBeInTheDocument();
-  expect(
-    screen.getByText(
-      "sTEZ is Tezos’s protocol-native liquid staking token. Stake XTZ to receive sTEZ, a token you can hold, transfer, or use in supported applications while its backing XTZ earns staking rewards. The protocol automatically assigns the pool’s staking power across participating bakers, so you do not need to choose one."
-    )
-  ).toBeInTheDocument();
   expect(screen.getByText("sTEZ Balance")).toBeInTheDocument();
-  expect(screen.getByText("Wallet XTZ")).toBeInTheDocument();
-  expect(screen.getByText("Pending Redemption")).toBeInTheDocument();
-  expect(screen.getByText("Ready to Finalize")).toBeInTheDocument();
-  expect(screen.getByText(/Staking XTZ mints sTEZ/)).toBeInTheDocument();
   expect(screen.getByText("Total sTEZ supply")).toBeInTheDocument();
-  expect(screen.getByRole("tab", { name: "Stake" })).toBeInTheDocument();
-  expect(
-    screen.queryByRole("tab", { name: "Deposit" })
-  ).not.toBeInTheDocument();
-  expect(
-    screen.queryByRole("link", {
-      name: "Get Shadownet test XTZ from the official faucet",
-    })
-  ).not.toBeInTheDocument();
-  expect(
-    screen.queryByRole("button", { name: /check stez availability again/i })
-  ).not.toBeInTheDocument();
-  expect(screen.getAllByText(/block 14,286,000/i)).toHaveLength(2);
+
+  const faucet = screen.getByRole("link", {
+    name: "Get Weeklynet test XTZ from the official Teztnets faucet",
+  });
+  expect(faucet).toHaveAttribute("href", weeklynet.faucetUrl);
+  expect(faucet.querySelector("svg")).toBeInTheDocument();
 
   fireEvent.click(screen.getByRole("tab", { name: "Redeem" }));
   expect(screen.getByText("YOU REDEEM")).toBeInTheDocument();
   expect(screen.getByText("XTZ ENTERING REDEMPTION")).toBeInTheDocument();
-  expect(
-    screen.getByText(
-      "Redeeming burns sTEZ and begins a delayed withdrawal of the corresponding XTZ. The XTZ remains frozen and slashable until the redemption delay ends, then must be finalized before it returns to your wallet."
-    )
-  ).toBeInTheDocument();
 
   fireEvent.click(screen.getByRole("tab", { name: "Finalize" }));
   expect(screen.getByText("READY TO FINALIZE")).toBeInTheDocument();
-  expect(
-    screen.getByText(
-      "After the redemption delay has elapsed, finalization releases all matured XTZ to the original redeemer. Anyone may submit the operation, but the funds can only be sent to that redeemer."
-    )
-  ).toBeInTheDocument();
 });
 
-test("uses the inactive Mainnet action label after a wallet is connected", async () => {
-  mockWallet.isWalletConnected = true;
-  mockWallet.address = "tz1MainnetWallet";
-
-  render(<Stez />);
-
-  await screen.findByText("sTEZ is not active on Mainnet");
-  expect(
-    screen.getByRole("button", { name: "sTEZ NOT ACTIVE ON MAINNET" })
-  ).toBeDisabled();
-});
-
-test("shows the Shadownet faucet only for an active Shadownet snapshot", async () => {
-  mockNetworkType = NetworkType.SHADOWNET;
-  (loadStezSnapshot as jest.Mock).mockResolvedValue(availableSnapshot);
-
-  render(<Stez />);
-
-  await screen.findByText("sTEZ is active on Shadownet");
-  expect(
-    screen.getByText(
-      "Live sTEZ protocol data was read from block 14,286,000. Transaction signing is not yet enabled in this interface."
-    )
-  ).toBeInTheDocument();
-  const faucetLink = screen.getByRole("link", {
-    name: "Get Shadownet test XTZ from the official faucet",
-  });
-  expect(faucetLink).toHaveAttribute(
-    "href",
-    "https://faucet.shadownet.teztnets.com"
-  );
-  expect(faucetLink.querySelector("svg")).toBeInTheDocument();
-  expect(faucetLink).not.toHaveTextContent("↗");
-  expect(
-    screen.getByText(
-      "Rewards do not increase your sTEZ balance. Instead, they increase the amount of XTZ each sTEZ can redeem for. Baker fees reduce the rewards passed through, and slashing can lower the redemption rate."
-    )
-  ).toBeInTheDocument();
-});
-
-test.each([
-  [
-    "unsupported" as const,
-    "sTEZ is not supported on Mainnet",
-    "The selected network does not expose a compatible sTEZ implementation. No balances, rates, or transaction controls are shown.",
-  ],
-  [
-    "unreachable" as const,
-    "Unable to load sTEZ data",
-    "TEZEX could not verify the sTEZ contract or read its current state from the selected network. No cached or estimated values have been substituted.",
-  ],
-])("renders exact %s state copy", async (availability, title, description) => {
+test("shows an exact inactive-network state without enabling controls", async () => {
   (loadStezSnapshot as jest.Mock).mockResolvedValue({
-    ...disabledSnapshot,
-    availability,
+    ...baseSnapshot,
+    availability: "disabled",
+    contractHash: null,
   });
 
   render(<Stez />);
 
-  await screen.findByText(title);
-  expect(screen.getByText(description)).toBeInTheDocument();
+  await screen.findByText("sTEZ is not active on Weeklynet");
+  expect(
+    screen.getByText(
+      "The selected network includes the sTEZ protocol code, but native sTEZ contracts are not enabled. No balances, rates, or transaction controls are shown."
+    )
+  ).toBeInTheDocument();
 });
 
-test("uses amount and signing-preview states on an active network", async () => {
-  mockNetworkType = NetworkType.SHADOWNET;
+test("enables a stake request only for a wallet connected to current Weeklynet", async () => {
   mockWallet.isWalletConnected = true;
-  mockWallet.address = "tz1ShadownetWallet";
-  (loadStezSnapshot as jest.Mock).mockResolvedValue(availableSnapshot);
+  mockWallet.address = "tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb";
+  mockWallet.client = mockClient;
+  mockClient.getActiveAccount.mockResolvedValue({
+    address: mockWallet.address,
+    network: { type: "custom", rpcUrl: weeklynet.rpcUrl },
+  });
+  (loadStezSnapshot as jest.Mock).mockResolvedValue({
+    ...baseSnapshot,
+    walletXtzMutez: BigInt(5_000_000),
+    walletStezUnits: BigInt(2_000_000),
+    redeemedFrozenMutez: BigInt(250_000),
+    redeemedFinalizableMutez: BigInt(100_000),
+  });
 
   render(<Stez />);
 
-  await screen.findByText("sTEZ is active on Shadownet");
-  expect(
-    screen.getByRole("button", { name: "ENTER AN AMOUNT" })
-  ).toBeDisabled();
+  await screen.findByText("sTEZ is live on Weeklynet");
+  await waitFor(() =>
+    expect(
+      screen.getByRole("button", { name: "ENTER AN AMOUNT" })
+    ).toBeDisabled()
+  );
 
   fireEvent.change(screen.getByLabelText("YOU STAKE"), {
     target: { value: "1" },
   });
-
-  expect(
-    screen.getByRole("button", {
-      name: "TRANSACTIONS NOT ENABLED IN THIS PREVIEW",
-    })
-  ).toBeDisabled();
+  expect(screen.getByRole("button", { name: "STAKE XTZ" })).toBeEnabled();
 });
 
-test("uses the existing wallet connection flow", async () => {
+test("connects a disconnected wallet to the resolved Weeklynet RPC", async () => {
   render(<Stez />);
-  await screen.findByText("sTEZ is not active on Mainnet");
+  await screen.findByText("sTEZ is live on Weeklynet");
 
-  fireEvent.click(screen.getByRole("button", { name: "CONNECT WALLET" }));
+  fireEvent.click(
+    screen.getByRole("button", { name: "CONNECT WALLET TO WEEKLYNET" })
+  );
 
-  expect(connectWallet).toHaveBeenCalledTimes(1);
+  await waitFor(() =>
+    expect(connectWalletToCustomNetwork).toHaveBeenCalledWith(mockWallet, {
+      name: "Weeklynet",
+      rpcUrl: weeklynet.rpcUrl,
+    })
+  );
 });
