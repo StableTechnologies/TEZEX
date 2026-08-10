@@ -1,16 +1,12 @@
 import { Asset, Token } from "../../types/general";
-import { PoolConfig } from "../../types/pools";
+import { PoolConfig, supportsDirectSwap } from "../../types/pools";
 
 export const findPoolForTokenPair = (
   pools: PoolConfig[],
   tokenA: Token,
   tokenB: Token
 ): PoolConfig | undefined =>
-  pools.find(
-    (pool) =>
-      (pool.tokenA === tokenA && pool.tokenB === tokenB) ||
-      (pool.tokenA === tokenB && pool.tokenB === tokenA)
-  );
+  pools.find((pool) => supportsDirectSwap(pool, tokenA, tokenB));
 
 export const getCompatibleSwapAssets = (
   pools: PoolConfig[],
@@ -27,7 +23,11 @@ export const getCompatibleSwapAssets = (
         ? pool.tokenA
         : undefined;
 
-    if (token && !compatibleTokens.includes(token))
+    if (
+      token &&
+      supportsDirectSwap(pool, counterpart, token) &&
+      !compatibleTokens.includes(token)
+    )
       compatibleTokens.push(token);
   });
 

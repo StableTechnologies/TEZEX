@@ -3,6 +3,8 @@ import {
   PoolConfig,
   PoolType,
   StablePoolConfig,
+  isSupportedPoolConfiguration,
+  supportsDirectSwap,
 } from "../types/pools";
 import { Asset, Token } from "../types/general";
 import { SiriusAdapter } from "./sirius";
@@ -14,6 +16,9 @@ export class PoolRegistry {
   private static assets: Asset[] = [];
 
   static registerPool(config: PoolConfig): void {
+    if (!isSupportedPoolConfiguration(config)) {
+      throw new Error(`Unsupported pool configuration: ${config.id}`);
+    }
     const adapter = this.createAdapter(config);
     this.adapters.set(config.id, adapter);
   }
@@ -53,10 +58,8 @@ export class PoolRegistry {
   }
 
   static getPoolsByTokenPair(tokenA: Token, tokenB: Token): PoolConfig[] {
-    return this.getAllPools().filter(
-      (pool) =>
-        (pool.tokenA === tokenA && pool.tokenB === tokenB) ||
-        (pool.tokenA === tokenB && pool.tokenB === tokenA)
+    return this.getAllPools().filter((pool) =>
+      supportsDirectSwap(pool, tokenA, tokenB)
     );
   }
 

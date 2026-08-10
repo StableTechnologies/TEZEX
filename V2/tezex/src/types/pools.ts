@@ -48,6 +48,36 @@ export interface PoolData {
   protocolFeeBp?: number; // 0 for classic pools, >0 for mod pools with protocol fee
 }
 
+export const isSupportedPoolConfiguration = (pool: PoolConfig): boolean =>
+  pool.type !== PoolType.SIRIUS ||
+  (pool.tokenA === Token.XTZ &&
+    pool.tokenB === Token.TzBTC &&
+    pool.lpToken === Token.Sirs);
+
+export const supportsDirectSwap = (
+  pool: PoolConfig,
+  inputToken: Token,
+  outputToken: Token
+): boolean => {
+  if (!isSupportedPoolConfiguration(pool) || inputToken === outputToken) {
+    return false;
+  }
+
+  const matchesConfiguredPair =
+    (pool.tokenA === inputToken && pool.tokenB === outputToken) ||
+    (pool.tokenA === outputToken && pool.tokenB === inputToken);
+
+  if (!matchesConfiguredPair) return false;
+
+  // Sirius' immutable tokenToToken entrypoint is deliberately unsupported.
+  // Every Sirius route exposed by TEZEX must be one direct XTZ leg.
+  return (
+    pool.type !== PoolType.SIRIUS ||
+    inputToken === Token.XTZ ||
+    outputToken === Token.XTZ
+  );
+};
+
 export interface IPoolAdapter {
   poolConfig: PoolConfig;
 
