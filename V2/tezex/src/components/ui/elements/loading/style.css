@@ -1,0 +1,537 @@
+.tezex-loader {
+  min-height: 150px;
+  padding: 28px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 14px;
+  color: var(--tezex-text);
+}
+
+.tezex-loader.is-compact {
+  min-height: 116px;
+  padding: 18px;
+  gap: 10px;
+}
+
+.tezex-loader__mark {
+  width: 70px;
+  height: 70px;
+  display: grid;
+  place-items: center;
+  position: relative;
+}
+
+.tezex-loader.is-compact .tezex-loader__mark {
+  width: 50px;
+  height: 50px;
+}
+
+.tezex-loader__orbit {
+  grid-area: 1 / 1;
+  color: var(--tezex-text-secondary);
+}
+
+.tezex-loader__mark img {
+  width: 35px;
+  grid-area: 1 / 1;
+  filter: var(--tezex-logo-filter);
+  opacity: 0.9;
+}
+
+.tezex-loader.is-compact .tezex-loader__mark img {
+  width: 28px;
+}
+
+.tezex-loader__label {
+  color: var(--tezex-muted);
+  font-family: "Red Hat Mono", monospace;
+  font-size: 9px;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.tezex-skeleton {
+  display: block;
+  overflow: hidden;
+  position: relative;
+  background: var(--tezex-hover);
+  border-radius: 999px;
+}
+
+.tezex-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--tezex-text) 7%, transparent),
+    transparent
+  );
+  transform: translateX(-100%);
+  animation: tezex-loading-shimmer 1.6s ease-in-out infinite;
+}
+
+.tezex-trading-loading {
+  width: 100%;
+  max-width: 880px;
+  min-height: 560px;
+  margin: 0 auto;
+  padding-bottom: 20px;
+  display: grid;
+  grid-template-columns: 470px minmax(0, 1fr);
+  align-items: stretch;
+  gap: 20px;
+  text-align: left;
+}
+
+.tezex-trading-loading.is-liquidity {
+  max-width: 880px;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.tezex-trading-loading__card,
+.tezex-trading-loading__context-panel,
+.tezex-analytics-loading__stats,
+.tezex-analytics-loading__panel {
+  overflow: hidden;
+  background: var(--tezex-panel);
+  border: 1px solid var(--tezex-line);
+  border-radius: 24px;
+}
+
+.tezex-trading-loading__card {
+  display: flex;
+  flex-direction: column;
+}
+
+.tezex-trading-loading__header {
+  min-height: 82px;
+  padding: 19px 21px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid var(--tezex-line-soft);
+}
+
+.tezex-trading-loading__header > span:first-child {
+  display: grid;
+  gap: 8px;
+}
+
+.tezex-trading-loading__eyebrow {
+  width: 48px;
+  height: 8px;
+}
+
+.tezex-trading-loading__title {
+  width: 148px;
+  height: 18px;
+}
+
+.tezex-trading-loading__selector {
+  width: 184px;
+  height: 48px;
+}
+
+.tezex-trading-loading__body {
+  padding: 20px;
+  flex: 1;
+}
+
+.tezex-trading-loading__fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  position: relative;
+  gap: 8px;
+}
+
+.tezex-loading-field {
+  min-height: 116px;
+  padding: 22px 20px;
+  position: relative;
+  border: 1px solid var(--tezex-line);
+  border-radius: 18px;
+  background: var(--tezex-field);
+}
+
+.tezex-loading-field__label {
+  width: 74px;
+  height: 9px;
+}
+
+.tezex-loading-field__amount {
+  width: 106px;
+  height: 30px;
+  margin-top: 20px;
+}
+
+.tezex-loading-field__token {
+  min-width: 112px;
+  height: 48px;
+  padding: 7px 12px;
+  position: absolute;
+  right: 16px;
+  bottom: 19px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid var(--tezex-line);
+  border-radius: 999px;
+  background: var(--tezex-panel-subtle);
+}
+
+.tezex-loading-field__token-icon {
+  width: 30px;
+  height: 30px;
+}
+
+.tezex-loading-field__token-name {
+  width: 46px;
+  height: 11px;
+}
+
+.tezex-trading-loading__join {
+  width: 30px;
+  height: 2px;
+  margin: 0 auto;
+  background: var(--tezex-line-strong);
+  border-radius: 999px;
+}
+
+.tezex-trading-loading__quote {
+  min-height: 42px;
+  padding: 14px 4px 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tezex-trading-loading__quote-copy {
+  width: 205px;
+  height: 9px;
+}
+
+.tezex-trading-loading__quote-status {
+  width: 76px;
+  height: 9px;
+}
+
+.tezex-trading-loading__action {
+  width: 100%;
+  height: 54px;
+  margin-top: 14px;
+}
+
+.tezex-trading-loading__footer {
+  min-height: 76px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: var(--tezex-panel-subtle);
+  border-top: 1px solid var(--tezex-line-soft);
+}
+
+.tezex-trading-loading__footer-copy {
+  width: 130px;
+  height: 12px;
+}
+
+.tezex-trading-loading__footer-control {
+  width: 170px;
+  height: 40px;
+}
+
+.tezex-trading-loading__context {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tezex-trading-loading__context-panel {
+  min-height: 325px;
+  padding: 22px;
+}
+
+.tezex-trading-loading__context-panel.is-short {
+  min-height: 180px;
+  padding: 0;
+}
+
+.tezex-trading-loading__context-title {
+  width: 128px;
+  height: 19px;
+  margin-bottom: 24px;
+}
+
+.tezex-trading-loading__context-row {
+  min-height: 49px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid var(--tezex-line-soft);
+}
+
+.tezex-trading-loading__context-row .tezex-skeleton:first-child {
+  width: 94px;
+  height: 10px;
+}
+
+.tezex-trading-loading__context-row .tezex-skeleton:last-child {
+  width: 74px;
+  height: 10px;
+}
+
+.tezex-analytics-loading {
+  display: grid;
+  gap: 20px;
+}
+
+.tezex-analytics-loading__stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.tezex-analytics-loading__stats > span {
+  min-width: 0;
+  min-height: 112px;
+  padding: 20px 22px;
+  border-right: 1px solid var(--tezex-line);
+}
+
+.tezex-analytics-loading__stats > span:last-child {
+  border-right: 0;
+}
+
+.tezex-analytics-loading__stat-label {
+  width: 72px;
+  height: 8px;
+}
+
+.tezex-analytics-loading__stat-value {
+  width: min(118px, 90%);
+  height: 20px;
+  margin-top: 13px;
+}
+
+.tezex-analytics-loading__stat-change {
+  width: 52px;
+  height: 9px;
+  margin-top: 9px;
+}
+
+.tezex-analytics-loading__panel > header {
+  min-height: 58px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid var(--tezex-line);
+}
+
+.tezex-analytics-loading__panel-title {
+  width: 84px;
+  height: 9px;
+}
+
+.tezex-analytics-loading__panel-meta {
+  width: 112px;
+  height: 9px;
+}
+
+.tezex-analytics-loading__chart {
+  height: 330px;
+  margin: 20px;
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid var(--tezex-line-strong);
+}
+
+.tezex-analytics-loading__chart > span:not(.tezex-analytics-loading__scan) {
+  height: 1px;
+  position: absolute;
+  right: 0;
+  left: 0;
+  background: var(--tezex-line);
+}
+
+.tezex-analytics-loading__chart > span:nth-child(2) {
+  top: 12%;
+}
+
+.tezex-analytics-loading__chart > span:nth-child(3) {
+  top: 49%;
+}
+
+.tezex-analytics-loading__chart > span:nth-child(4) {
+  top: 86%;
+}
+
+.tezex-analytics-loading__scan {
+  width: 1px;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  background: var(--tezex-text-secondary);
+  opacity: 0.45;
+  animation: tezex-loading-scan 2.4s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+}
+
+.tezex-analytics-loading__row {
+  min-height: 54px;
+  padding: 13px 20px;
+  display: grid;
+  grid-template-columns: 1.3fr 1fr 0.7fr 1fr;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--tezex-line);
+}
+
+.tezex-analytics-loading__row:last-child {
+  border-bottom: 0;
+}
+
+.tezex-analytics-loading__row > .tezex-skeleton {
+  width: 66px;
+  height: 10px;
+}
+
+.tezex-analytics-loading__row > .tezex-skeleton:last-child {
+  justify-self: end;
+}
+
+.tezex-analytics-loading__pair {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tezex-analytics-loading__token {
+  width: 24px;
+  height: 24px;
+}
+
+.tezex-analytics-loading__pair-name {
+  width: 86px;
+  height: 10px;
+}
+
+@keyframes tezex-loading-shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes tezex-loading-scan {
+  to {
+    transform: translateX(800px);
+  }
+}
+
+@media (max-width: 959px) {
+  .tezex-trading-loading {
+    max-width: 470px;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tezex-trading-loading__context {
+    display: none;
+  }
+}
+
+@media (max-width: 820px) {
+  .tezex-analytics-loading__stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tezex-analytics-loading__stats > span:nth-child(2) {
+    border-right: 0;
+  }
+
+  .tezex-analytics-loading__stats > span:nth-child(-n + 2) {
+    border-bottom: 1px solid var(--tezex-line);
+  }
+}
+
+@media (max-width: 520px) {
+  .tezex-trading-loading {
+    min-height: 520px;
+    padding-bottom: 8px;
+  }
+
+  .tezex-trading-loading__card,
+  .tezex-trading-loading__context-panel,
+  .tezex-analytics-loading__stats,
+  .tezex-analytics-loading__panel {
+    border-radius: 20px;
+  }
+
+  .tezex-trading-loading__header {
+    min-height: 72px;
+    padding: 16px 18px;
+  }
+
+  .tezex-trading-loading__body {
+    padding: 16px;
+  }
+
+  .tezex-loading-field {
+    min-height: 108px;
+    padding: 20px 18px;
+  }
+
+  .tezex-loading-field__token {
+    right: 13px;
+    bottom: 16px;
+  }
+
+  .tezex-trading-loading__footer {
+    padding: 15px 16px;
+  }
+
+  .tezex-trading-loading__footer-control {
+    width: 140px;
+  }
+
+  .tezex-analytics-loading {
+    gap: 14px;
+  }
+
+  .tezex-analytics-loading__stats > span {
+    min-height: 102px;
+    padding: 16px;
+  }
+
+  .tezex-analytics-loading__chart {
+    height: 260px;
+    margin: 16px;
+  }
+
+  .tezex-analytics-loading__row {
+    grid-template-columns: 1.3fr 1fr 1fr;
+    padding: 12px 14px;
+  }
+
+  .tezex-analytics-loading__row > .tezex-skeleton:nth-child(3) {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tezex-skeleton::after,
+  .tezex-analytics-loading__scan,
+  .tezex-loader__orbit {
+    animation: none !important;
+  }
+}

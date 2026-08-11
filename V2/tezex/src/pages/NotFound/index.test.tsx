@@ -18,7 +18,7 @@ describe("NotFound", () => {
     expect(screen.getByText("/missing-page")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "BACK TO SWAP" })).toHaveAttribute(
       "href",
-      "/"
+      "/swap/xtz-to-tzbtc"
     );
     expect(
       screen.getByRole("img", {

@@ -13,6 +13,7 @@ import { homePathForHost } from "../../routing";
 interface NavTabProps {
   label: string;
   href: string;
+  active?: boolean;
 }
 
 function NavTabExternal(props: NavTabProps) {
@@ -30,11 +31,12 @@ function NavTabExternal(props: NavTabProps) {
 
 function NavTab(props: NavTabProps) {
   const navigate = useNavigate();
-  const { label, ...restProps } = props;
+  const { label, active, ...restProps } = props;
   return (
     <Box sx={{ display: "inline-flex" }}>
       <Tab
         sx={{ cursor: "pointer" }}
+        aria-current={active ? "page" : undefined}
         onClick={(event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
           event.preventDefault();
           navigate(props.href);
@@ -53,11 +55,18 @@ interface INavApp {
 export const NavApp: FC<INavApp> = (props) => {
   const styles = useStyles(style, props.scalingKey);
   const location = useLocation();
+  const isHomeRoute =
+    location.pathname === "/" ||
+    location.pathname.startsWith("/home") ||
+    location.pathname.startsWith("/swap") ||
+    location.pathname.startsWith("/liquidity");
   const value = location.pathname.startsWith("/analytics")
     ? 1
     : location.pathname.startsWith("/stez")
     ? 2
-    : 0;
+    : isHomeRoute
+    ? 0
+    : false;
 
   const aboutRedirectUrl = useSession().appConfig.aboutRedirectUrl;
   const homePath = homePathForHost(window.location.hostname);
@@ -71,9 +80,9 @@ export const NavApp: FC<INavApp> = (props) => {
         style: { display: "none" },
       }}
     >
-      <NavTab label="Home" href={homePath} />
-      <NavTab label="Analytics" href="/analytics" />
-      <NavTab label="sTEZ" href="/stez" />
+      <NavTab label="Home" href={homePath} active={value === 0} />
+      <NavTab label="Analytics" href="/analytics" active={value === 1} />
+      <NavTab label="sTEZ" href="/stez" active={value === 2} />
       <NavTabExternal label="About" href={aboutRedirectUrl} />
     </Tabs>
   );

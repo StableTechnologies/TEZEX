@@ -53,7 +53,7 @@ const style = (theme, scale = 1) => {
         padding: "16px 18px",
       },
     },
-    cardTitleGroup: {
+    headerTitleGroup: {
       display: "flex",
       flexDirection: "column",
       gap: "4px",
@@ -65,8 +65,9 @@ const style = (theme, scale = 1) => {
       letterSpacing: "0.18em",
       lineHeight: 1.2,
     },
-    cardTitle: {
+    headerTitle: {
       color: "var(--tezex-text)",
+      fontFamily: '"Inter", sans-serif',
       fontSize: { xs: "17px", sm: "19px" },
       fontWeight: 600,
       letterSpacing: "-0.02em",
@@ -162,21 +163,12 @@ const style = (theme, scale = 1) => {
     },
     panelHeader: {
       minHeight: "82px",
-      padding: { xs: "18px", sm: "20px 22px" },
+      padding: { xs: "17px", sm: "19px 21px" },
       display: "flex",
       alignItems: "center",
       justifyContent: "space-between",
       gap: "16px",
       borderBottom: "1px solid var(--tezex-line-soft)",
-    },
-    panelTitle: {
-      color: "var(--tezex-text)",
-      fontFamily: '"Inter", sans-serif',
-      fontSize: { xs: "18px", sm: "20px" },
-      fontWeight: 500,
-      letterSpacing: "-0.03em",
-      lineHeight: 1.25,
-      marginTop: "7px",
     },
     liveBadge: {
       display: "flex",

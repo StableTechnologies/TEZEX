@@ -17,28 +17,31 @@ describe("hostname-specific routing", () => {
   });
 
   it("uses a redirect route when leaving the dedicated sTEZ hostname", () => {
-    expect(homePathForHost(STEZ_HOSTNAME)).toBe("/swap");
-    expect(homePathForHost("tezex.io")).toBe("/");
+    expect(homePathForHost(STEZ_HOSTNAME)).toBe("/swap/xtz-to-tzbtc");
+    expect(homePathForHost("tezex.io")).toBe("/swap/xtz-to-tzbtc");
   });
 
   it("moves non-sTEZ routes to the canonical TEZEX origin", () => {
-    expect(canonicalTezexUrl("/home/swap")).toBe("https://tezex.io/");
+    expect(canonicalTezexUrl("/home/swap")).toBe(
+      "https://tezex.io/swap/xtz-to-tzbtc"
+    );
     expect(canonicalTezexUrl("/analytics", "?range=30d")).toBe(
       "https://tezex.io/analytics?range=30d"
     );
   });
 
   it("maps legacy application routes to clean canonical paths", () => {
-    expect(canonicalPath("/home/swap")).toBe("/");
-    expect(canonicalPath("/home/add")).toBe("/liquidity");
-    expect(canonicalPath("/home/remove")).toBe("/liquidity/remove");
+    expect(canonicalPath("/")).toBe("/swap/xtz-to-tzbtc");
+    expect(canonicalPath("/home/swap")).toBe("/swap/xtz-to-tzbtc");
+    expect(canonicalPath("/home/add")).toBe("/liquidity/xtz-tzbtc");
+    expect(canonicalPath("/home/remove")).toBe("/liquidity/xtz-tzbtc/remove");
     expect(canonicalPath("/analytics")).toBe("/analytics");
   });
 
   it("converts old hash URLs without dropping their query string", () => {
-    expect(routeFromLegacyHash("#/home/swap")).toBe("/");
+    expect(routeFromLegacyHash("#/home/swap")).toBe("/swap/xtz-to-tzbtc");
     expect(routeFromLegacyHash("#/home/add?pool=sirius")).toBe(
-      "/liquidity?pool=sirius"
+      "/liquidity/xtz-tzbtc?pool=sirius"
     );
     expect(routeFromLegacyHash("#/analytics?range=30d")).toBe(
       "/analytics?range=30d"

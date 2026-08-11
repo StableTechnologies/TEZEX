@@ -117,10 +117,6 @@ describe("WalletProvider quote lifecycle", () => {
     }>();
     const estimateSwap = jest
       .fn()
-      .mockResolvedValueOnce({
-        inputAmount: new BigNumber(0),
-        outputAmount: new BigNumber(0),
-      })
       .mockImplementationOnce(() => slowEstimate.promise)
       .mockImplementationOnce(() => fastEstimate.promise);
     const adapter = {
@@ -158,6 +154,7 @@ describe("WalletProvider quote lifecycle", () => {
         wallet.getActiveTransaction(TransactingComponent.SWAP)
       ).toBeDefined()
     );
+    expect(estimateSwap).not.toHaveBeenCalled();
 
     let firstRequest!: Promise<boolean>;
     await act(async () => {
@@ -166,7 +163,7 @@ describe("WalletProvider quote lifecycle", () => {
       ]);
       await Promise.resolve();
     });
-    await waitFor(() => expect(estimateSwap).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(estimateSwap).toHaveBeenCalledTimes(1));
 
     let secondRequest!: Promise<boolean>;
     await act(async () => {
@@ -176,12 +173,12 @@ describe("WalletProvider quote lifecycle", () => {
       );
       await Promise.resolve();
     });
-    await waitFor(() => expect(estimateSwap).toHaveBeenCalledTimes(3));
+    await waitFor(() => expect(estimateSwap).toHaveBeenCalledTimes(2));
     await waitFor(() => {
       const pendingTransaction = wallet.getActiveTransaction(
         TransactingComponent.SWAP
       );
-      expect(pendingTransaction?.quoteRevision).toBe(3);
+      expect(pendingTransaction?.quoteRevision).toBe(2);
       expect(pendingTransaction?.sendAmount[0].mantissa.toFixed()).toBe("2");
     });
 
@@ -204,7 +201,7 @@ describe("WalletProvider quote lifecycle", () => {
     const transaction = wallet.getActiveTransaction(TransactingComponent.SWAP);
     expect(transaction?.sendAmount[0].mantissa.toFixed()).toBe("2");
     expect(transaction?.receiveAmount[0].mantissa.toFixed()).toBe("200");
-    expect(transaction?.quoteRevision).toBe(3);
+    expect(transaction?.quoteRevision).toBe(2);
   });
 
   it("removes a cleared transaction from the synchronous active-state ref", async () => {
@@ -246,6 +243,7 @@ describe("WalletProvider quote lifecycle", () => {
         wallet.getActiveTransaction(TransactingComponent.SWAP)
       ).toBeDefined()
     );
+    expect(adapter.estimateSwap).not.toHaveBeenCalled();
 
     act(() => {
       wallet.clearTransaction(TransactingComponent.SWAP);

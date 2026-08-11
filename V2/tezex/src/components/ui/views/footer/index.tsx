@@ -7,6 +7,7 @@ import tezosLogoWhite from "../../../../assets/TezosLogo_Horizontal_White.svg";
 import { useSession } from "../../../../hooks/session";
 import "./style.css";
 import { homePathForHost } from "../../../../routing";
+import { DEFAULT_LIQUIDITY_PATH } from "../../../../tradeRouting";
 
 const GITHUB_URL = "https://github.com/StableTechnologies/TEZEX";
 const X_URL = "https://x.com/TezosExchange";
@@ -98,7 +99,7 @@ export function Footer() {
                 <Link to={homePath}>Swap</Link>
               </li>
               <li>
-                <Link to="/liquidity">Liquidity</Link>
+                <Link to={DEFAULT_LIQUIDITY_PATH}>Liquidity</Link>
               </li>
               <li>
                 <Link to="/analytics">Analytics</Link>

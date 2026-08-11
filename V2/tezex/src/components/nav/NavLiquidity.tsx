@@ -8,6 +8,12 @@ import { useSession } from "../../hooks/session";
 import { TransactingComponent } from "../../types/general";
 import style from "./style";
 import useStyles from "../../hooks/styles";
+import { useNetwork } from "../../hooks/network";
+import {
+  DEFAULT_LIQUIDITY_PATH,
+  DEFAULT_REMOVE_LIQUIDITY_PATH,
+  getLiquidityPath,
+} from "../../tradeRouting";
 
 interface NavTabProps {
   label: string;
@@ -35,6 +41,7 @@ export const NavLiquidity: FC<INavLiquidty> = (props) => {
   const [value, setValue] = useState(0);
 
   const sessionInfo = useSession();
+  const network = useNetwork();
   useEffect(() => {
     switch (sessionInfo.activeComponent) {
       case TransactingComponent.SWAP:
@@ -62,6 +69,12 @@ export const NavLiquidity: FC<INavLiquidty> = (props) => {
     event.preventDefault();
     setValue(newValue);
   };
+  const addHref = network.selectedPool
+    ? getLiquidityPath(network.selectedPool)
+    : DEFAULT_LIQUIDITY_PATH;
+  const removeHref = network.selectedPool
+    ? getLiquidityPath(network.selectedPool, "remove")
+    : DEFAULT_REMOVE_LIQUIDITY_PATH;
   return (
     <Tabs
       value={value}
@@ -80,8 +93,8 @@ export const NavLiquidity: FC<INavLiquidty> = (props) => {
         ),
       }}
     >
-      <NavTab label="Add Liquidity" href="/liquidity" />
-      <NavTab label="Remove Liquidity" href="/liquidity/remove" />
+      <NavTab label="Add Liquidity" href={addHref} />
+      <NavTab label="Remove Liquidity" href={removeHref} />
     </Tabs>
   );
 };

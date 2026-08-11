@@ -9,6 +9,13 @@ import { TransactingComponent } from "../../types/general";
 
 import style from "./style";
 import useStyles from "../../hooks/styles";
+import {
+  DEFAULT_LIQUIDITY_PATH,
+  DEFAULT_REMOVE_LIQUIDITY_PATH,
+  DEFAULT_SWAP_PATH,
+  getLiquidityPath,
+} from "../../tradeRouting";
+import { useNetwork } from "../../hooks/network";
 
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
@@ -132,6 +139,7 @@ export const Menu: FC = () => {
   const styles = useStyles(style);
   const [value, setValue] = useState(0);
   const sessionInfo = useSession();
+  const network = useNetwork();
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     event.preventDefault();
     setValue(newValue);
@@ -151,10 +159,18 @@ export const Menu: FC = () => {
   }, [sessionInfo]);
 
   const liquidityHref: () => string = useCallback(() => {
+    if (!network.selectedPool) {
+      return sessionInfo.activeComponent ===
+        TransactingComponent.REMOVE_LIQUIDITY
+        ? DEFAULT_REMOVE_LIQUIDITY_PATH
+        : DEFAULT_LIQUIDITY_PATH;
+    }
+
     if (sessionInfo.activeComponent === TransactingComponent.REMOVE_LIQUIDITY) {
-      return "/liquidity/remove";
-    } else return "/liquidity";
-  }, [sessionInfo]);
+      return getLiquidityPath(network.selectedPool, "remove");
+    }
+    return getLiquidityPath(network.selectedPool);
+  }, [network.selectedPool, sessionInfo.activeComponent]);
 
   return (
     <Tabs
@@ -163,7 +179,7 @@ export const Menu: FC = () => {
       onChange={handleChange}
       aria-label="nav-home-tabs"
     >
-      <MenuItem label="Swap" href="/" />
+      <MenuItem label="Swap" href={DEFAULT_SWAP_PATH} />
       <MenuItem label="Liquidity" href={liquidityHref()} />
     </Tabs>
   );

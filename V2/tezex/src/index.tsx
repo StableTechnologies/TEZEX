@@ -27,6 +27,11 @@ import {
   routeFromLegacyHash,
   stezRouteFromHash,
 } from "./routing";
+import {
+  DEFAULT_LIQUIDITY_PATH,
+  DEFAULT_REMOVE_LIQUIDITY_PATH,
+  DEFAULT_SWAP_PATH,
+} from "./tradeRouting";
 
 const CanonicalTezexRedirect = () => {
   const location = useLocation();
@@ -43,31 +48,43 @@ const CanonicalTezexRedirect = () => {
 const standardRoutes = [
   {
     index: true,
+    element: <Navigate to={DEFAULT_SWAP_PATH} replace />,
+  },
+  {
+    path: "swap/:pair",
     element: <Home path="swap" />,
   },
   {
-    path: "liquidity",
+    path: "liquidity/:pair",
     element: <Home path="add" />,
   },
   {
-    path: "liquidity/remove",
+    path: "liquidity/:pair/remove",
     element: <Home path="remove" />,
   },
   {
+    path: "liquidity",
+    element: <Navigate to={DEFAULT_LIQUIDITY_PATH} replace />,
+  },
+  {
+    path: "liquidity/remove",
+    element: <Navigate to={DEFAULT_REMOVE_LIQUIDITY_PATH} replace />,
+  },
+  {
     path: "home/swap",
-    element: <Navigate to="/" replace />,
+    element: <Navigate to={DEFAULT_SWAP_PATH} replace />,
   },
   {
     path: "home/add",
-    element: <Navigate to="/liquidity" replace />,
+    element: <Navigate to={DEFAULT_LIQUIDITY_PATH} replace />,
   },
   {
     path: "home/remove",
-    element: <Navigate to="/liquidity/remove" replace />,
+    element: <Navigate to={DEFAULT_REMOVE_LIQUIDITY_PATH} replace />,
   },
   {
     path: "swap",
-    element: <Navigate to="/" replace />,
+    element: <Navigate to={DEFAULT_SWAP_PATH} replace />,
   },
   {
     path: "analytics",

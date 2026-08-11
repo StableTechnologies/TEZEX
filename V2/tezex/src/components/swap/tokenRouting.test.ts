@@ -1,7 +1,11 @@
 import { Token, TokenType } from "../../types/general";
 import { PoolConfig, PoolType } from "../../types/pools";
 import { PoolRegistry } from "../../adapters/poolRegistry";
-import { findPoolForTokenPair, getCompatibleSwapAssets } from "./tokenRouting";
+import {
+  findPoolForTokenPair,
+  getCompatibleSwapAssets,
+  getSwapDisplaySymbol,
+} from "./tokenRouting";
 
 const pools: PoolConfig[] = [
   {
@@ -34,6 +38,22 @@ const getAsset = (name: Token) => ({
 });
 
 describe("swap token routing", () => {
+  it("uses canonical symbols in pair-aware swap headings", () => {
+    expect(
+      getSwapDisplaySymbol({
+        ...getAsset(Token.XTZ),
+        label: "Tez",
+        type: TokenType.XTZ,
+      })
+    ).toBe("XTZ");
+    expect(
+      getSwapDisplaySymbol({
+        ...getAsset(Token.TzBTC),
+        label: "tzBTC",
+      })
+    ).toBe("tzBTC");
+  });
+
   it("resolves the same pool regardless of trade direction", () => {
     expect(findPoolForTokenPair(pools, Token.XTZ, Token.TzBTC)?.id).toBe(
       "tez-btc"

@@ -31,12 +31,18 @@ import { eq } from "lodash";
 import { useTransaction } from "../../hooks/transaction";
 import { PoolSelector } from "../ui/elements/PoolSelector";
 import { getBalance } from "../../functions/beacon";
+import { PoolConfig } from "../../types/pools";
 
 export interface IRemoveLiquidity {
   orientation: "portrait" | "landscape";
+  routePool?: PoolConfig;
+  onPoolRouteChange?: (pool: PoolConfig) => void;
 }
 
-export const RemoveLiquidity: FC<IRemoveLiquidity> = () => {
+export const RemoveLiquidity: FC<IRemoveLiquidity> = ({
+  routePool,
+  onPoolRouteChange,
+}) => {
   //return <div>Remove Liquidity</div>;
   const scalingKey = "removeLiquidity";
   // load styles and apply responsive scaling for component
@@ -60,7 +66,7 @@ export const RemoveLiquidity: FC<IRemoveLiquidity> = () => {
   const receive1 = 1;
   const receive2 = 2;
 
-  const currentPool = network.selectedPool;
+  const currentPool = routePool || network.selectedPool;
   const [poolBalances, setPoolBalances] = useState<Map<string, string>>(
     new Map()
   );
@@ -99,6 +105,7 @@ export const RemoveLiquidity: FC<IRemoveLiquidity> = () => {
         network.getAsset(pool.tokenB),
       ];
       setAssets(newAssets);
+      onPoolRouteChange?.(pool);
 
       wallet.clearTransaction(TransactingComponent.ADD_LIQUIDITY);
       wallet.clearTransaction(TransactingComponent.SWAP);
@@ -108,8 +115,30 @@ export const RemoveLiquidity: FC<IRemoveLiquidity> = () => {
         newPoolId
       );
     },
-    [network, getLPToken, transactionOps]
+    [network, getLPToken, onPoolRouteChange, transactionOps]
   );
+
+  useEffect(() => {
+    if (!routePool) return;
+
+    const nextAssets: [Asset, Asset, Asset] = [
+      getLPToken(routePool),
+      network.getAsset(routePool.tokenA),
+      network.getAsset(routePool.tokenB),
+    ];
+    const routeAlreadyLoaded =
+      assets[send].name === nextAssets[send].name &&
+      assets[receive1].name === nextAssets[receive1].name &&
+      assets[receive2].name === nextAssets[receive2].name;
+
+    if (routeAlreadyLoaded) return;
+
+    network.setSelectedPool(routePool);
+    setAssets(nextAssets);
+    wallet.clearTransaction(TransactingComponent.REMOVE_LIQUIDITY);
+    setLoading(true);
+    setReloading(true);
+  }, [routePool?.id, network.network]);
 
   // Fetch balances for all pools
   useEffect(() => {
@@ -237,6 +266,7 @@ export const RemoveLiquidity: FC<IRemoveLiquidity> = () => {
       currentPool?.id || ""
     );
     if (transaction) {
+      setCanUpdate(true);
       setLoading(false);
     }
   }, [assets, transactionOps.initialize]);
@@ -416,7 +446,7 @@ export const RemoveLiquidity: FC<IRemoveLiquidity> = () => {
           </Box>
           <Box>
             <Grid2 xs={12} sx={styles.receiveInfo}>
-              <Typography sx={styles.receiveText}>
+              <Typography component="div" sx={styles.receiveText}>
                 You will receive about: {getReceiveAmounts()}
               </Typography>
             </Grid2>
