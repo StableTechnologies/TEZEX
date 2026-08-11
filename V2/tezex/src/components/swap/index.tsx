@@ -30,7 +30,12 @@ import { TransactionProgress } from "./TransactionProgress";
 import useStyles from "../../hooks/styles";
 import { useTransaction } from "../../hooks/transaction";
 import { eq } from "lodash";
-import { findPoolForTokenPair, getCompatibleSwapAssets } from "./tokenRouting";
+import {
+  findPoolForTokenPair,
+  getCompatibleSwapAssets,
+  getSwapDisplaySymbol,
+} from "./tokenRouting";
+import { TradingLoadingState } from "../ui/elements/loading/TezexLoading";
 
 export interface ISwapToken {
   orientation: "portrait" | "landscape";
@@ -112,6 +117,9 @@ export const Swap: FC<ISwapToken> = () => {
   const [sendInputValue, setSendInputValue] = useState("0.00");
   const session = useSession();
   const [canUpdate, setCanUpdate] = useState<boolean>(false);
+  const previewLoading =
+    process.env.NODE_ENV === "development" &&
+    new URLSearchParams(window.location.search).has("loading");
 
   const active = walletOps.getActiveTransaction();
 
@@ -247,7 +255,7 @@ export const Swap: FC<ISwapToken> = () => {
     [loading, reloading]
   );
 
-  if (loading) return <Box sx={styles.loadingSpace} />;
+  if (loading || previewLoading) return <TradingLoadingState variant="swap" />;
 
   const transaction = transactionOps.getActiveTransaction() || active;
   const sendAssetOptions = getCompatibleSwapAssets(
@@ -292,7 +300,10 @@ export const Swap: FC<ISwapToken> = () => {
       ? 2
       : 1;
 
-  const routeLabel = `${assets[send].label} → ${assets[receive].label}`;
+  const sendSymbol = getSwapDisplaySymbol(assets[send]);
+  const receiveSymbol = getSwapDisplaySymbol(assets[receive]);
+  const tradeTitle = `Trade ${sendSymbol} to ${receiveSymbol}`;
+  const routeLabel = `${sendSymbol} → ${receiveSymbol}`;
   const feeLabel =
     currentPool?.type === PoolType.SIRIUS
       ? "0.1% fee + 0.1% XTZ burn"
@@ -310,9 +321,9 @@ export const Swap: FC<ISwapToken> = () => {
       <Box sx={styles.root}>
         <Card sx={styles.card}>
           <Box sx={styles.cardHeader}>
-            <Box sx={styles.cardTitleGroup}>
+            <Box sx={styles.headerTitleGroup}>
               <Typography sx={styles.eyebrow}>SWAP</Typography>
-              <Typography sx={styles.cardTitle}>Trade on Tezos</Typography>
+              <Typography sx={styles.headerTitle}>{tradeTitle}</Typography>
             </Box>
           </Box>
 
@@ -401,9 +412,9 @@ export const Swap: FC<ISwapToken> = () => {
         <Box sx={styles.contextColumn}>
           <Box sx={styles.detailsPanel}>
             <Box sx={styles.panelHeader}>
-              <Box>
+              <Box sx={styles.headerTitleGroup}>
                 <Typography sx={styles.eyebrow}>SWAP DETAILS</Typography>
-                <Typography sx={styles.panelTitle}>{routeLabel}</Typography>
+                <Typography sx={styles.headerTitle}>{routeLabel}</Typography>
               </Box>
               <Box sx={styles.liveBadge}>
                 <Box sx={styles.liveDot} />

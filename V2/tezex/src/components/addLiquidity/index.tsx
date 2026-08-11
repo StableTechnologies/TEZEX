@@ -31,6 +31,7 @@ import { PoolSelector } from "../ui/elements/PoolSelector";
 import { SwapUpDownToggle } from "../ui/elements/Toggles";
 import { getBalance } from "../../functions/beacon";
 import { BigNumber } from "bignumber.js";
+import { TradingLoadingState } from "../ui/elements/loading/TezexLoading";
 
 export interface IAddLiquidity {
   orientation: "portrait" | "landscape";
@@ -55,6 +56,9 @@ export const AddLiquidity: FC<IAddLiquidity> = () => {
   const [id, setId] = useState<Id | undefined>(undefined);
   const [loading, setLoading] = useState<boolean>(true);
   const [reloading, setReloading] = useState<boolean>(true);
+  const previewLoading =
+    process.env.NODE_ENV === "development" &&
+    new URLSearchParams(window.location.search).has("loading");
 
   const send1 = 0;
   const send2 = 1;
@@ -304,9 +308,9 @@ export const AddLiquidity: FC<IAddLiquidity> = () => {
     return !loading && !reloading;
   }, [loading, reloading]);
 
-  // if loading return empty div else render component
-  if (loading) {
-    return <div> </div>;
+  // Keep the workspace dimensions stable while the transaction model initializes.
+  if (loading || previewLoading) {
+    return <TradingLoadingState variant="liquidity" />;
   } else {
     return (
       <Grid2 container sx={styles.root}>
