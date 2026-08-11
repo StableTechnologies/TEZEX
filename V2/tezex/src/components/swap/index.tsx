@@ -1,4 +1,10 @@
-import React, { FC, useState, useEffect, useCallback } from "react";
+import React, {
+  FC,
+  useState,
+  useEffect,
+  useCallback,
+  useSyncExternalStore,
+} from "react";
 import BigNumber from "bignumber.js";
 
 import {
@@ -18,6 +24,7 @@ import { useWallet, useWalletOps, WalletOps } from "../../hooks/wallet";
 import { SwapUpDownToggle } from "../../components/ui/elements/Toggles";
 import { useNetwork } from "../../hooks/network";
 import { getExplorer } from "../../functions/util";
+import { formatTezexFeeLabel } from "../../functions/tezexFeeModel";
 
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
@@ -363,9 +370,11 @@ export const Swap: FC<ISwapToken> = ({ routeSelection, onRouteChange }) => {
     currentPool?.type === PoolType.SIRIUS
       ? "0.1% fee + 0.1% XTZ burn"
       : currentPool?.type === PoolType.TEZEX
-      ? cachedFeeModel === "new-mod"
-        ? "0.30% (0.25% LP / 0.05% TEZEX)"
-        : "0.30% pool fee"
+      ? formatTezexFeeLabel({
+          lpFeeBp: cachedPoolData?.lpFeeBp ?? 30,
+          protocolFeeBp: cachedPoolData?.protocolFeeBp ?? 0,
+          totalFeeBp: cachedPoolData?.totalFeeBp ?? 30,
+        })
       : "Pool-defined";
   const contractLabel = currentPool?.address
     ? `${currentPool.address.slice(0, 7)}…${currentPool.address.slice(-6)}`

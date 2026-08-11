@@ -4,8 +4,8 @@
   "chainId": "NetXY2oPPzkxUW1",
   "tradingAvailability": {
     "enabled": true,
-    "title": "Previewnet contracts require redeployment",
-    "message": "The July 20 Previewnet reset cleared the previous TEZEX contracts. Trading is unavailable until the pools and tokens are redeployed and their new addresses are verified.",
+    "title": "Previewnet TEZEX XTZ pools are live",
+    "message": "XTZ–USDt, XTZ–USDtz, and XTZ–BTCtz pools are available for trading on Previewnet.",
     "statusUrl": "https://previewnet.tezosx.nomadic-labs.com/"
   },
   "pools": [
@@ -35,27 +35,6 @@
       "tokenA": "XTZ",
       "tokenB": "BTCtz",
       "lpToken": "LP_XTZBTCtz"
-    },
-    {
-      "id": "xtz-ethtz-tezex",
-      "name": "TEZEX",
-      "type": "TEZEX",
-      "address": "KT1HVqzCghUP9q4VCLX67pu1e3rqGyKwzjpB",
-      "tokenA": "XTZ",
-      "tokenB": "ETHtz",
-      "lpToken": "LP_XTZETHtz"
-    },
-    {
-      "id": "usdtz-usdt-tezex",
-      "name": "TEZEX",
-      "type": "STABLE",
-      "address": "KT1T78BnBguxKJjG98As1nwwYYxE8XkWkXUE",
-      "lpToken": "LP_USDtzUSDt",
-      "tokenA": "USDtz",
-      "tokenB": "USDt",
-      "poolId": 0,
-      "tokenAIdx": 0,
-      "tokenBIdx": 1
     }
   ],
   "assets": [
@@ -115,31 +94,6 @@
       "address": "KT1PKT4tJafjL4HiqJRyuUP91vNeNeQgr6yf",
       "decimals": 6,
       "type": "FA1.2"
-    },
-    {
-      "name": "ETHtz",
-      "label": "ETHtz",
-      "logo": "/assets/ethtzLogo.svg",
-      "address": "KT1GVRhpjnVityzEfss7r8NhqUorACPRpL4y",
-      "decimals": 18,
-      "type": "FA1.2"
-    },
-    {
-      "name": "LP_XTZETHtz",
-      "label": "LP-XTZETHtz",
-      "logo": "/assets/lpxtzusdtzLogo.svg",
-      "address": "KT1PEUQUkp3wzUSwwTn1L92VHVVugjnojWSx",
-      "decimals": 12,
-      "type": "FA1.2"
-    },
-    {
-      "name": "LP_USDtzUSDt",
-      "label": "LP_USDtzUSDt",
-      "logo": "/assets/lpxtzusdtzLogo.svg",
-      "address": "KT1T78BnBguxKJjG98As1nwwYYxE8XkWkXUE",
-      "decimals": 18,
-      "type": "FA2",
-      "tokenId": 0
     }
   ]
 }

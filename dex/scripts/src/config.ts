@@ -25,6 +25,8 @@ interface Config {
     tokenAddress: string;
     seedAmount: SeedAmount;
     manager: string;
+    /** Initial protocol fee claim recipient for mod pools; independent of manager. */
+    protocolFeeRecipient: string;
     tokenStandard: string; // e.g. "FA1.2" or "FA2"
     metadata_uri: string;
     token_metadata_uri: string;
@@ -74,6 +76,7 @@ const config: Config = {
         token: getRequiredNatEnv("SEED_TOKEN"),
     },
     manager: getRequiredEnv("MANAGER"),
+    protocolFeeRecipient: getRequiredEnv("PROTOCOL_FEE_RECIPIENT"),
     metadata_uri: getRequiredEnv("METADATA_URI"),
     token_metadata_uri: getRequiredEnv("TOKEN_METADATA_URI"),
     poolType,
@@ -115,6 +118,10 @@ export function getConfig(networkName: NetworkName): FullConfig {
         "TOKEN_ADDRESS"
     );
     requireValidAddress(validateAddress(config.manager), "MANAGER");
+    requireValidAddress(
+        validateAddress(config.protocolFeeRecipient),
+        "PROTOCOL_FEE_RECIPIENT"
+    );
 
     return {
         ...networkConfig,

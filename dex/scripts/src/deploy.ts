@@ -166,9 +166,9 @@ async function deployDEX(
         tokenId: config.tokenStandard === "FA2" ? config.tokenId : undefined,
 
         // Fees are immutable in contract code (25/5 bp). Only the claim
-        // recipient is configurable; deploy sets it to MANAGER.
+        // recipient is configurable; independent of MANAGER.
         ...(config.poolType === "mod" && {
-            protocol_fee_recipient: config.manager,
+            protocol_fee_recipient: config.protocolFeeRecipient,
             accumulated_protocol_fee_xtz: "0",
             accumulated_protocol_fee_token: "0",
         }),
@@ -227,7 +227,8 @@ function saveDeploymentInfo(
             lpFeeBp: config.poolType === "mod" ? MOD_LP_FEE_BP : undefined,
             protocolFeeBp: config.poolType === "mod" ? MOD_PROTOCOL_FEE_BP : undefined,
             totalFeeBp: config.poolType === "mod" ? MOD_TOTAL_FEE_BP : undefined,
-            protocolFeeRecipient: config.poolType === "mod" ? config.manager : undefined,
+            protocolFeeRecipient:
+                config.poolType === "mod" ? config.protocolFeeRecipient : undefined,
         },
     };
 
@@ -428,10 +429,10 @@ async function verifyDeployment(
     }
     if (
         config.poolType === "mod"
-        && dexStorage.protocol_fee_recipient !== config.manager
+        && dexStorage.protocol_fee_recipient !== config.protocolFeeRecipient
     ) {
         throw new Error(
-            "Deployment verification failed for protocol fee recipient (expected MANAGER)"
+            "Deployment verification failed for protocol fee recipient"
         );
     }
 
@@ -486,7 +487,10 @@ async function main(): Promise<void> {
 
     console.log(`Token: ${config.tokenAddress}`);
     console.log(`Temporary deployment manager: ${pkh}`);
-    console.log(`Final manager and fee recipient: ${config.manager}`);
+    console.log(`Final manager: ${config.manager}`);
+    if (config.poolType === "mod") {
+        console.log(`Protocol fee recipient: ${config.protocolFeeRecipient}`);
+    }
     console.log(`Seed XTZ: ${config.seedAmount.xtz} mutez`);
     console.log(`Seed Tokens: ${config.seedAmount.token} tokens`);
 

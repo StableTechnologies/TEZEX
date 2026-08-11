@@ -105,11 +105,17 @@ describe("TezexAdapter estimateSwap fee models", () => {
     jest.restoreAllMocks();
   });
 
-  const makeEstimateHarness = (storage: Record<string, unknown>) => {
+  const makeEstimateHarness = (
+    storage: Record<string, unknown>,
+    views?: {
+      get_fee_bp?: () => { read: () => Promise<unknown> };
+    }
+  ) => {
     const toolkit = {
       contract: {
         at: jest.fn().mockResolvedValue({
           storage: jest.fn().mockResolvedValue(storage),
+          views: views ?? {},
         }),
       },
     } as unknown as TezosToolkit;
@@ -134,6 +140,24 @@ describe("TezexAdapter estimateSwap fee models", () => {
     expect(outputAmount.toFixed()).toBe("1992013");
     const data = await adapter.getPoolData(toolkit);
     expect(data.feeModel).toBe("base");
+    expect(data.totalFeeBp).toBe(30);
+    expect(data.lpFeeBp).toBe(30);
+    expect(data.protocolFeeBp).toBe(0);
+    expect(data.feeSource).toBe("fallback");
+  });
+
+  it("caches get_fee_bp plain nat for base on success", async () => {
+    const read = jest.fn().mockResolvedValue(30);
+    const { toolkit, adapter } = makeEstimateHarness(pools, {
+      get_fee_bp: () => ({ read }),
+    });
+    const data = await adapter.getPoolData(toolkit);
+    expect(read).toHaveBeenCalled();
+    expect(data.feeModel).toBe("base");
+    expect(data.feeSource).toBe("view");
+    expect(data.lpFeeBp).toBe(30);
+    expect(data.protocolFeeBp).toBe(0);
+    expect(data.totalFeeBp).toBe(30);
   });
 
   it("prices new-mod on gross input (does not deduct protocol fee)", async () => {
@@ -151,7 +175,52 @@ describe("TezexAdapter estimateSwap fee models", () => {
     expect(outputAmount.toFixed()).toBe("1992013");
     const data = await adapter.getPoolData(toolkit);
     expect(data.feeModel).toBe("new-mod");
-    expect(data.protocolFeeBp).toBe(0);
+    expect(data.protocolFeeBp).toBe(5);
+    expect(data.lpFeeBp).toBe(25);
+    expect(data.totalFeeBp).toBe(30);
+    expect(data.feeSource).toBe("fallback");
+  });
+
+  it("caches get_fee_bp view fees for new-mod on success", async () => {
+    const read = jest.fn().mockResolvedValue({ 0: 25, 1: { 0: 5, 1: 30 } });
+    const { toolkit, adapter } = makeEstimateHarness(
+      {
+        ...pools,
+        protocol_fee_recipient: "tz1LovVc1JH3taNFjemXWCEywqgxhWsjfvRW",
+        accumulated_protocol_fee_xtz: "0",
+        accumulated_protocol_fee_token: "0",
+      },
+      { get_fee_bp: () => ({ read }) }
+    );
+    const data = await adapter.getPoolData(toolkit);
+    expect(read).toHaveBeenCalled();
+    expect(data.feeSource).toBe("view");
+    expect(data.lpFeeBp).toBe(25);
+    expect(data.protocolFeeBp).toBe(5);
+    expect(data.totalFeeBp).toBe(30);
+  });
+
+  it("falls back when get_fee_bp view fails for new-mod", async () => {
+    const { toolkit, adapter } = makeEstimateHarness(
+      {
+        ...pools,
+        protocol_fee_recipient: "tz1LovVc1JH3taNFjemXWCEywqgxhWsjfvRW",
+        accumulated_protocol_fee_xtz: "0",
+        accumulated_protocol_fee_token: "0",
+      },
+      {
+        get_fee_bp: () => ({
+          read: async () => {
+            throw new Error("rpc view failed");
+          },
+        }),
+      }
+    );
+    const data = await adapter.getPoolData(toolkit);
+    expect(data.feeSource).toBe("fallback");
+    expect(data.lpFeeBp).toBe(25);
+    expect(data.protocolFeeBp).toBe(5);
+    expect(data.totalFeeBp).toBe(30);
   });
 
   it("deducts protocol fee before AMM for legacy-mod", async () => {
@@ -170,6 +239,9 @@ describe("TezexAdapter estimateSwap fee models", () => {
     const data = await adapter.getPoolData(toolkit);
     expect(data.feeModel).toBe("legacy-mod");
     expect(data.protocolFeeBp).toBe(5);
+    expect(data.lpFeeBp).toBe(30);
+    expect(data.totalFeeBp).toBe(35);
+    expect(data.feeSource).toBe("fallback");
   });
 });
 
