@@ -78,5 +78,7 @@ test("the TEZEX logo navigates to the swap home route", () => {
 
   fireEvent.click(screen.getByRole("link", { name: "TEZEX home" }));
 
-  expect(screen.getByTestId("location")).toHaveTextContent("/");
+  expect(screen.getByTestId("location")).toHaveTextContent(
+    "/swap/xtz-to-tzbtc"
+  );
 });

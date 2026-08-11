@@ -1,6 +1,13 @@
-import React, { FC, useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  FC,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { flushSync } from "react-dom";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import { NavHome } from "../../components/nav";
 import { Swap } from "../../components/swap";
@@ -20,6 +27,14 @@ import { useNetwork } from "../../hooks/network";
 
 import style from "./style";
 import useStyles from "../../hooks/styles";
+import {
+  getLiquidityPath,
+  getSwapPath,
+  resolveLiquidityPair,
+  resolveSwapPair,
+  SwapRouteSelection,
+} from "../../tradeRouting";
+import { PoolConfig } from "../../types/pools";
 import {
   BrowserView,
   MobileView,
@@ -42,10 +57,15 @@ const isLiquidityRoute = (path: HomePaths | string) => path !== "swap";
 const homePathFromHref = (href: string): HomePaths => {
   const pathname = href.split(/[?#]/, 1)[0].replace(/\/$/, "");
 
-  if (pathname === "/liquidity/remove" || pathname === "/home/remove") {
+  if (
+    pathname === "/home/remove" ||
+    (pathname.startsWith("/liquidity/") && pathname.endsWith("/remove"))
+  ) {
     return "remove";
   }
-  if (pathname === "/liquidity" || pathname === "/home/add") return "add";
+  if (pathname === "/home/add" || pathname.startsWith("/liquidity")) {
+    return "add";
+  }
   return "swap";
 };
 
@@ -78,12 +98,90 @@ export const Home: FC<IHome> = (props) => {
   const { orientation } = useMobileOrientation();
   const styles = useStyles(style);
   const navigate = useNavigate();
+  const { pair: pairSlug } = useParams<{ pair?: string }>();
   const network = useNetwork();
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [displayedPath, setDisplayedPath] = useState<HomePaths>(props.path);
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
   const cleanupTransitionRef = useRef<() => void>(() => undefined);
+
+  const availablePools = network.getAllPools();
+  const selectedPool = network.selectedPool;
+  const selectedPoolIsAvailable = availablePools.some(
+    (pool) => pool.id === selectedPool?.id
+  );
+  const fallbackPool: PoolConfig | undefined = selectedPoolIsAvailable
+    ? selectedPool || undefined
+    : availablePools[0];
+  const requestedSwapSelection =
+    props.path === "swap"
+      ? resolveSwapPair(pairSlug, availablePools)
+      : undefined;
+  const requestedLiquidityPool =
+    props.path !== "swap"
+      ? resolveLiquidityPair(pairSlug, availablePools)
+      : undefined;
+  const routePool =
+    requestedSwapSelection?.pool || requestedLiquidityPool || fallbackPool;
+  const swapRouteSelection: SwapRouteSelection | undefined =
+    requestedSwapSelection ||
+    (routePool
+      ? {
+          pool: routePool,
+          sendToken: routePool.tokenA,
+          receiveToken: routePool.tokenB,
+        }
+      : undefined);
+
+  useLayoutEffect(() => {
+    if (!pairSlug || !routePool) return;
+
+    if (network.selectedPool?.id !== routePool.id) {
+      network.setSelectedPool(routePool);
+    }
+
+    const routeIsValid =
+      props.path === "swap"
+        ? Boolean(requestedSwapSelection)
+        : Boolean(requestedLiquidityPool);
+
+    if (!routeIsValid) {
+      const fallbackPath =
+        props.path === "swap"
+          ? getSwapPath(routePool.tokenA, routePool.tokenB)
+          : getLiquidityPath(
+              routePool,
+              props.path === "remove" ? "remove" : "add"
+            );
+      navigate(fallbackPath, { replace: true });
+    }
+  }, [
+    pairSlug,
+    props.path,
+    routePool?.id,
+    requestedLiquidityPool?.id,
+    requestedSwapSelection?.pool.id,
+    network.network,
+    navigate,
+  ]);
+
+  const navigateToSwapPair = useCallback(
+    (
+      sendToken: SwapRouteSelection["sendToken"],
+      receiveToken: SwapRouteSelection["receiveToken"]
+    ) => {
+      navigate(getSwapPath(sendToken, receiveToken));
+    },
+    [navigate]
+  );
+
+  const navigateToLiquidityPool = useCallback(
+    (pool: PoolConfig, mode: "add" | "remove") => {
+      navigate(getLiquidityPath(pool, mode));
+    },
+    [navigate]
+  );
 
   useEffect(() => () => cleanupTransitionRef.current(), []);
   useEffect(() => {
@@ -277,11 +375,31 @@ export const Home: FC<IHome> = (props) => {
 
     switch (displayedPath) {
       case "add":
-        return <AddLiquidity orientation={orientation} />;
+        return (
+          <AddLiquidity
+            orientation={orientation}
+            routePool={routePool}
+            onPoolRouteChange={(pool) => navigateToLiquidityPool(pool, "add")}
+          />
+        );
       case "remove":
-        return <RemoveLiquidity orientation={orientation} />;
+        return (
+          <RemoveLiquidity
+            orientation={orientation}
+            routePool={routePool}
+            onPoolRouteChange={(pool) =>
+              navigateToLiquidityPool(pool, "remove")
+            }
+          />
+        );
       case "swap":
-        return <Swap orientation={orientation} />;
+        return (
+          <Swap
+            orientation={orientation}
+            routeSelection={swapRouteSelection}
+            onRouteChange={navigateToSwapPair}
+          />
+        );
     }
   })();
 

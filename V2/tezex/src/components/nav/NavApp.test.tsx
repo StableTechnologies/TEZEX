@@ -57,7 +57,9 @@ test("navigates between primary destinations", () => {
 
   fireEvent.click(screen.getByRole("tab", { name: "Home" }));
 
-  expect(screen.getByTestId("location")).toHaveTextContent("/");
+  expect(screen.getByTestId("location")).toHaveTextContent(
+    "/swap/xtz-to-tzbtc"
+  );
 });
 
 test("does not mark Home active on the not-found route", () => {

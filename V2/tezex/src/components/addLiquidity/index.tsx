@@ -32,11 +32,17 @@ import { SwapUpDownToggle } from "../ui/elements/Toggles";
 import { getBalance } from "../../functions/beacon";
 import { BigNumber } from "bignumber.js";
 import { TradingLoadingState } from "../ui/elements/loading/TezexLoading";
+import { PoolConfig } from "../../types/pools";
 
 export interface IAddLiquidity {
   orientation: "portrait" | "landscape";
+  routePool?: PoolConfig;
+  onPoolRouteChange?: (pool: PoolConfig) => void;
 }
-export const AddLiquidity: FC<IAddLiquidity> = () => {
+export const AddLiquidity: FC<IAddLiquidity> = ({
+  routePool,
+  onPoolRouteChange,
+}) => {
   //return <div> Add Liquidity</div>;
   const scalingKey = "addLiquidity";
   // load styles and apply responsive scaling for component
@@ -64,7 +70,7 @@ export const AddLiquidity: FC<IAddLiquidity> = () => {
   const send2 = 1;
   const receive = 2;
 
-  const currentPool = network.selectedPool;
+  const currentPool = routePool || network.selectedPool;
 
   const [poolBalances, setPoolBalances] = useState<Map<string, string>>(
     new Map()
@@ -96,6 +102,7 @@ export const AddLiquidity: FC<IAddLiquidity> = () => {
         getLPToken(pool),
       ];
       setAssets(newAssets);
+      onPoolRouteChange?.(pool);
 
       wallet.clearTransaction(TransactingComponent.SWAP);
       wallet.clearTransaction(TransactingComponent.REMOVE_LIQUIDITY);
@@ -106,8 +113,30 @@ export const AddLiquidity: FC<IAddLiquidity> = () => {
         newPoolId
       );
     },
-    [network, getLPToken, transactionOps]
+    [network, getLPToken, onPoolRouteChange, transactionOps]
   );
+
+  useEffect(() => {
+    if (!routePool) return;
+
+    const nextAssets: [Asset, Asset, Asset] = [
+      network.getAsset(routePool.tokenA),
+      network.getAsset(routePool.tokenB),
+      getLPToken(routePool),
+    ];
+    const routeAlreadyLoaded =
+      assets[send1].name === nextAssets[send1].name &&
+      assets[send2].name === nextAssets[send2].name &&
+      assets[receive].name === nextAssets[receive].name;
+
+    if (routeAlreadyLoaded) return;
+
+    network.setSelectedPool(routePool);
+    setAssets(nextAssets);
+    wallet.clearTransaction(TransactingComponent.ADD_LIQUIDITY);
+    setLoading(true);
+    setReloading(true);
+  }, [routePool?.id, network.network]);
 
   const session = useSession();
 
@@ -143,6 +172,7 @@ export const AddLiquidity: FC<IAddLiquidity> = () => {
 
     //if transaction initialized update balance and set loading params to false
     if (transactionInitialized) {
+      setCanUpdate(true);
       setLoading(false);
     }
   }, [assets, transactionOps]);

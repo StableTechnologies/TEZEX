@@ -31,7 +31,7 @@ const style = (theme, scale = 1) => {
         "&.Mui-selected": {
           color: "var(--tezex-text)",
         },
-        color: "var(--tezex-muted)",
+        color: "var(--tezex-text)",
         background: "transparent",
         fontFamily: "Inter",
         fontWeight: 600,
@@ -101,7 +101,7 @@ const style = (theme, scale = 1) => {
         borderRadius: 0,
         fontSize: "13.5px",
         letterSpacing: "0.02em",
-        color: "var(--tezex-muted)",
+        color: "var(--tezex-text)",
         background: "transparent",
         textTransform: "initial",
         transition: "color 160ms ease",

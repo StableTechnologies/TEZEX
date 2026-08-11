@@ -1,5 +1,6 @@
 import React, { FC } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { DEFAULT_SWAP_PATH } from "../../tradeRouting";
 
 import "./style.css";
 
@@ -137,7 +138,7 @@ export const NotFound: FC = () => {
         </div>
 
         <div className="not-found__actions">
-          <Link className="not-found__button is-primary" to="/">
+          <Link className="not-found__button is-primary" to={DEFAULT_SWAP_PATH}>
             BACK TO SWAP
           </Link>
           <Link className="not-found__button is-secondary" to="/analytics">

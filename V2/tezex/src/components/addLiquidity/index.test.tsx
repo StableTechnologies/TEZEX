@@ -70,7 +70,10 @@ const makeTransaction = (
   locked: false,
 });
 
-let mockActiveTransaction = makeTransaction([mockTez, mockTzbtc]);
+let mockActiveTransaction: Transaction | undefined = makeTransaction([
+  mockTez,
+  mockTzbtc,
+]);
 const mockSwapFields = jest.fn();
 
 const mockTransactionOps = {
@@ -102,7 +105,7 @@ jest.mock("../../hooks/network", () => ({
 }));
 jest.mock("../../hooks/session", () => ({
   useSession: () => ({
-    activeComponent: mockActiveTransaction.component,
+    activeComponent: "Add Liquidity",
     loadComponent: jest.fn(),
   }),
 }));
@@ -141,11 +144,18 @@ jest.mock("../wallet", () => ({
 }));
 jest.mock("../nav/NavLiquidity", () => ({ NavLiquidity: () => <div /> }));
 jest.mock("../ui/elements/PoolSelector", () => ({
-  PoolSelector: () => <div />,
+  PoolSelector: ({ disabled }: { disabled?: boolean }) => (
+    <button
+      type="button"
+      aria-label="Select liquidity pool"
+      disabled={disabled}
+    />
+  ),
 }));
 
 beforeEach(() => {
   mockActiveTransaction = makeTransaction([mockTez, mockTzbtc]);
+  mockTransactionOps.initialize.mockResolvedValue(true);
   mockTransactionOps.getActiveTransaction.mockImplementation(
     () => mockActiveTransaction
   );
@@ -155,6 +165,25 @@ beforeEach(() => {
       "transaction-2"
     );
   });
+});
+
+test("enables pool selection after an empty transaction initializes", async () => {
+  mockActiveTransaction = undefined;
+  mockTransactionOps.initialize.mockImplementation(async () => {
+    mockActiveTransaction = {
+      ...makeTransaction([mockTez, mockTzbtc]),
+      transactionStatus: TransactionStatus.ZERO_AMOUNT,
+    };
+    return true;
+  });
+
+  render(<AddLiquidity orientation="portrait" />);
+
+  await waitFor(() =>
+    expect(
+      screen.getByRole("button", { name: "Select liquidity pool" })
+    ).toBeEnabled()
+  );
 });
 
 test("switches which pool token is the editable deposit", async () => {

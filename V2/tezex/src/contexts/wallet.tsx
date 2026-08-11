@@ -677,6 +677,25 @@ export function WalletProvider(props: IWalletProvider) {
 
         let transaction: Transaction = _transaction;
 
+        if (_transaction.sendAmount[0].mantissa.isZero()) {
+          const currentQuoteContext = quoteContextRef.current;
+          if (
+            latestTransactionInitializations.get(component) !==
+              initializationToken ||
+            quoteContext.account !== currentQuoteContext.account ||
+            quoteContext.network !== currentQuoteContext.network ||
+            quoteContext.chainId !== currentQuoteContext.chainId
+          ) {
+            return false;
+          }
+
+          latestTransactionInitializations.delete(component);
+          return setActiveTransaction(component, {
+            ..._transaction,
+            transactionStatus: TransactionStatus.ZERO_AMOUNT,
+          });
+        }
+
         const adapter = network.getPoolAdapter(poolId);
         transaction = await estimateWithAdapter(
           _transaction,

@@ -9,8 +9,20 @@ import {
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { Home } from ".";
 import { NetworkType } from "@airgap/beacon-sdk";
+import { Token } from "../../types/general";
+import { PoolType } from "../../types/pools";
 
 const mockSwitchNetwork = jest.fn();
+const mockSetSelectedPool = jest.fn();
+const mockPool = {
+  id: "xtz-tzbtc-sirius",
+  name: "Sirius",
+  type: PoolType.SIRIUS,
+  address: "KT1-sirius",
+  tokenA: Token.XTZ,
+  tokenB: Token.TzBTC,
+  lpToken: Token.Sirs,
+};
 let mockNetworkType = NetworkType.MAINNET;
 let mockTradingAvailability:
   | {
@@ -26,6 +38,9 @@ jest.mock("../../hooks/network", () => ({
     network: mockNetworkType,
     info: { tradingAvailability: mockTradingAvailability },
     switchNetwork: mockSwitchNetwork,
+    selectedPool: mockPool,
+    setSelectedPool: mockSetSelectedPool,
+    getAllPools: () => [mockPool],
   }),
 }));
 
@@ -126,6 +141,7 @@ beforeEach(() => {
   mockTradingAvailability = undefined;
   mockNetworkType = NetworkType.MAINNET;
   mockSwitchNetwork.mockReset();
+  mockSetSelectedPool.mockReset();
 });
 
 afterEach(() => {
