@@ -25,6 +25,7 @@ import { SwapUpDownToggle } from "../../components/ui/elements/Toggles";
 import { useNetwork } from "../../hooks/network";
 import { getExplorer } from "../../functions/util";
 import { formatTezexFeeLabel } from "../../functions/tezexFeeModel";
+import { PoolDataCache } from "../../utils/poolDataCache";
 
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
@@ -51,6 +52,16 @@ export interface ISwapToken {
   routeSelection?: SwapRouteSelection;
   onRouteChange?: (sendToken: Token, receiveToken: Token) => void;
 }
+
+const subscribePoolDataCache = (onStoreChange: () => void) =>
+  PoolDataCache.subscribe(onStoreChange);
+
+const useCachedPoolData = (poolId: string | undefined) =>
+  useSyncExternalStore(
+    subscribePoolDataCache,
+    () => (poolId ? PoolDataCache.get(poolId) : null),
+    () => null
+  );
 
 const formatAmount = (value: BigNumber | undefined, decimals = 6): string => {
   if (!value || !value.isFinite()) return "—";
@@ -110,6 +121,7 @@ export const Swap: FC<ISwapToken> = ({ routeSelection, onRouteChange }) => {
 
   const availablePools = network.getAllPools();
   const currentPool = routeSelection?.pool || network.selectedPool;
+  const cachedPoolData = useCachedPoolData(currentPool?.id);
 
   const [assets, setAssets] = useState<[Asset, Asset]>(() => {
     if (routeSelection) {

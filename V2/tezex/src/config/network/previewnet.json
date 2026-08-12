@@ -13,7 +13,7 @@
       "id": "xtz-usdt-tezex",
       "name": "TEZEX",
       "type": "TEZEX",
-      "address": "KT1UD3bR9Dvff2PivruUir3SK1qXZ9TaRPqu",
+      "address": "KT1DCBFCxu3G7qmGo3guLwUnL7UsJU3EUzJH",
       "tokenA": "XTZ",
       "tokenB": "USDt",
       "lpToken": "LP_XTZUSDt"
@@ -22,7 +22,7 @@
       "id": "xtz-usdtz-tezex",
       "name": "TEZEX",
       "type": "TEZEX",
-      "address": "KT18vRL21aED4dudU6SiajScSxw33VYNXQsu",
+      "address": "KT1Wdfc9VqjnMnewp5iMeRYWmJ5obYeAsz4J",
       "tokenA": "XTZ",
       "tokenB": "USDtz",
       "lpToken": "LP_XTZUSDtz"
@@ -31,7 +31,7 @@
       "id": "xtz-btctz-tezex",
       "name": "TEZEX",
       "type": "TEZEX",
-      "address": "KT1LGX2eDqkzUYfaEk8XvHuojXmVUGTSrrFn",
+      "address": "KT1Kcr4dYvA4nA6F86phL6Pf48bszczDopMZ",
       "tokenA": "XTZ",
       "tokenB": "BTCtz",
       "lpToken": "LP_XTZBTCtz"
@@ -59,7 +59,7 @@
       "name": "LP_XTZUSDt",
       "label": "LP-XTZUSDt",
       "logo": "/assets/lpxtzusdtzLogo.svg",
-      "address": "KT1Ea4Wi3qpMakeGt6CBt11MzkrgkSQeEKxb",
+      "address": "KT1EiKaTmg4rn7egB6Tn2sSWv3dGkMFUtvir",
       "decimals": 6,
       "type": "FA1.2"
     },
@@ -75,7 +75,7 @@
       "name": "LP_XTZUSDtz",
       "label": "LP-XTZUSDtz",
       "logo": "/assets/lpxtzusdtzLogo.svg",
-      "address": "KT1SMxK2HEQoJeNRQTAVyZ6QdGVVkgtH3Fez",
+      "address": "KT1HdjyTk9i9azxVs853xsBtKT3Ntqqaotim",
       "decimals": 6,
       "type": "FA1.2"
     },
@@ -91,7 +91,7 @@
       "name": "LP_XTZBTCtz",
       "label": "LP-XTZBTCtz",
       "logo": "/assets/lpxtzusdtzLogo.svg",
-      "address": "KT1PKT4tJafjL4HiqJRyuUP91vNeNeQgr6yf",
+      "address": "KT1JWZhXRtfTecK8t6exLtbrwLW8ycGLKRxM",
       "decimals": 6,
       "type": "FA1.2"
     }

@@ -422,7 +422,12 @@ export class TezexAdapter implements IPoolAdapter {
 
       const storageRecord = storage as Record<string, unknown>;
       const feeModel = detectTezexFeeModel(storageRecord);
-      const fees = await resolveTezexFeeBp(contract, feeModel, storageRecord);
+      const fees = await resolveTezexFeeBp(
+        contract,
+        feeModel,
+        storageRecord,
+        this.poolConfig.address
+      );
 
       const poolData: PoolData = {
         tokenAPool,

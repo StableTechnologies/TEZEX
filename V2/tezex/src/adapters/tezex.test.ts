@@ -107,15 +107,19 @@ describe("TezexAdapter estimateSwap fee models", () => {
 
   const makeEstimateHarness = (
     storage: Record<string, unknown>,
-    views?: {
-      get_fee_bp?: () => { read: () => Promise<unknown> };
+    contractViews?: {
+      get_fee_bp?: () => {
+        executeView: (options?: { viewCaller?: string }) => Promise<unknown>;
+      };
     }
   ) => {
     const toolkit = {
       contract: {
         at: jest.fn().mockResolvedValue({
+          address: "KT1TezexPoolMock",
           storage: jest.fn().mockResolvedValue(storage),
-          views: views ?? {},
+          views: {},
+          contractViews: contractViews ?? {},
         }),
       },
     } as unknown as TezosToolkit;
@@ -147,12 +151,14 @@ describe("TezexAdapter estimateSwap fee models", () => {
   });
 
   it("caches get_fee_bp plain nat for base on success", async () => {
-    const read = jest.fn().mockResolvedValue(30);
+    const executeView = jest.fn().mockResolvedValue(30);
     const { toolkit, adapter } = makeEstimateHarness(pools, {
-      get_fee_bp: () => ({ read }),
+      get_fee_bp: () => ({ executeView }),
     });
     const data = await adapter.getPoolData(toolkit);
-    expect(read).toHaveBeenCalled();
+    expect(executeView).toHaveBeenCalledWith({
+      viewCaller: POOL_ADDRESS,
+    });
     expect(data.feeModel).toBe("base");
     expect(data.feeSource).toBe("view");
     expect(data.lpFeeBp).toBe(30);
@@ -182,7 +188,9 @@ describe("TezexAdapter estimateSwap fee models", () => {
   });
 
   it("caches get_fee_bp view fees for new-mod on success", async () => {
-    const read = jest.fn().mockResolvedValue({ 0: 25, 1: { 0: 5, 1: 30 } });
+    const executeView = jest
+      .fn()
+      .mockResolvedValue({ 0: 25, 1: { 0: 5, 1: 30 } });
     const { toolkit, adapter } = makeEstimateHarness(
       {
         ...pools,
@@ -190,10 +198,10 @@ describe("TezexAdapter estimateSwap fee models", () => {
         accumulated_protocol_fee_xtz: "0",
         accumulated_protocol_fee_token: "0",
       },
-      { get_fee_bp: () => ({ read }) }
+      { get_fee_bp: () => ({ executeView }) }
     );
     const data = await adapter.getPoolData(toolkit);
-    expect(read).toHaveBeenCalled();
+    expect(executeView).toHaveBeenCalled();
     expect(data.feeSource).toBe("view");
     expect(data.lpFeeBp).toBe(25);
     expect(data.protocolFeeBp).toBe(5);
@@ -210,7 +218,7 @@ describe("TezexAdapter estimateSwap fee models", () => {
       },
       {
         get_fee_bp: () => ({
-          read: async () => {
+          executeView: async () => {
             throw new Error("rpc view failed");
           },
         }),

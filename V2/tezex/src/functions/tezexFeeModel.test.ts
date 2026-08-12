@@ -115,12 +115,51 @@ describe("fallbackTezexFeeBp / resolveTezexFeeBp", () => {
     });
   });
 
-  it("reads new-mod fees from get_fee_bp view on success", async () => {
+  it("reads new-mod fees from get_fee_bp contractViews on success", async () => {
+    const executeView = jest
+      .fn()
+      .mockResolvedValue({ 0: 25, 1: { 0: 5, 1: 30 } });
     const contract = {
-      views: {
-        get_fee_bp: () => ({
-          read: async () => ({ 0: 25, 1: { 0: 5, 1: 30 } }),
-        }),
+      address: "KT1FeeViewCaller",
+      contractViews: {
+        get_fee_bp: () => ({ executeView }),
+      },
+    };
+    await expect(
+      resolveTezexFeeBp(
+        contract,
+        "new-mod",
+        { protocol_fee_recipient: "tz1..." },
+        "KT1FeeViewCaller"
+      )
+    ).resolves.toEqual({
+      lpFeeBp: 25,
+      protocolFeeBp: 5,
+      totalFeeBp: 30,
+      source: "view",
+    });
+    expect(executeView).toHaveBeenCalledWith({
+      viewCaller: "KT1FeeViewCaller",
+    });
+  });
+
+  it("preserves OnChainView this when calling executeView", async () => {
+    // Mirrors Taquito OnChainView: method body reads instance fields via `this`.
+    class FakeOnChainView {
+      constructor(private readonly result: unknown) {}
+      async executeView(_executionContext?: { viewCaller?: string }) {
+        if (!this || this.result === undefined) {
+          throw new TypeError("lost this");
+        }
+        return this.result;
+      }
+    }
+    const view = new FakeOnChainView({ 0: 25, 1: { 0: 5, 1: 30 } });
+    const executeViewSpy = jest.spyOn(view, "executeView");
+    const contract = {
+      address: "KT1ThisBound",
+      contractViews: {
+        get_fee_bp: () => view,
       },
     };
     await expect(
@@ -133,13 +172,15 @@ describe("fallbackTezexFeeBp / resolveTezexFeeBp", () => {
       totalFeeBp: 30,
       source: "view",
     });
+    expect(executeViewSpy).toHaveBeenCalledWith({ viewCaller: "KT1ThisBound" });
   });
 
   it("reads base fees from plain get_fee_bp nat on success", async () => {
-    const read = jest.fn().mockResolvedValue(30);
+    const executeView = jest.fn().mockResolvedValue(30);
     const contract = {
-      views: {
-        get_fee_bp: () => ({ read }),
+      address: "KT1Base",
+      contractViews: {
+        get_fee_bp: () => ({ executeView }),
       },
     };
     await expect(resolveTezexFeeBp(contract, "base", {})).resolves.toEqual({
@@ -148,15 +189,38 @@ describe("fallbackTezexFeeBp / resolveTezexFeeBp", () => {
       totalFeeBp: 30,
       source: "view",
     });
-    expect(read).toHaveBeenCalled();
+    expect(executeView).toHaveBeenCalledWith({ viewCaller: "KT1Base" });
   });
 
-  it("falls back when get_fee_bp view fails", async () => {
+  it("ignores legacy TZIP-4 views map and uses contractViews", async () => {
+    const executeView = jest.fn().mockResolvedValue([25, 5, 30]);
     const contract = {
+      address: "KT1Mod",
       views: {
         get_fee_bp: () => ({
           read: async () => {
-            throw new Error("view unavailable");
+            throw new Error("should not use views.read");
+          },
+        }),
+      },
+      contractViews: {
+        get_fee_bp: () => ({ executeView }),
+      },
+    };
+    await expect(
+      resolveTezexFeeBp(contract, "new-mod", {
+        protocol_fee_recipient: "tz1...",
+      })
+    ).resolves.toMatchObject({ source: "view", totalFeeBp: 30 });
+    expect(executeView).toHaveBeenCalled();
+  });
+
+  it("falls back when get_fee_bp executeView fails", async () => {
+    const contract = {
+      contractViews: {
+        get_fee_bp: () => ({
+          executeView: async () => {
+            throw new Error("Http error response: (404)");
           },
         }),
       },
@@ -183,10 +247,10 @@ describe("fallbackTezexFeeBp / resolveTezexFeeBp", () => {
   });
 
   it("does not call get_fee_bp for legacy-mod", async () => {
-    const read = jest.fn();
+    const executeView = jest.fn();
     const contract = {
-      views: {
-        get_fee_bp: () => ({ read }),
+      contractViews: {
+        get_fee_bp: () => ({ executeView }),
       },
     };
     await expect(
@@ -197,7 +261,7 @@ describe("fallbackTezexFeeBp / resolveTezexFeeBp", () => {
       totalFeeBp: 35,
       source: "fallback",
     });
-    expect(read).not.toHaveBeenCalled();
+    expect(executeView).not.toHaveBeenCalled();
   });
 });
 

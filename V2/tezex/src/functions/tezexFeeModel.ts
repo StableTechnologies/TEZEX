@@ -175,20 +175,26 @@ export const fallbackTezexFeeBp = (
 };
 
 type FeeBpViewContract = {
-  views?: {
-    get_fee_bp?: () => { read: () => Promise<unknown> };
+  address?: string;
+  /** Taquito on-chain views (Michelson `view`); not the legacy TZIP-4 `views` map. */
+  contractViews?: {
+    get_fee_bp?: () => {
+      executeView: (options?: { viewCaller?: string }) => Promise<unknown>;
+    };
   };
 };
 
 /**
  * Resolve fee bp for pool cache.
- * base / new-mod: try `get_fee_bp` when present; fallback only if missing/unreadable.
+ * base / new-mod: try on-chain `get_fee_bp` via Taquito `contractViews.executeView`;
+ * fallback only if missing/unreadable (e.g. Previewnet without `run_script_view`).
  * legacy-mod: keep storage `protocol_fee_bp` semantics (deduct-first path).
  */
 export const resolveTezexFeeBp = async (
   contract: FeeBpViewContract,
   feeModel: TezexFeeModel,
-  storage: Record<string, unknown>
+  storage: Record<string, unknown>,
+  viewCaller?: string
 ): Promise<TezexFeeBp> => {
   const fallback = fallbackTezexFeeBp(feeModel, storage);
   if (feeModel === "legacy-mod") {
@@ -196,9 +202,13 @@ export const resolveTezexFeeBp = async (
   }
 
   try {
-    const read = contract.views?.get_fee_bp?.().read;
-    if (!read) return fallback;
-    const raw = await read();
+    const view = contract.contractViews?.get_fee_bp?.();
+    if (!view?.executeView) return fallback;
+    const caller = viewCaller ?? contract.address;
+    // Call through the view object so Taquito OnChainView keeps `this`.
+    const raw = caller
+      ? await view.executeView({ viewCaller: caller })
+      : await view.executeView();
     const parsed = parseGetFeeBpView(raw);
     if (!parsed) return fallback;
     return { ...parsed, source: "view" };
