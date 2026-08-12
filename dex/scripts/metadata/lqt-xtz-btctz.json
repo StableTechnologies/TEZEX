@@ -1,0 +1,8 @@
+{
+  "name": "TEZEX LP: XTZ–BTCtz",
+  "symbol": "LP-XTZBTCtz",
+  "decimals": "6",
+  "shouldPreferSymbol": true,
+  "description": "Liquidity provider token for the TEZEX XTZ–BTCtz CPMM pool.",
+  "thumbnailUri": "ipfs://bafkreidumr3xiifencjp4mlaa26laeahqeopatgfgg5aqblht2j3krzdri"
+}

@@ -3,7 +3,6 @@ import React, { FC, useState, useEffect, useCallback } from "react";
 import { Wallet } from "../wallet";
 import { NavLiquidity } from "../nav/NavLiquidity";
 import {
-  Token,
   Asset,
   TransactingComponent,
   TransferType,
@@ -76,19 +75,39 @@ export const AddLiquidity: FC<IAddLiquidity> = ({
     new Map()
   );
 
+  const resolvePool = useCallback(() => {
+    return network.selectedPool ?? network.getAllPools()[0] ?? null;
+  }, [network.selectedPool, network.getAllPools]);
+
   const getLPToken = useCallback(
     (pool: typeof currentPool): Asset => {
-      if (!pool) return network.getAsset(Token.Sirs);
-      return network.getAsset(pool.lpToken);
+      const resolved = pool ?? resolvePool();
+      if (!resolved) {
+        throw new Error("No liquidity pool available on this network");
+      }
+      return network.getAsset(resolved.lpToken);
     },
-    [network]
+    [network.getAsset, resolvePool]
   );
 
-  const [assets, setAssets] = useState<[Asset, Asset, Asset]>([
-    network.getAsset(currentPool?.tokenA || Token.XTZ),
-    network.getAsset(currentPool?.tokenB || Token.TzBTC),
-    getLPToken(currentPool),
-  ]);
+  const assetsFromPool = useCallback(
+    (
+      pool: NonNullable<ReturnType<typeof resolvePool>>
+    ): [Asset, Asset, Asset] => [
+      network.getAsset(pool.tokenA),
+      network.getAsset(pool.tokenB),
+      network.getAsset(pool.lpToken),
+    ],
+    [network.getAsset]
+  );
+
+  const [assets, setAssets] = useState<[Asset, Asset, Asset]>(() => {
+    const pool = resolvePool();
+    if (!pool) {
+      throw new Error("No liquidity pool available on this network");
+    }
+    return assetsFromPool(pool);
+  });
 
   const handlePoolChange = useCallback(
     async (newPoolId: string) => {
@@ -96,11 +115,7 @@ export const AddLiquidity: FC<IAddLiquidity> = ({
       if (!pool) return;
 
       network.setSelectedPool(pool);
-      const newAssets: [Asset, Asset, Asset] = [
-        network.getAsset(pool.tokenA),
-        network.getAsset(pool.tokenB),
-        getLPToken(pool),
-      ];
+      const newAssets = assetsFromPool(pool);
       setAssets(newAssets);
       onPoolRouteChange?.(pool);
 
@@ -163,11 +178,17 @@ export const AddLiquidity: FC<IAddLiquidity> = ({
 
   // callback to create new transaction
   const newTransaction = useCallback(async () => {
-    // initialize transaction
+    const pool = resolvePool();
+    if (!pool) return;
+
+    const nextAssets = assetsFromPool(pool);
+    setAssets(nextAssets);
+
+    // initialize transaction from the active network pool (not stale UI assets)
     const transactionInitialized = await transactionOps.initialize(
-      [assets[send1], assets[send2]],
-      [assets[receive]],
-      currentPool?.id || ""
+      [nextAssets[send1], nextAssets[send2]],
+      [nextAssets[receive]],
+      pool.id
     );
 
     //if transaction initialized update balance and set loading params to false
@@ -175,7 +196,7 @@ export const AddLiquidity: FC<IAddLiquidity> = ({
       setCanUpdate(true);
       setLoading(false);
     }
-  }, [assets, transactionOps]);
+  }, [assetsFromPool, resolvePool, transactionOps]);
 
   // Effect to load component
   useEffect(() => {
@@ -184,8 +205,14 @@ export const AddLiquidity: FC<IAddLiquidity> = ({
   }, [session]);
 
   useEffect(() => {
+    const pool = resolvePool();
+    if (pool) {
+      setAssets(assetsFromPool(pool));
+    }
     setLoading(true);
-  }, [network.network]);
+    // Re-sync only when network or selected pool changes. Callback identities
+    // are intentionally omitted to avoid update-depth loops in tests.
+  }, [network.network, network.selectedPool?.id]);
 
   // Effect to handle initial loading of transaction
   useEffect(() => {

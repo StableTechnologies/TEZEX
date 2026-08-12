@@ -11,6 +11,9 @@ import {
     dexStorageTypeFA2Mod,
     dexStorageTypeMod,
     lqtStorageType,
+    MOD_LP_FEE_BP,
+    MOD_PROTOCOL_FEE_BP,
+    MOD_TOTAL_FEE_BP,
     type DexStorage,
     type LqtStorage,
     type NetworkName,
@@ -19,26 +22,40 @@ import {
 } from "./types.js";
 import { Parser } from "@taquito/michel-codec";
 import { MichelsonMap, Schema } from "@taquito/michelson-encoder";
-import { getTokenBalance, prepareTokenTransfer } from "./util.js";
+import { assertTokenStandardMatchesContract, getTokenBalance, prepareTokenTransfer } from "./util.js";
 import {
     allocateInitialLqt,
     calculateInitialLqt,
     formatMutez,
     toSafeNumber,
 } from "./amounts.js";
-import { appendInitializationCalls } from "./initialization.js";
+import { appendInitializationCalls, initializationOpCount } from "./initialization.js";
 import { verifyAtLeast, verifyEqual } from "./verification.js";
+import {
+    needsExplicitOpLimits,
+    previewnetBatchCallLimits,
+    previewnetFeeBufferMutez,
+    previewnetOriginateLimits,
+} from "./tezosxLimits.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+const SUPPORTED_NETWORKS: readonly NetworkName[] = [
+    "testnet",
+    "mainnet",
+    "previewnet",
+];
 
 function parseArgs(): NetworkName {
     const args = process.argv.slice(2);
     const networkArg = args.find((arg) => arg.startsWith("--network="));
     const networkName = networkArg ? networkArg.split("=")[1] : "testnet";
 
-    if (networkName !== "testnet" && networkName !== "mainnet") {
-        throw new Error(`Invalid network: ${networkName}. Use 'testnet' or 'mainnet'.`);
+    if (!SUPPORTED_NETWORKS.includes(networkName as NetworkName)) {
+        throw new Error(
+            `Invalid network: ${networkName}. Use 'testnet', 'mainnet', or 'previewnet'.`
+        );
     }
 
     return networkName as NetworkName;
@@ -49,7 +66,12 @@ function loadCompiledContract(filename: string): string {
     return fs.readFileSync(contractPath, "utf8");
 }
 
-async function deployLQT(tezos: TezosToolkit, dexAddress: string, config: FullConfig): Promise<string> {
+async function deployLQT(
+    tezos: TezosToolkit,
+    dexAddress: string,
+    config: FullConfig,
+    networkName: NetworkName
+): Promise<string> {
     console.log("\nDeploying LQT contract...");
 
     const lqtCode = loadCompiledContract("lqt.tz");
@@ -88,6 +110,9 @@ async function deployLQT(tezos: TezosToolkit, dexAddress: string, config: FullCo
     const originationOp = await tezos.contract.originate({
         code: parsedMichelson!,
         init: michelsonData,
+        ...(needsExplicitOpLimits(networkName)
+            ? previewnetOriginateLimits()
+            : {}),
     });
 
     console.log(`LQT operation: ${originationOp.hash}`);
@@ -100,7 +125,8 @@ async function deployLQT(tezos: TezosToolkit, dexAddress: string, config: FullCo
 async function deployDEX(
     tezos: TezosToolkit,
     config: FullConfig,
-    deploymentManager: string
+    deploymentManager: string,
+    networkName: NetworkName
 ): Promise<string> {
     console.log("\nDeploying DEX contract...");
 
@@ -139,8 +165,10 @@ async function deployDEX(
         lqtAddress: "tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU",
         tokenId: config.tokenStandard === "FA2" ? config.tokenId : undefined,
 
+        // Fees are immutable in contract code (25/5 bp). Only the claim
+        // recipient is configurable; independent of MANAGER.
         ...(config.poolType === "mod" && {
-            protocol_fee_recipient: config.manager,
+            protocol_fee_recipient: config.protocolFeeRecipient,
             accumulated_protocol_fee_xtz: "0",
             accumulated_protocol_fee_token: "0",
         }),
@@ -150,6 +178,9 @@ async function deployDEX(
     const originationOp = await tezos.contract.originate({
         code: parsedMichelson!,
         init: michelsonData,
+        ...(needsExplicitOpLimits(networkName)
+            ? previewnetOriginateLimits()
+            : {}),
     });
 
     console.log(`DEX operation: ${originationOp.hash}`);
@@ -192,10 +223,12 @@ function saveDeploymentInfo(
             lqtTotal,
             minimumLqt: lqtAllocation.locked,
             initialProviderLqt: lqtAllocation.provider,
-            lpFeeBp: config.poolType === "mod" ? 25 : undefined,
-            protocolFeeBp: config.poolType === "mod" ? 5 : undefined,
-            totalFeeBp: config.poolType === "mod" ? 30 : undefined,
-            protocolFeeRecipient: config.poolType === "mod" ? config.manager : undefined,
+            // Recorded for operators; not passed as storage (fees are hardcoded).
+            lpFeeBp: config.poolType === "mod" ? MOD_LP_FEE_BP : undefined,
+            protocolFeeBp: config.poolType === "mod" ? MOD_PROTOCOL_FEE_BP : undefined,
+            totalFeeBp: config.poolType === "mod" ? MOD_TOTAL_FEE_BP : undefined,
+            protocolFeeRecipient:
+                config.poolType === "mod" ? config.protocolFeeRecipient : undefined,
         },
     };
 
@@ -215,7 +248,11 @@ function saveDeploymentInfo(
     console.log(`Deployment info saved: ${filepath}`);
 }
 
-async function checkBalance(config: FullConfig, tezos: TezosToolkit): Promise<void> {
+async function checkBalance(
+    config: FullConfig,
+    tezos: TezosToolkit,
+    networkName: NetworkName
+): Promise<void> {
     const pkh = await tezos.signer.publicKeyHash();
     const balance = await tezos.tz.getBalance(pkh);
 
@@ -223,8 +260,11 @@ async function checkBalance(config: FullConfig, tezos: TezosToolkit): Promise<vo
     const seedToken = BigInt(config.seedAmount.token);
     const balanceMutez = BigInt(balance.toString());
 
-    // Check if balance is sufficient (seed amount + 2 XTZ buffer for fees)
-    const requiredBalance = seedXtz + 2_000_000n;
+    // Seed amount + network fee buffer (Previewnet TezosX fees are much higher).
+    const feeBuffer = needsExplicitOpLimits(networkName)
+        ? previewnetFeeBufferMutez()
+        : 2_000_000n;
+    const requiredBalance = seedXtz + feeBuffer;
     if (balanceMutez < requiredBalance) {
         throw new Error(
             `Insufficient XTZ balance (${balanceMutez} mutez). ` +
@@ -239,7 +279,8 @@ async function checkBalance(config: FullConfig, tezos: TezosToolkit): Promise<vo
         config.tokenAddress,
         pkh,
         config.tokenStandard,
-        config.tokenId
+        config.tokenId,
+        config.tzktApiUrl
     );
 
     if (tokenBalance < seedToken) {
@@ -262,7 +303,8 @@ async function initializePool(
     tezos: TezosToolkit,
     dexAddress: string,
     lqtAddress: string,
-    config: FullConfig
+    config: FullConfig,
+    networkName: NetworkName
 ): Promise<string> {
     console.log("\nInitializing pool atomically...");
     const managerAddress = await tezos.signer.publicKeyHash();
@@ -276,6 +318,10 @@ async function initializePool(
         amount: config.seedAmount.token,
         tokenId: config.tokenStandard === "FA2" ? config.tokenId : undefined,
     });
+
+    const callLimits = needsExplicitOpLimits(networkName)
+        ? previewnetBatchCallLimits(initializationOpCount(config.poolType))
+        : undefined;
 
     const batch = appendInitializationCalls({
         batch: tezos.contract.batch(),
@@ -291,6 +337,7 @@ async function initializePool(
         ),
         poolType: config.poolType,
         finalManager: config.manager,
+        callLimits,
     });
 
     const op = await batch.send();
@@ -380,6 +427,14 @@ async function verifyDeployment(
     ) {
         throw new Error("Deployment verification failed for pool activation state");
     }
+    if (
+        config.poolType === "mod"
+        && dexStorage.protocol_fee_recipient !== config.protocolFeeRecipient
+    ) {
+        throw new Error(
+            "Deployment verification failed for protocol fee recipient"
+        );
+    }
 
     const dexXtzBalance = await tezos.tz.getBalance(dexAddress);
     verifyEqual(dexXtzBalance.toString(), config.seedAmount.xtz, "DEX XTZ balance");
@@ -389,7 +444,8 @@ async function verifyDeployment(
         config.tokenAddress,
         dexAddress,
         config.tokenStandard,
-        config.tokenId
+        config.tokenId,
+        config.tzktApiUrl
     );
     if (config.poolType === "mod") {
         verifyAtLeast(dexTokenBalance.toString(), dexTokenPool, "DEX token balance");
@@ -422,11 +478,19 @@ async function main(): Promise<void> {
     const pkh = await tezos.signer.publicKeyHash();
     console.log(`Deployer: ${pkh}`);
 
-    await checkBalance(config, tezos);
+    await assertTokenStandardMatchesContract(
+        tezos,
+        config.tokenAddress,
+        config.tokenStandard
+    );
+    await checkBalance(config, tezos, networkName);
 
     console.log(`Token: ${config.tokenAddress}`);
     console.log(`Temporary deployment manager: ${pkh}`);
-    console.log(`Final manager and fee recipient: ${config.manager}`);
+    console.log(`Final manager: ${config.manager}`);
+    if (config.poolType === "mod") {
+        console.log(`Protocol fee recipient: ${config.protocolFeeRecipient}`);
+    }
     console.log(`Seed XTZ: ${config.seedAmount.xtz} mutez`);
     console.log(`Seed Tokens: ${config.seedAmount.token} tokens`);
 
@@ -436,11 +500,11 @@ async function main(): Promise<void> {
     }
 
     try {
-        const dexAddress = await deployDEX(tezos, config, pkh);
-        const lqtAddress = await deployLQT(tezos, dexAddress, config);
+        const dexAddress = await deployDEX(tezos, config, pkh, networkName);
+        const lqtAddress = await deployLQT(tezos, dexAddress, config, networkName);
         await new Promise((resolve) => setTimeout(resolve, 5000));
         const initializationOperation =
-            await initializePool(tezos, dexAddress, lqtAddress, config);
+            await initializePool(tezos, dexAddress, lqtAddress, config, networkName);
         await verifyDeployment(tezos, dexAddress, lqtAddress, config);
         saveDeploymentInfo(
             networkName,

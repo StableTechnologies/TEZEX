@@ -12,6 +12,7 @@ dotenv.config();
 interface NetworkConfig {
     name: string;
     rpc: string;
+    tzktApiUrl: string;
     privateKey?: string;
 }
 
@@ -24,6 +25,8 @@ interface Config {
     tokenAddress: string;
     seedAmount: SeedAmount;
     manager: string;
+    /** Initial protocol fee claim recipient for mod pools; independent of manager. */
+    protocolFeeRecipient: string;
     tokenStandard: string; // e.g. "FA1.2" or "FA2"
     metadata_uri: string;
     token_metadata_uri: string;
@@ -35,12 +38,26 @@ export const networks: Record<NetworkName, NetworkConfig> = {
     testnet: {
         name: "Ghostnet",
         rpc: process.env.TESTNET_RPC || "https://rpc.tzkt.io/ghostnet",
+        tzktApiUrl:
+            process.env.TESTNET_TZKT_API || "https://api.ghostnet.tzkt.io",
         privateKey: process.env.TESTNET_PRIVATE_KEY,
     },
     mainnet: {
         name: "Mainnet",
         rpc: process.env.MAINNET_RPC || "https://rpc.tzkt.io/mainnet",
+        tzktApiUrl: process.env.MAINNET_TZKT_API || "https://api.tzkt.io",
         privateKey: process.env.MAINNET_PRIVATE_KEY,
+    },
+    // Optional smoke-test network; only required when deploying with --network=previewnet.
+    previewnet: {
+        name: "Previewnet",
+        rpc:
+            process.env.PREVIEWNET_RPC
+            || "https://michelson.previewnet.tezosx.nomadic-labs.com",
+        tzktApiUrl:
+            process.env.PREVIEWNET_TZKT_API
+            || "https://api.previewnet.tezosx.tzkt.io",
+        privateKey: process.env.PREVIEWNET_PRIVATE_KEY,
     },
 };
 
@@ -59,6 +76,7 @@ const config: Config = {
         token: getRequiredNatEnv("SEED_TOKEN"),
     },
     manager: getRequiredEnv("MANAGER"),
+    protocolFeeRecipient: getRequiredEnv("PROTOCOL_FEE_RECIPIENT"),
     metadata_uri: getRequiredEnv("METADATA_URI"),
     token_metadata_uri: getRequiredEnv("TOKEN_METADATA_URI"),
     poolType,
@@ -76,7 +94,9 @@ export function getConfig(networkName: NetworkName): FullConfig {
     const networkConfig = networks[networkName];
 
     if (!networkConfig) {
-        throw new Error(`Unknown network: ${networkName}. Use 'testnet' or 'mainnet'.`);
+        throw new Error(
+            `Unknown network: ${networkName}. Use 'testnet', 'mainnet', or 'previewnet'.`
+        );
     }
 
     if (!networkConfig.privateKey) {
@@ -98,6 +118,10 @@ export function getConfig(networkName: NetworkName): FullConfig {
         "TOKEN_ADDRESS"
     );
     requireValidAddress(validateAddress(config.manager), "MANAGER");
+    requireValidAddress(
+        validateAddress(config.protocolFeeRecipient),
+        "PROTOCOL_FEE_RECIPIENT"
+    );
 
     return {
         ...networkConfig,

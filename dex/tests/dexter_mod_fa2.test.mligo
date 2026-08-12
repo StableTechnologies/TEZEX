@@ -546,6 +546,86 @@ let test_modified_fa2_one_sided_active_states_fail_closed =
     Dexter.error_POOL_NOT_ACTIVE
     token_only_result
 
+(* Immutable 25 bp LP + 5 bp protocol (997/1000 on gross input). *)
+let test_modified_fa2_xtz_to_token_target_fees =
+  let test_name = "test_modified_fa2_xtz_to_token_target_fees" in
+  let (dex_orig, _, tok_orig) = setup_full_dex () in
+  let swap_param : Dexter.xtz_to_token =
+    {
+     to_ = src ();
+     minTokensBought = 499248n;
+     deadline = future;
+    } in
+  let _ : nat =
+    Test.Typed_address.transfer_exn
+      dex_orig.taddr
+      (XtzToToken swap_param)
+      1tez in
+  let storage : Dexter.storage =
+    Test.Typed_address.get_storage dex_orig.taddr in
+  let () =
+    if
+      storage.xtzPool <> 1999500mutez
+      or storage.tokenPool <> 500752n
+      or storage.lqtTotal <> 1000000n
+      or storage.accumulated_protocol_fee_xtz <> 500mutez
+    then failwith (test_name ^ ": XTZ fee accounting mismatch")
+    else () in
+  if fa2_balance tok_orig.taddr (src ()) <> 1000499248n
+  then failwith (test_name ^ ": incorrect FA2 balance after swap")
+  else ()
+
+let test_modified_fa2_view_get_fee_bp =
+  let test_name = "test_modified_fa2_view_get_fee_bp" in
+  let (dex_orig, _, _) = setup_full_dex () in
+  let dex_address = Test.Typed_address.to_address dex_orig.taddr in
+  let view_result : (nat * nat * nat) option =
+    Tezos.View.call "get_fee_bp" () dex_address in
+  match view_result with
+    None -> failwith (test_name ^ ": get_fee_bp view failed")
+  | Some (lp_fee, protocol_fee, total_fee) ->
+      if lp_fee <> 25n or protocol_fee <> 5n or total_fee <> 30n
+      then failwith (test_name ^ ": unexpected fee split")
+      else ()
+
+let test_modified_fa2_update_token_pool =
+  let test_name = "test_modified_fa2_update_token_pool" in
+  let (dex_orig, _, tok_orig) = setup_full_dex () in
+  let token_id = 0n in
+  let dex_addr = Test.Typed_address.to_address dex_orig.taddr in
+  let transfer_param : FA2.transfer =
+    [
+      {
+       from_ = src ();
+       txs =
+         [
+           {
+            to_ = dex_addr;
+            token_id = token_id;
+            amount = 1000n;
+           }
+         ];
+      }
+    ] in
+  let _ : nat =
+    Test.Typed_address.transfer_exn
+      tok_orig.taddr
+      (Transfer transfer_param)
+      0tez in
+  let _ : nat =
+    Test.Typed_address.transfer_exn
+      dex_orig.taddr
+      (UpdateTokenPool ())
+      0tez in
+  let storage : Dexter.storage =
+    Test.Typed_address.get_storage dex_orig.taddr in
+  if
+    storage.xtzPool <> 1tez
+    or storage.tokenPool <> 1001000n
+    or storage.lqtTotal <> 1000000n
+  then failwith (test_name ^ ": token pool did not reflect donation")
+  else ()
+
 let test_modified_fa2_xtz_fee_claim_preserves_lp_reserve =
   let test_name = "test_modified_fa2_xtz_fee_claim_preserves_lp_reserve" in
   let (dex_orig, _, _) = setup_full_dex () in

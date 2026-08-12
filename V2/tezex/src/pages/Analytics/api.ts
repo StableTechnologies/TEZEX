@@ -1,6 +1,7 @@
 import { NetworkInfo } from "../../contexts/network";
 import { Asset, Token } from "../../types/general";
 import { PoolConfig, PoolType } from "../../types/pools";
+import { tezexPoolFeeRate } from "../../functions/tezexFeeModel";
 import {
   ANALYTICS_HISTORY,
   ANALYTICS_HISTORY_CUTOFF,
@@ -229,7 +230,7 @@ const query = (values: Record<string, string | number>) => {
 const poolFeeRate = (pool: PoolConfig, storage: Record<string, unknown>) => {
   if (pool.type === PoolType.SIRIUS) return 0.001;
   if (pool.type === PoolType.TEZEX) {
-    return 0.003 + toNumber(storage.protocol_fee_bp) / 10_000;
+    return tezexPoolFeeRate(storage);
   }
   return 0;
 };

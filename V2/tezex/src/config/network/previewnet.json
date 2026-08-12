@@ -3,9 +3,9 @@
   "rpcFallbacks": [],
   "chainId": "NetXY2oPPzkxUW1",
   "tradingAvailability": {
-    "enabled": false,
-    "title": "Previewnet contracts require redeployment",
-    "message": "The July 20 Previewnet reset cleared the previous TEZEX contracts. Trading is unavailable until the pools and tokens are redeployed and their new addresses are verified.",
+    "enabled": true,
+    "title": "Previewnet TEZEX XTZ pools are live",
+    "message": "XTZ–USDt, XTZ–USDtz, and XTZ–BTCtz pools are available for trading on Previewnet.",
     "statusUrl": "https://previewnet.tezosx.nomadic-labs.com/"
   },
   "pools": [
@@ -13,7 +13,7 @@
       "id": "xtz-usdt-tezex",
       "name": "TEZEX",
       "type": "TEZEX",
-      "address": "KT1Vxk9m4kkfeH8sP8VnDvH2tjTFz2kL1ofE",
+      "address": "KT1DCBFCxu3G7qmGo3guLwUnL7UsJU3EUzJH",
       "tokenA": "XTZ",
       "tokenB": "USDt",
       "lpToken": "LP_XTZUSDt"
@@ -22,7 +22,7 @@
       "id": "xtz-usdtz-tezex",
       "name": "TEZEX",
       "type": "TEZEX",
-      "address": "KT1RjhYTShmRGfBTHrzxjcLnWuxbuTyKqThw",
+      "address": "KT1Wdfc9VqjnMnewp5iMeRYWmJ5obYeAsz4J",
       "tokenA": "XTZ",
       "tokenB": "USDtz",
       "lpToken": "LP_XTZUSDtz"
@@ -31,31 +31,10 @@
       "id": "xtz-btctz-tezex",
       "name": "TEZEX",
       "type": "TEZEX",
-      "address": "KT1TVBRajhqhboj9ag2z1bu7Co9sjpvi5oQq",
+      "address": "KT1Kcr4dYvA4nA6F86phL6Pf48bszczDopMZ",
       "tokenA": "XTZ",
       "tokenB": "BTCtz",
       "lpToken": "LP_XTZBTCtz"
-    },
-    {
-      "id": "xtz-ethtz-tezex",
-      "name": "TEZEX",
-      "type": "TEZEX",
-      "address": "KT1HVqzCghUP9q4VCLX67pu1e3rqGyKwzjpB",
-      "tokenA": "XTZ",
-      "tokenB": "ETHtz",
-      "lpToken": "LP_XTZETHtz"
-    },
-    {
-      "id": "usdtz-usdt-tezex",
-      "name": "TEZEX",
-      "type": "STABLE",
-      "address": "KT1T78BnBguxKJjG98As1nwwYYxE8XkWkXUE",
-      "lpToken": "LP_USDtzUSDt",
-      "tokenA": "USDtz",
-      "tokenB": "USDt",
-      "poolId": 0,
-      "tokenAIdx": 0,
-      "tokenBIdx": 1
     }
   ],
   "assets": [
@@ -71,7 +50,7 @@
       "name": "USDt",
       "label": "USDt",
       "logo": "/assets/usdtLogo.svg",
-      "address": "KT1QC9jwGx6oUDFiTVDY97rbsHc3UDuBPJBH",
+      "address": "KT1FthanFQC6p8pdhTzw7bStMNFv9FK98P6J",
       "decimals": 6,
       "type": "FA2",
       "tokenId": 0
@@ -80,7 +59,7 @@
       "name": "LP_XTZUSDt",
       "label": "LP-XTZUSDt",
       "logo": "/assets/lpxtzusdtzLogo.svg",
-      "address": "KT1PkcBKx1jf2QcnZgFmVUysMCN66qjuzT6k",
+      "address": "KT1EiKaTmg4rn7egB6Tn2sSWv3dGkMFUtvir",
       "decimals": 6,
       "type": "FA1.2"
     },
@@ -88,7 +67,7 @@
       "name": "USDtz",
       "label": "USDtz",
       "logo": "/assets/usdtzLogo.svg",
-      "address": "KT1Ho6NbeyyGExTcq74VAEh4vwis51AXrE16",
+      "address": "KT1Wk2ytPg26WKSvcoDpGAPEfPDGDBJyMFwW",
       "decimals": 6,
       "type": "FA1.2"
     },
@@ -96,7 +75,7 @@
       "name": "LP_XTZUSDtz",
       "label": "LP-XTZUSDtz",
       "logo": "/assets/lpxtzusdtzLogo.svg",
-      "address": "KT1Xm52eeRDn2cDAWMo3bk5MjRmUbVjanxic",
+      "address": "KT1HdjyTk9i9azxVs853xsBtKT3Ntqqaotim",
       "decimals": 6,
       "type": "FA1.2"
     },
@@ -104,43 +83,17 @@
       "name": "BTCtz",
       "label": "BTCtz",
       "logo": "/assets/btctzLogo.svg",
-      "address": "KT1SWMmJvoRtAHNW6pbWLXsNDvXRqQmQ5jXD",
+      "address": "KT1UvK5MZuzE7jWX66qTmQrbmysjUv6kSeLh",
       "decimals": 8,
-      "type": "FA2",
-      "tokenId": 0
+      "type": "FA1.2"
     },
     {
       "name": "LP_XTZBTCtz",
       "label": "LP-XTZBTCtz",
       "logo": "/assets/lpxtzusdtzLogo.svg",
-      "address": "KT1VdAZipAG93bos3na5k9Ac7inWdWME1Jjd",
+      "address": "KT1JWZhXRtfTecK8t6exLtbrwLW8ycGLKRxM",
       "decimals": 6,
       "type": "FA1.2"
-    },
-    {
-      "name": "ETHtz",
-      "label": "ETHtz",
-      "logo": "/assets/ethtzLogo.svg",
-      "address": "KT1GVRhpjnVityzEfss7r8NhqUorACPRpL4y",
-      "decimals": 18,
-      "type": "FA1.2"
-    },
-    {
-      "name": "LP_XTZETHtz",
-      "label": "LP-XTZETHtz",
-      "logo": "/assets/lpxtzusdtzLogo.svg",
-      "address": "KT1PEUQUkp3wzUSwwTn1L92VHVVugjnojWSx",
-      "decimals": 12,
-      "type": "FA1.2"
-    },
-    {
-      "name": "LP_USDtzUSDt",
-      "label": "LP_USDtzUSDt",
-      "logo": "/assets/lpxtzusdtzLogo.svg",
-      "address": "KT1T78BnBguxKJjG98As1nwwYYxE8XkWkXUE",
-      "decimals": 18,
-      "type": "FA2",
-      "tokenId": 0
     }
   ]
 }

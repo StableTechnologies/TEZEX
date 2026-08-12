@@ -1,0 +1,21 @@
+{
+  "dex": "TEZEX",
+  "name": "TEZEX LP: XTZ–USDt",
+  "pair": [
+    "XTZ",
+    "USDt"
+  ],
+  "version": "1.0.0",
+  "interfaces": [
+    "TZIP-007"
+  ],
+  "description": "Liquidity provider token for the TEZEX XTZ–USDt CPMM pool.",
+  "thumbnailUri": "ipfs://bafkreidumr3xiifencjp4mlaa26laeahqeopatgfgg5aqblht2j3krzdri",
+  "authors": [
+    "TEZEX"
+  ],
+  "homepage": "https://tezex.io",
+  "license": {
+    "name": "MIT"
+  }
+}

@@ -1,10 +1,49 @@
 import { WalletInfo } from "../contexts/wallet";
 import { INetwork } from "../contexts/network";
 import { TezosToolkit } from "@taquito/taquito";
+import { BigNumber } from "bignumber.js";
 
 import { Asset, Balance, TokenType } from "../types/general";
 import { balanceBuilder, getBalanceFromTzKT } from "./util";
 import { BeaconEvent, DAppClient, NetworkType } from "@airgap/beacon-dapp";
+
+async function getFa12BalanceFromStorage(
+  toolkit: TezosToolkit,
+  tokenAddress: string,
+  owner: string
+): Promise<BigNumber> {
+  const contract = await toolkit.contract.at(tokenAddress);
+  const storage: {
+    tokens?: { get: (k: string) => Promise<unknown> };
+    balances?: { get: (k: string) => Promise<unknown> };
+    ledger?: { get: (k: string) => Promise<unknown> };
+  } = await contract.storage();
+
+  const ledger = storage.tokens ?? storage.balances ?? storage.ledger;
+  if (!ledger || typeof ledger.get !== "function") {
+    throw new Error(
+      `FA1.2 token ${tokenAddress} has no tokens/balances/ledger bigmap`
+    );
+  }
+
+  const entry = await ledger.get(owner);
+  if (entry == null) {
+    return new BigNumber(0);
+  }
+
+  if (
+    typeof entry === "object" &&
+    entry !== null &&
+    "balance" in entry &&
+    (entry as { balance: unknown }).balance != null
+  ) {
+    return new BigNumber(
+      (entry as { balance: { toString(): string } }).balance.toString()
+    );
+  }
+
+  return new BigNumber((entry as { toString(): string }).toString());
+}
 
 export async function getBalance(
   toolkit: TezosToolkit,
@@ -12,18 +51,28 @@ export async function getBalance(
   address: string,
   asset: Asset
 ): Promise<Balance> {
-  // NOTE: For now some of the RPC operations that we use fail on TezLink Shadownet
-  // like getting a value from bigmap. So we handle it by using TzKT API to get the balance.
-  // In future, when TezLink Shadownet supports all RPC operations, we can remove this workaround.
-  // We also need to pass the network type to this function to get the correct TzKT API URL.
+  // TezLink Previewnet/Shadownet often breaks run_view and FA2 bigmap key
+  // encoding. Prefer views, then storage bigmap, then TzKT.
   const getBalance = async () => {
     try {
       switch (asset.type) {
         case TokenType.XTZ:
           return await toolkit.tz.getBalance(address);
         case TokenType.FA12: {
-          const contract = await toolkit.contract.at(asset.address);
-          return await contract.views.getBalance(address).read();
+          try {
+            const contract = await toolkit.contract.at(asset.address);
+            return await contract.views.getBalance(address).read();
+          } catch (viewError) {
+            console.warn(
+              `[getBalance] FA1.2 view failed for ${asset.name}, trying storage:`,
+              viewError
+            );
+            return await getFa12BalanceFromStorage(
+              toolkit,
+              asset.address,
+              address
+            );
+          }
         }
         case TokenType.FA2: {
           const contract = await toolkit.contract.at(asset.address);

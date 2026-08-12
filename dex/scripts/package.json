@@ -5,6 +5,8 @@
     "scripts": {
         "deploy:testnet": "tsx src/deploy.ts --network=testnet",
         "deploy:mainnet": "tsx src/deploy.ts --network=mainnet",
+        "deploy:previewnet": "tsx src/deploy.ts --network=previewnet",
+        "smoke:previewnet": "tsx src/smoke-test.ts",
         "test": "tsx --test src/*.test.ts",
         "typecheck": "tsc --noEmit"
     },
