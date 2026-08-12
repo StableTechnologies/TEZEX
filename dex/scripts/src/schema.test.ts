@@ -38,6 +38,8 @@ test("deployment schemas match every compiled pool contract", () => {
 
 test("deployment schemas preserve arbitrary-precision storage integers", () => {
     const manager = "tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU";
+    // Distinct from manager: fee recipient is independent at origination.
+    const protocolFeeRecipient = "tz1ddb9NMYHZi5UzPdzTZMYQQZoMub195zgv";
     const token = "KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton";
     const exactLqtTotal = "500000000000000000";
     const exactTokenId = "9007199254740993";
@@ -54,7 +56,7 @@ test("deployment schemas preserve arbitrary-precision storage integers", () => {
         tokenAddress: token,
         tokenId: exactTokenId,
         lqtAddress: manager,
-        protocol_fee_recipient: manager,
+        protocol_fee_recipient: protocolFeeRecipient,
         accumulated_protocol_fee_xtz: "0",
         accumulated_protocol_fee_token: "0",
     });
@@ -76,4 +78,6 @@ test("deployment schemas preserve arbitrary-precision storage integers", () => {
     assert.match(encoded, new RegExp(exactLqtTotal));
     assert.match(encoded, new RegExp(exactTokenId));
     assert.match(encoded, new RegExp(allocation.provider));
+    assert.match(encoded, new RegExp(protocolFeeRecipient));
+    assert.notEqual(protocolFeeRecipient, manager);
 });

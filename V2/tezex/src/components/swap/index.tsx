@@ -1,4 +1,10 @@
-import React, { FC, useState, useEffect, useCallback } from "react";
+import React, {
+  FC,
+  useState,
+  useEffect,
+  useCallback,
+  useSyncExternalStore,
+} from "react";
 import BigNumber from "bignumber.js";
 
 import {
@@ -7,6 +13,7 @@ import {
   TransferType,
   TransactionStatus,
   Id,
+  Token,
 } from "../../types/general";
 import { PoolType } from "../../types/pools";
 
@@ -17,6 +24,8 @@ import { useWallet, useWalletOps, WalletOps } from "../../hooks/wallet";
 import { SwapUpDownToggle } from "../../components/ui/elements/Toggles";
 import { useNetwork } from "../../hooks/network";
 import { getExplorer } from "../../functions/util";
+import { formatTezexFeeLabel } from "../../functions/tezexFeeModel";
+import { PoolDataCache } from "../../utils/poolDataCache";
 
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
@@ -30,11 +39,29 @@ import { TransactionProgress } from "./TransactionProgress";
 import useStyles from "../../hooks/styles";
 import { useTransaction } from "../../hooks/transaction";
 import { eq } from "lodash";
-import { findPoolForTokenPair, getCompatibleSwapAssets } from "./tokenRouting";
+import {
+  findPoolForTokenPair,
+  getCompatibleSwapAssets,
+  getSwapDisplaySymbol,
+} from "./tokenRouting";
+import { TradingLoadingState } from "../ui/elements/loading/TezexLoading";
+import { SwapRouteSelection } from "../../tradeRouting";
 
 export interface ISwapToken {
   orientation: "portrait" | "landscape";
+  routeSelection?: SwapRouteSelection;
+  onRouteChange?: (sendToken: Token, receiveToken: Token) => void;
 }
+
+const subscribePoolDataCache = (onStoreChange: () => void) =>
+  PoolDataCache.subscribe(onStoreChange);
+
+const useCachedPoolData = (poolId: string | undefined) =>
+  useSyncExternalStore(
+    subscribePoolDataCache,
+    () => (poolId ? PoolDataCache.get(poolId) : null),
+    () => null
+  );
 
 const formatAmount = (value: BigNumber | undefined, decimals = 6): string => {
   if (!value || !value.isFinite()) return "—";
@@ -77,7 +104,7 @@ const getStatusLabel = (status?: TransactionStatus): string => {
   }
 };
 
-export const Swap: FC<ISwapToken> = () => {
+export const Swap: FC<ISwapToken> = ({ routeSelection, onRouteChange }) => {
   const scalingKey = "swap";
   const styles = useStyles(style, scalingKey);
   const network = useNetwork();
@@ -93,9 +120,16 @@ export const Swap: FC<ISwapToken> = () => {
   const receive = 1;
 
   const availablePools = network.getAllPools();
-  const currentPool = network.selectedPool;
+  const currentPool = routeSelection?.pool || network.selectedPool;
+  const cachedPoolData = useCachedPoolData(currentPool?.id);
 
   const [assets, setAssets] = useState<[Asset, Asset]>(() => {
+    if (routeSelection) {
+      return [
+        network.getAsset(routeSelection.sendToken),
+        network.getAsset(routeSelection.receiveToken),
+      ];
+    }
     if (currentPool) {
       return [
         network.getAsset(currentPool.tokenA),
@@ -112,19 +146,49 @@ export const Swap: FC<ISwapToken> = () => {
   const [sendInputValue, setSendInputValue] = useState("0.00");
   const session = useSession();
   const [canUpdate, setCanUpdate] = useState<boolean>(false);
+  const previewLoading =
+    process.env.NODE_ENV === "development" &&
+    new URLSearchParams(window.location.search).has("loading");
 
   const active = walletOps.getActiveTransaction();
 
   useEffect(() => {
     const pools = network.getAllPools();
     if (pools.length > 0) {
+      const nextPool = routeSelection?.pool || pools[0];
       setAssets([
-        network.getAsset(pools[0].tokenA),
-        network.getAsset(pools[0].tokenB),
+        network.getAsset(routeSelection?.sendToken || nextPool.tokenA),
+        network.getAsset(routeSelection?.receiveToken || nextPool.tokenB),
       ]);
       setLoading(true);
     }
   }, [network.network]);
+
+  useEffect(() => {
+    if (!routeSelection) return;
+
+    const nextAssets: [Asset, Asset] = [
+      network.getAsset(routeSelection.sendToken),
+      network.getAsset(routeSelection.receiveToken),
+    ];
+    const routeAlreadyLoaded =
+      assets[send].name === nextAssets[send].name &&
+      assets[receive].name === nextAssets[receive].name;
+
+    if (routeAlreadyLoaded) return;
+
+    network.setSelectedPool(routeSelection.pool);
+    setAssets(nextAssets);
+    setSendInputValue("0.00");
+    wallet.clearTransaction(TransactingComponent.SWAP);
+    setLoading(true);
+    setReloading(true);
+  }, [
+    routeSelection?.pool.id,
+    routeSelection?.sendToken,
+    routeSelection?.receiveToken,
+    network.network,
+  ]);
 
   const handleAssetChange = useCallback(
     async (side: typeof send | typeof receive, nextAsset: Asset) => {
@@ -141,6 +205,7 @@ export const Swap: FC<ISwapToken> = () => {
       network.setSelectedPool(pool);
       setAssets(nextAssets);
       setSendInputValue("0.00");
+      onRouteChange?.(nextAssets[send].name, nextAssets[receive].name);
 
       wallet.clearTransaction(TransactingComponent.ADD_LIQUIDITY);
       wallet.clearTransaction(TransactingComponent.REMOVE_LIQUIDITY);
@@ -150,7 +215,7 @@ export const Swap: FC<ISwapToken> = () => {
         pool.id
       );
     },
-    [assets, network, transactionOps, wallet]
+    [assets, network, onRouteChange, transactionOps, wallet]
   );
 
   const transact = useCallback(async () => {
@@ -159,21 +224,38 @@ export const Swap: FC<ISwapToken> = () => {
 
   const swapFields = useCallback(async () => {
     setAssets([assets[1], assets[0]]);
+    onRouteChange?.(assets[receive].name, assets[send].name);
     await transactionOps.swapFields();
-  }, [assets, transactionOps]);
+  }, [assets, onRouteChange, transactionOps]);
 
   const newTransaction = useCallback(async () => {
+    const transactionPool =
+      routeSelection?.pool ||
+      findPoolForTokenPair(
+        network.getAllPools(),
+        assets[send].name,
+        assets[receive].name
+      ) ||
+      currentPool;
     const transaction = await transactionOps.initialize(
       [assets[send]],
       [assets[receive]],
-      currentPool?.id || ""
+      transactionPool?.id || ""
     );
 
     if (transaction) {
       if (swappingFileds) setSwappingFileds(false);
+      setCanUpdate(true);
       setLoading(false);
     }
-  }, [swappingFileds, assets, transactionOps, currentPool]);
+  }, [
+    swappingFileds,
+    assets,
+    transactionOps,
+    currentPool,
+    routeSelection,
+    network,
+  ]);
 
   useEffect(() => {
     const transaction = transactionOps.getActiveTransaction();
@@ -247,7 +329,7 @@ export const Swap: FC<ISwapToken> = () => {
     [loading, reloading]
   );
 
-  if (loading) return <Box sx={styles.loadingSpace} />;
+  if (loading || previewLoading) return <TradingLoadingState variant="swap" />;
 
   const transaction = transactionOps.getActiveTransaction() || active;
   const sendAssetOptions = getCompatibleSwapAssets(
@@ -292,12 +374,19 @@ export const Swap: FC<ISwapToken> = () => {
       ? 2
       : 1;
 
-  const routeLabel = `${assets[send].label} → ${assets[receive].label}`;
+  const sendSymbol = getSwapDisplaySymbol(assets[send]);
+  const receiveSymbol = getSwapDisplaySymbol(assets[receive]);
+  const tradeTitle = `Trade ${sendSymbol} to ${receiveSymbol}`;
+  const routeLabel = `${sendSymbol} → ${receiveSymbol}`;
   const feeLabel =
     currentPool?.type === PoolType.SIRIUS
       ? "0.1% fee + 0.1% XTZ burn"
       : currentPool?.type === PoolType.TEZEX
-      ? "0.30% pool fee"
+      ? formatTezexFeeLabel({
+          lpFeeBp: cachedPoolData?.lpFeeBp ?? 30,
+          protocolFeeBp: cachedPoolData?.protocolFeeBp ?? 0,
+          totalFeeBp: cachedPoolData?.totalFeeBp ?? 30,
+        })
       : "Pool-defined";
   const contractLabel = currentPool?.address
     ? `${currentPool.address.slice(0, 7)}…${currentPool.address.slice(-6)}`
@@ -310,9 +399,9 @@ export const Swap: FC<ISwapToken> = () => {
       <Box sx={styles.root}>
         <Card sx={styles.card}>
           <Box sx={styles.cardHeader}>
-            <Box sx={styles.cardTitleGroup}>
+            <Box sx={styles.headerTitleGroup}>
               <Typography sx={styles.eyebrow}>SWAP</Typography>
-              <Typography sx={styles.cardTitle}>Trade on Tezos</Typography>
+              <Typography sx={styles.headerTitle}>{tradeTitle}</Typography>
             </Box>
           </Box>
 
@@ -401,9 +490,9 @@ export const Swap: FC<ISwapToken> = () => {
         <Box sx={styles.contextColumn}>
           <Box sx={styles.detailsPanel}>
             <Box sx={styles.panelHeader}>
-              <Box>
+              <Box sx={styles.headerTitleGroup}>
                 <Typography sx={styles.eyebrow}>SWAP DETAILS</Typography>
-                <Typography sx={styles.panelTitle}>{routeLabel}</Typography>
+                <Typography sx={styles.headerTitle}>{routeLabel}</Typography>
               </Box>
               <Box sx={styles.liveBadge}>
                 <Box sx={styles.liveDot} />

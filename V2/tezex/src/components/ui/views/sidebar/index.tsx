@@ -25,6 +25,10 @@ import logo from "../../../../assets/TezexLogo.svg";
 import logoSmall from "../../../../assets/tezexIcon.svg";
 import { Wallet as WalletControl } from "../../../wallet";
 import { homePathForHost } from "../../../../routing";
+import {
+  DEFAULT_LIQUIDITY_PATH,
+  DEFAULT_REMOVE_LIQUIDITY_PATH,
+} from "../../../../tradeRouting";
 
 export interface ISideBarProps {
   openMenu: boolean;
@@ -155,7 +159,7 @@ export const SideBar: FC<ISideBarProps> = (props) => {
                     <ListItem disablePadding sx={styles.listItem}>
                       <ListItemButton
                         component={Link}
-                        to="/liquidity"
+                        to={DEFAULT_LIQUIDITY_PATH}
                         onClick={props.toggleMenu}
                         selected={active === 1}
                         sx={styles.nestedButton}
@@ -167,7 +171,7 @@ export const SideBar: FC<ISideBarProps> = (props) => {
                     <ListItem disablePadding sx={styles.listItem}>
                       <ListItemButton
                         component={Link}
-                        to="/liquidity/remove"
+                        to={DEFAULT_REMOVE_LIQUIDITY_PATH}
                         onClick={props.toggleMenu}
                         selected={active === 2}
                         sx={styles.nestedButton}

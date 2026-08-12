@@ -1,5 +1,16 @@
+export interface CallLimits {
+    fee?: number;
+    gasLimit?: number;
+    storageLimit?: number;
+}
+
+export interface BatchCallOptions extends CallLimits {
+    amount?: number;
+    mutez?: true;
+}
+
 export interface BatchLike {
-    withContractCall(call: unknown, options?: { amount: number; mutez: true }): BatchLike;
+    withContractCall(call: unknown, options?: BatchCallOptions): BatchLike;
 }
 
 interface ContractLike {
@@ -17,6 +28,8 @@ interface InitializationCalls<TBatch extends BatchLike> {
     lqtTotal: string;
     poolType: "base" | "mod";
     finalManager: string;
+    /** When set, applied to every manager op (TezosX Previewnet needs this). */
+    callLimits?: CallLimits;
 }
 
 /**
@@ -35,15 +48,25 @@ export function appendInitializationCalls<TBatch extends BatchLike>({
     lqtTotal,
     poolType,
     finalManager,
+    callLimits,
 }: InitializationCalls<TBatch>): TBatch {
+    const limits = callLimits ?? {};
+
     let next = batch
-        .withContractCall(dexContract.methodsObject.setLqtAddress(lqtAddress))
+        .withContractCall(dexContract.methodsObject.setLqtAddress(lqtAddress), limits)
         .withContractCall(dexContract.methodsObject.default(), {
+            ...limits,
             amount: seedXtz,
             mutez: true,
         })
-        .withContractCall(tokenContract.methodsObject.transfer(tokenTransfer))
-        .withContractCall(dexContract.methodsObject.updateTokenPool());
+        .withContractCall(
+            tokenContract.methodsObject.transfer(tokenTransfer),
+            limits
+        )
+        .withContractCall(
+            dexContract.methodsObject.updateTokenPool(),
+            limits
+        );
 
     if (poolType === "mod") {
         next = next.withContractCall(
@@ -53,11 +76,18 @@ export function appendInitializationCalls<TBatch extends BatchLike>({
                 // Any tokens donated before updateTokenPool remain in the pool.
                 expectedTokenPool: seedToken,
                 expectedLqtTotal: lqtTotal,
-            })
+            }),
+            limits
         );
     }
 
     return next.withContractCall(
-        dexContract.methodsObject.setManager(finalManager)
+        dexContract.methodsObject.setManager(finalManager),
+        limits
     ) as TBatch;
+}
+
+/** Number of manager ops appendInitializationCalls will add for this pool type. */
+export function initializationOpCount(poolType: "base" | "mod"): number {
+    return poolType === "mod" ? 6 : 5;
 }

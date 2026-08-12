@@ -22,7 +22,29 @@ import {
   transferParamsToBeaconOp,
   withExactMutezAmount,
 } from "../functions/transactions";
+import {
+  detectTezexFeeModel,
+  FEE_DENOMINATOR_BP,
+  resolveTezexFeeBp,
+  tezexAmmFeeBp,
+} from "../functions/tezexFeeModel";
 import { TransferParams } from "@taquito/taquito";
+
+const ammOutput = (
+  inputAmount: BigNumber,
+  inPool: BigNumber,
+  outPool: BigNumber,
+  ammFeeBp = 30
+): BigNumber => {
+  // Match contract / quote_* views: keep-rate (10000 - feeBp) / 10000.
+  // When ammFeeBp === 30 this is identical to classic 997/1000 integer math.
+  const keep = FEE_DENOMINATOR_BP - ammFeeBp;
+  const numerator = inputAmount.times(keep).times(outPool);
+  const denominator = inPool
+    .times(FEE_DENOMINATOR_BP)
+    .plus(inputAmount.times(keep));
+  return numerator.dividedBy(denominator).integerValue(BigNumber.ROUND_DOWN);
+};
 
 export class TezexAdapter implements IPoolAdapter {
   constructor(public poolConfig: PoolConfig) {}
@@ -37,32 +59,27 @@ export class TezexAdapter implements IPoolAdapter {
         tokenAPool: xtzPool,
         tokenBPool: tokenPool,
         protocolFeeBp,
+        totalFeeBp,
+        feeModel,
       } = await this.getPoolData(toolkit);
 
-      // protocol_fee = floor(amount * fee_bp / 10000); net_amount = amount - fee → AMM
-      const feeBp = new BigNumber(protocolFeeBp ?? 0);
       const isXtzInput = inputToken === Token.XTZ;
 
-      const protocolFee = inputAmount
-        .times(feeBp)
-        .div(10000)
-        .integerValue(BigNumber.ROUND_DOWN);
-      const netAmount = inputAmount.minus(protocolFee);
-
-      let outputAmount: BigNumber;
-      if (isXtzInput) {
-        const numerator = netAmount.times(997).times(tokenPool);
-        const denominator = xtzPool.times(1000).plus(netAmount.times(997));
-        outputAmount = numerator
-          .dividedBy(denominator)
+      // Legacy mod only: deduct protocol fee before AMM. Base + new-mod price on gross.
+      let ammInput = inputAmount;
+      if (feeModel === "legacy-mod") {
+        const feeBp = new BigNumber(protocolFeeBp ?? 0);
+        const protocolFee = inputAmount
+          .times(feeBp)
+          .div(FEE_DENOMINATOR_BP)
           .integerValue(BigNumber.ROUND_DOWN);
-      } else {
-        const numerator = netAmount.times(997).times(xtzPool);
-        const denominator = tokenPool.times(1000).plus(netAmount.times(997));
-        outputAmount = numerator
-          .dividedBy(denominator)
-          .integerValue(BigNumber.ROUND_DOWN);
+        ammInput = inputAmount.minus(protocolFee);
       }
+
+      const ammFeeBp = tezexAmmFeeBp(feeModel ?? "base", totalFeeBp);
+      const outputAmount = isXtzInput
+        ? ammOutput(ammInput, xtzPool, tokenPool, ammFeeBp)
+        : ammOutput(ammInput, tokenPool, xtzPool, ammFeeBp);
 
       return {
         inputAmount,
@@ -408,18 +425,24 @@ export class TezexAdapter implements IPoolAdapter {
       const tokenBPool = new BigNumber(storage.tokenPool);
       const lpTokenSupply = new BigNumber(storage.lqtTotal);
 
-      // Read protocol_fee_bp directly from contract storage.
-      // Undefined means this is a classic pool (no fee field) → treat as 0.
-      const protocolFeeBp: number =
-        storage.protocol_fee_bp !== undefined
-          ? Number(storage.protocol_fee_bp)
-          : 0;
+      const storageRecord = storage as Record<string, unknown>;
+      const feeModel = detectTezexFeeModel(storageRecord);
+      const fees = await resolveTezexFeeBp(
+        contract,
+        feeModel,
+        storageRecord,
+        this.poolConfig.address
+      );
 
       const poolData: PoolData = {
         tokenAPool,
         tokenBPool,
         lpTokenSupply,
-        protocolFeeBp,
+        protocolFeeBp: fees.protocolFeeBp,
+        lpFeeBp: fees.lpFeeBp,
+        totalFeeBp: fees.totalFeeBp,
+        feeSource: fees.source,
+        feeModel,
       };
 
       // Update cache

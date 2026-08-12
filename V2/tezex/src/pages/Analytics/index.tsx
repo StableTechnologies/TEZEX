@@ -13,6 +13,7 @@ import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 import ShowChartRoundedIcon from "@mui/icons-material/ShowChartRounded";
 
 import { TokenPair } from "../../components/ui/elements/TokenIcon";
+import { AnalyticsLoadingState } from "../../components/ui/elements/loading/TezexLoading";
 import { useNetwork } from "../../hooks/network";
 import {
   ANALYTICS_RANGES,
@@ -462,6 +463,9 @@ export const Analytics: FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>();
   const [refreshKey, setRefreshKey] = useState(0);
+  const previewLoading =
+    process.env.NODE_ENV === "development" &&
+    new URLSearchParams(window.location.search).has("loading");
   const cache = useRef(new Map<string, AnalyticsModel>());
   const refreshTarget = useRef<string>();
 
@@ -580,7 +584,7 @@ export const Analytics: FC = () => {
     );
   }
 
-  if (!model && loading) {
+  if ((!model && loading) || previewLoading) {
     return (
       <main className="analytics-page" aria-busy="true">
         <div className="analytics-intro">
@@ -589,11 +593,7 @@ export const Analytics: FC = () => {
             <h1>On-chain activity</h1>
           </div>
         </div>
-        <div className="analytics-skeleton" aria-label="Loading analytics">
-          <span />
-          <span />
-          <span />
-        </div>
+        <AnalyticsLoadingState />
       </main>
     );
   }

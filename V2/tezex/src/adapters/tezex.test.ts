@@ -95,6 +95,164 @@ const makePool = (tokenB: Token): PoolConfig => ({
   lpToken: Token.LP_XTZUSDt,
 });
 
+describe("TezexAdapter estimateSwap fee models", () => {
+  beforeEach(() => {
+    PoolDataCache.clear();
+    jest.spyOn(console, "error").mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  const makeEstimateHarness = (
+    storage: Record<string, unknown>,
+    contractViews?: {
+      get_fee_bp?: () => {
+        executeView: (options?: { viewCaller?: string }) => Promise<unknown>;
+      };
+    }
+  ) => {
+    const toolkit = {
+      contract: {
+        at: jest.fn().mockResolvedValue({
+          address: "KT1TezexPoolMock",
+          storage: jest.fn().mockResolvedValue(storage),
+          views: {},
+          contractViews: contractViews ?? {},
+        }),
+      },
+    } as unknown as TezosToolkit;
+    return { toolkit, adapter: new TezexAdapter(makePool(Token.USDt)) };
+  };
+
+  const pools = {
+    xtzPool: "1000000000",
+    tokenPool: "2000000000",
+    lqtTotal: "1000000",
+  };
+  const input = new BigNumber("1000000");
+
+  it("prices base pools on gross input (997/1000)", async () => {
+    const { toolkit, adapter } = makeEstimateHarness(pools);
+    const { outputAmount } = await adapter.estimateSwap(
+      toolkit,
+      Token.XTZ,
+      input
+    );
+    // (1e6 * 997 * 2e9) / (1e9 * 1000 + 1e6 * 997)
+    expect(outputAmount.toFixed()).toBe("1992013");
+    const data = await adapter.getPoolData(toolkit);
+    expect(data.feeModel).toBe("base");
+    expect(data.totalFeeBp).toBe(30);
+    expect(data.lpFeeBp).toBe(30);
+    expect(data.protocolFeeBp).toBe(0);
+    expect(data.feeSource).toBe("fallback");
+  });
+
+  it("caches get_fee_bp plain nat for base on success", async () => {
+    const executeView = jest.fn().mockResolvedValue(30);
+    const { toolkit, adapter } = makeEstimateHarness(pools, {
+      get_fee_bp: () => ({ executeView }),
+    });
+    const data = await adapter.getPoolData(toolkit);
+    expect(executeView).toHaveBeenCalledWith({
+      viewCaller: POOL_ADDRESS,
+    });
+    expect(data.feeModel).toBe("base");
+    expect(data.feeSource).toBe("view");
+    expect(data.lpFeeBp).toBe(30);
+    expect(data.protocolFeeBp).toBe(0);
+    expect(data.totalFeeBp).toBe(30);
+  });
+
+  it("prices new-mod on gross input (does not deduct protocol fee)", async () => {
+    const { toolkit, adapter } = makeEstimateHarness({
+      ...pools,
+      protocol_fee_recipient: "tz1LovVc1JH3taNFjemXWCEywqgxhWsjfvRW",
+      accumulated_protocol_fee_xtz: "0",
+      accumulated_protocol_fee_token: "0",
+    });
+    const { outputAmount } = await adapter.estimateSwap(
+      toolkit,
+      Token.XTZ,
+      input
+    );
+    expect(outputAmount.toFixed()).toBe("1992013");
+    const data = await adapter.getPoolData(toolkit);
+    expect(data.feeModel).toBe("new-mod");
+    expect(data.protocolFeeBp).toBe(5);
+    expect(data.lpFeeBp).toBe(25);
+    expect(data.totalFeeBp).toBe(30);
+    expect(data.feeSource).toBe("fallback");
+  });
+
+  it("caches get_fee_bp view fees for new-mod on success", async () => {
+    const executeView = jest
+      .fn()
+      .mockResolvedValue({ 0: 25, 1: { 0: 5, 1: 30 } });
+    const { toolkit, adapter } = makeEstimateHarness(
+      {
+        ...pools,
+        protocol_fee_recipient: "tz1LovVc1JH3taNFjemXWCEywqgxhWsjfvRW",
+        accumulated_protocol_fee_xtz: "0",
+        accumulated_protocol_fee_token: "0",
+      },
+      { get_fee_bp: () => ({ executeView }) }
+    );
+    const data = await adapter.getPoolData(toolkit);
+    expect(executeView).toHaveBeenCalled();
+    expect(data.feeSource).toBe("view");
+    expect(data.lpFeeBp).toBe(25);
+    expect(data.protocolFeeBp).toBe(5);
+    expect(data.totalFeeBp).toBe(30);
+  });
+
+  it("falls back when get_fee_bp view fails for new-mod", async () => {
+    const { toolkit, adapter } = makeEstimateHarness(
+      {
+        ...pools,
+        protocol_fee_recipient: "tz1LovVc1JH3taNFjemXWCEywqgxhWsjfvRW",
+        accumulated_protocol_fee_xtz: "0",
+        accumulated_protocol_fee_token: "0",
+      },
+      {
+        get_fee_bp: () => ({
+          executeView: async () => {
+            throw new Error("rpc view failed");
+          },
+        }),
+      }
+    );
+    const data = await adapter.getPoolData(toolkit);
+    expect(data.feeSource).toBe("fallback");
+    expect(data.lpFeeBp).toBe(25);
+    expect(data.protocolFeeBp).toBe(5);
+    expect(data.totalFeeBp).toBe(30);
+  });
+
+  it("deducts protocol fee before AMM for legacy-mod", async () => {
+    const { toolkit, adapter } = makeEstimateHarness({
+      ...pools,
+      protocol_fee_bp: 5,
+    });
+    const { outputAmount } = await adapter.estimateSwap(
+      toolkit,
+      Token.XTZ,
+      input
+    );
+    // protocol = floor(1e6 * 5 / 10000) = 500; net = 999500
+    // (999500 * 997 * 2e9) / (1e9 * 1000 + 999500 * 997)
+    expect(outputAmount.toFixed()).toBe("1991018");
+    const data = await adapter.getPoolData(toolkit);
+    expect(data.feeModel).toBe("legacy-mod");
+    expect(data.protocolFeeBp).toBe(5);
+    expect(data.lpFeeBp).toBe(30);
+    expect(data.totalFeeBp).toBe(35);
+    expect(data.feeSource).toBe("fallback");
+  });
+});
+
 describe("TezexAdapter exact transaction construction", () => {
   beforeEach(() => {
     PoolDataCache.clear();

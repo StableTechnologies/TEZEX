@@ -3,7 +3,6 @@ import React, { FC, useState, useEffect, useCallback } from "react";
 import { Wallet } from "../wallet";
 import { NavLiquidity } from "../nav/NavLiquidity";
 import {
-  Token,
   Asset,
   TransactingComponent,
   TransferType,
@@ -31,11 +30,18 @@ import { PoolSelector } from "../ui/elements/PoolSelector";
 import { SwapUpDownToggle } from "../ui/elements/Toggles";
 import { getBalance } from "../../functions/beacon";
 import { BigNumber } from "bignumber.js";
+import { TradingLoadingState } from "../ui/elements/loading/TezexLoading";
+import { PoolConfig } from "../../types/pools";
 
 export interface IAddLiquidity {
   orientation: "portrait" | "landscape";
+  routePool?: PoolConfig;
+  onPoolRouteChange?: (pool: PoolConfig) => void;
 }
-export const AddLiquidity: FC<IAddLiquidity> = () => {
+export const AddLiquidity: FC<IAddLiquidity> = ({
+  routePool,
+  onPoolRouteChange,
+}) => {
   //return <div> Add Liquidity</div>;
   const scalingKey = "addLiquidity";
   // load styles and apply responsive scaling for component
@@ -55,30 +61,53 @@ export const AddLiquidity: FC<IAddLiquidity> = () => {
   const [id, setId] = useState<Id | undefined>(undefined);
   const [loading, setLoading] = useState<boolean>(true);
   const [reloading, setReloading] = useState<boolean>(true);
+  const previewLoading =
+    process.env.NODE_ENV === "development" &&
+    new URLSearchParams(window.location.search).has("loading");
 
   const send1 = 0;
   const send2 = 1;
   const receive = 2;
 
-  const currentPool = network.selectedPool;
+  const currentPool = routePool || network.selectedPool;
 
   const [poolBalances, setPoolBalances] = useState<Map<string, string>>(
     new Map()
   );
 
+  const resolvePool = useCallback(() => {
+    return network.selectedPool ?? network.getAllPools()[0] ?? null;
+  }, [network.selectedPool, network.getAllPools]);
+
   const getLPToken = useCallback(
     (pool: typeof currentPool): Asset => {
-      if (!pool) return network.getAsset(Token.Sirs);
-      return network.getAsset(pool.lpToken);
+      const resolved = pool ?? resolvePool();
+      if (!resolved) {
+        throw new Error("No liquidity pool available on this network");
+      }
+      return network.getAsset(resolved.lpToken);
     },
-    [network]
+    [network.getAsset, resolvePool]
   );
 
-  const [assets, setAssets] = useState<[Asset, Asset, Asset]>([
-    network.getAsset(currentPool?.tokenA || Token.XTZ),
-    network.getAsset(currentPool?.tokenB || Token.TzBTC),
-    getLPToken(currentPool),
-  ]);
+  const assetsFromPool = useCallback(
+    (
+      pool: NonNullable<ReturnType<typeof resolvePool>>
+    ): [Asset, Asset, Asset] => [
+      network.getAsset(pool.tokenA),
+      network.getAsset(pool.tokenB),
+      network.getAsset(pool.lpToken),
+    ],
+    [network.getAsset]
+  );
+
+  const [assets, setAssets] = useState<[Asset, Asset, Asset]>(() => {
+    const pool = resolvePool();
+    if (!pool) {
+      throw new Error("No liquidity pool available on this network");
+    }
+    return assetsFromPool(pool);
+  });
 
   const handlePoolChange = useCallback(
     async (newPoolId: string) => {
@@ -86,12 +115,9 @@ export const AddLiquidity: FC<IAddLiquidity> = () => {
       if (!pool) return;
 
       network.setSelectedPool(pool);
-      const newAssets: [Asset, Asset, Asset] = [
-        network.getAsset(pool.tokenA),
-        network.getAsset(pool.tokenB),
-        getLPToken(pool),
-      ];
+      const newAssets = assetsFromPool(pool);
       setAssets(newAssets);
+      onPoolRouteChange?.(pool);
 
       wallet.clearTransaction(TransactingComponent.SWAP);
       wallet.clearTransaction(TransactingComponent.REMOVE_LIQUIDITY);
@@ -102,8 +128,30 @@ export const AddLiquidity: FC<IAddLiquidity> = () => {
         newPoolId
       );
     },
-    [network, getLPToken, transactionOps]
+    [network, getLPToken, onPoolRouteChange, transactionOps]
   );
+
+  useEffect(() => {
+    if (!routePool) return;
+
+    const nextAssets: [Asset, Asset, Asset] = [
+      network.getAsset(routePool.tokenA),
+      network.getAsset(routePool.tokenB),
+      getLPToken(routePool),
+    ];
+    const routeAlreadyLoaded =
+      assets[send1].name === nextAssets[send1].name &&
+      assets[send2].name === nextAssets[send2].name &&
+      assets[receive].name === nextAssets[receive].name;
+
+    if (routeAlreadyLoaded) return;
+
+    network.setSelectedPool(routePool);
+    setAssets(nextAssets);
+    wallet.clearTransaction(TransactingComponent.ADD_LIQUIDITY);
+    setLoading(true);
+    setReloading(true);
+  }, [routePool?.id, network.network]);
 
   const session = useSession();
 
@@ -130,18 +178,25 @@ export const AddLiquidity: FC<IAddLiquidity> = () => {
 
   // callback to create new transaction
   const newTransaction = useCallback(async () => {
-    // initialize transaction
+    const pool = resolvePool();
+    if (!pool) return;
+
+    const nextAssets = assetsFromPool(pool);
+    setAssets(nextAssets);
+
+    // initialize transaction from the active network pool (not stale UI assets)
     const transactionInitialized = await transactionOps.initialize(
-      [assets[send1], assets[send2]],
-      [assets[receive]],
-      currentPool?.id || ""
+      [nextAssets[send1], nextAssets[send2]],
+      [nextAssets[receive]],
+      pool.id
     );
 
     //if transaction initialized update balance and set loading params to false
     if (transactionInitialized) {
+      setCanUpdate(true);
       setLoading(false);
     }
-  }, [assets, transactionOps]);
+  }, [assetsFromPool, resolvePool, transactionOps]);
 
   // Effect to load component
   useEffect(() => {
@@ -150,8 +205,14 @@ export const AddLiquidity: FC<IAddLiquidity> = () => {
   }, [session]);
 
   useEffect(() => {
+    const pool = resolvePool();
+    if (pool) {
+      setAssets(assetsFromPool(pool));
+    }
     setLoading(true);
-  }, [network.network]);
+    // Re-sync only when network or selected pool changes. Callback identities
+    // are intentionally omitted to avoid update-depth loops in tests.
+  }, [network.network, network.selectedPool?.id]);
 
   // Effect to handle initial loading of transaction
   useEffect(() => {
@@ -304,9 +365,9 @@ export const AddLiquidity: FC<IAddLiquidity> = () => {
     return !loading && !reloading;
   }, [loading, reloading]);
 
-  // if loading return empty div else render component
-  if (loading) {
-    return <div> </div>;
+  // Keep the workspace dimensions stable while the transaction model initializes.
+  if (loading || previewLoading) {
+    return <TradingLoadingState variant="liquidity" />;
   } else {
     return (
       <Grid2 container sx={styles.root}>

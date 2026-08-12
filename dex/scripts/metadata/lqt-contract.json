@@ -1,0 +1,16 @@
+{
+  "name": "TEZEX Liquidity Token",
+  "description": "FA1.2 (TZIP-007) liquidity provider token (LQT) for a TEZEX XTZ/token CPMM pool. Metadata is set at origination and is immutable.",
+  "version": "1.0.0",
+  "authors": [
+    "TEZEX"
+  ],
+  "homepage": "https://tezex.io",
+  "license": {
+    "name": "MIT"
+  },
+  "interfaces": [
+    "TZIP-007"
+  ],
+  "thumbnailUri": "ipfs://bafkreidumr3xiifencjp4mlaa26laeahqeopatgfgg5aqblht2j3krzdri"
+}

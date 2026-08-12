@@ -346,7 +346,10 @@ export function WalletProvider(props: IWalletProvider) {
         if (found.balance) return found.balance as Balance;
         // if balance is undefined return zero balance
         return zeroBalance;
-      } else throw Error("Asset : " + asset.name + " not found in Config");
+      }
+      // Stale transactions can still reference assets from a previous network
+      // (e.g. TzBTC after switching Mainnet → Previewnet). Treat as zero.
+      return zeroBalance;
     },
     [assetBalances]
   );
@@ -824,6 +827,25 @@ export function WalletProvider(props: IWalletProvider) {
         };
 
         let transaction: Transaction = _transaction;
+
+        if (_transaction.sendAmount[0].mantissa.isZero()) {
+          const currentQuoteContext = quoteContextRef.current;
+          if (
+            latestTransactionInitializations.get(component) !==
+              initializationToken ||
+            quoteContext.account !== currentQuoteContext.account ||
+            quoteContext.network !== currentQuoteContext.network ||
+            quoteContext.chainId !== currentQuoteContext.chainId
+          ) {
+            return false;
+          }
+
+          latestTransactionInitializations.delete(component);
+          return setActiveTransaction(component, {
+            ..._transaction,
+            transactionStatus: TransactionStatus.ZERO_AMOUNT,
+          });
+        }
 
         transaction = await estimateWithAdapter(
           _transaction,

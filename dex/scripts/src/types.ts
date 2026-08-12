@@ -53,7 +53,12 @@ export interface LqtStorage {
   token_metadata: TokenMetadata;
 }
 
-export type NetworkName = "testnet" | "mainnet";
+export type NetworkName = "testnet" | "mainnet" | "previewnet";
+
+/** Immutable mod-pool fees (must match dexter_mod.mligo). */
+export const MOD_LP_FEE_BP = 25;
+export const MOD_PROTOCOL_FEE_BP = 5;
+export const MOD_TOTAL_FEE_BP = MOD_LP_FEE_BP + MOD_PROTOCOL_FEE_BP;
 
 export type TransferParams = {
   from: string;

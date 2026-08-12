@@ -1,6 +1,9 @@
 import { Asset, Token } from "../../types/general";
 import { PoolConfig, supportsDirectSwap } from "../../types/pools";
 
+export const getSwapDisplaySymbol = (asset: Asset): string =>
+  asset.name === Token.XTZ ? "XTZ" : asset.label;
+
 export const findPoolForTokenPair = (
   pools: PoolConfig[],
   tokenA: Token,
