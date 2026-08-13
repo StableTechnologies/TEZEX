@@ -317,6 +317,7 @@ const AnalyticsChart: FC<ChartProps> = ({
           role="img"
           tabIndex={0}
           aria-label={`${metric} over ${rangeLabel(range)}, ${chartType} chart`}
+          onMouseDown={(event) => event.preventDefault()}
           onPointerMove={(event) =>
             points.length &&
             setHoverIndex(indexAt(event.clientX, event.currentTarget))
@@ -644,7 +645,7 @@ export const Analytics: FC = () => {
           <p>
             {selectedPool
               ? `Verified activity and liquidity for ${selectedPool.name}.`
-              : "Verified activity and liquidity across TEZEX Mainnet pools."}
+              : "Verified activity and liquidity across Mainnet pools across TEZEX."}
           </p>
         </div>
         <div className="analytics-intro__tools">
@@ -866,11 +867,9 @@ export const Analytics: FC = () => {
       <section className="analytics-panel" aria-labelledby="activity-title">
         <div className="analytics-panel__head">
           <h2 id="activity-title">RECENT ACTIVITY</h2>
-          <span className="analytics-panel__meta">
-            {selectedPool
-              ? `${selectedPool.name} · Confirmed on Tezos`
-              : "Confirmed on Tezos"}
-          </span>
+          {selectedPool && (
+            <span className="analytics-panel__meta">{selectedPool.name}</span>
+          )}
         </div>
         <div className="analytics-table-wrap">
           <table className="analytics-table analytics-activity-table">
