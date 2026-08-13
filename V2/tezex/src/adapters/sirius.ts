@@ -283,7 +283,9 @@ export class SiriusAdapter implements IPoolAdapter {
     kit: ExecutionKit,
     userAddress: string,
     lpTokenAmount: BigNumber,
-    slippage: number
+    slippage: number,
+    quotedTokenAAmount?: BigNumber,
+    quotedTokenBAmount?: BigNumber
   ): Promise<string> {
     const { client, toolkit } = kit;
     try {
@@ -294,10 +296,13 @@ export class SiriusAdapter implements IPoolAdapter {
       const deadline = getTxDeadline().toISOString();
 
       // Get expected amounts
-      const estimate = await this.estimateRemoveLiquidity(
-        toolkit,
-        lpTokenAmount
-      );
+      const estimate =
+        quotedTokenAAmount && quotedTokenBAmount
+          ? {
+              tokenAAmount: quotedTokenAAmount,
+              tokenBAmount: quotedTokenBAmount,
+            }
+          : await this.estimateRemoveLiquidity(toolkit, lpTokenAmount);
 
       const lbContract = await toolkit.wallet.at(this.poolConfig.address);
 

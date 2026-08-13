@@ -337,7 +337,9 @@ export class TezexAdapter implements IPoolAdapter {
     kit: ExecutionKit,
     userAddress: string,
     lpTokenAmount: BigNumber,
-    slippage: number
+    slippage: number,
+    quotedTokenAAmount?: BigNumber,
+    quotedTokenBAmount?: BigNumber
   ): Promise<string> {
     const { client, toolkit } = kit;
     try {
@@ -345,10 +347,13 @@ export class TezexAdapter implements IPoolAdapter {
       const deadline = getTxDeadline().toISOString();
 
       // Get estimates for min amounts
-      const estimate = await this.estimateRemoveLiquidity(
-        toolkit,
-        lpTokenAmount
-      );
+      const estimate =
+        quotedTokenAAmount && quotedTokenBAmount
+          ? {
+              tokenAAmount: quotedTokenAAmount,
+              tokenBAmount: quotedTokenBAmount,
+            }
+          : await this.estimateRemoveLiquidity(toolkit, lpTokenAmount);
 
       const minTokenA = estimate.tokenAAmount
         .minus(estimate.tokenAAmount.times(slippage).div(100))

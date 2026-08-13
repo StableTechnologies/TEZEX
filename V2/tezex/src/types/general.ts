@@ -159,6 +159,16 @@ export type CompletionRecord =
   | [CompletionState.FAILED, FailedRecord]
   | [CompletionState.SUCCESS, SuccessRecord];
 
+export interface TransactionSubmissionContext {
+  owner: string;
+  accountIdentifier: string;
+  recipient: string;
+  networkType: NetworkType;
+  chainId: string;
+  rpcUrl: string;
+  connectionRevision: number;
+}
+
 export enum Assets {
   ASSET = 1,
   PAIR = 2,
@@ -180,6 +190,7 @@ export interface Transaction {
   operationHash?: string;
   quoteRevision?: number;
   quote?: TransactionQuote;
+  submissionContext?: TransactionSubmissionContext;
   lastModified: Date;
   locked: boolean;
 }

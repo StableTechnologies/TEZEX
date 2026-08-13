@@ -61,9 +61,18 @@ const makeTransaction = (component: TransactingComponent): Transaction => ({
     component === TransactingComponent.ADD_LIQUIDITY
       ? [balance("10"), balance("10")]
       : [balance("10")],
-  receiveAsset: [tzbtc],
-  receiveAmount: [balance("1")],
-  receiveAssetBalance: [balance("0")],
+  receiveAsset:
+    component === TransactingComponent.REMOVE_LIQUIDITY
+      ? [xtz, tzbtc]
+      : [tzbtc],
+  receiveAmount:
+    component === TransactingComponent.REMOVE_LIQUIDITY
+      ? [balance("1"), balance("1")]
+      : [balance("1")],
+  receiveAssetBalance:
+    component === TransactingComponent.REMOVE_LIQUIDITY
+      ? [balance("0"), balance("0")]
+      : [balance("0")],
   slippage: 0.5,
   transactionStatus: TransactionStatus.PENDING,
   lastModified: new Date(),
@@ -71,7 +80,7 @@ const makeTransaction = (component: TransactingComponent): Transaction => ({
 });
 
 const makeAdapter = () => ({
-  poolConfig: { tokenA: Token.XTZ },
+  poolConfig: { tokenA: Token.XTZ, tokenB: Token.TzBTC },
   executeSwap: jest.fn().mockResolvedValue("operation-hash"),
   executeAddLiquidity: jest.fn().mockResolvedValue("operation-hash"),
   executeRemoveLiquidity: jest.fn().mockResolvedValue("operation-hash"),
@@ -132,7 +141,9 @@ describe("processTransaction confirmation lifecycle", () => {
           expect.anything(),
           "tz1-user",
           expect.any(BigNumber),
-          0.5
+          0.5,
+          expect.any(BigNumber),
+          expect.any(BigNumber)
         );
       }
     }

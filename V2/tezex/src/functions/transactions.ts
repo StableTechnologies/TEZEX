@@ -267,12 +267,25 @@ const removeLiquidityTransaction = async (
   lifecycle?: TransactionLifecycle
 ): Promise<SuccessRecord> => {
   const lpTokenAmount = transaction.sendAmount[0].mantissa;
+  const tokenAIndex = transaction.receiveAsset.findIndex(
+    (asset) => asset.name === adapter.poolConfig.tokenA
+  );
+  const tokenBIndex = transaction.receiveAsset.findIndex(
+    (asset) => asset.name === adapter.poolConfig.tokenB
+  );
+  const quotedTokenAAmount = transaction.receiveAmount[tokenAIndex]?.mantissa;
+  const quotedTokenBAmount = transaction.receiveAmount[tokenBIndex]?.mantissa;
+  if (!quotedTokenAAmount || !quotedTokenBAmount) {
+    throw new Error("Remove-liquidity quote does not match the pool assets.");
+  }
 
   const opHash = await adapter.executeRemoveLiquidity(
     kit,
     userAddress,
     lpTokenAmount,
-    transaction.slippage
+    transaction.slippage,
+    quotedTokenAAmount,
+    quotedTokenBAmount
   );
 
   await confirmSubmittedOperation(opHash, kit, lifecycle);

@@ -144,7 +144,9 @@ export interface IPoolAdapter {
     kit: ExecutionKit,
     userAddress: string,
     lpTokenAmount: BigNumber,
-    slippage: number
+    slippage: number,
+    quotedTokenAAmount?: BigNumber,
+    quotedTokenBAmount?: BigNumber
   ): Promise<string>; //  opHash
 
   getPoolData(toolkit: TezosToolkit, forceRefresh?: boolean): Promise<PoolData>;
