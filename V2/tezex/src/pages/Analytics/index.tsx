@@ -645,7 +645,7 @@ export const Analytics: FC = () => {
           <p>
             {selectedPool
               ? `Verified activity and liquidity for ${selectedPool.name}.`
-              : "Verified activity and liquidity across TEZEX Mainnet pools."}
+              : "Verified activity and liquidity across Mainnet pools across TEZEX."}
           </p>
         </div>
         <div className="analytics-intro__tools">
