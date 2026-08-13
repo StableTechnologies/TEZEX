@@ -1,14 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
   <!-- TEZEX roundel favicon.
-       currentColor + prefers-color-scheme so the mark inverts with the OS/browser theme.
-       Geometry: ring r=9.5 at 3.6 weight, rail overhanging to the tile edge. -->
+       Inverts with the browser/OS colour scheme:
+         light tab bar -> dark mark
+         dark  tab bar -> light mark
+       Colours are declared on the element AND overridden by the media query,
+       so browsers that ignore the query still get the light-mode mark. -->
   <style>
-    :root { color-scheme: light dark; }
-    .mk { stroke: #0a0a0a; }
-    @media (prefers-color-scheme: dark) { .mk { stroke: #fafafa; } }
+    path, circle, line { stroke: #0a0a0a; }
+    @media (prefers-color-scheme: dark) {
+      path, circle, line { stroke: #fafafa; }
+    }
   </style>
-  <g class="mk" fill="none" stroke-width="3.6" stroke-linecap="round">
-    <circle cx="16" cy="16" r="9.5"/>
-    <line x1="2.6" y1="16" x2="29.4" y2="16"/>
+  <g fill="none" stroke-width="3.7" stroke-linecap="round">
+    <circle cx="16" cy="16" r="10"/>
+    <line x1="2" y1="16" x2="30" y2="16"/>
   </g>
 </svg>
