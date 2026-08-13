@@ -317,6 +317,7 @@ const AnalyticsChart: FC<ChartProps> = ({
           role="img"
           tabIndex={0}
           aria-label={`${metric} over ${rangeLabel(range)}, ${chartType} chart`}
+          onMouseDown={(event) => event.preventDefault()}
           onPointerMove={(event) =>
             points.length &&
             setHoverIndex(indexAt(event.clientX, event.currentTarget))
