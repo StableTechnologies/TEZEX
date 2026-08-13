@@ -867,11 +867,9 @@ export const Analytics: FC = () => {
       <section className="analytics-panel" aria-labelledby="activity-title">
         <div className="analytics-panel__head">
           <h2 id="activity-title">RECENT ACTIVITY</h2>
-          <span className="analytics-panel__meta">
-            {selectedPool
-              ? `${selectedPool.name} · Confirmed on Tezos`
-              : "Confirmed on Tezos"}
-          </span>
+          {selectedPool && (
+            <span className="analytics-panel__meta">{selectedPool.name}</span>
+          )}
         </div>
         <div className="analytics-table-wrap">
           <table className="analytics-table analytics-activity-table">
