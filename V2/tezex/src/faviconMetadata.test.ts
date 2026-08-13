@@ -10,9 +10,31 @@ describe("TEZEX browser identity", () => {
   );
 
   it("serves an adaptive favicon and scheme-aware browser chrome", () => {
-    expect(indexHtml).toContain("%PUBLIC_URL%/favicon.svg");
-    expect(indexHtml).toContain('media="(prefers-color-scheme: light)"');
-    expect(indexHtml).toContain('media="(prefers-color-scheme: dark)"');
+    const appIconOrder = [
+      "%PUBLIC_URL%/favicon.svg",
+      "%PUBLIC_URL%/favicon-32-on-light.png",
+      "%PUBLIC_URL%/favicon-32-on-dark.png",
+      "%PUBLIC_URL%/favicon.ico",
+    ].map((icon) => indexHtml.indexOf(icon));
+    const notFoundIconOrder = [
+      "/favicon.svg",
+      "/favicon-32-on-light.png",
+      "/favicon-32-on-dark.png",
+      "/favicon.ico",
+    ].map((icon) => notFoundHtml.indexOf(icon));
+
+    expect(appIconOrder.every((position) => position >= 0)).toBe(true);
+    expect(appIconOrder).toEqual([...appIconOrder].sort((a, b) => a - b));
+    expect(notFoundIconOrder.every((position) => position >= 0)).toBe(true);
+    expect(notFoundIconOrder).toEqual(
+      [...notFoundIconOrder].sort((a, b) => a - b)
+    );
+    expect(indexHtml).toContain(
+      'href="%PUBLIC_URL%/favicon-32-on-light.png"\n      media="(prefers-color-scheme: light)"'
+    );
+    expect(indexHtml).toContain(
+      'href="%PUBLIC_URL%/favicon-32-on-dark.png"\n      media="(prefers-color-scheme: dark)"'
+    );
     expect(indexHtml).toContain("%PUBLIC_URL%/safari-pinned-tab.svg");
     expect(indexHtml).toContain("%PUBLIC_URL%/apple-touch-icon.png");
     expect(indexHtml).toContain("%PUBLIC_URL%/site.webmanifest");
@@ -25,6 +47,8 @@ describe("TEZEX browser identity", () => {
   it("ships the complete TEZEX icon set and branded manifest", () => {
     [
       "favicon.svg",
+      "favicon-32-on-light.png",
+      "favicon-32-on-dark.png",
       "favicon.ico",
       "apple-touch-icon.png",
       "safari-pinned-tab.svg",
