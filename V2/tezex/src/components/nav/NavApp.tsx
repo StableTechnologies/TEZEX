@@ -80,7 +80,7 @@ export const NavApp: FC<INavApp> = (props) => {
         style: { display: "none" },
       }}
     >
-      <NavTab label="Home" href={homePath} active={value === 0} />
+      <NavTab label="Swap" href={homePath} active={value === 0} />
       <NavTab label="Analytics" href="/analytics" active={value === 1} />
       <NavTab label="sTEZ" href="/stez" active={value === 2} />
       <NavTabExternal label="About" href={aboutRedirectUrl} />
