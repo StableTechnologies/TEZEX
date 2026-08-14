@@ -387,6 +387,6 @@ export async function waitForStezOperation(
   }
 
   throw new Error(
-    "The operation was submitted, but confirmation has not appeared on Weeklynet yet."
+    "The operation was submitted, but confirmation has not appeared on Snet yet."
   );
 }

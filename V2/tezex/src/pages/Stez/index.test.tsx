@@ -3,24 +3,24 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import { Stez } from ".";
 import { connectWalletToCustomNetwork } from "../../functions/beacon";
-import { resolveCurrentWeeklynet } from "./network";
+import { resolveSnet } from "./network";
 import { loadStezSnapshot, StezSnapshot } from "./rpc";
 
 jest.mock("../../functions/beacon", () => ({
   connectWalletToCustomNetwork: jest.fn(),
 }));
 
-const weeklynet = {
-  key: "weeklynet-2026-08-05",
-  name: "Weeklynet" as const,
-  rpcUrl: "https://rpc.weeklynet-2026-08-05.teztnets.com",
-  faucetUrl: "https://faucet.weeklynet-2026-08-05.teztnets.com",
-  chainId: "NetXmT6tP86uFqw",
-  activatedOn: "2026-08-05",
+const snet = {
+  key: "snet" as const,
+  name: "Snet" as const,
+  rpcUrl: "https://rpc.snet.teztnets.com",
+  faucetUrl: "https://faucet.snet.teztnets.com",
+  chainId: "NetXVasgoZmPMLe",
+  activatedOn: "2026-08-14",
   info: {
-    tezosServer: "https://rpc.weeklynet-2026-08-05.teztnets.com",
+    tezosServer: "https://rpc.snet.teztnets.com",
     rpcFallbacks: [],
-    chainId: "NetXmT6tP86uFqw",
+    chainId: "NetXVasgoZmPMLe",
     pools: [],
     assets: [],
   },
@@ -46,7 +46,7 @@ jest.mock("../../hooks/wallet", () => ({
 }));
 jest.mock("./network", () => {
   const actual = jest.requireActual("./network");
-  return { ...actual, resolveCurrentWeeklynet: jest.fn() };
+  return { ...actual, resolveSnet: jest.fn() };
 });
 jest.mock("./rpc", () => {
   const actual = jest.requireActual("./rpc");
@@ -55,8 +55,8 @@ jest.mock("./rpc", () => {
 
 const baseSnapshot: StezSnapshot = {
   availability: "available",
-  endpoint: weeklynet.rpcUrl,
-  chainId: weeklynet.chainId,
+  endpoint: snet.rpcUrl,
+  chainId: snet.chainId,
   protocolHash: "ProtoALphaALphaALphaALphaALphaALphaALphaALphaDdp3zK",
   blockHash: "BLockHash",
   blockLevel: BigInt(2_640),
@@ -79,27 +79,27 @@ beforeEach(() => {
   mockWallet.isWalletConnected = false;
   mockWallet.address = null;
   mockWallet.client = null;
-  (resolveCurrentWeeklynet as jest.Mock).mockResolvedValue(weeklynet);
+  (resolveSnet as jest.Mock).mockResolvedValue(snet);
   (loadStezSnapshot as jest.Mock).mockResolvedValue(baseSnapshot);
 });
 
-test("loads live Weeklynet data and its matching faucet", async () => {
+test("loads live Snet data and its matching faucet", async () => {
   render(<Stez />);
 
   expect(screen.getByText("Loading sTEZ data")).toBeInTheDocument();
-  await screen.findByText("sTEZ is live on Weeklynet");
+  await screen.findByText("sTEZ is live on Snet");
 
   expect(
-    screen.getByText(/Weeklynet resets every Wednesday/)
+    screen.getByText(/without Weeklynet’s scheduled resets/)
   ).toBeInTheDocument();
   expect(screen.getByText("Stake tez, stay liquid.")).toBeInTheDocument();
   expect(screen.getByText("sTEZ Balance")).toBeInTheDocument();
   expect(screen.getByText("Total sTEZ supply")).toBeInTheDocument();
 
   const faucet = screen.getByRole("link", {
-    name: "Get Weeklynet test XTZ from the official Teztnets faucet",
+    name: "Get Snet test XTZ from the official Teztnets faucet",
   });
-  expect(faucet).toHaveAttribute("href", weeklynet.faucetUrl);
+  expect(faucet).toHaveAttribute("href", snet.faucetUrl);
   expect(faucet.querySelector("svg")).toBeInTheDocument();
 
   fireEvent.click(screen.getByRole("tab", { name: "Redeem" }));
@@ -119,7 +119,7 @@ test("shows an exact inactive-network state without enabling controls", async ()
 
   render(<Stez />);
 
-  await screen.findByText("sTEZ is not active on Weeklynet");
+  await screen.findByText("sTEZ is not active on Snet");
   expect(
     screen.getByText(
       "The selected network includes the sTEZ protocol code, but native sTEZ contracts are not enabled. No balances, rates, or transaction controls are shown."
@@ -127,13 +127,13 @@ test("shows an exact inactive-network state without enabling controls", async ()
   ).toBeInTheDocument();
 });
 
-test("enables a stake request only for a wallet connected to current Weeklynet", async () => {
+test("enables a stake request only for a wallet connected to Snet", async () => {
   mockWallet.isWalletConnected = true;
   mockWallet.address = "tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb";
   mockWallet.client = mockClient;
   mockClient.getActiveAccount.mockResolvedValue({
     address: mockWallet.address,
-    network: { type: "custom", rpcUrl: weeklynet.rpcUrl },
+    network: { type: "custom", rpcUrl: snet.rpcUrl },
   });
   (loadStezSnapshot as jest.Mock).mockResolvedValue({
     ...baseSnapshot,
@@ -145,7 +145,7 @@ test("enables a stake request only for a wallet connected to current Weeklynet",
 
   render(<Stez />);
 
-  await screen.findByText("sTEZ is live on Weeklynet");
+  await screen.findByText("sTEZ is live on Snet");
   await waitFor(() =>
     expect(
       screen.getByRole("button", { name: "ENTER AN AMOUNT" })
@@ -158,18 +158,18 @@ test("enables a stake request only for a wallet connected to current Weeklynet",
   expect(screen.getByRole("button", { name: "STAKE XTZ" })).toBeEnabled();
 });
 
-test("connects a disconnected wallet to the resolved Weeklynet RPC", async () => {
+test("connects a disconnected wallet to the Snet RPC", async () => {
   render(<Stez />);
-  await screen.findByText("sTEZ is live on Weeklynet");
+  await screen.findByText("sTEZ is live on Snet");
 
   fireEvent.click(
-    screen.getByRole("button", { name: "CONNECT WALLET TO WEEKLYNET" })
+    screen.getByRole("button", { name: "CONNECT WALLET TO SNET" })
   );
 
   await waitFor(() =>
     expect(connectWalletToCustomNetwork).toHaveBeenCalledWith(mockWallet, {
-      name: "Weeklynet",
-      rpcUrl: weeklynet.rpcUrl,
+      name: "Snet",
+      rpcUrl: snet.rpcUrl,
     })
   );
 });
