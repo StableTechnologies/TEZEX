@@ -47,7 +47,7 @@ test("marks the current primary destination without using a body-style pill", ()
     "aria-selected",
     "true"
   );
-  expect(screen.getByRole("tab", { name: "Home" })).not.toHaveAttribute(
+  expect(screen.getByRole("tab", { name: "Swap" })).not.toHaveAttribute(
     "aria-current"
   );
 });
@@ -55,21 +55,21 @@ test("marks the current primary destination without using a body-style pill", ()
 test("navigates between primary destinations", () => {
   renderNavigation("/stez");
 
-  fireEvent.click(screen.getByRole("tab", { name: "Home" }));
+  fireEvent.click(screen.getByRole("tab", { name: "Swap" }));
 
   expect(screen.getByTestId("location")).toHaveTextContent(
     "/swap/xtz-to-tzbtc"
   );
 });
 
-test("does not mark Home active on the not-found route", () => {
+test("does not mark Swap active on the not-found route", () => {
   renderNavigation("/missing");
 
-  expect(screen.getByRole("tab", { name: "Home" })).toHaveAttribute(
+  expect(screen.getByRole("tab", { name: "Swap" })).toHaveAttribute(
     "aria-selected",
     "false"
   );
-  expect(screen.getByRole("tab", { name: "Home" })).not.toHaveAttribute(
+  expect(screen.getByRole("tab", { name: "Swap" })).not.toHaveAttribute(
     "aria-current"
   );
 });
