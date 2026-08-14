@@ -20,7 +20,7 @@ import { useColorMode } from "../../../../contexts/color-mode";
 import { homePathForHost } from "../../../../routing";
 import { useWallet } from "../../../../hooks/wallet";
 import { connectWalletToCustomNetwork } from "../../../../functions/beacon";
-import { resolveCurrentWeeklynet } from "../../../../pages/Stez/network";
+import { resolveSnet } from "../../../../pages/Stez/network";
 
 export interface IHeader {
   openMenu: boolean;
@@ -35,11 +35,11 @@ export const Header: FC<IHeader> = (props) => {
   const location = useLocation();
   const wallet = useWallet();
   const isStezRoute = location.pathname.startsWith("/stez");
-  const connectToWeeklynet = useCallback(async () => {
-    const weeklynet = await resolveCurrentWeeklynet();
+  const connectToSnet = useCallback(async () => {
+    const snet = await resolveSnet();
     await connectWalletToCustomNetwork(wallet, {
-      name: weeklynet.name,
-      rpcUrl: weeklynet.rpcUrl,
+      name: snet.name,
+      rpcUrl: snet.rpcUrl,
     });
   }, [wallet]);
 
@@ -98,7 +98,7 @@ export const Header: FC<IHeader> = (props) => {
                   variant={"header"}
                   scalingKey={scalingKey}
                   visualVariant="dark"
-                  connectOverride={isStezRoute ? connectToWeeklynet : undefined}
+                  connectOverride={isStezRoute ? connectToSnet : undefined}
                 />
               </Box>
             </Box>

@@ -16,7 +16,7 @@ jest.mock("../../../../functions/beacon", () => ({
 }));
 
 jest.mock("../../../../pages/Stez/network", () => ({
-  resolveCurrentWeeklynet: jest.fn(),
+  resolveSnet: jest.fn(),
 }));
 
 jest.mock("../../../nav", () => ({

@@ -16,11 +16,7 @@ import {
   stezUnderlyingValue,
   waitForStezOperation,
 } from "./rpc";
-import {
-  isWeeklynetAccount,
-  resolveCurrentWeeklynet,
-  WeeklynetNetwork,
-} from "./network";
+import { isSnetAccount, resolveSnet, SnetNetwork } from "./network";
 import { readableStezError, submitStezOperation } from "./transactions";
 import "./style.css";
 
@@ -84,15 +80,15 @@ const statusCopy = (
     return {
       title: "Loading sTEZ data",
       description:
-        "TEZEX is resolving the current Weeklynet and checking its native sTEZ contract.",
+        "TEZEX is connecting to Snet and checking its native sTEZ contract.",
     };
   }
   if (!snapshot) {
     return {
-      title: "Unable to resolve Weeklynet",
+      title: "Unable to reach Snet",
       description:
         networkError ??
-        "The current Weeklynet could not be read from the official Teztnets directory.",
+        "The Snet public RPC could not be reached. No cached or estimated values have been substituted.",
     };
   }
   if (snapshot.availability === "available") {
@@ -100,7 +96,7 @@ const statusCopy = (
       title: `sTEZ is live on ${selectedNetwork}`,
       description: `Use test XTZ to stake, redeem, and finalize against the current experimental protocol. Live data was read from block ${snapshot.blockLevel.toLocaleString(
         "en-US"
-      )}. Weeklynet resets every Wednesday, so balances and addresses are temporary.`,
+      )}. Snet is intended for longer-term sTEZ testing without Weeklynet’s scheduled resets.`,
     };
   }
   if (snapshot.availability === "disabled") {
@@ -151,8 +147,8 @@ const PositionCell: FC<PositionCellProps> = ({
 
 export const Stez: FC = () => {
   const wallet = useWallet();
-  const selectedNetwork = "Weeklynet";
-  const [weeklynet, setWeeklynet] = useState<WeeklynetNetwork | null>(null);
+  const selectedNetwork = "Snet";
+  const [snet, setSnet] = useState<SnetNetwork | null>(null);
   const [snapshot, setSnapshot] = useState<StezSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
   const [networkError, setNetworkError] = useState<string | null>(null);
@@ -171,11 +167,11 @@ export const Stez: FC = () => {
     setNetworkError(null);
     setAmount("");
 
-    resolveCurrentWeeklynet(controller.signal)
-      .then(async (nextWeeklynet) => {
-        if (!controller.signal.aborted) setWeeklynet(nextWeeklynet);
+    resolveSnet()
+      .then(async (nextSnet) => {
+        if (!controller.signal.aborted) setSnet(nextSnet);
         return loadStezSnapshot(
-          nextWeeklynet.info,
+          nextSnet.info,
           wallet.address,
           controller.signal
         );
@@ -199,7 +195,7 @@ export const Stez: FC = () => {
   useEffect(() => {
     let mounted = true;
 
-    if (!wallet.client || !weeklynet) {
+    if (!wallet.client || !snet) {
       setWalletReady(false);
       return () => {
         mounted = false;
@@ -209,7 +205,7 @@ export const Stez: FC = () => {
     wallet.client
       .getActiveAccount()
       .then((account) => {
-        if (mounted) setWalletReady(isWeeklynetAccount(account, weeklynet));
+        if (mounted) setWalletReady(isSnetAccount(account, snet));
       })
       .catch(() => {
         if (mounted) setWalletReady(false);
@@ -218,7 +214,7 @@ export const Stez: FC = () => {
     return () => {
       mounted = false;
     };
-  }, [wallet.client, weeklynet]);
+  }, [wallet.client, snet]);
 
   const available = snapshot?.availability === "available";
   const walletConnected =
@@ -264,13 +260,13 @@ export const Stez: FC = () => {
   const copy = statusCopy(snapshot, loading, selectedNetwork, networkError);
 
   const connect = useCallback(async () => {
-    const activeWeeklynet = weeklynet ?? (await resolveCurrentWeeklynet());
-    setWeeklynet(activeWeeklynet);
+    const activeSnet = snet ?? (await resolveSnet());
+    setSnet(activeSnet);
     await connectWalletToCustomNetwork(wallet, {
-      name: activeWeeklynet.name,
-      rpcUrl: activeWeeklynet.rpcUrl,
+      name: activeSnet.name,
+      rpcUrl: activeSnet.rpcUrl,
     });
-  }, [wallet, weeklynet]);
+  }, [wallet, snet]);
 
   const setMaximum = () => {
     const maximum =
@@ -283,9 +279,9 @@ export const Stez: FC = () => {
   };
 
   const actionButtonCopy = () => {
-    if (!walletConnected) return "CONNECT WALLET TO WEEKLYNET";
+    if (!walletConnected) return "CONNECT WALLET TO SNET";
     if (transactionStage === "requesting") return "CONFIRM IN WALLET";
-    if (transactionStage === "submitted") return "CONFIRMING ON WEEKLYNET";
+    if (transactionStage === "submitted") return "CONFIRMING ON SNET";
     if (transactionStage === "confirmed") return "CONFIRMED";
     if (
       activeAction === "Finalize" &&
@@ -307,12 +303,7 @@ export const Stez: FC = () => {
       await connect();
       return;
     }
-    if (
-      !wallet.client ||
-      !wallet.address ||
-      !weeklynet ||
-      !snapshot?.contractHash
-    ) {
+    if (!wallet.client || !wallet.address || !snet || !snapshot?.contractHash) {
       return;
     }
 
@@ -330,14 +321,14 @@ export const Stez: FC = () => {
       setOperationHash(hash);
       setTransactionStage("submitted");
       setTransactionMessage(
-        "Operation submitted. Waiting for Weeklynet confirmation."
+        "Operation submitted. Waiting for Snet confirmation."
       );
       await waitForStezOperation(snapshot.endpoint, hash);
-      const refreshed = await loadStezSnapshot(weeklynet.info, wallet.address);
+      const refreshed = await loadStezSnapshot(snet.info, wallet.address);
       setSnapshot(refreshed);
       setAmount("");
       setTransactionStage("confirmed");
-      setTransactionMessage("Operation confirmed on Weeklynet.");
+      setTransactionMessage("Operation confirmed on Snet.");
     } catch (error) {
       setTransactionStage("failed");
       setTransactionMessage(readableStezError(error));
@@ -350,7 +341,7 @@ export const Stez: FC = () => {
     wallet.address,
     wallet.client,
     walletConnected,
-    weeklynet,
+    snet,
   ]);
 
   const actionDisabled =
@@ -395,15 +386,15 @@ export const Stez: FC = () => {
           <strong>{copy.title}</strong>
           <p>{copy.description}</p>
         </div>
-        {weeklynet && (
+        {snet && (
           <a
             className="stez-availability__faucet-link"
-            href={weeklynet.faucetUrl}
+            href={snet.faucetUrl}
             target="_blank"
             rel="noreferrer"
-            aria-label="Get Weeklynet test XTZ from the official Teztnets faucet"
+            aria-label="Get Snet test XTZ from the official Teztnets faucet"
           >
-            GET WEEKLYNET TEST XTZ
+            GET SNET TEST XTZ
             <ArrowOutwardRoundedIcon aria-hidden="true" />
           </a>
         )}
@@ -719,7 +710,7 @@ export const Stez: FC = () => {
               <dt>Network / chain ID</dt>
               <dd>
                 {selectedNetwork} ·{" "}
-                {shortAddress(snapshot?.chainId || weeklynet?.chainId, 10, 6)}
+                {shortAddress(snapshot?.chainId || snet?.chainId, 10, 6)}
               </dd>
               <dt>Protocol</dt>
               <dd>

@@ -153,12 +153,12 @@ export const NetworkSelector: FC = () => {
     return (
       <Box
         component="div"
-        aria-label="Network: Weeklynet, live"
+        aria-label="Network: Snet, live"
         sx={{ ...styles.button, cursor: "default" }}
       >
         <Box aria-hidden="true" sx={styles.liveSignal} />
         <Box data-network-label sx={styles.networkIdentity}>
-          <Typography sx={styles.networkLabel}>Weeklynet</Typography>
+          <Typography sx={styles.networkLabel}>Snet</Typography>
         </Box>
       </Box>
     );
