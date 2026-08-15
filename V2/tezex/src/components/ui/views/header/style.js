@@ -25,6 +25,7 @@ const style = (theme, scale = 1) => {
     shell: {
       maxWidth: "1180px",
       padding: "0 16px",
+      "@media (max-width: 359px)": { padding: "0 10px" },
       "@media (min-width: 1200px)": { padding: "0 28px" },
     },
     toolbar: {
@@ -44,6 +45,7 @@ const style = (theme, scale = 1) => {
       height: "auto",
       filter: "var(--tezex-logo-filter)",
       flexShrink: 0,
+      "@media (max-width: 359px)": { width: "110px" },
       "@media (min-width: 1200px)": { width: "144px" },
     },
     logoLink: {
@@ -61,6 +63,7 @@ const style = (theme, scale = 1) => {
       alignItems: "center",
       display: "flex",
       gap: "12px",
+      "@media (max-width: 359px)": { gap: "8px" },
       "@media (min-width: 1200px)": { gap: "18px" },
     },
     networkSelector: {
@@ -69,16 +72,14 @@ const style = (theme, scale = 1) => {
       flexShrink: 0,
       "@media (max-width: 519px)": {
         "& > .MuiBox-root": {
-          width: "36px",
           height: "36px",
           minHeight: "36px",
           maxHeight: "36px",
-          padding: 0,
+          padding: "0 9px",
+          gap: "6px",
           justifyContent: "center",
           borderRadius: "999px",
         },
-        "& [data-network-label]": { display: "none" },
-        "& [data-network-arrow]": { display: "none" },
       },
     },
     nav: {
