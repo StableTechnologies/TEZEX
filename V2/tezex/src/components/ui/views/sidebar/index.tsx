@@ -56,6 +56,7 @@ export const SideBar: FC<ISideBarProps> = (props) => {
     await connectWalletToCustomNetwork(wallet, {
       name: snet.name,
       rpcUrl: snet.rpcUrl,
+      chainId: snet.chainId,
     });
   }, [wallet]);
 

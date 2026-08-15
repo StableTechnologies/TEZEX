@@ -20,6 +20,7 @@ import { IPoolAdapter, PoolType } from "../types/pools";
 import { PoolRegistry } from "../adapters/poolRegistry";
 import { WalletContext, WalletInfo, WalletProvider } from "./wallet";
 import { TRANSACTION_DEADLINE_MS } from "../functions/transactionSafety";
+import { SNET_RPC_URL } from "../config/snet";
 
 const mockGetPoolAdapter = jest.fn();
 const mockGetBalance = jest.fn();
@@ -125,6 +126,7 @@ describe("WalletProvider account and network lifecycle", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    window.history.replaceState(null, "", "/");
     mockNetwork = makeNetwork(NetworkType.MAINNET, "NetX-mainnet");
     activeAccount = account("tz1-first-owner", "first-account");
     jest
@@ -219,6 +221,28 @@ describe("WalletProvider account and network lifecycle", () => {
     expect(
       wallet.getActiveTransaction(TransactingComponent.SWAP)
     ).toBeUndefined();
+  });
+
+  it("restores a saved Snet account on the sTEZ route", async () => {
+    window.history.replaceState(null, "", "/stez");
+    activeAccount = {
+      ...account("tz1-snet-owner", "snet-account"),
+      network: {
+        type: NetworkType.CUSTOM,
+        rpcUrl: SNET_RPC_URL,
+        name: "Snet",
+      },
+    } as AccountInfo;
+
+    render(
+      <WalletProvider>
+        <Probe />
+      </WalletProvider>
+    );
+
+    await waitFor(() => expect(wallet.address).toBe("tz1-snet-owner"));
+    expect(wallet.isWalletConnected).toBe(true);
+    expect(activeAccount.network.type).toBe(NetworkType.CUSTOM);
   });
 
   it("re-reads Beacon and blocks a stale signing account before requestOperation", async () => {
