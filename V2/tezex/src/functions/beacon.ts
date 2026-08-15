@@ -11,6 +11,10 @@ import {
   DAppClient,
   NetworkType,
 } from "@airgap/beacon-dapp";
+import {
+  ConfiguredNetworkIdentity,
+  createConfiguredNetworkIdentity,
+} from "./walletIdentity";
 
 async function getFa12BalanceFromStorage(
   toolkit: TezosToolkit,
@@ -118,6 +122,7 @@ export function createDAppClient(network: INetwork): DAppClient {
 export interface CustomDAppNetwork {
   rpcUrl: string;
   name: string;
+  chainId?: string;
 }
 
 export async function subscribeToActiveAccount(
@@ -151,12 +156,17 @@ export function createCustomDAppClient(
 
 const connectWithClient = async (
   walletInfo: WalletInfo,
-  dAppClient: DAppClient
+  dAppClient: DAppClient,
+  expectedNetwork?: ConfiguredNetworkIdentity
 ) => {
   let err = false;
   try {
     await subscribeToActiveAccount(dAppClient, (account) => {
-      const accepted = walletInfo.syncActiveAccount(dAppClient, account);
+      const accepted = walletInfo.syncActiveAccount(
+        dAppClient,
+        account,
+        expectedNetwork
+      );
       if (account && !accepted) {
         void disposeDAppClient(dAppClient).catch((cleanupError) =>
           console.warn(
@@ -168,7 +178,9 @@ const connectWithClient = async (
     });
     await dAppClient.requestPermissions();
     const activeAccount = await dAppClient.getActiveAccount();
-    if (!walletInfo.syncActiveAccount(dAppClient, activeAccount)) {
+    if (
+      !walletInfo.syncActiveAccount(dAppClient, activeAccount, expectedNetwork)
+    ) {
       throw new Error("Could not connect to the configured network");
     }
   } catch (error) {
@@ -202,7 +214,19 @@ export async function connectWalletToCustomNetwork(
     }
   }
 
-  await connectWithClient(walletInfo, createCustomDAppClient(customNetwork));
+  const expectedNetwork = customNetwork.chainId
+    ? createConfiguredNetworkIdentity({
+        type: NetworkType.CUSTOM,
+        chainId: customNetwork.chainId,
+        primaryRpcUrl: customNetwork.rpcUrl,
+      })
+    : undefined;
+
+  await connectWithClient(
+    walletInfo,
+    createCustomDAppClient(customNetwork),
+    expectedNetwork
+  );
 }
 
 export default async function connectWallet(

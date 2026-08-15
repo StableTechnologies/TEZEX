@@ -151,6 +151,16 @@ test("enables a stake request only for a wallet connected to Snet", async () => 
       screen.getByRole("button", { name: "ENTER AN AMOUNT" })
     ).toBeDisabled()
   );
+  expect(screen.getByText("5.0")).toBeInTheDocument();
+  expect(screen.getByText("2.0")).toBeInTheDocument();
+  expect(
+    screen.getByText(/Test XTZ detected in your connected wallet/)
+  ).toBeInTheDocument();
+  expect(
+    screen.getByRole("link", {
+      name: "Get more Snet test XTZ from the official Teztnets faucet",
+    })
+  ).toHaveTextContent("GET MORE SNET TEST XTZ");
 
   fireEvent.change(screen.getByLabelText("YOU STAKE"), {
     target: { value: "1" },
@@ -170,6 +180,7 @@ test("connects a disconnected wallet to the Snet RPC", async () => {
     expect(connectWalletToCustomNetwork).toHaveBeenCalledWith(mockWallet, {
       name: "Snet",
       rpcUrl: snet.rpcUrl,
+      chainId: snet.chainId,
     })
   );
 });

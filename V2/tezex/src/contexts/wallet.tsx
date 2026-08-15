@@ -9,7 +9,7 @@ import React, {
 import { current, Draft, produce } from "immer";
 import { useImmer } from "use-immer";
 import { Mutex } from "async-mutex";
-import { AccountInfo, DAppClient } from "@airgap/beacon-dapp";
+import { AccountInfo, DAppClient, NetworkType } from "@airgap/beacon-dapp";
 import {
   Transaction,
   Asset,
@@ -30,6 +30,7 @@ import { v4 as uuidv4 } from "uuid";
 import { BigNumber } from "bignumber.js";
 import {
   createDAppClient,
+  createCustomDAppClient,
   disposeDAppClient,
   getBalance,
   subscribeToActiveAccount,
@@ -60,12 +61,15 @@ import {
 } from "../functions/transactionSafety";
 import {
   accountMatchesConfiguredNetwork,
+  ConfiguredNetworkIdentity,
   createConfiguredNetworkIdentity,
   createGuardedDAppClient,
   createOperationRequestPolicy,
   networkIdentityFingerprint,
   WalletIdentityError,
 } from "../functions/walletIdentity";
+import { isStezOnlyHost } from "../routing";
+import { SNET_CHAIN_ID, SNET_NETWORK, SNET_RPC_URL } from "../config/snet";
 
 export enum WalletStatus {
   ESTIMATING_SIRS = "Estimating Sirs",
@@ -84,7 +88,8 @@ export interface WalletInfo {
   address: string | null;
   syncActiveAccount: (
     sourceClient: DAppClient,
-    account: AccountInfo | undefined
+    account: AccountInfo | undefined,
+    expectedNetwork?: ConfiguredNetworkIdentity
   ) => boolean;
   isWalletConnected: boolean;
   disconnect: () => Promise<void>;
@@ -289,21 +294,26 @@ export function WalletProvider(props: IWalletProvider) {
   ]);
 
   const syncActiveAccount = useCallback(
-    (sourceClient: DAppClient, account: AccountInfo | undefined): boolean => {
+    (
+      sourceClient: DAppClient,
+      account: AccountInfo | undefined,
+      expectedNetwork?: ConfiguredNetworkIdentity
+    ): boolean => {
       connectionRevisionRef.current += 1;
       clearWalletDerivedState();
 
+      const acceptedNetwork =
+        expectedNetwork ??
+        createConfiguredNetworkIdentity({
+          type: networkRef.current.network,
+          chainId: networkRef.current.info.chainId,
+          primaryRpcUrl: networkRef.current.info.tezosServer,
+          fallbackRpcUrls: networkRef.current.info.rpcFallbacks,
+        });
+
       if (
         !account ||
-        !accountMatchesConfiguredNetwork(
-          account,
-          createConfiguredNetworkIdentity({
-            type: networkRef.current.network,
-            chainId: networkRef.current.info.chainId,
-            primaryRpcUrl: networkRef.current.info.tezosServer,
-            fallbackRpcUrls: networkRef.current.info.rpcFallbacks,
-          })
-        )
+        !accountMatchesConfiguredNetwork(account, acceptedNetwork)
       ) {
         addressRef.current = null;
         activeAccountIdentifierRef.current = null;
@@ -388,10 +398,30 @@ export function WalletProvider(props: IWalletProvider) {
       hasReconnectedRef.current = true;
 
       try {
-        const dAppClient = createDAppClient(initialNetworkRef.current);
+        const isStezSurface =
+          isStezOnlyHost(window.location.hostname) ||
+          window.location.pathname.startsWith("/stez");
+        const expectedNetwork = isStezSurface
+          ? createConfiguredNetworkIdentity({
+              type: NetworkType.CUSTOM,
+              chainId: SNET_CHAIN_ID,
+              primaryRpcUrl: SNET_RPC_URL,
+            })
+          : undefined;
+        const dAppClient = isStezSurface
+          ? createCustomDAppClient({
+              name: SNET_NETWORK.name,
+              rpcUrl: SNET_RPC_URL,
+              chainId: SNET_CHAIN_ID,
+            })
+          : createDAppClient(initialNetworkRef.current);
 
         await subscribeToActiveAccount(dAppClient, (account) => {
-          const accepted = syncActiveAccountRef.current(dAppClient, account);
+          const accepted = syncActiveAccountRef.current(
+            dAppClient,
+            account,
+            expectedNetwork
+          );
           if (account && !accepted) {
             void disposeDAppClient(dAppClient).catch((cleanupError) =>
               console.warn(
@@ -409,7 +439,13 @@ export function WalletProvider(props: IWalletProvider) {
           return;
         }
 
-        if (!syncActiveAccountRef.current(dAppClient, activeAccount)) {
+        if (
+          !syncActiveAccountRef.current(
+            dAppClient,
+            activeAccount,
+            expectedNetwork
+          )
+        ) {
           await disposeDAppClient(dAppClient);
         }
       } catch (error) {

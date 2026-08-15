@@ -74,7 +74,8 @@ const statusCopy = (
   snapshot: StezSnapshot | null,
   loading: boolean,
   selectedNetwork: string,
-  networkError: string | null
+  networkError: string | null,
+  hasTestXtz: boolean
 ) => {
   if (loading) {
     return {
@@ -94,9 +95,13 @@ const statusCopy = (
   if (snapshot.availability === "available") {
     return {
       title: `sTEZ is live on ${selectedNetwork}`,
-      description: `Use test XTZ to stake, redeem, and finalize against the current experimental protocol. Live data was read from block ${snapshot.blockLevel.toLocaleString(
-        "en-US"
-      )}. Snet is intended for longer-term sTEZ testing without Weeklynet’s scheduled resets.`,
+      description: hasTestXtz
+        ? `Test XTZ detected in your connected wallet. You can use it to stake, redeem, and finalize against the current experimental protocol. If you need more for testing, use the Snet faucet below. Live data was read from block ${snapshot.blockLevel.toLocaleString(
+            "en-US"
+          )}. Snet is intended for longer-term sTEZ testing without Weeklynet’s scheduled resets.`
+        : `Use test XTZ to stake, redeem, and finalize against the current experimental protocol. Live data was read from block ${snapshot.blockLevel.toLocaleString(
+            "en-US"
+          )}. Snet is intended for longer-term sTEZ testing without Weeklynet’s scheduled resets.`,
     };
   }
   if (snapshot.availability === "disabled") {
@@ -257,7 +262,19 @@ export const Stez: FC = () => {
           snapshot.rateDenominatorTokenUnits
         );
   }, [activeAction, available, inputUnits, snapshot]);
-  const copy = statusCopy(snapshot, loading, selectedNetwork, networkError);
+  const hasTestXtz = Boolean(
+    walletConnected &&
+      snapshot?.walletXtzMutez !== null &&
+      snapshot?.walletXtzMutez !== undefined &&
+      snapshot.walletXtzMutez > ZERO
+  );
+  const copy = statusCopy(
+    snapshot,
+    loading,
+    selectedNetwork,
+    networkError,
+    hasTestXtz
+  );
 
   const connect = useCallback(async () => {
     const activeSnet = snet ?? (await resolveSnet());
@@ -265,6 +282,7 @@ export const Stez: FC = () => {
     await connectWalletToCustomNetwork(wallet, {
       name: activeSnet.name,
       rpcUrl: activeSnet.rpcUrl,
+      chainId: activeSnet.chainId,
     });
   }, [wallet, snet]);
 
@@ -392,9 +410,11 @@ export const Stez: FC = () => {
             href={snet.faucetUrl}
             target="_blank"
             rel="noreferrer"
-            aria-label="Get Snet test XTZ from the official Teztnets faucet"
+            aria-label={`Get${
+              hasTestXtz ? " more" : ""
+            } Snet test XTZ from the official Teztnets faucet`}
           >
-            GET SNET TEST XTZ
+            {hasTestXtz ? "GET MORE SNET TEST XTZ" : "GET SNET TEST XTZ"}
             <ArrowOutwardRoundedIcon aria-hidden="true" />
           </a>
         )}
