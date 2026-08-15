@@ -7,6 +7,7 @@ import { WalletConnected } from "../session/WalletConnected";
 import { WalletDisconnected } from "../session/WalletDisconnected";
 import { getExplorer, shorten } from "../../functions/util";
 import CircularProgress from "@mui/material/CircularProgress";
+import Popover from "@mui/material/Popover";
 
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
@@ -19,6 +20,8 @@ import {
 import Button from "@mui/material/Button";
 import style from "./style";
 import useStyles from "../../hooks/styles";
+import { useLocation } from "react-router-dom";
+import { NetworkType } from "@airgap/beacon-sdk";
 
 interface IWallet {
   component?: TransactingComponent;
@@ -29,12 +32,14 @@ interface IWallet {
   scalingKey?: string;
   visualVariant?: "default" | "dark";
   connectOverride?: () => Promise<void>;
+  accountPresentation?: "header" | "drawer";
 }
 
 export const Wallet: FC<IWallet> = (props) => {
   const styles = useStyles(style, props.scalingKey);
   const walletInfo: WalletInfo | undefined = useWallet();
   const networkInfo = useNetwork();
+  const location = useLocation();
   const walletOps = props.component ? useWalletOps(props.component) : undefined;
   const [spinner, setSpinner] = useState(false);
   const [disabled, setDisabled] = useState(false);
@@ -42,6 +47,26 @@ export const Wallet: FC<IWallet> = (props) => {
     TransactionStatus.ZERO_AMOUNT
   );
   const [walletText, setWalletText] = useState<string | undefined>("");
+  const [accountAnchor, setAccountAnchor] = useState<HTMLElement | null>(null);
+  const [addressCopied, setAddressCopied] = useState(false);
+  const accountMenuOpen = Boolean(accountAnchor);
+  const isDrawerAccount = props.accountPresentation === "drawer";
+  const isSnetRoute =
+    location.pathname.startsWith("/stez") ||
+    window.location.hostname.startsWith("stez.");
+  const networkLabel = isSnetRoute
+    ? "Snet"
+    : networkInfo.network === NetworkType.MAINNET
+    ? "Mainnet"
+    : networkInfo.network === NetworkType.SHADOWNET
+    ? "Shadownet"
+    : "Previewnet";
+
+  useEffect(() => {
+    if (!addressCopied) return;
+    const reset = window.setTimeout(() => setAddressCopied(false), 1800);
+    return () => window.clearTimeout(reset);
+  }, [addressCopied]);
   // use effect to update transaction status
   useEffect(() => {
     const status = walletOps?.getTransactionStatus();
@@ -144,9 +169,24 @@ export const Wallet: FC<IWallet> = (props) => {
     }
   };
   const disconnect = async () => {
+    setAccountAnchor(null);
     if (walletInfo) {
       await walletInfo.disconnect();
     }
+  };
+
+  const switchWallet = async () => {
+    setAccountAnchor(null);
+    if (walletInfo) {
+      await walletInfo.disconnect();
+    }
+    await connect();
+  };
+
+  const copyAddress = async () => {
+    if (!walletInfo?.address) return;
+    await navigator.clipboard.writeText(walletInfo.address);
+    setAddressCopied(true);
   };
 
   const WalletVariantDisconnected: FC = () => {
@@ -182,25 +222,104 @@ export const Wallet: FC<IWallet> = (props) => {
   };
   const WalletVariantConnected: FC = () => {
     if (props.variant && props.variant === "header") {
+      const address = walletInfo?.address ?? "";
+      const visibleAddress = isDrawerAccount ? address : shorten(8, 6, address);
+
       return (
-        <Button onClick={disconnect} sx={styles.headerButtonReset}>
-          <Box
-            sx={
-              props.visualVariant === "dark"
-                ? styles.walletConnectedHeaderDark
-                : styles.walletConnectedHeader
-            }
+        <>
+          <Button
+            onClick={(event) => setAccountAnchor(event.currentTarget)}
+            sx={{
+              ...styles.headerButtonReset,
+              ...(isDrawerAccount ? styles.drawerAccountButtonReset : {}),
+            }}
+            aria-label={`Open wallet account menu for ${address}`}
+            aria-haspopup="dialog"
+            aria-expanded={accountMenuOpen}
+            title={address}
           >
-            <img
-              src={tzwalletlogo}
-              style={styles.walletConnectedHeader.logo}
-              alt="tz "
-            />
-            {walletInfo &&
-              walletInfo.address &&
-              shorten(5, 5, walletInfo.address)}
-          </Box>
-        </Button>
+            <Box
+              sx={{
+                ...(props.visualVariant === "dark"
+                  ? styles.walletConnectedHeaderDark
+                  : styles.walletConnectedHeader),
+                ...(isDrawerAccount ? styles.walletConnectedDrawer : {}),
+              }}
+            >
+              <Box
+                component="img"
+                src={tzwalletlogo}
+                sx={styles.walletLogo}
+                alt=""
+              />
+              <Typography
+                component="span"
+                sx={{
+                  ...styles.walletAddress,
+                  ...(isDrawerAccount ? styles.walletAddressDrawer : {}),
+                }}
+              >
+                {visibleAddress}
+              </Typography>
+              <Box
+                component="span"
+                aria-hidden="true"
+                sx={{
+                  ...styles.accountChevron,
+                  transform: accountMenuOpen
+                    ? "rotate(225deg)"
+                    : "rotate(45deg)",
+                }}
+              />
+            </Box>
+          </Button>
+
+          <Popover
+            open={accountMenuOpen}
+            anchorEl={accountAnchor}
+            onClose={() => setAccountAnchor(null)}
+            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+            transformOrigin={{ vertical: "top", horizontal: "right" }}
+            PaperProps={{ sx: styles.accountPopover }}
+          >
+            <Box sx={styles.accountHeader}>
+              <Typography sx={styles.accountLabel}>CONNECTED WALLET</Typography>
+              <Box sx={styles.accountAddressRow}>
+                <Typography title={address} sx={styles.accountFullAddress}>
+                  {address}
+                </Typography>
+                <Button
+                  type="button"
+                  onClick={copyAddress}
+                  sx={styles.copyAddressButton}
+                  aria-label="Copy wallet address"
+                >
+                  {addressCopied ? "Copied" : "Copy"}
+                </Button>
+              </Box>
+            </Box>
+
+            <Box sx={styles.accountNetworkRow}>
+              <Typography sx={styles.accountNetworkLabel}>Network</Typography>
+              <Box sx={styles.accountNetworkValue}>
+                <Box aria-hidden="true" sx={styles.accountNetworkDot} />
+                {networkLabel}
+              </Box>
+            </Box>
+
+            <Box sx={styles.accountActions}>
+              <Button onClick={switchWallet} sx={styles.accountAction}>
+                Switch wallet
+              </Button>
+              <Button
+                onClick={disconnect}
+                sx={{ ...styles.accountAction, ...styles.disconnectAction }}
+              >
+                Disconnect
+              </Button>
+            </Box>
+          </Popover>
+        </>
       );
     } else {
       return (

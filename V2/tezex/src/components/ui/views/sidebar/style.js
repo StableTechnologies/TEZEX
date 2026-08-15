@@ -2,10 +2,10 @@
 const style = (theme, scale = 1) => {
   return {
     drawer: {
-      width: "min(88vw, 360px)",
+      width: "clamp(280px, 82vw, 320px)",
       flexShrink: 0,
       "& .MuiDrawer-paper": {
-        width: "min(88vw, 360px)",
+        width: "clamp(280px, 82vw, 320px)",
         boxSizing: "border-box",
         backgroundColor: "var(--tezex-panel)",
         color: "var(--tezex-text)",
@@ -28,11 +28,12 @@ const style = (theme, scale = 1) => {
       paddingTop: "8px",
     },
     utilityItem: {
-      padding: "6px 16px 14px",
+      padding: "6px 14px 12px",
     },
     utilityPanel: {
       width: "100%",
-      padding: "14px",
+      minWidth: 0,
+      padding: "12px",
       background: "var(--tezex-panel-subtle)",
       border: "1px solid var(--tezex-line)",
       borderRadius: "16px",
@@ -46,6 +47,7 @@ const style = (theme, scale = 1) => {
     },
     walletControl: {
       width: "100%",
+      minWidth: 0,
       "& .MuiButtonBase-root": { width: "100%" },
     },
     listItem: {
