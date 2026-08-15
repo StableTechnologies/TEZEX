@@ -1,5 +1,5 @@
 import React from "react";
-import { render, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { NetworkSelector } from "./NetworkSelector";
 
@@ -46,4 +46,25 @@ test("accepts Previewnet's empty cycle response without logging an error", async
   await waitFor(() => expect(global.fetch).toHaveBeenCalledTimes(2));
   expect(cycleJson).not.toHaveBeenCalled();
   expect(consoleError).not.toHaveBeenCalled();
+});
+
+test("keeps Snet labeled and opens its network details", () => {
+  render(
+    <MemoryRouter initialEntries={["/stez"]}>
+      <NetworkSelector />
+    </MemoryRouter>
+  );
+
+  const selector = screen.getByRole("button", {
+    name: "Network: Snet, live",
+  });
+
+  expect(selector).toHaveTextContent("Snet");
+  fireEvent.click(selector);
+
+  expect(screen.getByText("Current network")).toBeInTheDocument();
+  expect(screen.getByText("Public testnet")).toBeInTheDocument();
+  expect(
+    screen.getByRole("link", { name: /Snet network details/i })
+  ).toHaveAttribute("href", "https://teztnets.com/snet-about");
 });
