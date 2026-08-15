@@ -1,4 +1,4 @@
-import React, { FC, useEffect } from "react";
+import React, { FC, useCallback, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   List,
@@ -25,6 +25,9 @@ import logo from "../../../../assets/TezexLogo.svg";
 import logoSmall from "../../../../assets/tezexIcon.svg";
 import { Wallet as WalletControl } from "../../../wallet";
 import { homePathForHost } from "../../../../routing";
+import { useWallet } from "../../../../hooks/wallet";
+import { connectWalletToCustomNetwork } from "../../../../functions/beacon";
+import { resolveSnet } from "../../../../pages/Stez/network";
 import {
   DEFAULT_LIQUIDITY_PATH,
   DEFAULT_REMOVE_LIQUIDITY_PATH,
@@ -44,6 +47,17 @@ export const SideBar: FC<ISideBarProps> = (props) => {
   const styles = useStyles(style);
   const { isLandscape } = useMobileOrientation();
   const homePath = homePathForHost(window.location.hostname);
+  const wallet = useWallet();
+  const isStezRoute =
+    location.pathname.startsWith("/stez") ||
+    window.location.hostname.startsWith("stez.");
+  const connectToSnet = useCallback(async () => {
+    const snet = await resolveSnet();
+    await connectWalletToCustomNetwork(wallet, {
+      name: snet.name,
+      rpcUrl: snet.rpcUrl,
+    });
+  }, [wallet]);
 
   useEffect(() => {
     switch (sessionInfo.activeComponent) {
@@ -111,7 +125,12 @@ export const SideBar: FC<ISideBarProps> = (props) => {
               <Box sx={styles.utilityPanel}>
                 <Typography sx={styles.utilityLabel}>WALLET</Typography>
                 <Box sx={styles.walletControl}>
-                  <WalletControl variant="header" visualVariant="dark" />
+                  <WalletControl
+                    variant="header"
+                    visualVariant="dark"
+                    accountPresentation="drawer"
+                    connectOverride={isStezRoute ? connectToSnet : undefined}
+                  />
                 </Box>
               </Box>
             </ListItem>
