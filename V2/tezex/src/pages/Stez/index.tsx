@@ -5,6 +5,8 @@ import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlin
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import LockClockOutlinedIcon from "@mui/icons-material/LockClockOutlined";
 import ArrowOutwardRoundedIcon from "@mui/icons-material/ArrowOutwardRounded";
+import SavingsOutlinedIcon from "@mui/icons-material/SavingsOutlined";
+import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
 
 import { connectWalletToCustomNetwork } from "../../functions/beacon";
 import { useWallet } from "../../hooks/wallet";
@@ -435,6 +437,30 @@ export const Stez: FC = () => {
           </header>
           <div className="stez-position-grid">
             <PositionCell
+              label="Wallet XTZ"
+              value={
+                walletConnected
+                  ? formatUnits(snapshot?.walletXtzMutez ?? null)
+                  : "—"
+              }
+              note={walletConnected ? "Spendable now" : "Connect to view"}
+              icon={<AccountBalanceWalletOutlinedIcon />}
+            />
+            <PositionCell
+              label="Direct stake"
+              value={
+                walletConnected
+                  ? formatUnits(snapshot?.walletStakedMutez ?? null)
+                  : "—"
+              }
+              note={
+                walletConnected
+                  ? "Staked separately from sTEZ"
+                  : "Connect to view"
+              }
+              icon={<SavingsOutlinedIcon />}
+            />
+            <PositionCell
               label="sTEZ Balance"
               value={
                 walletConnected
@@ -442,25 +468,19 @@ export const Stez: FC = () => {
                   : "—"
               }
               note={
-                walletConnected
-                  ? `≈ ${formatUnits(
-                      walletUnderlying
-                    )} XTZ at the current protocol rate`
-                  : "Connect to view"
+                walletConnected ? "Liquid and transferable" : "Connect to view"
               }
               icon={<AccountBalanceWalletOutlinedIcon />}
             />
             <PositionCell
-              label="Wallet XTZ"
-              value={
-                walletConnected
-                  ? formatUnits(snapshot?.walletXtzMutez ?? null)
-                  : "—"
-              }
+              label="XTZ value of sTEZ"
+              value={walletConnected ? formatUnits(walletUnderlying) : "—"}
               note={
-                walletConnected ? "Available in your wallet" : "Connect to view"
+                walletConnected
+                  ? "Same sTEZ position, shown in XTZ"
+                  : "Connect to view"
               }
-              icon={<AccountBalanceWalletOutlinedIcon />}
+              icon={<SwapHorizRoundedIcon />}
             />
             <PositionCell
               label="Pending Redemption"
@@ -471,7 +491,7 @@ export const Stez: FC = () => {
               }
               note={
                 walletConnected
-                  ? "Frozen XTZ awaiting maturity"
+                  ? "Redeemed XTZ still frozen"
                   : "Connect to view"
               }
               icon={<LockClockOutlinedIcon />}
@@ -694,31 +714,30 @@ export const Stez: FC = () => {
           aria-labelledby="stez-rate-history-title"
         >
           <header className="stez-panel__head">
-            <h2 id="stez-rate-history-title">PROTOCOL RATE</h2>
+            <h2 id="stez-rate-history-title">RATE HISTORY</h2>
             <span>
               Block {snapshot?.blockLevel.toLocaleString("en-US") ?? "—"}
             </span>
           </header>
           <div className="stez-rate-panel">
-            <div>
-              <span className="stez-field-label">CURRENT REDEMPTION RATE</span>
+            <div className="stez-rate-panel__current">
+              <span className="stez-field-label">CURRENT RATE</span>
               <strong>
-                <span>1 sTEZ =</span>
-                <span>{rate} XTZ</span>
+                1 sTEZ <span>=</span> {rate} XTZ
               </strong>
               <small>
-                Rewards do not increase your sTEZ balance. Instead, they
-                increase the amount of XTZ each sTEZ can redeem for. Baker fees
-                reduce the rewards passed through, and slashing can lower the
-                redemption rate.
+                Rewards and slashing change the XTZ value represented by each
+                sTEZ; they do not change the number of sTEZ in your wallet.
               </small>
             </div>
             <div className="stez-rate-panel__empty">
-              <p>
-                Rate history will appear once TEZEX is indexing a live
-                sTEZ-enabled network. No simulated returns or projected APY are
-                shown.
-              </p>
+              <div>
+                <strong>NO HISTORY YET</strong>
+                <p>
+                  Historical rates will appear after TEZEX has indexed enough
+                  Snet observations. No projected returns are substituted.
+                </p>
+              </div>
             </div>
           </div>
         </section>

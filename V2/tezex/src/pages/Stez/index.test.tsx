@@ -67,6 +67,7 @@ const baseSnapshot: StezSnapshot = {
   rateNumeratorMutez: BigInt(1_100_000),
   rateDenominatorTokenUnits: BigInt(1_000_000),
   walletXtzMutez: null,
+  walletStakedMutez: null,
   walletStezUnits: null,
   redeemedFrozenMutez: null,
   redeemedFinalizableMutez: null,
@@ -138,6 +139,7 @@ test("enables a stake request only for a wallet connected to Snet", async () => 
   (loadStezSnapshot as jest.Mock).mockResolvedValue({
     ...baseSnapshot,
     walletXtzMutez: BigInt(5_000_000),
+    walletStakedMutez: BigInt(1_500_000),
     walletStezUnits: BigInt(2_000_000),
     redeemedFrozenMutez: BigInt(250_000),
     redeemedFinalizableMutez: BigInt(100_000),
@@ -152,7 +154,10 @@ test("enables a stake request only for a wallet connected to Snet", async () => 
     ).toBeDisabled()
   );
   expect(screen.getByText("5.0")).toBeInTheDocument();
+  expect(screen.getByText("1.5")).toBeInTheDocument();
   expect(screen.getByText("2.0")).toBeInTheDocument();
+  expect(screen.getByText("Direct stake")).toBeInTheDocument();
+  expect(screen.getByText("XTZ value of sTEZ")).toBeInTheDocument();
   expect(
     screen.getByText(/Test XTZ detected in your connected wallet/)
   ).toBeInTheDocument();

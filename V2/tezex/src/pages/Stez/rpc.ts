@@ -23,6 +23,7 @@ export interface StezSnapshot {
   rateNumeratorMutez: bigint | null;
   rateDenominatorTokenUnits: bigint | null;
   walletXtzMutez: bigint | null;
+  walletStakedMutez: bigint | null;
   walletStezUnits: bigint | null;
   redeemedFrozenMutez: bigint | null;
   redeemedFinalizableMutez: bigint | null;
@@ -147,6 +148,7 @@ const unavailableSnapshot = (
   rateNumeratorMutez: null,
   rateDenominatorTokenUnits: null,
   walletXtzMutez: null,
+  walletStakedMutez: null,
   walletStezUnits: null,
   redeemedFrozenMutez: null,
   redeemedFinalizableMutez: null,
@@ -294,6 +296,11 @@ export async function loadStezSnapshot(
           ),
           fetchRpc<string | number>(
             metadata.endpoint,
+            `${accountPath}/staked_balance`,
+            signal
+          ),
+          fetchRpc<string | number>(
+            metadata.endpoint,
             `${accountPath}/stez_balance`,
             signal
           ),
@@ -324,9 +331,10 @@ export async function loadStezSnapshot(
       rateNumeratorMutez: toBigInt(rate.numerator),
       rateDenominatorTokenUnits: toBigInt(rate.denominator),
       walletXtzMutez: account ? toBigInt(account[0]) : null,
-      walletStezUnits: account ? toBigInt(account[1]) : null,
-      redeemedFrozenMutez: account ? toBigInt(account[2]) : null,
-      redeemedFinalizableMutez: account ? toBigInt(account[3]) : null,
+      walletStakedMutez: account ? toBigInt(account[1]) : null,
+      walletStezUnits: account ? toBigInt(account[2]) : null,
+      redeemedFrozenMutez: account ? toBigInt(account[3]) : null,
+      redeemedFinalizableMutez: account ? toBigInt(account[4]) : null,
       checkedAt: Date.now(),
       detail:
         "sTEZ is active and the current position was read from one fixed Tezos block.",
