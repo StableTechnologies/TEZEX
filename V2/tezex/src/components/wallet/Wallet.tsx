@@ -32,6 +32,7 @@ interface IWallet {
   visualVariant?: "default" | "dark";
   connectOverride?: () => Promise<void>;
   accountPresentation?: "header" | "drawer";
+  onZeroAmount?: () => void;
 }
 
 export const Wallet: FC<IWallet> = (props) => {
@@ -69,9 +70,9 @@ export const Wallet: FC<IWallet> = (props) => {
   useEffect(() => {
     switch (transactionStatus) {
       case TransactionStatus.ZERO_AMOUNT:
-        setDisabled(true);
+        setDisabled(!props.onZeroAmount);
         setSpinner(false);
-        setWalletText(transactionStatus);
+        setWalletText(props.onZeroAmount ? props.children : transactionStatus);
         break;
       case TransactionStatus.INSUFFICIENT_BALANCE:
         setDisabled(true);
@@ -127,9 +128,17 @@ export const Wallet: FC<IWallet> = (props) => {
         setSpinner(true);
         setWalletText(transactionStatus);
     }
-  }, [transactionStatus, props.children]);
+  }, [transactionStatus, props.children, props.onZeroAmount]);
 
   const transact = async () => {
+    if (
+      transactionStatus === TransactionStatus.ZERO_AMOUNT &&
+      props.onZeroAmount
+    ) {
+      props.onZeroAmount();
+      return;
+    }
+
     if (transactionStatus === TransactionStatus.CONFIRMATION_UNKNOWN) {
       const operationHash = walletOps?.getActiveTransaction()?.operationHash;
       if (operationHash) {

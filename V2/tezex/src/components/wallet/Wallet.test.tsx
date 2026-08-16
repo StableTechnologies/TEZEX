@@ -5,6 +5,7 @@ import { Wallet } from "./Wallet";
 
 const mockDisconnect = jest.fn().mockResolvedValue(undefined);
 const mockConnectOverride = jest.fn().mockResolvedValue(undefined);
+const mockZeroAmount = jest.fn();
 const mockWallet = {
   address: "tz1d4ExampleAccountAddressMuU7n",
   isWalletConnected: true,
@@ -32,6 +33,7 @@ jest.mock("../../functions/beacon", () => ({
 beforeEach(() => {
   mockDisconnect.mockClear();
   mockConnectOverride.mockClear();
+  mockZeroAmount.mockClear();
 });
 
 const renderWallet = () =>
@@ -89,4 +91,21 @@ test("disconnect is only called from the explicit action", async () => {
 
   await waitFor(() => expect(mockDisconnect).toHaveBeenCalledTimes(1));
   expect(mockConnectOverride).not.toHaveBeenCalled();
+});
+
+test("keeps the normal action available and delegates zero-amount validation", () => {
+  render(
+    <MemoryRouter>
+      <Wallet visualVariant="dark" onZeroAmount={mockZeroAmount}>
+        Swap
+      </Wallet>
+    </MemoryRouter>
+  );
+
+  const action = screen.getByRole("button", { name: "Swap" });
+  expect(action).toBeEnabled();
+
+  fireEvent.click(action);
+
+  expect(mockZeroAmount).toHaveBeenCalledTimes(1);
 });

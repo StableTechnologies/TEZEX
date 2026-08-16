@@ -46,6 +46,8 @@ export interface IRigthInput {
   selectableAssets?: Asset[];
   onAssetChange?: (asset: Asset) => void;
   assetSelectionDisabled?: boolean;
+  validationMessage?: string;
+  inputRef?: React.Ref<HTMLInputElement>;
 }
 
 const TokenInput: FC<IRigthInput> = (props) => {
@@ -270,16 +272,30 @@ const TokenInput: FC<IRigthInput> = (props) => {
           <Box component="label" htmlFor={inputId} sx={styles.tezex.label}>
             {props.label}
           </Box>
-          <WalletConnected>
-            <Typography hidden={!transactionBalance} sx={styles.tezex.balance}>
-              Balance {transactionBalance ? String(transactionBalance) : "—"}
+          {props.validationMessage ? (
+            <Typography
+              id={`${inputId}-validation`}
+              role="alert"
+              sx={styles.tezex.validationMessage}
+            >
+              {props.validationMessage}
             </Typography>
-          </WalletConnected>
+          ) : (
+            <WalletConnected>
+              <Typography
+                hidden={!transactionBalance}
+                sx={styles.tezex.balance}
+              >
+                Balance {transactionBalance ? String(transactionBalance) : "—"}
+              </Typography>
+            </WalletConnected>
+          )}
         </Box>
 
         <Box sx={styles.tezex.amountRow}>
           <TextField
             id={inputId}
+            inputRef={props.inputRef}
             autoComplete="off"
             onFocus={handleFocus}
             onBlur={handleBlur}
@@ -290,6 +306,10 @@ const TokenInput: FC<IRigthInput> = (props) => {
               inputMode: "decimal",
               readOnly: props.readOnly,
               "aria-label": `${props.label || props.transferType} amount`,
+              "aria-invalid": Boolean(props.validationMessage),
+              "aria-describedby": props.validationMessage
+                ? `${inputId}-validation`
+                : undefined,
             }}
             variant="standard"
             InputProps={{ disableUnderline: true }}

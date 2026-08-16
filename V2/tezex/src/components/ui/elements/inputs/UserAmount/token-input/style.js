@@ -35,6 +35,13 @@ export const style = (theme, scale = 1) => {
         fontSize: "11px",
         fontWeight: 400,
       },
+      validationMessage: {
+        color: "#c94c4c",
+        fontSize: "10px",
+        fontWeight: 700,
+        letterSpacing: "0.04em",
+        lineHeight: 1.2,
+      },
       amountRow: {
         display: "flex",
         alignItems: "center",

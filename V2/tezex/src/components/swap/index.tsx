@@ -3,6 +3,7 @@ import React, {
   useState,
   useEffect,
   useCallback,
+  useRef,
   useSyncExternalStore,
 } from "react";
 import BigNumber from "bignumber.js";
@@ -144,6 +145,9 @@ export const Swap: FC<ISwapToken> = ({ routeSelection, onRouteChange }) => {
 
   const [swappingFileds, setSwappingFileds] = useState<boolean>(false);
   const [sendInputValue, setSendInputValue] = useState("0.00");
+  const [showAmountValidation, setShowAmountValidation] = useState(false);
+  const [shakeAmountField, setShakeAmountField] = useState(false);
+  const sendAmountInputRef = useRef<HTMLInputElement>(null);
   const session = useSession();
   const [canUpdate, setCanUpdate] = useState<boolean>(false);
   const previewLoading =
@@ -180,6 +184,8 @@ export const Swap: FC<ISwapToken> = ({ routeSelection, onRouteChange }) => {
     network.setSelectedPool(routeSelection.pool);
     setAssets(nextAssets);
     setSendInputValue("0.00");
+    setShowAmountValidation(false);
+    setShakeAmountField(false);
     wallet.clearTransaction(TransactingComponent.SWAP);
     setLoading(true);
     setReloading(true);
@@ -205,6 +211,8 @@ export const Swap: FC<ISwapToken> = ({ routeSelection, onRouteChange }) => {
       network.setSelectedPool(pool);
       setAssets(nextAssets);
       setSendInputValue("0.00");
+      setShowAmountValidation(false);
+      setShakeAmountField(false);
       onRouteChange?.(nextAssets[send].name, nextAssets[receive].name);
 
       wallet.clearTransaction(TransactingComponent.ADD_LIQUIDITY);
@@ -222,7 +230,27 @@ export const Swap: FC<ISwapToken> = ({ routeSelection, onRouteChange }) => {
     await walletOps.sendTransaction();
   }, [walletOps]);
 
+  const handleSendAmountChange = useCallback((value: string) => {
+    setSendInputValue(value);
+    if (new BigNumber(value || 0).isGreaterThan(0)) {
+      setShowAmountValidation(false);
+      setShakeAmountField(false);
+    }
+  }, []);
+
+  const handleZeroAmount = useCallback(() => {
+    setShowAmountValidation(true);
+    setShakeAmountField(false);
+    sendAmountInputRef.current?.focus();
+
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => setShakeAmountField(true));
+    });
+  }, []);
+
   const swapFields = useCallback(async () => {
+    setShowAmountValidation(false);
+    setShakeAmountField(false);
     setAssets([assets[1], assets[0]]);
     onRouteChange?.(assets[receive].name, assets[send].name);
     await transactionOps.swapFields();
@@ -363,7 +391,7 @@ export const Swap: FC<ISwapToken> = ({ routeSelection, onRouteChange }) => {
       )
     : undefined;
   const status = transaction?.transactionStatus;
-  const statusLabel = hasQuote ? getStatusLabel(status) : "Enter an amount";
+  const statusLabel = hasQuote ? getStatusLabel(status) : "Ready";
   const statusStep =
     status === TransactionStatus.COMPLETED
       ? 3
@@ -406,12 +434,18 @@ export const Swap: FC<ISwapToken> = ({ routeSelection, onRouteChange }) => {
           </Box>
 
           <CardContent sx={styles.cardContent}>
-            <Box sx={styles.amountField}>
+            <Box
+              sx={{
+                ...styles.amountField,
+                ...(shakeAmountField ? styles.amountFieldShake : {}),
+              }}
+              onAnimationEnd={() => setShakeAmountField(false)}
+            >
               <UserAmountField
                 component={TransactingComponent.SWAP}
                 transferType={TransferType.SEND}
                 asset={assets[send]}
-                onChange={setSendInputValue}
+                onChange={handleSendAmountChange}
                 readOnly={!canUpdate}
                 scalingKey={scalingKey}
                 loading={!isLoaded()}
@@ -420,6 +454,10 @@ export const Swap: FC<ISwapToken> = ({ routeSelection, onRouteChange }) => {
                 selectableAssets={sendAssetOptions}
                 onAssetChange={(asset) => handleAssetChange(send, asset)}
                 assetSelectionDisabled={!canUpdate}
+                validationMessage={
+                  showAmountValidation ? "Enter an amount" : undefined
+                }
+                inputRef={sendAmountInputRef}
               />
             </Box>
 
@@ -453,7 +491,9 @@ export const Swap: FC<ISwapToken> = ({ routeSelection, onRouteChange }) => {
                     )} ${assets[receive].label}`
                   : "Enter an amount to load a live pool quote"}
               </Typography>
-              <Typography sx={styles.quoteStatus}>{statusLabel}</Typography>
+              <Typography sx={styles.quoteStatus}>
+                {hasQuote ? statusLabel : ""}
+              </Typography>
             </Box>
           </CardContent>
 
@@ -464,6 +504,7 @@ export const Swap: FC<ISwapToken> = ({ routeSelection, onRouteChange }) => {
               callback={transact}
               scalingKey={scalingKey}
               visualVariant="dark"
+              onZeroAmount={handleZeroAmount}
             >
               Swap
             </Wallet>
