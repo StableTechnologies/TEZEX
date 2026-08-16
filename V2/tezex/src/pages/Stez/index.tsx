@@ -5,7 +5,6 @@ import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlin
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import LockClockOutlinedIcon from "@mui/icons-material/LockClockOutlined";
 import ArrowOutwardRoundedIcon from "@mui/icons-material/ArrowOutwardRounded";
-import SavingsOutlinedIcon from "@mui/icons-material/SavingsOutlined";
 import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
 
 import { connectWalletToCustomNetwork } from "../../functions/beacon";
@@ -447,20 +446,6 @@ export const Stez: FC = () => {
               icon={<AccountBalanceWalletOutlinedIcon />}
             />
             <PositionCell
-              label="Direct stake"
-              value={
-                walletConnected
-                  ? formatUnits(snapshot?.walletStakedMutez ?? null)
-                  : "—"
-              }
-              note={
-                walletConnected
-                  ? "Staked separately from sTEZ"
-                  : "Connect to view"
-              }
-              icon={<SavingsOutlinedIcon />}
-            />
-            <PositionCell
               label="sTEZ Balance"
               value={
                 walletConnected
@@ -473,11 +458,11 @@ export const Stez: FC = () => {
               icon={<AccountBalanceWalletOutlinedIcon />}
             />
             <PositionCell
-              label="XTZ value of sTEZ"
+              label="Current redemption value"
               value={walletConnected ? formatUnits(walletUnderlying) : "—"}
               note={
                 walletConnected
-                  ? "Same sTEZ position, shown in XTZ"
+                  ? "XTZ represented by your sTEZ at the current protocol rate"
                   : "Connect to view"
               }
               icon={<SwapHorizRoundedIcon />}

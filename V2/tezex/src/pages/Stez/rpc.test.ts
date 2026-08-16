@@ -90,7 +90,6 @@ describe("sTEZ RPC adapter", () => {
         return response({ numerator: "1040000000", denominator: "1000000000" });
       }
       if (url.endsWith("/balance")) return response("9000000");
-      if (url.endsWith("/staked_balance")) return response("1500000");
       if (url.endsWith("/stez_balance")) return response("2000000");
       if (url.endsWith("/stez_redeemed_frozen_balance")) {
         return response("300000");
@@ -105,7 +104,6 @@ describe("sTEZ RPC adapter", () => {
 
     expect(snapshot.availability).toBe("available");
     expect(snapshot.contractHash).toBe("KT1Native");
-    expect(snapshot.walletStakedMutez).toBe(BigInt(1_500_000));
     expect(snapshot.walletStezUnits).toBe(BigInt(2_000_000));
     expect(snapshot.redeemedFinalizableMutez).toBe(BigInt(100_000));
     expect(
