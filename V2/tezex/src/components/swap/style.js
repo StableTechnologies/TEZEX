@@ -160,6 +160,7 @@ const style = (theme, scale = 1) => {
       borderRadius: { xs: "20px", sm: "24px" },
       background: "var(--tezex-panel)",
       border: "1px solid var(--tezex-line)",
+      "@media (min-width: 960px)": { order: 1 },
     },
     panelHeader: {
       minHeight: "82px",
@@ -245,7 +246,7 @@ const style = (theme, scale = 1) => {
       borderRadius: { xs: "20px", sm: "24px" },
       background: "var(--tezex-panel)",
       border: "1px solid var(--tezex-line)",
-      "@media (min-width: 960px)": { marginTop: "auto" },
+      "@media (min-width: 960px)": { order: 2, marginTop: "auto" },
     },
     statusHeader: {
       display: "flex",
