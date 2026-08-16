@@ -25,6 +25,8 @@ export interface IAmountField {
   selectableAssets?: Asset[];
   onAssetChange?: (asset: Asset) => void;
   assetSelectionDisabled?: boolean;
+  validationMessage?: string;
+  inputRef?: React.Ref<HTMLInputElement>;
 }
 
 const AmountField: FC<IAmountField> = (props) => {
@@ -46,6 +48,8 @@ const AmountField: FC<IAmountField> = (props) => {
       selectableAssets={props.selectableAssets}
       onAssetChange={props.onAssetChange}
       assetSelectionDisabled={props.assetSelectionDisabled}
+      validationMessage={props.validationMessage}
+      inputRef={props.inputRef}
     />
   );
 };
