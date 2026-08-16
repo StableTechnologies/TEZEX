@@ -95,6 +95,12 @@ test("loads live Snet data and its matching faucet", async () => {
   expect(screen.getByText("Stake tez, stay liquid.")).toBeInTheDocument();
   expect(screen.getByText("sTEZ Balance")).toBeInTheDocument();
   expect(screen.getByText("Total sTEZ supply")).toBeInTheDocument();
+  expect(
+    screen
+      .getByText("PROTOCOL DETAILS")
+      .compareDocumentPosition(screen.getByText("RATE HISTORY")) &
+      Node.DOCUMENT_POSITION_FOLLOWING
+  ).toBeTruthy();
 
   const faucet = screen.getByRole("link", {
     name: "Get Snet test XTZ from the official Teztnets faucet",
