@@ -335,7 +335,16 @@ export const Wallet: FC<IWallet> = (props) => {
             >
               <CircularProgress sx={styles.spinner} />
             </Box>
-            <Typography sx={styles.transactionStatus}>{walletText}</Typography>
+            <Typography
+              component="span"
+              sx={
+                props.visualVariant === "dark"
+                  ? styles.transactionStatusDark
+                  : styles.transactionStatus
+              }
+            >
+              {walletText}
+            </Typography>
           </Box>
         </Button>
       );

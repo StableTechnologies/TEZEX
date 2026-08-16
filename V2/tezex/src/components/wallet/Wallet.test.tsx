@@ -104,6 +104,14 @@ test("keeps the normal action available and delegates zero-amount validation", (
 
   const action = screen.getByRole("button", { name: "Swap" });
   expect(action).toBeEnabled();
+  expect(screen.getByText("Swap")).toHaveStyle({
+    fontFamily: "inherit",
+    fontWeight: "inherit",
+    fontSize: "inherit",
+    lineHeight: "1",
+    letterSpacing: "inherit",
+    textTransform: "inherit",
+  });
 
   fireEvent.click(action);
 

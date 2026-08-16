@@ -6,6 +6,14 @@ const style = (theme, scale = 1) => {
       fontSize: `calc(1.66vw * ${scale})`,
       lineHeight: `calc(2.01vw * ${scale})`,
     },
+    transactionStatusDark: {
+      fontFamily: "inherit",
+      fontWeight: "inherit",
+      fontSize: "inherit",
+      lineHeight: 1,
+      letterSpacing: "inherit",
+      textTransform: "inherit",
+    },
 
     spinnerBox: {
       position: "absolute",
