@@ -179,8 +179,8 @@
   grid-template-columns: 470px minmax(0, 1fr);
   grid-template-areas:
     "action position"
-    "rate rate"
-    "details details";
+    "details details"
+    "rate rate";
   align-items: stretch;
   gap: 18px 20px;
 }
@@ -381,11 +381,6 @@
   background: var(--tezex-field);
   border: 1px solid var(--tezex-line);
   border-radius: 15px;
-  transition: border-color 160ms ease;
-}
-
-.stez-amount-field:focus-within {
-  border-color: var(--tezex-line-strong);
 }
 
 .stez-amount-field__topline {
@@ -713,10 +708,13 @@
 }
 
 .stez-page button:focus-visible,
-.stez-page input:focus-visible,
 .stez-page summary:focus-visible {
   outline: 2px solid var(--tezex-text-secondary);
   outline-offset: 3px;
+}
+
+.stez-amount-field__input input:focus-visible {
+  outline: 0;
 }
 
 @media (max-width: 959px) {
@@ -759,11 +757,11 @@
     order: 2;
   }
 
-  .stez-workspace__rate {
+  .stez-workspace__details {
     order: 3;
   }
 
-  .stez-workspace__details {
+  .stez-workspace__rate {
     order: 4;
   }
 
