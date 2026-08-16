@@ -33,8 +33,8 @@ export const Layout: FC<ILayout> = (props) => {
     location.pathname.startsWith("/analytics");
   const [openMenu, setOpenMenu] = useState(false);
   const toggleMenu = useCallback(() => {
-    setOpenMenu(!openMenu);
-  }, [openMenu]);
+    setOpenMenu((current) => !current);
+  }, []);
 
   useEffect(() => {
     const handleResize = () => {

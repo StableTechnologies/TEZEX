@@ -55,9 +55,16 @@ test("opens account details without disconnecting the wallet", () => {
 
   expect(mockDisconnect).not.toHaveBeenCalled();
   expect(screen.getAllByText(mockWallet.address).length).toBeGreaterThan(0);
-  expect(screen.getByText("Snet")).toBeInTheDocument();
+  const networkControl = screen.getByRole("button", {
+    name: "Network: Snet, live",
+  });
+  expect(networkControl).toBeVisible();
   expect(screen.getByRole("button", { name: "Switch wallet" })).toBeVisible();
   expect(screen.getByRole("button", { name: "Disconnect" })).toBeVisible();
+
+  fireEvent.click(networkControl);
+  expect(screen.getByText("Current network")).toBeInTheDocument();
+  expect(screen.getByText("Public testnet")).toBeInTheDocument();
 });
 
 test("switch wallet disconnects deliberately before reconnecting", async () => {
