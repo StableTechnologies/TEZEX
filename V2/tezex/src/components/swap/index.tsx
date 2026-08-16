@@ -488,6 +488,21 @@ export const Swap: FC<ISwapToken> = ({ routeSelection, onRouteChange }) => {
         </Card>
 
         <Box sx={styles.contextColumn}>
+          <Box sx={styles.statusPanel} aria-live="polite">
+            <Box sx={styles.statusHeader}>
+              <Typography sx={styles.eyebrow}>TRANSACTION STATUS</Typography>
+              <Typography sx={styles.statusText}>{statusLabel}</Typography>
+            </Box>
+
+            <TransactionProgress statusStep={statusStep} styles={styles} />
+
+            <Typography sx={styles.statusFootnote}>
+              Request gets a live pool price. Swap covers wallet approval and
+              on-chain execution. Complete means the operation is confirmed on
+              Tezos.
+            </Typography>
+          </Box>
+
           <Box sx={styles.detailsPanel}>
             <Box sx={styles.panelHeader}>
               <Box sx={styles.headerTitleGroup}>
@@ -552,21 +567,6 @@ export const Swap: FC<ISwapToken> = ({ routeSelection, onRouteChange }) => {
               Review every amount and destination in your wallet before
               approving.
             </Box>
-          </Box>
-
-          <Box sx={styles.statusPanel} aria-live="polite">
-            <Box sx={styles.statusHeader}>
-              <Typography sx={styles.eyebrow}>TRANSACTION STATUS</Typography>
-              <Typography sx={styles.statusText}>{statusLabel}</Typography>
-            </Box>
-
-            <TransactionProgress statusStep={statusStep} styles={styles} />
-
-            <Typography sx={styles.statusFootnote}>
-              Request gets a live pool price. Swap covers wallet approval and
-              on-chain execution. Complete means the operation is confirmed on
-              Tezos.
-            </Typography>
           </Box>
         </Box>
       </Box>
