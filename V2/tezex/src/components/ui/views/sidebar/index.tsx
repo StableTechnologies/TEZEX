@@ -20,9 +20,7 @@ import { TransactingComponent } from "../../../../types/general";
 import style from "./style";
 import useStyles from "../../../../hooks/styles";
 import { useMobileOrientation } from "react-device-detect";
-import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
 import logo from "../../../../assets/TezexLogo.svg";
-import logoSmall from "../../../../assets/tezexIcon.svg";
 import { Wallet as WalletControl } from "../../../wallet";
 import { homePathForHost } from "../../../../routing";
 import { useWallet } from "../../../../hooks/wallet";
@@ -81,158 +79,144 @@ export const SideBar: FC<ISideBarProps> = (props) => {
 
   return (
     <SwipeableDrawer
-      disableBackdropTransition={!iOS}
+      disableBackdropTransition={false}
       disableDiscovery={iOS}
       onClose={props.toggleMenu}
       onOpen={props.toggleMenu}
       open={props.openMenu}
       variant={isLandscape ? "permanent" : undefined}
       anchor="right"
-      sx={props.openMenu ? styles.drawer : styles.drawerClosed}
+      sx={styles.drawer}
+      ModalProps={{ keepMounted: true }}
       transitionDuration={{
-        enter: 500,
-        exit: 0,
+        enter: 280,
+        exit: 240,
+      }}
+      SlideProps={{
+        easing: {
+          enter: "cubic-bezier(0.22, 1, 0.36, 1)",
+          exit: "cubic-bezier(0.4, 0, 0.2, 1)",
+        },
       }}
     >
       <List>
-        <ListItem
-          sx={props.openMenu ? styles.menuItemOpened : styles.menuItemClosed}
-        >
+        <ListItem sx={styles.menuItemOpened}>
           <IconButton
             onClick={props.toggleMenu}
             sx={styles.menuButton}
             aria-label="Close navigation"
           >
-            {!props.openMenu ? (
-              <MenuOutlinedIcon />
-            ) : (
-              <>
-                <KeyboardDoubleArrowRightSharp />
-                <Box component="img" sx={styles.logo} src={logo} alt="Logo" />
-              </>
-            )}
+            <KeyboardDoubleArrowRightSharp />
+            <Box component="img" sx={styles.logo} src={logo} alt="Logo" />
           </IconButton>
         </ListItem>
 
-        {!props.openMenu && (
-          <ListItem>
-            <Box component="img" src={logoSmall} alt="Logo" />
-          </ListItem>
-        )}
+        <ListItem disablePadding sx={styles.utilityItem}>
+          <Box sx={styles.utilityPanel}>
+            <Typography sx={styles.utilityLabel}>WALLET</Typography>
+            <Box sx={styles.walletControl}>
+              <WalletControl
+                variant="header"
+                visualVariant="dark"
+                accountPresentation="drawer"
+                connectOverride={isStezRoute ? connectToSnet : undefined}
+              />
+            </Box>
+          </Box>
+        </ListItem>
 
-        {props.openMenu && (
-          <>
-            <ListItem disablePadding sx={styles.utilityItem}>
-              <Box sx={styles.utilityPanel}>
-                <Typography sx={styles.utilityLabel}>WALLET</Typography>
-                <Box sx={styles.walletControl}>
-                  <WalletControl
-                    variant="header"
-                    visualVariant="dark"
-                    accountPresentation="drawer"
-                    connectOverride={isStezRoute ? connectToSnet : undefined}
-                  />
-                </Box>
-              </Box>
-            </ListItem>
+        <ListItem disablePadding sx={styles.homeItem}>
+          <ListItemButton onClick={() => setHomeOpen(!homeOpen)}>
+            <ListItemIcon>
+              {homeOpen ? <ExpandLess /> : <ExpandMore />}
+            </ListItemIcon>
+            <ListItemText primary="Home" sx={styles.listItemText} />
+          </ListItemButton>
+        </ListItem>
 
-            <ListItem disablePadding sx={styles.homeItem}>
-              <ListItemButton onClick={() => setHomeOpen(!homeOpen)}>
-                <ListItemIcon>
-                  {homeOpen ? <ExpandLess /> : <ExpandMore />}
-                </ListItemIcon>
-                <ListItemText primary="Home" sx={styles.listItemText} />
+        <Collapse in={homeOpen} timeout="auto" unmountOnExit>
+          <List>
+            <ListItem disablePadding sx={styles.listItem}>
+              <ListItemButton
+                component={Link}
+                to={homePath}
+                onClick={props.toggleMenu}
+                selected={active === 0}
+                sx={styles.swapButton}
+              >
+                <ListItemText primary="Swap" sx={styles.swapText} />
               </ListItemButton>
             </ListItem>
 
-            <Collapse in={homeOpen} timeout="auto" unmountOnExit>
+            <ListItem disablePadding sx={styles.listItem}>
+              <ListItemButton
+                onClick={() => setLiquidityOpen(!liquidityOpen)}
+                sx={styles.liquidityButton}
+              >
+                <ListItemIcon>
+                  {liquidityOpen ? <ExpandLess /> : <ExpandMore />}
+                </ListItemIcon>
+                <ListItemText primary="Liquidity" sx={styles.liquidityText} />
+              </ListItemButton>
+            </ListItem>
+
+            <Collapse in={liquidityOpen} timeout="auto" unmountOnExit>
               <List>
                 <ListItem disablePadding sx={styles.listItem}>
                   <ListItemButton
                     component={Link}
-                    to={homePath}
+                    to={DEFAULT_LIQUIDITY_PATH}
                     onClick={props.toggleMenu}
-                    selected={active === 0}
-                    sx={styles.swapButton}
+                    selected={active === 1}
+                    sx={styles.nestedButton}
                   >
-                    <ListItemText primary="Swap" sx={styles.swapText} />
+                    <ListItemText primary="Add" sx={styles.nestedText} />
                   </ListItemButton>
                 </ListItem>
 
                 <ListItem disablePadding sx={styles.listItem}>
                   <ListItemButton
-                    onClick={() => setLiquidityOpen(!liquidityOpen)}
-                    sx={styles.liquidityButton}
+                    component={Link}
+                    to={DEFAULT_REMOVE_LIQUIDITY_PATH}
+                    onClick={props.toggleMenu}
+                    selected={active === 2}
+                    sx={styles.nestedButton}
                   >
-                    <ListItemIcon>
-                      {liquidityOpen ? <ExpandLess /> : <ExpandMore />}
-                    </ListItemIcon>
-                    <ListItemText
-                      primary="Liquidity"
-                      sx={styles.liquidityText}
-                    />
+                    <ListItemText primary="Remove" sx={styles.nestedText} />
                   </ListItemButton>
                 </ListItem>
-
-                <Collapse in={liquidityOpen} timeout="auto" unmountOnExit>
-                  <List>
-                    <ListItem disablePadding sx={styles.listItem}>
-                      <ListItemButton
-                        component={Link}
-                        to={DEFAULT_LIQUIDITY_PATH}
-                        onClick={props.toggleMenu}
-                        selected={active === 1}
-                        sx={styles.nestedButton}
-                      >
-                        <ListItemText primary="Add" sx={styles.nestedText} />
-                      </ListItemButton>
-                    </ListItem>
-
-                    <ListItem disablePadding sx={styles.listItem}>
-                      <ListItemButton
-                        component={Link}
-                        to={DEFAULT_REMOVE_LIQUIDITY_PATH}
-                        onClick={props.toggleMenu}
-                        selected={active === 2}
-                        sx={styles.nestedButton}
-                      >
-                        <ListItemText primary="Remove" sx={styles.nestedText} />
-                      </ListItemButton>
-                    </ListItem>
-                  </List>
-                </Collapse>
               </List>
             </Collapse>
+          </List>
+        </Collapse>
 
-            <ListItem disablePadding sx={styles.listItem}>
-              <ListItemButton
-                component={Link}
-                to="/analytics"
-                onClick={props.toggleMenu}
-                selected={location.pathname.startsWith("/analytics")}
-              >
-                <ListItemText primary="Analytics" sx={styles.listItemText} />
-              </ListItemButton>
-            </ListItem>
+        <ListItem disablePadding sx={styles.listItem}>
+          <ListItemButton
+            component={Link}
+            to="/analytics"
+            onClick={props.toggleMenu}
+            selected={location.pathname.startsWith("/analytics")}
+          >
+            <ListItemText primary="Analytics" sx={styles.listItemText} />
+          </ListItemButton>
+        </ListItem>
 
-            <ListItem disablePadding sx={styles.listItem}>
-              <ListItemButton
-                component={Link}
-                to="/stez"
-                onClick={props.toggleMenu}
-                selected={location.pathname.startsWith("/stez")}
-              >
-                <ListItemText primary="sTEZ" sx={styles.listItemText} />
-              </ListItemButton>
-            </ListItem>
+        <ListItem disablePadding sx={styles.listItem}>
+          <ListItemButton
+            component={Link}
+            to="/stez"
+            onClick={props.toggleMenu}
+            selected={location.pathname.startsWith("/stez")}
+          >
+            <ListItemText primary="sTEZ" sx={styles.listItemText} />
+          </ListItemButton>
+        </ListItem>
 
-            <ListItem disablePadding sx={styles.listItem}>
-              <ListItemButton href={aboutRedirectUrl}>
-                <ListItemText primary="About" sx={styles.listItemText} />
-              </ListItemButton>
-            </ListItem>
-          </>
-        )}
+        <ListItem disablePadding sx={styles.listItem}>
+          <ListItemButton href={aboutRedirectUrl}>
+            <ListItemText primary="About" sx={styles.listItemText} />
+          </ListItemButton>
+        </ListItem>
       </List>
     </SwipeableDrawer>
   );

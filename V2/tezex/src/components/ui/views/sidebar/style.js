@@ -2,21 +2,24 @@
 const style = (theme, scale = 1) => {
   return {
     drawer: {
-      width: "clamp(280px, 82vw, 320px)",
+      width: "clamp(272px, 74vw, 296px)",
       flexShrink: 0,
       "& .MuiDrawer-paper": {
-        width: "clamp(280px, 82vw, 320px)",
+        width: "clamp(272px, 74vw, 296px)",
         boxSizing: "border-box",
         backgroundColor: "var(--tezex-panel)",
         color: "var(--tezex-text)",
         boxShadow: "var(--tezex-menu-shadow)",
         borderLeft: "1px solid var(--tezex-line)",
       },
-    },
-    drawerClosed: {
-      width: 70,
-      "& .MuiDrawer-paper": {
-        width: 70,
+      "& .MuiBackdrop-root": {
+        backgroundColor: "rgba(0, 0, 0, 0.58)",
+        transition: "opacity 240ms cubic-bezier(0.4, 0, 0.2, 1)",
+      },
+      "@media (prefers-reduced-motion: reduce)": {
+        "& .MuiDrawer-paper, & .MuiBackdrop-root": {
+          transitionDuration: "1ms !important",
+        },
       },
     },
     menuButton: {
@@ -63,9 +66,6 @@ const style = (theme, scale = 1) => {
           color: "var(--tezex-text)",
         },
       },
-    },
-    menuItemClosed: {
-      justifyContent: "center",
     },
     menuItemOpened: {
       justifyContent: "flex-start",

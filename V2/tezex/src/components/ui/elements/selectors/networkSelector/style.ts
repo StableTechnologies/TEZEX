@@ -31,6 +31,38 @@ export const getNetworkSelectorStyles = (theme: Theme) => {
       },
     },
 
+    accountButton: {
+      width: "100%",
+      minHeight: "44px",
+      padding: "0 16px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: "16px",
+      color: "var(--tezex-text)",
+      background: "transparent",
+      border: 0,
+      borderBottom: "1px solid var(--tezex-line-soft)",
+      appearance: "none",
+      cursor: "pointer",
+      transition: "background-color 150ms ease",
+      "&:hover": { background: "var(--tezex-hover)" },
+      "&:focus-visible": {
+        outline: "2px solid var(--tezex-text-secondary)",
+        outlineOffset: "-3px",
+      },
+    },
+    accountButtonLabel: {
+      color: "var(--tezex-muted)",
+      fontSize: "11px",
+      fontWeight: 500,
+    },
+    accountButtonValue: {
+      display: "inline-flex",
+      alignItems: "center",
+      gap: "7px",
+    },
+
     liveSignal: {
       position: "relative",
       width: "8px",

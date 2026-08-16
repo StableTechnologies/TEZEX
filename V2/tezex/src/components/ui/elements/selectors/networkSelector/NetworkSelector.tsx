@@ -29,6 +29,10 @@ interface CycleInfo {
   endTime: string;
 }
 
+interface NetworkSelectorProps {
+  presentation?: "header" | "account";
+}
+
 const networks: NetworkOption[] = [
   { type: NetworkType.MAINNET, label: "Mainnet" },
   { type: NetworkType.SHADOWNET, label: "Shadownet" },
@@ -50,7 +54,9 @@ const formatTimeRemaining = (seconds: number): string => {
 
 const formatNumber = (num: number): string => num.toLocaleString();
 
-export const NetworkSelector: FC = () => {
+export const NetworkSelector: FC<NetworkSelectorProps> = ({
+  presentation = "header",
+}) => {
   const theme = useTheme();
   const network = useNetwork();
   const styles = getNetworkSelectorStyles(theme);
@@ -151,6 +157,7 @@ export const NetworkSelector: FC = () => {
   const networkLabel = isStezRoute
     ? "Snet"
     : currentNetwork?.label ?? "Mainnet";
+  const isAccountPresentation = presentation === "account";
 
   return (
     <>
@@ -162,22 +169,28 @@ export const NetworkSelector: FC = () => {
         aria-haspopup="dialog"
         aria-expanded={open}
         onClick={(e) => setAnchorEl(e.currentTarget)}
-        sx={styles.button}
+        sx={isAccountPresentation ? styles.accountButton : styles.button}
       >
-        <Box aria-hidden="true" sx={styles.liveSignal} />
+        {isAccountPresentation && (
+          <Typography sx={styles.accountButtonLabel}>Network</Typography>
+        )}
 
-        <Box data-network-label sx={styles.networkIdentity}>
-          <Typography sx={styles.networkLabel}>{networkLabel}</Typography>
-        </Box>
+        <Box sx={styles.accountButtonValue}>
+          <Box aria-hidden="true" sx={styles.liveSignal} />
 
-        <Box
-          data-network-arrow
-          sx={{
-            ...styles.arrow,
-            transform: open ? "rotate(180deg)" : "rotate(0deg)",
-          }}
-        >
-          <Box component="span" sx={styles.arrowGlyph} />
+          <Box data-network-label sx={styles.networkIdentity}>
+            <Typography sx={styles.networkLabel}>{networkLabel}</Typography>
+          </Box>
+
+          <Box
+            data-network-arrow
+            sx={{
+              ...styles.arrow,
+              transform: open ? "rotate(180deg)" : "rotate(0deg)",
+            }}
+          >
+            <Box component="span" sx={styles.arrowGlyph} />
+          </Box>
         </Box>
       </Box>
 
@@ -186,8 +199,14 @@ export const NetworkSelector: FC = () => {
         open={open}
         anchorEl={anchorEl}
         onClose={() => setAnchorEl(null)}
-        anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
-        transformOrigin={{ vertical: "top", horizontal: "left" }}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: isAccountPresentation ? "right" : "left",
+        }}
+        transformOrigin={{
+          vertical: "top",
+          horizontal: isAccountPresentation ? "right" : "left",
+        }}
         PaperProps={{ sx: styles.popover }}
       >
         {isStezRoute ? (

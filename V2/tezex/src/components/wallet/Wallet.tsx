@@ -20,8 +20,7 @@ import {
 import Button from "@mui/material/Button";
 import style from "./style";
 import useStyles from "../../hooks/styles";
-import { useLocation } from "react-router-dom";
-import { NetworkType } from "@airgap/beacon-sdk";
+import { NetworkSelector } from "../ui/elements/selectors/networkSelector/NetworkSelector";
 
 interface IWallet {
   component?: TransactingComponent;
@@ -39,7 +38,6 @@ export const Wallet: FC<IWallet> = (props) => {
   const styles = useStyles(style, props.scalingKey);
   const walletInfo: WalletInfo | undefined = useWallet();
   const networkInfo = useNetwork();
-  const location = useLocation();
   const walletOps = props.component ? useWalletOps(props.component) : undefined;
   const [spinner, setSpinner] = useState(false);
   const [disabled, setDisabled] = useState(false);
@@ -51,16 +49,6 @@ export const Wallet: FC<IWallet> = (props) => {
   const [addressCopied, setAddressCopied] = useState(false);
   const accountMenuOpen = Boolean(accountAnchor);
   const isDrawerAccount = props.accountPresentation === "drawer";
-  const isSnetRoute =
-    location.pathname.startsWith("/stez") ||
-    window.location.hostname.startsWith("stez.");
-  const networkLabel = isSnetRoute
-    ? "Snet"
-    : networkInfo.network === NetworkType.MAINNET
-    ? "Mainnet"
-    : networkInfo.network === NetworkType.SHADOWNET
-    ? "Shadownet"
-    : "Previewnet";
 
   useEffect(() => {
     if (!addressCopied) return;
@@ -299,13 +287,7 @@ export const Wallet: FC<IWallet> = (props) => {
               </Box>
             </Box>
 
-            <Box sx={styles.accountNetworkRow}>
-              <Typography sx={styles.accountNetworkLabel}>Network</Typography>
-              <Box sx={styles.accountNetworkValue}>
-                <Box aria-hidden="true" sx={styles.accountNetworkDot} />
-                {networkLabel}
-              </Box>
-            </Box>
+            <NetworkSelector presentation="account" />
 
             <Box sx={styles.accountActions}>
               <Button onClick={switchWallet} sx={styles.accountAction}>
