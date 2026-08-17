@@ -240,6 +240,10 @@ export const Stez: FC = () => {
           snapshot.rateDenominatorTokenUnits
         )
       : null;
+  const hasRedemptionStatus =
+    walletConnected &&
+    ((snapshot?.redeemedFrozenMutez ?? ZERO) > ZERO ||
+      (snapshot?.redeemedFinalizableMutez ?? ZERO) > ZERO);
   const inputUnits = parseUnits(amount);
   const quotedOutput = useMemo(() => {
     if (
@@ -434,7 +438,11 @@ export const Stez: FC = () => {
                 : "Wallet not connected"}
             </span>
           </header>
-          <div className="stez-position-grid">
+          <div
+            className={`stez-position-grid${
+              hasRedemptionStatus ? " has-redemption-status" : ""
+            }`}
+          >
             <PositionCell
               label="Wallet XTZ"
               value={
@@ -467,35 +475,25 @@ export const Stez: FC = () => {
               }
               icon={<SwapHorizRoundedIcon />}
             />
-            <PositionCell
-              label="Pending Redemption"
-              value={
-                walletConnected
-                  ? formatUnits(snapshot?.redeemedFrozenMutez ?? null)
-                  : "—"
-              }
-              note={
-                walletConnected
-                  ? "Redeemed XTZ still frozen"
-                  : "Connect to view"
-              }
-              icon={<LockClockOutlinedIcon />}
-            />
-            <PositionCell
-              label="Ready to Finalize"
-              value={
-                walletConnected
-                  ? formatUnits(snapshot?.redeemedFinalizableMutez ?? null)
-                  : "—"
-              }
-              note={
-                walletConnected
-                  ? "Matured XTZ ready to claim"
-                  : "Connect to view"
-              }
-              positive={Boolean(snapshot?.redeemedFinalizableMutez)}
-              icon={<CheckCircleOutlineRoundedIcon />}
-            />
+            {hasRedemptionStatus && (
+              <>
+                <PositionCell
+                  label="Redemption in progress"
+                  value={formatUnits(snapshot?.redeemedFrozenMutez ?? null)}
+                  note="Completing the protocol waiting period"
+                  icon={<LockClockOutlinedIcon />}
+                />
+                <PositionCell
+                  label="Claimable XTZ"
+                  value={formatUnits(
+                    snapshot?.redeemedFinalizableMutez ?? null
+                  )}
+                  note="Available to return to your wallet"
+                  positive={Boolean(snapshot?.redeemedFinalizableMutez)}
+                  icon={<CheckCircleOutlineRoundedIcon />}
+                />
+              </>
+            )}
           </div>
         </section>
 
@@ -547,7 +545,7 @@ export const Stez: FC = () => {
             {activeAction === "Finalize" ? (
               <>
                 <div className="stez-amount-field">
-                  <span className="stez-field-label">READY TO FINALIZE</span>
+                  <span className="stez-field-label">CLAIMABLE XTZ</span>
                   <div className="stez-amount-field__value">
                     <strong>
                       {formatUnits(snapshot?.redeemedFinalizableMutez ?? null)}
@@ -568,7 +566,9 @@ export const Stez: FC = () => {
                 <div className="stez-amount-field">
                   <div className="stez-amount-field__topline">
                     <label htmlFor="stez-action-amount">
-                      {activeAction === "Stake" ? "YOU STAKE" : "YOU REDEEM"}
+                      {activeAction === "Stake"
+                        ? "AMOUNT TO STAKE"
+                        : "AMOUNT TO REDEEM"}
                     </label>
                     <button
                       type="button"
@@ -608,8 +608,8 @@ export const Stez: FC = () => {
                 <div className="stez-amount-field">
                   <span className="stez-field-label">
                     {activeAction === "Stake"
-                      ? "YOU RECEIVE"
-                      : "XTZ ENTERING REDEMPTION"}
+                      ? "ESTIMATED sTEZ"
+                      : "ESTIMATED XTZ"}
                   </span>
                   <div className="stez-amount-field__value">
                     <strong>{formatUnits(quotedOutput)}</strong>

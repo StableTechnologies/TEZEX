@@ -109,11 +109,11 @@ test("loads live Snet data and its matching faucet", async () => {
   expect(faucet.querySelector("svg")).toBeInTheDocument();
 
   fireEvent.click(screen.getByRole("tab", { name: "Redeem" }));
-  expect(screen.getByText("YOU REDEEM")).toBeInTheDocument();
-  expect(screen.getByText("XTZ ENTERING REDEMPTION")).toBeInTheDocument();
+  expect(screen.getByText("AMOUNT TO REDEEM")).toBeInTheDocument();
+  expect(screen.getByText("ESTIMATED XTZ")).toBeInTheDocument();
 
   fireEvent.click(screen.getByRole("tab", { name: "Finalize" }));
-  expect(screen.getByText("READY TO FINALIZE")).toBeInTheDocument();
+  expect(screen.getByText("CLAIMABLE XTZ")).toBeInTheDocument();
 });
 
 test("shows an exact inactive-network state without enabling controls", async () => {
@@ -162,6 +162,8 @@ test("enables a stake request only for a wallet connected to Snet", async () => 
   expect(screen.getByText("2.2")).toBeInTheDocument();
   expect(screen.queryByText("Direct stake")).not.toBeInTheDocument();
   expect(screen.getByText("Current redemption value")).toBeInTheDocument();
+  expect(screen.getByText("Redemption in progress")).toBeInTheDocument();
+  expect(screen.getByText("Claimable XTZ")).toBeInTheDocument();
   expect(
     screen.getByText(/Test XTZ detected in your connected wallet/)
   ).toBeInTheDocument();
@@ -171,7 +173,7 @@ test("enables a stake request only for a wallet connected to Snet", async () => 
     })
   ).toHaveTextContent("GET MORE SNET TEST XTZ");
 
-  fireEvent.change(screen.getByLabelText("YOU STAKE"), {
+  fireEvent.change(screen.getByLabelText("AMOUNT TO STAKE"), {
     target: { value: "1" },
   });
   expect(screen.getByRole("button", { name: "STAKE XTZ" })).toBeEnabled();

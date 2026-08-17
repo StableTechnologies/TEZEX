@@ -278,6 +278,11 @@
   grid-column: 1 / -1;
 }
 
+.stez-position-grid:not(.has-redemption-status)
+  .stez-position-cell:nth-child(3) {
+  border-bottom: 0;
+}
+
 .stez-position-cell__label {
   display: flex;
   align-items: center;
