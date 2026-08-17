@@ -7,7 +7,11 @@ import { Parser } from "@taquito/michel-codec";
 import { Schema } from "@taquito/michelson-encoder";
 import { b58Encode, PrefixV2 } from "@taquito/utils";
 
-import { parseTokenTokenConfig } from "./token-token-config.js";
+import {
+  assertTokenTokenDeploymentChain,
+  parseTokenTokenConfig,
+  TEZOS_MAINNET_CHAIN_ID,
+} from "./token-token-config.js";
 import {
   calculateInitialLqt,
   integerSquareRoot,
@@ -15,6 +19,7 @@ import {
   quoteOutput,
 } from "./token-token-math.js";
 import {
+  assertPoolIdentityStorage,
   buildEmptyLqtStorage,
   buildTokenTokenInitialStorage,
 } from "./token-token-storage.js";
@@ -185,10 +190,75 @@ test("encodes pool and empty external LQT storage against compiled schemas", () 
   );
 });
 
+test("verifies immutable pool assets and protocol-fee recipient storage", () => {
+  const config = parseTokenTokenConfig("previewnet", validEnv());
+  const poolSchema = new Schema(storageType("token_token_pool.tz") as never);
+  const encodedStorage = poolSchema.Encode(
+    buildTokenTokenInitialStorage(config, implicitAddress(5)),
+  );
+  const storage = poolSchema.Execute(encodedStorage) as Record<string, unknown>;
+  assert.doesNotThrow(() => assertPoolIdentityStorage(storage, config));
+
+  assert.throws(
+    () =>
+      assertPoolIdentityStorage(
+        { ...storage, token_a: storage.token_b },
+        config,
+      ),
+    /token_a does not match/,
+  );
+  assert.throws(
+    () =>
+      assertPoolIdentityStorage(
+        { ...storage, token_b: storage.token_a },
+        config,
+      ),
+    /token_b does not match/,
+  );
+  assert.throws(
+    () =>
+      assertPoolIdentityStorage(
+        { ...storage, protocol_fee_recipient: implicitAddress(6) },
+        config,
+      ),
+    /protocol_fee_recipient does not match/,
+  );
+  assert.throws(
+    () =>
+      assertPoolIdentityStorage(
+        { ...storage, pending_fee_recipient: implicitAddress(7) },
+        config,
+      ),
+    /pending_fee_recipient is unexpectedly set/,
+  );
+});
+
 test("does not expose a mainnet deployment mode", () => {
   const parse = parseTokenTokenConfig as unknown as (
     network: string,
     env: NodeJS.ProcessEnv,
   ) => unknown;
   assert.throws(() => parse("mainnet", validEnv()), /limited to Previewnet\/testnet/);
+});
+
+test("rejects Mainnet even when hidden behind Previewnet environment names", () => {
+  const env = validEnv();
+  env.PREVIEWNET_RPC = "https://rpc.tzkt.io/mainnet";
+  env.PREVIEWNET_CHAIN_ID = TEZOS_MAINNET_CHAIN_ID;
+  assert.throws(
+    () => parseTokenTokenConfig("previewnet", env),
+    /refuses Tezos Mainnet/,
+  );
+
+  assert.throws(
+    () => assertTokenTokenDeploymentChain("NetXPreview", TEZOS_MAINNET_CHAIN_ID),
+    /refuses Tezos Mainnet/,
+  );
+  assert.throws(
+    () => assertTokenTokenDeploymentChain("NetXPreview", "NetXWrong"),
+    /RPC chain ID mismatch/,
+  );
+  assert.doesNotThrow(() =>
+    assertTokenTokenDeploymentChain("NetXPreview", "NetXPreview"),
+  );
 });

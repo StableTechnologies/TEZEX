@@ -15,6 +15,60 @@ export function encodeTokenDescriptor(token: TokenDescriptor): Record<string, un
     : { fa12: token.address };
 }
 
+type TokenIdentity = Pick<TokenDescriptor, "standard" | "address" | "tokenId">;
+
+function decodeTokenDescriptor(value: unknown, label: string): TokenIdentity {
+  if (typeof value !== "object" || value === null) {
+    throw new Error(`${label} is not a token descriptor`);
+  }
+  const candidate = value as { fa12?: unknown; fa2?: unknown };
+  if (candidate.fa12 !== undefined) {
+    return {
+      standard: "FA1.2",
+      address: String(candidate.fa12),
+      tokenId: "0",
+    };
+  }
+  if (typeof candidate.fa2 === "object" && candidate.fa2 !== null) {
+    const fa2 = candidate.fa2 as { token?: unknown; id?: unknown };
+    if (fa2.token === undefined || fa2.id === undefined) {
+      throw new Error(`${label} FA2 descriptor is incomplete`);
+    }
+    return {
+      standard: "FA2",
+      address: String(fa2.token),
+      tokenId: String(fa2.id),
+    };
+  }
+  throw new Error(`${label} has an unknown token descriptor variant`);
+}
+
+function tokenIdentity(value: TokenIdentity): string {
+  return `${value.standard}:${value.address}:${value.tokenId}`;
+}
+
+export function assertPoolIdentityStorage(
+  storage: Record<string, unknown>,
+  config: Pick<TokenTokenDeploymentConfig, "tokenA" | "tokenB" | "feeRecipient">,
+): void {
+  const actualTokenA = decodeTokenDescriptor(storage.token_a, "token_a");
+  const actualTokenB = decodeTokenDescriptor(storage.token_b, "token_b");
+  if (tokenIdentity(actualTokenA) !== tokenIdentity(config.tokenA)) {
+    throw new Error("Pool token_a does not match the deployment configuration");
+  }
+  if (tokenIdentity(actualTokenB) !== tokenIdentity(config.tokenB)) {
+    throw new Error("Pool token_b does not match the deployment configuration");
+  }
+  if (String(storage.protocol_fee_recipient) !== config.feeRecipient) {
+    throw new Error(
+      "Pool protocol_fee_recipient does not match the deployment configuration",
+    );
+  }
+  if (storage.pending_fee_recipient !== null && storage.pending_fee_recipient !== undefined) {
+    throw new Error("Pool pending_fee_recipient is unexpectedly set");
+  }
+}
+
 export function buildTokenTokenInitialStorage(
   config: TokenTokenDeploymentConfig,
   deployer: string,

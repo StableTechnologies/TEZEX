@@ -16,6 +16,7 @@ import {
 import dotenv from "dotenv";
 
 import {
+  assertTokenTokenDeploymentChain,
   parseTokenTokenConfig,
   type TokenDescriptor,
   type TokenTokenDeploymentConfig,
@@ -24,6 +25,7 @@ import {
 import { calculateInitialLqt } from "./token-token-math.js";
 import { scriptCodeSha256 } from "./token-code-hash.js";
 import {
+  assertPoolIdentityStorage,
   buildEmptyLqtStorage,
   buildTokenTokenInitialStorage,
 } from "./token-token-storage.js";
@@ -278,6 +280,7 @@ async function verifyDeployment(
   const expectedLqt = BigInt(calculateInitialLqt(config.seedAmountA, config.seedAmountB));
   const pool = await tezos.contract.at(poolAddress);
   const storage = (await pool.storage()) as Record<string, unknown>;
+  assertPoolIdentityStorage(storage, config);
   if (storage.active !== true || storage.paused !== false || storage.entered !== false) {
     throw new Error("Pool lifecycle flags do not match the initialized state");
   }
@@ -394,9 +397,7 @@ async function main(): Promise<void> {
     tezos.signer.publicKeyHash(),
     tezos.rpc.getChainId(),
   ]);
-  if (chainId !== config.expectedChainId) {
-    throw new Error(`RPC chain ID mismatch: expected ${config.expectedChainId}, received ${chainId}`);
-  }
+  assertTokenTokenDeploymentChain(config.expectedChainId, chainId);
   const seedReceiver = config.seedReceiver ?? deployer;
   const stateConfig = canonicalConfig(config, deployer, seedReceiver);
   const stateFingerprint = fingerprint({

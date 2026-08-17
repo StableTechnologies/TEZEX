@@ -11,6 +11,11 @@ import { calculateInitialLqt } from "./token-token-math.js";
 export type TokenTokenNetwork = "previewnet" | "testnet";
 export type TokenStandard = "FA1.2" | "FA2";
 
+// The Tezos Mainnet chain ID is permanent. This deployment workflow is
+// intentionally test-only, so reject it independently of user-supplied RPC
+// and expected-chain configuration.
+export const TEZOS_MAINNET_CHAIN_ID = "NetXdQprcVkpaWU";
+
 export interface TokenDescriptor {
   standard: TokenStandard;
   address: string;
@@ -120,6 +125,23 @@ function address(env: NodeJS.ProcessEnv, key: string, requiredValue = true): str
   return value;
 }
 
+export function assertTokenTokenDeploymentChain(
+  expectedChainId: string,
+  actualChainId: string = expectedChainId,
+): void {
+  if (
+    expectedChainId === TEZOS_MAINNET_CHAIN_ID ||
+    actualChainId === TEZOS_MAINNET_CHAIN_ID
+  ) {
+    throw new Error("Token-to-token test deployment refuses Tezos Mainnet");
+  }
+  if (actualChainId !== expectedChainId) {
+    throw new Error(
+      `RPC chain ID mismatch: expected ${expectedChainId}, received ${actualChainId}`,
+    );
+  }
+}
+
 export function parseTokenTokenConfig(
   network: TokenTokenNetwork,
   env: NodeJS.ProcessEnv = process.env,
@@ -128,6 +150,8 @@ export function parseTokenTokenConfig(
     throw new Error("Token-to-token deployment is limited to Previewnet/testnet");
   }
   const prefix = network === "previewnet" ? "PREVIEWNET" : "TESTNET";
+  const expectedChainId = required(env, `${prefix}_CHAIN_ID`);
+  assertTokenTokenDeploymentChain(expectedChainId);
   const tokenA = tokenDescriptor(env, "A");
   const tokenB = tokenDescriptor(env, "B");
   if (canonicalAsset(tokenA) === canonicalAsset(tokenB)) {
@@ -159,7 +183,7 @@ export function parseTokenTokenConfig(
   return {
     network,
     rpc: required(env, `${prefix}_RPC`),
-    expectedChainId: required(env, `${prefix}_CHAIN_ID`),
+    expectedChainId,
     tzktApiUrl: optional(env, `${prefix}_TZKT_API`),
     privateKey: required(env, `${prefix}_PRIVATE_KEY`),
     tokenA,
