@@ -1,7 +1,13 @@
 import React from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 
-import { Stez } from ".";
+import { Stez, STEZ_REFRESH_INTERVAL_MS } from ".";
 import { connectWalletToCustomNetwork } from "../../functions/beacon";
 import { resolveSnet } from "./network";
 import { loadStezSnapshot, StezSnapshot } from "./rpc";
@@ -83,6 +89,10 @@ beforeEach(() => {
   (loadStezSnapshot as jest.Mock).mockResolvedValue(baseSnapshot);
 });
 
+afterEach(() => {
+  jest.useRealTimers();
+});
+
 test("loads live Snet data and its matching faucet", async () => {
   render(<Stez />);
 
@@ -160,8 +170,12 @@ test("enables a stake request only for a wallet connected to Snet", async () => 
   expect(screen.getByText("5.0")).toBeInTheDocument();
   expect(screen.getByText("2.0")).toBeInTheDocument();
   expect(screen.getByText("2.2")).toBeInTheDocument();
+  expect(screen.getByText("0.2")).toBeInTheDocument();
+  expect(screen.getByText("7.55")).toBeInTheDocument();
   expect(screen.queryByText("Direct stake")).not.toBeInTheDocument();
   expect(screen.getByText("Current redemption value")).toBeInTheDocument();
+  expect(screen.getByText("Net staking rewards")).toBeInTheDocument();
+  expect(screen.getByText("Combined XTZ value")).toBeInTheDocument();
   expect(screen.getByText("Redemption in progress")).toBeInTheDocument();
   expect(screen.getByText("Claimable XTZ")).toBeInTheDocument();
   expect(
@@ -177,6 +191,49 @@ test("enables a stake request only for a wallet connected to Snet", async () => 
     target: { value: "1" },
   });
   expect(screen.getByRole("button", { name: "STAKE XTZ" })).toBeEnabled();
+});
+
+test("refreshes the live rate and position while the page remains open", async () => {
+  jest.useFakeTimers();
+  mockWallet.isWalletConnected = true;
+  mockWallet.address = "tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb";
+  mockWallet.client = mockClient;
+  mockClient.getActiveAccount.mockResolvedValue({
+    address: mockWallet.address,
+    network: { type: "custom", rpcUrl: snet.rpcUrl },
+  });
+  (loadStezSnapshot as jest.Mock)
+    .mockResolvedValueOnce({
+      ...baseSnapshot,
+      walletXtzMutez: BigInt(5_000_000),
+      walletStezUnits: BigInt(2_000_000),
+      redeemedFrozenMutez: BigInt(0),
+      redeemedFinalizableMutez: BigInt(0),
+    })
+    .mockResolvedValue({
+      ...baseSnapshot,
+      blockLevel: BigInt(2_641),
+      rateNumeratorMutez: BigInt(1_200_000),
+      walletXtzMutez: BigInt(5_000_000),
+      walletStezUnits: BigInt(2_000_000),
+      redeemedFrozenMutez: BigInt(0),
+      redeemedFinalizableMutez: BigInt(0),
+    });
+
+  render(<Stez />);
+  await screen.findByText("2.2");
+
+  await act(async () => {
+    jest.advanceTimersByTime(STEZ_REFRESH_INTERVAL_MS);
+    await Promise.resolve();
+    await Promise.resolve();
+  });
+
+  await waitFor(() => expect(loadStezSnapshot).toHaveBeenCalledTimes(2));
+  expect(screen.getByText("2.4")).toBeInTheDocument();
+  expect(screen.getByText("0.4")).toBeInTheDocument();
+  expect(screen.getByText("7.4")).toBeInTheDocument();
+  expect(screen.getByText("Snet · block 2,641")).toBeInTheDocument();
 });
 
 test("connects a disconnected wallet to the Snet RPC", async () => {

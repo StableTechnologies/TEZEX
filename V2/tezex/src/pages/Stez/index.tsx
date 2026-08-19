@@ -6,6 +6,7 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import LockClockOutlinedIcon from "@mui/icons-material/LockClockOutlined";
 import ArrowOutwardRoundedIcon from "@mui/icons-material/ArrowOutwardRounded";
 import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
+import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
 
 import { connectWalletToCustomNetwork } from "../../functions/beacon";
 import { useWallet } from "../../hooks/wallet";
@@ -25,6 +26,7 @@ type StezAction = "Stake" | "Redeem" | "Finalize";
 
 const ZERO = BigInt(0);
 const TOKEN_SCALE = BigInt(1_000_000);
+export const STEZ_REFRESH_INTERVAL_MS = 15_000;
 
 type TransactionStage =
   | "idle"
@@ -131,6 +133,9 @@ interface PositionCellProps {
   value: string;
   note: string;
   positive?: boolean;
+  wide?: boolean;
+  rightDivider?: boolean;
+  finalRow?: boolean;
   icon: React.ReactNode;
 }
 
@@ -139,9 +144,21 @@ const PositionCell: FC<PositionCellProps> = ({
   value,
   note,
   positive,
+  wide,
+  rightDivider,
+  finalRow,
   icon,
 }) => (
-  <div className="stez-position-cell">
+  <div
+    className={[
+      "stez-position-cell",
+      wide ? "is-wide" : "",
+      rightDivider ? "has-right-divider" : "",
+      finalRow ? "is-final-row" : "",
+    ]
+      .filter(Boolean)
+      .join(" ")}
+  >
     <div className="stez-position-cell__label">
       <span aria-hidden="true">{icon}</span>
       {label}
@@ -168,34 +185,59 @@ export const Stez: FC = () => {
 
   useEffect(() => {
     const controller = new AbortController();
+    let activeSnet: SnetNetwork | null = null;
+    let refreshPending = false;
     setLoading(true);
     setSnapshot(null);
     setNetworkError(null);
     setAmount("");
 
-    resolveSnet()
-      .then(async (nextSnet) => {
+    const refresh = async () => {
+      if (refreshPending || controller.signal.aborted) return;
+      refreshPending = true;
+
+      try {
+        const nextSnet = activeSnet ?? (await resolveSnet());
+        activeSnet = nextSnet;
         if (!controller.signal.aborted) setSnet(nextSnet);
-        return loadStezSnapshot(
+        const nextSnapshot = await loadStezSnapshot(
           nextSnet.info,
           wallet.address,
           controller.signal
         );
-      })
-      .then((nextSnapshot) => {
-        if (!controller.signal.aborted) setSnapshot(nextSnapshot);
-      })
-      .catch((error) => {
+        if (!controller.signal.aborted) {
+          setSnapshot(nextSnapshot);
+          setNetworkError(null);
+        }
+      } catch (error) {
         if (!controller.signal.aborted) {
           console.error("Unable to load sTEZ state", error);
           setNetworkError(readableStezError(error));
         }
-      })
-      .finally(() => {
+      } finally {
+        refreshPending = false;
         if (!controller.signal.aborted) setLoading(false);
-      });
+      }
+    };
 
-    return () => controller.abort();
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") void refresh();
+    };
+
+    void refresh();
+    const intervalId = window.setInterval(
+      refreshWhenVisible,
+      STEZ_REFRESH_INTERVAL_MS
+    );
+    window.addEventListener("focus", refreshWhenVisible);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+
+    return () => {
+      controller.abort();
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", refreshWhenVisible);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
   }, [wallet.address]);
 
   useEffect(() => {
@@ -239,6 +281,17 @@ export const Stez: FC = () => {
           snapshot.rateNumeratorMutez,
           snapshot.rateDenominatorTokenUnits
         )
+      : null;
+  const walletNetStakingRewards =
+    walletUnderlying !== null && snapshot?.walletStezUnits != null
+      ? walletUnderlying - snapshot.walletStezUnits
+      : null;
+  const walletCombinedXtzValue =
+    available && snapshot.walletXtzMutez !== null && walletUnderlying !== null
+      ? snapshot.walletXtzMutez +
+        walletUnderlying +
+        (snapshot.redeemedFrozenMutez ?? ZERO) +
+        (snapshot.redeemedFinalizableMutez ?? ZERO)
       : null;
   const hasRedemptionStatus =
     walletConnected &&
@@ -442,15 +495,17 @@ export const Stez: FC = () => {
             className={`stez-position-grid${
               hasRedemptionStatus ? " has-redemption-status" : ""
             }`}
+            aria-live="polite"
           >
             <PositionCell
               label="Wallet XTZ"
               value={
                 walletConnected
-                  ? formatUnits(snapshot?.walletXtzMutez ?? null)
+                  ? formatUnits(snapshot?.walletXtzMutez ?? null, 4)
                   : "—"
               }
               note={walletConnected ? "Spendable now" : "Connect to view"}
+              rightDivider
               icon={<AccountBalanceWalletOutlinedIcon />}
             />
             <PositionCell
@@ -473,7 +528,37 @@ export const Stez: FC = () => {
                   ? "XTZ represented by your sTEZ at the current protocol rate"
                   : "Connect to view"
               }
+              rightDivider
               icon={<SwapHorizRoundedIcon />}
+            />
+            <PositionCell
+              label="Net staking rewards"
+              value={
+                walletConnected ? formatUnits(walletNetStakingRewards) : "—"
+              }
+              note={
+                walletConnected
+                  ? "XTZ gained through the protocol rate, net of fees and slashing"
+                  : "Connect to view"
+              }
+              positive={Boolean(
+                walletNetStakingRewards && walletNetStakingRewards > ZERO
+              )}
+              icon={<TrendingUpRoundedIcon />}
+            />
+            <PositionCell
+              label="Combined XTZ value"
+              value={
+                walletConnected ? formatUnits(walletCombinedXtzValue, 4) : "—"
+              }
+              note={
+                walletConnected
+                  ? "Wallet XTZ, current sTEZ value, and XTZ in redemption"
+                  : "Connect to view"
+              }
+              wide
+              finalRow={!hasRedemptionStatus}
+              icon={<AccountBalanceWalletOutlinedIcon />}
             />
             {hasRedemptionStatus && (
               <>
@@ -481,6 +566,8 @@ export const Stez: FC = () => {
                   label="Redemption in progress"
                   value={formatUnits(snapshot?.redeemedFrozenMutez ?? null)}
                   note="Completing the protocol waiting period"
+                  rightDivider
+                  finalRow
                   icon={<LockClockOutlinedIcon />}
                 />
                 <PositionCell
@@ -490,6 +577,7 @@ export const Stez: FC = () => {
                   )}
                   note="Available to return to your wallet"
                   positive={Boolean(snapshot?.redeemedFinalizableMutez)}
+                  finalRow
                   icon={<CheckCircleOutlineRoundedIcon />}
                 />
               </>
