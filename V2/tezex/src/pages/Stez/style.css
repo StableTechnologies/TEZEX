@@ -181,7 +181,7 @@
     "action position"
     "details details"
     "rate rate";
-  align-items: stretch;
+  align-items: start;
   gap: 18px 20px;
 }
 
@@ -196,8 +196,6 @@
 
 .stez-workspace__position {
   grid-area: position;
-  display: flex;
-  flex-direction: column;
 }
 
 .stez-workspace__rate {
@@ -249,53 +247,48 @@
 }
 
 .stez-position-grid {
-  flex: 1;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-auto-rows: 1fr;
+  grid-auto-rows: auto;
 }
 
 .stez-position-cell {
   min-width: 0;
-  min-height: 128px;
+  min-height: 108px;
   padding: 19px 20px 17px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  border-right: 0;
-}
-
-.stez-position-cell:nth-child(1),
-.stez-position-cell:nth-child(4) {
-  border-right: 1px solid var(--tezex-line);
-}
-
-.stez-position-cell:nth-child(-n + 3) {
+  justify-content: flex-start;
   border-bottom: 1px solid var(--tezex-line);
 }
 
-.stez-position-cell:nth-child(3) {
-  grid-column: 1 / -1;
+.stez-position-cell.has-right-divider {
+  border-right: 1px solid var(--tezex-line);
 }
 
-.stez-position-grid:not(.has-redemption-status)
-  .stez-position-cell:nth-child(3) {
+.stez-position-cell.is-wide {
+  grid-column: 1 / -1;
+  border-right: 0;
+}
+
+.stez-position-cell.is-final-row {
   border-bottom: 0;
 }
 
 .stez-position-cell__label {
+  min-height: 24px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 7px;
-  overflow: hidden;
+  overflow: visible;
   color: var(--tezex-muted);
   font-size: 10px;
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: 0.14em;
-  text-overflow: ellipsis;
+  text-overflow: clip;
   text-transform: uppercase;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .stez-position-cell__label span {
@@ -312,7 +305,7 @@
   margin-top: 11px;
   overflow: hidden;
   font-family: "Red Hat Mono", monospace;
-  font-size: clamp(18px, 2.25vw, 23px);
+  font-size: clamp(18px, 1.65vw, 23px);
   font-weight: 500;
   line-height: 1.1;
   letter-spacing: -0.04em;
@@ -326,13 +319,11 @@
 
 .stez-position-cell small {
   margin-top: 6px;
-  overflow: hidden;
   color: var(--tezex-faint);
   font-family: "Red Hat Mono", monospace;
   font-size: 9px;
   line-height: 1.35;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .stez-panel__head--actions {
