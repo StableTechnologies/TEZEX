@@ -820,6 +820,77 @@ export const Stez: FC = () => {
           </div>
         </details>
 
+        <details className="stez-baker-guide stez-workspace__baker">
+          <summary>
+            <span>RUN A BAKER ON SNET</span>
+            <small>Help test sTEZ rewards</small>
+          </summary>
+          <div className="stez-baker-guide__body">
+            <p className="stez-baker-guide__intro">
+              Run a funded Snet baker, then opt it into the protocol’s sTEZ pool
+              so it can receive a share of the pool’s staking power.
+            </p>
+            <ol className="stez-baker-guide__steps">
+              <li>
+                <span>01</span>
+                <div>
+                  <strong>RUN AND FUND A SNET BAKER</strong>
+                  <p>
+                    Follow the official Snet setup guide using a dedicated
+                    testnet key. Register it as a delegate and stake at least
+                    6,000 test XTZ.
+                  </p>
+                  <code>octez-client register key mybaker as delegate</code>
+                  <code>octez-client stake 6000 for mybaker</code>
+                </div>
+              </li>
+              <li>
+                <span>02</span>
+                <div>
+                  <strong>OPT THE BAKER INTO sTEZ</strong>
+                  <p>
+                    Set the baker’s fee in millionths and declare how much sTEZ
+                    staking capacity it will accept.
+                  </p>
+                  <code>
+                    octez-client stez register key mybaker as delegate with
+                    initial fee &lt;fee&gt; and capacity &lt;capacity&gt;
+                  </code>
+                </div>
+              </li>
+              <li>
+                <span>03</span>
+                <div>
+                  <strong>KEEP THE BAKER AND DAL NODE ONLINE</strong>
+                  <p>
+                    The baker becomes eligible after the protocol delay. Never
+                    run two baking daemons with the same key; doing so risks
+                    double signing.
+                  </p>
+                </div>
+              </li>
+            </ol>
+            <div className="stez-baker-guide__links">
+              <a
+                href="https://teztnets.com/snet-about"
+                target="_blank"
+                rel="noreferrer"
+              >
+                SNET SETUP GUIDE
+                <ArrowOutwardRoundedIcon aria-hidden="true" />
+              </a>
+              <a
+                href="https://octez.tezos.com/docs/u025/stez.html"
+                target="_blank"
+                rel="noreferrer"
+              >
+                sTEZ BAKER DOCUMENTATION
+                <ArrowOutwardRoundedIcon aria-hidden="true" />
+              </a>
+            </div>
+          </div>
+        </details>
+
         <section
           className="stez-panel stez-workspace__rate"
           aria-labelledby="stez-rate-history-title"
