@@ -134,9 +134,6 @@ interface PositionCellProps {
   value: string;
   note: string;
   positive?: boolean;
-  wide?: boolean;
-  rightDivider?: boolean;
-  finalRow?: boolean;
   icon: React.ReactNode;
 }
 
@@ -145,21 +142,9 @@ const PositionCell: FC<PositionCellProps> = ({
   value,
   note,
   positive,
-  wide,
-  rightDivider,
-  finalRow,
   icon,
 }) => (
-  <div
-    className={[
-      "stez-position-cell",
-      wide ? "is-wide" : "",
-      rightDivider ? "has-right-divider" : "",
-      finalRow ? "is-final-row" : "",
-    ]
-      .filter(Boolean)
-      .join(" ")}
-  >
+  <div className="stez-position-cell">
     <div className="stez-position-cell__label">
       <span aria-hidden="true">{icon}</span>
       {label}
@@ -512,7 +497,6 @@ export const Stez: FC = () => {
                   : "—"
               }
               note={walletConnected ? "Spendable now" : "Connect to view"}
-              rightDivider
               icon={<AccountBalanceWalletOutlinedIcon />}
             />
             <PositionCell
@@ -535,7 +519,6 @@ export const Stez: FC = () => {
                   ? "XTZ represented by your sTEZ at the current protocol rate"
                   : "Connect to view"
               }
-              rightDivider
               icon={<SwapHorizRoundedIcon />}
             />
             <PositionCell
@@ -563,8 +546,6 @@ export const Stez: FC = () => {
                   ? "Wallet XTZ, current sTEZ value, and XTZ in redemption"
                   : "Connect to view"
               }
-              wide
-              finalRow={!hasRedemptionStatus}
               icon={<AccountBalanceWalletOutlinedIcon />}
             />
             {hasRedemptionStatus && (
@@ -573,8 +554,6 @@ export const Stez: FC = () => {
                   label="Redemption in progress"
                   value={formatUnits(snapshot?.redeemedFrozenMutez ?? null)}
                   note="Completing the protocol waiting period"
-                  rightDivider
-                  finalRow
                   icon={<LockClockOutlinedIcon />}
                 />
                 <PositionCell
@@ -584,7 +563,6 @@ export const Stez: FC = () => {
                   )}
                   note="Available to return to your wallet"
                   positive={Boolean(snapshot?.redeemedFinalizableMutez)}
-                  finalRow
                   icon={<CheckCircleOutlineRoundedIcon />}
                 />
               </>
