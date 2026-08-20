@@ -1,0 +1,2 @@
+# LIGO emits an intentional blank line after generated Michelson scripts.
+dex/compiled_contracts/*.tz -whitespace
