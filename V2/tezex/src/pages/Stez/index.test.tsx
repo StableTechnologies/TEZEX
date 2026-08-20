@@ -5,6 +5,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react";
 
 import { Stez, STEZ_REFRESH_INTERVAL_MS } from ".";
@@ -131,6 +132,18 @@ test("loads live Snet data and its matching faucet", async () => {
   });
   expect(faucet).toHaveAttribute("href", snet.faucetUrl);
   expect(faucet.querySelector("svg")).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole("button", { name: "SEND SNET XTZ" }));
+  const transferDialog = screen.getByRole("dialog", {
+    name: "Send test XTZ",
+  });
+  expect(transferDialog).toBeInTheDocument();
+  expect(
+    within(transferDialog).getByRole("button", {
+      name: "CONNECT WALLET TO SNET",
+    })
+  ).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Close Snet transfer" }));
 
   fireEvent.click(screen.getByRole("tab", { name: "Redeem" }));
   expect(screen.getByText("AMOUNT TO REDEEM")).toBeInTheDocument();

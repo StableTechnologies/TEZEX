@@ -146,8 +146,35 @@
   text-decoration: none;
   white-space: normal;
   transition: background-color 160ms ease, color 160ms ease;
+}
+
+.stez-availability__actions {
   grid-column: 3;
+  display: flex;
+  align-items: center;
   justify-self: end;
+  gap: 8px;
+}
+
+.stez-availability__actions > button {
+  min-height: 38px;
+  padding: 9px 15px;
+  color: var(--tezex-text-secondary);
+  background: transparent;
+  border: 1px solid var(--tezex-line-strong);
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1.35;
+  white-space: nowrap;
+  transition: border-color 160ms ease, color 160ms ease;
+}
+
+.stez-availability__actions > button:hover {
+  color: var(--tezex-text);
+  border-color: var(--tezex-text-secondary);
 }
 
 .stez-availability__faucet-link:hover {
@@ -886,6 +913,337 @@
   outline: 0;
 }
 
+.stez-transfer-backdrop {
+  position: fixed;
+  z-index: 1500;
+  inset: 0;
+  padding: 22px;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, #000 70%, transparent);
+  backdrop-filter: blur(8px);
+  animation: stez-transfer-backdrop-in 180ms ease both;
+}
+
+.stez-transfer-dialog {
+  width: min(100%, 510px);
+  max-height: min(760px, calc(100vh - 44px));
+  overflow: auto;
+  color: var(--tezex-text);
+  background: var(--tezex-panel);
+  border: 1px solid var(--tezex-line-strong);
+  border-radius: 22px;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.35);
+  animation: stez-transfer-dialog-in 220ms cubic-bezier(0.22, 0.8, 0.24, 1) both;
+}
+
+.stez-transfer-dialog__head {
+  min-height: 76px;
+  padding: 16px 18px 15px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border-bottom: 1px solid var(--tezex-line);
+}
+
+.stez-transfer-dialog__head span,
+.stez-transfer-kicker,
+.stez-transfer-form > label {
+  display: block;
+  color: var(--tezex-muted);
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.18em;
+}
+
+.stez-transfer-dialog__head h2 {
+  margin: 5px 0 0;
+  font-size: 21px;
+  font-weight: 650;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+}
+
+.stez-transfer-dialog__head > button,
+.stez-transfer-success__hash button {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  color: var(--tezex-muted);
+  background: transparent;
+  border: 1px solid var(--tezex-line);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.stez-transfer-dialog__head > button:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+
+.stez-transfer-dialog__head svg,
+.stez-transfer-success__hash svg {
+  width: 18px;
+  height: 18px;
+}
+
+.stez-transfer-form,
+.stez-transfer-review,
+.stez-transfer-success,
+.stez-transfer-dialog__connect {
+  padding: 22px;
+}
+
+.stez-transfer-network {
+  min-height: 64px;
+  margin-bottom: 21px;
+  padding: 12px 14px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 11px;
+  background: var(--tezex-panel-subtle);
+  border: 1px solid var(--tezex-line);
+  border-radius: 14px;
+}
+
+.stez-transfer-network__dot {
+  width: 9px;
+  height: 9px;
+  background: var(--tezex-positive);
+  border-radius: 50%;
+  box-shadow: 0 0 0 5px var(--tezex-focus-ring);
+}
+
+.stez-transfer-network strong,
+.stez-transfer-network small {
+  display: block;
+}
+
+.stez-transfer-network strong {
+  color: var(--tezex-text-secondary);
+  font-size: 13px;
+}
+
+.stez-transfer-network small,
+.stez-transfer-network > span:last-child {
+  color: var(--tezex-muted);
+  font-family: "Red Hat Mono", monospace;
+  font-size: 9px;
+}
+
+.stez-transfer-network > span:last-child {
+  color: var(--tezex-text-secondary);
+  font-size: 11px;
+  text-align: right;
+}
+
+.stez-transfer-form > label {
+  margin: 18px 0 8px;
+}
+
+.stez-transfer-form > input,
+.stez-transfer-amount {
+  width: 100%;
+  min-height: 58px;
+  padding: 13px 15px;
+  color: var(--tezex-text);
+  background: var(--tezex-field);
+  border: 1px solid var(--tezex-line);
+  border-radius: 13px;
+  font-family: "Red Hat Mono", monospace;
+}
+
+.stez-transfer-form > input {
+  outline: 0;
+  font-size: 13px;
+}
+
+.stez-transfer-form > input:focus,
+.stez-transfer-amount:focus-within {
+  border-color: var(--tezex-text-secondary);
+}
+
+.stez-transfer-amount {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.stez-transfer-amount input {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  color: var(--tezex-text);
+  background: transparent;
+  border: 0;
+  outline: 0;
+  font-family: "Red Hat Mono", monospace;
+  font-size: 25px;
+}
+
+.stez-transfer-amount span {
+  color: var(--tezex-text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.stez-transfer-form__note,
+.stez-transfer-review > p,
+.stez-transfer-success > p,
+.stez-transfer-dialog__connect > p {
+  display: block;
+  margin-top: 10px;
+  color: var(--tezex-muted);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.stez-transfer-form > button,
+.stez-transfer-review__button,
+.stez-transfer-dialog__actions > button:last-child,
+.stez-transfer-dialog__connect > button {
+  width: 100%;
+  min-height: 50px;
+  margin-top: 20px;
+  padding: 11px 18px;
+  color: var(--tezex-action-text);
+  background: var(--tezex-action);
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+}
+
+.stez-transfer-review > strong {
+  margin-top: 10px;
+  display: block;
+  font-family: "Red Hat Mono", monospace;
+  font-size: 34px;
+  font-weight: 500;
+  letter-spacing: -0.05em;
+}
+
+.stez-transfer-review dl {
+  margin: 22px 0 0;
+  border-top: 1px solid var(--tezex-line);
+}
+
+.stez-transfer-review dl > div {
+  padding: 12px 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  border-bottom: 1px solid var(--tezex-line);
+}
+
+.stez-transfer-review dt,
+.stez-transfer-review dd {
+  margin: 0;
+  font-size: 11px;
+}
+
+.stez-transfer-review dt {
+  color: var(--tezex-muted);
+}
+
+.stez-transfer-review dd {
+  color: var(--tezex-text-secondary);
+  font-family: "Red Hat Mono", monospace;
+  text-align: right;
+}
+
+.stez-transfer-dialog__actions {
+  display: grid;
+  grid-template-columns: 0.42fr 1fr;
+  gap: 10px;
+}
+
+.stez-transfer-dialog__actions > button:last-child {
+  margin-top: 20px;
+}
+
+.stez-transfer-dialog__actions > button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.stez-transfer-secondary {
+  min-height: 50px;
+  margin-top: 20px;
+  padding: 11px 18px;
+  color: var(--tezex-text-secondary);
+  background: transparent;
+  border: 1px solid var(--tezex-line-strong);
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+}
+
+.stez-transfer-error {
+  margin-top: 12px;
+  padding: 10px 12px;
+  color: var(--tezex-text-secondary);
+  background: var(--tezex-panel-subtle);
+  border: 1px solid var(--tezex-line-strong);
+  border-radius: 11px;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.stez-transfer-success {
+  text-align: center;
+}
+
+.stez-transfer-success > svg {
+  width: 38px;
+  height: 38px;
+  color: var(--tezex-positive);
+}
+
+.stez-transfer-success > span {
+  margin-top: 12px;
+  display: block;
+  color: var(--tezex-positive);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+
+.stez-transfer-success h3 {
+  margin: 8px 0 0;
+  font-size: 22px;
+}
+
+.stez-transfer-success__hash {
+  margin-top: 20px;
+  padding: 10px 10px 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--tezex-panel-subtle);
+  border: 1px solid var(--tezex-line);
+  border-radius: 13px;
+}
+
+.stez-transfer-success__hash code {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--tezex-text-secondary);
+  font-family: "Red Hat Mono", monospace;
+  font-size: 10px;
+  text-overflow: ellipsis;
+}
+
 @media (max-width: 959px) {
   .stez-page {
     max-width: 502px;
@@ -908,8 +1266,13 @@
   }
 
   .stez-availability__faucet-link {
+    justify-self: start;
+  }
+
+  .stez-availability__actions {
     grid-column: 2;
     justify-self: start;
+    flex-wrap: wrap;
   }
 
   .stez-workspace {
@@ -999,9 +1362,26 @@
   }
 
   .stez-availability__faucet-link {
-    grid-column: 2;
     justify-self: start;
     white-space: normal;
+  }
+
+  .stez-transfer-backdrop {
+    padding: 12px;
+    align-items: end;
+  }
+
+  .stez-transfer-dialog {
+    width: 100%;
+    max-height: calc(100dvh - 24px);
+    border-radius: 20px;
+  }
+
+  .stez-transfer-form,
+  .stez-transfer-review,
+  .stez-transfer-success,
+  .stez-transfer-dialog__connect {
+    padding: 19px 18px 22px;
   }
 
   .stez-panel,
@@ -1135,8 +1515,30 @@
 
 @media (prefers-reduced-motion: reduce) {
   .stez-page,
-  .stez-availability.is-checking .stez-availability__signal {
+  .stez-availability.is-checking .stez-availability__signal,
+  .stez-transfer-backdrop,
+  .stez-transfer-dialog {
     animation: none;
+  }
+}
+
+@keyframes stez-transfer-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes stez-transfer-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 

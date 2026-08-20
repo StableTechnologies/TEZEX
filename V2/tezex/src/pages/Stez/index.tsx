@@ -20,6 +20,7 @@ import {
 } from "./rpc";
 import { isSnetAccount, resolveSnet, SnetNetwork } from "./network";
 import { readableStezError, submitStezOperation } from "./transactions";
+import { SnetTransferDialog } from "./SnetTransferDialog";
 import "./style.css";
 
 type StezAction = "Stake" | "Redeem" | "Finalize";
@@ -182,6 +183,7 @@ export const Stez: FC = () => {
     useState<TransactionStage>("idle");
   const [transactionMessage, setTransactionMessage] = useState("");
   const [operationHash, setOperationHash] = useState("");
+  const [transferOpen, setTransferOpen] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -463,18 +465,23 @@ export const Stez: FC = () => {
           <p>{copy.description}</p>
         </div>
         {snet && (
-          <a
-            className="stez-availability__faucet-link"
-            href={snet.faucetUrl}
-            target="_blank"
-            rel="noreferrer"
-            aria-label={`Get${
-              hasTestXtz ? " more" : ""
-            } Snet test XTZ from the official Teztnets faucet`}
-          >
-            {hasTestXtz ? "GET MORE SNET TEST XTZ" : "GET SNET TEST XTZ"}
-            <ArrowOutwardRoundedIcon aria-hidden="true" />
-          </a>
+          <div className="stez-availability__actions">
+            <button type="button" onClick={() => setTransferOpen(true)}>
+              SEND SNET XTZ
+            </button>
+            <a
+              className="stez-availability__faucet-link"
+              href={snet.faucetUrl}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={`Get${
+                hasTestXtz ? " more" : ""
+              } Snet test XTZ from the official Teztnets faucet`}
+            >
+              {hasTestXtz ? "GET MORE SNET TEST XTZ" : "GET SNET TEST XTZ"}
+              <ArrowOutwardRoundedIcon aria-hidden="true" />
+            </a>
+          </div>
         )}
       </section>
 
@@ -924,6 +931,24 @@ export const Stez: FC = () => {
           </div>
         </section>
       </div>
+
+      {snet && (
+        <SnetTransferDialog
+          open={transferOpen}
+          network={snet}
+          connected={walletConnected}
+          address={wallet.address}
+          balanceMutez={snapshot?.walletXtzMutez ?? null}
+          client={wallet.client}
+          onClose={() => setTransferOpen(false)}
+          onConnect={connect}
+          onConfirmed={async () => {
+            if (!wallet.address) return;
+            const refreshed = await loadStezSnapshot(snet.info, wallet.address);
+            setSnapshot(refreshed);
+          }}
+        />
+      )}
     </main>
   );
 };
