@@ -1,8 +1,8 @@
 {
   "files": {
-    "main.css": "/static/css/main.c64e9a84.css",
-    "main.js": "/static/js/main.80e3a425.js",
-    "static/js/488.6a7f7bdd.chunk.js": "/static/js/488.6a7f7bdd.chunk.js",
+    "main.css": "/static/css/main.a0918292.css",
+    "main.js": "/static/js/main.d7e29dc9.js",
+    "static/js/523.39173091.chunk.js": "/static/js/523.39173091.chunk.js",
     "static/media/tick.svg": "/static/media/tick.298f5d82d1a70db591c85004b360e2d3.svg",
     "index.html": "/index.html",
     "static/media/TezosLogo_Horizontal_White.svg": "/static/media/TezosLogo_Horizontal_White.4cace296597ae1e4503a6abbe83c1365.svg",
@@ -13,12 +13,12 @@
     "static/media/tzwalletlogo.svg": "/static/media/tzwalletlogo.298ee304ca29eec491be48cb5f4a1231.svg",
     "static/media/copyIcon.svg": "/static/media/copyIcon.33a1802d976cc4a100936132200a4e17.svg",
     "static/media/tezexIcon.svg": "/static/media/tezexIcon.3c8afc012f361860a7d52d042c689e72.svg",
-    "main.c64e9a84.css.map": "/static/css/main.c64e9a84.css.map",
-    "main.80e3a425.js.map": "/static/js/main.80e3a425.js.map",
-    "488.6a7f7bdd.chunk.js.map": "/static/js/488.6a7f7bdd.chunk.js.map"
+    "main.a0918292.css.map": "/static/css/main.a0918292.css.map",
+    "main.d7e29dc9.js.map": "/static/js/main.d7e29dc9.js.map",
+    "523.39173091.chunk.js.map": "/static/js/523.39173091.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.c64e9a84.css",
-    "static/js/main.80e3a425.js"
+    "static/css/main.a0918292.css",
+    "static/js/main.d7e29dc9.js"
   ]
 }
