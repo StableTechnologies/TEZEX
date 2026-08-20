@@ -11,11 +11,7 @@ import {
   TransactingComponent,
 } from "../../../../types/general";
 
-import {
-  formatWithSubscript,
-  getExplorer,
-  shorten,
-} from "../../../../functions/util";
+import { formatWithSubscript, getExplorer } from "../../../../functions/util";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
@@ -114,17 +110,10 @@ const SuccessAlert: FC<ISuccessAlert> = (props) => {
         </Box>
 
         <Box sx={styles.successLinks}>
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-              padding: 0,
-            }}
-          >
+          <Box sx={styles.successHashRow}>
             <Typography sx={styles.descriptionHighlight}>{"Hash: "}</Typography>
-            <Typography sx={styles.description}>
-              {shorten(4, 3, props.successRecord.opHash) as string}
+            <Typography sx={styles.successHashValue}>
+              {props.successRecord.opHash}
             </Typography>
             <Button
               sx={styles.copyButton}

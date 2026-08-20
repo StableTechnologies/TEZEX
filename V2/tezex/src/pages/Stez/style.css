@@ -535,7 +535,7 @@
   margin-top: 10px;
   padding: 10px 12px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
   color: var(--tezex-muted);
@@ -556,10 +556,14 @@
 }
 
 .stez-transaction-status code {
-  flex-shrink: 0;
+  min-width: 0;
+  flex: 1 1 220px;
   color: inherit;
   font-family: "Red Hat Mono", monospace;
   font-size: 9px;
+  text-align: right;
+  overflow-wrap: anywhere;
+  word-break: break-all;
 }
 
 .stez-action-explanation {
@@ -715,7 +719,8 @@
   margin-left: 42%;
   color: var(--tezex-text-secondary);
   text-align: right;
-  word-break: break-word;
+  overflow-wrap: anywhere;
+  word-break: break-all;
 }
 
 .stez-protocol-details p {
@@ -1228,11 +1233,14 @@
 
 .stez-transfer-success__hash code {
   min-width: 0;
-  overflow: hidden;
+  flex: 1 1 auto;
   color: var(--tezex-text-secondary);
   font-family: "Red Hat Mono", monospace;
   font-size: 10px;
-  text-overflow: ellipsis;
+  line-height: 1.5;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-all;
 }
 
 @media (max-width: 959px) {
