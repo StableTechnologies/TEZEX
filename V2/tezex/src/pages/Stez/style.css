@@ -59,7 +59,7 @@
   width: 100%;
   min-width: 0;
   margin-top: 0;
-  padding: 14px 16px;
+  padding: 14px 18px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -70,8 +70,9 @@
 }
 
 .stez-rate-summary strong {
+  max-width: 100%;
   font-family: "Red Hat Mono", monospace;
-  font-size: clamp(17px, 2.2vw, 21px);
+  font-size: 18px;
   font-weight: 500;
   line-height: 1;
   letter-spacing: -0.04em;
@@ -984,7 +985,7 @@
 
   .stez-rate-summary {
     margin-top: 20px;
-    padding: 14px 16px;
+    padding: 14px 18px;
     align-items: flex-start;
     background: var(--tezex-panel);
     border: 1px solid var(--tezex-line);
