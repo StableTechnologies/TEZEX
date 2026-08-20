@@ -731,7 +731,7 @@ export const Stez: FC = () => {
               >
                 <span>{transactionMessage}</span>
                 {operationHash && (
-                  <code>{shortAddress(operationHash, 12, 8)}</code>
+                  <code>{operationHash}</code>
                 )}
               </div>
             )}
@@ -778,7 +778,7 @@ export const Stez: FC = () => {
               </dd>
               <dt>Protocol</dt>
               <dd>
-                {shortAddress(snapshot?.protocolHash, 12, 8) || "Not resolved"}
+                {snapshot?.protocolHash || "Not resolved"}
               </dd>
               <dt>Native contract</dt>
               <dd>

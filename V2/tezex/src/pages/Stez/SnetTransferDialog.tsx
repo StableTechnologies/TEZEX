@@ -183,7 +183,7 @@ export const SnetTransferDialog: FC<SnetTransferDialogProps> = ({
             <span>TRANSFER CONFIRMED</span>
             <h3>{amount} XTZ arrived on Snet.</h3>
             <div className="stez-transfer-success__hash">
-              <code>{shortValue(operationHash, 14, 10)}</code>
+              <code>{operationHash}</code>
               <button
                 type="button"
                 onClick={copyHash}

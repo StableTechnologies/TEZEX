@@ -12,7 +12,6 @@ import {
 jest.mock("../../../../functions/util", () => ({
   formatWithSubscript: () => "",
   getExplorer: () => "https://tzkt.io/",
-  shorten: () => "",
 }));
 
 jest.mock("../../../../hooks/styles", () => ({
@@ -77,5 +76,30 @@ describe("failure alert", () => {
     expect(
       screen.queryByRole("button", { name: /retry/i })
     ).not.toBeInTheDocument();
+  });
+});
+
+describe("success alert", () => {
+  it("shows the complete operation hash", () => {
+    const opHash =
+      "ooLsmXLFQfhr2ZptqbCgoRZnBsR1fohNvwKaKHdtFPaiCUkA9eYr";
+    const completionRecord: CompletionRecord = [
+      CompletionState.SUCCESS,
+      {
+        opHash,
+        tx: {
+          sendAsset: [],
+          receiveAsset: [],
+          sendAmount: [],
+          receiveAmount: [],
+          network: "mainnet",
+        } as never,
+      },
+    ];
+
+    render(<Alert completionRecord={completionRecord} clear={jest.fn()} />);
+
+    expect(screen.getByText(opHash)).toBeInTheDocument();
+    expect(screen.queryByText(/ooLsm.*….*A9eYr/)).not.toBeInTheDocument();
   });
 });
