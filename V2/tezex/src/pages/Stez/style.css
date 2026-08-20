@@ -747,14 +747,6 @@
   letter-spacing: 0.2em;
 }
 
-.stez-baker-guide summary > small {
-  margin-left: 14px;
-  color: var(--tezex-muted);
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0;
-}
-
 .stez-baker-guide summary::after {
   content: "+";
   margin-left: auto;
@@ -1398,10 +1390,6 @@
   .stez-baker-guide summary {
     min-height: 54px;
     padding: 11px 16px;
-  }
-
-  .stez-baker-guide summary > small {
-    display: none;
   }
 
   .stez-baker-guide__body {

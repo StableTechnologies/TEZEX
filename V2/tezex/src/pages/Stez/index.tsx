@@ -830,7 +830,6 @@ export const Stez: FC = () => {
         <details className="stez-baker-guide stez-workspace__baker">
           <summary>
             <span>RUN A BAKER ON SNET</span>
-            <small>Help test sTEZ rewards</small>
           </summary>
           <div className="stez-baker-guide__body">
             <p className="stez-baker-guide__intro">
