@@ -209,8 +209,8 @@
   grid-template-areas:
     "action position"
     "details details"
-    "baker baker"
-    "rate rate";
+    "rate rate"
+    "baker baker";
   align-items: start;
   gap: 18px 20px;
 }
@@ -1286,11 +1286,11 @@
   }
 
   .stez-workspace__baker {
-    order: 4;
+    order: 5;
   }
 
   .stez-workspace__rate {
-    order: 5;
+    order: 4;
   }
 
   .stez-workspace > .stez-panel,

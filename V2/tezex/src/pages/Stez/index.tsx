@@ -827,6 +827,39 @@ export const Stez: FC = () => {
           </div>
         </details>
 
+        <section
+          className="stez-panel stez-workspace__rate"
+          aria-labelledby="stez-rate-history-title"
+        >
+          <header className="stez-panel__head">
+            <h2 id="stez-rate-history-title">RATE HISTORY</h2>
+            <span>
+              Block {snapshot?.blockLevel.toLocaleString("en-US") ?? "—"}
+            </span>
+          </header>
+          <div className="stez-rate-panel">
+            <div className="stez-rate-panel__current">
+              <span className="stez-field-label">CURRENT RATE</span>
+              <strong>
+                1 sTEZ <span>=</span> {rate} XTZ
+              </strong>
+              <small>
+                Rewards and slashing change the XTZ value represented by each
+                sTEZ; they do not change the number of sTEZ in your wallet.
+              </small>
+            </div>
+            <div className="stez-rate-panel__empty">
+              <div>
+                <strong>NO HISTORY YET</strong>
+                <p>
+                  Historical rates will appear after TEZEX has indexed enough
+                  Snet observations. No projected returns are substituted.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <details className="stez-baker-guide stez-workspace__baker">
           <summary>
             <span>RUN A BAKER ON SNET</span>
@@ -896,39 +929,6 @@ export const Stez: FC = () => {
             </div>
           </div>
         </details>
-
-        <section
-          className="stez-panel stez-workspace__rate"
-          aria-labelledby="stez-rate-history-title"
-        >
-          <header className="stez-panel__head">
-            <h2 id="stez-rate-history-title">RATE HISTORY</h2>
-            <span>
-              Block {snapshot?.blockLevel.toLocaleString("en-US") ?? "—"}
-            </span>
-          </header>
-          <div className="stez-rate-panel">
-            <div className="stez-rate-panel__current">
-              <span className="stez-field-label">CURRENT RATE</span>
-              <strong>
-                1 sTEZ <span>=</span> {rate} XTZ
-              </strong>
-              <small>
-                Rewards and slashing change the XTZ value represented by each
-                sTEZ; they do not change the number of sTEZ in your wallet.
-              </small>
-            </div>
-            <div className="stez-rate-panel__empty">
-              <div>
-                <strong>NO HISTORY YET</strong>
-                <p>
-                  Historical rates will appear after TEZEX has indexed enough
-                  Snet observations. No projected returns are substituted.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
       </div>
 
       {snet && (

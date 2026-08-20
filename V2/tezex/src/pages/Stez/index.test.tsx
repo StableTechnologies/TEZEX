@@ -122,8 +122,8 @@ test("loads live Snet data and its matching faucet", async () => {
   ).toBeTruthy();
   expect(
     screen
-      .getByText("RUN A BAKER ON SNET")
-      .compareDocumentPosition(screen.getByText("RATE HISTORY")) &
+      .getByText("RATE HISTORY")
+      .compareDocumentPosition(screen.getByText("RUN A BAKER ON SNET")) &
       Node.DOCUMENT_POSITION_FOLLOWING
   ).toBeTruthy();
 
