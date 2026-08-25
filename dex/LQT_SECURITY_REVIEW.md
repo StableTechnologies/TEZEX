@@ -11,10 +11,10 @@ Compiler: LIGO 1.11.5
 | Artifact | SHA-256 |
 | --- | --- |
 | `compiled_contracts/lqt.tz` | `2df971245f3d468ee2668e1ed48797852eedd280348c753e9f2cd1d1bdf23921` |
-| `compiled_contracts/pool_mod.tz` | `036cd191ae1a7c4a9594604b6d7a57045c8ae091e1256a32a8ba9a0d858cfd0e` |
-| `compiled_contracts/pool_fa2_mod.tz` | `6b69085ee3bf86c7c9cda562748bf3ddd8e8890fbbdb6dea3d1d5fc36e82cec9` |
+| `compiled_contracts/pool_mod.tz` | `579aef8008e75d58955691709f7d931e923e85e93d49e431b372f57dfc70f7b9` |
+| `compiled_contracts/pool_fa2_mod.tz` | `2d746984f22f5676c864fa1a70df04c9e8176f023eea74d86d303f29b5544c2a` |
 
-The contract CI rebuilds these files with the pinned compiler and compares the generated Michelson byte-for-byte with the checked-in release artifacts. Modified pools are compiled with the `DEPLOY` define so their native XTZ receiver is emitted as `%default`.
+The contract CI rebuilds these files with the pinned compiler and compares the generated Michelson byte-for-byte with the checked-in release artifacts. Modified pools are compiled with the `DEPLOY` define so their native XTZ receiver is emitted as `%default`. The modified artifact hashes changed when two-step authority handoffs and emergency-pause storage/entrypoints were added; the liquidity-floor behavior reviewed here is unchanged.
 
 ## Summary
 

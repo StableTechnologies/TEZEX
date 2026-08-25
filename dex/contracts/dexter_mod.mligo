@@ -72,16 +72,19 @@ module Dexter = struct
       xtzPool : tez ;
       lqtTotal : nat ;
       active : bool ;
+      paused : bool ;
       activationPending : bool ;
       selfIsUpdatingTokenPool : bool ;
       freezeBaker : bool ;
       manager : address ;
+      pending_manager : address option ;
       tokenAddress : address ;
   #if FA2
       tokenId : nat ;
   #endif
       lqtAddress : address ;
       protocol_fee_recipient : address ; // address authorised to claim the accumulated fee
+      pending_protocol_fee_recipient : address option ;
       accumulated_protocol_fee_xtz : tez ;  // total XTZ fee accumulated since last claim
       accumulated_protocol_fee_token : nat ; // total token fee accumulated since last claim
     }
@@ -174,6 +177,13 @@ module Dexter = struct
   [@inline] let error_INVALID_ACTIVATION_CALLBACK = 49n
   [@inline] let error_LQT_TOTAL_MISMATCH = 50n
   [@inline] let error_MINIMUM_LQT_MUST_REMAIN_LOCKED = 51n
+  [@inline] let error_POOL_PAUSED = 52n
+  [@inline] let error_ONLY_MANAGER_CAN_SET_PAUSE = 53n
+  [@inline] let error_ONLY_PENDING_MANAGER_CAN_ACCEPT = 54n
+  [@inline] let error_ONLY_PENDING_PROTOCOL_FEE_RECIPIENT_CAN_ACCEPT = 55n
+  [@inline] let error_INVALID_ADMIN_ADDRESS = 56n
+  [@inline] let error_PENDING_MANAGER_MUST_ACCEPT = 57n
+  [@inline] let error_PENDING_PROTOCOL_FEE_RECIPIENT_MUST_ACCEPT = 58n
 
   // =============================================================================
   // Functions
@@ -243,6 +253,12 @@ module Dexter = struct
       && storage.tokenPool > 0n
       && storage.lqtTotal >= minimum_lqt
 
+  [@inline]
+  let assert_valid_admin_address (candidate : address) : unit =
+      if candidate = Tezos.get_self_address ()
+      then failwith error_INVALID_ADMIN_ADDRESS
+      else ()
+
   // =============================================================================
   // Entrypoint Functions
   // =============================================================================
@@ -265,6 +281,8 @@ module Dexter = struct
           (failwith error_SELF_IS_UPDATING_TOKEN_POOL_MUST_BE_FALSE : result)
       else if not (pool_is_ready storage) then
           (failwith error_POOL_NOT_ACTIVE : result)
+      else if storage.paused then
+          (failwith error_POOL_PAUSED : result)
       else if Tezos.get_now () >= deadline then
           (failwith error_THE_CURRENT_TIME_MUST_BE_LESS_THAN_THE_DEADLINE : result)
       else
@@ -357,6 +375,8 @@ module Dexter = struct
           (failwith error_SELF_IS_UPDATING_TOKEN_POOL_MUST_BE_FALSE : result)
       else if not (pool_is_ready storage) then
           (failwith error_POOL_NOT_ACTIVE : result)
+      else if storage.paused then
+          (failwith error_POOL_PAUSED : result)
       else if Tezos.get_now () >= deadline then
           (failwith error_THE_CURRENT_TIME_MUST_BE_LESS_THAN_THE_DEADLINE : result)    
       else begin
@@ -409,6 +429,8 @@ module Dexter = struct
           (failwith error_SELF_IS_UPDATING_TOKEN_POOL_MUST_BE_FALSE : result)
       else if not (pool_is_ready storage) then
           (failwith error_POOL_NOT_ACTIVE : result)
+      else if storage.paused then
+          (failwith error_POOL_PAUSED : result)
       else if Tezos.get_now () >= deadline then
           (failwith error_THE_CURRENT_TIME_MUST_BE_LESS_THAN_THE_DEADLINE : result)    
       else if Tezos.get_amount () > 0mutez then
@@ -460,6 +482,8 @@ module Dexter = struct
       // update xtzPool
       if (storage.selfIsUpdatingTokenPool) then
           (failwith error_SELF_IS_UPDATING_TOKEN_POOL_MUST_BE_FALSE: result)
+      else if storage.active && storage.paused then
+          (failwith error_POOL_PAUSED : result)
       else if not storage.active && Tezos.get_sender () <> storage.manager then
           (failwith error_ONLY_MANAGER_CAN_INITIALIZE_POOL : result)
       else 
@@ -482,9 +506,36 @@ module Dexter = struct
       else
           ([ Tezos.set_delegate baker ], {storage with freezeBaker = freezeBaker})
 
-  // set manager
+  // Emergency pause blocks swaps, additions, and reserve synchronization.
+  // Liquidity removal and protocol-fee claims remain available.
   [@entry]
-  let setManager (new_manager : address) (storage : storage) : result =
+  let setPaused (paused : bool) (storage : storage) : result =
+      if storage.selfIsUpdatingTokenPool then
+        (failwith error_SELF_IS_UPDATING_TOKEN_POOL_MUST_BE_FALSE : result)
+      else if Tezos.get_amount () > 0mutez then
+          (failwith error_AMOUNT_MUST_BE_ZERO : result)
+      else if Tezos.get_sender () <> storage.manager then
+          (failwith error_ONLY_MANAGER_CAN_SET_PAUSE : result)
+      else
+          if paused then
+            (([] : operation list), {storage with paused = true})
+          else
+            match storage.pending_manager with
+            | Some _ ->
+                (failwith error_PENDING_MANAGER_MUST_ACCEPT : result)
+            | None ->
+                (match storage.pending_protocol_fee_recipient with
+                | Some _ ->
+                    (failwith
+                       error_PENDING_PROTOCOL_FEE_RECIPIENT_MUST_ACCEPT
+                       : result)
+                | None ->
+                    (([] : operation list), {storage with paused = false}))
+
+  // Manager changes use a two-step handoff so a typo cannot permanently lose
+  // control. The proposed address must explicitly accept from that address.
+  [@entry]
+  let proposeManager (new_manager : address) (storage : storage) : result =
       if storage.selfIsUpdatingTokenPool then
         (failwith error_SELF_IS_UPDATING_TOKEN_POOL_MUST_BE_FALSE : result)
       else if Tezos.get_amount () > 0mutez then
@@ -492,7 +543,36 @@ module Dexter = struct
       else if Tezos.get_sender () <> storage.manager then
           (failwith error_ONLY_MANAGER_CAN_SET_MANAGER : result)
       else
-          (([] : operation list), {storage with manager = new_manager})
+          let () = assert_valid_admin_address new_manager in
+          (([] : operation list), {storage with pending_manager = Some new_manager})
+
+  [@entry]
+  let cancelManagerTransfer (_ : unit) (storage : storage) : result =
+      if storage.selfIsUpdatingTokenPool then
+        (failwith error_SELF_IS_UPDATING_TOKEN_POOL_MUST_BE_FALSE : result)
+      else if Tezos.get_amount () > 0mutez then
+          (failwith error_AMOUNT_MUST_BE_ZERO : result)
+      else if Tezos.get_sender () <> storage.manager then
+          (failwith error_ONLY_MANAGER_CAN_SET_MANAGER : result)
+      else
+          (([] : operation list), {storage with pending_manager = None})
+
+  [@entry]
+  let acceptManager (_ : unit) (storage : storage) : result =
+      if storage.selfIsUpdatingTokenPool then
+        (failwith error_SELF_IS_UPDATING_TOKEN_POOL_MUST_BE_FALSE : result)
+      else if Tezos.get_amount () > 0mutez then
+          (failwith error_AMOUNT_MUST_BE_ZERO : result)
+      else
+          match storage.pending_manager with
+          | Some pending ->
+              if Tezos.get_sender () = pending then
+                (([] : operation list),
+                 {storage with manager = pending; pending_manager = None})
+              else
+                (failwith error_ONLY_PENDING_MANAGER_CAN_ACCEPT : result)
+          | _ ->
+              (failwith error_ONLY_PENDING_MANAGER_CAN_ACCEPT : result)
 
   // set lqt_address
   [@entry]
@@ -516,6 +596,8 @@ module Dexter = struct
         (failwith error_AMOUNT_MUST_BE_ZERO : result)
       else if storage.selfIsUpdatingTokenPool then
         (failwith error_UNEXPECTED_REENTRANCE_IN_UPDATE_TOKEN_POOL : result)
+      else if storage.active && storage.paused then
+        (failwith error_POOL_PAUSED : result)
       else if not storage.active && Tezos.get_sender () <> storage.manager then
         (failwith error_ONLY_MANAGER_CAN_INITIALIZE_POOL : result)
       else
@@ -583,6 +665,8 @@ module Dexter = struct
         (failwith error_SELF_IS_UPDATING_TOKEN_POOL_MUST_BE_FALSE : result)
       else if not (pool_is_ready storage) then
         (failwith error_POOL_NOT_ACTIVE : result)
+      else if storage.paused then
+        (failwith error_POOL_PAUSED : result)
       else if Tezos.get_amount () > 0mutez then
         (failwith error_AMOUNT_MUST_BE_ZERO : result)
       else if Tezos.get_now () >= deadline then
@@ -694,7 +778,7 @@ module Dexter = struct
              {storage with active = true; activationPending = false})
 
     [@entry]
-    let setProtocolFeeRecipient (new_recipient : address) (storage : storage) : result =
+    let proposeProtocolFeeRecipient (new_recipient : address) (storage : storage) : result =
         if storage.selfIsUpdatingTokenPool then
             (failwith error_SELF_IS_UPDATING_TOKEN_POOL_MUST_BE_FALSE : result)
         else if Tezos.get_amount () > 0mutez then
@@ -702,7 +786,44 @@ module Dexter = struct
         else if Tezos.get_sender () <> storage.manager then
             (failwith error_ONLY_MANAGER_CAN_SET_PROTOCOL_FEE_RECIPIENT : result)
         else
-            (([] : operation list), {storage with protocol_fee_recipient = new_recipient})
+            let () = assert_valid_admin_address new_recipient in
+            (([] : operation list),
+             {storage with pending_protocol_fee_recipient = Some new_recipient})
+
+    [@entry]
+    let cancelProtocolFeeRecipient (_ : unit) (storage : storage) : result =
+        if storage.selfIsUpdatingTokenPool then
+            (failwith error_SELF_IS_UPDATING_TOKEN_POOL_MUST_BE_FALSE : result)
+        else if Tezos.get_amount () > 0mutez then
+            (failwith error_AMOUNT_MUST_BE_ZERO : result)
+        else if Tezos.get_sender () <> storage.manager then
+            (failwith error_ONLY_MANAGER_CAN_SET_PROTOCOL_FEE_RECIPIENT : result)
+        else
+            (([] : operation list),
+             {storage with pending_protocol_fee_recipient = None})
+
+    [@entry]
+    let acceptProtocolFeeRecipient (_ : unit) (storage : storage) : result =
+        if storage.selfIsUpdatingTokenPool then
+            (failwith error_SELF_IS_UPDATING_TOKEN_POOL_MUST_BE_FALSE : result)
+        else if Tezos.get_amount () > 0mutez then
+            (failwith error_AMOUNT_MUST_BE_ZERO : result)
+        else
+            match storage.pending_protocol_fee_recipient with
+            | Some pending ->
+                if Tezos.get_sender () = pending then
+                  (([] : operation list),
+                   {storage with
+                      protocol_fee_recipient = pending;
+                      pending_protocol_fee_recipient = None})
+                else
+                  (failwith
+                     error_ONLY_PENDING_PROTOCOL_FEE_RECIPIENT_CAN_ACCEPT
+                     : result)
+            | _ ->
+                (failwith
+                   error_ONLY_PENDING_PROTOCOL_FEE_RECIPIENT_CAN_ACCEPT
+                   : result)
 
     [@entry]
     let claimProtocolFeeXtz (_ : unit) (storage : storage) : result =
@@ -759,6 +880,10 @@ module Dexter = struct
       pool_is_ready storage
 
   [@view]
+  let is_paused (_ : unit) (storage : storage) : bool =
+      storage.paused
+
+  [@view]
   let get_fee_bp (_ : unit) (_storage : storage) : (nat * nat * nat) =
       (lp_fee_bp, protocol_fee_bp, total_fee_bp)
 
@@ -766,7 +891,7 @@ module Dexter = struct
   let quote_tez_to_token (tez_in : nat) (storage : storage) : nat =
       let a : nat = mutez_to_natural storage.xtzPool in
       let b : nat = storage.tokenPool in
-      if not storage.active or tez_in = 0n or a = 0n or b = 0n then
+      if not storage.active or storage.paused or tez_in = 0n or a = 0n or b = 0n then
           0n
       else
         (tez_in * swap_fee_numerator * b) / (a * 1000n + tez_in * swap_fee_numerator)
@@ -775,7 +900,7 @@ module Dexter = struct
   let quote_token_to_tez (token_in : nat) (storage : storage) : nat =
       let a : nat = mutez_to_natural storage.xtzPool in
       let b : nat = storage.tokenPool in
-      if not storage.active or token_in = 0n or a = 0n or b = 0n then
+      if not storage.active or storage.paused or token_in = 0n or a = 0n or b = 0n then
           0n
       else
         (token_in * swap_fee_numerator * a) / (b * 1000n + token_in * swap_fee_numerator)
@@ -795,16 +920,19 @@ module Dexter = struct
     xtzPool = 0tz ;
     lqtTotal = build.lqtTotal ;
     active = false ;
+    paused = true ;
     activationPending = false ;
     selfIsUpdatingTokenPool = false ;
     freezeBaker = false ;
     manager = build.manager ;
+    pending_manager = None ;
     tokenAddress = build.tokenAddress ;
     #if FA2
     tokenId = build.tokenId ;
     #endif
     lqtAddress = ("tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU" : address) ;
     protocol_fee_recipient = build.protocol_fee_recipient ;
+    pending_protocol_fee_recipient = None ;
     accumulated_protocol_fee_xtz = 0mutez ;
     accumulated_protocol_fee_token = 0n ;
   }

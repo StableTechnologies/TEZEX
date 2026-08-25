@@ -11,7 +11,7 @@ function methodRecorder(calls: Array<{ method: string; value?: unknown }>) {
     }) as Record<string, (...args: any[]) => unknown>;
 }
 
-test("modified initialization hands management off only after activation", () => {
+test("modified initialization proposes management only after activation", () => {
     const methodCalls: Array<{ method: string; value?: unknown }> = [];
     const batchCalls: unknown[] = [];
     const batch: BatchLike = {
@@ -31,15 +31,27 @@ test("modified initialization hands management off only after activation", () =>
         seedToken: "10000000",
         lqtTotal: "14142135",
         poolType: "mod",
+        deploymentManager: "tz1-deployer",
         finalManager: "KT1-multisig",
+        deploymentProtocolFeeRecipient: "tz1-deployer",
+        finalProtocolFeeRecipient: "KT1-fee-multisig",
     });
 
     assert.deepEqual(
         methodCalls.map(({ method }) => method),
-        ["setLqtAddress", "default", "transfer", "updateTokenPool", "activate", "setManager"]
+        [
+            "setLqtAddress",
+            "default",
+            "transfer",
+            "updateTokenPool",
+            "activate",
+            "proposeProtocolFeeRecipient",
+            "proposeManager",
+        ]
     );
     assert.equal(methodCalls.at(-1)?.value, "KT1-multisig");
-    assert.deepEqual(methodCalls.at(-2)?.value, {
+    assert.equal(methodCalls.at(-2)?.value, "KT1-fee-multisig");
+    assert.deepEqual(methodCalls.at(-3)?.value, {
         expectedXtzPool: "20000000",
         expectedTokenPool: "10000000",
         expectedLqtTotal: "14142135",
@@ -50,8 +62,40 @@ test("modified initialization hands management off only after activation", () =>
         "transfer",
         "updateTokenPool",
         "activate",
-        "setManager",
+        "proposeProtocolFeeRecipient",
+        "proposeManager",
     ]);
+});
+
+test("modified initialization unpauses when the deployer is final manager", () => {
+    const methodCalls: Array<{ method: string; value?: unknown }> = [];
+    const batch: BatchLike = {
+        withContractCall() {
+            return this;
+        },
+    };
+
+    appendInitializationCalls({
+        batch,
+        dexContract: { methodsObject: methodRecorder(methodCalls) },
+        tokenContract: { methodsObject: methodRecorder(methodCalls) },
+        tokenTransfer: [],
+        lqtAddress: "KT1-lqt",
+        seedXtz: 20_000_000,
+        seedToken: "10000000",
+        lqtTotal: "14142135",
+        poolType: "mod",
+        deploymentManager: "tz1-deployer",
+        finalManager: "tz1-deployer",
+        deploymentProtocolFeeRecipient: "tz1-deployer",
+        finalProtocolFeeRecipient: "tz1-deployer",
+    });
+
+    assert.deepEqual(
+        methodCalls.map(({ method }) => method),
+        ["setLqtAddress", "default", "transfer", "updateTokenPool", "activate", "setPaused"]
+    );
+    assert.equal(methodCalls.at(-1)?.value, false);
 });
 
 test("base initialization also ends with the final manager handoff", () => {
@@ -72,7 +116,10 @@ test("base initialization also ends with the final manager handoff", () => {
         seedToken: "1",
         lqtTotal: "1",
         poolType: "base",
+        deploymentManager: "tz1-deployer",
         finalManager: "KT1-multisig",
+        deploymentProtocolFeeRecipient: "tz1-deployer",
+        finalProtocolFeeRecipient: "KT1-fee-multisig",
     });
 
     assert.deepEqual(

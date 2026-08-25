@@ -182,6 +182,8 @@ let setup_full_dex () =
   let (dex_orig, lqt_orig, tok_orig) =
     prepare_full_dex 1000000n 0n in
   let () = activate_dex dex_orig.taddr in
+  let _ : nat =
+    Test.Typed_address.transfer_exn dex_orig.taddr (SetPaused false) 0tez in
   (dex_orig, lqt_orig, tok_orig)
 
 let assert_error
@@ -218,7 +220,7 @@ let test_modified_fa2_pool_is_inactive_by_default =
   let storage : Dexter.storage =
     Test.Typed_address.get_storage dex_orig.taddr in
   let () =
-    if storage.active or storage.activationPending
+    if storage.active or storage.activationPending or not storage.paused
     then failwith (test_name ^ ": pool should originate inactive")
     else () in
   let dex_address = Test.Typed_address.to_address dex_orig.taddr in
@@ -811,3 +813,43 @@ let test_modified_fa2_final_lp_cannot_cross_minimum_lqt =
     test_name
     Dexter.error_MINIMUM_LQT_MUST_REMAIN_LOCKED
     result
+
+let test_modified_fa2_pause_blocks_swaps_but_preserves_withdrawal =
+  let test_name =
+    "test_modified_fa2_pause_blocks_swaps_but_preserves_withdrawal" in
+  let (dex_orig, _, _) = setup_full_dex () in
+  let _ : nat =
+    Test.Typed_address.transfer_exn dex_orig.taddr (SetPaused true) 0tez in
+  let xtz_swap : Dexter.xtz_to_token =
+    {to_ = src (); minTokensBought = 0n; deadline = future} in
+  let xtz_result =
+    Test.Typed_address.transfer dex_orig.taddr (XtzToToken xtz_swap) 1tez in
+  let () = assert_error test_name Dexter.error_POOL_PAUSED xtz_result in
+  let token_swap : Dexter.token_to_xtz =
+    {
+     to_ = src ();
+     tokensSold = 1000n;
+     minXtzBought = 0tez;
+     deadline = future;
+    } in
+  let token_result =
+    Test.Typed_address.transfer dex_orig.taddr (TokenToXtz token_swap) 0tez in
+  let () = assert_error test_name Dexter.error_POOL_PAUSED token_result in
+  let remove_param : Dexter.remove_liquidity =
+    {
+     to_ = src ();
+     lqtBurned = 1000n;
+     minXtzWithdrawn = 0tez;
+     minTokensWithdrawn = 0n;
+     deadline = future;
+    } in
+  let _ : nat =
+    Test.Typed_address.transfer_exn
+      dex_orig.taddr
+      (RemoveLiquidity remove_param)
+      0tez in
+  let storage : Dexter.storage =
+    Test.Typed_address.get_storage dex_orig.taddr in
+  if storage.paused && storage.lqtTotal = 999000n
+  then ()
+  else failwith (test_name ^ ": paused withdrawal failed")

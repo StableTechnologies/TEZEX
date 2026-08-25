@@ -23,14 +23,17 @@ export interface DexStorage {
   xtzPool: string;
   lqtTotal: string;
   active?: boolean; // Modified pools only
+  paused?: boolean; // Modified pools only
   activationPending?: boolean; // Modified pools only
   tokenAddress: string;
   lqtAddress: string;
   selfIsUpdatingTokenPool: boolean;
   freezeBaker: boolean;
   manager: string;
+  pending_manager?: string | null; // Modified pools only
   tokenId?: string; // Only for FA2
   protocol_fee_recipient?: string; // Modified pools only
+  pending_protocol_fee_recipient?: string | null; // Modified pools only
   accumulated_protocol_fee_xtz?: string; // Modified pools only
   accumulated_protocol_fee_token?: string; // Modified pools only
 }
@@ -194,156 +197,68 @@ export const lqtStorageType = {
   ]
 };
 
-export const dexStorageTypeMod = {
-  prim: 'pair',
-  args: [
-    { prim: 'nat', annots: ['%tokenPool'] },
-    {
-      prim: 'pair',
-      args: [
-        { prim: 'mutez', annots: ['%xtzPool'] },
-        {
-          prim: 'pair',
-          args: [
-            { prim: 'nat', annots: ['%lqtTotal'] },
-            {
-              prim: 'pair',
-              args: [
-                { prim: 'bool', annots: ['%active'] },
-                {
-                  prim: 'pair',
-                  args: [
-                    { prim: 'bool', annots: ['%activationPending'] },
-                    {
-                      prim: 'pair',
-                      args: [
-                        { prim: 'bool', annots: ['%selfIsUpdatingTokenPool'] },
-                        {
-                          prim: 'pair',
-                          args: [
-                            { prim: 'bool', annots: ['%freezeBaker'] },
-                            {
-                              prim: 'pair',
-                              args: [
-                                { prim: 'address', annots: ['%manager'] },
-                                {
-                                  prim: 'pair',
-                                  args: [
-                                    { prim: 'address', annots: ['%tokenAddress'] },
-                                    {
-                                      prim: 'pair',
-                                      args: [
-                                        { prim: 'address', annots: ['%lqtAddress'] },
-                                        {
-                                          prim: 'pair',
-                                          args: [
-                                            { prim: 'address', annots: ['%protocol_fee_recipient'] },
-                                            {
-                                              prim: 'pair',
-                                              args: [
-                                                { prim: 'mutez', annots: ['%accumulated_protocol_fee_xtz'] },
-                                                { prim: 'nat', annots: ['%accumulated_protocol_fee_token'] }
-                                              ]
-                                            }
-                                          ]
-                                        }
-                                      ]
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    }
-  ]
+type MichelsonType = {
+  prim: string;
+  args?: MichelsonType[];
+  annots?: string[];
 };
 
-export const dexStorageTypeFA2Mod = {
-  prim: 'pair',
-  args: [
-    { prim: 'nat', annots: ['%tokenPool'] },
-    {
-      prim: 'pair',
-      args: [
-        { prim: 'mutez', annots: ['%xtzPool'] },
-        {
-          prim: 'pair',
-          args: [
-            { prim: 'nat', annots: ['%lqtTotal'] },
-            {
-              prim: 'pair',
-              args: [
-                { prim: 'bool', annots: ['%active'] },
-                {
-                  prim: 'pair',
-                  args: [
-                    { prim: 'bool', annots: ['%activationPending'] },
-                    {
-                      prim: 'pair',
-                      args: [
-                        { prim: 'bool', annots: ['%selfIsUpdatingTokenPool'] },
-                        {
-                          prim: 'pair',
-                          args: [
-                            { prim: 'bool', annots: ['%freezeBaker'] },
-                            {
-                              prim: 'pair',
-                              args: [
-                                { prim: 'address', annots: ['%manager'] },
-                                {
-                                  prim: 'pair',
-                                  args: [
-                                    { prim: 'address', annots: ['%tokenAddress'] },
-                                    {
-                                      prim: 'pair',
-                                      args: [
-                                        { prim: 'nat', annots: ['%tokenId'] },
-                                        {
-                                          prim: 'pair',
-                                          args: [
-                                            { prim: 'address', annots: ['%lqtAddress'] },
-                                            {
-                                              prim: 'pair',
-                                              args: [
-                                                { prim: 'address', annots: ['%protocol_fee_recipient'] },
-                                                {
-                                                  prim: 'pair',
-                                                  args: [
-                                                    { prim: 'mutez', annots: ['%accumulated_protocol_fee_xtz'] },
-                                                    { prim: 'nat', annots: ['%accumulated_protocol_fee_token'] }
-                                                  ]
-                                                }
-                                              ]
-                                            }
-                                          ]
-                                        }
-                                      ]
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    }
-  ]
+function combPair(...fields: MichelsonType[]): MichelsonType {
+  if (fields.length < 2) {
+    throw new Error("A comb pair requires at least two fields");
+  }
+  return fields.slice(0, -1).reduceRight<MichelsonType>(
+    (right, left) => ({ prim: 'pair', args: [left, right] }),
+    fields.at(-1)!
+  );
+}
+
+const pendingManagerType: MichelsonType = {
+  prim: 'option',
+  args: [{ prim: 'address' }],
+  annots: ['%pending_manager'],
 };
+const pendingProtocolFeeRecipientType: MichelsonType = {
+  prim: 'option',
+  args: [{ prim: 'address' }],
+  annots: ['%pending_protocol_fee_recipient'],
+};
+
+export const dexStorageTypeMod = combPair(
+  { prim: 'nat', annots: ['%tokenPool'] },
+  { prim: 'mutez', annots: ['%xtzPool'] },
+  { prim: 'nat', annots: ['%lqtTotal'] },
+  { prim: 'bool', annots: ['%active'] },
+  { prim: 'bool', annots: ['%paused'] },
+  { prim: 'bool', annots: ['%activationPending'] },
+  { prim: 'bool', annots: ['%selfIsUpdatingTokenPool'] },
+  { prim: 'bool', annots: ['%freezeBaker'] },
+  { prim: 'address', annots: ['%manager'] },
+  pendingManagerType,
+  { prim: 'address', annots: ['%tokenAddress'] },
+  { prim: 'address', annots: ['%lqtAddress'] },
+  { prim: 'address', annots: ['%protocol_fee_recipient'] },
+  pendingProtocolFeeRecipientType,
+  { prim: 'mutez', annots: ['%accumulated_protocol_fee_xtz'] },
+  { prim: 'nat', annots: ['%accumulated_protocol_fee_token'] }
+);
+
+export const dexStorageTypeFA2Mod = combPair(
+  { prim: 'nat', annots: ['%tokenPool'] },
+  { prim: 'mutez', annots: ['%xtzPool'] },
+  { prim: 'nat', annots: ['%lqtTotal'] },
+  { prim: 'bool', annots: ['%active'] },
+  { prim: 'bool', annots: ['%paused'] },
+  { prim: 'bool', annots: ['%activationPending'] },
+  { prim: 'bool', annots: ['%selfIsUpdatingTokenPool'] },
+  { prim: 'bool', annots: ['%freezeBaker'] },
+  { prim: 'address', annots: ['%manager'] },
+  pendingManagerType,
+  { prim: 'address', annots: ['%tokenAddress'] },
+  { prim: 'nat', annots: ['%tokenId'] },
+  { prim: 'address', annots: ['%lqtAddress'] },
+  { prim: 'address', annots: ['%protocol_fee_recipient'] },
+  pendingProtocolFeeRecipientType,
+  { prim: 'mutez', annots: ['%accumulated_protocol_fee_xtz'] },
+  { prim: 'nat', annots: ['%accumulated_protocol_fee_token'] }
+);

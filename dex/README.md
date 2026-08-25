@@ -45,6 +45,7 @@ Decentralized Exchange (DEX) implementation for Tezos blockchain based on Dexter
   - `get_fee_bp`: Get the immutable LP, protocol, and total fees in basis points
     `(25, 5, 30)`
   - `is_active`: Check whether a modified pool has completed verified initialization
+  - `is_paused`: Check whether risk-increasing operations are suspended
   - `quote_tez_to_token`: Calculate XTZ → Token swap output
   - `quote_token_to_tez`: Calculate Token → XTZ swap output
 
@@ -56,6 +57,23 @@ donation and cannot block activation. Activation also verifies the actual LQT
 total supply. Swap and liquidity entrypoints remain unavailable until all checks
 pass.
 
+Modified pools originate paused. Swaps, deposits, liquidity additions, reserve
+synchronization, and routed swaps remain blocked while paused; liquidity
+removal and protocol-fee claims remain available. Manager and protocol-fee
+recipient changes are two-step, cancellable handoffs that the proposed address
+must accept. A pool cannot be unpaused while either handoff is pending.
+
+### Modified-pool fee decision
+
+The authoritative model is **30 bp total: 25 bp to LPs and 5 bp to the
+protocol**. Both swap directions price the gross input with the `997 / 1000`
+constant-product factor and round the output down using Michelson integer
+division. The protocol liability is `floor(gross input * 5 / 10,000)` and is
+excluded from the recorded trading reserve; the balance remains in contract
+custody until the configured recipient claims it. The remainder of the 30 bp
+charge stays in the trading reserve for LPs. There is no fee-setting entrypoint,
+and the `get_fee_bp` view reports `(25, 5, 30)`.
+
 ### Liquidity Token (lqt_fa12.mligo)
 - FA1.2 compliant token
 - Minted when liquidity is added
@@ -66,7 +84,7 @@ pass.
 
 ## Prerequisites
 
-- **Node.js** v18 or higher (v20.16.0 was used/tested during development)
+- **Node.js** v22 or higher
 - **LIGO** compiler v1.11.5 (for contract development)
 - **Tezos account** with funds (for deployment)
 
@@ -134,18 +152,34 @@ This will:
 1. Check deployer's XTZ and token balance
 2. Deploy DEX contract
 3. Deploy LQT contract (with DEX as admin)
-4. In one atomic operation group, link the LQT address, fund both reserves,
-   synchronize the token pool, activate a modified pool, and transfer DEX
-   management from the deployment signer to `MANAGER`
+4. In one simulated-then-injected atomic operation group, link the LQT address,
+   fund both reserves, synchronize the token pool, activate a modified pool,
+   and propose the configured production manager and fee recipient
 5. Verify the resulting on-chain addresses, reserves, balances, LQT supply,
    permanent locked balance, provider balance, and activation state
-6. Save the exact integer configuration and initialization operation hash to
-   `deployments/testnet-latest.json`
+6. Atomically journal every operation hash and originated address so an
+   interrupted run resumes without reinjection
+7. Save a release manifest containing the source commit, pinned compiler,
+   artifact and on-chain code hashes, exact parameters, roles, thresholds,
+   addresses, and operation hashes
 
 For modified pools, the total swap fee is immutable: 25 bp remains with LPs and
-5 bp is accumulated for the protocol fee recipient. `MANAGER` is used as the
-initial recipient. It may be an originated multisig contract; the private-key
-signer only manages the inactive initialization window.
+5 bp is accumulated for the protocol fee recipient. The deployment signer is
+the temporary manager and recipient during the inactive initialization window.
+The production roles must explicitly accept their handoffs, after which the
+final manager can unpause the pool. Mainnet preflight requires originated
+multisig addresses, their documented thresholds, exact artifact hashes, the
+token script-code hash, the permanent Mainnet chain ID, and a clean Git tree.
+The signer can be a local key or a remote/HSM-backed signer.
+External token control monitoring and incident gates are defined in
+[EXTERNAL_TOKEN_OPERATIONAL_RUNBOOK.md](./EXTERNAL_TOKEN_OPERATIONAL_RUNBOOK.md).
+
+After both production roles accept and the final manager unpauses, verify and
+record the completed handoff:
+
+```bash
+DEX_DEPLOYMENT_STATE=deployments/mainnet-in-progress.json npm run verify:handoff
+```
 
 The configured token seed is a minimum for modified-pool activation. Any tokens
 transferred directly to the pool before its initialization batch are included

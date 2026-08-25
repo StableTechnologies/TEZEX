@@ -9,6 +9,7 @@
         "deploy:testnet": "tsx src/deploy.ts --network=testnet",
         "deploy:mainnet": "tsx src/deploy.ts --network=mainnet",
         "deploy:previewnet": "tsx src/deploy.ts --network=previewnet",
+        "verify:handoff": "tsx src/verify-handoff.ts",
         "smoke:previewnet": "tsx src/smoke-test.ts",
         "test": "tsx --test src/*.test.ts",
         "deploy:token-token:previewnet": "tsx src/deploy-token-token.ts --network=previewnet",
@@ -23,6 +24,7 @@
     "dependencies": {
         "@taquito/michel-codec": "^25.0.0",
         "@taquito/michelson-encoder": "^25.0.0",
+        "@taquito/remote-signer": "^25.0.0",
         "@taquito/signer": "^25.0.0",
         "@taquito/taquito": "^25.0.0",
         "@taquito/utils": "^25.0.0",
