@@ -175,11 +175,19 @@ External token control monitoring and incident gates are defined in
 [EXTERNAL_TOKEN_OPERATIONAL_RUNBOOK.md](./EXTERNAL_TOKEN_OPERATIONAL_RUNBOOK.md).
 
 After both production roles accept and the final manager unpauses, verify and
-record the completed handoff:
+record the completed handoff. This final gate rechecks the seed reserves against
+the pool's real XTZ/token balances and confirms the LQT total supply, permanent
+locked balance, and seed-provider allocation were unchanged while the pool was
+paused:
 
 ```bash
 DEX_DEPLOYMENT_STATE=deployments/mainnet-in-progress.json npm run verify:handoff
 ```
+
+For tokens whose balances cannot be read directly from their storage layout,
+set `DEPLOYMENT_VERIFY_TZKT_API` to the matching network's TzKT API endpoint.
+The verifier prefers a direct RPC storage read and uses that indexer only as a
+fallback.
 
 The configured token seed is a minimum for modified-pool activation. Any tokens
 transferred directly to the pool before its initialization batch are included

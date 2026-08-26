@@ -11,6 +11,7 @@ import {
 } from "./deployment-state.js";
 import { assertFinalHandoffStorage } from "./handoff-verification.js";
 import { scriptCodeSha256 } from "./token-code-hash.js";
+import { getTokenBalance } from "./util.js";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 
@@ -63,10 +64,47 @@ async function main(): Promise<void> {
     ) {
         throw new Error("On-chain code changed or disagrees with the deployment state");
     }
-    const dex = await tezos.contract.at(dexAddress);
+    const [dex, lqt] = await Promise.all([
+        tezos.contract.at(dexAddress),
+        tezos.contract.at(lqtAddress),
+    ]);
+    const [dexStorage, lqtStorage, dexXtzBalance, dexTokenBalance] =
+        await Promise.all([
+            dex.storage() as Promise<Record<string, unknown>>,
+            lqt.storage() as Promise<Record<string, unknown>>,
+            tezos.tz.getBalance(dexAddress),
+            getTokenBalance(
+                tezos,
+                state.config.tokenAddress,
+                dexAddress,
+                state.config.tokenStandard,
+                state.config.tokenId,
+                process.env.DEPLOYMENT_VERIFY_TZKT_API?.trim()
+            ),
+        ]);
+    const lqtTokens = lqtStorage.tokens as {
+        get: (owner: string) => Promise<unknown>;
+    };
+    if (!lqtTokens || typeof lqtTokens.get !== "function") {
+        throw new Error("LQT storage does not expose the expected token ledger");
+    }
+    const [lockedLqtBalance, providerLqtBalance] = await Promise.all([
+        lqtTokens.get(dexAddress),
+        lqtTokens.get(state.config.finalManager),
+    ]);
     assertFinalHandoffStorage(
-        await dex.storage() as Record<string, unknown>,
-        state
+        dexStorage,
+        state,
+        {
+            dexAddress,
+            lqtAddress,
+            dexXtzBalance,
+            dexTokenBalance,
+            lqtAdmin: lqtStorage.admin,
+            lqtTotalSupply: lqtStorage.total_supply,
+            lockedLqtBalance: lockedLqtBalance ?? 0,
+            providerLqtBalance: providerLqtBalance ?? 0,
+        }
     );
 
     state.steps.handoffVerified = { at: new Date().toISOString() };

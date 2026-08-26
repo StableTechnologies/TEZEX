@@ -33,8 +33,10 @@ only the separately tracked liability, not LP trading reserves.
   proposed only after successful activation.
 - Mainnet preflight requires originated role addresses and records their
   reviewed multisig thresholds in the manifest.
-- `verify:handoff` confirms both roles accepted, the pool is unpaused, and all
-  three on-chain code hashes still match the release manifest.
+- `verify:handoff` confirms both roles accepted, the pool is unpaused, all
+  three on-chain code hashes still match the release manifest, and the seed
+  reserves, real asset balances, LQT supply, locked floor, and provider
+  allocation remain intact through the handoff window.
 
 ## #242 — external token boundary
 
