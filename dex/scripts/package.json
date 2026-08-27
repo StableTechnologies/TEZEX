@@ -15,6 +15,7 @@
         "deploy:token-token:previewnet": "tsx src/deploy-token-token.ts --network=previewnet",
         "deploy:token-token:testnet": "tsx src/deploy-token-token.ts --network=testnet",
         "inspect:token": "tsx src/inspect-token-code.ts",
+        "monitor:token": "tsx src/monitor-token-controls.ts",
         "typecheck": "tsc --noEmit"
     },
     "keywords": [],
