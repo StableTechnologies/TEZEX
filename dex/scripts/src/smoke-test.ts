@@ -1,6 +1,6 @@
 import { TezosToolkit, type TransferParams } from "@taquito/taquito";
-import { InMemorySigner } from "@taquito/signer";
 import { getConfig } from "./config.js";
+import { createDeploymentSigner } from "./deployment-signer.js";
 import { getTokenBalance } from "./util.js";
 import type { NetworkName } from "./types.js";
 import fs from "fs";
@@ -71,9 +71,7 @@ async function main(): Promise<void> {
     const { dex: dexAddress, lqt: lqtAddress } = loadDeployment(network);
 
     const tezos = new TezosToolkit(config.rpc);
-    tezos.setProvider({
-        signer: await InMemorySigner.fromSecretKey(config.privateKey),
-    });
+    tezos.setProvider({ signer: (await createDeploymentSigner(config)).signer });
 
     const pkh = await tezos.signer.publicKeyHash();
     const dex = await tezos.contract.at(dexAddress);

@@ -1,51 +1,59 @@
 { parameter
     (or (unit %claimProtocolFeeToken)
         (or (unit %claimProtocolFeeXtz)
-            (or (address %setProtocolFeeRecipient)
-                (or (nat %activateInternal)
-                    (or (pair %activate
-                           (mutez %expectedXtzPool)
-                           (pair (nat %expectedTokenPool) (nat %expectedLqtTotal)))
-                        (or (pair %tokenToToken
-                               (address %outputDexterContract)
-                               (pair (nat %minTokensBought)
-                                     (pair (address %to) (pair (nat %tokensSold) (timestamp %deadline)))))
-                            (or (list %updateTokenPoolInternal (pair (pair address nat) nat))
-                                (or (unit %updateTokenPool)
-                                    (or (address %setLqtAddress)
-                                        (or (address %setManager)
-                                            (or (pair %setBaker (option %baker key_hash) (bool %freezeBaker))
-                                                (or (unit %default)
-                                                    (or (pair %tokenToXtz
-                                                           (address %to)
-                                                           (pair (nat %tokensSold) (pair (mutez %minXtzBought) (timestamp %deadline))))
-                                                        (or (pair %xtzToToken (address %to) (pair (nat %minTokensBought) (timestamp %deadline)))
-                                                            (or (pair %removeLiquidity
-                                                                   (address %to)
-                                                                   (pair (nat %lqtBurned)
-                                                                         (pair (mutez %minXtzWithdrawn) (pair (nat %minTokensWithdrawn) (timestamp %deadline)))))
-                                                                (pair %addLiquidity
-                                                                   (address %owner)
-                                                                   (pair (nat %minLqtMinted) (pair (nat %maxTokensDeposited) (timestamp %deadline))))))))))))))))))) ;
+            (or (unit %acceptProtocolFeeRecipient)
+                (or (unit %cancelProtocolFeeRecipient)
+                    (or (address %proposeProtocolFeeRecipient)
+                        (or (nat %activateInternal)
+                            (or (pair %activate
+                                   (mutez %expectedXtzPool)
+                                   (pair (nat %expectedTokenPool) (nat %expectedLqtTotal)))
+                                (or (pair %tokenToToken
+                                       (address %outputDexterContract)
+                                       (pair (nat %minTokensBought)
+                                             (pair (address %to) (pair (nat %tokensSold) (timestamp %deadline)))))
+                                    (or (list %updateTokenPoolInternal (pair (pair address nat) nat))
+                                        (or (unit %updateTokenPool)
+                                            (or (address %setLqtAddress)
+                                                (or (unit %acceptManager)
+                                                    (or (unit %cancelManagerTransfer)
+                                                        (or (address %proposeManager)
+                                                            (or (bool %setPaused)
+                                                                (or (pair %setBaker (option %baker key_hash) (bool %freezeBaker))
+                                                                    (or (unit %default)
+                                                                        (or (pair %tokenToXtz
+                                                                               (address %to)
+                                                                               (pair (nat %tokensSold) (pair (mutez %minXtzBought) (timestamp %deadline))))
+                                                                            (or (pair %xtzToToken (address %to) (pair (nat %minTokensBought) (timestamp %deadline)))
+                                                                                (or (pair %removeLiquidity
+                                                                                       (address %to)
+                                                                                       (pair (nat %lqtBurned)
+                                                                                             (pair (mutez %minXtzWithdrawn) (pair (nat %minTokensWithdrawn) (timestamp %deadline)))))
+                                                                                    (pair %addLiquidity
+                                                                                       (address %owner)
+                                                                                       (pair (nat %minLqtMinted) (pair (nat %maxTokensDeposited) (timestamp %deadline)))))))))))))))))))))))) ;
   storage
     (pair (nat %tokenPool)
           (pair (mutez %xtzPool)
                 (pair (nat %lqtTotal)
                       (pair (bool %active)
-                            (pair (bool %activationPending)
-                                  (pair (bool %selfIsUpdatingTokenPool)
-                                        (pair (bool %freezeBaker)
-                                              (pair (address %manager)
-                                                    (pair (address %tokenAddress)
-                                                          (pair (nat %tokenId)
-                                                                (pair (address %lqtAddress)
-                                                                      (pair (address %protocol_fee_recipient)
-                                                                            (pair (mutez %accumulated_protocol_fee_xtz) (nat %accumulated_protocol_fee_token)))))))))))))) ;
+                            (pair (bool %paused)
+                                  (pair (bool %activationPending)
+                                        (pair (bool %selfIsUpdatingTokenPool)
+                                              (pair (bool %freezeBaker)
+                                                    (pair (address %manager)
+                                                          (pair (option %pending_manager address)
+                                                                (pair (address %tokenAddress)
+                                                                      (pair (nat %tokenId)
+                                                                            (pair (address %lqtAddress)
+                                                                                  (pair (address %protocol_fee_recipient)
+                                                                                        (pair (option %pending_protocol_fee_recipient address)
+                                                                                              (pair (mutez %accumulated_protocol_fee_xtz) (nat %accumulated_protocol_fee_token))))))))))))))))) ;
   code { UNPAIR ;
          IF_LEFT
            { DROP ;
              DUP ;
-             GET 11 ;
+             GET 13 ;
              IF { PUSH nat 2 ; FAILWITH }
                 { PUSH mutez 0 ;
                   AMOUNT ;
@@ -53,28 +61,28 @@
                   GT ;
                   IF { PUSH nat 10 ; FAILWITH }
                      { DUP ;
-                       GET 23 ;
+                       GET 27 ;
                        SENDER ;
                        COMPARE ;
                        NEQ ;
                        IF { PUSH nat 39 ; FAILWITH }
                           { PUSH nat 0 ;
                             DUP 2 ;
-                            GET 26 ;
+                            GET 32 ;
                             COMPARE ;
                             EQ ;
                             IF { PUSH nat 40 ; FAILWITH }
                                { DUP ;
                                  PUSH nat 0 ;
-                                 UPDATE 26 ;
+                                 UPDATE 32 ;
                                  SWAP ;
-                                 GET 26 ;
+                                 GET 32 ;
                                  DUP 2 ;
-                                 GET 23 ;
+                                 GET 27 ;
                                  SELF_ADDRESS ;
                                  DUP 4 ;
                                  DUP ;
-                                 GET 17 ;
+                                 GET 21 ;
                                  CONTRACT %transfer (list (pair address (list (pair address (pair nat nat))))) ;
                                  IF_NONE { PUSH nat 0 ; FAILWITH } {} ;
                                  PUSH mutez 0 ;
@@ -82,7 +90,7 @@
                                  NIL (pair address (pair nat nat)) ;
                                  DIG 7 ;
                                  DIG 5 ;
-                                 GET 19 ;
+                                 GET 23 ;
                                  PAIR ;
                                  DIG 6 ;
                                  PAIR ;
@@ -99,7 +107,7 @@
            { IF_LEFT
                { DROP ;
                  DUP ;
-                 GET 11 ;
+                 GET 13 ;
                  IF { PUSH nat 2 ; FAILWITH }
                     { PUSH mutez 0 ;
                       AMOUNT ;
@@ -107,26 +115,26 @@
                       GT ;
                       IF { PUSH nat 10 ; FAILWITH }
                          { DUP ;
-                           GET 23 ;
+                           GET 27 ;
                            SENDER ;
                            COMPARE ;
                            NEQ ;
                            IF { PUSH nat 39 ; FAILWITH }
                               { PUSH mutez 0 ;
                                 DUP 2 ;
-                                GET 25 ;
+                                GET 31 ;
                                 COMPARE ;
                                 EQ ;
                                 IF { PUSH nat 40 ; FAILWITH }
                                    { DUP ;
                                      PUSH mutez 0 ;
-                                     UPDATE 25 ;
+                                     UPDATE 31 ;
                                      DUP ;
-                                     GET 23 ;
+                                     GET 27 ;
                                      CONTRACT unit ;
                                      IF_NONE { PUSH nat 9 ; FAILWITH } {} ;
                                      DIG 2 ;
-                                     GET 25 ;
+                                     GET 31 ;
                                      UNIT ;
                                      TRANSFER_TOKENS ;
                                      SWAP ;
@@ -135,68 +143,45 @@
                                      CONS ;
                                      PAIR } } } } }
                { IF_LEFT
-                   { DUP 2 ;
-                     GET 11 ;
+                   { DROP ;
+                     DUP ;
+                     GET 13 ;
                      IF { PUSH nat 2 ; FAILWITH }
                         { PUSH mutez 0 ;
                           AMOUNT ;
                           COMPARE ;
                           GT ;
                           IF { PUSH nat 10 ; FAILWITH }
-                             { DUP 2 ;
-                               GET 15 ;
-                               SENDER ;
-                               COMPARE ;
-                               NEQ ;
-                               IF { PUSH nat 41 ; FAILWITH } { UPDATE 23 ; NIL operation ; PAIR } } } }
+                             { DUP ;
+                               GET 29 ;
+                               IF_NONE
+                                 { PUSH nat 55 ; FAILWITH }
+                                 { DUP ;
+                                   SENDER ;
+                                   COMPARE ;
+                                   EQ ;
+                                   IF { UPDATE 27 ; NONE address ; UPDATE 29 ; NIL operation ; PAIR }
+                                      { PUSH nat 55 ; FAILWITH } } } } }
                    { IF_LEFT
-                       { DUP 2 ;
-                         GET 21 ;
-                         SENDER ;
-                         COMPARE ;
-                         NEQ ;
-                         DUP 3 ;
-                         GET 9 ;
-                         NOT ;
-                         OR ;
-                         IF { PUSH nat 49 ; FAILWITH }
+                       { DROP ;
+                         DUP ;
+                         GET 13 ;
+                         IF { PUSH nat 2 ; FAILWITH }
                             { PUSH mutez 0 ;
                               AMOUNT ;
                               COMPARE ;
                               GT ;
                               IF { PUSH nat 10 ; FAILWITH }
-                                 { DUP 2 ;
-                                   GET 5 ;
+                                 { DUP ;
+                                   GET 17 ;
+                                   SENDER ;
                                    COMPARE ;
                                    NEQ ;
-                                   IF { PUSH nat 50 ; FAILWITH }
-                                      { PUSH nat 1000 ;
-                                        DUP 2 ;
-                                        GET 5 ;
-                                        COMPARE ;
-                                        LE ;
-                                        PUSH nat 0 ;
-                                        DUP 3 ;
-                                        CAR ;
-                                        COMPARE ;
-                                        EQ ;
-                                        PUSH mutez 0 ;
-                                        DUP 4 ;
-                                        GET 3 ;
-                                        COMPARE ;
-                                        EQ ;
-                                        OR ;
-                                        OR ;
-                                        IF { PUSH nat 47 ; FAILWITH }
-                                           { PUSH bool True ;
-                                             UPDATE 7 ;
-                                             PUSH bool False ;
-                                             UPDATE 9 ;
-                                             NIL operation ;
-                                             PAIR } } } } }
+                                   IF { PUSH nat 41 ; FAILWITH }
+                                      { NONE address ; UPDATE 29 ; NIL operation ; PAIR } } } }
                        { IF_LEFT
                            { DUP 2 ;
-                             GET 11 ;
+                             GET 13 ;
                              IF { PUSH nat 2 ; FAILWITH }
                                 { PUSH mutez 0 ;
                                   AMOUNT ;
@@ -204,931 +189,1095 @@
                                   GT ;
                                   IF { PUSH nat 10 ; FAILWITH }
                                      { DUP 2 ;
-                                       GET 15 ;
+                                       GET 17 ;
                                        SENDER ;
                                        COMPARE ;
                                        NEQ ;
-                                       IF { PUSH nat 45 ; FAILWITH }
-                                          { DUP 2 ;
-                                            GET 9 ;
-                                            DUP 3 ;
-                                            GET 7 ;
-                                            OR ;
-                                            IF { PUSH nat 44 ; FAILWITH }
-                                               { PUSH address "tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU" ;
-                                                 DUP 3 ;
-                                                 GET 21 ;
-                                                 COMPARE ;
-                                                 EQ ;
-                                                 IF { PUSH nat 46 ; FAILWITH }
-                                                    { DUP ;
-                                                      CAR ;
-                                                      BALANCE ;
-                                                      COMPARE ;
-                                                      NEQ ;
-                                                      DUP 2 ;
-                                                      GET 4 ;
-                                                      DUP 4 ;
-                                                      GET 5 ;
-                                                      COMPARE ;
-                                                      NEQ ;
-                                                      DUP 3 ;
-                                                      GET 3 ;
-                                                      DUP 5 ;
-                                                      CAR ;
-                                                      COMPARE ;
-                                                      LT ;
-                                                      DUP 4 ;
-                                                      CAR ;
-                                                      DUP 6 ;
-                                                      GET 3 ;
-                                                      COMPARE ;
-                                                      NEQ ;
-                                                      PUSH nat 1000 ;
-                                                      DUP 6 ;
-                                                      GET 4 ;
-                                                      COMPARE ;
-                                                      LE ;
-                                                      PUSH nat 0 ;
-                                                      DUP 7 ;
-                                                      GET 3 ;
-                                                      COMPARE ;
-                                                      EQ ;
-                                                      PUSH mutez 0 ;
-                                                      DIG 7 ;
-                                                      CAR ;
-                                                      COMPARE ;
-                                                      EQ ;
-                                                      OR ;
-                                                      OR ;
-                                                      OR ;
-                                                      OR ;
-                                                      OR ;
-                                                      OR ;
-                                                      IF { PUSH nat 47 ; FAILWITH }
-                                                         { SELF_ADDRESS ;
-                                                           CONTRACT %activateInternal nat ;
-                                                           IF_NONE
-                                                             { PUSH string "Cannot get activateInternal entrypoint" ; FAILWITH }
-                                                             {} ;
-                                                           DUP 2 ;
-                                                           GET 21 ;
-                                                           CONTRACT %getTotalSupply (pair (unit %request) (contract %callback nat)) ;
-                                                           IF_NONE { PUSH nat 48 ; FAILWITH } {} ;
-                                                           PUSH mutez 0 ;
-                                                           DIG 2 ;
-                                                           UNIT ;
-                                                           PAIR ;
-                                                           TRANSFER_TOKENS ;
-                                                           SWAP ;
-                                                           PUSH bool True ;
-                                                           UPDATE 9 ;
-                                                           NIL operation ;
-                                                           DIG 2 ;
-                                                           CONS ;
-                                                           PAIR } } } } } } }
+                                       IF { PUSH nat 41 ; FAILWITH }
+                                          { SELF_ADDRESS ;
+                                            DUP 2 ;
+                                            COMPARE ;
+                                            EQ ;
+                                            IF { PUSH nat 56 ; FAILWITH } {} ;
+                                            SOME ;
+                                            UPDATE 29 ;
+                                            NIL operation ;
+                                            PAIR } } } }
                            { IF_LEFT
-                               { UNPAIR 5 ;
-                                 CONTRACT %xtzToToken
-                                   (pair (address %to) (pair (nat %minTokensBought) (timestamp %deadline))) ;
-                                 IF_NONE { PUSH nat 31 ; FAILWITH } {} ;
-                                 DUP 6 ;
+                               { DUP 2 ;
+                                 GET 25 ;
+                                 SENDER ;
+                                 COMPARE ;
+                                 NEQ ;
+                                 DUP 3 ;
                                  GET 11 ;
-                                 IF { PUSH nat 2 ; FAILWITH }
-                                    { PUSH nat 1000 ;
-                                      DUP 7 ;
-                                      GET 5 ;
-                                      COMPARE ;
-                                      GE ;
-                                      PUSH nat 0 ;
-                                      DUP 8 ;
-                                      CAR ;
+                                 NOT ;
+                                 OR ;
+                                 IF { PUSH nat 49 ; FAILWITH }
+                                    { PUSH mutez 0 ;
+                                      AMOUNT ;
                                       COMPARE ;
                                       GT ;
-                                      PUSH mutez 0 ;
-                                      DUP 9 ;
-                                      GET 3 ;
-                                      COMPARE ;
-                                      GT ;
-                                      DUP 9 ;
-                                      GET 7 ;
-                                      AND ;
-                                      AND ;
-                                      AND ;
-                                      IF { PUSH mutez 0 ;
-                                           AMOUNT ;
+                                      IF { PUSH nat 10 ; FAILWITH }
+                                         { DUP 2 ;
+                                           GET 5 ;
                                            COMPARE ;
-                                           GT ;
-                                           IF { PUSH nat 10 ; FAILWITH }
-                                              { DUP 5 ;
-                                                NOW ;
+                                           NEQ ;
+                                           IF { PUSH nat 50 ; FAILWITH }
+                                              { PUSH nat 1000 ;
+                                                DUP 2 ;
+                                                GET 5 ;
                                                 COMPARE ;
-                                                GE ;
-                                                IF { PUSH nat 3 ; FAILWITH }
-                                                   { PUSH nat 10000 ;
-                                                     PUSH nat 5 ;
-                                                     DUP 6 ;
-                                                     MUL ;
-                                                     EDIV ;
-                                                     IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
-                                                     DUP ;
-                                                     DUP 6 ;
-                                                     SUB ;
-                                                     ISNAT ;
-                                                     IF_NONE { PUSH nat 34 ; FAILWITH } {} ;
-                                                     PUSH nat 997 ;
-                                                     DUP 7 ;
-                                                     MUL ;
-                                                     PUSH nat 1000 ;
-                                                     DUP 10 ;
-                                                     CAR ;
-                                                     MUL ;
-                                                     ADD ;
-                                                     PUSH mutez 1 ;
-                                                     DUP 10 ;
-                                                     GET 3 ;
-                                                     EDIV ;
-                                                     IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
-                                                     PUSH nat 997 ;
-                                                     DUP 9 ;
-                                                     MUL ;
-                                                     MUL ;
-                                                     EDIV ;
-                                                     IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
-                                                     PUSH mutez 1 ;
-                                                     DUP 10 ;
-                                                     GET 3 ;
-                                                     EDIV ;
-                                                     IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
-                                                     DUP 2 ;
-                                                     SWAP ;
-                                                     SUB ;
-                                                     ISNAT ;
-                                                     IF_NONE { PUSH nat 36 ; FAILWITH } {} ;
-                                                     PUSH mutez 1 ;
-                                                     SWAP ;
-                                                     MUL ;
-                                                     PUSH mutez 1 ;
-                                                     DIG 2 ;
-                                                     MUL ;
-                                                     DUP 10 ;
-                                                     DIG 3 ;
-                                                     DUP 11 ;
-                                                     CAR ;
-                                                     ADD ;
-                                                     UPDATE 1 ;
-                                                     DIG 2 ;
-                                                     UPDATE 3 ;
-                                                     DIG 2 ;
-                                                     DIG 8 ;
-                                                     GET 26 ;
-                                                     ADD ;
-                                                     UPDATE 26 ;
-                                                     DIG 5 ;
-                                                     SELF_ADDRESS ;
-                                                     SENDER ;
-                                                     DUP 4 ;
-                                                     DUP ;
-                                                     GET 17 ;
-                                                     CONTRACT %transfer (list (pair address (list (pair address (pair nat nat))))) ;
-                                                     IF_NONE { PUSH nat 0 ; FAILWITH } {} ;
-                                                     PUSH mutez 0 ;
-                                                     NIL (pair address (list (pair address (pair nat nat)))) ;
-                                                     NIL (pair address (pair nat nat)) ;
-                                                     DIG 7 ;
-                                                     DIG 5 ;
-                                                     GET 19 ;
-                                                     PAIR ;
-                                                     DIG 6 ;
-                                                     PAIR ;
-                                                     CONS ;
-                                                     DIG 4 ;
-                                                     PAIR ;
-                                                     CONS ;
-                                                     TRANSFER_TOKENS ;
-                                                     DIG 3 ;
-                                                     DIG 3 ;
-                                                     DIG 6 ;
-                                                     DIG 5 ;
-                                                     DIG 6 ;
-                                                     PAIR 3 ;
-                                                     TRANSFER_TOKENS ;
-                                                     DIG 2 ;
+                                                LE ;
+                                                PUSH nat 0 ;
+                                                DUP 3 ;
+                                                CAR ;
+                                                COMPARE ;
+                                                EQ ;
+                                                PUSH mutez 0 ;
+                                                DUP 4 ;
+                                                GET 3 ;
+                                                COMPARE ;
+                                                EQ ;
+                                                OR ;
+                                                OR ;
+                                                IF { PUSH nat 47 ; FAILWITH }
+                                                   { PUSH bool True ;
+                                                     UPDATE 7 ;
+                                                     PUSH bool False ;
+                                                     UPDATE 11 ;
                                                      NIL operation ;
-                                                     DIG 2 ;
-                                                     CONS ;
-                                                     DIG 2 ;
-                                                     CONS ;
-                                                     PAIR } } }
-                                         { PUSH nat 43 ; FAILWITH } } }
+                                                     PAIR } } } } }
                                { IF_LEFT
                                    { DUP 2 ;
-                                     GET 17 ;
-                                     SENDER ;
-                                     COMPARE ;
-                                     NEQ ;
-                                     DUP 3 ;
-                                     GET 11 ;
-                                     NOT ;
-                                     OR ;
-                                     IF { PUSH nat 29 ; FAILWITH }
+                                     GET 13 ;
+                                     IF { PUSH nat 2 ; FAILWITH }
                                         { PUSH mutez 0 ;
                                           AMOUNT ;
                                           COMPARE ;
                                           GT ;
                                           IF { PUSH nat 10 ; FAILWITH }
-                                             { IF_CONS
-                                                 { UNPAIR ;
-                                                   UNPAIR ;
-                                                   DIG 3 ;
-                                                   IF_CONS
-                                                     { PUSH nat 32 ; FAILWITH }
-                                                     { DUP 4 ;
-                                                       GET 19 ;
-                                                       DIG 2 ;
-                                                       COMPARE ;
-                                                       EQ ;
-                                                       SELF_ADDRESS ;
-                                                       DIG 2 ;
-                                                       COMPARE ;
-                                                       EQ ;
-                                                       AND ;
-                                                       IF {} { PUSH nat 32 ; FAILWITH } } }
-                                                 { PUSH nat 32 ; FAILWITH } ;
-                                               DUP 2 ;
-                                               GET 26 ;
-                                               SWAP ;
-                                               SUB ;
-                                               ISNAT ;
-                                               IF_NONE { PUSH nat 42 ; FAILWITH } {} ;
-                                               UPDATE 1 ;
-                                               PUSH bool False ;
-                                               UPDATE 11 ;
-                                               NIL operation ;
-                                               PAIR } } }
+                                             { DUP 2 ;
+                                               GET 17 ;
+                                               SENDER ;
+                                               COMPARE ;
+                                               NEQ ;
+                                               IF { PUSH nat 45 ; FAILWITH }
+                                                  { DUP 2 ;
+                                                    GET 11 ;
+                                                    DUP 3 ;
+                                                    GET 7 ;
+                                                    OR ;
+                                                    IF { PUSH nat 44 ; FAILWITH }
+                                                       { PUSH address "tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU" ;
+                                                         DUP 3 ;
+                                                         GET 25 ;
+                                                         COMPARE ;
+                                                         EQ ;
+                                                         IF { PUSH nat 46 ; FAILWITH }
+                                                            { DUP ;
+                                                              CAR ;
+                                                              BALANCE ;
+                                                              COMPARE ;
+                                                              NEQ ;
+                                                              DUP 2 ;
+                                                              GET 4 ;
+                                                              DUP 4 ;
+                                                              GET 5 ;
+                                                              COMPARE ;
+                                                              NEQ ;
+                                                              DUP 3 ;
+                                                              GET 3 ;
+                                                              DUP 5 ;
+                                                              CAR ;
+                                                              COMPARE ;
+                                                              LT ;
+                                                              DUP 4 ;
+                                                              CAR ;
+                                                              DUP 6 ;
+                                                              GET 3 ;
+                                                              COMPARE ;
+                                                              NEQ ;
+                                                              PUSH nat 1000 ;
+                                                              DUP 6 ;
+                                                              GET 4 ;
+                                                              COMPARE ;
+                                                              LE ;
+                                                              PUSH nat 0 ;
+                                                              DUP 7 ;
+                                                              GET 3 ;
+                                                              COMPARE ;
+                                                              EQ ;
+                                                              PUSH mutez 0 ;
+                                                              DIG 7 ;
+                                                              CAR ;
+                                                              COMPARE ;
+                                                              EQ ;
+                                                              OR ;
+                                                              OR ;
+                                                              OR ;
+                                                              OR ;
+                                                              OR ;
+                                                              OR ;
+                                                              IF { PUSH nat 47 ; FAILWITH }
+                                                                 { SELF_ADDRESS ;
+                                                                   CONTRACT %activateInternal nat ;
+                                                                   IF_NONE
+                                                                     { PUSH string "Cannot get activateInternal entrypoint" ; FAILWITH }
+                                                                     {} ;
+                                                                   DUP 2 ;
+                                                                   GET 25 ;
+                                                                   CONTRACT %getTotalSupply (pair (unit %request) (contract %callback nat)) ;
+                                                                   IF_NONE { PUSH nat 48 ; FAILWITH } {} ;
+                                                                   PUSH mutez 0 ;
+                                                                   DIG 2 ;
+                                                                   UNIT ;
+                                                                   PAIR ;
+                                                                   TRANSFER_TOKENS ;
+                                                                   SWAP ;
+                                                                   PUSH bool True ;
+                                                                   UPDATE 11 ;
+                                                                   NIL operation ;
+                                                                   DIG 2 ;
+                                                                   CONS ;
+                                                                   PAIR } } } } } } }
                                    { IF_LEFT
-                                       { DROP ;
-                                         SOURCE ;
-                                         SENDER ;
-                                         COMPARE ;
-                                         NEQ ;
-                                         IF { PUSH nat 25 ; FAILWITH }
-                                            { PUSH mutez 0 ;
-                                              AMOUNT ;
+                                       { UNPAIR 5 ;
+                                         CONTRACT %xtzToToken
+                                           (pair (address %to) (pair (nat %minTokensBought) (timestamp %deadline))) ;
+                                         IF_NONE { PUSH nat 31 ; FAILWITH } {} ;
+                                         DUP 6 ;
+                                         GET 13 ;
+                                         IF { PUSH nat 2 ; FAILWITH }
+                                            { PUSH nat 1000 ;
+                                              DUP 7 ;
+                                              GET 5 ;
+                                              COMPARE ;
+                                              GE ;
+                                              PUSH nat 0 ;
+                                              DUP 8 ;
+                                              CAR ;
                                               COMPARE ;
                                               GT ;
-                                              IF { PUSH nat 10 ; FAILWITH }
-                                                 { DUP ;
-                                                   GET 11 ;
-                                                   IF { PUSH nat 33 ; FAILWITH }
-                                                      { DUP ;
-                                                        GET 15 ;
-                                                        SENDER ;
+                                              PUSH mutez 0 ;
+                                              DUP 9 ;
+                                              GET 3 ;
+                                              COMPARE ;
+                                              GT ;
+                                              DUP 9 ;
+                                              GET 7 ;
+                                              AND ;
+                                              AND ;
+                                              AND ;
+                                              IF { DUP 6 ;
+                                                   GET 9 ;
+                                                   IF { PUSH nat 52 ; FAILWITH }
+                                                      { PUSH mutez 0 ;
+                                                        AMOUNT ;
                                                         COMPARE ;
-                                                        NEQ ;
-                                                        DUP 2 ;
-                                                        GET 7 ;
-                                                        NOT ;
-                                                        AND ;
-                                                        IF { PUSH nat 45 ; FAILWITH }
-                                                           { SELF_ADDRESS ;
-                                                             CONTRACT %updateTokenPoolInternal (list (pair (pair address nat) nat)) ;
-                                                             IF_NONE
-                                                               { PUSH string "Cannot get updateTokenPoolInternal entrypoint" ; FAILWITH }
-                                                               {} ;
-                                                             DUP 2 ;
-                                                             GET 17 ;
-                                                             CONTRACT %balance_of
-                                                               (pair (list (pair address nat)) (contract (list (pair (pair address nat) nat)))) ;
-                                                             IF_NONE { PUSH nat 28 ; FAILWITH } {} ;
-                                                             PUSH mutez 0 ;
-                                                             DIG 2 ;
-                                                             NIL (pair address nat) ;
-                                                             DUP 5 ;
-                                                             GET 19 ;
-                                                             SELF_ADDRESS ;
-                                                             PAIR ;
-                                                             CONS ;
-                                                             PAIR ;
-                                                             TRANSFER_TOKENS ;
-                                                             SWAP ;
-                                                             PUSH bool True ;
-                                                             UPDATE 11 ;
-                                                             NIL operation ;
-                                                             DIG 2 ;
-                                                             CONS ;
-                                                             PAIR } } } } }
+                                                        GT ;
+                                                        IF { PUSH nat 10 ; FAILWITH }
+                                                           { DUP 5 ;
+                                                             NOW ;
+                                                             COMPARE ;
+                                                             GE ;
+                                                             IF { PUSH nat 3 ; FAILWITH }
+                                                                { PUSH nat 10000 ;
+                                                                  PUSH nat 5 ;
+                                                                  DUP 6 ;
+                                                                  MUL ;
+                                                                  EDIV ;
+                                                                  IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
+                                                                  DUP ;
+                                                                  DUP 6 ;
+                                                                  SUB ;
+                                                                  ISNAT ;
+                                                                  IF_NONE { PUSH nat 34 ; FAILWITH } {} ;
+                                                                  PUSH nat 997 ;
+                                                                  DUP 7 ;
+                                                                  MUL ;
+                                                                  PUSH nat 1000 ;
+                                                                  DUP 10 ;
+                                                                  CAR ;
+                                                                  MUL ;
+                                                                  ADD ;
+                                                                  PUSH mutez 1 ;
+                                                                  DUP 10 ;
+                                                                  GET 3 ;
+                                                                  EDIV ;
+                                                                  IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
+                                                                  PUSH nat 997 ;
+                                                                  DUP 9 ;
+                                                                  MUL ;
+                                                                  MUL ;
+                                                                  EDIV ;
+                                                                  IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
+                                                                  PUSH mutez 1 ;
+                                                                  DUP 10 ;
+                                                                  GET 3 ;
+                                                                  EDIV ;
+                                                                  IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
+                                                                  DUP 2 ;
+                                                                  SWAP ;
+                                                                  SUB ;
+                                                                  ISNAT ;
+                                                                  IF_NONE { PUSH nat 36 ; FAILWITH } {} ;
+                                                                  PUSH mutez 1 ;
+                                                                  SWAP ;
+                                                                  MUL ;
+                                                                  PUSH mutez 1 ;
+                                                                  DIG 2 ;
+                                                                  MUL ;
+                                                                  DUP 10 ;
+                                                                  DIG 3 ;
+                                                                  DUP 11 ;
+                                                                  CAR ;
+                                                                  ADD ;
+                                                                  UPDATE 1 ;
+                                                                  DIG 2 ;
+                                                                  UPDATE 3 ;
+                                                                  DIG 2 ;
+                                                                  DIG 8 ;
+                                                                  GET 32 ;
+                                                                  ADD ;
+                                                                  UPDATE 32 ;
+                                                                  DIG 5 ;
+                                                                  SELF_ADDRESS ;
+                                                                  SENDER ;
+                                                                  DUP 4 ;
+                                                                  DUP ;
+                                                                  GET 21 ;
+                                                                  CONTRACT %transfer (list (pair address (list (pair address (pair nat nat))))) ;
+                                                                  IF_NONE { PUSH nat 0 ; FAILWITH } {} ;
+                                                                  PUSH mutez 0 ;
+                                                                  NIL (pair address (list (pair address (pair nat nat)))) ;
+                                                                  NIL (pair address (pair nat nat)) ;
+                                                                  DIG 7 ;
+                                                                  DIG 5 ;
+                                                                  GET 23 ;
+                                                                  PAIR ;
+                                                                  DIG 6 ;
+                                                                  PAIR ;
+                                                                  CONS ;
+                                                                  DIG 4 ;
+                                                                  PAIR ;
+                                                                  CONS ;
+                                                                  TRANSFER_TOKENS ;
+                                                                  DIG 3 ;
+                                                                  DIG 3 ;
+                                                                  DIG 6 ;
+                                                                  DIG 5 ;
+                                                                  DIG 6 ;
+                                                                  PAIR 3 ;
+                                                                  TRANSFER_TOKENS ;
+                                                                  DIG 2 ;
+                                                                  NIL operation ;
+                                                                  DIG 2 ;
+                                                                  CONS ;
+                                                                  DIG 2 ;
+                                                                  CONS ;
+                                                                  PAIR } } } }
+                                                 { PUSH nat 43 ; FAILWITH } } }
                                        { IF_LEFT
                                            { DUP 2 ;
-                                             GET 11 ;
-                                             IF { PUSH nat 2 ; FAILWITH }
+                                             GET 21 ;
+                                             SENDER ;
+                                             COMPARE ;
+                                             NEQ ;
+                                             DUP 3 ;
+                                             GET 13 ;
+                                             NOT ;
+                                             OR ;
+                                             IF { PUSH nat 29 ; FAILWITH }
                                                 { PUSH mutez 0 ;
                                                   AMOUNT ;
                                                   COMPARE ;
                                                   GT ;
                                                   IF { PUSH nat 10 ; FAILWITH }
-                                                     { DUP 2 ;
-                                                       GET 15 ;
-                                                       SENDER ;
-                                                       COMPARE ;
-                                                       NEQ ;
-                                                       IF { PUSH nat 23 ; FAILWITH }
-                                                          { PUSH address "tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU" ;
-                                                            DUP 3 ;
-                                                            GET 21 ;
-                                                            COMPARE ;
-                                                            NEQ ;
-                                                            IF { PUSH nat 24 ; FAILWITH } { UPDATE 21 ; NIL operation ; PAIR } } } } }
+                                                     { IF_CONS
+                                                         { UNPAIR ;
+                                                           UNPAIR ;
+                                                           DIG 3 ;
+                                                           IF_CONS
+                                                             { PUSH nat 32 ; FAILWITH }
+                                                             { DUP 4 ;
+                                                               GET 23 ;
+                                                               DIG 2 ;
+                                                               COMPARE ;
+                                                               EQ ;
+                                                               SELF_ADDRESS ;
+                                                               DIG 2 ;
+                                                               COMPARE ;
+                                                               EQ ;
+                                                               AND ;
+                                                               IF {} { PUSH nat 32 ; FAILWITH } } }
+                                                         { PUSH nat 32 ; FAILWITH } ;
+                                                       DUP 2 ;
+                                                       GET 32 ;
+                                                       SWAP ;
+                                                       SUB ;
+                                                       ISNAT ;
+                                                       IF_NONE { PUSH nat 42 ; FAILWITH } {} ;
+                                                       UPDATE 1 ;
+                                                       PUSH bool False ;
+                                                       UPDATE 13 ;
+                                                       NIL operation ;
+                                                       PAIR } } }
                                            { IF_LEFT
-                                               { DUP 2 ;
-                                                 GET 11 ;
-                                                 IF { PUSH nat 2 ; FAILWITH }
+                                               { DROP ;
+                                                 SOURCE ;
+                                                 SENDER ;
+                                                 COMPARE ;
+                                                 NEQ ;
+                                                 IF { PUSH nat 25 ; FAILWITH }
                                                     { PUSH mutez 0 ;
                                                       AMOUNT ;
                                                       COMPARE ;
                                                       GT ;
                                                       IF { PUSH nat 10 ; FAILWITH }
-                                                         { DUP 2 ;
-                                                           GET 15 ;
-                                                           SENDER ;
-                                                           COMPARE ;
-                                                           NEQ ;
-                                                           IF { PUSH nat 21 ; FAILWITH } { UPDATE 15 ; NIL operation ; PAIR } } } }
+                                                         { DUP ;
+                                                           GET 13 ;
+                                                           IF { PUSH nat 33 ; FAILWITH }
+                                                              { DUP ;
+                                                                GET 9 ;
+                                                                DUP 2 ;
+                                                                GET 7 ;
+                                                                AND ;
+                                                                IF { PUSH nat 52 ; FAILWITH }
+                                                                   { DUP ;
+                                                                     GET 17 ;
+                                                                     SENDER ;
+                                                                     COMPARE ;
+                                                                     NEQ ;
+                                                                     DUP 2 ;
+                                                                     GET 7 ;
+                                                                     NOT ;
+                                                                     AND ;
+                                                                     IF { PUSH nat 45 ; FAILWITH }
+                                                                        { SELF_ADDRESS ;
+                                                                          CONTRACT %updateTokenPoolInternal (list (pair (pair address nat) nat)) ;
+                                                                          IF_NONE
+                                                                            { PUSH string "Cannot get updateTokenPoolInternal entrypoint" ; FAILWITH }
+                                                                            {} ;
+                                                                          DUP 2 ;
+                                                                          GET 21 ;
+                                                                          CONTRACT %balance_of
+                                                                            (pair (list (pair address nat)) (contract (list (pair (pair address nat) nat)))) ;
+                                                                          IF_NONE { PUSH nat 28 ; FAILWITH } {} ;
+                                                                          PUSH mutez 0 ;
+                                                                          DIG 2 ;
+                                                                          NIL (pair address nat) ;
+                                                                          DUP 5 ;
+                                                                          GET 23 ;
+                                                                          SELF_ADDRESS ;
+                                                                          PAIR ;
+                                                                          CONS ;
+                                                                          PAIR ;
+                                                                          TRANSFER_TOKENS ;
+                                                                          SWAP ;
+                                                                          PUSH bool True ;
+                                                                          UPDATE 13 ;
+                                                                          NIL operation ;
+                                                                          DIG 2 ;
+                                                                          CONS ;
+                                                                          PAIR } } } } } }
                                                { IF_LEFT
-                                                   { UNPAIR ;
-                                                     DUP 3 ;
-                                                     GET 11 ;
+                                                   { DUP 2 ;
+                                                     GET 13 ;
                                                      IF { PUSH nat 2 ; FAILWITH }
                                                         { PUSH mutez 0 ;
                                                           AMOUNT ;
                                                           COMPARE ;
                                                           GT ;
                                                           IF { PUSH nat 10 ; FAILWITH }
-                                                             { DUP 3 ;
-                                                               GET 15 ;
+                                                             { DUP 2 ;
+                                                               GET 17 ;
                                                                SENDER ;
                                                                COMPARE ;
                                                                NEQ ;
-                                                               IF { PUSH nat 20 ; FAILWITH }
-                                                                  { DUP 3 ;
-                                                                    GET 13 ;
-                                                                    IF { PUSH nat 22 ; FAILWITH }
-                                                                       { DUG 2 ; UPDATE 13 ; NIL operation ; DIG 2 ; SET_DELEGATE ; CONS ; PAIR } } } } }
+                                                               IF { PUSH nat 23 ; FAILWITH }
+                                                                  { PUSH address "tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU" ;
+                                                                    DUP 3 ;
+                                                                    GET 25 ;
+                                                                    COMPARE ;
+                                                                    NEQ ;
+                                                                    IF { PUSH nat 24 ; FAILWITH } { UPDATE 25 ; NIL operation ; PAIR } } } } }
                                                    { IF_LEFT
                                                        { DROP ;
                                                          DUP ;
-                                                         GET 11 ;
+                                                         GET 13 ;
                                                          IF { PUSH nat 2 ; FAILWITH }
-                                                            { DUP ;
-                                                              GET 15 ;
-                                                              SENDER ;
+                                                            { PUSH mutez 0 ;
+                                                              AMOUNT ;
                                                               COMPARE ;
-                                                              NEQ ;
-                                                              DUP 2 ;
-                                                              GET 7 ;
-                                                              NOT ;
-                                                              AND ;
-                                                              IF { PUSH nat 45 ; FAILWITH }
-                                                                 { DUP ; AMOUNT ; DIG 2 ; GET 3 ; ADD ; UPDATE 3 ; NIL operation ; PAIR } } }
-                                                       { IF_LEFT
-                                                           { UNPAIR 4 ;
-                                                             DUP 5 ;
-                                                             GET 11 ;
-                                                             IF { PUSH nat 2 ; FAILWITH }
-                                                                { PUSH nat 1000 ;
-                                                                  DUP 6 ;
-                                                                  GET 5 ;
-                                                                  COMPARE ;
-                                                                  GE ;
-                                                                  PUSH nat 0 ;
-                                                                  DUP 7 ;
-                                                                  CAR ;
-                                                                  COMPARE ;
-                                                                  GT ;
-                                                                  PUSH mutez 0 ;
-                                                                  DUP 8 ;
-                                                                  GET 3 ;
-                                                                  COMPARE ;
-                                                                  GT ;
-                                                                  DUP 8 ;
-                                                                  GET 7 ;
-                                                                  AND ;
-                                                                  AND ;
-                                                                  AND ;
-                                                                  IF { DIG 3 ;
-                                                                       NOW ;
+                                                              GT ;
+                                                              IF { PUSH nat 10 ; FAILWITH }
+                                                                 { DUP ;
+                                                                   GET 19 ;
+                                                                   IF_NONE
+                                                                     { PUSH nat 54 ; FAILWITH }
+                                                                     { DUP ;
+                                                                       SENDER ;
                                                                        COMPARE ;
-                                                                       GE ;
-                                                                       IF { PUSH nat 3 ; FAILWITH }
-                                                                          { PUSH mutez 0 ;
-                                                                            AMOUNT ;
-                                                                            COMPARE ;
-                                                                            GT ;
-                                                                            IF { PUSH nat 10 ; FAILWITH }
-                                                                               { PUSH nat 10000 ;
-                                                                                 PUSH nat 5 ;
-                                                                                 DUP 4 ;
-                                                                                 MUL ;
-                                                                                 EDIV ;
-                                                                                 IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
-                                                                                 DUP ;
-                                                                                 DUP 4 ;
-                                                                                 SUB ;
-                                                                                 ISNAT ;
-                                                                                 IF_NONE { PUSH nat 34 ; FAILWITH } {} ;
-                                                                                 PUSH nat 997 ;
-                                                                                 DUP 5 ;
-                                                                                 MUL ;
-                                                                                 PUSH nat 1000 ;
-                                                                                 DUP 8 ;
-                                                                                 CAR ;
-                                                                                 MUL ;
-                                                                                 ADD ;
-                                                                                 PUSH mutez 1 ;
-                                                                                 DUP 8 ;
-                                                                                 GET 3 ;
-                                                                                 EDIV ;
-                                                                                 IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
-                                                                                 PUSH nat 997 ;
-                                                                                 DUP 7 ;
-                                                                                 MUL ;
-                                                                                 MUL ;
-                                                                                 EDIV ;
-                                                                                 IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
-                                                                                 PUSH mutez 1 ;
-                                                                                 SWAP ;
-                                                                                 MUL ;
-                                                                                 DIG 5 ;
-                                                                                 DUP 2 ;
-                                                                                 COMPARE ;
-                                                                                 LT ;
-                                                                                 IF { PUSH nat 8 ; FAILWITH } {} ;
-                                                                                 PUSH mutez 1 ;
-                                                                                 DUP 7 ;
-                                                                                 GET 3 ;
-                                                                                 EDIV ;
-                                                                                 IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
-                                                                                 PUSH mutez 1 ;
-                                                                                 DUP 3 ;
-                                                                                 EDIV ;
-                                                                                 IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
-                                                                                 SWAP ;
-                                                                                 SUB ;
-                                                                                 ISNAT ;
-                                                                                 IF_NONE { PUSH nat 36 ; FAILWITH } {} ;
-                                                                                 PUSH mutez 1 ;
-                                                                                 SWAP ;
-                                                                                 MUL ;
-                                                                                 DIG 5 ;
-                                                                                 SELF_ADDRESS ;
-                                                                                 SENDER ;
-                                                                                 DUP 9 ;
-                                                                                 DUP ;
-                                                                                 GET 17 ;
-                                                                                 CONTRACT %transfer (list (pair address (list (pair address (pair nat nat))))) ;
-                                                                                 IF_NONE { PUSH nat 0 ; FAILWITH } {} ;
-                                                                                 PUSH mutez 0 ;
-                                                                                 NIL (pair address (list (pair address (pair nat nat)))) ;
-                                                                                 NIL (pair address (pair nat nat)) ;
-                                                                                 DIG 7 ;
-                                                                                 DIG 5 ;
-                                                                                 GET 19 ;
-                                                                                 PAIR ;
-                                                                                 DIG 6 ;
-                                                                                 PAIR ;
-                                                                                 CONS ;
-                                                                                 DIG 4 ;
-                                                                                 PAIR ;
-                                                                                 CONS ;
-                                                                                 TRANSFER_TOKENS ;
-                                                                                 DIG 5 ;
-                                                                                 CONTRACT unit ;
-                                                                                 IF_NONE { PUSH nat 9 ; FAILWITH } {} ;
-                                                                                 DIG 3 ;
-                                                                                 UNIT ;
-                                                                                 TRANSFER_TOKENS ;
-                                                                                 DUP 6 ;
-                                                                                 DIG 4 ;
-                                                                                 DUP 7 ;
-                                                                                 CAR ;
-                                                                                 ADD ;
-                                                                                 UPDATE 1 ;
-                                                                                 DIG 3 ;
-                                                                                 UPDATE 3 ;
-                                                                                 DIG 3 ;
-                                                                                 DIG 4 ;
-                                                                                 GET 26 ;
-                                                                                 ADD ;
-                                                                                 UPDATE 26 ;
-                                                                                 NIL operation ;
-                                                                                 DIG 2 ;
-                                                                                 CONS ;
-                                                                                 DIG 2 ;
-                                                                                 CONS ;
-                                                                                 PAIR } } }
-                                                                     { PUSH nat 43 ; FAILWITH } } }
+                                                                       EQ ;
+                                                                       IF { UPDATE 17 ; NONE address ; UPDATE 19 ; NIL operation ; PAIR }
+                                                                          { PUSH nat 54 ; FAILWITH } } } } }
+                                                       { IF_LEFT
+                                                           { DROP ;
+                                                             DUP ;
+                                                             GET 13 ;
+                                                             IF { PUSH nat 2 ; FAILWITH }
+                                                                { PUSH mutez 0 ;
+                                                                  AMOUNT ;
+                                                                  COMPARE ;
+                                                                  GT ;
+                                                                  IF { PUSH nat 10 ; FAILWITH }
+                                                                     { DUP ;
+                                                                       GET 17 ;
+                                                                       SENDER ;
+                                                                       COMPARE ;
+                                                                       NEQ ;
+                                                                       IF { PUSH nat 21 ; FAILWITH }
+                                                                          { NONE address ; UPDATE 19 ; NIL operation ; PAIR } } } }
                                                            { IF_LEFT
-                                                               { UNPAIR 3 ;
-                                                                 DUP 4 ;
-                                                                 GET 11 ;
+                                                               { DUP 2 ;
+                                                                 GET 13 ;
                                                                  IF { PUSH nat 2 ; FAILWITH }
-                                                                    { PUSH nat 1000 ;
-                                                                      DUP 5 ;
-                                                                      GET 5 ;
-                                                                      COMPARE ;
-                                                                      GE ;
-                                                                      PUSH nat 0 ;
-                                                                      DUP 6 ;
-                                                                      CAR ;
+                                                                    { PUSH mutez 0 ;
+                                                                      AMOUNT ;
                                                                       COMPARE ;
                                                                       GT ;
-                                                                      PUSH mutez 0 ;
-                                                                      DUP 7 ;
-                                                                      GET 3 ;
-                                                                      COMPARE ;
-                                                                      GT ;
-                                                                      DUP 7 ;
-                                                                      GET 7 ;
-                                                                      AND ;
-                                                                      AND ;
-                                                                      AND ;
-                                                                      IF { DIG 2 ;
-                                                                           NOW ;
+                                                                      IF { PUSH nat 10 ; FAILWITH }
+                                                                         { DUP 2 ;
+                                                                           GET 17 ;
+                                                                           SENDER ;
                                                                            COMPARE ;
-                                                                           GE ;
-                                                                           IF { PUSH nat 3 ; FAILWITH }
-                                                                              { PUSH mutez 1 ;
-                                                                                DUP 4 ;
-                                                                                GET 3 ;
-                                                                                EDIV ;
-                                                                                IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
-                                                                                PUSH mutez 1 ;
-                                                                                AMOUNT ;
-                                                                                EDIV ;
-                                                                                IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
-                                                                                PUSH nat 10000 ;
-                                                                                PUSH nat 5 ;
-                                                                                DUP 3 ;
-                                                                                MUL ;
-                                                                                EDIV ;
-                                                                                IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
-                                                                                DUP ;
-                                                                                DUP 3 ;
-                                                                                SUB ;
-                                                                                ISNAT ;
-                                                                                IF_NONE { PUSH nat 34 ; FAILWITH } {} ;
-                                                                                PUSH nat 997 ;
-                                                                                DUP 4 ;
-                                                                                MUL ;
-                                                                                PUSH nat 1000 ;
-                                                                                DIG 5 ;
-                                                                                MUL ;
-                                                                                ADD ;
-                                                                                DUP 7 ;
-                                                                                CAR ;
-                                                                                PUSH nat 997 ;
-                                                                                DIG 5 ;
-                                                                                MUL ;
-                                                                                MUL ;
-                                                                                EDIV ;
-                                                                                IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
-                                                                                DIG 4 ;
+                                                                           NEQ ;
+                                                                           IF { PUSH nat 21 ; FAILWITH }
+                                                                              { SELF_ADDRESS ;
                                                                                 DUP 2 ;
                                                                                 COMPARE ;
-                                                                                LT ;
-                                                                                IF { PUSH nat 18 ; FAILWITH } {} ;
-                                                                                DUP ;
-                                                                                DUP 6 ;
-                                                                                CAR ;
-                                                                                SUB ;
-                                                                                ISNAT ;
-                                                                                IF_NONE { PUSH nat 19 ; FAILWITH } {} ;
-                                                                                PUSH mutez 1 ;
-                                                                                DIG 4 ;
-                                                                                MUL ;
-                                                                                PUSH mutez 1 ;
-                                                                                DIG 4 ;
-                                                                                MUL ;
-                                                                                DUP 6 ;
-                                                                                SWAP ;
-                                                                                DUP 7 ;
-                                                                                GET 3 ;
-                                                                                ADD ;
-                                                                                UPDATE 3 ;
-                                                                                DIG 2 ;
-                                                                                UPDATE 1 ;
-                                                                                SWAP ;
-                                                                                DIG 4 ;
-                                                                                GET 25 ;
-                                                                                ADD ;
-                                                                                UPDATE 25 ;
-                                                                                SWAP ;
-                                                                                DIG 2 ;
-                                                                                SELF_ADDRESS ;
-                                                                                DUP 4 ;
-                                                                                DUP ;
-                                                                                GET 17 ;
-                                                                                CONTRACT %transfer (list (pair address (list (pair address (pair nat nat))))) ;
-                                                                                IF_NONE { PUSH nat 0 ; FAILWITH } {} ;
-                                                                                PUSH mutez 0 ;
-                                                                                NIL (pair address (list (pair address (pair nat nat)))) ;
-                                                                                NIL (pair address (pair nat nat)) ;
-                                                                                DIG 7 ;
-                                                                                DIG 5 ;
-                                                                                GET 19 ;
-                                                                                PAIR ;
-                                                                                DIG 6 ;
-                                                                                PAIR ;
-                                                                                CONS ;
-                                                                                DIG 4 ;
-                                                                                PAIR ;
-                                                                                CONS ;
-                                                                                TRANSFER_TOKENS ;
-                                                                                SWAP ;
+                                                                                EQ ;
+                                                                                IF { PUSH nat 56 ; FAILWITH } {} ;
+                                                                                SOME ;
+                                                                                UPDATE 19 ;
                                                                                 NIL operation ;
-                                                                                DIG 2 ;
-                                                                                CONS ;
-                                                                                PAIR } }
-                                                                         { PUSH nat 43 ; FAILWITH } } }
+                                                                                PAIR } } } }
                                                                { IF_LEFT
-                                                                   { UNPAIR 5 ;
-                                                                     DUP 6 ;
-                                                                     GET 11 ;
+                                                                   { DUP 2 ;
+                                                                     GET 13 ;
                                                                      IF { PUSH nat 2 ; FAILWITH }
-                                                                        { PUSH nat 1000 ;
-                                                                          DUP 7 ;
-                                                                          GET 5 ;
-                                                                          COMPARE ;
-                                                                          GE ;
-                                                                          PUSH nat 0 ;
-                                                                          DUP 8 ;
-                                                                          CAR ;
+                                                                        { PUSH mutez 0 ;
+                                                                          AMOUNT ;
                                                                           COMPARE ;
                                                                           GT ;
-                                                                          PUSH mutez 0 ;
-                                                                          DUP 9 ;
-                                                                          GET 3 ;
-                                                                          COMPARE ;
-                                                                          GT ;
-                                                                          DUP 9 ;
-                                                                          GET 7 ;
-                                                                          AND ;
-                                                                          AND ;
-                                                                          AND ;
-                                                                          IF { DIG 4 ;
-                                                                               NOW ;
+                                                                          IF { PUSH nat 10 ; FAILWITH }
+                                                                             { DUP 2 ;
+                                                                               GET 17 ;
+                                                                               SENDER ;
                                                                                COMPARE ;
-                                                                               GE ;
-                                                                               IF { PUSH nat 3 ; FAILWITH }
-                                                                                  { PUSH mutez 0 ;
-                                                                                    AMOUNT ;
-                                                                                    COMPARE ;
-                                                                                    GT ;
-                                                                                    IF { PUSH nat 10 ; FAILWITH }
-                                                                                       { DUP 5 ;
-                                                                                         GET 5 ;
-                                                                                         PUSH mutez 1 ;
-                                                                                         DUP 7 ;
-                                                                                         GET 3 ;
-                                                                                         EDIV ;
-                                                                                         IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
-                                                                                         DUP 4 ;
-                                                                                         MUL ;
-                                                                                         EDIV ;
-                                                                                         IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
-                                                                                         PUSH mutez 1 ;
-                                                                                         SWAP ;
-                                                                                         MUL ;
+                                                                               NEQ ;
+                                                                               IF { PUSH nat 53 ; FAILWITH }
+                                                                                  { IF { PUSH bool True ; UPDATE 9 ; NIL operation ; PAIR }
+                                                                                       { DUP ;
+                                                                                         GET 19 ;
+                                                                                         IF_NONE
+                                                                                           { DUP ;
+                                                                                             GET 29 ;
+                                                                                             IF_NONE
+                                                                                               { PUSH bool False ; UPDATE 9 ; NIL operation ; PAIR }
+                                                                                               { PUSH nat 58 ; FAILWITH } }
+                                                                                           { PUSH nat 57 ; FAILWITH } } } } } }
+                                                                   { IF_LEFT
+                                                                       { UNPAIR ;
+                                                                         DUP 3 ;
+                                                                         GET 13 ;
+                                                                         IF { PUSH nat 2 ; FAILWITH }
+                                                                            { PUSH mutez 0 ;
+                                                                              AMOUNT ;
+                                                                              COMPARE ;
+                                                                              GT ;
+                                                                              IF { PUSH nat 10 ; FAILWITH }
+                                                                                 { DUP 3 ;
+                                                                                   GET 17 ;
+                                                                                   SENDER ;
+                                                                                   COMPARE ;
+                                                                                   NEQ ;
+                                                                                   IF { PUSH nat 20 ; FAILWITH }
+                                                                                      { DUP 3 ;
+                                                                                        GET 15 ;
+                                                                                        IF { PUSH nat 22 ; FAILWITH }
+                                                                                           { DUG 2 ; UPDATE 15 ; NIL operation ; DIG 2 ; SET_DELEGATE ; CONS ; PAIR } } } } }
+                                                                       { IF_LEFT
+                                                                           { DROP ;
+                                                                             DUP ;
+                                                                             GET 13 ;
+                                                                             IF { PUSH nat 2 ; FAILWITH }
+                                                                                { DUP ;
+                                                                                  GET 9 ;
+                                                                                  DUP 2 ;
+                                                                                  GET 7 ;
+                                                                                  AND ;
+                                                                                  IF { PUSH nat 52 ; FAILWITH }
+                                                                                     { DUP ;
+                                                                                       GET 17 ;
+                                                                                       SENDER ;
+                                                                                       COMPARE ;
+                                                                                       NEQ ;
+                                                                                       DUP 2 ;
+                                                                                       GET 7 ;
+                                                                                       NOT ;
+                                                                                       AND ;
+                                                                                       IF { PUSH nat 45 ; FAILWITH }
+                                                                                          { DUP ; AMOUNT ; DIG 2 ; GET 3 ; ADD ; UPDATE 3 ; NIL operation ; PAIR } } } }
+                                                                           { IF_LEFT
+                                                                               { UNPAIR 4 ;
+                                                                                 DUP 5 ;
+                                                                                 GET 13 ;
+                                                                                 IF { PUSH nat 2 ; FAILWITH }
+                                                                                    { PUSH nat 1000 ;
+                                                                                      DUP 6 ;
+                                                                                      GET 5 ;
+                                                                                      COMPARE ;
+                                                                                      GE ;
+                                                                                      PUSH nat 0 ;
+                                                                                      DUP 7 ;
+                                                                                      CAR ;
+                                                                                      COMPARE ;
+                                                                                      GT ;
+                                                                                      PUSH mutez 0 ;
+                                                                                      DUP 8 ;
+                                                                                      GET 3 ;
+                                                                                      COMPARE ;
+                                                                                      GT ;
+                                                                                      DUP 8 ;
+                                                                                      GET 7 ;
+                                                                                      AND ;
+                                                                                      AND ;
+                                                                                      AND ;
+                                                                                      IF { DUP 5 ;
+                                                                                           GET 9 ;
+                                                                                           IF { PUSH nat 52 ; FAILWITH }
+                                                                                              { DIG 3 ;
+                                                                                                NOW ;
+                                                                                                COMPARE ;
+                                                                                                GE ;
+                                                                                                IF { PUSH nat 3 ; FAILWITH }
+                                                                                                   { PUSH mutez 0 ;
+                                                                                                     AMOUNT ;
+                                                                                                     COMPARE ;
+                                                                                                     GT ;
+                                                                                                     IF { PUSH nat 10 ; FAILWITH }
+                                                                                                        { PUSH nat 10000 ;
+                                                                                                          PUSH nat 5 ;
+                                                                                                          DUP 4 ;
+                                                                                                          MUL ;
+                                                                                                          EDIV ;
+                                                                                                          IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
+                                                                                                          DUP ;
+                                                                                                          DUP 4 ;
+                                                                                                          SUB ;
+                                                                                                          ISNAT ;
+                                                                                                          IF_NONE { PUSH nat 34 ; FAILWITH } {} ;
+                                                                                                          PUSH nat 997 ;
+                                                                                                          DUP 5 ;
+                                                                                                          MUL ;
+                                                                                                          PUSH nat 1000 ;
+                                                                                                          DUP 8 ;
+                                                                                                          CAR ;
+                                                                                                          MUL ;
+                                                                                                          ADD ;
+                                                                                                          PUSH mutez 1 ;
+                                                                                                          DUP 8 ;
+                                                                                                          GET 3 ;
+                                                                                                          EDIV ;
+                                                                                                          IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
+                                                                                                          PUSH nat 997 ;
+                                                                                                          DUP 7 ;
+                                                                                                          MUL ;
+                                                                                                          MUL ;
+                                                                                                          EDIV ;
+                                                                                                          IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
+                                                                                                          PUSH mutez 1 ;
+                                                                                                          SWAP ;
+                                                                                                          MUL ;
+                                                                                                          DIG 5 ;
+                                                                                                          DUP 2 ;
+                                                                                                          COMPARE ;
+                                                                                                          LT ;
+                                                                                                          IF { PUSH nat 8 ; FAILWITH } {} ;
+                                                                                                          PUSH mutez 1 ;
+                                                                                                          DUP 7 ;
+                                                                                                          GET 3 ;
+                                                                                                          EDIV ;
+                                                                                                          IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
+                                                                                                          PUSH mutez 1 ;
+                                                                                                          DUP 3 ;
+                                                                                                          EDIV ;
+                                                                                                          IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
+                                                                                                          SWAP ;
+                                                                                                          SUB ;
+                                                                                                          ISNAT ;
+                                                                                                          IF_NONE { PUSH nat 36 ; FAILWITH } {} ;
+                                                                                                          PUSH mutez 1 ;
+                                                                                                          SWAP ;
+                                                                                                          MUL ;
+                                                                                                          DIG 5 ;
+                                                                                                          SELF_ADDRESS ;
+                                                                                                          SENDER ;
+                                                                                                          DUP 9 ;
+                                                                                                          DUP ;
+                                                                                                          GET 21 ;
+                                                                                                          CONTRACT %transfer (list (pair address (list (pair address (pair nat nat))))) ;
+                                                                                                          IF_NONE { PUSH nat 0 ; FAILWITH } {} ;
+                                                                                                          PUSH mutez 0 ;
+                                                                                                          NIL (pair address (list (pair address (pair nat nat)))) ;
+                                                                                                          NIL (pair address (pair nat nat)) ;
+                                                                                                          DIG 7 ;
+                                                                                                          DIG 5 ;
+                                                                                                          GET 23 ;
+                                                                                                          PAIR ;
+                                                                                                          DIG 6 ;
+                                                                                                          PAIR ;
+                                                                                                          CONS ;
+                                                                                                          DIG 4 ;
+                                                                                                          PAIR ;
+                                                                                                          CONS ;
+                                                                                                          TRANSFER_TOKENS ;
+                                                                                                          DIG 5 ;
+                                                                                                          CONTRACT unit ;
+                                                                                                          IF_NONE { PUSH nat 9 ; FAILWITH } {} ;
+                                                                                                          DIG 3 ;
+                                                                                                          UNIT ;
+                                                                                                          TRANSFER_TOKENS ;
+                                                                                                          DUP 6 ;
+                                                                                                          DIG 4 ;
+                                                                                                          DUP 7 ;
+                                                                                                          CAR ;
+                                                                                                          ADD ;
+                                                                                                          UPDATE 1 ;
+                                                                                                          DIG 3 ;
+                                                                                                          UPDATE 3 ;
+                                                                                                          DIG 3 ;
+                                                                                                          DIG 4 ;
+                                                                                                          GET 32 ;
+                                                                                                          ADD ;
+                                                                                                          UPDATE 32 ;
+                                                                                                          NIL operation ;
+                                                                                                          DIG 2 ;
+                                                                                                          CONS ;
+                                                                                                          DIG 2 ;
+                                                                                                          CONS ;
+                                                                                                          PAIR } } } }
+                                                                                         { PUSH nat 43 ; FAILWITH } } }
+                                                                               { IF_LEFT
+                                                                                   { UNPAIR 3 ;
+                                                                                     DUP 4 ;
+                                                                                     GET 13 ;
+                                                                                     IF { PUSH nat 2 ; FAILWITH }
+                                                                                        { PUSH nat 1000 ;
+                                                                                          DUP 5 ;
+                                                                                          GET 5 ;
+                                                                                          COMPARE ;
+                                                                                          GE ;
+                                                                                          PUSH nat 0 ;
+                                                                                          DUP 6 ;
+                                                                                          CAR ;
+                                                                                          COMPARE ;
+                                                                                          GT ;
+                                                                                          PUSH mutez 0 ;
+                                                                                          DUP 7 ;
+                                                                                          GET 3 ;
+                                                                                          COMPARE ;
+                                                                                          GT ;
+                                                                                          DUP 7 ;
+                                                                                          GET 7 ;
+                                                                                          AND ;
+                                                                                          AND ;
+                                                                                          AND ;
+                                                                                          IF { DUP 4 ;
+                                                                                               GET 9 ;
+                                                                                               IF { PUSH nat 52 ; FAILWITH }
+                                                                                                  { DIG 2 ;
+                                                                                                    NOW ;
+                                                                                                    COMPARE ;
+                                                                                                    GE ;
+                                                                                                    IF { PUSH nat 3 ; FAILWITH }
+                                                                                                       { PUSH mutez 1 ;
+                                                                                                         DUP 4 ;
+                                                                                                         GET 3 ;
+                                                                                                         EDIV ;
+                                                                                                         IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
+                                                                                                         PUSH mutez 1 ;
+                                                                                                         AMOUNT ;
+                                                                                                         EDIV ;
+                                                                                                         IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
+                                                                                                         PUSH nat 10000 ;
+                                                                                                         PUSH nat 5 ;
+                                                                                                         DUP 3 ;
+                                                                                                         MUL ;
+                                                                                                         EDIV ;
+                                                                                                         IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
+                                                                                                         DUP ;
+                                                                                                         DUP 3 ;
+                                                                                                         SUB ;
+                                                                                                         ISNAT ;
+                                                                                                         IF_NONE { PUSH nat 34 ; FAILWITH } {} ;
+                                                                                                         PUSH nat 997 ;
+                                                                                                         DUP 4 ;
+                                                                                                         MUL ;
+                                                                                                         PUSH nat 1000 ;
+                                                                                                         DIG 5 ;
+                                                                                                         MUL ;
+                                                                                                         ADD ;
+                                                                                                         DUP 7 ;
+                                                                                                         CAR ;
+                                                                                                         PUSH nat 997 ;
+                                                                                                         DIG 5 ;
+                                                                                                         MUL ;
+                                                                                                         MUL ;
+                                                                                                         EDIV ;
+                                                                                                         IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
+                                                                                                         DIG 4 ;
+                                                                                                         DUP 2 ;
+                                                                                                         COMPARE ;
+                                                                                                         LT ;
+                                                                                                         IF { PUSH nat 18 ; FAILWITH } {} ;
+                                                                                                         DUP ;
+                                                                                                         DUP 6 ;
+                                                                                                         CAR ;
+                                                                                                         SUB ;
+                                                                                                         ISNAT ;
+                                                                                                         IF_NONE { PUSH nat 19 ; FAILWITH } {} ;
+                                                                                                         PUSH mutez 1 ;
+                                                                                                         DIG 4 ;
+                                                                                                         MUL ;
+                                                                                                         PUSH mutez 1 ;
+                                                                                                         DIG 4 ;
+                                                                                                         MUL ;
+                                                                                                         DUP 6 ;
+                                                                                                         SWAP ;
+                                                                                                         DUP 7 ;
+                                                                                                         GET 3 ;
+                                                                                                         ADD ;
+                                                                                                         UPDATE 3 ;
+                                                                                                         DIG 2 ;
+                                                                                                         UPDATE 1 ;
+                                                                                                         SWAP ;
+                                                                                                         DIG 4 ;
+                                                                                                         GET 31 ;
+                                                                                                         ADD ;
+                                                                                                         UPDATE 31 ;
+                                                                                                         SWAP ;
+                                                                                                         DIG 2 ;
+                                                                                                         SELF_ADDRESS ;
+                                                                                                         DUP 4 ;
+                                                                                                         DUP ;
+                                                                                                         GET 21 ;
+                                                                                                         CONTRACT %transfer (list (pair address (list (pair address (pair nat nat))))) ;
+                                                                                                         IF_NONE { PUSH nat 0 ; FAILWITH } {} ;
+                                                                                                         PUSH mutez 0 ;
+                                                                                                         NIL (pair address (list (pair address (pair nat nat)))) ;
+                                                                                                         NIL (pair address (pair nat nat)) ;
+                                                                                                         DIG 7 ;
+                                                                                                         DIG 5 ;
+                                                                                                         GET 23 ;
+                                                                                                         PAIR ;
+                                                                                                         DIG 6 ;
+                                                                                                         PAIR ;
+                                                                                                         CONS ;
+                                                                                                         DIG 4 ;
+                                                                                                         PAIR ;
+                                                                                                         CONS ;
+                                                                                                         TRANSFER_TOKENS ;
+                                                                                                         SWAP ;
+                                                                                                         NIL operation ;
+                                                                                                         DIG 2 ;
+                                                                                                         CONS ;
+                                                                                                         PAIR } } }
+                                                                                             { PUSH nat 43 ; FAILWITH } } }
+                                                                                   { IF_LEFT
+                                                                                       { UNPAIR 5 ;
                                                                                          DUP 6 ;
-                                                                                         GET 5 ;
-                                                                                         DUP 7 ;
-                                                                                         CAR ;
-                                                                                         DUP 5 ;
-                                                                                         MUL ;
-                                                                                         EDIV ;
-                                                                                         IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
-                                                                                         DIG 4 ;
-                                                                                         DUP 3 ;
-                                                                                         COMPARE ;
-                                                                                         LT ;
-                                                                                         IF { PUSH nat 11 ; FAILWITH }
-                                                                                            { DIG 4 ;
-                                                                                              DUP 2 ;
+                                                                                         GET 13 ;
+                                                                                         IF { PUSH nat 2 ; FAILWITH }
+                                                                                            { PUSH nat 1000 ;
+                                                                                              DUP 7 ;
+                                                                                              GET 5 ;
                                                                                               COMPARE ;
-                                                                                              LT ;
-                                                                                              IF { PUSH nat 13 ; FAILWITH }
-                                                                                                 { DUP 4 ;
-                                                                                                   DUP 6 ;
-                                                                                                   GET 5 ;
-                                                                                                   SUB ;
-                                                                                                   ISNAT ;
-                                                                                                   IF_NONE { PUSH nat 14 ; FAILWITH } {} ;
-                                                                                                   PUSH nat 1000 ;
-                                                                                                   DUP 2 ;
+                                                                                              GE ;
+                                                                                              PUSH nat 0 ;
+                                                                                              DUP 8 ;
+                                                                                              CAR ;
+                                                                                              COMPARE ;
+                                                                                              GT ;
+                                                                                              PUSH mutez 0 ;
+                                                                                              DUP 9 ;
+                                                                                              GET 3 ;
+                                                                                              COMPARE ;
+                                                                                              GT ;
+                                                                                              DUP 9 ;
+                                                                                              GET 7 ;
+                                                                                              AND ;
+                                                                                              AND ;
+                                                                                              AND ;
+                                                                                              IF { DIG 4 ;
+                                                                                                   NOW ;
                                                                                                    COMPARE ;
-                                                                                                   LT ;
-                                                                                                   IF { PUSH nat 51 ; FAILWITH } {} ;
-                                                                                                   DUP 2 ;
-                                                                                                   DUP 7 ;
-                                                                                                   CAR ;
-                                                                                                   SUB ;
-                                                                                                   ISNAT ;
-                                                                                                   IF_NONE { PUSH nat 15 ; FAILWITH } {} ;
-                                                                                                   PUSH mutez 1 ;
-                                                                                                   DUP 8 ;
-                                                                                                   GET 3 ;
-                                                                                                   EDIV ;
-                                                                                                   IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
-                                                                                                   PUSH mutez 1 ;
-                                                                                                   DUP 6 ;
-                                                                                                   EDIV ;
-                                                                                                   IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
-                                                                                                   SWAP ;
-                                                                                                   SUB ;
-                                                                                                   ISNAT ;
-                                                                                                   IF_NONE { PUSH nat 36 ; FAILWITH } {} ;
-                                                                                                   PUSH mutez 1 ;
-                                                                                                   SWAP ;
-                                                                                                   MUL ;
-                                                                                                   DIG 6 ;
-                                                                                                   PUSH int 0 ;
-                                                                                                   SUB ;
-                                                                                                   SENDER ;
-                                                                                                   DUP 9 ;
-                                                                                                   GET 21 ;
-                                                                                                   CONTRACT %mintOrBurn (pair (int %quantity) (address %target)) ;
-                                                                                                   IF_NONE { PUSH nat 12 ; FAILWITH } {} ;
-                                                                                                   PUSH mutez 0 ;
-                                                                                                   DIG 2 ;
-                                                                                                   DIG 3 ;
-                                                                                                   PAIR ;
-                                                                                                   TRANSFER_TOKENS ;
-                                                                                                   DIG 4 ;
-                                                                                                   DUP 7 ;
-                                                                                                   SELF_ADDRESS ;
-                                                                                                   DUP 10 ;
-                                                                                                   DUP ;
-                                                                                                   GET 17 ;
-                                                                                                   CONTRACT %transfer (list (pair address (list (pair address (pair nat nat))))) ;
-                                                                                                   IF_NONE { PUSH nat 0 ; FAILWITH } {} ;
-                                                                                                   PUSH mutez 0 ;
-                                                                                                   NIL (pair address (list (pair address (pair nat nat)))) ;
-                                                                                                   NIL (pair address (pair nat nat)) ;
-                                                                                                   DIG 7 ;
-                                                                                                   DIG 5 ;
-                                                                                                   GET 19 ;
-                                                                                                   PAIR ;
-                                                                                                   DIG 6 ;
-                                                                                                   PAIR ;
-                                                                                                   CONS ;
-                                                                                                   DIG 4 ;
-                                                                                                   PAIR ;
-                                                                                                   CONS ;
-                                                                                                   TRANSFER_TOKENS ;
-                                                                                                   DIG 6 ;
-                                                                                                   CONTRACT unit ;
-                                                                                                   IF_NONE { PUSH nat 9 ; FAILWITH } {} ;
-                                                                                                   DIG 6 ;
-                                                                                                   UNIT ;
-                                                                                                   TRANSFER_TOKENS ;
-                                                                                                   DIG 6 ;
-                                                                                                   DIG 4 ;
-                                                                                                   UPDATE 3 ;
-                                                                                                   DIG 5 ;
-                                                                                                   UPDATE 5 ;
-                                                                                                   DIG 4 ;
-                                                                                                   UPDATE 1 ;
-                                                                                                   NIL operation ;
-                                                                                                   DIG 2 ;
-                                                                                                   CONS ;
-                                                                                                   DIG 2 ;
-                                                                                                   CONS ;
-                                                                                                   DIG 2 ;
-                                                                                                   CONS ;
-                                                                                                   PAIR } } } } }
-                                                                             { PUSH nat 43 ; FAILWITH } } }
-                                                                   { UNPAIR 4 ;
-                                                                     DUP 5 ;
-                                                                     GET 11 ;
-                                                                     IF { PUSH nat 2 ; FAILWITH }
-                                                                        { PUSH nat 1000 ;
-                                                                          DUP 6 ;
-                                                                          GET 5 ;
-                                                                          COMPARE ;
-                                                                          GE ;
-                                                                          PUSH nat 0 ;
-                                                                          DUP 7 ;
-                                                                          CAR ;
-                                                                          COMPARE ;
-                                                                          GT ;
-                                                                          PUSH mutez 0 ;
-                                                                          DUP 8 ;
-                                                                          GET 3 ;
-                                                                          COMPARE ;
-                                                                          GT ;
-                                                                          DUP 8 ;
-                                                                          GET 7 ;
-                                                                          AND ;
-                                                                          AND ;
-                                                                          AND ;
-                                                                          IF { DIG 3 ;
-                                                                               NOW ;
-                                                                               COMPARE ;
-                                                                               GE ;
-                                                                               IF { PUSH nat 3 ; FAILWITH }
-                                                                                  { PUSH mutez 1 ;
-                                                                                    DUP 5 ;
-                                                                                    GET 3 ;
-                                                                                    EDIV ;
-                                                                                    IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
-                                                                                    PUSH mutez 1 ;
-                                                                                    AMOUNT ;
-                                                                                    EDIV ;
-                                                                                    IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
-                                                                                    DUP 2 ;
-                                                                                    DUP 7 ;
-                                                                                    GET 5 ;
-                                                                                    DUP 3 ;
-                                                                                    MUL ;
-                                                                                    EDIV ;
-                                                                                    IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
-                                                                                    DIG 2 ;
-                                                                                    DUP 7 ;
-                                                                                    CAR ;
-                                                                                    DIG 3 ;
-                                                                                    MUL ;
-                                                                                    EDIV ;
-                                                                                    IF_NONE
-                                                                                      { PUSH string "DIV by 0" ; FAILWITH }
-                                                                                      { UNPAIR ; SWAP ; INT ; EQ ; IF {} { PUSH nat 1 ; ADD } } ;
-                                                                                    DIG 4 ;
-                                                                                    DUP 2 ;
-                                                                                    COMPARE ;
-                                                                                    GT ;
-                                                                                    IF { PUSH nat 4 ; FAILWITH }
-                                                                                       { DIG 3 ;
-                                                                                         DUP 3 ;
-                                                                                         COMPARE ;
-                                                                                         LT ;
-                                                                                         IF { PUSH nat 5 ; FAILWITH }
-                                                                                            { DUP 4 ;
-                                                                                              DUP 3 ;
+                                                                                                   GE ;
+                                                                                                   IF { PUSH nat 3 ; FAILWITH }
+                                                                                                      { PUSH mutez 0 ;
+                                                                                                        AMOUNT ;
+                                                                                                        COMPARE ;
+                                                                                                        GT ;
+                                                                                                        IF { PUSH nat 10 ; FAILWITH }
+                                                                                                           { DUP 5 ;
+                                                                                                             GET 5 ;
+                                                                                                             PUSH mutez 1 ;
+                                                                                                             DUP 7 ;
+                                                                                                             GET 3 ;
+                                                                                                             EDIV ;
+                                                                                                             IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
+                                                                                                             DUP 4 ;
+                                                                                                             MUL ;
+                                                                                                             EDIV ;
+                                                                                                             IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
+                                                                                                             PUSH mutez 1 ;
+                                                                                                             SWAP ;
+                                                                                                             MUL ;
+                                                                                                             DUP 6 ;
+                                                                                                             GET 5 ;
+                                                                                                             DUP 7 ;
+                                                                                                             CAR ;
+                                                                                                             DUP 5 ;
+                                                                                                             MUL ;
+                                                                                                             EDIV ;
+                                                                                                             IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
+                                                                                                             DIG 4 ;
+                                                                                                             DUP 3 ;
+                                                                                                             COMPARE ;
+                                                                                                             LT ;
+                                                                                                             IF { PUSH nat 11 ; FAILWITH }
+                                                                                                                { DIG 4 ;
+                                                                                                                  DUP 2 ;
+                                                                                                                  COMPARE ;
+                                                                                                                  LT ;
+                                                                                                                  IF { PUSH nat 13 ; FAILWITH }
+                                                                                                                     { DUP 4 ;
+                                                                                                                       DUP 6 ;
+                                                                                                                       GET 5 ;
+                                                                                                                       SUB ;
+                                                                                                                       ISNAT ;
+                                                                                                                       IF_NONE { PUSH nat 14 ; FAILWITH } {} ;
+                                                                                                                       PUSH nat 1000 ;
+                                                                                                                       DUP 2 ;
+                                                                                                                       COMPARE ;
+                                                                                                                       LT ;
+                                                                                                                       IF { PUSH nat 51 ; FAILWITH } {} ;
+                                                                                                                       DUP 2 ;
+                                                                                                                       DUP 7 ;
+                                                                                                                       CAR ;
+                                                                                                                       SUB ;
+                                                                                                                       ISNAT ;
+                                                                                                                       IF_NONE { PUSH nat 15 ; FAILWITH } {} ;
+                                                                                                                       PUSH mutez 1 ;
+                                                                                                                       DUP 8 ;
+                                                                                                                       GET 3 ;
+                                                                                                                       EDIV ;
+                                                                                                                       IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
+                                                                                                                       PUSH mutez 1 ;
+                                                                                                                       DUP 6 ;
+                                                                                                                       EDIV ;
+                                                                                                                       IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
+                                                                                                                       SWAP ;
+                                                                                                                       SUB ;
+                                                                                                                       ISNAT ;
+                                                                                                                       IF_NONE { PUSH nat 36 ; FAILWITH } {} ;
+                                                                                                                       PUSH mutez 1 ;
+                                                                                                                       SWAP ;
+                                                                                                                       MUL ;
+                                                                                                                       DIG 6 ;
+                                                                                                                       PUSH int 0 ;
+                                                                                                                       SUB ;
+                                                                                                                       SENDER ;
+                                                                                                                       DUP 9 ;
+                                                                                                                       GET 25 ;
+                                                                                                                       CONTRACT %mintOrBurn (pair (int %quantity) (address %target)) ;
+                                                                                                                       IF_NONE { PUSH nat 12 ; FAILWITH } {} ;
+                                                                                                                       PUSH mutez 0 ;
+                                                                                                                       DIG 2 ;
+                                                                                                                       DIG 3 ;
+                                                                                                                       PAIR ;
+                                                                                                                       TRANSFER_TOKENS ;
+                                                                                                                       DIG 4 ;
+                                                                                                                       DUP 7 ;
+                                                                                                                       SELF_ADDRESS ;
+                                                                                                                       DUP 10 ;
+                                                                                                                       DUP ;
+                                                                                                                       GET 21 ;
+                                                                                                                       CONTRACT %transfer (list (pair address (list (pair address (pair nat nat))))) ;
+                                                                                                                       IF_NONE { PUSH nat 0 ; FAILWITH } {} ;
+                                                                                                                       PUSH mutez 0 ;
+                                                                                                                       NIL (pair address (list (pair address (pair nat nat)))) ;
+                                                                                                                       NIL (pair address (pair nat nat)) ;
+                                                                                                                       DIG 7 ;
+                                                                                                                       DIG 5 ;
+                                                                                                                       GET 23 ;
+                                                                                                                       PAIR ;
+                                                                                                                       DIG 6 ;
+                                                                                                                       PAIR ;
+                                                                                                                       CONS ;
+                                                                                                                       DIG 4 ;
+                                                                                                                       PAIR ;
+                                                                                                                       CONS ;
+                                                                                                                       TRANSFER_TOKENS ;
+                                                                                                                       DIG 6 ;
+                                                                                                                       CONTRACT unit ;
+                                                                                                                       IF_NONE { PUSH nat 9 ; FAILWITH } {} ;
+                                                                                                                       DIG 6 ;
+                                                                                                                       UNIT ;
+                                                                                                                       TRANSFER_TOKENS ;
+                                                                                                                       DIG 6 ;
+                                                                                                                       DIG 4 ;
+                                                                                                                       UPDATE 3 ;
+                                                                                                                       DIG 5 ;
+                                                                                                                       UPDATE 5 ;
+                                                                                                                       DIG 4 ;
+                                                                                                                       UPDATE 1 ;
+                                                                                                                       NIL operation ;
+                                                                                                                       DIG 2 ;
+                                                                                                                       CONS ;
+                                                                                                                       DIG 2 ;
+                                                                                                                       CONS ;
+                                                                                                                       DIG 2 ;
+                                                                                                                       CONS ;
+                                                                                                                       PAIR } } } } }
+                                                                                                 { PUSH nat 43 ; FAILWITH } } }
+                                                                                       { UNPAIR 4 ;
+                                                                                         DUP 5 ;
+                                                                                         GET 13 ;
+                                                                                         IF { PUSH nat 2 ; FAILWITH }
+                                                                                            { PUSH nat 1000 ;
                                                                                               DUP 6 ;
                                                                                               GET 5 ;
-                                                                                              ADD ;
-                                                                                              UPDATE 5 ;
-                                                                                              DUP 2 ;
-                                                                                              DUP 6 ;
+                                                                                              COMPARE ;
+                                                                                              GE ;
+                                                                                              PUSH nat 0 ;
+                                                                                              DUP 7 ;
                                                                                               CAR ;
-                                                                                              ADD ;
-                                                                                              UPDATE 1 ;
-                                                                                              AMOUNT ;
-                                                                                              DIG 5 ;
+                                                                                              COMPARE ;
+                                                                                              GT ;
+                                                                                              PUSH mutez 0 ;
+                                                                                              DUP 8 ;
                                                                                               GET 3 ;
-                                                                                              ADD ;
-                                                                                              UPDATE 3 ;
-                                                                                              SWAP ;
-                                                                                              SELF_ADDRESS ;
-                                                                                              SENDER ;
-                                                                                              DUP 4 ;
-                                                                                              DUP ;
-                                                                                              GET 17 ;
-                                                                                              CONTRACT %transfer (list (pair address (list (pair address (pair nat nat))))) ;
-                                                                                              IF_NONE { PUSH nat 0 ; FAILWITH } {} ;
-                                                                                              PUSH mutez 0 ;
-                                                                                              NIL (pair address (list (pair address (pair nat nat)))) ;
-                                                                                              NIL (pair address (pair nat nat)) ;
-                                                                                              DIG 7 ;
-                                                                                              DIG 5 ;
-                                                                                              GET 19 ;
-                                                                                              PAIR ;
-                                                                                              DIG 6 ;
-                                                                                              PAIR ;
-                                                                                              CONS ;
-                                                                                              DIG 4 ;
-                                                                                              PAIR ;
-                                                                                              CONS ;
-                                                                                              TRANSFER_TOKENS ;
-                                                                                              DIG 2 ;
-                                                                                              INT ;
-                                                                                              DIG 3 ;
-                                                                                              DUP 4 ;
-                                                                                              GET 21 ;
-                                                                                              CONTRACT %mintOrBurn (pair (int %quantity) (address %target)) ;
-                                                                                              IF_NONE { PUSH nat 12 ; FAILWITH } {} ;
-                                                                                              PUSH mutez 0 ;
-                                                                                              DIG 2 ;
-                                                                                              DIG 3 ;
-                                                                                              PAIR ;
-                                                                                              TRANSFER_TOKENS ;
-                                                                                              DIG 2 ;
-                                                                                              NIL operation ;
-                                                                                              DIG 2 ;
-                                                                                              CONS ;
-                                                                                              DIG 2 ;
-                                                                                              CONS ;
-                                                                                              PAIR } } } }
-                                                                             { PUSH nat 43 ; FAILWITH } } } } } } } } } } } } } } } } } } ;
+                                                                                              COMPARE ;
+                                                                                              GT ;
+                                                                                              DUP 8 ;
+                                                                                              GET 7 ;
+                                                                                              AND ;
+                                                                                              AND ;
+                                                                                              AND ;
+                                                                                              IF { DUP 5 ;
+                                                                                                   GET 9 ;
+                                                                                                   IF { PUSH nat 52 ; FAILWITH }
+                                                                                                      { DIG 3 ;
+                                                                                                        NOW ;
+                                                                                                        COMPARE ;
+                                                                                                        GE ;
+                                                                                                        IF { PUSH nat 3 ; FAILWITH }
+                                                                                                           { PUSH mutez 1 ;
+                                                                                                             DUP 5 ;
+                                                                                                             GET 3 ;
+                                                                                                             EDIV ;
+                                                                                                             IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
+                                                                                                             PUSH mutez 1 ;
+                                                                                                             AMOUNT ;
+                                                                                                             EDIV ;
+                                                                                                             IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
+                                                                                                             DUP 2 ;
+                                                                                                             DUP 7 ;
+                                                                                                             GET 5 ;
+                                                                                                             DUP 3 ;
+                                                                                                             MUL ;
+                                                                                                             EDIV ;
+                                                                                                             IF_NONE { PUSH string "DIV by 0" ; FAILWITH } { CAR } ;
+                                                                                                             DIG 2 ;
+                                                                                                             DUP 7 ;
+                                                                                                             CAR ;
+                                                                                                             DIG 3 ;
+                                                                                                             MUL ;
+                                                                                                             EDIV ;
+                                                                                                             IF_NONE
+                                                                                                               { PUSH string "DIV by 0" ; FAILWITH }
+                                                                                                               { UNPAIR ; SWAP ; INT ; EQ ; IF {} { PUSH nat 1 ; ADD } } ;
+                                                                                                             DIG 4 ;
+                                                                                                             DUP 2 ;
+                                                                                                             COMPARE ;
+                                                                                                             GT ;
+                                                                                                             IF { PUSH nat 4 ; FAILWITH }
+                                                                                                                { DIG 3 ;
+                                                                                                                  DUP 3 ;
+                                                                                                                  COMPARE ;
+                                                                                                                  LT ;
+                                                                                                                  IF { PUSH nat 5 ; FAILWITH }
+                                                                                                                     { DUP 4 ;
+                                                                                                                       DUP 3 ;
+                                                                                                                       DUP 6 ;
+                                                                                                                       GET 5 ;
+                                                                                                                       ADD ;
+                                                                                                                       UPDATE 5 ;
+                                                                                                                       DUP 2 ;
+                                                                                                                       DUP 6 ;
+                                                                                                                       CAR ;
+                                                                                                                       ADD ;
+                                                                                                                       UPDATE 1 ;
+                                                                                                                       AMOUNT ;
+                                                                                                                       DIG 5 ;
+                                                                                                                       GET 3 ;
+                                                                                                                       ADD ;
+                                                                                                                       UPDATE 3 ;
+                                                                                                                       SWAP ;
+                                                                                                                       SELF_ADDRESS ;
+                                                                                                                       SENDER ;
+                                                                                                                       DUP 4 ;
+                                                                                                                       DUP ;
+                                                                                                                       GET 21 ;
+                                                                                                                       CONTRACT %transfer (list (pair address (list (pair address (pair nat nat))))) ;
+                                                                                                                       IF_NONE { PUSH nat 0 ; FAILWITH } {} ;
+                                                                                                                       PUSH mutez 0 ;
+                                                                                                                       NIL (pair address (list (pair address (pair nat nat)))) ;
+                                                                                                                       NIL (pair address (pair nat nat)) ;
+                                                                                                                       DIG 7 ;
+                                                                                                                       DIG 5 ;
+                                                                                                                       GET 23 ;
+                                                                                                                       PAIR ;
+                                                                                                                       DIG 6 ;
+                                                                                                                       PAIR ;
+                                                                                                                       CONS ;
+                                                                                                                       DIG 4 ;
+                                                                                                                       PAIR ;
+                                                                                                                       CONS ;
+                                                                                                                       TRANSFER_TOKENS ;
+                                                                                                                       DIG 2 ;
+                                                                                                                       INT ;
+                                                                                                                       DIG 3 ;
+                                                                                                                       DUP 4 ;
+                                                                                                                       GET 25 ;
+                                                                                                                       CONTRACT %mintOrBurn (pair (int %quantity) (address %target)) ;
+                                                                                                                       IF_NONE { PUSH nat 12 ; FAILWITH } {} ;
+                                                                                                                       PUSH mutez 0 ;
+                                                                                                                       DIG 2 ;
+                                                                                                                       DIG 3 ;
+                                                                                                                       PAIR ;
+                                                                                                                       TRANSFER_TOKENS ;
+                                                                                                                       DIG 2 ;
+                                                                                                                       NIL operation ;
+                                                                                                                       DIG 2 ;
+                                                                                                                       CONS ;
+                                                                                                                       DIG 2 ;
+                                                                                                                       CONS ;
+                                                                                                                       PAIR } } } } }
+                                                                                                 { PUSH nat 43 ; FAILWITH } } } } } } } } } } } } } } } } } } } } } } } ;
   view "get_reserves"
        unit
        (pair nat nat)
@@ -1168,6 +1317,7 @@
          AND ;
          AND ;
          AND } ;
+  view "is_paused" unit bool { GET 11 } ;
   view "get_fee_bp"
        unit
        (pair nat (pair nat nat))
@@ -1192,9 +1342,12 @@
          DUP 5 ;
          INT ;
          EQ ;
-         DIG 6 ;
+         DUP 7 ;
+         GET 9 ;
+         DIG 7 ;
          GET 7 ;
          NOT ;
+         OR ;
          OR ;
          OR ;
          OR ;
@@ -1233,9 +1386,12 @@
          DUP 5 ;
          INT ;
          EQ ;
-         DIG 6 ;
+         DUP 7 ;
+         GET 9 ;
+         DIG 7 ;
          GET 7 ;
          NOT ;
+         OR ;
          OR ;
          OR ;
          OR ;
