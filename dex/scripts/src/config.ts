@@ -5,7 +5,11 @@ import {
     ValidationResult,
     validateAddress,
     validateContractAddress,
+    validateKeyHash,
 } from "@taquito/utils";
+
+export const TEZOS_MAINNET_CHAIN_ID = "NetXdQprcVkpaWU";
+const SHA256_PATTERN = /^[0-9a-f]{64}$/;
 
 dotenv.config();
 
@@ -14,6 +18,9 @@ interface NetworkConfig {
     rpc: string;
     tzktApiUrl: string;
     privateKey?: string;
+    expectedChainId?: string;
+    remoteSignerUrl?: string;
+    remoteSignerPkh?: string;
 }
 
 interface SeedAmount {
@@ -41,12 +48,18 @@ export const networks: Record<NetworkName, NetworkConfig> = {
         tzktApiUrl:
             process.env.TESTNET_TZKT_API || "https://api.ghostnet.tzkt.io",
         privateKey: process.env.TESTNET_PRIVATE_KEY,
+        expectedChainId: process.env.TESTNET_CHAIN_ID,
+        remoteSignerUrl: process.env.TESTNET_REMOTE_SIGNER_URL,
+        remoteSignerPkh: process.env.TESTNET_REMOTE_SIGNER_PKH,
     },
     mainnet: {
         name: "Mainnet",
         rpc: process.env.MAINNET_RPC || "https://rpc.tzkt.io/mainnet",
         tzktApiUrl: process.env.MAINNET_TZKT_API || "https://api.tzkt.io",
         privateKey: process.env.MAINNET_PRIVATE_KEY,
+        expectedChainId: TEZOS_MAINNET_CHAIN_ID,
+        remoteSignerUrl: process.env.MAINNET_REMOTE_SIGNER_URL,
+        remoteSignerPkh: process.env.MAINNET_REMOTE_SIGNER_PKH,
     },
     // Optional smoke-test network; only required when deploying with --network=previewnet.
     previewnet: {
@@ -58,6 +71,9 @@ export const networks: Record<NetworkName, NetworkConfig> = {
             process.env.PREVIEWNET_TZKT_API
             || "https://api.previewnet.tezosx.tzkt.io",
         privateKey: process.env.PREVIEWNET_PRIVATE_KEY,
+        expectedChainId: process.env.PREVIEWNET_CHAIN_ID,
+        remoteSignerUrl: process.env.PREVIEWNET_REMOTE_SIGNER_URL,
+        remoteSignerPkh: process.env.PREVIEWNET_REMOTE_SIGNER_PKH,
     },
 };
 
@@ -83,7 +99,17 @@ const config: Config = {
 };
 
 export interface FullConfig extends NetworkConfig, Config {
-    privateKey: string;
+    privateKey?: string;
+    expectedChainId: string;
+    confirmations: number;
+    deploymentStateFile: string;
+    dexArtifactSha256?: string;
+    lqtArtifactSha256?: string;
+    tokenCodeSha256?: string;
+    managerThreshold?: number;
+    protocolFeeRecipientThreshold?: number;
+    tokenIntegrationOwner?: string;
+    tokenIncidentChannel?: string;
     seedAmount: {
         xtz: string;
         token: string;
@@ -99,9 +125,36 @@ export function getConfig(networkName: NetworkName): FullConfig {
         );
     }
 
-    if (!networkConfig.privateKey) {
+    const hasRemoteSigner =
+        Boolean(networkConfig.remoteSignerUrl)
+        && Boolean(networkConfig.remoteSignerPkh);
+    if (
+        Boolean(networkConfig.remoteSignerUrl)
+        !== Boolean(networkConfig.remoteSignerPkh)
+    ) {
         throw new Error(
-            `Private key not configured for ${networkName}. Set ${networkName.toUpperCase()}_PRIVATE_KEY in .env file.`
+            `${networkName.toUpperCase()}_REMOTE_SIGNER_URL and `
+            + `${networkName.toUpperCase()}_REMOTE_SIGNER_PKH must be set together.`
+        );
+    }
+    if (!networkConfig.privateKey && !hasRemoteSigner) {
+        throw new Error(
+            `Signer not configured for ${networkName}. Set `
+            + `${networkName.toUpperCase()}_PRIVATE_KEY or the matching remote-signer variables.`
+        );
+    }
+
+    if (!networkConfig.expectedChainId) {
+        throw new Error(
+            `${networkName.toUpperCase()}_CHAIN_ID must be set so deployment fails closed on the wrong RPC.`
+        );
+    }
+    if (
+        networkConfig.remoteSignerPkh
+        && validateKeyHash(networkConfig.remoteSignerPkh) !== ValidationResult.VALID
+    ) {
+        throw new Error(
+            `${networkName.toUpperCase()}_REMOTE_SIGNER_PKH is not a valid implicit address.`
         );
     }
 
@@ -123,10 +176,68 @@ export function getConfig(networkName: NetworkName): FullConfig {
         "PROTOCOL_FEE_RECIPIENT"
     );
 
+    const dexArtifactSha256 = optionalSha256("DEX_ARTIFACT_SHA256");
+    const lqtArtifactSha256 = optionalSha256("LQT_ARTIFACT_SHA256");
+    const tokenCodeSha256 = optionalSha256("TOKEN_CODE_SHA256");
+    const managerThreshold = getOptionalPositiveIntegerEnv(
+        "MANAGER_MULTISIG_THRESHOLD"
+    );
+    const protocolFeeRecipientThreshold = getOptionalPositiveIntegerEnv(
+        "PROTOCOL_FEE_RECIPIENT_MULTISIG_THRESHOLD"
+    );
+    const tokenIntegrationOwner = process.env.TOKEN_INTEGRATION_OWNER?.trim();
+    const tokenIncidentChannel = process.env.TOKEN_INCIDENT_CHANNEL?.trim();
+    if (
+        networkName === "mainnet"
+        && (!dexArtifactSha256 || !lqtArtifactSha256 || !tokenCodeSha256)
+    ) {
+        throw new Error(
+            "Mainnet requires DEX_ARTIFACT_SHA256, LQT_ARTIFACT_SHA256, and TOKEN_CODE_SHA256."
+        );
+    }
+    if (
+        networkName === "mainnet"
+        && (
+            validateContractAddress(config.manager) !== ValidationResult.VALID
+            || managerThreshold === undefined
+            || (
+                config.poolType === "mod"
+                && (
+                    validateContractAddress(config.protocolFeeRecipient)
+                        !== ValidationResult.VALID
+                    || protocolFeeRecipientThreshold === undefined
+                )
+            )
+        )
+    ) {
+        throw new Error(
+            "Mainnet requires originated multisig role addresses and documented thresholds."
+        );
+    }
+    if (
+        networkName === "mainnet"
+        && (!tokenIntegrationOwner || !tokenIncidentChannel)
+    ) {
+        throw new Error(
+            "Mainnet requires TOKEN_INTEGRATION_OWNER and TOKEN_INCIDENT_CHANNEL."
+        );
+    }
+
     return {
         ...networkConfig,
         ...config,
-        privateKey: networkConfig.privateKey,
+        expectedChainId: networkConfig.expectedChainId,
+        confirmations: getPositiveIntegerEnv("CONFIRMATIONS", 2),
+        deploymentStateFile:
+            process.env.DEX_DEPLOYMENT_STATE?.trim()
+            || `deployments/${networkName}-in-progress.json`,
+        dexArtifactSha256,
+        lqtArtifactSha256,
+        tokenCodeSha256,
+        managerThreshold,
+        protocolFeeRecipientThreshold,
+        tokenIntegrationOwner,
+        tokenIncidentChannel,
         seedAmount: {
             xtz: config.seedAmount.xtz!,
             token: config.seedAmount.token!,
@@ -150,4 +261,39 @@ function requireValidAddress(result: ValidationResult, name: string): void {
     if (result !== ValidationResult.VALID) {
         throw new Error(`${name} is not a valid Tezos address`);
     }
+}
+
+function optionalSha256(key: string): string | undefined {
+    const value = process.env[key]?.trim().toLowerCase();
+    if (!value) return undefined;
+    if (!SHA256_PATTERN.test(value)) {
+        throw new Error(`${key} must be a lowercase SHA-256 digest`);
+    }
+    return value;
+}
+
+function getPositiveIntegerEnv(key: string, fallback: number): number {
+    const value = process.env[key]?.trim();
+    if (!value) return fallback;
+    if (!/^[1-9][0-9]*$/.test(value)) {
+        throw new Error(`${key} must be a positive integer`);
+    }
+    const parsed = Number(value);
+    if (!Number.isSafeInteger(parsed)) {
+        throw new Error(`${key} is too large`);
+    }
+    return parsed;
+}
+
+function getOptionalPositiveIntegerEnv(key: string): number | undefined {
+    const value = process.env[key]?.trim();
+    if (!value) return undefined;
+    if (!/^[1-9][0-9]*$/.test(value)) {
+        throw new Error(`${key} must be a positive integer`);
+    }
+    const parsed = Number(value);
+    if (!Number.isSafeInteger(parsed)) {
+        throw new Error(`${key} is too large`);
+    }
+    return parsed;
 }

@@ -148,6 +148,8 @@ let setup_full_dex () =
       (SetLqtAddress (Test.Typed_address.to_address lqt_orig.taddr))
       0tez in
   let () = activate_dex dex_orig.taddr 1tez 1000000n 1000000n in
+  let _ : nat =
+    Test.Typed_address.transfer_exn dex_orig.taddr (SetPaused false) 0tez in
   (dex_orig, lqt_orig, tok_orig)
 
 let setup_dex_with_updating_pool () =
@@ -202,6 +204,8 @@ let setup_custom_dex (xtz_pool : tez) (token_pool : nat) (lqt_total : nat) =
   let _ : nat = Test.Typed_address.transfer_exn tok_orig.taddr (Transfer transfer_param) 0tez in
   let _ : nat = Test.Typed_address.transfer_exn dex_orig.taddr (UpdateTokenPool ()) 0tez in
   let () = activate_dex dex_orig.taddr xtz_pool token_pool lqt_total in
+  let _ : nat =
+    Test.Typed_address.transfer_exn dex_orig.taddr (SetPaused false) 0tez in
   (dex_orig, lqt_orig, tok_orig)
 
 (*****************************************************************************)
