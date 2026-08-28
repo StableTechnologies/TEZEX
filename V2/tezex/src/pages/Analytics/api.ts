@@ -144,6 +144,9 @@ interface RangeConfig {
 }
 
 const TZKT_API = "https://api.tzkt.io/v1";
+const REQUEST_TIMEOUT_MS = 12_000;
+const MAX_CONCURRENT_REQUESTS = 2;
+const MIN_REQUEST_INTERVAL_MS = 200;
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
 const SWAP_ENTRYPOINTS = ["xtzToToken", "tokenToXtz"];
@@ -180,25 +183,124 @@ const getRecord = (value: unknown): Record<string, unknown> =>
     ? (value as Record<string, unknown>)
     : {};
 
+const cancelledRequest = () =>
+  new DOMException("Analytics request cancelled", "AbortError");
+
+interface QueuedRequest {
+  signal?: AbortSignal;
+  resolve: (release: () => void) => void;
+  reject: (reason: DOMException) => void;
+  onAbort: () => void;
+}
+
+let activeRequests = 0;
+let lastRequestStartedAt = 0;
+let requestStartTimer: number | undefined;
+const requestQueue: QueuedRequest[] = [];
+
+const pumpRequestQueue = () => {
+  while (activeRequests < MAX_CONCURRENT_REQUESTS && requestQueue.length) {
+    const delay = Math.max(
+      0,
+      lastRequestStartedAt + MIN_REQUEST_INTERVAL_MS - Date.now()
+    );
+    if (delay > 0) {
+      if (requestStartTimer === undefined) {
+        requestStartTimer = window.setTimeout(() => {
+          requestStartTimer = undefined;
+          pumpRequestQueue();
+        }, delay);
+      }
+      return;
+    }
+
+    const queued = requestQueue.shift();
+    if (!queued) return;
+    queued.signal?.removeEventListener("abort", queued.onAbort);
+    if (queued.signal?.aborted) {
+      queued.reject(cancelledRequest());
+      continue;
+    }
+
+    activeRequests += 1;
+    lastRequestStartedAt = Date.now();
+    let released = false;
+    queued.resolve(() => {
+      if (released) return;
+      released = true;
+      activeRequests -= 1;
+      pumpRequestQueue();
+    });
+  }
+};
+
+const acquireRequestSlot = (signal?: AbortSignal) =>
+  new Promise<() => void>((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(cancelledRequest());
+      return;
+    }
+
+    const queued: QueuedRequest = {
+      signal,
+      resolve,
+      reject,
+      onAbort: () => {
+        const index = requestQueue.indexOf(queued);
+        if (index >= 0) requestQueue.splice(index, 1);
+        reject(cancelledRequest());
+        pumpRequestQueue();
+      },
+    };
+    signal?.addEventListener("abort", queued.onAbort, { once: true });
+    requestQueue.push(queued);
+    pumpRequestQueue();
+  });
+
 const wait = (duration: number, signal?: AbortSignal) =>
   new Promise<void>((resolve, reject) => {
-    const timeout = window.setTimeout(resolve, duration);
-    signal?.addEventListener(
-      "abort",
-      () => {
-        window.clearTimeout(timeout);
-        reject(new DOMException("Analytics request cancelled", "AbortError"));
-      },
-      { once: true }
-    );
+    if (signal?.aborted) {
+      reject(cancelledRequest());
+      return;
+    }
+    const onAbort = () => {
+      window.clearTimeout(timeout);
+      reject(cancelledRequest());
+    };
+    const timeout = window.setTimeout(() => {
+      signal?.removeEventListener("abort", onAbort);
+      resolve();
+    }, duration);
+    signal?.addEventListener("abort", onAbort, { once: true });
   });
 
 const fetchJson = async <T>(path: string, signal?: AbortSignal): Promise<T> => {
   for (let attempt = 0; attempt < 4; attempt += 1) {
-    const response = await fetch(`${TZKT_API}${path}`, {
-      signal,
-      headers: { Accept: "application/json" },
-    });
+    const releaseRequestSlot = await acquireRequestSlot(signal);
+    const controller = new AbortController();
+    let timedOut = false;
+    const cancel = () => controller.abort();
+    if (signal?.aborted) cancel();
+    else signal?.addEventListener("abort", cancel, { once: true });
+    const timeout = window.setTimeout(() => {
+      timedOut = true;
+      controller.abort();
+    }, REQUEST_TIMEOUT_MS);
+
+    let response: Response;
+    try {
+      response = await fetch(`${TZKT_API}${path}`, {
+        signal: controller.signal,
+        headers: { Accept: "application/json" },
+      });
+    } catch (reason) {
+      if (timedOut) throw new Error("TzKT analytics request timed out");
+      throw reason;
+    } finally {
+      window.clearTimeout(timeout);
+      signal?.removeEventListener("abort", cancel);
+      releaseRequestSlot();
+    }
 
     if (response.ok) return (await response.json()) as T;
 
@@ -620,18 +722,15 @@ export const loadAnalytics = async (
   const addresses = pools.map((pool) => pool.address);
   const headPromise = fetchJson<TzktHead>("/head", signal);
   const quotePromise = fetchJson<TzktQuote>("/quotes/last", signal);
-  const storageDataPromise = async () => {
-    const storages: Record<string, unknown>[] = [];
-    for (const pool of pools) {
-      storages.push(
-        await fetchJson<Record<string, unknown>>(
+  const storageDataPromise = () =>
+    Promise.all(
+      pools.map((pool) =>
+        fetchJson<Record<string, unknown>>(
           `/contracts/${pool.address}/storage`,
           signal
         )
-      );
-    }
-    return storages;
-  };
+      )
+    );
   const preliminaryHead = await headPromise;
   const now = new Date(preliminaryHead.timestamp).getTime();
   const requestedSince = Math.min(
@@ -639,53 +738,55 @@ export const loadAnalytics = async (
     ANALYTICS_HISTORY_CUTOFF
   );
   const swapsPromise = async () => {
-    const xtzToToken = await fetchTransactionHistory(
-      addresses,
-      ["xtzToToken"],
-      requestedSince,
-      "id,timestamp,target,amount,parameter",
-      signal
-    );
-    const tokenToXtz = await fetchTransactionHistory(
-      addresses,
-      ["tokenToXtz"],
-      requestedSince,
-      "id,timestamp,target,amount,parameter,storage",
-      signal
-    );
+    const [xtzToToken, tokenToXtz] = await Promise.all([
+      fetchTransactionHistory(
+        addresses,
+        ["xtzToToken"],
+        requestedSince,
+        "id,timestamp,target,amount,parameter",
+        signal
+      ),
+      fetchTransactionHistory(
+        addresses,
+        ["tokenToXtz"],
+        requestedSince,
+        "id,timestamp,target,amount,parameter,storage",
+        signal
+      ),
+    ]);
     return [...xtzToToken, ...tokenToXtz];
   };
   const balanceDataPromise = async () => {
-    const firstBalances: TzktBalancePoint[] = [];
-    for (const pool of pools) {
-      firstBalances.push(await fetchFirstBalance(pool, signal));
-    }
-    const histories: TzktBalancePoint[][][] = [];
-    for (const range of BALANCE_HISTORY_RANGES) {
-      const rangeHistories: TzktBalancePoint[][] = [];
-      for (const pool of pools) {
-        rangeHistories.push(
-          await fetchBalanceHistory(pool, range, preliminaryHead.level, signal)
-        );
-      }
-      histories.push(rangeHistories);
-    }
+    const [firstBalances, histories] = await Promise.all([
+      Promise.all(pools.map((pool) => fetchFirstBalance(pool, signal))),
+      Promise.all(
+        BALANCE_HISTORY_RANGES.map((range) =>
+          Promise.all(
+            pools.map((pool) =>
+              fetchBalanceHistory(
+                pool,
+                range,
+                preliminaryHead.level,
+                signal
+              )
+            )
+          )
+        )
+      ),
+    ]);
     return { firstBalances, histories };
   };
-  const recentTransactionsPromise = async () => {
-    const transactions: TzktTransaction[][] = [];
-    for (const pool of pools) {
-      transactions.push(
-        await fetchTransactions(
+  const recentTransactionsPromise = () =>
+    Promise.all(
+      pools.map((pool) =>
+        fetchTransactions(
           [pool.address],
           ACTIVITY_ENTRYPOINTS,
           { limit: 8, sort: "desc" },
           signal
         )
-      );
-    }
-    return transactions;
-  };
+      )
+    );
 
   const [quote, storages, balanceData, swaps, recentTransactionsByPool] =
     await Promise.all([
