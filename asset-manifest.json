@@ -1,8 +1,8 @@
 {
   "files": {
     "main.css": "/static/css/main.4fec6e91.css",
-    "main.js": "/static/js/main.4856e38b.js",
-    "static/js/488.6a7f7bdd.chunk.js": "/static/js/488.6a7f7bdd.chunk.js",
+    "main.js": "/static/js/main.19ad111f.js",
+    "static/js/523.39173091.chunk.js": "/static/js/523.39173091.chunk.js",
     "static/media/tick.svg": "/static/media/tick.298f5d82d1a70db591c85004b360e2d3.svg",
     "index.html": "/index.html",
     "static/media/TezosLogo_Horizontal_White.svg": "/static/media/TezosLogo_Horizontal_White.4cace296597ae1e4503a6abbe83c1365.svg",
@@ -14,11 +14,11 @@
     "static/media/copyIcon.svg": "/static/media/copyIcon.33a1802d976cc4a100936132200a4e17.svg",
     "static/media/tezexIcon.svg": "/static/media/tezexIcon.3c8afc012f361860a7d52d042c689e72.svg",
     "main.4fec6e91.css.map": "/static/css/main.4fec6e91.css.map",
-    "main.4856e38b.js.map": "/static/js/main.4856e38b.js.map",
-    "488.6a7f7bdd.chunk.js.map": "/static/js/488.6a7f7bdd.chunk.js.map"
+    "main.19ad111f.js.map": "/static/js/main.19ad111f.js.map",
+    "523.39173091.chunk.js.map": "/static/js/523.39173091.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.4fec6e91.css",
-    "static/js/main.4856e38b.js"
+    "static/js/main.19ad111f.js"
   ]
 }
