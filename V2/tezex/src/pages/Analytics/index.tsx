@@ -498,9 +498,10 @@ export const Analytics: FC = () => {
 
     refreshTarget.current = undefined;
     let active = true;
+    const controller = new AbortController();
     setLoading(true);
     setError(undefined);
-    void loadAnalytics(network.info)
+    void loadAnalytics(network.info, controller.signal)
       .then((nextModel) => {
         if (!active) return;
         cache.current.set(cacheKey, nextModel);
@@ -520,6 +521,7 @@ export const Analytics: FC = () => {
 
     return () => {
       active = false;
+      controller.abort();
     };
   }, [cacheKey, isMainnet, network.info, refreshKey]);
 

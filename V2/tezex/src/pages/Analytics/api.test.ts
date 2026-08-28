@@ -1,5 +1,7 @@
 import { Token } from "../../types/general";
 import { PoolConfig, PoolType } from "../../types/pools";
+import { NetworkInfo } from "../../contexts/network";
+import mainnet from "../../config/network/mainnet.json";
 import { ANALYTICS_HISTORY, ANALYTICS_HISTORY_CUTOFF } from "./history";
 import {
   ANALYTICS_RANGES,
@@ -9,6 +11,7 @@ import {
   calculateSwapVolumeXtz,
   convertXtz,
   formatDenominatedXtz,
+  loadAnalytics,
   RANGE_CONFIG,
   TzktTransaction,
   valueAt,
@@ -205,5 +208,72 @@ describe("analytics calculations", () => {
     expect(formatDenominatedXtz(1000, "XTZ", quote)).toBe("1K XTZ");
     expect(formatDenominatedXtz(1000, "BTC", quote)).toBe("0.003 BTC");
     expect(formatDenominatedXtz(1000, "USD", quote)).toBe("$200.00");
+  });
+
+  it("exposes every configured mainnet pool across all analytics surfaces", async () => {
+    const originalFetch = global.fetch;
+    const response = (payload: unknown) =>
+      ({
+        ok: true,
+        status: 200,
+        headers: { get: () => null },
+        json: async () => payload,
+      } as unknown as Response);
+
+    global.fetch = jest.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+
+      if (url.endsWith("/head")) {
+        return response({
+          level: 10_000,
+          timestamp: "2026-08-28T12:00:00Z",
+          synced: true,
+        });
+      }
+      if (url.endsWith("/quotes/last")) {
+        return response({
+          timestamp: "2026-08-28T12:00:00Z",
+          btc: 0.000003,
+          usd: 0.2,
+        });
+      }
+      if (url.includes("/storage")) {
+        return response({
+          xtzPool: "1000000",
+          tokenPool: "1000000",
+          lqtTotal: "1000000",
+        });
+      }
+      if (url.includes("/balance_history")) {
+        return response([
+          {
+            level: 1,
+            timestamp: "2026-08-01T00:00:00Z",
+            balance: 1_000_000,
+          },
+        ]);
+      }
+      if (url.includes("/operations/transactions")) return response([]);
+
+      throw new Error(`Unexpected analytics request: ${url}`);
+    }) as typeof fetch;
+
+    try {
+      const network = mainnet as unknown as NetworkInfo;
+      const model = await loadAnalytics(network);
+      const configuredPoolIds = network.pools.map((pool) => pool.id);
+
+      expect(model.pools.map((pool) => pool.id)).toEqual(configuredPoolIds);
+      expect(model.pools.find((pool) => pool.id === "xtz-usdt-tezex")?.tokenB.label)
+        .toBe("USDt");
+
+      configuredPoolIds.forEach((poolId) => {
+        expect(model.summaryByPool).toHaveProperty(poolId);
+        expect(model.chartByPool).toHaveProperty(poolId);
+        expect(model.activityByPool).toHaveProperty(poolId);
+      });
+    } finally {
+      global.fetch = originalFetch;
+    }
   });
 });
