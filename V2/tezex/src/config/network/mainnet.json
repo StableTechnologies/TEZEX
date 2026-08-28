@@ -20,6 +20,15 @@
       "tokenA": "XTZ",
       "tokenB": "USDtz",
       "lpToken": "LP_XTZUSDtz"
+    },
+    {
+      "id": "xtz-usdt-tezex",
+      "name": "TEZEX",
+      "type": "TEZEX",
+      "address": "KT1XEXSoPfMfnTggFEfVsmQYQfCakBTCHCR1",
+      "tokenA": "XTZ",
+      "tokenB": "USDt",
+      "lpToken": "LP_XTZUSDt"
     }
   ],
   "assets": [
@@ -71,6 +80,14 @@
       "decimals": 6,
       "type": "FA2",
       "tokenId": 0
+    },
+    {
+      "name": "LP_XTZUSDt",
+      "label": "LP-XTZUSDt",
+      "logo": "/assets/lpxtzusdtzLogo.svg",
+      "address": "KT19wPWBNdMDBkdPgPwV8ppC1ez7igANrRCR",
+      "decimals": 6,
+      "type": "FA1.2"
     }
   ]
 }
