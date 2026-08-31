@@ -1,6 +1,6 @@
 # Token-to-token pool internal security assessment
 
-Scope: pool source and artifact, external LQT integration, tests, configuration parser, storage encoder, and non-mainnet deployment workflow.
+Scope: pool source and artifact, external LQT integration, tests, configuration parser, storage encoder, and fail-closed deployment workflow.
 
 Compiler: LIGO 1.11.5.
 
@@ -20,7 +20,7 @@ This is a repository self-assessment, not an independent audit and not a mainnet
 | TT-08 | A mistaken one-step control transfer loses administration. | Manager and fee-recipient changes are two-step, cancelable handoffs. |
 | TT-09 | Deployment uses the wrong chain, artifact, or token implementation. | Tooling pins chain ID, artifact SHA-256, token script-code SHA-256, and required interfaces before origination. |
 | TT-10 | Interrupted setup leaves operators/allowances unnecessarily active. | Seed authorization, initialization, and cleanup are one atomic batch; the deployment receipt supports resuming confirmed prior steps. |
-| TT-11 | Mainnet is run before review and rehearsal. | Token-to-token scripts expose Previewnet/testnet only; no mainnet command or confirmation bypass exists. |
+| TT-11 | Mainnet is run before review and rehearsal. | Mainnet is explicit and fails closed on chain identity, dirty source, artifact/token hashes, seed balances, signer mode, multisig policy, operational ownership, paused handoff, and final signer-free verification. |
 
 ## Accounting invariants
 
@@ -72,7 +72,7 @@ The LIGO suite exercises:
 - immutable fee/quote views; and
 - hostile token callback reentrancy with whole-transaction rollback.
 
-The TypeScript suite tests arbitrary-precision math, all supported asset combinations, identical/ambiguous descriptor rejection, same-contract distinct FA2 IDs, immutable IPFS URI requirements, artifact digest validation, storage schema encoding, and absence of a mainnet mode.
+The TypeScript suite tests arbitrary-precision math, all supported asset combinations, identical/ambiguous descriptor rejection, same-contract distinct FA2 IDs, immutable IPFS URI requirements, artifact digest validation, storage schema encoding, test-network/Mainnet separation, and Mainnet release requirements.
 
 Independent recompilation in the pinned LIGO 1.11.5 container produced a byte-identical pool artifact with SHA-256 `a7939ae6ee629057d6dca4301a9be8485b19d72efebcdf172cbd4a3a0e48957e`; `ligo info measure-contract` reports 9,189 bytes. The existing LQT source also reproduced its checked-in artifact (`2df971245f3d468ee2668e1ed48797852eedd280348c753e9f2cd1d1bdf23921`). The full pre-existing LQT and native-pool LIGO regression suites pass alongside the new pool suite. Type checking and all Node tests pass under Taquito 25, and `npm audit --omit=dev` reports zero known production-dependency vulnerabilities at assessment time.
 
@@ -106,4 +106,4 @@ Direct donations can remain locked. The deliberate absence of rescue/sync author
 - Network rehearsal using the intended metadata, seed ratios, fee recipient, and final manager.
 - Indexer/wallet/router compatibility testing for the external FA1.2 LQT.
 - Front-end and monitoring integration.
-- A separately reviewed change if and when mainnet deployment support is desired.
+- Independent review of the Mainnet-enablement change and its final release manifest.

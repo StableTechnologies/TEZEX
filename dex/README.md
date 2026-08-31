@@ -4,7 +4,7 @@
 
 The generic FA1.2/FA2 single-pair review candidate is documented in [TOKEN_TOKEN_POOL.md](./TOKEN_TOKEN_POOL.md). Its internal security assessment and residual launch gates are in [TOKEN_TOKEN_POOL_SECURITY_REVIEW.md](./TOKEN_TOKEN_POOL_SECURITY_REVIEW.md), with upstream lineage and design differences recorded in [TOKEN_TOKEN_POOL_PROVENANCE.md](./TOKEN_TOKEN_POOL_PROVENANCE.md).
 
-This pool is separate from the native-XTZ Dexter contracts described below. It uses the repository's external FA1.2 LQT, immutable 25 bp LP and 5 bp protocol fees, and contains no hardcoded asset, manager, or fee-recipient address. Its deployment tooling is limited to Previewnet/testnet pending independent review.
+This pool is separate from the native-XTZ Dexter contracts described below. It uses the repository's external FA1.2 LQT, immutable 25 bp LP and 5 bp protocol fees, and contains no hardcoded asset, manager, or fee-recipient address. Its Mainnet deployment path is explicit and fail-closed; exact pair selection and release parameters remain external review inputs.
 
 Decentralized Exchange (DEX) implementation for Tezos blockchain based on Dexter v2 contracts updated to latest Ligo v1.11.5
 

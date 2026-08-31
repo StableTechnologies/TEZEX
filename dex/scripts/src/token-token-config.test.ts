@@ -32,6 +32,7 @@ const implicitAddress = (byte: number): string =>
 function validEnv(): NodeJS.ProcessEnv {
   return {
     PREVIEWNET_RPC: "https://preview.example.invalid",
+    PREVIEWNET_TZKT_API: "https://preview-indexer.example.invalid",
     PREVIEWNET_CHAIN_ID: "NetXPreview",
     PREVIEWNET_PRIVATE_KEY: "unencrypted:test-only-placeholder",
     TOKEN_A_STANDARD: "FA2",
@@ -49,6 +50,23 @@ function validEnv(): NodeJS.ProcessEnv {
     TOKEN_TOKEN_LQT_CONTRACT_METADATA_URI: "ipfs://contractcid",
     TOKEN_TOKEN_LQT_TOKEN_METADATA_URI: "ipfs://tokencid",
     TOKEN_TOKEN_ARTIFACT_SHA256: "a".repeat(64),
+  };
+}
+
+function validMainnetEnv(): NodeJS.ProcessEnv {
+  return {
+    ...validEnv(),
+    MAINNET_RPC: "https://mainnet.example.invalid",
+    MAINNET_TZKT_API: "https://mainnet-indexer.example.invalid",
+    MAINNET_PRIVATE_KEY: "unencrypted:test-only-placeholder",
+    FINAL_MANAGER: contractAddress(3),
+    PROTOCOL_FEE_RECIPIENT: contractAddress(4),
+    SEED_RECEIVER: contractAddress(3),
+    MANAGER_MULTISIG_THRESHOLD: "2",
+    PROTOCOL_FEE_RECIPIENT_MULTISIG_THRESHOLD: "2",
+    TOKEN_INTEGRATION_OWNER: "operations-team",
+    TOKEN_INCIDENT_CHANNEL: "incident-channel",
+    TOKEN_TOKEN_LQT_ARTIFACT_SHA256: "d".repeat(64),
   };
 }
 
@@ -152,6 +170,12 @@ test("requires immutable IPFS metadata and exact artifact hash", () => {
     () => parseTokenTokenConfig("previewnet", hash),
     /SHA-256/,
   );
+  const lqtHash = validEnv();
+  lqtHash.TOKEN_TOKEN_LQT_ARTIFACT_SHA256 = "not-a-hash";
+  assert.throws(
+    () => parseTokenTokenConfig("previewnet", lqtHash),
+    /TOKEN_TOKEN_LQT_ARTIFACT_SHA256.*SHA-256/,
+  );
 });
 
 test("rejects malformed token and control addresses before any RPC call", () => {
@@ -233,12 +257,39 @@ test("verifies immutable pool assets and protocol-fee recipient storage", () => 
   );
 });
 
-test("does not expose a mainnet deployment mode", () => {
-  const parse = parseTokenTokenConfig as unknown as (
-    network: string,
-    env: NodeJS.ProcessEnv,
-  ) => unknown;
-  assert.throws(() => parse("mainnet", validEnv()), /limited to Previewnet\/testnet/);
+test("parses Mainnet only with explicit production release controls", () => {
+  const config = parseTokenTokenConfig("mainnet", validMainnetEnv());
+  assert.equal(config.expectedChainId, TEZOS_MAINNET_CHAIN_ID);
+  assert.equal(config.finalManager, contractAddress(3));
+  assert.equal(config.seedReceiver, contractAddress(3));
+  assert.equal(config.managerThreshold, 2);
+  assert.equal(config.feeRecipientThreshold, 2);
+  assert.equal(config.lqtArtifactSha256, "d".repeat(64));
+  assert.equal(config.tokenIntegrationOwner, "operations-team");
+  assert.equal(config.tokenIncidentChannel, "incident-channel");
+});
+
+test("Mainnet rejects missing artifact, role, LP-owner, and operations gates", () => {
+  const cases: Array<[string, RegExp]> = [
+    ["TOKEN_TOKEN_LQT_ARTIFACT_SHA256", /LQT_ARTIFACT/],
+    ["SEED_RECEIVER", /SEED_RECEIVER/],
+    ["MANAGER_MULTISIG_THRESHOLD", /multisig role addresses/],
+    ["PROTOCOL_FEE_RECIPIENT_MULTISIG_THRESHOLD", /multisig role addresses/],
+    ["TOKEN_INTEGRATION_OWNER", /INTEGRATION_OWNER/],
+    ["TOKEN_INCIDENT_CHANNEL", /INCIDENT_CHANNEL/],
+  ];
+  for (const [key, message] of cases) {
+    const env = validMainnetEnv();
+    delete env[key];
+    assert.throws(() => parseTokenTokenConfig("mainnet", env), message);
+  }
+
+  const implicitManager = validMainnetEnv();
+  implicitManager.FINAL_MANAGER = implicitAddress(3);
+  assert.throws(
+    () => parseTokenTokenConfig("mainnet", implicitManager),
+    /originated multisig role addresses/,
+  );
 });
 
 test("rejects Mainnet even when hidden behind Previewnet environment names", () => {
@@ -251,14 +302,58 @@ test("rejects Mainnet even when hidden behind Previewnet environment names", () 
   );
 
   assert.throws(
-    () => assertTokenTokenDeploymentChain("NetXPreview", TEZOS_MAINNET_CHAIN_ID),
+    () =>
+      assertTokenTokenDeploymentChain(
+        "previewnet",
+        "NetXPreview",
+        TEZOS_MAINNET_CHAIN_ID,
+      ),
     /refuses Tezos Mainnet/,
   );
   assert.throws(
-    () => assertTokenTokenDeploymentChain("NetXPreview", "NetXWrong"),
+    () =>
+      assertTokenTokenDeploymentChain(
+        "previewnet",
+        "NetXPreview",
+        "NetXWrong",
+      ),
     /RPC chain ID mismatch/,
   );
   assert.doesNotThrow(() =>
-    assertTokenTokenDeploymentChain("NetXPreview", "NetXPreview"),
+    assertTokenTokenDeploymentChain("previewnet", "NetXPreview", "NetXPreview"),
+  );
+  assert.doesNotThrow(() =>
+    assertTokenTokenDeploymentChain(
+      "mainnet",
+      TEZOS_MAINNET_CHAIN_ID,
+      TEZOS_MAINNET_CHAIN_ID,
+    ),
+  );
+  assert.throws(
+    () =>
+      assertTokenTokenDeploymentChain(
+        "mainnet",
+        "NetXPreview",
+        "NetXPreview",
+      ),
+    /permanent Tezos Mainnet chain ID/,
+  );
+});
+
+test("supports exactly one local or remote signer mode", () => {
+  const remote = validMainnetEnv();
+  delete remote.MAINNET_PRIVATE_KEY;
+  remote.MAINNET_REMOTE_SIGNER_URL = "https://signer.example.invalid";
+  remote.MAINNET_REMOTE_SIGNER_PKH = implicitAddress(9);
+  const config = parseTokenTokenConfig("mainnet", remote);
+  assert.equal(config.privateKey, undefined);
+  assert.equal(config.remoteSignerPkh, implicitAddress(9));
+
+  const both = validMainnetEnv();
+  both.MAINNET_REMOTE_SIGNER_URL = "https://signer.example.invalid";
+  both.MAINNET_REMOTE_SIGNER_PKH = implicitAddress(9);
+  assert.throws(
+    () => parseTokenTokenConfig("mainnet", both),
+    /exactly one.*signer mode/,
   );
 });
