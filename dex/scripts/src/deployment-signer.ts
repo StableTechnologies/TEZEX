@@ -2,15 +2,19 @@ import { RemoteSigner } from "@taquito/remote-signer";
 import { InMemorySigner } from "@taquito/signer";
 import type { Signer } from "@taquito/taquito";
 
-import type { FullConfig } from "./config.js";
-
 export interface DeploymentSigner {
     signer: Signer;
     mode: "local-key" | "remote";
 }
 
+export interface DeploymentSignerConfig {
+    privateKey?: string;
+    remoteSignerUrl?: string;
+    remoteSignerPkh?: string;
+}
+
 export async function createDeploymentSigner(
-    config: FullConfig
+    config: DeploymentSignerConfig
 ): Promise<DeploymentSigner> {
     if (config.remoteSignerUrl && config.remoteSignerPkh) {
         return {

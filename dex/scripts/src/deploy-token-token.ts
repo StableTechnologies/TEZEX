@@ -6,7 +6,6 @@ import { fileURLToPath } from "node:url";
 
 import { Parser } from "@taquito/michel-codec";
 import { Schema } from "@taquito/michelson-encoder";
-import { InMemorySigner } from "@taquito/signer";
 import {
   TezosToolkit,
   type ContractAbstraction,
@@ -22,6 +21,17 @@ import {
   type TokenTokenDeploymentConfig,
   type TokenTokenNetwork,
 } from "./token-token-config.js";
+import { createDeploymentSigner } from "./deployment-signer.js";
+import {
+  assertOperationApplied,
+  recoverOrigination,
+} from "./deployment-state.js";
+import {
+  loadTokenTokenDeploymentState,
+  persistTokenTokenDeploymentState,
+  TOKEN_TOKEN_DEPLOYMENT_STATE_VERSION,
+  type TokenTokenDeploymentState,
+} from "./token-token-deployment-state.js";
 import { calculateInitialLqt } from "./token-token-math.js";
 import { scriptCodeSha256 } from "./token-code-hash.js";
 import {
@@ -34,53 +44,18 @@ import { getTokenBalance } from "./util.js";
 dotenv.config();
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
-const deploymentVersion = 1;
 const compilerVersion = "1.11.5";
 const minimumLqt = 1_000n;
+const minimumDeploymentBalance = 5_000_000n;
 
 type Contract = ContractAbstraction<ContractProvider>;
-
-interface DeploymentState {
-  version: number;
-  fingerprint: string;
-  network: TokenTokenNetwork;
-  rpc: string;
-  chainId: string;
-  sourceCommit: string;
-  compilerVersion: string;
-  artifacts: {
-    pool: { path: string; sha256: string; codeSha256: string };
-    lqt: { path: string; sha256: string; codeSha256: string };
-  };
-  deployer: string;
-  config: {
-    tokenA: TokenDescriptor;
-    tokenB: TokenDescriptor;
-    seedAmountA: string;
-    seedAmountB: string;
-    seedReceiver: string;
-    finalManager: string;
-    feeRecipient: string;
-    poolMetadataUri: string;
-    lqtContractMetadataUri: string;
-    lqtTokenMetadataUri: string;
-  };
-  steps: {
-    pool?: { address: string; operation: string };
-    lqt?: { address: string; operation: string };
-    lqtLinked?: { operation: string };
-    initialized?: { operation: string };
-    managerProposed?: { operation: string };
-    verified?: { at: string };
-  };
-}
 
 function parseNetwork(): TokenTokenNetwork {
   const arg = process.argv.slice(2).find((value) => value.startsWith("--network="));
   const network = arg?.slice("--network=".length) ?? "previewnet";
-  if (network !== "previewnet" && network !== "testnet") {
+  if (network !== "previewnet" && network !== "testnet" && network !== "mainnet") {
     throw new Error(
-      `Invalid network ${network}; token-to-token deployment is limited to Previewnet/testnet`,
+      `Invalid token-to-token deployment network ${network}`,
     );
   }
   return network;
@@ -133,7 +108,7 @@ function canonicalConfig(
   config: TokenTokenDeploymentConfig,
   deployer: string,
   seedReceiver: string,
-): DeploymentState["config"] {
+): TokenTokenDeploymentState["config"] {
   return {
     tokenA: config.tokenA,
     tokenB: config.tokenB,
@@ -142,6 +117,14 @@ function canonicalConfig(
     seedReceiver,
     finalManager: config.finalManager,
     feeRecipient: config.feeRecipient,
+    roleThresholds: {
+      manager: config.managerThreshold ?? null,
+      feeRecipient: config.feeRecipientThreshold ?? null,
+    },
+    tokenOperations: {
+      integrationOwner: config.tokenIntegrationOwner ?? null,
+      incidentChannel: config.tokenIncidentChannel ?? null,
+    },
     poolMetadataUri: config.poolMetadataUri,
     lqtContractMetadataUri: config.lqtContractMetadataUri,
     lqtTokenMetadataUri: config.lqtTokenMetadataUri,
@@ -152,34 +135,59 @@ function fingerprint(value: unknown): string {
   return sha256(JSON.stringify(value));
 }
 
-async function persistState(file: string, state: DeploymentState): Promise<void> {
-  const absolute = path.resolve(file);
-  await fs.promises.mkdir(path.dirname(absolute), { recursive: true });
-  const temporary = `${absolute}.${process.pid}.tmp`;
-  await fs.promises.writeFile(temporary, `${JSON.stringify(state, null, 2)}\n`, {
-    mode: 0o600,
-  });
-  await fs.promises.rename(temporary, absolute);
-  await fs.promises.chmod(absolute, 0o600);
-}
-
-async function loadState(file: string): Promise<DeploymentState | undefined> {
-  try {
-    const parsed = JSON.parse(await fs.promises.readFile(path.resolve(file), "utf8"));
-    if (parsed.version !== deploymentVersion) {
-      throw new Error(`Unsupported deployment-state version ${String(parsed.version)}`);
-    }
-    return parsed as DeploymentState;
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined;
-    throw error;
-  }
+function sourceIsClean(): boolean {
+  return execFileSync("git", ["status", "--porcelain"], {
+    cwd: path.resolve(scriptDirectory, "..", "..", ".."),
+    encoding: "utf8",
+  }).trim().length === 0;
 }
 
 async function contractCodeHash(tezos: TezosToolkit, address: string): Promise<string> {
   const script = await tezos.rpc.getScript(address);
   if (!script.code) throw new Error(`Contract ${address} has no script code`);
   return scriptCodeSha256(script.code);
+}
+
+async function resumeOrigination(
+  key: "pool" | "lqt",
+  tezos: TezosToolkit,
+  config: TokenTokenDeploymentConfig,
+  state: TokenTokenDeploymentState,
+  expectedCodeSha256: string,
+): Promise<string | undefined> {
+  const record = state.steps[key];
+  if (!record) return undefined;
+  if (record.status === "injected") {
+    record.address = await recoverOrigination(
+      config.tzktApiUrl,
+      record.operation,
+    );
+    record.status = "applied";
+    await persistTokenTokenDeploymentState(config.stateFile, state);
+  }
+  if (!record.address) {
+    throw new Error(`${key} origination is applied but has no contract address`);
+  }
+  const actualCodeSha256 = await contractCodeHash(tezos, record.address);
+  if (actualCodeSha256 !== expectedCodeSha256) {
+    throw new Error(`${key} origination code does not match the reviewed artifact`);
+  }
+  return record.address;
+}
+
+async function resumeOperation(
+  key: "lqtLinked" | "initialized" | "managerProposed",
+  config: TokenTokenDeploymentConfig,
+  state: TokenTokenDeploymentState,
+): Promise<boolean> {
+  const record = state.steps[key];
+  if (!record) return false;
+  if (record.status === "injected") {
+    await assertOperationApplied(config.tzktApiUrl, record.operation);
+    record.status = "applied";
+    await persistTokenTokenDeploymentState(config.stateFile, state);
+  }
+  return true;
 }
 
 async function assertTokenContract(
@@ -262,12 +270,18 @@ function asOptionAddress(value: unknown): string | null {
 async function verifyDeployment(
   tezos: TezosToolkit,
   config: TokenTokenDeploymentConfig,
-  state: DeploymentState,
+  state: TokenTokenDeploymentState,
   expectedCode: { pool: string; lqt: string },
 ): Promise<void> {
   const poolAddress = state.steps.pool?.address;
   const lqtAddress = state.steps.lqt?.address;
-  if (!poolAddress || !lqtAddress || !state.steps.initialized) {
+  if (
+    !poolAddress ||
+    state.steps.pool?.status !== "applied" ||
+    !lqtAddress ||
+    state.steps.lqt?.status !== "applied" ||
+    state.steps.initialized?.status !== "applied"
+  ) {
     throw new Error("Cannot verify an incomplete deployment");
   }
   const [poolCode, lqtCode] = await Promise.all([
@@ -281,8 +295,8 @@ async function verifyDeployment(
   const pool = await tezos.contract.at(poolAddress);
   const storage = (await pool.storage()) as Record<string, unknown>;
   assertPoolIdentityStorage(storage, config);
-  if (storage.active !== true || storage.paused !== false || storage.entered !== false) {
-    throw new Error("Pool lifecycle flags do not match the initialized state");
+  if (storage.active !== true || storage.paused !== true || storage.entered !== false) {
+    throw new Error("Pool is not active, idle, and paused for the manager handoff");
   }
   if (asNat(storage.reserve_a, "reserve_a") !== BigInt(config.seedAmountA)) {
     throw new Error("Pool reserve_a does not match the configured seed");
@@ -390,33 +404,53 @@ async function main(): Promise<void> {
       `Pool artifact hash mismatch: expected ${config.artifactSha256}, received ${poolArtifact.digest}`,
     );
   }
+  if (
+    config.lqtArtifactSha256 &&
+    lqtArtifact.digest !== config.lqtArtifactSha256
+  ) {
+    throw new Error(
+      `LQT artifact hash mismatch: expected ${config.lqtArtifactSha256}, received ${lqtArtifact.digest}`,
+    );
+  }
+
+  const commit = sourceCommit();
+  const sourceDirty = !sourceIsClean();
+  if (config.network === "mainnet" && sourceDirty) {
+    throw new Error("Mainnet deployment requires a clean Git worktree");
+  }
 
   const tezos = new TezosToolkit(config.rpc);
-  tezos.setProvider({ signer: await InMemorySigner.fromSecretKey(config.privateKey) });
+  const deploymentSigner = await createDeploymentSigner(config);
+  tezos.setProvider({ signer: deploymentSigner.signer });
   const [deployer, chainId] = await Promise.all([
     tezos.signer.publicKeyHash(),
     tezos.rpc.getChainId(),
   ]);
-  assertTokenTokenDeploymentChain(config.expectedChainId, chainId);
+  assertTokenTokenDeploymentChain(config.network, config.expectedChainId, chainId);
   const seedReceiver = config.seedReceiver ?? deployer;
   const stateConfig = canonicalConfig(config, deployer, seedReceiver);
   const stateFingerprint = fingerprint({
     network: config.network,
     chainId,
+    sourceCommit: commit,
+    sourceDirty,
+    signerMode: deploymentSigner.mode,
     poolArtifact: poolArtifact.digest,
     lqtArtifact: lqtArtifact.digest,
     ...stateConfig,
   });
-  const existing = await loadState(config.stateFile);
-  const state: DeploymentState =
+  const existing = await loadTokenTokenDeploymentState(config.stateFile);
+  const state: TokenTokenDeploymentState =
     existing ?? {
-      version: deploymentVersion,
+      version: TOKEN_TOKEN_DEPLOYMENT_STATE_VERSION,
       fingerprint: stateFingerprint,
       network: config.network,
       rpc: config.rpc,
       chainId,
-      sourceCommit: sourceCommit(),
+      sourceCommit: commit,
+      sourceDirty,
       compilerVersion,
+      signerMode: deploymentSigner.mode,
       artifacts: {
         pool: {
           path: poolArtifact.absolutePath,
@@ -438,7 +472,8 @@ async function main(): Promise<void> {
       `Deployment state ${config.stateFile} belongs to different code, configuration, or deployer`,
     );
   }
-  await persistState(config.stateFile, state);
+  state.rpc = config.rpc;
+  await persistTokenTokenDeploymentState(config.stateFile, state);
 
   console.log(`Network: ${config.network} (${chainId})`);
   console.log(`Deployer: ${deployer}`);
@@ -449,7 +484,57 @@ async function main(): Promise<void> {
     assertTokenContract(tezos, "TOKEN_B", config.tokenB),
   ]);
 
-  if (!state.steps.pool) {
+  if (!state.steps.initialized) {
+    const [balanceA, balanceB, xtzBalance] = await Promise.all([
+      getTokenBalance(
+        tezos,
+        config.tokenA.address,
+        deployer,
+        config.tokenA.standard,
+        config.tokenA.tokenId,
+        config.tzktApiUrl,
+      ),
+      getTokenBalance(
+        tezos,
+        config.tokenB.address,
+        deployer,
+        config.tokenB.standard,
+        config.tokenB.tokenId,
+        config.tzktApiUrl,
+      ),
+      tezos.tz.getBalance(deployer).then((value) => BigInt(value.toString())),
+    ]);
+    if (balanceA < BigInt(config.seedAmountA)) {
+      throw new Error("Deployer TOKEN_A balance is below SEED_AMOUNT_A");
+    }
+    if (balanceB < BigInt(config.seedAmountB)) {
+      throw new Error("Deployer TOKEN_B balance is below SEED_AMOUNT_B");
+    }
+    if (xtzBalance < minimumDeploymentBalance) {
+      throw new Error("Deployer requires at least 5 XTZ for origination and fees");
+    }
+    console.log("Seed-token and deployment-fee balance checks passed.");
+  }
+
+  if (config.network === "mainnet") {
+    console.log("WARNING: Deploying the token-to-token pool to MAINNET.");
+    console.log("Press Ctrl+C within 5 seconds to cancel.");
+    await new Promise((resolve) => setTimeout(resolve, 5_000));
+  }
+
+  const reviewedCode = {
+    pool: scriptCodeSha256(poolArtifact.script),
+    lqt: scriptCodeSha256(lqtArtifact.script),
+  };
+
+  let poolAddress = await resumeOrigination(
+    "pool",
+    tezos,
+    config,
+    state,
+    reviewedCode.pool,
+  );
+  if (!poolAddress) {
     const storage = new Schema(getStorageType(poolArtifact.script) as never).Encode(
       buildTokenTokenInitialStorage(config, deployer),
     );
@@ -457,14 +542,31 @@ async function main(): Promise<void> {
       code: poolArtifact.script,
       init: storage,
     });
+    state.steps.pool = {
+      operation: operation.hash,
+      status: "injected",
+    };
+    await persistTokenTokenDeploymentState(config.stateFile, state);
     const pool = await operation.contract(config.confirmations);
-    state.steps.pool = { address: pool.address, operation: operation.hash };
-    await persistState(config.stateFile, state);
-    console.log(`Pool originated: ${pool.address}`);
+    poolAddress = pool.address;
+    state.steps.pool = {
+      address: poolAddress,
+      operation: operation.hash,
+      status: "applied",
+    };
+    await persistTokenTokenDeploymentState(config.stateFile, state);
+    console.log(`Pool originated: ${poolAddress}`);
   }
-  const pool = await tezos.contract.at(state.steps.pool.address);
+  const pool = await tezos.contract.at(poolAddress);
 
-  if (!state.steps.lqt) {
+  let lqtAddress = await resumeOrigination(
+    "lqt",
+    tezos,
+    config,
+    state,
+    reviewedCode.lqt,
+  );
+  if (!lqtAddress) {
     const storage = new Schema(getStorageType(lqtArtifact.script) as never).Encode(
       buildEmptyLqtStorage(config, pool.address),
     );
@@ -472,23 +574,38 @@ async function main(): Promise<void> {
       code: lqtArtifact.script,
       init: storage,
     });
+    state.steps.lqt = {
+      operation: operation.hash,
+      status: "injected",
+    };
+    await persistTokenTokenDeploymentState(config.stateFile, state);
     const lqt = await operation.contract(config.confirmations);
-    state.steps.lqt = { address: lqt.address, operation: operation.hash };
-    await persistState(config.stateFile, state);
-    console.log(`LQT originated: ${lqt.address}`);
+    lqtAddress = lqt.address;
+    state.steps.lqt = {
+      address: lqtAddress,
+      operation: operation.hash,
+      status: "applied",
+    };
+    await persistTokenTokenDeploymentState(config.stateFile, state);
+    console.log(`LQT originated: ${lqtAddress}`);
   }
 
-  if (!state.steps.lqtLinked) {
+  if (!(await resumeOperation("lqtLinked", config, state))) {
     const operation = await pool.methodsObject
-      .set_lqt_address(state.steps.lqt.address)
+      .set_lqt_address(lqtAddress)
       .send();
+    state.steps.lqtLinked = {
+      operation: operation.hash,
+      status: "injected",
+    };
+    await persistTokenTokenDeploymentState(config.stateFile, state);
     await operation.confirmation(config.confirmations);
-    state.steps.lqtLinked = { operation: operation.hash };
-    await persistState(config.stateFile, state);
+    state.steps.lqtLinked.status = "applied";
+    await persistTokenTokenDeploymentState(config.stateFile, state);
     console.log("LQT address linked to pool.");
   }
 
-  if (!state.steps.initialized) {
+  if (!(await resumeOperation("initialized", config, state))) {
     const batch = tezos.contract.batch();
     addAuthorization(
       batch,
@@ -516,32 +633,51 @@ async function main(): Promise<void> {
     );
     addAuthorizationCleanup(batch, tokenA, config.tokenA, deployer, pool.address);
     addAuthorizationCleanup(batch, tokenB, config.tokenB, deployer, pool.address);
+    batch.withContractCall(pool.methodsObject.set_paused(true));
     const operation = await batch.send();
+    state.steps.initialized = {
+      operation: operation.hash,
+      status: "injected",
+    };
+    await persistTokenTokenDeploymentState(config.stateFile, state);
     await operation.confirmation(config.confirmations);
-    state.steps.initialized = { operation: operation.hash };
-    await persistState(config.stateFile, state);
-    console.log("Pool initialized and temporary token authorizations removed.");
+    state.steps.initialized.status = "applied";
+    await persistTokenTokenDeploymentState(config.stateFile, state);
+    console.log(
+      "Pool initialized, paused for handoff, and temporary token authorizations removed.",
+    );
   }
 
-  if (config.finalManager !== deployer && !state.steps.managerProposed) {
+  if (
+    config.finalManager !== deployer &&
+    !(await resumeOperation("managerProposed", config, state))
+  ) {
     const operation = await pool.methodsObject
       .propose_manager(config.finalManager)
       .send();
+    state.steps.managerProposed = {
+      operation: operation.hash,
+      status: "injected",
+    };
+    await persistTokenTokenDeploymentState(config.stateFile, state);
     await operation.confirmation(config.confirmations);
-    state.steps.managerProposed = { operation: operation.hash };
-    await persistState(config.stateFile, state);
+    state.steps.managerProposed.status = "applied";
+    await persistTokenTokenDeploymentState(config.stateFile, state);
     console.log(`Manager proposed: ${config.finalManager}`);
   }
 
   await verifyDeployment(tezos, config, state, {
-    pool: scriptCodeSha256(poolArtifact.script),
-    lqt: scriptCodeSha256(lqtArtifact.script),
+    pool: reviewedCode.pool,
+    lqt: reviewedCode.lqt,
   });
   state.steps.verified = { at: new Date().toISOString() };
-  await persistState(config.stateFile, state);
+  await persistTokenTokenDeploymentState(config.stateFile, state);
   console.log("Deployment verification passed.");
   if (config.finalManager !== deployer) {
-    console.log("FINAL_MANAGER must call %accept_manager to complete the handoff.");
+    console.log("FINAL_MANAGER must call %accept_manager and then %set_paused false.");
+    console.log("Run verify:token-token-handoff after both calls are confirmed.");
+  } else {
+    console.log("The manager must call %set_paused false after reviewing the deployment.");
   }
 }
 

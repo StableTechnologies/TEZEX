@@ -4,16 +4,16 @@ import {
   ValidationResult,
   validateAddress,
   validateContractAddress,
+  validateKeyHash,
 } from "@taquito/utils";
 
 import { calculateInitialLqt } from "./token-token-math.js";
 
-export type TokenTokenNetwork = "previewnet" | "testnet";
+export type TokenTokenNetwork = "previewnet" | "testnet" | "mainnet";
 export type TokenStandard = "FA1.2" | "FA2";
 
-// The Tezos Mainnet chain ID is permanent. This deployment workflow is
-// intentionally test-only, so reject it independently of user-supplied RPC
-// and expected-chain configuration.
+// The Tezos Mainnet chain ID is permanent and is never supplied by release
+// operators. This prevents a mislabeled RPC from weakening the network gate.
 export const TEZOS_MAINNET_CHAIN_ID = "NetXdQprcVkpaWU";
 
 export interface TokenDescriptor {
@@ -27,8 +27,10 @@ export interface TokenTokenDeploymentConfig {
   network: TokenTokenNetwork;
   rpc: string;
   expectedChainId: string;
-  tzktApiUrl?: string;
-  privateKey: string;
+  tzktApiUrl: string;
+  privateKey?: string;
+  remoteSignerUrl?: string;
+  remoteSignerPkh?: string;
   tokenA: TokenDescriptor;
   tokenB: TokenDescriptor;
   seedAmountA: string;
@@ -40,6 +42,11 @@ export interface TokenTokenDeploymentConfig {
   lqtContractMetadataUri: string;
   lqtTokenMetadataUri: string;
   artifactSha256: string;
+  lqtArtifactSha256?: string;
+  managerThreshold?: number;
+  feeRecipientThreshold?: number;
+  tokenIntegrationOwner?: string;
+  tokenIncidentChannel?: string;
   confirmations: number;
   stateFile: string;
 }
@@ -74,6 +81,28 @@ function positiveInteger(env: NodeJS.ProcessEnv, key: string, fallback: number):
   const parsed = Number(value);
   if (!Number.isSafeInteger(parsed)) throw new Error(`${key} is too large`);
   return parsed;
+}
+
+function optionalPositiveInteger(
+  env: NodeJS.ProcessEnv,
+  key: string,
+): number | undefined {
+  const value = optional(env, key);
+  if (!value) return undefined;
+  if (!NAT_PATTERN.test(value) || BigInt(value) === 0n) {
+    throw new Error(`${key} must be a positive integer`);
+  }
+  const parsed = Number(value);
+  if (!Number.isSafeInteger(parsed)) throw new Error(`${key} is too large`);
+  return parsed;
+}
+
+function optionalSha256(env: NodeJS.ProcessEnv, key: string): string | undefined {
+  const value = optional(env, key)?.toLowerCase();
+  if (value && !SHA256_PATTERN.test(value)) {
+    throw new Error(`${key} must be a lowercase SHA-256 digest`);
+  }
+  return value;
 }
 
 function tokenStandard(env: NodeJS.ProcessEnv, key: string): TokenStandard {
@@ -126,10 +155,15 @@ function address(env: NodeJS.ProcessEnv, key: string, requiredValue = true): str
 }
 
 export function assertTokenTokenDeploymentChain(
+  network: TokenTokenNetwork,
   expectedChainId: string,
   actualChainId: string = expectedChainId,
 ): void {
-  if (
+  if (network === "mainnet") {
+    if (expectedChainId !== TEZOS_MAINNET_CHAIN_ID) {
+      throw new Error("Mainnet deployment requires the permanent Tezos Mainnet chain ID");
+    }
+  } else if (
     expectedChainId === TEZOS_MAINNET_CHAIN_ID ||
     actualChainId === TEZOS_MAINNET_CHAIN_ID
   ) {
@@ -146,12 +180,20 @@ export function parseTokenTokenConfig(
   network: TokenTokenNetwork,
   env: NodeJS.ProcessEnv = process.env,
 ): TokenTokenDeploymentConfig {
-  if (network !== "previewnet" && network !== "testnet") {
-    throw new Error("Token-to-token deployment is limited to Previewnet/testnet");
+  if (network !== "previewnet" && network !== "testnet" && network !== "mainnet") {
+    throw new Error("Unknown token-to-token deployment network");
   }
-  const prefix = network === "previewnet" ? "PREVIEWNET" : "TESTNET";
-  const expectedChainId = required(env, `${prefix}_CHAIN_ID`);
-  assertTokenTokenDeploymentChain(expectedChainId);
+  const prefix =
+    network === "previewnet"
+      ? "PREVIEWNET"
+      : network === "testnet"
+        ? "TESTNET"
+        : "MAINNET";
+  const expectedChainId =
+    network === "mainnet"
+      ? TEZOS_MAINNET_CHAIN_ID
+      : required(env, `${prefix}_CHAIN_ID`);
+  assertTokenTokenDeploymentChain(network, expectedChainId);
   const tokenA = tokenDescriptor(env, "A");
   const tokenB = tokenDescriptor(env, "B");
   if (canonicalAsset(tokenA) === canonicalAsset(tokenB)) {
@@ -180,19 +222,86 @@ export function parseTokenTokenConfig(
     throw new Error("TOKEN_TOKEN_ARTIFACT_SHA256 must be a lowercase SHA-256 digest");
   }
 
+  const lqtArtifactSha256 = optionalSha256(
+    env,
+    "TOKEN_TOKEN_LQT_ARTIFACT_SHA256",
+  );
+  const privateKey = optional(env, `${prefix}_PRIVATE_KEY`);
+  const remoteSignerUrl = optional(env, `${prefix}_REMOTE_SIGNER_URL`);
+  const remoteSignerPkh = optional(env, `${prefix}_REMOTE_SIGNER_PKH`);
+  if (Boolean(remoteSignerUrl) !== Boolean(remoteSignerPkh)) {
+    throw new Error(
+      `${prefix}_REMOTE_SIGNER_URL and ${prefix}_REMOTE_SIGNER_PKH must be set together`,
+    );
+  }
+  if (!privateKey && !remoteSignerUrl) {
+    throw new Error(
+      `Set ${prefix}_PRIVATE_KEY or the matching remote-signer variables`,
+    );
+  }
+  if (privateKey && remoteSignerUrl) {
+    throw new Error("Configure exactly one token-to-token deployment signer mode");
+  }
+  if (
+    remoteSignerPkh &&
+    validateKeyHash(remoteSignerPkh) !== ValidationResult.VALID
+  ) {
+    throw new Error(`${prefix}_REMOTE_SIGNER_PKH must be a valid implicit address`);
+  }
+
+  const seedReceiver = address(env, "SEED_RECEIVER", false);
+  const finalManager = address(env, "FINAL_MANAGER")!;
+  const feeRecipient = address(env, "PROTOCOL_FEE_RECIPIENT")!;
+  const managerThreshold = optionalPositiveInteger(
+    env,
+    "MANAGER_MULTISIG_THRESHOLD",
+  );
+  const feeRecipientThreshold = optionalPositiveInteger(
+    env,
+    "PROTOCOL_FEE_RECIPIENT_MULTISIG_THRESHOLD",
+  );
+  const tokenIntegrationOwner = optional(env, "TOKEN_INTEGRATION_OWNER");
+  const tokenIncidentChannel = optional(env, "TOKEN_INCIDENT_CHANNEL");
+
+  if (network === "mainnet") {
+    if (!lqtArtifactSha256) {
+      throw new Error("Mainnet requires TOKEN_TOKEN_LQT_ARTIFACT_SHA256");
+    }
+    if (!seedReceiver) {
+      throw new Error("Mainnet requires an explicit SEED_RECEIVER");
+    }
+    if (
+      validateContractAddress(finalManager) !== ValidationResult.VALID ||
+      validateContractAddress(feeRecipient) !== ValidationResult.VALID ||
+      managerThreshold === undefined ||
+      feeRecipientThreshold === undefined
+    ) {
+      throw new Error(
+        "Mainnet requires originated multisig role addresses and documented thresholds",
+      );
+    }
+    if (!tokenIntegrationOwner || !tokenIncidentChannel) {
+      throw new Error(
+        "Mainnet requires TOKEN_INTEGRATION_OWNER and TOKEN_INCIDENT_CHANNEL",
+      );
+    }
+  }
+
   return {
     network,
     rpc: required(env, `${prefix}_RPC`),
     expectedChainId,
-    tzktApiUrl: optional(env, `${prefix}_TZKT_API`),
-    privateKey: required(env, `${prefix}_PRIVATE_KEY`),
+    tzktApiUrl: required(env, `${prefix}_TZKT_API`),
+    privateKey,
+    remoteSignerUrl,
+    remoteSignerPkh,
     tokenA,
     tokenB,
     seedAmountA,
     seedAmountB,
-    seedReceiver: address(env, "SEED_RECEIVER", false),
-    finalManager: address(env, "FINAL_MANAGER")!,
-    feeRecipient: address(env, "PROTOCOL_FEE_RECIPIENT")!,
+    seedReceiver,
+    finalManager,
+    feeRecipient,
     poolMetadataUri: assertIpfsUri(
       required(env, "TOKEN_TOKEN_POOL_METADATA_URI"),
       "TOKEN_TOKEN_POOL_METADATA_URI",
@@ -206,6 +315,11 @@ export function parseTokenTokenConfig(
       "TOKEN_TOKEN_LQT_TOKEN_METADATA_URI",
     ),
     artifactSha256,
+    lqtArtifactSha256,
+    managerThreshold,
+    feeRecipientThreshold,
+    tokenIntegrationOwner,
+    tokenIncidentChannel,
     confirmations: positiveInteger(env, "CONFIRMATIONS", 2),
     stateFile:
       optional(env, "TOKEN_TOKEN_DEPLOYMENT_STATE") ??

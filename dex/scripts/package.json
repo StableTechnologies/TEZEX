@@ -14,6 +14,8 @@
         "test": "tsx --test src/*.test.ts",
         "deploy:token-token:previewnet": "tsx src/deploy-token-token.ts --network=previewnet",
         "deploy:token-token:testnet": "tsx src/deploy-token-token.ts --network=testnet",
+        "deploy:token-token:mainnet": "tsx src/deploy-token-token.ts --network=mainnet",
+        "verify:token-token-handoff": "tsx src/verify-token-token-handoff.ts",
         "inspect:token": "tsx src/inspect-token-code.ts",
         "monitor:token": "tsx src/monitor-token-controls.ts",
         "typecheck": "tsc --noEmit"

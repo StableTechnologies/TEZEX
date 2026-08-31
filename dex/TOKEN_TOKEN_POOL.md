@@ -2,14 +2,15 @@
 
 This package is a generic single-pair constant-product pool for FA1.2 and FA2 assets. One compiled pool artifact supports FA1.2/FA1.2, FA2/FA2, or mixed pairs; the two asset descriptors are immutable origination storage.
 
-It is a review candidate, not a mainnet deployment authorization. The supplied deployment command accepts only Previewnet or testnet.
+The generic contract package has completed repository review and network rehearsal. Mainnet use remains a release decision for an exact allowlisted asset pair and must pass the fail-closed deployment gates below.
 
 ## Components
 
 - `contracts/token_token_pool.mligo`: pool accounting and custody operations.
 - `contracts/lqt_fa12.mligo`: existing external FA1.2 liquidity token; the pool is its administrator.
 - `tests/token_token_pool.test.mligo`: lifecycle, economics, pair-shape, failure, and adversarial tests.
-- `scripts/src/deploy-token-token.ts`: pinned, resumable non-mainnet origination workflow.
+- `scripts/src/deploy-token-token.ts`: pinned, resumable origination workflow.
+- `scripts/src/verify-token-token-handoff.ts`: signer-free final role, reserve, code, and LQT verification.
 - `compiled_contracts/token_token_pool.tz`: reproducible Michelson artifact.
 
 The external LQT design preserves the repository's established liquidity-token interface. The pool links an empty LQT contract exactly once before activation. Initialization then mints 1,000 LQT units permanently to the pool and the remaining initial supply to the configured seed receiver.
@@ -81,7 +82,7 @@ a7939ae6ee629057d6dca4301a9be8485b19d72efebcdf172cbd4a3a0e48957e
 
 CI recompiles the source with the pinned compiler, byte-compares the output, checks this digest, runs the LIGO suite, and validates the TypeScript deployment tooling.
 
-## Non-mainnet deployment rehearsal
+## Deployment rehearsal
 
 From `dex/scripts`:
 
@@ -107,22 +108,35 @@ The workflow is resumable and records confirmed steps in a gitignored mode-0600 
 1. originates the inactive pool;
 2. originates an empty LQT with the pool as administrator;
 3. links LQT once;
-4. batches temporary token authorization, initialization, and authorization cleanup atomically;
+4. batches temporary token authorization, initialization, authorization cleanup, and handoff pause atomically;
 5. proposes the configured final manager;
 6. verifies source/artifact identity, pool and LQT state, metadata pointers, seed balances, reserve solvency, minimum LQT lock, and pending handoff.
 
-The receipt never contains the private key. The proposed manager must separately call `%accept_manager`; that acceptance is intentionally not automated with the deployer's authority.
+The receipt never contains the private key. The proposed manager must separately call `%accept_manager` and then `%set_paused false`; those privileged actions are intentionally not automated with the deployer's authority. Verify the completed handoff without a signer:
+
+```sh
+TOKEN_TOKEN_DEPLOYMENT_STATE=<receipt.json> npm run verify:token-token-handoff
+```
 
 ## Mainnet gates
 
-Mainnet support is intentionally absent from this workflow. Adding it should be a later reviewed change only after:
+The Mainnet command is explicit:
 
-- independent review of the final source and compiled Michelson;
-- reproduction of both pool and LQT artifacts;
-- exact selected-token code and administrative-control review;
-- complete Previewnet/testnet rehearsal of both swap directions, add/remove liquidity, fee claims, pause, failed slippage/deadline calls, and manager acceptance;
-- front-end/router integration using explicit pool allowlisting and on-chain fee views;
-- operational monitoring that compares held balances with `reserve + protocol fees`; and
-- confirmation of final metadata, fee recipient, manager, and seed plan outside source control.
+```sh
+npm run deploy:token-token:mainnet
+```
+
+It refuses to originate unless the release has:
+
+- the permanent Mainnet chain ID and a matching RPC;
+- a clean Git worktree and exact pool and LQT artifact hashes;
+- exact selected-token code hashes and required transfer interfaces;
+- sufficient seed-token balances and an XTZ fee buffer before origination;
+- immutable IPFS metadata and an explicit LQT receiver;
+- originated manager and fee-recipient contracts with documented multisig thresholds;
+- a named token-integration owner and incident channel; and
+- exactly one local-key or remote/HSM signer mode.
+
+The release operator must still complete the selected-token administrative-control review, monitoring setup, frontend/router allowlisting, final metadata and seed approval, and independent review of the Mainnet-enablement change. Mainnet remains blocked if any preflight, confirmation, code-hash, reserve, LQT, or final-handoff check differs.
 
 See `TOKEN_TOKEN_POOL_SECURITY_REVIEW.md` for the internal assessment and `TOKEN_TOKEN_POOL_PROVENANCE.md` for upstream lineage and deliberate differences.
