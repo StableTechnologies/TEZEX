@@ -1,6 +1,21 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { appendInitializationCalls, type BatchLike } from "./initialization.js";
+import { OpKind } from "@taquito/taquito";
+import {
+    appendInitializationCalls,
+    transactionParams,
+    type BatchLike,
+} from "./initialization.js";
+
+test("transaction params include the Taquito operation kind", () => {
+    const params = transactionParams({
+        toTransferParams: () => ({
+            to: "KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton",
+            amount: 0,
+        }),
+    });
+    assert.equal(params.kind, OpKind.TRANSACTION);
+});
 
 function methodRecorder(calls: Array<{ method: string; value?: unknown }>) {
     return new Proxy({}, {

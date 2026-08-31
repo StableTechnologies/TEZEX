@@ -33,7 +33,11 @@ import {
     formatMutez,
     toSafeNumber,
 } from "./amounts.js";
-import { appendInitializationCalls, initializationOpCount } from "./initialization.js";
+import {
+    appendInitializationCalls,
+    initializationOpCount,
+    transactionParams,
+} from "./initialization.js";
 import { verifyAtLeast, verifyEqual } from "./verification.js";
 import {
     needsExplicitOpLimits,
@@ -368,13 +372,7 @@ class TransferParamsBatch {
             storageLimit?: number;
         }
     ): this {
-        const method = call as {
-            toTransferParams: (value?: typeof options) => ParamsWithKind;
-        };
-        if (typeof method.toTransferParams !== "function") {
-            throw new Error("Initialization call cannot be converted to transfer parameters");
-        }
-        this.operations.push(method.toTransferParams(options));
+        this.operations.push(transactionParams(call, options));
         return this;
     }
 }

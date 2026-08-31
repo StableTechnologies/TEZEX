@@ -1,3 +1,9 @@
+import {
+    OpKind,
+    type ParamsWithKind,
+    type TransferParams,
+} from "@taquito/taquito";
+
 export interface CallLimits {
     fee?: number;
     gasLimit?: number;
@@ -11,6 +17,24 @@ export interface BatchCallOptions extends CallLimits {
 
 export interface BatchLike {
     withContractCall(call: unknown, options?: BatchCallOptions): BatchLike;
+}
+
+export function transactionParams(
+    call: unknown,
+    options?: BatchCallOptions
+): ParamsWithKind {
+    const method = call as {
+        toTransferParams: (value?: BatchCallOptions) => TransferParams;
+    };
+    if (typeof method.toTransferParams !== "function") {
+        throw new Error(
+            "Initialization call cannot be converted to transfer parameters"
+        );
+    }
+    return {
+        ...method.toTransferParams(options),
+        kind: OpKind.TRANSACTION,
+    };
 }
 
 interface ContractLike {
