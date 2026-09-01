@@ -8,6 +8,16 @@ import {
 } from "@taquito/utils";
 
 import { calculateInitialLqt } from "./token-token-math.js";
+import {
+  parseMultisigExpectation,
+  type MultisigExpectation,
+} from "./multisig-verification.js";
+import {
+  parseImplementationSelectors,
+  parseTokenControlProfile,
+  type ImplementationSelector,
+  type TokenControlProfile,
+} from "./token-control-monitor.js";
 
 export type TokenTokenNetwork = "previewnet" | "testnet" | "mainnet";
 export type TokenStandard = "FA1.2" | "FA2";
@@ -21,6 +31,9 @@ export interface TokenDescriptor {
   address: string;
   tokenId: string;
   codeSha256: string;
+  controlProfile: TokenControlProfile;
+  implementationSha256?: string;
+  implementationSelectors: ImplementationSelector[];
 }
 
 export interface TokenTokenDeploymentConfig {
@@ -45,9 +58,12 @@ export interface TokenTokenDeploymentConfig {
   lqtArtifactSha256?: string;
   managerThreshold?: number;
   feeRecipientThreshold?: number;
+  managerMultisig?: MultisigExpectation;
+  feeRecipientMultisig?: MultisigExpectation;
   tokenIntegrationOwner?: string;
   tokenIncidentChannel?: string;
   confirmations: number;
+  expectedSourceCommit?: string;
   stateFile: string;
 }
 
@@ -122,6 +138,29 @@ function tokenDescriptor(env: NodeJS.ProcessEnv, label: "A" | "B"): TokenDescrip
   if (validateContractAddress(address) !== ValidationResult.VALID) {
     throw new Error(`TOKEN_${label}_ADDRESS must be a valid originated contract address`);
   }
+  const controlProfile = parseTokenControlProfile(
+    optional(env, `TOKEN_${label}_CONTROL_PROFILE`),
+    `TOKEN_${label}_CONTROL_PROFILE`,
+  );
+  const implementationSha256 = optionalSha256(
+    env,
+    `TOKEN_${label}_IMPLEMENTATION_SHA256`,
+  );
+  const selectorsValue = optional(env, `TOKEN_${label}_IMPLEMENTATION_SELECTORS`);
+  const implementationSelectors = selectorsValue
+    ? parseImplementationSelectors(
+      selectorsValue,
+      `TOKEN_${label}_IMPLEMENTATION_SELECTORS`,
+    )
+    : [];
+  if (
+    controlProfile !== "generic"
+    && (!implementationSha256 || implementationSelectors.length === 0)
+  ) {
+    throw new Error(
+      `Exact TOKEN_${label}_CONTROL_PROFILE requires implementation SHA-256 and selectors`,
+    );
+  }
   return {
     standard,
     address,
@@ -130,6 +169,9 @@ function tokenDescriptor(env: NodeJS.ProcessEnv, label: "A" | "B"): TokenDescrip
         ? natural(env, `TOKEN_${label}_ID`)
         : "0",
     codeSha256,
+    controlProfile,
+    implementationSha256,
+    implementationSelectors,
   };
 }
 
@@ -262,6 +304,24 @@ export function parseTokenTokenConfig(
   );
   const tokenIntegrationOwner = optional(env, "TOKEN_INTEGRATION_OWNER");
   const tokenIncidentChannel = optional(env, "TOKEN_INCIDENT_CHANNEL");
+  const expectedSourceCommit = optional(env, "EXPECTED_SOURCE_COMMIT")
+    ?.toLowerCase();
+  if (expectedSourceCommit && !/^[0-9a-f]{40}$/.test(expectedSourceCommit)) {
+    throw new Error("EXPECTED_SOURCE_COMMIT must be a 40-character lowercase Git commit");
+  }
+  const confirmations = positiveInteger(env, "CONFIRMATIONS", 2);
+  const managerMultisig = parseMultisigExpectation(
+    env,
+    "MANAGER",
+    managerThreshold,
+    network === "mainnet",
+  );
+  const feeRecipientMultisig = parseMultisigExpectation(
+    env,
+    "PROTOCOL_FEE_RECIPIENT",
+    feeRecipientThreshold,
+    network === "mainnet",
+  );
 
   if (network === "mainnet") {
     if (!lqtArtifactSha256) {
@@ -284,6 +344,12 @@ export function parseTokenTokenConfig(
       throw new Error(
         "Mainnet requires TOKEN_INTEGRATION_OWNER and TOKEN_INCIDENT_CHANNEL",
       );
+    }
+    if (!expectedSourceCommit) {
+      throw new Error("Mainnet requires EXPECTED_SOURCE_COMMIT");
+    }
+    if (confirmations < 2) {
+      throw new Error("Mainnet requires at least 2 confirmations");
     }
   }
 
@@ -318,9 +384,12 @@ export function parseTokenTokenConfig(
     lqtArtifactSha256,
     managerThreshold,
     feeRecipientThreshold,
+    managerMultisig,
+    feeRecipientMultisig,
     tokenIntegrationOwner,
     tokenIncidentChannel,
-    confirmations: positiveInteger(env, "CONFIRMATIONS", 2),
+    confirmations,
+    expectedSourceCommit,
     stateFile:
       optional(env, "TOKEN_TOKEN_DEPLOYMENT_STATE") ??
       path.join("deployments", "token-token", `${network}-in-progress.json`),

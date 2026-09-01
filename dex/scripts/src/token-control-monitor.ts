@@ -11,7 +11,20 @@ import { canonicalJson, scriptCodeSha256 } from "./token-code-hash.js";
 
 const SHA256_PATTERN = /^[0-9a-f]{64}$/;
 const NAT_PATTERN = /^(0|[1-9][0-9]*)$/;
-const CHECKPOINT_VERSION = 1;
+const CHECKPOINT_VERSION = 3;
+
+export type TokenControlProfile = "generic" | "usdt" | "tzbtc";
+
+export function parseTokenControlProfile(
+  value: string | undefined,
+  key = "TOKEN_MONITOR_PROFILE",
+): TokenControlProfile {
+  const profile = value?.trim().toLowerCase() || "generic";
+  if (profile !== "generic" && profile !== "usdt" && profile !== "tzbtc") {
+    throw new Error(`${key} must be generic, usdt, or tzbtc`);
+  }
+  return profile;
+}
 
 export type AlertSeverity = "critical" | "high";
 
@@ -27,13 +40,18 @@ export type AlertCategory =
   | "chain-mismatch"
   | "rpc-disagreement"
   | "code-hash-mismatch"
+  | "implementation-fingerprint-mismatch"
+  | "unexpected-entrypoint"
   | "checkpoint-anchor-mismatch"
   | "indexer-unhealthy";
 
 export interface TokenControlMonitorConfig {
+  profile: TokenControlProfile;
   tokenAddress: string;
   tokenId: string;
   expectedCodeSha256: string;
+  expectedImplementationSha256?: string;
+  implementationSelectors: ImplementationSelector[];
   expectedChainId: string;
   rpcUrls: string[];
   tzktApiUrl: string;
@@ -57,7 +75,10 @@ export interface MonitorCheckpoint {
   tokenAddress: string;
   tokenId: string;
   expectedCodeSha256: string;
+  expectedImplementationSha256: string | null;
+  implementationSelectorsSha256: string;
   expectedChainId: string;
+  profile: TokenControlProfile;
   startLevel: number;
   lastScannedLevel: number;
   lastScannedBlockHash: string | null;
@@ -84,6 +105,12 @@ export interface RpcObservation {
   commonLevel?: number;
   commonBlockHash?: string;
   codeSha256: string;
+  implementationSha256?: string;
+}
+
+export interface ImplementationSelector {
+  bigMapId: number;
+  keyHash: string;
 }
 
 export interface IndexerObservation {
@@ -122,6 +149,8 @@ export interface MonitorReport {
     address: string;
     tokenId: string;
     expectedCodeSha256: string;
+    profile: TokenControlProfile;
+    expectedImplementationSha256: string | null;
   };
   range: {
     previousLevel: number;
@@ -213,6 +242,45 @@ function parseRpcUrls(env: NodeJS.ProcessEnv): string[] {
   return values;
 }
 
+export function parseImplementationSelectors(
+  value: string,
+  key = "TOKEN_MONITOR_IMPLEMENTATION_SELECTORS",
+): ImplementationSelector[] {
+  const selectors = value.split(",").map((item) => {
+    const [rawBigMapId, keyHash, extra] = item.trim().split(":");
+    if (
+      extra !== undefined
+      || !rawBigMapId
+      || !/^(0|[1-9][0-9]*)$/.test(rawBigMapId)
+      || !keyHash
+      || !/^expr[1-9A-HJ-NP-Za-km-z]+$/.test(keyHash)
+    ) {
+      throw new Error(
+        `${key} must be comma-separated <big-map-id>:<expr-hash> entries`,
+      );
+    }
+    const bigMapId = Number(rawBigMapId);
+    if (!Number.isSafeInteger(bigMapId)) {
+      throw new Error("Token implementation big-map ID is too large");
+    }
+    return { bigMapId, keyHash };
+  });
+  const unique = new Map(
+    selectors.map((selector) => [`${selector.bigMapId}:${selector.keyHash}`, selector]),
+  );
+  if (unique.size !== selectors.length) {
+    throw new Error(`${key} contains duplicates`);
+  }
+  return [...unique.values()].sort(
+    (left, right) => left.bigMapId - right.bigMapId
+      || left.keyHash.localeCompare(right.keyHash),
+  );
+}
+
+function selectorsSha256(selectors: ImplementationSelector[]): string {
+  return createHash("sha256").update(canonicalJson(selectors)).digest("hex");
+}
+
 export function parseTokenControlMonitorConfig(
   env: NodeJS.ProcessEnv = process.env,
 ): TokenControlMonitorConfig {
@@ -236,15 +304,48 @@ export function parseTokenControlMonitorConfig(
     );
   const alertWebhookUrl = optional(env, "TOKEN_MONITOR_ALERT_WEBHOOK_URL");
 
+  const profile = parseTokenControlProfile(
+    optional(env, "TOKEN_MONITOR_PROFILE"),
+  );
+  const expectedImplementationSha256 = optional(
+    env,
+    "TOKEN_MONITOR_IMPLEMENTATION_SHA256",
+  )?.toLowerCase();
+  if (
+    expectedImplementationSha256
+    && !SHA256_PATTERN.test(expectedImplementationSha256)
+  ) {
+    throw new Error(
+      "TOKEN_MONITOR_IMPLEMENTATION_SHA256 must be a lowercase SHA-256 digest",
+    );
+  }
+  const rawSelectors = optional(env, "TOKEN_MONITOR_IMPLEMENTATION_SELECTORS");
+  const implementationSelectors = rawSelectors
+    ? parseImplementationSelectors(
+      rawSelectors,
+      "TOKEN_MONITOR_IMPLEMENTATION_SELECTORS",
+    )
+    : [];
+  if (
+    profile !== "generic"
+    && (!expectedImplementationSha256 || implementationSelectors.length === 0)
+  ) {
+    throw new Error(
+      "Exact USDt/tzBTC profiles require TOKEN_MONITOR_IMPLEMENTATION_SHA256 and TOKEN_MONITOR_IMPLEMENTATION_SELECTORS",
+    );
+  }
   const pageSize = safeInteger(env, "TOKEN_MONITOR_PAGE_SIZE", 500, 1);
   if (pageSize > 10_000) {
     throw new Error("TOKEN_MONITOR_PAGE_SIZE cannot exceed the TzKT limit of 10000");
   }
 
   return {
+    profile,
     tokenAddress,
     tokenId: natural(env, "TOKEN_MONITOR_TOKEN_ID", "0"),
     expectedCodeSha256,
+    expectedImplementationSha256,
+    implementationSelectors,
     expectedChainId: required(env, "TOKEN_MONITOR_CHAIN_ID"),
     rpcUrls: parseRpcUrls(env),
     tzktApiUrl: httpsUrl(
@@ -288,7 +389,12 @@ function newCheckpoint(
     tokenAddress: config.tokenAddress,
     tokenId: config.tokenId,
     expectedCodeSha256: config.expectedCodeSha256,
+    expectedImplementationSha256: config.expectedImplementationSha256 ?? null,
+    implementationSelectorsSha256: selectorsSha256(
+      config.implementationSelectors,
+    ),
     expectedChainId: config.expectedChainId,
+    profile: config.profile,
     startLevel: config.startLevel,
     lastScannedLevel: config.startLevel - 1,
     lastScannedBlockHash: null,
@@ -318,7 +424,16 @@ export async function loadMonitorCheckpoint(
     parsed.tokenAddress === config.tokenAddress
     && parsed.tokenId === config.tokenId
     && parsed.expectedCodeSha256 === config.expectedCodeSha256
+    && (
+      parsed.expectedImplementationSha256
+        === (config.expectedImplementationSha256 ?? null)
+    )
+    && (
+      parsed.implementationSelectorsSha256
+        === selectorsSha256(config.implementationSelectors)
+    )
     && parsed.expectedChainId === config.expectedChainId
+    && parsed.profile === config.profile
     && parsed.startLevel === config.startLevel;
   if (!identityMatches) {
     throw new Error(
@@ -375,20 +490,29 @@ async function fetchJson(
   fetcher: FetchLike,
   headers?: Record<string, string>,
 ): Promise<unknown> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const response = await fetcher(url, {
-      headers: { accept: "application/json", ...headers },
-      signal: controller.signal,
-    });
-    if (!response.ok) {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetcher(url, {
+        headers: { accept: "application/json", ...headers },
+        signal: controller.signal,
+      });
+      if (response.ok) return await response.json();
+      if ((response.status === 429 || response.status === 503) && attempt < 2) {
+        const retryAfter = Number(response.headers.get("retry-after"));
+        const delay = Number.isFinite(retryAfter) && retryAfter > 0
+          ? Math.min(retryAfter * 1_000, 5_000)
+          : 250 * (2 ** attempt);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        continue;
+      }
       throw new Error(`HTTP ${response.status} from ${new URL(url).origin}`);
+    } finally {
+      clearTimeout(timer);
     }
-    return await response.json();
-  } finally {
-    clearTimeout(timer);
   }
+  throw new Error(`RPC retry budget exhausted for ${new URL(url).origin}`);
 }
 
 function integer(value: unknown, label: string): number {
@@ -445,6 +569,35 @@ export async function observeRpc(
     blockHash: text(header?.hash, "RPC head block hash"),
     codeSha256: scriptCodeSha256(script.code),
   };
+}
+
+export async function observeImplementationFingerprint(
+  rpcUrl: string,
+  block: number | string,
+  selectors: ImplementationSelector[],
+  timeoutMs: number,
+  fetcher: FetchLike = fetch,
+): Promise<string> {
+  if (selectors.length === 0) {
+    throw new Error("At least one implementation selector is required");
+  }
+  const entries: Array<ImplementationSelector & { value: unknown }> = [];
+  // Read sequentially per origin to stay within public-RPC burst limits. The
+  // two independent origins are still observed concurrently by callers.
+  for (const selector of selectors) {
+    const value = await fetchJson(
+      endpoint(
+        rpcUrl,
+        `/chains/main/blocks/${encodeURIComponent(String(block))}/context/big_maps/${selector.bigMapId}/${encodeURIComponent(selector.keyHash)}`,
+      ),
+      timeoutMs,
+      fetcher,
+    );
+    entries.push({ ...selector, value });
+  }
+  return createHash("sha256")
+    .update(canonicalJson(entries))
+    .digest("hex");
 }
 
 export async function observeIndexer(
@@ -653,6 +806,65 @@ export async function evaluateHealth(
     } else {
       verifiedCommonLevel = commonLevel;
       verifiedCommonBlockHash = commonBlockHashes[0];
+      if (config.implementationSelectors.length > 0) {
+        const implementationResults = await Promise.allSettled(
+          config.rpcUrls.map((rpcUrl) => observeImplementationFingerprint(
+            rpcUrl,
+            commonLevel,
+            config.implementationSelectors,
+            config.requestTimeoutMs,
+            fetcher,
+          )),
+        );
+        const fingerprints: string[] = [];
+        implementationResults.forEach((result, index) => {
+          if (result.status === "fulfilled") {
+            fingerprints.push(result.value);
+            rpc[index].implementationSha256 = result.value;
+          } else {
+            alerts.push(healthAlert(
+              "source-unavailable",
+              "critical",
+              "An RPC source could not read the token implementation selectors",
+              "rpc",
+              {
+                rpcOrigin: new URL(config.rpcUrls[index]).origin,
+                commonLevel,
+                error: result.reason instanceof Error
+                  ? result.reason.message
+                  : String(result.reason),
+              },
+            ));
+          }
+        });
+        if (
+          fingerprints.length !== config.rpcUrls.length
+          || new Set(fingerprints).size !== 1
+        ) {
+          alerts.push(healthAlert(
+            "rpc-disagreement",
+            "critical",
+            "Independent RPC sources disagree on mutable token implementation state",
+            "rpc",
+            { commonLevel, fingerprints },
+          ));
+        } else if (
+          config.expectedImplementationSha256
+          && fingerprints[0] !== config.expectedImplementationSha256
+        ) {
+          alerts.push(healthAlert(
+            "implementation-fingerprint-mismatch",
+            "critical",
+            "Mutable token implementation or control state differs from the reviewed fingerprint",
+            "rpc",
+            {
+              commonLevel,
+              expected: config.expectedImplementationSha256,
+              actual: fingerprints[0],
+            },
+          ));
+        }
+      }
     }
   }
 
@@ -862,7 +1074,112 @@ function includesAny(value: string, candidates: readonly string[]): boolean {
   return candidates.some((candidate) => value.includes(candidate));
 }
 
-export function classifyTokenOperation(operation: IndexedTransaction):
+type TokenOperationClassification = {
+  category: AlertCategory;
+  severity: AlertSeverity;
+  summary: string;
+};
+
+const PROFILE_ORDINARY_ENTRYPOINTS: Record<Exclude<TokenControlProfile, "generic">, ReadonlySet<string>> = {
+  usdt: new Set(["default", "balanceof", "transfer", "updateoperators"]),
+  tzbtc: new Set([
+    "default",
+    "approve",
+    "getallowance",
+    "getbalance",
+    "getowner",
+    "getredeemaddress",
+    "gettokenmetadata",
+    "gettotalburned",
+    "gettotalminted",
+    "gettotalsupply",
+    "getversion",
+    "safeentrypoints",
+    "transfer",
+  ]),
+};
+
+function exactProfileClassification(
+  profile: Exclude<TokenControlProfile, "generic">,
+  entrypoint: string,
+): TokenOperationClassification | null {
+  if (PROFILE_ORDINARY_ENTRYPOINTS[profile].has(entrypoint)) return null;
+
+  const upgrade = profile === "usdt"
+    ? new Set(["execute", "updateentrypoints"])
+    : new Set([
+      "epwapplymigration",
+      "epwbeginupgrade",
+      "epwfinishupgrade",
+      "epwsetcode",
+      "run",
+      "upgrade",
+    ]);
+  if (upgrade.has(entrypoint)) {
+    return {
+      category: "upgrade-or-migration",
+      severity: "critical",
+      summary: "A token implementation, upgrade, migration, or arbitrary execution control was exercised",
+    };
+  }
+
+  const freeze = profile === "usdt"
+    ? new Set(["freeze", "revoke", "transferfrozenassets", "unfreeze"])
+    : new Set<string>();
+  if (freeze.has(entrypoint)) {
+    return {
+      category: "freeze-revoke-or-seizure",
+      severity: "critical",
+      summary: "A token freeze, revoke, or frozen-asset transfer control was exercised",
+    };
+  }
+
+  const authority = profile === "usdt"
+    ? new Set(["proposeadministrator", "removeadministrator", "setadministrator"])
+    : new Set([
+      "acceptownership",
+      "addoperator",
+      "removeoperator",
+      "setredeemaddress",
+      "transferownership",
+    ]);
+  if (authority.has(entrypoint)) {
+    return {
+      category: "administrator-or-authority-change",
+      severity: "critical",
+      summary: "A token administrator, owner, operator, or redemption authority changed",
+    };
+  }
+
+  if (entrypoint === "pause" || entrypoint === "unpause") {
+    return {
+      category: "pause-or-unpause",
+      severity: "high",
+      summary: "A token pause control was exercised",
+    };
+  }
+  if (
+    entrypoint === "mint"
+    || entrypoint === "burn"
+    || entrypoint === "addtoken"
+  ) {
+    return {
+      category: "mint-burn-or-issuance",
+      severity: "high",
+      summary: "A token mint, burn, or issuance control was exercised",
+    };
+  }
+  return {
+    category: "unexpected-entrypoint",
+    severity: "critical",
+    summary: `An unallowlisted ${profile} entrypoint was applied`,
+  };
+}
+
+export function classifyTokenOperation(
+  operation: IndexedTransaction,
+  profile: TokenControlProfile = "generic",
+):
   | { category: AlertCategory; severity: AlertSeverity; summary: string }
   | null {
   const entrypoint = normalizedEntrypoint(operation);
@@ -885,6 +1202,9 @@ export function classifyTokenOperation(operation: IndexedTransaction):
         ? "A token transfer or balance operation did not apply"
         : "An operation targeting the token contract did not apply",
     };
+  }
+  if (profile !== "generic") {
+    return exactProfileClassification(profile, entrypoint);
   }
   if (includesAny(shape, ["upgrade", "migrate", "migration", "setimplementation", "setcode"])) {
     return {
@@ -984,7 +1304,7 @@ export async function evaluateTokenControlMonitor(
   const fetcher = options.fetcher ?? fetch;
   const health = await evaluateHealth(config, now, fetcher);
   const base = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     observedAt: now.toISOString(),
     integrationOwner: config.integrationOwner,
     incidentChannel: config.incidentChannel,
@@ -992,6 +1312,9 @@ export async function evaluateTokenControlMonitor(
       address: config.tokenAddress,
       tokenId: config.tokenId,
       expectedCodeSha256: config.expectedCodeSha256,
+      profile: config.profile,
+      expectedImplementationSha256:
+        config.expectedImplementationSha256 ?? null,
     },
     range: {
       previousLevel: checkpoint.lastScannedLevel,
@@ -1056,7 +1379,7 @@ export async function evaluateTokenControlMonitor(
   const classifications: Record<string, number> = { ordinary: 0 };
   const alerts = [...health.alerts];
   for (const operation of operations) {
-    const classification = classifyTokenOperation(operation);
+    const classification = classifyTokenOperation(operation, config.profile);
     const key = classification?.category ?? "ordinary";
     classifications[key] = (classifications[key] ?? 0) + 1;
     if (classification) alerts.push(operationAlert(operation, classification));

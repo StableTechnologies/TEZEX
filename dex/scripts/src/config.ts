@@ -7,6 +7,16 @@ import {
     validateContractAddress,
     validateKeyHash,
 } from "@taquito/utils";
+import {
+    parseMultisigExpectation,
+    type MultisigExpectation,
+} from "./multisig-verification.js";
+import {
+    parseImplementationSelectors,
+    parseTokenControlProfile,
+    type ImplementationSelector,
+    type TokenControlProfile,
+} from "./token-control-monitor.js";
 
 export const TEZOS_MAINNET_CHAIN_ID = "NetXdQprcVkpaWU";
 const SHA256_PATTERN = /^[0-9a-f]{64}$/;
@@ -102,12 +112,18 @@ export interface FullConfig extends NetworkConfig, Config {
     privateKey?: string;
     expectedChainId: string;
     confirmations: number;
+    expectedSourceCommit?: string;
     deploymentStateFile: string;
     dexArtifactSha256?: string;
     lqtArtifactSha256?: string;
     tokenCodeSha256?: string;
+    tokenControlProfile: TokenControlProfile;
+    tokenImplementationSha256?: string;
+    tokenImplementationSelectors: ImplementationSelector[];
     managerThreshold?: number;
     protocolFeeRecipientThreshold?: number;
+    managerMultisig?: MultisigExpectation;
+    protocolFeeRecipientMultisig?: MultisigExpectation;
     tokenIntegrationOwner?: string;
     tokenIncidentChannel?: string;
     seedAmount: {
@@ -141,6 +157,11 @@ export function getConfig(networkName: NetworkName): FullConfig {
         throw new Error(
             `Signer not configured for ${networkName}. Set `
             + `${networkName.toUpperCase()}_PRIVATE_KEY or the matching remote-signer variables.`
+        );
+    }
+    if (networkConfig.privateKey && hasRemoteSigner) {
+        throw new Error(
+            `Configure exactly one ${networkName} deployment signer mode.`
         );
     }
 
@@ -179,6 +200,32 @@ export function getConfig(networkName: NetworkName): FullConfig {
     const dexArtifactSha256 = optionalSha256("DEX_ARTIFACT_SHA256");
     const lqtArtifactSha256 = optionalSha256("LQT_ARTIFACT_SHA256");
     const tokenCodeSha256 = optionalSha256("TOKEN_CODE_SHA256");
+    const tokenControlProfile = parseTokenControlProfile(
+        process.env.TOKEN_CONTROL_PROFILE,
+        "TOKEN_CONTROL_PROFILE"
+    );
+    const tokenImplementationSha256 = optionalSha256(
+        "TOKEN_IMPLEMENTATION_SHA256"
+    );
+    const tokenImplementationSelectorsRaw =
+        process.env.TOKEN_IMPLEMENTATION_SELECTORS?.trim();
+    const tokenImplementationSelectors = tokenImplementationSelectorsRaw
+        ? parseImplementationSelectors(
+            tokenImplementationSelectorsRaw,
+            "TOKEN_IMPLEMENTATION_SELECTORS"
+        )
+        : [];
+    if (
+        tokenControlProfile !== "generic"
+        && (
+            !tokenImplementationSha256
+            || tokenImplementationSelectors.length === 0
+        )
+    ) {
+        throw new Error(
+            "Exact token control profiles require TOKEN_IMPLEMENTATION_SHA256 and TOKEN_IMPLEMENTATION_SELECTORS"
+        );
+    }
     const managerThreshold = getOptionalPositiveIntegerEnv(
         "MANAGER_MULTISIG_THRESHOLD"
     );
@@ -187,6 +234,25 @@ export function getConfig(networkName: NetworkName): FullConfig {
     );
     const tokenIntegrationOwner = process.env.TOKEN_INTEGRATION_OWNER?.trim();
     const tokenIncidentChannel = process.env.TOKEN_INCIDENT_CHANNEL?.trim();
+    const expectedSourceCommit = process.env.EXPECTED_SOURCE_COMMIT
+        ?.trim()
+        .toLowerCase();
+    if (expectedSourceCommit && !/^[0-9a-f]{40}$/.test(expectedSourceCommit)) {
+        throw new Error("EXPECTED_SOURCE_COMMIT must be a 40-character lowercase Git commit");
+    }
+    const confirmations = getPositiveIntegerEnv("CONFIRMATIONS", 2);
+    const managerMultisig = parseMultisigExpectation(
+        process.env,
+        "MANAGER",
+        managerThreshold,
+        networkName === "mainnet"
+    );
+    const protocolFeeRecipientMultisig = parseMultisigExpectation(
+        process.env,
+        "PROTOCOL_FEE_RECIPIENT",
+        protocolFeeRecipientThreshold,
+        networkName === "mainnet" && config.poolType === "mod"
+    );
     if (
         networkName === "mainnet"
         && (!dexArtifactSha256 || !lqtArtifactSha256 || !tokenCodeSha256)
@@ -222,20 +288,41 @@ export function getConfig(networkName: NetworkName): FullConfig {
             "Mainnet requires TOKEN_INTEGRATION_OWNER and TOKEN_INCIDENT_CHANNEL."
         );
     }
+    if (networkName === "mainnet" && !expectedSourceCommit) {
+        throw new Error("Mainnet requires EXPECTED_SOURCE_COMMIT");
+    }
+    if (networkName === "mainnet" && confirmations < 2) {
+        throw new Error("Mainnet requires at least 2 confirmations");
+    }
+    if (
+        networkName === "mainnet"
+        && (
+            !/^ipfs:\/\/[a-zA-Z0-9]+$/.test(config.metadata_uri)
+            || !/^ipfs:\/\/[a-zA-Z0-9]+$/.test(config.token_metadata_uri)
+        )
+    ) {
+        throw new Error("Mainnet metadata URIs must be immutable ipfs:// CID URIs");
+    }
 
     return {
         ...networkConfig,
         ...config,
         expectedChainId: networkConfig.expectedChainId,
-        confirmations: getPositiveIntegerEnv("CONFIRMATIONS", 2),
+        confirmations,
+        expectedSourceCommit,
         deploymentStateFile:
             process.env.DEX_DEPLOYMENT_STATE?.trim()
             || `deployments/${networkName}-in-progress.json`,
         dexArtifactSha256,
         lqtArtifactSha256,
         tokenCodeSha256,
+        tokenControlProfile,
+        tokenImplementationSha256,
+        tokenImplementationSelectors,
         managerThreshold,
         protocolFeeRecipientThreshold,
+        managerMultisig,
+        protocolFeeRecipientMultisig,
         tokenIntegrationOwner,
         tokenIncidentChannel,
         seedAmount: {

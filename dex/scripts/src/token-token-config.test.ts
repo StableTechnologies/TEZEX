@@ -67,6 +67,13 @@ function validMainnetEnv(): NodeJS.ProcessEnv {
     TOKEN_INTEGRATION_OWNER: "operations-team",
     TOKEN_INCIDENT_CHANNEL: "incident-channel",
     TOKEN_TOKEN_LQT_ARTIFACT_SHA256: "d".repeat(64),
+    EXPECTED_SOURCE_COMMIT: "e".repeat(40),
+    MANAGER_MULTISIG_CODE_SHA256: "f".repeat(64),
+    MANAGER_MULTISIG_OWNERS:
+      `${implicitAddress(10)},${implicitAddress(11)},${implicitAddress(12)}`,
+    PROTOCOL_FEE_RECIPIENT_MULTISIG_CODE_SHA256: "1".repeat(64),
+    PROTOCOL_FEE_RECIPIENT_MULTISIG_OWNERS:
+      `${implicitAddress(10)},${implicitAddress(11)},${implicitAddress(12)}`,
   };
 }
 
@@ -92,12 +99,18 @@ test("parses a generic mixed-standard Previewnet configuration", () => {
     address: contractAddress(1),
     tokenId: "0",
     codeSha256: "b".repeat(64),
+    controlProfile: "generic",
+    implementationSha256: undefined,
+    implementationSelectors: [],
   });
   assert.deepEqual(config.tokenB, {
     standard: "FA1.2",
     address: contractAddress(2),
     tokenId: "0",
     codeSha256: "c".repeat(64),
+    controlProfile: "generic",
+    implementationSha256: undefined,
+    implementationSelectors: [],
   });
   assert.equal(config.finalManager, implicitAddress(3));
   assert.equal(config.confirmations, 2);
@@ -176,6 +189,22 @@ test("requires immutable IPFS metadata and exact artifact hash", () => {
     () => parseTokenTokenConfig("previewnet", lqtHash),
     /TOKEN_TOKEN_LQT_ARTIFACT_SHA256.*SHA-256/,
   );
+});
+
+test("exact token-control profiles require mutable implementation pins", () => {
+  const missing = validEnv();
+  missing.TOKEN_A_CONTROL_PROFILE = "usdt";
+  assert.throws(
+    () => parseTokenTokenConfig("previewnet", missing),
+    /Exact TOKEN_A_CONTROL_PROFILE requires implementation/,
+  );
+  missing.TOKEN_A_IMPLEMENTATION_SHA256 = "9".repeat(64);
+  missing.TOKEN_A_IMPLEMENTATION_SELECTORS =
+    "31:exprtu6vJPJCkTXVHfqSY4e3WUVnRgozHnAZoFRrEyCE8XfHRi9LZm";
+  const config = parseTokenTokenConfig("previewnet", missing);
+  assert.equal(config.tokenA.controlProfile, "usdt");
+  assert.equal(config.tokenA.implementationSha256, "9".repeat(64));
+  assert.equal(config.tokenA.implementationSelectors.length, 1);
 });
 
 test("rejects malformed token and control addresses before any RPC call", () => {
@@ -267,16 +296,26 @@ test("parses Mainnet only with explicit production release controls", () => {
   assert.equal(config.lqtArtifactSha256, "d".repeat(64));
   assert.equal(config.tokenIntegrationOwner, "operations-team");
   assert.equal(config.tokenIncidentChannel, "incident-channel");
+  assert.equal(config.expectedSourceCommit, "e".repeat(40));
+  assert.equal(config.managerMultisig?.threshold, 2);
+  assert.equal(config.feeRecipientMultisig?.threshold, 2);
 });
 
 test("Mainnet rejects missing artifact, role, LP-owner, and operations gates", () => {
   const cases: Array<[string, RegExp]> = [
     ["TOKEN_TOKEN_LQT_ARTIFACT_SHA256", /LQT_ARTIFACT/],
     ["SEED_RECEIVER", /SEED_RECEIVER/],
-    ["MANAGER_MULTISIG_THRESHOLD", /multisig role addresses/],
-    ["PROTOCOL_FEE_RECIPIENT_MULTISIG_THRESHOLD", /multisig role addresses/],
+    ["MANAGER_MULTISIG_THRESHOLD", /multisig/],
+    ["PROTOCOL_FEE_RECIPIENT_MULTISIG_THRESHOLD", /multisig/],
     ["TOKEN_INTEGRATION_OWNER", /INTEGRATION_OWNER/],
     ["TOKEN_INCIDENT_CHANNEL", /INCIDENT_CHANNEL/],
+    ["EXPECTED_SOURCE_COMMIT", /EXPECTED_SOURCE_COMMIT/],
+    ["MANAGER_MULTISIG_CODE_SHA256", /MANAGER multisig verification/],
+    ["MANAGER_MULTISIG_OWNERS", /MANAGER multisig verification/],
+    [
+      "PROTOCOL_FEE_RECIPIENT_MULTISIG_CODE_SHA256",
+      /PROTOCOL_FEE_RECIPIENT multisig verification/,
+    ],
   ];
   for (const [key, message] of cases) {
     const env = validMainnetEnv();
@@ -289,6 +328,15 @@ test("Mainnet rejects missing artifact, role, LP-owner, and operations gates", (
   assert.throws(
     () => parseTokenTokenConfig("mainnet", implicitManager),
     /originated multisig role addresses/,
+  );
+});
+
+test("Mainnet requires at least two confirmations", () => {
+  const env = validMainnetEnv();
+  env.CONFIRMATIONS = "1";
+  assert.throws(
+    () => parseTokenTokenConfig("mainnet", env),
+    /at least 2 confirmations/,
   );
 });
 

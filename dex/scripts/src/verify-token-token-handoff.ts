@@ -150,7 +150,10 @@ async function main(): Promise<void> {
   );
   await fs.promises.writeFile(latest, manifest, { mode: 0o600 });
   await fs.promises.chmod(latest, 0o600);
-  console.log(`Final token-to-token handoff verified: ${finalManifest}`);
+  console.log(`Paused token-to-token handoff verified: ${finalManifest}`);
+  console.log(
+    "The final manager may now unpause the pool and must then run the launch/invariant verifier.",
+  );
 }
 
 main().catch((error: unknown) => {

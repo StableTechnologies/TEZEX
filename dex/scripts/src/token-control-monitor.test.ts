@@ -12,6 +12,8 @@ import {
   evaluateTokenControlMonitor,
   fetchIndexedTransactions,
   loadMonitorCheckpoint,
+  observeImplementationFingerprint,
+  parseImplementationSelectors,
   parseTokenControlMonitorConfig,
   persistMonitorCheckpoint,
   type FetchLike,
@@ -40,6 +42,7 @@ function environment(): NodeJS.ProcessEnv {
     TOKEN_INTEGRATION_OWNER: "token-security-owner",
     TOKEN_INCIDENT_CHANNEL: "security-incident",
     TOKEN_MONITOR_START_LEVEL: "100",
+    TOKEN_MONITOR_PROFILE: "generic",
   };
 }
 
@@ -81,6 +84,7 @@ test("requires an exact token identity and two independent RPC origins", () => {
     "https://rpc-two.invalid",
   ]);
   assert.equal(parsed.startLevel, 100);
+  assert.equal(parsed.profile, "generic");
 
   const oneRpc = environment();
   oneRpc.TOKEN_MONITOR_RPC_URLS = "https://rpc-one.invalid";
@@ -96,6 +100,43 @@ test("requires an exact token identity and two independent RPC origins", () => {
   const wrongAddress = environment();
   wrongAddress.TOKEN_MONITOR_ADDRESS = "not-a-contract";
   assert.throws(() => parseTokenControlMonitorConfig(wrongAddress), /originated/);
+});
+
+test("exact profiles require a reviewed mutable-implementation fingerprint", async () => {
+  const exact = environment();
+  exact.TOKEN_MONITOR_PROFILE = "tzbtc";
+  assert.throws(
+    () => parseTokenControlMonitorConfig(exact),
+    /require.*IMPLEMENTATION_SHA256.*IMPLEMENTATION_SELECTORS/,
+  );
+  exact.TOKEN_MONITOR_IMPLEMENTATION_SHA256 = "d".repeat(64);
+  exact.TOKEN_MONITOR_IMPLEMENTATION_SELECTORS =
+    "31:exprtu6vJPJCkTXVHfqSY4e3WUVnRgozHnAZoFRrEyCE8XfHRi9LZm";
+  const parsed = parseTokenControlMonitorConfig(exact);
+  assert.equal(parsed.profile, "tzbtc");
+  assert.deepEqual(parsed.implementationSelectors, [{
+    bigMapId: 31,
+    keyHash: "exprtu6vJPJCkTXVHfqSY4e3WUVnRgozHnAZoFRrEyCE8XfHRi9LZm",
+  }]);
+
+  const selectors = parseImplementationSelectors(
+    "32:exprtcKu2vMv9vGVGWRmbxA7BByz1adTZzyXSinuE8816jZruUmMCB,"
+      + "31:exprtu6vJPJCkTXVHfqSY4e3WUVnRgozHnAZoFRrEyCE8XfHRi9LZm",
+  );
+  const urls: string[] = [];
+  const digest = await observeImplementationFingerprint(
+    "https://rpc.invalid",
+    123,
+    selectors,
+    1_000,
+    async (input) => {
+      urls.push(String(input));
+      return json({ int: String(urls.length) });
+    },
+  );
+  assert.match(digest, /^[0-9a-f]{64}$/);
+  assert.match(urls[0], /blocks\/123\/context\/big_maps\/31\/expr/);
+  assert.match(urls[1], /blocks\/123\/context\/big_maps\/32\/expr/);
 });
 
 test("classifies every required control family without flagging ordinary transfers", () => {
@@ -121,6 +162,46 @@ test("classifies every required control family without flagging ordinary transfe
     }))?.category,
     "administrator-or-authority-change",
   );
+});
+
+test("uses exact fail-closed USDt and tzBTC entrypoint profiles", () => {
+  const usdtCases: Array<[string, string | null]> = [
+    ["transfer", null],
+    ["update_operators", null],
+    ["update_entrypoints", "upgrade-or-migration"],
+    ["execute", "upgrade-or-migration"],
+    ["transfer_frozen_assets", "freeze-revoke-or-seizure"],
+    ["propose_administrator", "administrator-or-authority-change"],
+    ["remove_administrator", "administrator-or-authority-change"],
+    ["add_token", "mint-burn-or-issuance"],
+    ["future_entrypoint", "unexpected-entrypoint"],
+  ];
+  for (const [entrypoint, expected] of usdtCases) {
+    assert.equal(
+      classifyTokenOperation(operation(entrypoint), "usdt")?.category ?? null,
+      expected,
+      entrypoint,
+    );
+  }
+
+  const tzbtcCases: Array<[string, string | null]> = [
+    ["transfer", null],
+    ["approve", null],
+    ["getBalance", null],
+    ["addOperator", "administrator-or-authority-change"],
+    ["removeOperator", "administrator-or-authority-change"],
+    ["setRedeemAddress", "administrator-or-authority-change"],
+    ["run", "upgrade-or-migration"],
+    ["epwSetCode", "upgrade-or-migration"],
+    ["future_entrypoint", "unexpected-entrypoint"],
+  ];
+  for (const [entrypoint, expected] of tzbtcCases) {
+    assert.equal(
+      classifyTokenOperation(operation(entrypoint), "tzbtc")?.category ?? null,
+      expected,
+      entrypoint,
+    );
+  }
 });
 
 test("checkpoint identity is immutable and persistence is owner-only", async () => {
@@ -180,7 +261,11 @@ test("transaction scanning paginates by monotonic operation ID", async () => {
 test("healthy sources scan confirmed operations and advance the checkpoint", async () => {
   const monitorConfig = config();
   const checkpoint: MonitorCheckpoint = {
-    version: 1,
+    version: 3,
+    profile: "generic",
+    expectedImplementationSha256: null,
+    implementationSelectorsSha256:
+      "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e546b32b6a93a81f80e1b2c",
     tokenAddress: contractAddress,
     tokenId: "0",
     expectedCodeSha256: codeHash,
@@ -309,7 +394,11 @@ test("RPC sources on different common blocks fail closed", async () => {
 test("a changed prior checkpoint block fails closed before scanning", async () => {
   const monitorConfig = config();
   const checkpoint: MonitorCheckpoint = {
-    version: 1,
+    version: 3,
+    profile: "generic",
+    expectedImplementationSha256: null,
+    implementationSelectorsSha256:
+      "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e546b32b6a93a81f80e1b2c",
     tokenAddress: contractAddress,
     tokenId: "0",
     expectedCodeSha256: codeHash,
@@ -359,7 +448,7 @@ test("webhook credentials stay in headers and delivery failures reject", async (
     alertWebhookBearer: "secret-not-printed",
   });
   const report = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     observedAt: "2026-08-26T00:00:00Z",
     integrationOwner: "token-security-owner",
     incidentChannel: "security-incident",
@@ -367,6 +456,8 @@ test("webhook credentials stay in headers and delivery failures reject", async (
       address: contractAddress,
       tokenId: "0",
       expectedCodeSha256: codeHash,
+      profile: "generic",
+      expectedImplementationSha256: null,
     },
     range: { previousLevel: 99, safeLevel: 100 },
     health: { rpc: [], indexer: null },

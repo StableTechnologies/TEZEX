@@ -40,6 +40,11 @@ import {
   buildTokenTokenInitialStorage,
 } from "./token-token-storage.js";
 import { getTokenBalance } from "./util.js";
+import {
+  assertMultisigStorage,
+  type MultisigExpectation,
+} from "./multisig-verification.js";
+import { observeImplementationFingerprint } from "./token-control-monitor.js";
 
 dotenv.config();
 
@@ -121,6 +126,10 @@ function canonicalConfig(
       manager: config.managerThreshold ?? null,
       feeRecipient: config.feeRecipientThreshold ?? null,
     },
+    roleControls: {
+      manager: config.managerMultisig ?? null,
+      feeRecipient: config.feeRecipientMultisig ?? null,
+    },
     tokenOperations: {
       integrationOwner: config.tokenIntegrationOwner ?? null,
       incidentChannel: config.tokenIncidentChannel ?? null,
@@ -128,6 +137,7 @@ function canonicalConfig(
     poolMetadataUri: config.poolMetadataUri,
     lqtContractMetadataUri: config.lqtContractMetadataUri,
     lqtTokenMetadataUri: config.lqtTokenMetadataUri,
+    confirmations: config.confirmations,
   };
 }
 
@@ -148,6 +158,27 @@ async function contractCodeHash(tezos: TezosToolkit, address: string): Promise<s
   return scriptCodeSha256(script.code);
 }
 
+async function verifyMultisigRole(
+  tezos: TezosToolkit,
+  address: string,
+  expected: MultisigExpectation | undefined,
+  label: string,
+): Promise<void> {
+  if (!expected) return;
+  const [actualCodeSha256, contract] = await Promise.all([
+    contractCodeHash(tezos, address),
+    tezos.contract.at(address),
+  ]);
+  if (actualCodeSha256 !== expected.codeSha256) {
+    throw new Error(`${label} multisig code differs from the reviewed hash`);
+  }
+  assertMultisigStorage(
+    await contract.storage() as Record<string, unknown>,
+    expected,
+    label,
+  );
+}
+
 async function resumeOrigination(
   key: "pool" | "lqt",
   tezos: TezosToolkit,
@@ -161,6 +192,7 @@ async function resumeOrigination(
     record.address = await recoverOrigination(
       config.tzktApiUrl,
       record.operation,
+      config.confirmations,
     );
     record.status = "applied";
     await persistTokenTokenDeploymentState(config.stateFile, state);
@@ -183,7 +215,11 @@ async function resumeOperation(
   const record = state.steps[key];
   if (!record) return false;
   if (record.status === "injected") {
-    await assertOperationApplied(config.tzktApiUrl, record.operation);
+    await assertOperationApplied(
+      config.tzktApiUrl,
+      record.operation,
+      config.confirmations,
+    );
     record.status = "applied";
     await persistTokenTokenDeploymentState(config.stateFile, state);
   }
@@ -200,6 +236,19 @@ async function assertTokenContract(
     throw new Error(
       `${label} code hash mismatch: expected ${token.codeSha256}, received ${digest}`,
     );
+  }
+  if (token.implementationSha256) {
+    const actualImplementation = await observeImplementationFingerprint(
+      tezos.rpc.getRpcUrl(),
+      "head",
+      token.implementationSelectors,
+      15_000,
+    );
+    if (actualImplementation !== token.implementationSha256) {
+      throw new Error(
+        `${label} mutable implementation fingerprint mismatch: expected ${token.implementationSha256}, received ${actualImplementation}`,
+      );
+    }
   }
   const contract = await tezos.contract.at(token.address);
   const entrypoints = contract.entrypoints.entrypoints;
@@ -418,6 +467,14 @@ async function main(): Promise<void> {
   if (config.network === "mainnet" && sourceDirty) {
     throw new Error("Mainnet deployment requires a clean Git worktree");
   }
+  if (
+    config.network === "mainnet"
+    && commit !== config.expectedSourceCommit
+  ) {
+    throw new Error(
+      `Mainnet source commit mismatch: expected ${config.expectedSourceCommit}, received ${commit}`,
+    );
+  }
 
   const tezos = new TezosToolkit(config.rpc);
   const deploymentSigner = await createDeploymentSigner(config);
@@ -482,6 +539,20 @@ async function main(): Promise<void> {
   const [tokenA, tokenB] = await Promise.all([
     assertTokenContract(tezos, "TOKEN_A", config.tokenA),
     assertTokenContract(tezos, "TOKEN_B", config.tokenB),
+  ]);
+  await Promise.all([
+    verifyMultisigRole(
+      tezos,
+      config.finalManager,
+      config.managerMultisig,
+      "Manager",
+    ),
+    verifyMultisigRole(
+      tezos,
+      config.feeRecipient,
+      config.feeRecipientMultisig,
+      "Protocol fee recipient",
+    ),
   ]);
 
   if (!state.steps.initialized) {
@@ -674,10 +745,10 @@ async function main(): Promise<void> {
   await persistTokenTokenDeploymentState(config.stateFile, state);
   console.log("Deployment verification passed.");
   if (config.finalManager !== deployer) {
-    console.log("FINAL_MANAGER must call %accept_manager and then %set_paused false.");
-    console.log("Run verify:token-token-handoff after both calls are confirmed.");
+    console.log("FINAL_MANAGER must call %accept_manager while the pool remains paused.");
+    console.log("Run verify:token-token-handoff before calling %set_paused false.");
   } else {
-    console.log("The manager must call %set_paused false after reviewing the deployment.");
+    console.log("Run verify:token-token-handoff before the manager calls %set_paused false.");
   }
 }
 

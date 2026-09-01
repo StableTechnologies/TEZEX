@@ -114,3 +114,39 @@ test("recovery refuses to repeat failed or unindexed operations", async () => {
         globalThis.fetch = previousFetch;
     }
 });
+
+test("recovery enforces indexed confirmation depth", async () => {
+    const previousFetch = globalThis.fetch;
+    const responses = [
+        true,
+        [{ status: "applied", level: 100 }],
+        { level: 100, synced: true },
+    ];
+    globalThis.fetch = async () => new Response(
+        JSON.stringify(responses.shift())
+    );
+    try {
+        await assert.rejects(
+            assertOperationApplied("https://api.invalid", "opRecent", 2),
+            /1 confirmation.*2 required/
+        );
+    } finally {
+        globalThis.fetch = previousFetch;
+    }
+
+    const confirmed = [
+        true,
+        [{ status: "applied", level: 100 }],
+        { level: 101, synced: true },
+    ];
+    globalThis.fetch = async () => new Response(
+        JSON.stringify(confirmed.shift())
+    );
+    try {
+        await assert.doesNotReject(
+            assertOperationApplied("https://api.invalid", "opConfirmed", 2)
+        );
+    } finally {
+        globalThis.fetch = previousFetch;
+    }
+});

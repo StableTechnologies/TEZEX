@@ -166,22 +166,39 @@ This will:
 For modified pools, the total swap fee is immutable: 25 bp remains with LPs and
 5 bp is accumulated for the protocol fee recipient. The deployment signer is
 the temporary manager and recipient during the inactive initialization window.
-The production roles must explicitly accept their handoffs, after which the
-final manager can unpause the pool. Mainnet preflight requires originated
-multisig addresses, their documented thresholds, exact artifact hashes, the
-token script-code hash, the permanent Mainnet chain ID, and a clean Git tree.
+The production roles must explicitly accept their handoffs while the pool
+remains paused. Mainnet preflight requires originated multisig addresses and
+verifies their code hashes, thresholds, and complete owner sets on chain. It
+also requires exact artifact hashes, the token script-code hash, the permanent
+Mainnet chain ID, at least two confirmations, a clean Git tree, and an explicit
+`EXPECTED_SOURCE_COMMIT` matching `HEAD`.
 The signer can be a local key or a remote/HSM-backed signer.
 External token control monitoring and incident gates are defined in
 [EXTERNAL_TOKEN_OPERATIONAL_RUNBOOK.md](./EXTERNAL_TOKEN_OPERATIONAL_RUNBOOK.md).
+For storage-upgradeable token proxies, an exact control profile also requires a
+reviewed mutable implementation fingerprint; the deployer checks it again at
+the launch head instead of relying on the outer script-code hash alone.
 
-After both production roles accept and the final manager unpauses, verify and
-record the completed handoff. This final gate rechecks the seed reserves against
+After both production roles accept, verify and record the completed handoff
+**before the final manager unpauses**. This paused gate rechecks the seed reserves against
 the pool's real XTZ/token balances and confirms the LQT total supply, permanent
 locked balance, and seed-provider allocation were unchanged while the pool was
 paused:
 
 ```bash
 DEX_DEPLOYMENT_STATE=deployments/mainnet-in-progress.json npm run verify:handoff
+```
+
+Only after that succeeds should the final manager unpause. Immediately verify
+the live launch state; this check tolerates legitimate swaps and liquidity
+changes but enforces reserve/fee solvency, exact roles, lifecycle flags, no
+unexpected delegate, pool/LQT supply equality, the permanent LQT lock,
+metadata pointers, and reviewed pool/LQT/token code hashes:
+
+```bash
+POOL_INVARIANT_KIND=native POOL_EXPECTED_PAUSED=false \
+DEX_DEPLOYMENT_STATE=deployments/mainnet-in-progress.json \
+npm run verify:pool-invariants
 ```
 
 For tokens whose balances cannot be read directly from their storage layout,

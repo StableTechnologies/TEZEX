@@ -29,8 +29,14 @@ function state(): TokenTokenDeploymentState {
     },
     deployer: "tz1-deployer",
     config: {
-      tokenA: { standard: "FA2", address: "KT1-a", tokenId: "0", codeSha256: "e".repeat(64) },
-      tokenB: { standard: "FA1.2", address: "KT1-b", tokenId: "0", codeSha256: "f".repeat(64) },
+      tokenA: {
+        standard: "FA2", address: "KT1-a", tokenId: "0", codeSha256: "e".repeat(64),
+        controlProfile: "generic", implementationSelectors: [],
+      },
+      tokenB: {
+        standard: "FA1.2", address: "KT1-b", tokenId: "0", codeSha256: "f".repeat(64),
+        controlProfile: "generic", implementationSelectors: [],
+      },
       seedAmountA: "1000000",
       seedAmountB: "100000",
       seedReceiver: "KT1-receiver",
@@ -41,6 +47,7 @@ function state(): TokenTokenDeploymentState {
       poolMetadataUri: "ipfs://pool",
       lqtContractMetadataUri: "ipfs://contract",
       lqtTokenMetadataUri: "ipfs://token",
+      confirmations: 2,
     },
     steps: {},
   };

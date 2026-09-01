@@ -64,8 +64,8 @@ interface InitializationCalls<TBatch extends BatchLike> {
  * one-step manager handoff. Modified pools remain paused and propose the final
  * manager and protocol-fee recipient only after reserve and activation checks
  * succeed. Each proposed address must accept before the pool can be unpaused.
- * If the deployment signer already holds both final roles, the last call
- * unpauses the pool.
+ * The deployment workflow never unpauses: even when the signer already holds
+ * both final roles, the paused handoff verifier must run first.
  */
 export function appendInitializationCalls<TBatch extends BatchLike>({
     batch,
@@ -129,12 +129,6 @@ export function appendInitializationCalls<TBatch extends BatchLike>({
                 limits
             );
         }
-        if (!recipientHandoffPending && !managerHandoffPending) {
-            next = next.withContractCall(
-                dexContract.methodsObject.setPaused(false),
-                limits
-            );
-        }
         return next as TBatch;
     }
 
@@ -156,6 +150,5 @@ export function initializationOpCount(
     const managerHandoff = deploymentManager === finalManager ? 0 : 1;
     const recipientHandoff =
         deploymentProtocolFeeRecipient === finalProtocolFeeRecipient ? 0 : 1;
-    const unpause = managerHandoff === 0 && recipientHandoff === 0 ? 1 : 0;
-    return 5 + managerHandoff + recipientHandoff + unpause;
+    return 5 + managerHandoff + recipientHandoff;
 }

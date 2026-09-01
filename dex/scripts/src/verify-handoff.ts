@@ -125,7 +125,10 @@ async function main(): Promise<void> {
     );
     await fs.promises.writeFile(latest, manifest, { mode: 0o600 });
     await fs.promises.chmod(latest, 0o600);
-    console.log(`Final handoff verified: ${finalManifest}`);
+    console.log(`Paused final handoff verified: ${finalManifest}`);
+    console.log(
+        "The final manager may now unpause the pool and must then run the launch/invariant verifier."
+    );
 }
 
 main().catch((error: unknown) => {

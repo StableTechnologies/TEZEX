@@ -16,7 +16,9 @@
         "deploy:token-token:testnet": "tsx src/deploy-token-token.ts --network=testnet",
         "deploy:token-token:mainnet": "tsx src/deploy-token-token.ts --network=mainnet",
         "verify:token-token-handoff": "tsx src/verify-token-token-handoff.ts",
+        "verify:pool-invariants": "tsx src/verify-pool-invariants.ts",
         "inspect:token": "tsx src/inspect-token-code.ts",
+        "inspect:token-implementation": "tsx src/inspect-token-implementation.ts",
         "monitor:token": "tsx src/monitor-token-controls.ts",
         "typecheck": "tsc --noEmit"
     },

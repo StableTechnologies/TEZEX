@@ -60,6 +60,11 @@ import {
     type NativePoolDeploymentState,
 } from "./deployment-state.js";
 import { scriptCodeSha256 } from "./token-code-hash.js";
+import {
+    assertMultisigStorage,
+    type MultisigExpectation,
+} from "./multisig-verification.js";
+import { observeImplementationFingerprint } from "./token-control-monitor.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -136,6 +141,27 @@ async function contractCodeHash(
     const script = await tezos.rpc.getScript(address);
     if (!script.code) throw new Error(`Contract ${address} has no script code`);
     return scriptCodeSha256(script.code);
+}
+
+async function verifyMultisigRole(
+    tezos: TezosToolkit,
+    address: string,
+    expected: MultisigExpectation | undefined,
+    label: string
+): Promise<void> {
+    if (!expected) return;
+    const [actualCodeSha256, contract] = await Promise.all([
+        contractCodeHash(tezos, address),
+        tezos.contract.at(address),
+    ]);
+    if (actualCodeSha256 !== expected.codeSha256) {
+        throw new Error(`${label} multisig code differs from the reviewed hash`);
+    }
+    assertMultisigStorage(
+        await contract.storage() as Record<string, unknown>,
+        expected,
+        label
+    );
 }
 
 function assertPinnedDigest(
@@ -323,7 +349,7 @@ async function checkBalance(
     // Seed amount + network fee buffer (Previewnet TezosX fees are much higher).
     const feeBuffer = needsExplicitOpLimits(networkName)
         ? previewnetFeeBufferMutez()
-        : 2_000_000n;
+        : 5_000_000n;
     const requiredBalance = seedXtz + feeBuffer;
     if (balanceMutez < requiredBalance) {
         throw new Error(
@@ -438,10 +464,7 @@ async function initializePool(
     await op.confirmation(config.confirmations);
     console.log(
         config.poolType === "mod"
-            ? config.manager === managerAddress
-                && config.protocolFeeRecipient === managerAddress
-                ? "✓ Pool funded, activated, and unpaused under final roles"
-                : "✓ Pool funded, activated, paused, and final roles proposed"
+            ? "✓ Pool funded, activated, paused, and final roles proposed where needed"
             : "✓ Pool funded and transferred to final manager"
     );
     return op.hash;
@@ -478,12 +501,17 @@ async function resumeOrigination(
     if (!step.address) {
         step.address = await recoverOrigination(
             config.tzktApiUrl,
-            step.operation
+            step.operation,
+            config.confirmations
         );
         step.status = "applied";
         await persistDeploymentState(config.deploymentStateFile, state);
     } else if (step.status !== "applied") {
-        await assertOperationApplied(config.tzktApiUrl, step.operation);
+        await assertOperationApplied(
+            config.tzktApiUrl,
+            step.operation,
+            config.confirmations
+        );
         step.status = "applied";
         await persistDeploymentState(config.deploymentStateFile, state);
     }
@@ -504,7 +532,11 @@ async function resumeInitialization(
     const step = state.steps.initialization;
     if (!step) return false;
     if (step.status !== "applied") {
-        await assertOperationApplied(config.tzktApiUrl, step.operation);
+        await assertOperationApplied(
+            config.tzktApiUrl,
+            step.operation,
+            config.confirmations
+        );
         step.status = "applied";
         await persistDeploymentState(config.deploymentStateFile, state);
     }
@@ -603,7 +635,7 @@ async function verifyDeployment(
     }
     if (
         config.poolType === "mod"
-        && dexStorage.paused !== (managerHandoffPending || recipientHandoffPending)
+        && dexStorage.paused !== true
     ) {
         throw new Error("Deployment verification failed for pool pause state");
     }
@@ -690,6 +722,14 @@ async function main(): Promise<void> {
         }
         console.warn("WARNING: test deployment explicitly allows a dirty worktree");
     }
+    if (
+        networkName === "mainnet"
+        && commit !== config.expectedSourceCommit
+    ) {
+        throw new Error(
+            `Mainnet source commit mismatch: expected ${config.expectedSourceCommit}, received ${commit}`
+        );
+    }
 
     const tezos = new TezosToolkit(config.rpc);
     const deploymentSigner = await createDeploymentSigner(config);
@@ -723,6 +763,33 @@ async function main(): Promise<void> {
             `Token code hash mismatch: expected ${config.tokenCodeSha256}, received ${tokenCodeSha256}`
         );
     }
+    if (config.tokenImplementationSha256) {
+        const implementationSha256 = await observeImplementationFingerprint(
+            config.rpc,
+            "head",
+            config.tokenImplementationSelectors,
+            15_000
+        );
+        if (implementationSha256 !== config.tokenImplementationSha256) {
+            throw new Error(
+                `Token mutable implementation fingerprint mismatch: expected ${config.tokenImplementationSha256}, received ${implementationSha256}`
+            );
+        }
+    }
+    await verifyMultisigRole(
+        tezos,
+        config.manager,
+        config.managerMultisig,
+        "Manager"
+    );
+    if (config.poolType === "mod") {
+        await verifyMultisigRole(
+            tezos,
+            config.protocolFeeRecipient,
+            config.protocolFeeRecipientMultisig,
+            "Protocol fee recipient"
+        );
+    }
 
     const stateConfig: NativePoolDeploymentState["config"] = {
         tokenAddress: config.tokenAddress,
@@ -738,6 +805,11 @@ async function main(): Promise<void> {
             protocolFeeRecipient:
                 config.protocolFeeRecipientThreshold ?? null,
         },
+        roleControls: {
+            manager: config.managerMultisig ?? null,
+            protocolFeeRecipient:
+                config.protocolFeeRecipientMultisig ?? null,
+        },
         tokenOperations: {
             integrationOwner: config.tokenIntegrationOwner ?? null,
             incidentChannel: config.tokenIncidentChannel ?? null,
@@ -748,6 +820,10 @@ async function main(): Promise<void> {
                 "mint-or-burn",
                 "administrator-change",
             ],
+            controlProfile: config.tokenControlProfile,
+            implementationSha256:
+                config.tokenImplementationSha256 ?? null,
+            implementationSelectors: config.tokenImplementationSelectors,
         },
         metadataUri: config.metadata_uri,
         tokenMetadataUri: config.token_metadata_uri,
@@ -932,14 +1008,12 @@ async function main(): Promise<void> {
             if (config.manager !== pkh) {
                 console.log(`NEXT: ${config.manager} must call %acceptManager.`);
             }
-            if (
-                config.manager !== pkh
-                || config.protocolFeeRecipient !== pkh
-            ) {
-                console.log(
-                    `NEXT: ${config.manager} must call %setPaused false after all role acceptances.`
-                );
-            }
+            console.log(
+                "NEXT: run verify:handoff while the pool remains paused."
+            );
+            console.log(
+                `ONLY AFTER THAT: ${config.manager} may call %setPaused false, then run verify:pool-invariants.`
+            );
         }
     } catch (error: any) {
         console.error("Deployment failed:", error.message);
