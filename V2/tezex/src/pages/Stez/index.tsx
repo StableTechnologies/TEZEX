@@ -78,8 +78,7 @@ const statusCopy = (
   snapshot: StezSnapshot | null,
   loading: boolean,
   selectedNetwork: string,
-  networkError: string | null,
-  hasTestXtz: boolean
+  networkError: string | null
 ) => {
   if (loading) {
     return {
@@ -99,13 +98,7 @@ const statusCopy = (
   if (snapshot.availability === "available") {
     return {
       title: `sTEZ is live on ${selectedNetwork}`,
-      description: hasTestXtz
-        ? `Test XTZ detected in your connected wallet. You can use it to stake, redeem, and finalize against the current experimental protocol. If you need more for testing, use the Snet faucet below. Live data was read from block ${snapshot.blockLevel.toLocaleString(
-            "en-US"
-          )}. Snet is intended for longer-term sTEZ testing without Weeklynet’s scheduled resets.`
-        : `Use test XTZ to stake, redeem, and finalize against the current experimental protocol. Live data was read from block ${snapshot.blockLevel.toLocaleString(
-            "en-US"
-          )}. Snet is intended for longer-term sTEZ testing without Weeklynet’s scheduled resets.`,
+      description: "Get testnet XTZ to test sTEZ here:",
     };
   }
   if (snapshot.availability === "disabled") {
@@ -317,8 +310,7 @@ export const Stez: FC = () => {
     snapshot,
     loading,
     selectedNetwork,
-    networkError,
-    hasTestXtz
+    networkError
   );
 
   const connect = useCallback(async () => {
