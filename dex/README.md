@@ -201,10 +201,11 @@ DEX_DEPLOYMENT_STATE=deployments/mainnet-in-progress.json \
 npm run verify:pool-invariants
 ```
 
-For tokens whose balances cannot be read directly from their storage layout,
-set `DEPLOYMENT_VERIFY_TZKT_API` to the matching network's TzKT API endpoint.
-The verifier prefers a direct RPC storage read and uses that indexer only as a
-fallback.
+The final handoff and live invariant gates read token balances directly from
+the configured RPC and fail closed on any read or storage-decoding error. They
+never substitute an indexer balance, because it may describe an older block.
+Support for a new token storage layout must be added to the RPC balance reader
+before that token can pass a production release gate.
 
 The configured token seed is a minimum for modified-pool activation. Any tokens
 transferred directly to the pool before its initialization batch are included

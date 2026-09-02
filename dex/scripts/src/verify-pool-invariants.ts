@@ -16,7 +16,7 @@ import {
 } from "./pool-invariant-verification.js";
 import { scriptCodeSha256 } from "./token-code-hash.js";
 import { assertPoolIdentityStorage } from "./token-token-storage.js";
-import { getTokenBalance } from "./util.js";
+import { getTokenBalanceFromRpc } from "./util.js";
 import { observeImplementationFingerprint } from "./token-control-monitor.js";
 
 function required(value: string | undefined, message: string): string {
@@ -164,13 +164,12 @@ async function verifyNative(
     pool.storage() as Promise<Record<string, unknown>>,
     lqt.storage() as Promise<Record<string, unknown>>,
     tezos.tz.getBalance(poolAddress),
-    getTokenBalance(
+    getTokenBalanceFromRpc(
       tezos,
       state.config.tokenAddress,
       poolAddress,
       state.config.tokenStandard,
       state.config.tokenId,
-      process.env.DEPLOYMENT_VERIFY_TZKT_API?.trim(),
     ),
     tezos.rpc.getDelegate(poolAddress),
   ]);
@@ -248,21 +247,19 @@ async function verifyTokenToken(
   const [poolStorage, lqtStorage, balanceA, balanceB] = await Promise.all([
     pool.storage() as Promise<Record<string, unknown>>,
     lqt.storage() as Promise<Record<string, unknown>>,
-    getTokenBalance(
+    getTokenBalanceFromRpc(
       tezos,
       state.config.tokenA.address,
       poolAddress,
       state.config.tokenA.standard,
       state.config.tokenA.tokenId,
-      process.env.DEPLOYMENT_VERIFY_TZKT_API?.trim(),
     ),
-    getTokenBalance(
+    getTokenBalanceFromRpc(
       tezos,
       state.config.tokenB.address,
       poolAddress,
       state.config.tokenB.standard,
       state.config.tokenB.tokenId,
-      process.env.DEPLOYMENT_VERIFY_TZKT_API?.trim(),
     ),
   ]);
   assertPoolIdentityStorage(poolStorage, {

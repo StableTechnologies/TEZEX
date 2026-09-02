@@ -132,6 +132,10 @@ TOKEN_TOKEN_DEPLOYMENT_STATE=<receipt.json> \
 npm run verify:pool-invariants
 ```
 
+Both signer-free release gates read token balances directly from the configured
+RPC and fail closed on read or storage-decoding errors. They never substitute
+an indexer balance that may describe an older block.
+
 ## Mainnet gates
 
 The Mainnet command is explicit:

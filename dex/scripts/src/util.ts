@@ -161,3 +161,25 @@ export async function getTokenBalance(
         );
     }
 }
+
+/**
+ * Read a token balance from the configured RPC and fail closed on any error.
+ *
+ * Release gates must use this function so an unavailable RPC cannot silently
+ * substitute an indexer balance from an older block.
+ */
+export async function getTokenBalanceFromRpc(
+    tezos: TezosToolkit,
+    tokenAddress: string,
+    owner: string,
+    tokenStandard: string,
+    tokenId: string = "0"
+): Promise<bigint> {
+    return getTokenBalance(
+        tezos,
+        tokenAddress,
+        owner,
+        tokenStandard,
+        tokenId
+    );
+}

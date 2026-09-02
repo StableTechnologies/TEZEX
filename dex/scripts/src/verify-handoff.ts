@@ -11,7 +11,7 @@ import {
 } from "./deployment-state.js";
 import { assertFinalHandoffStorage } from "./handoff-verification.js";
 import { scriptCodeSha256 } from "./token-code-hash.js";
-import { getTokenBalance } from "./util.js";
+import { getTokenBalanceFromRpc } from "./util.js";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 
@@ -73,13 +73,12 @@ async function main(): Promise<void> {
             dex.storage() as Promise<Record<string, unknown>>,
             lqt.storage() as Promise<Record<string, unknown>>,
             tezos.tz.getBalance(dexAddress),
-            getTokenBalance(
+            getTokenBalanceFromRpc(
                 tezos,
                 state.config.tokenAddress,
                 dexAddress,
                 state.config.tokenStandard,
-                state.config.tokenId,
-                process.env.DEPLOYMENT_VERIFY_TZKT_API?.trim()
+                state.config.tokenId
             ),
         ]);
     const lqtTokens = lqtStorage.tokens as {

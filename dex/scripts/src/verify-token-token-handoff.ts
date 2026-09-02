@@ -11,7 +11,7 @@ import {
 } from "./token-token-deployment-state.js";
 import { assertFinalTokenTokenHandoff } from "./token-token-handoff-verification.js";
 import { scriptCodeSha256 } from "./token-code-hash.js";
-import { getTokenBalance } from "./util.js";
+import { getTokenBalanceFromRpc } from "./util.js";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 
@@ -85,21 +85,19 @@ async function main(): Promise<void> {
   const [poolStorage, lqtStorage, balanceA, balanceB] = await Promise.all([
     pool.storage() as Promise<Record<string, unknown>>,
     lqt.storage() as Promise<Record<string, unknown>>,
-    getTokenBalance(
+    getTokenBalanceFromRpc(
       tezos,
       state.config.tokenA.address,
       poolAddress,
       state.config.tokenA.standard,
       state.config.tokenA.tokenId,
-      process.env.DEPLOYMENT_VERIFY_TZKT_API?.trim(),
     ),
-    getTokenBalance(
+    getTokenBalanceFromRpc(
       tezos,
       state.config.tokenB.address,
       poolAddress,
       state.config.tokenB.standard,
       state.config.tokenB.tokenId,
-      process.env.DEPLOYMENT_VERIFY_TZKT_API?.trim(),
     ),
   ]);
 
