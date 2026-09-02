@@ -689,25 +689,6 @@ export const Stez: FC = () => {
                     <span>{activeAction === "Stake" ? "sTEZ" : "XTZ"}</span>
                   </div>
                 </div>
-                <div className="stez-action-meta">
-                  {activeAction === "Stake" ? (
-                    <>
-                      <span>Rate: {rate} XTZ per sTEZ</span>
-                      <span>
-                        Final amount is determined when the operation is
-                        included on-chain
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Quoted at the current protocol rate</span>
-                      <span>
-                        Final XTZ may change if slashing occurs before
-                        finalization
-                      </span>
-                    </>
-                  )}
-                </div>
               </>
             )}
 

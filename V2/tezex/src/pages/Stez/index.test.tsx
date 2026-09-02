@@ -206,6 +206,11 @@ test("enables a stake request only for a wallet connected to Snet", async () => 
   expect(screen.getByText("Redemption in progress")).toBeInTheDocument();
   expect(screen.getByText("Claimable XTZ")).toBeInTheDocument();
   expect(
+    screen.queryByText(
+      "Final amount is determined when the operation is included on-chain"
+    )
+  ).not.toBeInTheDocument();
+  expect(
     screen.getByText(/Test XTZ detected in your connected wallet/)
   ).toBeInTheDocument();
   expect(

@@ -259,6 +259,22 @@
   max-width: 360px;
 }
 
+@media (min-width: 960px) {
+  .stez-workspace {
+    align-items: stretch;
+  }
+
+  .stez-workspace__position {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .stez-workspace__position .stez-position-grid {
+    flex: 1;
+    grid-auto-rows: minmax(82px, 1fr);
+  }
+}
+
 .stez-panel__head {
   min-height: 58px;
   padding: 12px 20px;
