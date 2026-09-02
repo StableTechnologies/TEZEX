@@ -101,7 +101,7 @@ test("loads live Snet data and its matching faucet", async () => {
   await screen.findByText("sTEZ is live on Snet");
 
   expect(
-    screen.getByText(/without Weeklynet’s scheduled resets/)
+    screen.getByText("Get testnet XTZ to test sTEZ here:")
   ).toBeInTheDocument();
   expect(screen.getByText("Stake tez, stay liquid.")).toBeInTheDocument();
   expect(screen.getByText("sTEZ Balance")).toBeInTheDocument();
@@ -211,7 +211,7 @@ test("enables a stake request only for a wallet connected to Snet", async () => 
     )
   ).not.toBeInTheDocument();
   expect(
-    screen.getByText(/Test XTZ detected in your connected wallet/)
+    screen.getByText("Get testnet XTZ to test sTEZ here:")
   ).toBeInTheDocument();
   expect(
     screen.getByRole("link", {
