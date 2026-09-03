@@ -10,7 +10,7 @@ function fixture(): {
 } {
   const pool = "KT1-pool";
   const state: TokenTokenDeploymentState = {
-    version: 2,
+    version: 3,
     fingerprint: "fingerprint",
     network: "mainnet",
     rpc: "https://rpc.example.invalid",
@@ -25,8 +25,14 @@ function fixture(): {
     },
     deployer: "tz1-deployer",
     config: {
-      tokenA: { standard: "FA2", address: "KT1-a", tokenId: "0", codeSha256: "e".repeat(64) },
-      tokenB: { standard: "FA1.2", address: "KT1-b", tokenId: "0", codeSha256: "f".repeat(64) },
+      tokenA: {
+        standard: "FA2", address: "KT1-a", tokenId: "0", codeSha256: "e".repeat(64),
+        controlProfile: "generic", implementationSelectors: [],
+      },
+      tokenB: {
+        standard: "FA1.2", address: "KT1-b", tokenId: "0", codeSha256: "f".repeat(64),
+        controlProfile: "generic", implementationSelectors: [],
+      },
       seedAmountA: "1000000",
       seedAmountB: "100000",
       seedReceiver: "KT1-receiver",
@@ -37,6 +43,7 @@ function fixture(): {
       poolMetadataUri: "ipfs://pool",
       lqtContractMetadataUri: "ipfs://contract",
       lqtTokenMetadataUri: "ipfs://token",
+      confirmations: 2,
     },
     steps: {
       pool: { address: pool, operation: "op-pool", status: "applied" },
@@ -53,7 +60,7 @@ function fixture(): {
         protocol_fee_recipient: "KT1-recipient",
         pending_fee_recipient: null,
         active: true,
-        paused: false,
+        paused: true,
         entered: false,
         manager: "KT1-manager",
         pending_manager: null,
@@ -80,7 +87,7 @@ test("accepts an exact completed token-to-token handoff", () => {
 
 test("rejects incomplete roles, unpreserved seed, and broken LQT allocation", () => {
   const paused = fixture();
-  paused.evidence.poolStorage.paused = true;
+  paused.evidence.poolStorage.paused = false;
   assert.throws(
     () => assertFinalTokenTokenHandoff(paused.state, paused.evidence),
     /handoff is incomplete/,

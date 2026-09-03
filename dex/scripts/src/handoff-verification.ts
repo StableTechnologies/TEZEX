@@ -53,8 +53,10 @@ export function assertFinalHandoffStorage(
             throw new Error("Base-pool manager handoff is incomplete");
         }
     } else {
-        if (storage.active !== true || storage.paused !== false) {
-            throw new Error("Modified pool is not active and unpaused");
+        if (storage.active !== true || storage.paused !== true) {
+            throw new Error(
+                "Modified pool must remain active and paused during final handoff verification"
+            );
         }
         if (String(storage.manager) !== state.config.finalManager) {
             throw new Error("Final manager has not accepted the handoff");

@@ -45,13 +45,15 @@ export function assertFinalTokenTokenHandoff(
   });
   if (
     poolStorage.active !== true ||
-    poolStorage.paused !== false ||
+    poolStorage.paused !== true ||
     poolStorage.entered !== false ||
     String(poolStorage.manager) !== state.config.finalManager ||
     optionAddress(poolStorage.pending_manager) !== null ||
     optionAddress(poolStorage.pending_fee_recipient) !== null
   ) {
-    throw new Error("Final pool lifecycle or role handoff is incomplete");
+    throw new Error(
+      "Final pool lifecycle or role handoff is incomplete, or the pool was unpaused before verification",
+    );
   }
 
   const reserveA = nat(poolStorage.reserve_a, "reserve_a");

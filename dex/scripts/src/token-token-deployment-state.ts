@@ -2,8 +2,9 @@ import fs from "node:fs";
 import path from "node:path";
 
 import type { TokenDescriptor, TokenTokenNetwork } from "./token-token-config.js";
+import type { MultisigExpectation } from "./multisig-verification.js";
 
-export const TOKEN_TOKEN_DEPLOYMENT_STATE_VERSION = 2;
+export const TOKEN_TOKEN_DEPLOYMENT_STATE_VERSION = 3;
 
 export interface TokenTokenOperationRecord {
   operation: string;
@@ -42,6 +43,10 @@ export interface TokenTokenDeploymentState {
       manager: number | null;
       feeRecipient: number | null;
     };
+    roleControls?: {
+      manager: MultisigExpectation | null;
+      feeRecipient: MultisigExpectation | null;
+    };
     tokenOperations: {
       integrationOwner: string | null;
       incidentChannel: string | null;
@@ -49,6 +54,7 @@ export interface TokenTokenDeploymentState {
     poolMetadataUri: string;
     lqtContractMetadataUri: string;
     lqtTokenMetadataUri: string;
+    confirmations: number;
   };
   steps: {
     pool?: TokenTokenOriginationRecord;

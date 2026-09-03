@@ -28,7 +28,7 @@ const state = {
 
 const storage = {
     active: true,
-    paused: false,
+    paused: true,
     manager: "KT1-manager",
     pending_manager: null,
     protocol_fee_recipient: "KT1-recipient",
@@ -54,7 +54,7 @@ const economics: FinalHandoffEconomics = {
     providerLqtBalance: "1413213",
 };
 
-test("final handoff requires accepted roles, an unpaused pool, and intact seed liquidity", () => {
+test("final handoff requires accepted roles while the pool is still paused", () => {
     assert.doesNotThrow(() => assertFinalHandoffStorage(
         storage,
         state,
@@ -63,12 +63,12 @@ test("final handoff requires accepted roles, an unpaused pool, and intact seed l
 
     assert.throws(() => assertFinalHandoffStorage({
         ...storage,
-        paused: true,
+        paused: false,
         manager: "tz1-deployer",
         pending_manager: "KT1-manager",
         protocol_fee_recipient: "tz1-deployer",
         pending_protocol_fee_recipient: "KT1-recipient",
-    }, state, economics), /not active and unpaused/);
+    }, state, economics), /remain active and paused/);
 });
 
 test("final handoff rejects seed liquidity removed during the paused handoff", () => {

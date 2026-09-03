@@ -31,12 +31,14 @@ only the separately tracked liability, not LP trading reserves.
 - A pool cannot be unpaused while either production-role handoff is pending.
 - The deployer is a temporary manager and fee recipient. Production roles are
   proposed only after successful activation.
-- Mainnet preflight requires originated role addresses and records their
-  reviewed multisig thresholds in the manifest.
-- `verify:handoff` confirms both roles accepted, the pool is unpaused, all
+- Mainnet preflight requires originated role addresses and verifies their
+  reviewed code hashes, thresholds, and complete owner sets on chain.
+- `verify:handoff` confirms both roles accepted while the pool remains paused, all
   three on-chain code hashes still match the release manifest, and the seed
   reserves, real asset balances, LQT supply, locked floor, and provider
   allocation remain intact through the handoff window.
+- After unpausing, `verify:pool-invariants` checks live solvency and lifecycle
+  state without assuming the original seed reserves remain unchanged.
 
 ## #242 — external token boundary
 

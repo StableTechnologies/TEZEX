@@ -3,6 +3,11 @@ import fs from "node:fs";
 import path from "node:path";
 
 import type { NetworkName } from "./types.js";
+import type { MultisigExpectation } from "./multisig-verification.js";
+import type {
+    ImplementationSelector,
+    TokenControlProfile,
+} from "./token-control-monitor.js";
 
 export const DEPLOYMENT_STATE_VERSION = 1;
 export const DEPLOYMENT_COMPILER_VERSION = "1.11.5";
@@ -52,10 +57,17 @@ export interface NativePoolDeploymentState {
             manager: number | null;
             protocolFeeRecipient: number | null;
         };
+        roleControls?: {
+            manager: MultisigExpectation | null;
+            protocolFeeRecipient: MultisigExpectation | null;
+        };
         tokenOperations: {
             integrationOwner: string | null;
             incidentChannel: string | null;
             monitoredEventClasses: string[];
+            controlProfile?: TokenControlProfile;
+            implementationSha256?: string | null;
+            implementationSelectors?: ImplementationSelector[];
         };
         metadataUri: string;
         tokenMetadataUri: string;
@@ -137,7 +149,13 @@ export async function loadDeploymentState(
 
 interface TzktOrigination {
     status?: string;
+    level?: number;
     originatedContract?: { address?: string } | null;
+}
+
+interface TzktHead {
+    level?: number;
+    synced?: boolean;
 }
 
 async function fetchJson(url: string): Promise<unknown> {
@@ -156,7 +174,8 @@ async function fetchJson(url: string): Promise<unknown> {
 
 export async function recoverOrigination(
     tzktApiUrl: string,
-    operation: string
+    operation: string,
+    confirmations = 1
 ): Promise<string> {
     const base = tzktApiUrl.replace(/\/$/, "");
     const value = await fetchJson(
@@ -182,18 +201,81 @@ export async function recoverOrigination(
             `Origination ${operation} produced ${addresses.length} contracts; expected exactly one.`
         );
     }
+    if (confirmations > 1) {
+        await assertIndexedConfirmationDepth(
+            base,
+            operation,
+            originations.map((item) => item.level),
+            confirmations
+        );
+    }
     return addresses[0];
+}
+
+async function assertIndexedConfirmationDepth(
+    base: string,
+    operation: string,
+    levels: Array<number | undefined>,
+    confirmations: number
+): Promise<void> {
+    if (
+        levels.length === 0
+        || levels.some(
+            (level) => !Number.isSafeInteger(level) || Number(level) < 1
+        )
+    ) {
+        throw new Error(
+            `Operation ${operation} has no trustworthy indexed level; rerun later.`
+        );
+    }
+    const head = await fetchJson(`${base}/v1/head`) as TzktHead;
+    if (
+        !Number.isSafeInteger(head.level)
+        || head.synced !== true
+    ) {
+        throw new Error("TzKT head is not synchronized or has no trustworthy level");
+    }
+    const operationLevel = Math.max(...levels.map(Number));
+    const depth = Number(head.level) - operationLevel + 1;
+    if (depth < confirmations) {
+        throw new Error(
+            `Operation ${operation} has ${depth} confirmation(s); ${confirmations} required. Rerun later.`
+        );
+    }
 }
 
 export async function assertOperationApplied(
     tzktApiUrl: string,
-    operation: string
+    operation: string,
+    confirmations = 1
 ): Promise<void> {
     const base = tzktApiUrl.replace(/\/$/, "");
     const status = await fetchJson(
         `${base}/v1/operations/${encodeURIComponent(operation)}/status`
     );
-    if (status === true) return;
+    if (status === true) {
+        if (confirmations > 1) {
+            const operations = await fetchJson(
+                `${base}/v1/operations/transactions/${encodeURIComponent(operation)}`
+            );
+            if (!Array.isArray(operations) || operations.length === 0) {
+                throw new Error(
+                    `Operation ${operation} details are not indexed yet; rerun later.`
+                );
+            }
+            const rows = operations as Array<{ status?: unknown; level?: number }>;
+            if (rows.some((row) => row.status !== "applied")) {
+                throw new Error(`Operation ${operation} failed; refusing to repeat it.`);
+            }
+            await assertIndexedConfirmationDepth(
+                base,
+                operation,
+                rows.map((row) => row.level),
+                confirmations
+            );
+        }
+        return;
+    }
     if (status === false) {
         throw new Error(`Operation ${operation} failed; refusing to repeat it.`);
     }

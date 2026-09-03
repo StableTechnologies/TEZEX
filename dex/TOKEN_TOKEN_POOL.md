@@ -10,7 +10,8 @@ The generic contract package has completed repository review and network rehears
 - `contracts/lqt_fa12.mligo`: existing external FA1.2 liquidity token; the pool is its administrator.
 - `tests/token_token_pool.test.mligo`: lifecycle, economics, pair-shape, failure, and adversarial tests.
 - `scripts/src/deploy-token-token.ts`: pinned, resumable origination workflow.
-- `scripts/src/verify-token-token-handoff.ts`: signer-free final role, reserve, code, and LQT verification.
+- `scripts/src/verify-token-token-handoff.ts`: signer-free paused final-role, reserve, code, and LQT verification.
+- `scripts/src/verify-pool-invariants.ts`: signer-free post-unpause and continuous solvency/lifecycle verification.
 - `compiled_contracts/token_token_pool.tz`: reproducible Michelson artifact.
 
 The external LQT design preserves the repository's established liquidity-token interface. The pool links an empty LQT contract exactly once before activation. Initialization then mints 1,000 LQT units permanently to the pool and the remaining initial supply to the configured seed receiver.
@@ -112,11 +113,28 @@ The workflow is resumable and records confirmed steps in a gitignored mode-0600 
 5. proposes the configured final manager;
 6. verifies source/artifact identity, pool and LQT state, metadata pointers, seed balances, reserve solvency, minimum LQT lock, and pending handoff.
 
-The receipt never contains the private key. The proposed manager must separately call `%accept_manager` and then `%set_paused false`; those privileged actions are intentionally not automated with the deployer's authority. Verify the completed handoff without a signer:
+The receipt never contains the private key. The proposed manager must call
+`%accept_manager` while the pool remains paused. Verify the completed handoff
+without a signer **before** calling `%set_paused false`:
 
 ```sh
 TOKEN_TOKEN_DEPLOYMENT_STATE=<receipt.json> npm run verify:token-token-handoff
 ```
+
+After that command succeeds, the final manager may unpause. Then run the live
+invariant gate, which tolerates legitimate trading but enforces both token
+liabilities, exact role/lifecycle state, pool/LQT supply equality, the
+permanent LQT lock, metadata, and every reviewed code hash:
+
+```sh
+POOL_INVARIANT_KIND=token-token POOL_EXPECTED_PAUSED=false \
+TOKEN_TOKEN_DEPLOYMENT_STATE=<receipt.json> \
+npm run verify:pool-invariants
+```
+
+Both signer-free release gates read token balances directly from the configured
+RPC and fail closed on read or storage-decoding errors. They never substitute
+an indexer balance that may describe an older block.
 
 ## Mainnet gates
 
@@ -129,11 +147,14 @@ npm run deploy:token-token:mainnet
 It refuses to originate unless the release has:
 
 - the permanent Mainnet chain ID and a matching RPC;
-- a clean Git worktree and exact pool and LQT artifact hashes;
-- exact selected-token code hashes and required transfer interfaces;
+- a clean Git worktree, an exact `EXPECTED_SOURCE_COMMIT`, and exact pool and LQT artifact hashes;
+- exact selected-token code hashes and required transfer interfaces; exact
+  proxy profiles additionally pin reviewed mutable implementation selectors;
 - sufficient seed-token balances and an XTZ fee buffer before origination;
 - immutable IPFS metadata and an explicit LQT receiver;
-- originated manager and fee-recipient contracts with documented multisig thresholds;
+- originated manager and fee-recipient contracts whose on-chain code hashes,
+  thresholds, and complete owner sets match the reviewed configuration;
+- at least two confirmations, including on interrupted-run recovery;
 - a named token-integration owner and incident channel; and
 - exactly one local-key or remote/HSM signer mode.
 

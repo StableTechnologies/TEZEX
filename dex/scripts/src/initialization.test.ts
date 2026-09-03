@@ -82,7 +82,7 @@ test("modified initialization proposes management only after activation", () => 
     ]);
 });
 
-test("modified initialization unpauses when the deployer is final manager", () => {
+test("modified initialization stays paused when the deployer holds final roles", () => {
     const methodCalls: Array<{ method: string; value?: unknown }> = [];
     const batch: BatchLike = {
         withContractCall() {
@@ -108,9 +108,8 @@ test("modified initialization unpauses when the deployer is final manager", () =
 
     assert.deepEqual(
         methodCalls.map(({ method }) => method),
-        ["setLqtAddress", "default", "transfer", "updateTokenPool", "activate", "setPaused"]
+        ["setLqtAddress", "default", "transfer", "updateTokenPool", "activate"]
     );
-    assert.equal(methodCalls.at(-1)?.value, false);
 });
 
 test("base initialization also ends with the final manager handoff", () => {
