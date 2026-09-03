@@ -21,6 +21,7 @@ import {
 import { isSnetAccount, resolveSnet, SnetNetwork } from "./network";
 import { readableStezError, submitStezOperation } from "./transactions";
 import { SnetTransferDialog } from "./SnetTransferDialog";
+import { SnetFaucetDrawer } from "./SnetFaucetDrawer";
 import "./style.css";
 
 type StezAction = "Stake" | "Redeem" | "Finalize";
@@ -162,6 +163,8 @@ export const Stez: FC = () => {
   const [transactionMessage, setTransactionMessage] = useState("");
   const [operationHash, setOperationHash] = useState("");
   const [transferOpen, setTransferOpen] = useState(false);
+  const [faucetOpen, setFaucetOpen] = useState(false);
+  const closeFaucet = useCallback(() => setFaucetOpen(false), []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -446,18 +449,14 @@ export const Stez: FC = () => {
             <button type="button" onClick={() => setTransferOpen(true)}>
               SEND SNET XTZ
             </button>
-            <a
-              className="stez-availability__faucet-link"
-              href={snet.faucetUrl}
-              target="_blank"
-              rel="noreferrer"
-              aria-label={`Get${
-                hasTestXtz ? " more" : ""
-              } Snet test XTZ from the official Teztnets faucet`}
+            <button
+              type="button"
+              className="stez-availability__faucet-button"
+              onClick={() => setFaucetOpen(true)}
+              aria-label={`Get${hasTestXtz ? " more" : ""} Snet test XTZ`}
             >
               {hasTestXtz ? "GET MORE SNET TEST XTZ" : "GET SNET TEST XTZ"}
-              <ArrowOutwardRoundedIcon aria-hidden="true" />
-            </a>
+            </button>
           </div>
         )}
       </section>
@@ -881,6 +880,15 @@ export const Stez: FC = () => {
           </div>
         </details>
       </div>
+
+      {snet && (
+        <SnetFaucetDrawer
+          open={faucetOpen}
+          apiUrl={snet.faucetApiUrl}
+          initialAddress={wallet.address}
+          onClose={closeFaucet}
+        />
+      )}
 
       {snet && (
         <SnetTransferDialog

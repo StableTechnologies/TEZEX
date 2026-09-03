@@ -22,6 +22,7 @@ const snet = {
   name: "Snet" as const,
   rpcUrl: "https://rpc.snet.teztnets.com",
   faucetUrl: "https://faucet.snet.teztnets.com",
+  faucetApiUrl: "https://faucet-api.example",
   chainId: "NetXVasgoZmPMLe",
   activatedOn: "2026-08-14",
   info: {
@@ -127,11 +128,18 @@ test("loads live Snet data and its matching faucet", async () => {
       Node.DOCUMENT_POSITION_FOLLOWING
   ).toBeTruthy();
 
-  const faucet = screen.getByRole("link", {
-    name: "Get Snet test XTZ from the official Teztnets faucet",
+  fireEvent.click(
+    screen.getByRole("button", { name: "Get Snet test XTZ" })
+  );
+  const faucetDialog = screen.getByRole("dialog", {
+    name: "Get test XTZ",
   });
-  expect(faucet).toHaveAttribute("href", snet.faucetUrl);
-  expect(faucet.querySelector("svg")).toBeInTheDocument();
+  expect(
+    within(faucetDialog).getByRole("slider", { name: "Faucet amount" })
+  ).toHaveAttribute("max", "10000");
+  fireEvent.click(
+    within(faucetDialog).getByRole("button", { name: "Close faucet" })
+  );
 
   fireEvent.click(screen.getByRole("button", { name: "SEND SNET XTZ" }));
   const transferDialog = screen.getByRole("dialog", {
@@ -213,11 +221,14 @@ test("enables a stake request only for a wallet connected to Snet", async () => 
   expect(
     screen.getByText("Get testnet XTZ to test sTEZ here:")
   ).toBeInTheDocument();
-  expect(
-    screen.getByRole("link", {
-      name: "Get more Snet test XTZ from the official Teztnets faucet",
-    })
-  ).toHaveTextContent("GET MORE SNET TEST XTZ");
+  const faucetButton = screen.getByRole("button", {
+    name: "Get more Snet test XTZ",
+  });
+  expect(faucetButton).toHaveTextContent("GET MORE SNET TEST XTZ");
+  fireEvent.click(faucetButton);
+  expect(screen.getByLabelText("DESTINATION ADDRESS")).toHaveValue(
+    mockWallet.address
+  );
 
   fireEvent.change(screen.getByLabelText("AMOUNT TO STAKE"), {
     target: { value: "1" },
