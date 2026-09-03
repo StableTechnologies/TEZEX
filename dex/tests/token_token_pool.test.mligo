@@ -378,7 +378,7 @@ let initialize_pool
       0tez in
   ()
 
-let setup_pool () =
+let setup_paused_pool () =
   let () = clean () in
   let () = Test.State.set_source (manager ()) in
   let fa2 = deploy_fa2 (manager ()) in
@@ -391,6 +391,15 @@ let setup_pool () =
   let () = set_lqt pool.taddr lqt.taddr in
   let () = authorize_pair pool.taddr fa2.taddr fa12.taddr (manager ()) seed_a seed_b in
   let () = initialize_pool pool.taddr (manager ()) seed_a seed_b in
+  (pool, lqt, fa2, fa12)
+
+let setup_pool () =
+  let (pool, lqt, fa2, fa12) = setup_paused_pool () in
+  let _ : nat =
+    Test.Contract.transfer_exn
+      (Test.Typed_address.get_entrypoint "set_paused" pool.taddr)
+      false
+      0tez in
   (pool, lqt, fa2, fa12)
 
 let fund_and_authorize_trader
@@ -431,7 +440,7 @@ let assert_solvency
 (* ----------------------------------------------------------------------- *)
 
 let test_initialization_uses_integer_square_root_and_external_lqt =
-  let (pool, lqt, fa2, fa12) = setup_pool () in
+  let (pool, lqt, fa2, fa12) = setup_paused_pool () in
   let storage : Contract.storage = Test.Typed_address.get_storage pool.taddr in
   let lqt_storage : LQT.LQT.storage = Test.Typed_address.get_storage lqt.taddr in
   let pool_address = Test.Typed_address.to_address pool.taddr in
@@ -446,8 +455,32 @@ let test_initialization_uses_integer_square_root_and_external_lqt =
       (lqt_balance lqt.taddr (manager ()))
       9999000n in
   let () = assert_true "LQT admin mismatch" (lqt_storage.admin = pool_address) in
-  let () = assert_true "pool not active" (storage.active && not storage.entered) in
+  let () =
+    assert_true
+      "pool must be active, idle, and paused after initialization"
+      (storage.active && storage.paused && not storage.entered) in
   assert_solvency "initialization" pool.taddr fa2.taddr fa12.taddr
+
+let test_initialization_forces_pause_even_if_unpaused_before_activation =
+  let () = clean () in
+  let () = Test.State.set_source (manager ()) in
+  let fa2 = deploy_fa2 (manager ()) in
+  let fa12 = deploy_fa12 (manager ()) in
+  let pool =
+    deploy_pool
+      (Fa2 {token = Test.Typed_address.to_address fa2.taddr; id = 0n})
+      (Fa12 (Test.Typed_address.to_address fa12.taddr)) in
+  let lqt = deploy_lqt (Test.Typed_address.to_address pool.taddr) in
+  let () = set_lqt pool.taddr lqt.taddr in
+  let _ : nat =
+    Test.Contract.transfer_exn
+      (Test.Typed_address.get_entrypoint "set_paused" pool.taddr)
+      false
+      0tez in
+  let () = authorize_pair pool.taddr fa2.taddr fa12.taddr (manager ()) seed_a seed_b in
+  let () = initialize_pool pool.taddr (manager ()) seed_a seed_b in
+  let storage : Contract.storage = Test.Typed_address.get_storage pool.taddr in
+  assert_true "initialization did not force pause" storage.paused
 
 let test_initialization_is_one_time_and_lqt_address_is_immutable =
   let (pool, lqt, _fa2, _fa12) = setup_pool () in
@@ -672,6 +705,11 @@ let test_reentrant_token_callback_reverts_the_whole_swap =
   let () = initialize_pool pool.taddr (manager ()) seed_a seed_b in
   let _ : nat =
     Test.Contract.transfer_exn
+      (Test.Typed_address.get_entrypoint "set_paused" pool.taddr)
+      false
+      0tez in
+  let _ : nat =
+    Test.Contract.transfer_exn
       (Test.Typed_address.get_entrypoint "transfer" hostile.taddr)
       ((manager ()), ((trader ()), 100000n))
       0tez in
@@ -865,6 +903,83 @@ let test_fee_recipient_change_is_two_step =
   assert_true
     "fee recipient not transferred"
     (storage.protocol_fee_recipient = replacement_fee_recipient ())
+
+let test_pending_manager_must_accept_before_unpause =
+  let (pool, _lqt, _fa2, _fa12) = setup_pool () in
+  let () = Test.State.set_source (manager ()) in
+  let _ : nat =
+    Test.Contract.transfer_exn
+      (Test.Typed_address.get_entrypoint "set_paused" pool.taddr)
+      true
+      0tez in
+  let _ : nat =
+    Test.Contract.transfer_exn
+      (Test.Typed_address.get_entrypoint "propose_manager" pool.taddr)
+      (successor ())
+      0tez in
+  let blocked =
+    Test.Contract.transfer
+      (Test.Typed_address.get_entrypoint "set_paused" pool.taddr)
+      false
+      0tez in
+  let () =
+    assert_string_failure
+      "unpause with pending manager"
+      Contract.err_pending_manager
+      blocked in
+  let () = Test.State.set_source (successor ()) in
+  let _ : nat =
+    Test.Contract.transfer_exn
+      (Test.Typed_address.get_entrypoint "accept_manager" pool.taddr)
+      ()
+      0tez in
+  let _ : nat =
+    Test.Contract.transfer_exn
+      (Test.Typed_address.get_entrypoint "set_paused" pool.taddr)
+      false
+      0tez in
+  let storage : Contract.storage = Test.Typed_address.get_storage pool.taddr in
+  assert_true "pool remained paused after completed manager handoff" (not storage.paused)
+
+let test_pending_fee_recipient_must_accept_before_unpause =
+  let (pool, _lqt, _fa2, _fa12) = setup_pool () in
+  let () = Test.State.set_source (manager ()) in
+  let _ : nat =
+    Test.Contract.transfer_exn
+      (Test.Typed_address.get_entrypoint "set_paused" pool.taddr)
+      true
+      0tez in
+  let _ : nat =
+    Test.Contract.transfer_exn
+      (Test.Typed_address.get_entrypoint "propose_protocol_fee_recipient" pool.taddr)
+      (replacement_fee_recipient ())
+      0tez in
+  let blocked =
+    Test.Contract.transfer
+      (Test.Typed_address.get_entrypoint "set_paused" pool.taddr)
+      false
+      0tez in
+  let () =
+    assert_string_failure
+      "unpause with pending fee recipient"
+      Contract.err_pending_fee_recipient
+      blocked in
+  let () = Test.State.set_source (replacement_fee_recipient ()) in
+  let _ : nat =
+    Test.Contract.transfer_exn
+      (Test.Typed_address.get_entrypoint "accept_protocol_fee_recipient" pool.taddr)
+      ()
+      0tez in
+  let () = Test.State.set_source (manager ()) in
+  let _ : nat =
+    Test.Contract.transfer_exn
+      (Test.Typed_address.get_entrypoint "set_paused" pool.taddr)
+      false
+      0tez in
+  let storage : Contract.storage = Test.Typed_address.get_storage pool.taddr in
+  assert_true
+    "pool remained paused after completed fee-recipient handoff"
+    (not storage.paused)
 
 let test_non_payable_and_unauthorized_admin_calls_fail_closed =
   let (pool, _lqt, _fa2, _fa12) = setup_pool () in

@@ -679,6 +679,15 @@
                                              SWAP ;
                                              EXEC ;
                                              DROP ;
+                                             DUP ;
+                                             IF {}
+                                                { DUP 2 ;
+                                                  GET 25 ;
+                                                  IF_NONE
+                                                    { DUP 2 ;
+                                                      GET 29 ;
+                                                      IF_NONE {} { PUSH string "POOL_PENDING_FEE_RECIPIENT" ; FAILWITH } }
+                                                    { PUSH string "POOL_PENDING_MANAGER" ; FAILWITH } } ;
                                              UPDATE 19 ;
                                              NIL operation }
                                            { IF_LEFT
@@ -1328,15 +1337,12 @@
                                                              DROP ;
                                                              DIG 9 ;
                                                              DROP ;
-                                                             DIG 14 ;
+                                                             DIG 9 ;
+                                                             DROP ;
+                                                             DIG 13 ;
                                                              DROP ;
                                                              IF_LEFT
                                                                { UNIT ;
-                                                                 DIG 13 ;
-                                                                 SWAP ;
-                                                                 EXEC ;
-                                                                 DROP ;
-                                                                 DUP 2 ;
                                                                  DIG 12 ;
                                                                  SWAP ;
                                                                  EXEC ;
@@ -1497,6 +1503,8 @@
                                                                  PUSH bool True ;
                                                                  UPDATE 17 ;
                                                                  PUSH bool True ;
+                                                                 UPDATE 19 ;
+                                                                 PUSH bool True ;
                                                                  UPDATE 21 ;
                                                                  SWAP }
                                                                { DIG 2 ;
@@ -1508,8 +1516,6 @@
                                                                  DIG 2 ;
                                                                  DROP ;
                                                                  DIG 2 ;
-                                                                 DROP ;
-                                                                 DIG 3 ;
                                                                  DROP ;
                                                                  DIG 3 ;
                                                                  DROP ;
