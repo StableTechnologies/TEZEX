@@ -128,7 +128,7 @@
   line-height: 1.5;
 }
 
-.stez-availability__faucet-link {
+.stez-availability__faucet-button {
   min-height: 38px;
   padding: 9px 15px;
   display: inline-flex;
@@ -139,6 +139,8 @@
   background: var(--tezex-action);
   border: 1px solid var(--tezex-action);
   border-radius: 999px;
+  cursor: pointer;
+  font-family: inherit;
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -156,7 +158,7 @@
   gap: 8px;
 }
 
-.stez-availability__actions > button {
+.stez-availability__actions > button:not(.stez-availability__faucet-button) {
   min-height: 38px;
   padding: 9px 15px;
   color: var(--tezex-text-secondary);
@@ -172,22 +174,17 @@
   transition: border-color 160ms ease, color 160ms ease;
 }
 
-.stez-availability__actions > button:hover {
+.stez-availability__actions
+  > button:not(.stez-availability__faucet-button):hover {
   color: var(--tezex-text);
   border-color: var(--tezex-text-secondary);
 }
 
-.stez-availability__faucet-link:hover {
+.stez-availability__faucet-button:hover {
   background: var(--tezex-action-hover);
 }
 
-.stez-availability__faucet-link svg {
-  width: 13px;
-  height: 13px;
-  flex: 0 0 13px;
-}
-
-.stez-availability__faucet-link:focus-visible {
+.stez-availability__faucet-button:focus-visible {
   outline: 2px solid var(--tezex-text-secondary);
   outline-offset: 3px;
 }
@@ -1259,6 +1256,300 @@
   word-break: break-all;
 }
 
+.stez-faucet-backdrop {
+  position: fixed;
+  z-index: 1600;
+  inset: 0;
+  display: flex;
+  justify-content: flex-end;
+  background: color-mix(in srgb, #000 72%, transparent);
+  backdrop-filter: blur(8px);
+  animation: stez-transfer-backdrop-in 180ms ease both;
+}
+
+.stez-faucet-drawer {
+  width: min(480px, 100%);
+  height: 100dvh;
+  overflow: auto;
+  color: var(--tezex-text);
+  background: var(--tezex-panel);
+  border-left: 1px solid var(--tezex-line-strong);
+  box-shadow: -28px 0 90px rgba(0, 0, 0, 0.36);
+  animation: stez-faucet-drawer-in 260ms cubic-bezier(0.22, 0.8, 0.24, 1)
+    both;
+}
+
+.stez-faucet-drawer__head {
+  min-height: 92px;
+  padding: 20px 22px 18px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border-bottom: 1px solid var(--tezex-line);
+}
+
+.stez-faucet-drawer__head span,
+.stez-faucet-form > label,
+.stez-faucet-form__amount-head label,
+.stez-faucet-success > span {
+  color: var(--tezex-muted);
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.18em;
+}
+
+.stez-faucet-drawer__head h2 {
+  margin: 6px 0 0;
+  font-size: 24px;
+  font-weight: 650;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+}
+
+.stez-faucet-drawer__head > button,
+.stez-faucet-success__hash button {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: grid;
+  flex: 0 0 40px;
+  place-items: center;
+  color: var(--tezex-muted);
+  background: transparent;
+  border: 1px solid var(--tezex-line);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.stez-faucet-drawer__head svg,
+.stez-faucet-success__hash svg {
+  width: 19px;
+  height: 19px;
+}
+
+.stez-faucet-form,
+.stez-faucet-success {
+  padding: 30px 28px 34px;
+}
+
+.stez-faucet-form > label,
+.stez-faucet-form__amount-head label {
+  display: block;
+  margin-bottom: 10px;
+}
+
+.stez-faucet-form > input[type="text"],
+.stez-faucet-form > input:not([type]) {
+  width: 100%;
+  min-height: 62px;
+  margin-bottom: 30px;
+  padding: 15px 17px;
+  color: var(--tezex-text);
+  background: var(--tezex-panel-subtle);
+  border: 1px solid var(--tezex-line-strong);
+  border-radius: 14px;
+  font-family: "Red Hat Mono", monospace;
+  font-size: 14px;
+  outline: 0;
+}
+
+.stez-faucet-form > input[type="text"]:focus,
+.stez-faucet-form > input:not([type]):focus {
+  border-color: var(--tezex-text-secondary);
+}
+
+.stez-faucet-form__amount-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.stez-faucet-form__amount-head output {
+  color: var(--tezex-text);
+  font-family: "Red Hat Mono", monospace;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.stez-faucet-form__range {
+  width: 100%;
+  height: 28px;
+  margin: 9px 0 2px;
+  padding: 0;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.stez-faucet-form__range::-webkit-slider-runnable-track {
+  height: 4px;
+  background: linear-gradient(
+    to right,
+    var(--tezex-text) 0 var(--stez-faucet-progress),
+    var(--tezex-line-strong) var(--stez-faucet-progress) 100%
+  );
+  border-radius: 999px;
+}
+
+.stez-faucet-form__range::-moz-range-track {
+  height: 4px;
+  background: var(--tezex-line-strong);
+  border-radius: 999px;
+}
+
+.stez-faucet-form__range::-moz-range-progress {
+  height: 4px;
+  background: var(--tezex-text);
+  border-radius: 999px;
+}
+
+.stez-faucet-form__range::-webkit-slider-thumb {
+  width: 22px;
+  height: 22px;
+  margin-top: -9px;
+  appearance: none;
+  background: var(--tezex-action);
+  border: 5px solid var(--tezex-panel);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--tezex-line-strong);
+}
+
+.stez-faucet-form__range::-moz-range-thumb {
+  width: 13px;
+  height: 13px;
+  background: var(--tezex-action);
+  border: 5px solid var(--tezex-panel);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--tezex-line-strong);
+}
+
+.stez-faucet-form__range-labels {
+  display: flex;
+  justify-content: space-between;
+  color: var(--tezex-muted);
+  font-family: "Red Hat Mono", monospace;
+  font-size: 10px;
+}
+
+.stez-faucet-form p {
+  margin: 30px 0 18px;
+  color: var(--tezex-muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.stez-faucet-form__error {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  color: var(--tezex-negative);
+  background: color-mix(in srgb, var(--tezex-negative) 9%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tezex-negative) 35%, transparent);
+  border-radius: 12px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.stez-faucet-form__submit,
+.stez-faucet-success__done {
+  width: 100%;
+  min-height: 54px;
+  padding: 13px 18px;
+  color: var(--tezex-action-text);
+  background: var(--tezex-action);
+  border: 1px solid var(--tezex-action);
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: 0.13em;
+}
+
+.stez-faucet-form__submit:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.stez-faucet-success {
+  min-height: calc(100dvh - 92px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.stez-faucet-success > svg {
+  width: 54px;
+  height: 54px;
+  margin-bottom: 24px;
+  color: var(--tezex-positive);
+}
+
+.stez-faucet-success > span {
+  color: var(--tezex-positive);
+}
+
+.stez-faucet-success h3 {
+  margin: 12px 0 28px;
+  color: var(--tezex-text);
+  font-size: 25px;
+  line-height: 1.25;
+}
+
+.stez-faucet-success__hash {
+  width: 100%;
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--tezex-panel-subtle);
+  border: 1px solid var(--tezex-line);
+  border-radius: 14px;
+  text-align: left;
+}
+
+.stez-faucet-success__hash code {
+  min-width: 0;
+  flex: 1;
+  color: var(--tezex-text-secondary);
+  font-family: "Red Hat Mono", monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+
+.stez-faucet-success small {
+  margin-top: 8px;
+  color: var(--tezex-muted);
+}
+
+.stez-faucet-success__done {
+  margin-top: 30px;
+}
+
+@keyframes stez-faucet-drawer-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes stez-faucet-sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
 @media (max-width: 959px) {
   .stez-page {
     max-width: 502px;
@@ -1280,7 +1571,7 @@
     align-items: flex-start;
   }
 
-  .stez-availability__faucet-link {
+  .stez-availability__faucet-button {
     justify-self: start;
   }
 
@@ -1376,9 +1667,38 @@
     align-items: flex-start;
   }
 
-  .stez-availability__faucet-link {
+  .stez-availability__faucet-button {
     justify-self: start;
     white-space: normal;
+  }
+
+  .stez-faucet-backdrop {
+    align-items: flex-end;
+    justify-content: stretch;
+  }
+
+  .stez-faucet-drawer {
+    width: 100%;
+    height: auto;
+    max-height: calc(100dvh - 20px);
+    border-top: 1px solid var(--tezex-line-strong);
+    border-left: 0;
+    border-radius: 22px 22px 0 0;
+    animation-name: stez-faucet-sheet-in;
+  }
+
+  .stez-faucet-drawer__head {
+    min-height: 78px;
+    padding: 16px 18px;
+  }
+
+  .stez-faucet-form,
+  .stez-faucet-success {
+    padding: 24px 18px 28px;
+  }
+
+  .stez-faucet-success {
+    min-height: 0;
   }
 
   .stez-transfer-backdrop {
@@ -1541,6 +1861,8 @@
 @media (prefers-reduced-motion: reduce) {
   .stez-page,
   .stez-availability.is-checking .stez-availability__signal,
+  .stez-faucet-backdrop,
+  .stez-faucet-drawer,
   .stez-transfer-backdrop,
   .stez-transfer-dialog {
     animation: none;
