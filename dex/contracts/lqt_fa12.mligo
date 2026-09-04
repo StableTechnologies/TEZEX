@@ -196,4 +196,11 @@ module LQT = struct
     let () = assert_non_payable () in
     let total = storage.total_supply in
     ([Tezos.transaction total 0mutez param.callback], storage)
+
+  (* A synchronous view lets a pool verify the exact LQT supply before it
+     irreversibly links or accepts reserve assets. Keep the callback entrypoint
+     above for FA1.2 compatibility and legacy integrations. *)
+  [@view]
+  let get_total_supply (_ : unit) (storage : storage) : nat =
+    storage.total_supply
   end

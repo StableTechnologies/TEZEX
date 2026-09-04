@@ -45,12 +45,15 @@
          PUSH nat 1000 ;
          PUSH string "POOL_NOT_PENDING_MANAGER" ;
          PUSH string "POOL_NOT_PENDING_FEE_RECIPIENT" ;
+         PUSH string "POOL_NOT_ACTIVE" ;
          PUSH string "POOL_ALREADY_ACTIVE" ;
          PUSH string "POOL_ZERO_AMOUNT" ;
          PUSH string "POOL_ZERO_OUTPUT" ;
          PUSH string "POOL_SLIPPAGE" ;
          PUSH string "POOL_INSUFFICIENT_LIQUIDITY" ;
          PUSH string "POOL_MINIMUM_LQT" ;
+         PUSH string "POOL_MISSING_LQT_MINT_OR_BURN" ;
+         PUSH string "POOL_LQT_SUPPLY_NOT_ZERO" ;
          LAMBDA
            unit
            unit
@@ -118,44 +121,48 @@
            unit
            { GET 19 ; IF { PUSH string "POOL_PAUSED" ; FAILWITH } {} ; UNIT } ;
          LAMBDA
-           (pair nat
-                 (pair (or address (pair address nat))
+           (pair string
+                 (pair nat
                        (pair (or address (pair address nat))
-                             (pair nat
+                             (pair (or address (pair address nat))
                                    (pair nat
                                          (pair nat
                                                (pair nat
                                                      (pair nat
-                                                           (pair (option address)
-                                                                 (pair bool
+                                                           (pair nat
+                                                                 (pair (option address)
                                                                        (pair bool
                                                                              (pair bool
-                                                                                   (pair address
-                                                                                         (pair (option address) (pair address (pair (option address) (big_map string bytes)))))))))))))))))
+                                                                                   (pair bool
+                                                                                         (pair address
+                                                                                               (pair (option address) (pair address (pair (option address) (big_map string bytes))))))))))))))))))
            unit
-           { UNPAIR ;
-             DUP 2 ;
+           { UNPAIR 3 ;
+             SWAP ;
+             DUP 3 ;
              GET 13 ;
              COMPARE ;
              GE ;
              PUSH nat 0 ;
-             DUP 3 ;
+             DUP 4 ;
              GET 7 ;
              COMPARE ;
              GT ;
              PUSH nat 0 ;
-             DUP 4 ;
+             DUP 5 ;
              GET 5 ;
              COMPARE ;
              GT ;
-             DIG 3 ;
+             DIG 4 ;
              GET 17 ;
              AND ;
              AND ;
              AND ;
-             IF {} { PUSH string "POOL_NOT_ACTIVE" ; FAILWITH } ;
+             IF { DROP } { FAILWITH } ;
              UNIT } ;
          DUP 14 ;
+         APPLY ;
+         DUP 17 ;
          APPLY ;
          LAMBDA
            timestamp
@@ -177,6 +184,7 @@
              NEQ ;
              IF { DROP } { FAILWITH } ;
              UNIT } ;
+         LAMBDA (or address (pair address nat)) address { IF_LEFT {} { CAR } } ;
          LAMBDA
            (pair nat nat)
            nat
@@ -194,7 +202,7 @@
              IF_NONE
                { FAILWITH }
                { SWAP ; DROP ; UNPAIR ; SWAP ; INT ; EQ ; IF {} { PUSH nat 1 ; ADD } } } ;
-         DUP 11 ;
+         DUP 14 ;
          APPLY ;
          LAMBDA
            (pair address (pair address (pair nat (or address (pair address nat)))))
@@ -247,16 +255,32 @@
            address
            { GET 15 ; IF_NONE { PUSH string "POOL_LQT_NOT_SET" ; FAILWITH } {} } ;
          LAMBDA
-           (pair address (pair address int))
+           (pair string (pair address (pair address int)))
            operation
-           { UNPAIR 3 ;
+           { UNPAIR ;
+             SWAP ;
+             UNPAIR 3 ;
              CONTRACT %mintOrBurn (pair (int %quantity) (address %target)) ;
-             IF_NONE { PUSH string "POOL_MISSING_LQT_MINT_OR_BURN" ; FAILWITH } {} ;
+             IF_NONE { DUP 3 ; FAILWITH } { DIG 3 ; DROP } ;
              PUSH mutez 0 ;
              DIG 2 ;
              DIG 3 ;
              PAIR ;
              TRANSFER_TOKENS } ;
+         DUP 15 ;
+         APPLY ;
+         LAMBDA
+           (pair string address)
+           nat
+           { UNPAIR ;
+             DUP 2 ;
+             CONTRACT %mintOrBurn (pair (int %quantity) (address %target)) ;
+             IF_NONE { FAILWITH } { DROP 2 } ;
+             UNIT ;
+             VIEW "get_total_supply" nat ;
+             IF_NONE { PUSH string "POOL_MISSING_LQT_SUPPLY_VIEW" ; FAILWITH } {} } ;
+         DIG 15 ;
+         APPLY ;
          LAMBDA
            unit
            operation
@@ -267,12 +291,16 @@
              PUSH mutez 0 ;
              UNIT ;
              TRANSFER_TOKENS } ;
-         DIG 23 ;
+         DIG 27 ;
          UNPAIR ;
          IF_LEFT
            { DROP ;
-             DUG 11 ;
-             DROP 11 ;
+             DUG 13 ;
+             DROP 13 ;
+             DIG 3 ;
+             DROP ;
+             DIG 3 ;
+             DROP ;
              DIG 3 ;
              DROP ;
              DIG 3 ;
@@ -306,8 +334,12 @@
              NIL operation }
            { IF_LEFT
                { DROP ;
-                 DUG 12 ;
-                 DROP 12 ;
+                 DUG 14 ;
+                 DROP 14 ;
+                 DIG 2 ;
+                 DROP ;
+                 DIG 2 ;
+                 DROP ;
                  DIG 2 ;
                  DROP ;
                  DIG 2 ;
@@ -347,8 +379,12 @@
                  NIL operation }
                { IF_LEFT
                    { DROP ;
-                     DUG 11 ;
-                     DROP 11 ;
+                     DUG 13 ;
+                     DROP 13 ;
+                     DIG 3 ;
+                     DROP ;
+                     DIG 3 ;
+                     DROP ;
                      DIG 3 ;
                      DROP ;
                      DIG 3 ;
@@ -387,12 +423,16 @@
                      NONE address ;
                      UPDATE 29 ;
                      NIL operation }
-                   { DIG 21 ;
+                   { DIG 25 ;
                      DROP ;
                      IF_LEFT
                        { DROP ;
-                         DUG 10 ;
-                         DROP 10 ;
+                         DUG 12 ;
+                         DROP 12 ;
+                         DIG 4 ;
+                         DROP ;
+                         DIG 4 ;
+                         DROP ;
                          DIG 4 ;
                          DROP ;
                          DIG 4 ;
@@ -442,11 +482,19 @@
                              DROP ;
                              DIG 2 ;
                              DROP ;
-                             DIG 3 ;
+                             DIG 2 ;
+                             DROP ;
+                             DIG 2 ;
                              DROP ;
                              DIG 3 ;
                              DROP ;
                              DIG 3 ;
+                             DROP ;
+                             DIG 3 ;
+                             DROP ;
+                             DIG 6 ;
+                             DROP ;
+                             DIG 6 ;
                              DROP ;
                              DIG 6 ;
                              DROP ;
@@ -488,11 +536,17 @@
                              DROP ;
                              SOME ;
                              UPDATE 29 ;
+                             PUSH bool True ;
+                             UPDATE 19 ;
                              NIL operation }
                            { IF_LEFT
                                { DROP ;
-                                 DUG 11 ;
-                                 DROP 11 ;
+                                 DUG 13 ;
+                                 DROP 13 ;
+                                 DIG 3 ;
+                                 DROP ;
+                                 DIG 3 ;
+                                 DROP ;
                                  DIG 3 ;
                                  DROP ;
                                  DIG 3 ;
@@ -529,12 +583,16 @@
                                  NONE address ;
                                  UPDATE 25 ;
                                  NIL operation }
-                               { DIG 21 ;
+                               { DIG 25 ;
                                  DROP ;
                                  IF_LEFT
                                    { DROP ;
-                                     DUG 10 ;
-                                     DROP 10 ;
+                                     DUG 12 ;
+                                     DROP 12 ;
+                                     DIG 4 ;
+                                     DROP ;
+                                     DIG 4 ;
+                                     DROP ;
                                      DIG 4 ;
                                      DROP ;
                                      DIG 4 ;
@@ -582,11 +640,19 @@
                                          DROP ;
                                          DIG 2 ;
                                          DROP ;
-                                         DIG 3 ;
+                                         DIG 2 ;
+                                         DROP ;
+                                         DIG 2 ;
                                          DROP ;
                                          DIG 3 ;
                                          DROP ;
                                          DIG 3 ;
+                                         DROP ;
+                                         DIG 3 ;
+                                         DROP ;
+                                         DIG 6 ;
+                                         DROP ;
+                                         DIG 6 ;
                                          DROP ;
                                          DIG 6 ;
                                          DROP ;
@@ -626,6 +692,8 @@
                                          DROP ;
                                          SOME ;
                                          UPDATE 25 ;
+                                         PUSH bool True ;
+                                         UPDATE 19 ;
                                          NIL operation }
                                        { IF_LEFT
                                            { DIG 2 ;
@@ -648,7 +716,9 @@
                                              DROP ;
                                              DIG 2 ;
                                              DROP ;
-                                             DIG 5 ;
+                                             DIG 2 ;
+                                             DROP ;
+                                             DIG 2 ;
                                              DROP ;
                                              DIG 5 ;
                                              DROP ;
@@ -663,6 +733,8 @@
                                              DIG 5 ;
                                              DROP ;
                                              DIG 5 ;
+                                             DROP ;
+                                             DIG 7 ;
                                              DROP ;
                                              UNIT ;
                                              DIG 5 ;
@@ -680,18 +752,45 @@
                                              EXEC ;
                                              DROP ;
                                              DUP ;
-                                             IF {}
-                                                { DUP 2 ;
-                                                  GET 25 ;
-                                                  IF_NONE
-                                                    { DUP 2 ;
-                                                      GET 29 ;
-                                                      IF_NONE {} { PUSH string "POOL_PENDING_FEE_RECIPIENT" ; FAILWITH } }
-                                                    { PUSH string "POOL_PENDING_MANAGER" ; FAILWITH } } ;
+                                             IF { DIG 2 ; DROP ; DIG 2 ; DROP }
+                                                { DIG 3 ;
+                                                  DUP 3 ;
+                                                  GET 13 ;
+                                                  COMPARE ;
+                                                  GE ;
+                                                  PUSH nat 0 ;
+                                                  DUP 4 ;
+                                                  GET 7 ;
+                                                  COMPARE ;
+                                                  GT ;
+                                                  PUSH nat 0 ;
+                                                  DUP 5 ;
+                                                  GET 5 ;
+                                                  COMPARE ;
+                                                  GT ;
+                                                  DUP 5 ;
+                                                  GET 17 ;
+                                                  AND ;
+                                                  AND ;
+                                                  AND ;
+                                                  IF { DIG 2 ;
+                                                       DROP ;
+                                                       DUP 2 ;
+                                                       GET 25 ;
+                                                       IF_NONE
+                                                         { DUP 2 ;
+                                                           GET 29 ;
+                                                           IF_NONE {} { PUSH string "POOL_PENDING_FEE_RECIPIENT" ; FAILWITH } }
+                                                         { PUSH string "POOL_PENDING_MANAGER" ; FAILWITH } }
+                                                     { DIG 2 ; FAILWITH } } ;
                                              UPDATE 19 ;
                                              NIL operation }
-                                           { IF_LEFT
+                                           { DIG 24 ;
+                                             DROP ;
+                                             IF_LEFT
                                                { DIG 3 ;
+                                                 DROP ;
+                                                 DIG 3 ;
                                                  DROP ;
                                                  DIG 3 ;
                                                  DROP ;
@@ -703,9 +802,13 @@
                                                  DROP ;
                                                  DIG 4 ;
                                                  DROP ;
+                                                 DIG 4 ;
+                                                 DROP ;
                                                  DIG 5 ;
                                                  DROP ;
                                                  DIG 5 ;
+                                                 DROP ;
+                                                 DIG 7 ;
                                                  DROP ;
                                                  DIG 7 ;
                                                  DROP ;
@@ -789,9 +892,15 @@
                                                      DROP ;
                                                      DIG 3 ;
                                                      DROP ;
+                                                     DIG 3 ;
+                                                     DROP ;
                                                      DIG 4 ;
                                                      DROP ;
+                                                     DIG 5 ;
+                                                     DROP ;
                                                      DIG 9 ;
+                                                     DROP ;
+                                                     DIG 11 ;
                                                      DROP ;
                                                      DIG 11 ;
                                                      DROP ;
@@ -975,16 +1084,22 @@
                                                          PUSH bool True ;
                                                          UPDATE 21 } ;
                                                      SWAP }
-                                                   { DIG 16 ;
+                                                   { DIG 19 ;
                                                      DROP ;
-                                                     DIG 21 ;
+                                                     DIG 24 ;
                                                      DROP ;
                                                      IF_LEFT
-                                                       { DIG 6 ;
+                                                       { DIG 3 ;
+                                                         DROP ;
+                                                         DIG 6 ;
+                                                         DROP ;
+                                                         DIG 7 ;
                                                          DROP ;
                                                          DIG 10 ;
                                                          DROP ;
                                                          DIG 10 ;
+                                                         DROP ;
+                                                         DIG 12 ;
                                                          DROP ;
                                                          DIG 16 ;
                                                          DROP ;
@@ -1162,12 +1277,18 @@
                                                          PUSH bool True ;
                                                          UPDATE 21 ;
                                                          SWAP }
-                                                       { DIG 17 ;
+                                                       { DIG 20 ;
                                                          DROP ;
                                                          IF_LEFT
-                                                           { DIG 7 ;
+                                                           { DIG 3 ;
+                                                             DROP ;
+                                                             DIG 7 ;
+                                                             DROP ;
+                                                             DIG 7 ;
                                                              DROP ;
                                                              DIG 11 ;
+                                                             DROP ;
+                                                             DIG 13 ;
                                                              DROP ;
                                                              DIG 13 ;
                                                              DROP ;
@@ -1333,16 +1454,23 @@
                                                              PUSH bool True ;
                                                              UPDATE 21 ;
                                                              SWAP }
-                                                           { DIG 6 ;
+                                                           { DIG 7 ;
                                                              DROP ;
-                                                             DIG 9 ;
+                                                             DIG 11 ;
                                                              DROP ;
-                                                             DIG 9 ;
+                                                             DIG 11 ;
                                                              DROP ;
-                                                             DIG 13 ;
+                                                             DIG 16 ;
                                                              DROP ;
                                                              IF_LEFT
-                                                               { UNIT ;
+                                                               { DIG 8 ;
+                                                                 DROP ;
+                                                                 UNIT ;
+                                                                 DIG 13 ;
+                                                                 SWAP ;
+                                                                 EXEC ;
+                                                                 DROP ;
+                                                                 DUP 2 ;
                                                                  DIG 12 ;
                                                                  SWAP ;
                                                                  EXEC ;
@@ -1353,24 +1481,73 @@
                                                                  EXEC ;
                                                                  DROP ;
                                                                  DUP 2 ;
-                                                                 DIG 10 ;
-                                                                 SWAP ;
-                                                                 EXEC ;
-                                                                 DROP ;
-                                                                 DUP 2 ;
                                                                  GET 17 ;
-                                                                 IF { DIG 11 ; FAILWITH } { DIG 11 ; DROP } ;
+                                                                 IF { DIG 13 ; FAILWITH } { DIG 13 ; DROP } ;
                                                                  DUP 2 ;
                                                                  GET 3 ;
                                                                  DUP 3 ;
                                                                  CAR ;
-                                                                 COMPARE ;
-                                                                 NEQ ;
+                                                                 IF_LEFT
+                                                                   { SWAP ; IF_LEFT { COMPARE ; NEQ } { CAR ; COMPARE ; NEQ } }
+                                                                   { SWAP ;
+                                                                     IF_LEFT
+                                                                       { SWAP ; CAR ; COMPARE ; NEQ }
+                                                                       { DUP ;
+                                                                         CDR ;
+                                                                         DUP 3 ;
+                                                                         CDR ;
+                                                                         COMPARE ;
+                                                                         NEQ ;
+                                                                         SWAP ;
+                                                                         CAR ;
+                                                                         DIG 2 ;
+                                                                         CAR ;
+                                                                         COMPARE ;
+                                                                         NEQ ;
+                                                                         OR } } ;
                                                                  IF {} { PUSH string "POOL_IDENTICAL_ASSETS" ; FAILWITH } ;
+                                                                 PUSH nat 0 ;
+                                                                 DUP 3 ;
+                                                                 GET 13 ;
+                                                                 COMPARE ;
+                                                                 EQ ;
+                                                                 PUSH nat 0 ;
+                                                                 DUP 4 ;
+                                                                 GET 11 ;
+                                                                 COMPARE ;
+                                                                 EQ ;
+                                                                 PUSH nat 0 ;
+                                                                 DUP 5 ;
+                                                                 GET 9 ;
+                                                                 COMPARE ;
+                                                                 EQ ;
+                                                                 PUSH nat 0 ;
+                                                                 DUP 6 ;
+                                                                 GET 7 ;
+                                                                 COMPARE ;
+                                                                 EQ ;
+                                                                 PUSH nat 0 ;
+                                                                 DUP 7 ;
+                                                                 GET 5 ;
+                                                                 COMPARE ;
+                                                                 EQ ;
+                                                                 AND ;
+                                                                 AND ;
+                                                                 AND ;
+                                                                 AND ;
+                                                                 IF {} { PUSH string "POOL_DIRTY_INITIAL_STATE" ; FAILWITH } ;
                                                                  DUP 2 ;
+                                                                 DIG 6 ;
+                                                                 SWAP ;
+                                                                 EXEC ;
+                                                                 DUP ;
                                                                  DIG 5 ;
                                                                  SWAP ;
                                                                  EXEC ;
+                                                                 PUSH nat 0 ;
+                                                                 COMPARE ;
+                                                                 EQ ;
+                                                                 IF { DIG 9 ; DROP } { DIG 9 ; FAILWITH } ;
                                                                  DUP 2 ;
                                                                  GET 6 ;
                                                                  DIG 9 ;
@@ -1509,45 +1686,72 @@
                                                                  SWAP }
                                                                { DIG 2 ;
                                                                  DROP ;
-                                                                 DIG 2 ;
-                                                                 DROP ;
-                                                                 DIG 2 ;
-                                                                 DROP ;
-                                                                 DIG 2 ;
-                                                                 DROP ;
-                                                                 DIG 2 ;
+                                                                 DIG 3 ;
                                                                  DROP ;
                                                                  DIG 3 ;
                                                                  DROP ;
-                                                                 DIG 6 ;
+                                                                 DIG 3 ;
                                                                  DROP ;
-                                                                 DIG 6 ;
+                                                                 DIG 3 ;
                                                                  DROP ;
-                                                                 DIG 7 ;
+                                                                 DIG 5 ;
+                                                                 DROP ;
+                                                                 DIG 9 ;
+                                                                 DROP ;
+                                                                 DIG 9 ;
+                                                                 DROP ;
+                                                                 DIG 10 ;
                                                                  DROP ;
                                                                  UNIT ;
+                                                                 DIG 8 ;
+                                                                 SWAP ;
+                                                                 EXEC ;
+                                                                 DROP ;
+                                                                 DUP 2 ;
+                                                                 DIG 7 ;
+                                                                 SWAP ;
+                                                                 EXEC ;
+                                                                 DROP ;
+                                                                 DUP 2 ;
                                                                  DIG 6 ;
-                                                                 SWAP ;
-                                                                 EXEC ;
-                                                                 DROP ;
-                                                                 DUP 2 ;
-                                                                 DIG 5 ;
-                                                                 SWAP ;
-                                                                 EXEC ;
-                                                                 DROP ;
-                                                                 DUP 2 ;
-                                                                 DIG 4 ;
                                                                  SWAP ;
                                                                  EXEC ;
                                                                  DROP ;
                                                                  DUP 2 ;
                                                                  GET 17 ;
-                                                                 IF { DIG 3 ; FAILWITH } { DIG 3 ; DROP } ;
+                                                                 IF { DIG 6 ; FAILWITH } { DIG 6 ; DROP } ;
+                                                                 DUP ;
+                                                                 DIG 5 ;
+                                                                 SWAP ;
+                                                                 EXEC ;
+                                                                 DROP ;
+                                                                 PUSH string "POOL_LQT_IS_RESERVE_ASSET" ;
+                                                                 DUP 3 ;
+                                                                 GET 3 ;
+                                                                 DUP 6 ;
+                                                                 SWAP ;
+                                                                 EXEC ;
+                                                                 DUP 3 ;
+                                                                 COMPARE ;
+                                                                 NEQ ;
+                                                                 DUP 4 ;
+                                                                 CAR ;
+                                                                 DIG 6 ;
+                                                                 SWAP ;
+                                                                 EXEC ;
+                                                                 DUP 4 ;
+                                                                 COMPARE ;
+                                                                 NEQ ;
+                                                                 AND ;
+                                                                 IF { DROP } { FAILWITH } ;
                                                                  DUP ;
                                                                  DIG 3 ;
                                                                  SWAP ;
                                                                  EXEC ;
-                                                                 DROP ;
+                                                                 PUSH nat 0 ;
+                                                                 COMPARE ;
+                                                                 EQ ;
+                                                                 IF { DIG 2 ; DROP } { DIG 2 ; FAILWITH } ;
                                                                  DUP 2 ;
                                                                  GET 15 ;
                                                                  IF_NONE {} { PUSH string "POOL_LQT_ALREADY_SET" ; FAILWITH } ;

@@ -21,6 +21,10 @@ This is a repository self-assessment, not an independent audit and not a mainnet
 | TT-09 | Deployment uses the wrong chain, artifact, or token implementation. | Tooling pins chain ID, artifact SHA-256, token script-code SHA-256, and required interfaces before origination. |
 | TT-10 | Interrupted setup leaves operators/allowances unnecessarily active. | Seed authorization, initialization, and cleanup are one atomic batch; the deployment receipt supports resuming confirmed prior steps. |
 | TT-11 | Mainnet is run before review and rehearsal. | Mainnet is explicit and fails closed on chain identity, dirty source, artifact/token hashes, seed balances, signer mode, multisig policy, operational ownership, paused handoff, and final signer-free verification. |
+| TT-12 | Pre-minted LQT gives an earlier holder a claim on newly seeded reserves. | Linking requires a zero synchronous LQT supply, and initialization rechecks it immediately before accepting the seed. |
+| TT-13 | One multi-interface contract masquerades as both reserve assets. | The pool compares underlying addresses across FA1.2/FA2 variants while preserving support for distinct FA2 token IDs from the same contract. |
+| TT-14 | Malformed origination storage carries phantom reserves, fees, or LQT into activation. | Initialization requires every reserve, fee, and LQT accounting field to be zero. |
+| TT-15 | A live pool continues trading during an incomplete administrative handoff. | Proposing either manager or fee-recipient handoff pauses immediately; acceptance leaves the pool paused for explicit verification and unpause. |
 
 ## Accounting invariants
 
@@ -62,19 +66,20 @@ The LIGO suite exercises:
 - mixed FA2/FA1.2 initialization and independent FA2/FA2 and FA1.2/FA1.2 initialization using the same artifact;
 - integer geometric-mean initial supply and permanent LQT lock;
 - one-time initialization and immutable LQT link;
+- zero-supply LQT link/recheck, dirty-origination rejection, and reserve/LQT address separation;
 - proportional additions/removals and LQT supply synchronization;
 - both swap directions, fee rounding, reserve product, and solvency;
 - expired and excessive-minimum-output rejections before transfers;
 - direct donations as non-reserve surplus;
 - permissionless fee claims paying only the configured recipient;
-- fail-closed origination/initialization, pause behavior, rejection of unpause during pending handoffs, and two-step/cancelable administration;
+- fail-closed origination/initialization, automatic pause on role proposal, rejection of unpause during pending handoffs, and two-step/cancelable administration;
 - nonpayable and unauthorized calls;
 - immutable fee/quote views; and
 - hostile token callback reentrancy with whole-transaction rollback.
 
 The TypeScript suite tests arbitrary-precision math, all supported asset combinations, identical/ambiguous descriptor rejection, same-contract distinct FA2 IDs, immutable IPFS URI requirements, artifact digest validation, storage schema encoding, test-network/Mainnet separation, and Mainnet release requirements.
 
-Independent recompilation in the pinned LIGO 1.11.5 container produced a byte-identical pool artifact with SHA-256 `51700482709871b668284b8103f7d75ed0305731d24b1be8b34fd755bc95237b`; the serialized contract is 9,307 bytes. The existing LQT source also reproduced its checked-in artifact (`2df971245f3d468ee2668e1ed48797852eedd280348c753e9f2cd1d1bdf23921`). The full pre-existing LQT and native-pool LIGO regression suites pass alongside the new pool suite. Type checking and all Node tests pass under Taquito 25, and `npm audit --omit=dev` reports zero known production-dependency vulnerabilities at assessment time.
+Independent recompilation in the pinned LIGO 1.11.5 container produced a byte-identical pool artifact with SHA-256 `7b7e19d9ae040552bc5e70533f0277cd323e35f95a0dca9e0a25922aa93a6345`; the serialized Michelson file is 103,124 bytes. The LQT source reproduced its checked-in artifact (`617f0e402948e24110790288c55998d2319d5da9694e01a966e077f20f988f25`). The LQT and modified FA1.2/FA2 suites pass alongside the token-to-token suite. Type checking and all 67 Node tests pass under Taquito 25, including deterministic enumeration of more than 5.7 million arithmetic/state transitions; `npm audit --omit=dev` reports zero known production-dependency vulnerabilities at assessment time.
 
 ## Residual trust assumptions
 
@@ -88,7 +93,7 @@ To avoid callback liveness hazards, the contract uses strict atomic-transfer ass
 
 ### External LQT remains part of the trusted system
 
-The pool relies on the repository's existing FA1.2 LQT `%mintOrBurn` semantics. Deploying a different implementation at the linked address could break liquidity operations. The deployer therefore originates the reviewed artifact itself, assigns the pool as administrator, links it once, and verifies both code and storage.
+The pool relies on the repository's FA1.2 LQT `%mintOrBurn` semantics and synchronous total-supply view. Deploying a different implementation at the linked address could lie to the view or break liquidity operations. The deployer therefore originates the reviewed artifact itself, assigns the pool as administrator, links it once, and verifies both code and storage.
 
 ### No oracle protection
 

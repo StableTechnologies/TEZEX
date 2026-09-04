@@ -1,5 +1,9 @@
 # Dexter v2 Report
 
+> Historical build report for an earlier base-artifact snapshot. Its hashes and
+> sizes are not release pins. Use the byte-reproduced hashes in the current
+> security reviews and release manifests for modified or token-to-token pools.
+
 ## Build Information
 
 ### System Information

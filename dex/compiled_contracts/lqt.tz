@@ -236,5 +236,6 @@
                              SWAP ;
                              UPDATE 3 } } ;
                      NIL operation } } } ;
-         PAIR } }
+         PAIR } ;
+  view "get_total_supply" unit nat { GET 9 } }
 
