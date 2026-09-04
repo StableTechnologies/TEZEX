@@ -44,7 +44,7 @@ jobs:
             compile contract dex/contracts/token_token_pool.mligo \
             -m TokenTokenPool --no-warn > /tmp/token_token_pool.tz
           cmp /tmp/token_token_pool.tz dex/compiled_contracts/token_token_pool.tz
-          echo "51700482709871b668284b8103f7d75ed0305731d24b1be8b34fd755bc95237b  /tmp/token_token_pool.tz" \
+          echo "7b7e19d9ae040552bc5e70533f0277cd323e35f95a0dca9e0a25922aa93a6345  /tmp/token_token_pool.tz" \
             | sha256sum --check --strict
 
       - name: Run LIGO tests

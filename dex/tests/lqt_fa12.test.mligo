@@ -136,3 +136,13 @@ let test_only_admin_can_mint_or_burn =
       mint
       0tez in
   assert_string_failure "unauthorized mint" "OnlyAdmin" result
+
+let test_total_supply_view_matches_storage =
+  let () = clean () in
+  let lqt = deploy_lqt 1234567n 1234567n in
+  let lqt_address = Test.Typed_address.to_address lqt.taddr in
+  let result : nat option =
+    Tezos.View.call "get_total_supply" () lqt_address in
+  match result with
+  | Some total -> Assert.Error.assert (total = 1234567n) "wrong supply view"
+  | None -> failwith "missing total supply view"
