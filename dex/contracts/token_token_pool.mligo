@@ -31,6 +31,8 @@ module TokenTokenPool = struct
   let err_not_manager = "POOL_NOT_MANAGER"
   let err_not_pending_manager = "POOL_NOT_PENDING_MANAGER"
   let err_not_pending_fee_recipient = "POOL_NOT_PENDING_FEE_RECIPIENT"
+  let err_pending_manager = "POOL_PENDING_MANAGER"
+  let err_pending_fee_recipient = "POOL_PENDING_FEE_RECIPIENT"
   let err_invalid_address = "POOL_INVALID_ADDRESS"
   let err_paused = "POOL_PAUSED"
   let err_not_active = "POOL_NOT_ACTIVE"
@@ -331,7 +333,6 @@ module TokenTokenPool = struct
     let () = assert_non_payable () in
     let () = assert_idle s in
     let () = assert_manager s in
-    let () = assert_live s in
     let () = Assert.Error.assert (not s.active) err_already_active in
     let () = Assert.Error.assert (s.token_a <> s.token_b) err_same_asset in
     let lqt_address = get_lqt_address s in
@@ -361,6 +362,7 @@ module TokenTokenPool = struct
        reserve_b = param.amount_b;
        lqt_total = total;
        active = true;
+       paused = true;
        entered = true
      })
 
@@ -517,6 +519,16 @@ module TokenTokenPool = struct
     let () = assert_non_payable () in
     let () = assert_idle s in
     let () = assert_manager s in
+    let () =
+      if paused
+      then ()
+      else
+        match s.pending_manager with
+        | Some _ -> failwith err_pending_manager
+        | None ->
+            (match s.pending_fee_recipient with
+            | Some _ -> failwith err_pending_fee_recipient
+            | None -> ()) in
     ([], {s with paused = paused})
 
   [@entry]
@@ -669,7 +681,7 @@ module TokenTokenPool = struct
       lqt_total = 0n;
       lqt_address = None;
       active = false;
-      paused = false;
+      paused = true;
       entered = false;
       manager = param.manager;
       pending_manager = None;

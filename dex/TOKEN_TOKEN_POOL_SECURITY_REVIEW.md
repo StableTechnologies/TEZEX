@@ -17,7 +17,7 @@ This is a repository self-assessment, not an independent audit and not a mainnet
 | TT-05 | Pool and external LQT supply drift. | Only the pool administers LQT mint/burn, and each pool action updates reserve/LQT accounting in the same Tezos transaction. Tests compare both totals. |
 | TT-06 | A token contract reenters while accounting is staged. | User actions set `entered = true` before external operations and finish with authenticated self-only `%close`; an adversarial callback test verifies complete rollback. |
 | TT-07 | Emergency pause traps providers. | Pause blocks risk-increasing actions but leaves removal and fee claims available. |
-| TT-08 | A mistaken one-step control transfer loses administration. | Manager and fee-recipient changes are two-step, cancelable handoffs. |
+| TT-08 | A mistaken or incomplete control transfer loses administration or exposes the pool while temporary roles remain. | Manager and fee-recipient changes are two-step, cancelable handoffs. Origination and initialization remain paused, and unpausing fails while either handoff is pending. |
 | TT-09 | Deployment uses the wrong chain, artifact, or token implementation. | Tooling pins chain ID, artifact SHA-256, token script-code SHA-256, and required interfaces before origination. |
 | TT-10 | Interrupted setup leaves operators/allowances unnecessarily active. | Seed authorization, initialization, and cleanup are one atomic batch; the deployment receipt supports resuming confirmed prior steps. |
 | TT-11 | Mainnet is run before review and rehearsal. | Mainnet is explicit and fails closed on chain identity, dirty source, artifact/token hashes, seed balances, signer mode, multisig policy, operational ownership, paused handoff, and final signer-free verification. |
@@ -67,14 +67,14 @@ The LIGO suite exercises:
 - expired and excessive-minimum-output rejections before transfers;
 - direct donations as non-reserve surplus;
 - permissionless fee claims paying only the configured recipient;
-- pause behavior and two-step/cancelable administration;
+- fail-closed origination/initialization, pause behavior, rejection of unpause during pending handoffs, and two-step/cancelable administration;
 - nonpayable and unauthorized calls;
 - immutable fee/quote views; and
 - hostile token callback reentrancy with whole-transaction rollback.
 
 The TypeScript suite tests arbitrary-precision math, all supported asset combinations, identical/ambiguous descriptor rejection, same-contract distinct FA2 IDs, immutable IPFS URI requirements, artifact digest validation, storage schema encoding, test-network/Mainnet separation, and Mainnet release requirements.
 
-Independent recompilation in the pinned LIGO 1.11.5 container produced a byte-identical pool artifact with SHA-256 `a7939ae6ee629057d6dca4301a9be8485b19d72efebcdf172cbd4a3a0e48957e`; `ligo info measure-contract` reports 9,189 bytes. The existing LQT source also reproduced its checked-in artifact (`2df971245f3d468ee2668e1ed48797852eedd280348c753e9f2cd1d1bdf23921`). The full pre-existing LQT and native-pool LIGO regression suites pass alongside the new pool suite. Type checking and all Node tests pass under Taquito 25, and `npm audit --omit=dev` reports zero known production-dependency vulnerabilities at assessment time.
+Independent recompilation in the pinned LIGO 1.11.5 container produced a byte-identical pool artifact with SHA-256 `51700482709871b668284b8103f7d75ed0305731d24b1be8b34fd755bc95237b`; the serialized contract is 9,307 bytes. The existing LQT source also reproduced its checked-in artifact (`2df971245f3d468ee2668e1ed48797852eedd280348c753e9f2cd1d1bdf23921`). The full pre-existing LQT and native-pool LIGO regression suites pass alongside the new pool suite. Type checking and all Node tests pass under Taquito 25, and `npm audit --omit=dev` reports zero known production-dependency vulnerabilities at assessment time.
 
 ## Residual trust assumptions
 

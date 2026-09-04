@@ -233,10 +233,13 @@ test("integer square root and fee math match contract ordering", () => {
 test("encodes pool and empty external LQT storage against compiled schemas", () => {
   const config = parseTokenTokenConfig("previewnet", validEnv());
   const deployer = implicitAddress(5);
+  const poolStorage = buildTokenTokenInitialStorage(config, deployer);
   const poolSchema = new Schema(storageType("token_token_pool.tz") as never);
   const lqtSchema = new Schema(storageType("lqt.tz") as never);
+  assert.equal(poolStorage.active, false);
+  assert.equal(poolStorage.paused, true);
   assert.doesNotThrow(() =>
-    poolSchema.Encode(buildTokenTokenInitialStorage(config, deployer)),
+    poolSchema.Encode(poolStorage),
   );
   assert.doesNotThrow(() =>
     lqtSchema.Encode(buildEmptyLqtStorage(config, contractAddress(6))),

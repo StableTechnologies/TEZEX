@@ -85,7 +85,7 @@ export function buildTokenTokenInitialStorage(
     lqt_total: "0",
     lqt_address: null,
     active: false,
-    paused: false,
+    paused: true,
     entered: false,
     manager: deployer,
     pending_manager: null,

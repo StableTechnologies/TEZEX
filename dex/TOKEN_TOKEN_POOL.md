@@ -78,7 +78,7 @@ ligo run test dex/tests/token_token_pool.test.mligo --no-warn
 The checked-in pool artifact SHA-256 is:
 
 ```text
-a7939ae6ee629057d6dca4301a9be8485b19d72efebcdf172cbd4a3a0e48957e
+51700482709871b668284b8103f7d75ed0305731d24b1be8b34fd755bc95237b
 ```
 
 CI recompiles the source with the pinned compiler, byte-compares the output, checks this digest, runs the LIGO suite, and validates the TypeScript deployment tooling.
