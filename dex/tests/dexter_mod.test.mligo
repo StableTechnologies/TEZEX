@@ -574,6 +574,7 @@ let test_manager_two_step_handoff =
       0tez in
   let proposed = Test.Typed_address.get_storage dex_orig.taddr in
   let () = Assert.assert (proposed.manager = Util.src ()) in
+  let () = Assert.assert proposed.paused in
   let () = assert_some_address new_manager proposed.pending_manager in
   let () = Test.State.set_source new_manager in
   let _ : nat =
@@ -581,6 +582,7 @@ let test_manager_two_step_handoff =
   let accepted = Test.Typed_address.get_storage dex_orig.taddr in
   begin
     Assert.assert (accepted.manager = new_manager);
+    Assert.assert accepted.paused;
     assert_no_address accepted.pending_manager
   end
 
@@ -925,6 +927,7 @@ let test_protocol_fee_recipient_two_step_handoff =
   let proposed = Test.Typed_address.get_storage dex_orig.taddr in
   let () =
     Assert.assert (proposed.protocol_fee_recipient = Util.src ()) in
+  let () = Assert.assert proposed.paused in
   let () =
     assert_some_address
       new_recipient

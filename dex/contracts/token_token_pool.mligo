@@ -51,6 +51,10 @@ module TokenTokenPool = struct
   let err_missing_fa12_transfer = "POOL_MISSING_FA12_TRANSFER"
   let err_missing_fa2_transfer = "POOL_MISSING_FA2_TRANSFER"
   let err_missing_lqt_mint_burn = "POOL_MISSING_LQT_MINT_OR_BURN"
+  let err_missing_lqt_supply_view = "POOL_MISSING_LQT_SUPPLY_VIEW"
+  let err_lqt_supply_not_zero = "POOL_LQT_SUPPLY_NOT_ZERO"
+  let err_dirty_initial_state = "POOL_DIRTY_INITIAL_STATE"
+  let err_lqt_is_asset = "POOL_LQT_IS_RESERVE_ASSET"
   let err_missing_close = "POOL_MISSING_CLOSE"
 
   (* --------------------------------------------------------------------- *)
@@ -195,6 +199,19 @@ module TokenTokenPool = struct
       (candidate <> Tezos.get_self_address ())
       err_invalid_address
 
+  let token_address (asset : token) : address =
+    match asset with
+    | Fa12 address -> address
+    | Fa2 token_info -> token_info.token
+
+  let assets_are_distinct (token_a : token) (token_b : token) : bool =
+    match (token_a, token_b) with
+    | (Fa12 address_a, Fa12 address_b) -> address_a <> address_b
+    | (Fa12 address_a, Fa2 asset_b) -> address_a <> asset_b.token
+    | (Fa2 asset_a, Fa12 address_b) -> asset_a.token <> address_b
+    | (Fa2 asset_a, Fa2 asset_b) ->
+        asset_a.token <> asset_b.token || asset_a.id <> asset_b.id
+
   let checked_sub (a : nat) (b : nat) : nat =
     match is_nat (a - b) with
     | Some value -> value
@@ -301,6 +318,20 @@ module TokenTokenPool = struct
       | None -> failwith err_missing_lqt_mint_burn in
     Tezos.transaction {quantity = quantity; target = target} 0mutez entrypoint
 
+  let checked_lqt_total_supply (lqt_address : address) : nat =
+    let (_mint_or_burn : mint_or_burn contract) =
+      match
+        (Tezos.get_entrypoint_opt "%mintOrBurn" lqt_address
+          : mint_or_burn contract option)
+      with
+      | Some entrypoint -> entrypoint
+      | None -> failwith err_missing_lqt_mint_burn in
+    match
+      (Tezos.call_view "get_total_supply" () lqt_address : nat option)
+    with
+    | Some total -> total
+    | None -> failwith err_missing_lqt_supply_view
+
   let close_operation () : operation =
     let entrypoint : unit contract =
       match
@@ -323,6 +354,13 @@ module TokenTokenPool = struct
     let () = Assert.Error.assert (not s.active) err_already_active in
     let () = assert_external_address lqt_address in
     let () =
+      Assert.Error.assert
+        (lqt_address <> token_address s.token_a
+         && lqt_address <> token_address s.token_b)
+        err_lqt_is_asset in
+    let total_supply = checked_lqt_total_supply lqt_address in
+    let () = Assert.Error.assert (total_supply = 0n) err_lqt_supply_not_zero in
+    let () =
       match s.lqt_address with
       | None -> ()
       | Some _ -> failwith err_lqt_already_set in
@@ -334,8 +372,21 @@ module TokenTokenPool = struct
     let () = assert_idle s in
     let () = assert_manager s in
     let () = Assert.Error.assert (not s.active) err_already_active in
-    let () = Assert.Error.assert (s.token_a <> s.token_b) err_same_asset in
+    let () =
+      Assert.Error.assert
+        (assets_are_distinct s.token_a s.token_b)
+        err_same_asset in
+    let () =
+      Assert.Error.assert
+        (s.reserve_a = 0n
+         && s.reserve_b = 0n
+         && s.protocol_fee_a = 0n
+         && s.protocol_fee_b = 0n
+         && s.lqt_total = 0n)
+        err_dirty_initial_state in
     let lqt_address = get_lqt_address s in
+    let total_supply = checked_lqt_total_supply lqt_address in
+    let () = Assert.Error.assert (total_supply = 0n) err_lqt_supply_not_zero in
     let () = assert_deadline param.deadline in
     let () = assert_external_address param.receiver in
     let () =
@@ -522,6 +573,12 @@ module TokenTokenPool = struct
     let () =
       if paused
       then ()
+      else if not
+        (s.active
+         && s.reserve_a > 0n
+         && s.reserve_b > 0n
+         && s.lqt_total >= minimum_lqt)
+      then failwith err_not_active
       else
         match s.pending_manager with
         | Some _ -> failwith err_pending_manager
@@ -537,7 +594,7 @@ module TokenTokenPool = struct
     let () = assert_idle s in
     let () = assert_manager s in
     let () = assert_external_address new_manager in
-    ([], {s with pending_manager = Some new_manager})
+    ([], {s with pending_manager = Some new_manager; paused = true})
 
   [@entry]
   let cancel_manager_transfer (_ : unit) (s : storage) : result =
@@ -565,7 +622,7 @@ module TokenTokenPool = struct
     let () = assert_idle s in
     let () = assert_manager s in
     let () = assert_external_address recipient in
-    ([], {s with pending_fee_recipient = Some recipient})
+    ([], {s with pending_fee_recipient = Some recipient; paused = true})
 
   [@entry]
   let cancel_protocol_fee_recipient (_ : unit) (s : storage) : result =

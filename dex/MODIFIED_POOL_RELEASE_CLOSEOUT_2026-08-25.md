@@ -59,8 +59,14 @@ tooling. Current modified artifacts:
 
 | Artifact | SHA-256 |
 | --- | --- |
-| `compiled_contracts/pool_mod.tz` | `579aef8008e75d58955691709f7d931e923e85e93d49e431b372f57dfc70f7b9` |
-| `compiled_contracts/pool_fa2_mod.tz` | `2d746984f22f5676c864fa1a70df04c9e8176f023eea74d86d303f29b5544c2a` |
+| `compiled_contracts/pool_mod.tz` | `db6a15ce85437330f36750858cc7d75832e3d6c4af929c72884a344b1f96fbe6` |
+| `compiled_contracts/pool_fa2_mod.tz` | `589edf545be6ebbfd26b97c08a840c8110c2457d8da6958418c7f116f864a0bc` |
+
+The 2026-09-03 defense-in-depth pass additionally makes activation and role
+handoffs fail paused, verifies the LQT interface and supply before its address
+is stored, rejects LQT/reserve-token aliasing, blocks inactive fee claims and
+phantom initial fee liabilities, and rejects zero/dust actions that would
+produce no output. See `audits/EXHAUSTIVE_POOL_SECURITY_REVIEW_2026-09-03.md`.
 
 ## #244 — exact, resumable deployment
 

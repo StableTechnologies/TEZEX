@@ -54,14 +54,17 @@ the LQT contract, synchronize the token balance, and call `activate` with the
 expected XTZ and LQT totals and the minimum configured token seed. Tokens sent
 directly to the inactive pool before initialization are treated as an LP
 donation and cannot block activation. Activation also verifies the actual LQT
-total supply. Swap and liquidity entrypoints remain unavailable until all checks
-pass.
+total supply. The LQT address is stored only after its interface and synchronous
+supply view match the configured pool total, and it may not equal the reserve
+token. Swap, liquidity, and fee-claim entrypoints remain unavailable until all
+activation checks pass.
 
 Modified pools originate paused. Swaps, deposits, liquidity additions, reserve
 synchronization, and routed swaps remain blocked while paused; liquidity
 removal and protocol-fee claims remain available. Manager and protocol-fee
 recipient changes are two-step, cancellable handoffs that the proposed address
-must accept. A pool cannot be unpaused while either handoff is pending.
+must accept. Proposing either handoff immediately pauses the pool, and it cannot
+be unpaused while either handoff is pending.
 
 ### Modified-pool fee decision
 

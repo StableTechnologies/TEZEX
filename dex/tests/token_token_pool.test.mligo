@@ -230,13 +230,20 @@ let deploy_pool (token_a : Contract.token) (token_b : Contract.token) =
       } in
   Test.Originate.contract (contract_of Contract) storage 0tez
 
-let deploy_lqt (pool_address : address) =
+let deploy_lqt_with_supply
+  (admin : address)
+  (owner : address)
+  (total_supply : nat) =
+  let tokens : LQT.LQT.tokens =
+    if total_supply = 0n
+    then (Big_map.empty : LQT.LQT.tokens)
+    else Big_map.literal [(owner, total_supply)] in
   let storage : LQT.LQT.storage =
     {
-      tokens = (Big_map.empty : LQT.LQT.tokens);
+      tokens = tokens;
       allowances = (Big_map.empty : LQT.LQT.allowances);
-      admin = pool_address;
-      total_supply = 0n;
+      admin = admin;
+      total_supply = total_supply;
       metadata = (Big_map.empty : (string, bytes) big_map);
       token_metadata =
         Big_map.literal
@@ -255,6 +262,9 @@ let deploy_lqt (pool_address : address) =
           ]
     } in
   Test.Originate.contract (contract_of LQT.LQT) storage 0tez
+
+let deploy_lqt (pool_address : address) =
+  deploy_lqt_with_supply pool_address (manager ()) 0n
 
 let set_lqt (pool : pool_typed_address) (lqt : lqt_typed_address) : unit =
   let _ : nat =
@@ -461,7 +471,7 @@ let test_initialization_uses_integer_square_root_and_external_lqt =
       (storage.active && storage.paused && not storage.entered) in
   assert_solvency "initialization" pool.taddr fa2.taddr fa12.taddr
 
-let test_initialization_forces_pause_even_if_unpaused_before_activation =
+let test_pool_cannot_unpause_before_initialization =
   let () = clean () in
   let () = Test.State.set_source (manager ()) in
   let fa2 = deploy_fa2 (manager ()) in
@@ -472,15 +482,149 @@ let test_initialization_forces_pause_even_if_unpaused_before_activation =
       (Fa12 (Test.Typed_address.to_address fa12.taddr)) in
   let lqt = deploy_lqt (Test.Typed_address.to_address pool.taddr) in
   let () = set_lqt pool.taddr lqt.taddr in
-  let _ : nat =
-    Test.Contract.transfer_exn
+  let unpause_result =
+    Test.Contract.transfer
       (Test.Typed_address.get_entrypoint "set_paused" pool.taddr)
       false
       0tez in
+  let () =
+    assert_string_failure
+      "pre-initialization unpause"
+      Contract.err_not_active
+      unpause_result in
   let () = authorize_pair pool.taddr fa2.taddr fa12.taddr (manager ()) seed_a seed_b in
   let () = initialize_pool pool.taddr (manager ()) seed_a seed_b in
   let storage : Contract.storage = Test.Typed_address.get_storage pool.taddr in
-  assert_true "initialization did not force pause" storage.paused
+  assert_true "initialization did not remain paused" storage.paused
+
+let test_pre_minted_lqt_is_rejected_before_linking_or_seed_transfer =
+  let () = clean () in
+  let () = Test.State.set_source (manager ()) in
+  let fa2 = deploy_fa2 (manager ()) in
+  let fa12 = deploy_fa12 (manager ()) in
+  let pool =
+    deploy_pool
+      (Fa2 {token = Test.Typed_address.to_address fa2.taddr; id = 0n})
+      (Fa12 (Test.Typed_address.to_address fa12.taddr)) in
+  let pool_address = Test.Typed_address.to_address pool.taddr in
+  let lqt = deploy_lqt_with_supply pool_address (manager ()) 1n in
+  let result =
+    Test.Contract.transfer
+      (Test.Typed_address.get_entrypoint "set_lqt_address" pool.taddr)
+      (Test.Typed_address.to_address lqt.taddr)
+      0tez in
+  let () =
+    assert_string_failure
+      "pre-minted LQT"
+      Contract.err_lqt_supply_not_zero
+      result in
+  let storage : Contract.storage = Test.Typed_address.get_storage pool.taddr in
+  let () =
+    match storage.lqt_address with
+    | None -> ()
+    | Some _ -> failwith "failed LQT link mutated storage" in
+  let () = assert_nat "failed LQT link reserve A" storage.reserve_a 0n in
+  assert_nat "failed LQT link reserve B" storage.reserve_b 0n
+
+let test_lqt_supply_is_rechecked_immediately_before_initialization =
+  let () = clean () in
+  let () = Test.State.set_source (manager ()) in
+  let fa2 = deploy_fa2 (manager ()) in
+  let fa12 = deploy_fa12 (manager ()) in
+  let pool =
+    deploy_pool
+      (Fa2 {token = Test.Typed_address.to_address fa2.taddr; id = 0n})
+      (Fa12 (Test.Typed_address.to_address fa12.taddr)) in
+  let pool_address = Test.Typed_address.to_address pool.taddr in
+  let lqt = deploy_lqt_with_supply (manager ()) (manager ()) 0n in
+  let () = set_lqt pool.taddr lqt.taddr in
+  let _ : nat =
+    Test.Contract.transfer_exn
+      (Test.Typed_address.get_entrypoint "mintOrBurn" lqt.taddr)
+      ({quantity = 1; target = manager ()} : LQT.LQT.mintOrBurn)
+      0tez in
+  let () = authorize_pair pool.taddr fa2.taddr fa12.taddr (manager ()) seed_a seed_b in
+  let result =
+    Test.Contract.transfer
+      (Test.Typed_address.get_entrypoint "initialize" pool.taddr)
+      ({amount_a = seed_a; amount_b = seed_b; receiver = manager (); deadline = future}
+        : Contract.initialize_param)
+      0tez in
+  let () =
+    assert_string_failure
+      "LQT supply changed before initialization"
+      Contract.err_lqt_supply_not_zero
+      result in
+  let storage : Contract.storage = Test.Typed_address.get_storage pool.taddr in
+  let () = assert_true "failed initialization activated pool" (not storage.active) in
+  let () = assert_nat "failed initialization reserve A" storage.reserve_a 0n in
+  let () = assert_nat "failed initialization reserve B" storage.reserve_b 0n in
+  let () = assert_nat "failed initialization held A" (fa2_balance fa2.taddr pool_address) 0n in
+  assert_nat "failed initialization held B" (fa12_balance fa12.taddr pool_address) 0n
+
+let test_dirty_origination_state_cannot_be_initialized =
+  let () = clean () in
+  let () = Test.State.set_source (manager ()) in
+  let fa2 = deploy_fa2 (manager ()) in
+  let fa12 = deploy_fa12 (manager ()) in
+  let token_a : Contract.token =
+    Fa2 {token = Test.Typed_address.to_address fa2.taddr; id = 0n} in
+  let token_b : Contract.token =
+    Fa12 (Test.Typed_address.to_address fa12.taddr) in
+  let clean_storage : Contract.storage =
+    Contract.build_storage
+      {
+        token_a = token_a;
+        token_b = token_b;
+        manager = manager ();
+        protocol_fee_recipient = fee_recipient ();
+        metadata = (Big_map.empty : (string, bytes) big_map)
+      } in
+  let dirty_storage : Contract.storage =
+    {clean_storage with protocol_fee_a = 1n} in
+  let pool =
+    Test.Originate.contract (contract_of Contract) dirty_storage 0tez in
+  let pool_address = Test.Typed_address.to_address pool.taddr in
+  let lqt = deploy_lqt pool_address in
+  let () = set_lqt pool.taddr lqt.taddr in
+  let () = authorize_pair pool.taddr fa2.taddr fa12.taddr (manager ()) seed_a seed_b in
+  let result =
+    Test.Contract.transfer
+      (Test.Typed_address.get_entrypoint "initialize" pool.taddr)
+      ({amount_a = seed_a; amount_b = seed_b; receiver = manager (); deadline = future}
+        : Contract.initialize_param)
+      0tez in
+  let () =
+    assert_string_failure
+      "dirty origination state"
+      Contract.err_dirty_initial_state
+      result in
+  let storage : Contract.storage = Test.Typed_address.get_storage pool.taddr in
+  let () = assert_true "dirty pool became active" (not storage.active) in
+  let () = assert_nat "dirty pool held A" (fa2_balance fa2.taddr pool_address) 0n in
+  assert_nat "dirty pool held B" (fa12_balance fa12.taddr pool_address) 0n
+
+let test_same_contract_cannot_masquerade_as_mixed_standard_pair =
+  let () = clean () in
+  let () = Test.State.set_source (manager ()) in
+  let fa2 = deploy_fa2 (manager ()) in
+  let token_address = Test.Typed_address.to_address fa2.taddr in
+  let pool =
+    deploy_pool
+      (Fa2 {token = token_address; id = 0n})
+      (Fa12 token_address) in
+  let lqt = deploy_lqt (Test.Typed_address.to_address pool.taddr) in
+  let () = set_lqt pool.taddr lqt.taddr in
+  let result =
+    Test.Contract.transfer
+      (Test.Typed_address.get_entrypoint "initialize" pool.taddr)
+      ({amount_a = seed_a; amount_b = seed_b; receiver = manager (); deadline = future}
+        : Contract.initialize_param)
+      0tez in
+  assert_string_failure
+    "mixed-standard alias"
+    Contract.err_same_asset
+    result
 
 let test_initialization_is_one_time_and_lqt_address_is_immutable =
   let (pool, lqt, _fa2, _fa12) = setup_pool () in
@@ -854,6 +998,8 @@ let test_manager_transfer_is_two_step_and_cancelable =
       (Test.Typed_address.get_entrypoint "propose_manager" pool.taddr)
       (successor ())
       0tez in
+  let proposed : Contract.storage = Test.Typed_address.get_storage pool.taddr in
+  let () = assert_true "manager proposal did not pause pool" proposed.paused in
   let _ : nat =
     Test.Contract.transfer_exn
       (Test.Typed_address.get_entrypoint "cancel_manager_transfer" pool.taddr)
@@ -883,7 +1029,8 @@ let test_manager_transfer_is_two_step_and_cancelable =
       ()
       0tez in
   let storage : Contract.storage = Test.Typed_address.get_storage pool.taddr in
-  assert_true "manager not transferred" (storage.manager = successor ())
+  let () = assert_true "manager not transferred" (storage.manager = successor ()) in
+  assert_true "manager acceptance unexpectedly unpaused pool" storage.paused
 
 let test_fee_recipient_change_is_two_step =
   let (pool, _lqt, _fa2, _fa12) = setup_pool () in
@@ -893,6 +1040,8 @@ let test_fee_recipient_change_is_two_step =
       (Test.Typed_address.get_entrypoint "propose_protocol_fee_recipient" pool.taddr)
       (replacement_fee_recipient ())
       0tez in
+  let proposed : Contract.storage = Test.Typed_address.get_storage pool.taddr in
+  let () = assert_true "fee-recipient proposal did not pause pool" proposed.paused in
   let () = Test.State.set_source (replacement_fee_recipient ()) in
   let _ : nat =
     Test.Contract.transfer_exn
