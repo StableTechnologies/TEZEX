@@ -23,7 +23,7 @@ function nat(value: unknown, label: string): bigint {
   return BigInt(text);
 }
 
-function optionAddress(value: unknown): string | null {
+export function optionAddress(value: unknown): string | null {
   if (value === null || value === undefined) return null;
   if (typeof value === "string") return value;
   const candidate = value as { Some?: unknown; some?: unknown };
@@ -37,12 +37,17 @@ export function assertFinalTokenTokenHandoff(
   const { poolStorage } = evidence;
   const poolAddress = state.steps.pool?.address;
   if (!poolAddress) throw new Error("Deployment state does not contain a pool address");
+  const lqtAddress = state.steps.lqt?.address;
+  if (!lqtAddress) throw new Error("Deployment state does not contain an LQT address");
 
   assertPoolIdentityStorage(poolStorage, {
     tokenA: state.config.tokenA,
     tokenB: state.config.tokenB,
     feeRecipient: state.config.feeRecipient,
   });
+  if (optionAddress(poolStorage.lqt_address) !== lqtAddress) {
+    throw new Error("Final pool LQT address differs from the deployment state");
+  }
   if (
     poolStorage.active !== true ||
     poolStorage.paused !== true ||
