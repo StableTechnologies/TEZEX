@@ -69,6 +69,7 @@ function fixture(): {
         protocol_fee_a: "0",
         protocol_fee_b: "0",
         lqt_total: "316227",
+        lqt_address: { Some: "KT1-lqt" },
       },
       lqtAdmin: pool,
       lqtTotalSupply: "316227",
@@ -105,5 +106,19 @@ test("rejects incomplete roles, unpreserved seed, and broken LQT allocation", ()
   assert.throws(
     () => assertFinalTokenTokenHandoff(lqt.state, lqt.evidence),
     /LQT administration/,
+  );
+});
+
+test("accepts Taquito option decoding and rejects an unexpected LQT link", () => {
+  const exact = fixture();
+  assert.doesNotThrow(() =>
+    assertFinalTokenTokenHandoff(exact.state, exact.evidence),
+  );
+
+  const wrong = fixture();
+  wrong.evidence.poolStorage.lqt_address = { Some: "KT1-other-lqt" };
+  assert.throws(
+    () => assertFinalTokenTokenHandoff(wrong.state, wrong.evidence),
+    /LQT address differs/,
   );
 });

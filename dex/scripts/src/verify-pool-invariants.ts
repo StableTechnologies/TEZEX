@@ -16,6 +16,7 @@ import {
 } from "./pool-invariant-verification.js";
 import { scriptCodeSha256 } from "./token-code-hash.js";
 import { assertPoolIdentityStorage } from "./token-token-storage.js";
+import { optionAddress } from "./token-token-handoff-verification.js";
 import { getTokenBalanceFromRpc } from "./util.js";
 import { observeImplementationFingerprint } from "./token-control-monitor.js";
 
@@ -267,7 +268,7 @@ async function verifyTokenToken(
     tokenB: state.config.tokenB,
     feeRecipient: state.config.feeRecipient,
   });
-  if (String(poolStorage.lqt_address) !== lqtAddress) {
+  if (optionAddress(poolStorage.lqt_address) !== lqtAddress) {
     throw new Error("Pool LQT address differs from the release manifest");
   }
   const lqtTokens = lqtStorage.tokens as { get?: (owner: string) => Promise<unknown> };
