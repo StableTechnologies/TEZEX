@@ -5,6 +5,7 @@ import { ExecutionKit, Token } from "./general";
 export enum PoolType {
   SIRIUS = "SIRIUS",
   TEZEX = "TEZEX",
+  TEZEX_TOKEN = "TEZEX_TOKEN",
   STABLE = "STABLE",
 }
 

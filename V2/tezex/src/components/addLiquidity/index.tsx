@@ -247,10 +247,9 @@ export const AddLiquidity: FC<IAddLiquidity> = ({
   // Callback to fetch the estimate of amount of liquidity tokens to recieve
   const getLiquidityTokens = useCallback((): string => {
     const transaction = transactionOps.getActiveTransaction();
-    // liquidity tokens
-    const lqt = transaction?.receiveAmount[0].string || "0";
-    const bn = new BigNumber(lqt);
-    return bn.toFixed(6).replace(/\.?0+$/, "");
+    const lqt = transaction?.receiveAmount[0].decimal ?? new BigNumber(0);
+    const precision = transaction?.receiveAsset[0]?.decimals ?? 6;
+    return lqt.toFixed(precision).replace(/\.?0+$/, "");
   }, [transactionOps.getActiveTransaction]);
 
   // Fetch balances for all pools

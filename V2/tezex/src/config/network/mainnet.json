@@ -25,10 +25,19 @@
       "id": "xtz-usdt-tezex",
       "name": "TEZEX",
       "type": "TEZEX",
-      "address": "KT1XEXSoPfMfnTggFEfVsmQYQfCakBTCHCR1",
+      "address": "KT1C9RPUSsF4pYuMWBCUM7UReuCqdivWqsMM",
       "tokenA": "XTZ",
       "tokenB": "USDt",
       "lpToken": "LP_XTZUSDt"
+    },
+    {
+      "id": "usdt-tzbtc-tezex",
+      "name": "TEZEX",
+      "type": "TEZEX_TOKEN",
+      "address": "KT19FfCZgzcAuRxXxNRgAJ5i4pRtvBWFtGKH",
+      "tokenA": "USDt",
+      "tokenB": "TzBTC",
+      "lpToken": "LP_USDtTzBTC"
     }
   ],
   "assets": [
@@ -85,8 +94,16 @@
       "name": "LP_XTZUSDt",
       "label": "LP-XTZUSDt",
       "logo": "/assets/lpxtzusdtzLogo.svg",
-      "address": "KT19wPWBNdMDBkdPgPwV8ppC1ez7igANrRCR",
+      "address": "KT1BgiqsjP8EJqZiUhYJyT1XF3AnxvJZAn82",
       "decimals": 6,
+      "type": "FA1.2"
+    },
+    {
+      "name": "LP_USDtTzBTC",
+      "label": "LP-USDttzBTC",
+      "logo": "/assets/lpxtzusdtzLogo.svg",
+      "address": "KT1CXhiJEGd7z1E5Pee5dfatVDV8Qst8D68X",
+      "decimals": 7,
       "type": "FA1.2"
     }
   ]

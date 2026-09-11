@@ -409,10 +409,15 @@ export const Swap: FC<ISwapToken> = ({ routeSelection, onRouteChange }) => {
   const feeLabel =
     currentPool?.type === PoolType.SIRIUS
       ? "0.1% fee + 0.1% XTZ burn"
-      : currentPool?.type === PoolType.TEZEX
+      : currentPool?.type === PoolType.TEZEX ||
+        currentPool?.type === PoolType.TEZEX_TOKEN
       ? formatTezexFeeLabel({
-          lpFeeBp: cachedPoolData?.lpFeeBp ?? 30,
-          protocolFeeBp: cachedPoolData?.protocolFeeBp ?? 0,
+          lpFeeBp:
+            cachedPoolData?.lpFeeBp ??
+            (currentPool.type === PoolType.TEZEX_TOKEN ? 25 : 30),
+          protocolFeeBp:
+            cachedPoolData?.protocolFeeBp ??
+            (currentPool.type === PoolType.TEZEX_TOKEN ? 5 : 0),
           totalFeeBp: cachedPoolData?.totalFeeBp ?? 30,
         })
       : "Pool-defined";

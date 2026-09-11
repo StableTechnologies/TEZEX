@@ -305,6 +305,7 @@ export const decimals = {
   LP_XTZUSDtz: 6,
   USDt: 6,
   LP_XTZUSDt: 6,
+  LP_USDtTzBTC: 7,
   BTCtz: 8,
   LP_XTZBTCtz: 8,
   ETHtz: 18,

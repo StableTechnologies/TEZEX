@@ -26,6 +26,15 @@ const pools: PoolConfig[] = [
     tokenB: Token.USDtz,
     lpToken: Token.LP_XTZUSDtz,
   },
+  {
+    id: "usdt-tzbtc",
+    name: "TEZEX",
+    type: PoolType.TEZEX_TOKEN,
+    address: "KT1tokenpair",
+    tokenA: Token.USDt,
+    tokenB: Token.TzBTC,
+    lpToken: Token.LP_USDtTzBTC,
+  },
 ];
 
 const getAsset = (name: Token) => ({
@@ -74,15 +83,15 @@ describe("swap token routing", () => {
       getCompatibleSwapAssets(pools, Token.TzBTC, getAsset).map(
         (asset) => asset.name
       )
-    ).toEqual([Token.XTZ]);
+    ).toEqual([Token.XTZ, Token.USDt]);
   });
 
   it("does not synthesize a token-to-token route through Sirius", () => {
     expect(
-      findPoolForTokenPair(pools, Token.TzBTC, Token.BTCtz)
+      findPoolForTokenPair([pools[0]], Token.TzBTC, Token.BTCtz)
     ).toBeUndefined();
     expect(
-      getCompatibleSwapAssets(pools, Token.TzBTC, getAsset).map(
+      getCompatibleSwapAssets([pools[0]], Token.TzBTC, getAsset).map(
         (asset) => asset.name
       )
     ).toEqual([Token.XTZ]);

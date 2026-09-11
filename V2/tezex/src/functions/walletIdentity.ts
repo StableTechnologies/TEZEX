@@ -54,6 +54,7 @@ export interface GuardedClientOptions {
 }
 
 type OperatorAction = "add_operator" | "remove_operator";
+type TokenSwapDirection = "a_to_b" | "b_to_a";
 
 export interface OperationExpectation {
   destination: string;
@@ -62,6 +63,7 @@ export interface OperationExpectation {
   parameterValues: string[];
   hasDeadline?: boolean;
   operatorAction?: OperatorAction;
+  tokenSwapDirection?: TokenSwapDirection;
 }
 
 export interface OperationRequestPolicy {
@@ -341,6 +343,35 @@ export function createOperationRequestPolicy(
       }
       const minimumOutput = removeSlippage(quotedOutput, transaction.slippage);
 
+      if (poolConfig.type === PoolType.TEZEX_TOKEN) {
+        const reset = approvalExpectation({
+          asset: inputAsset,
+          owner,
+          pool,
+          amount: 0,
+        });
+        if (inputAsset.type === TokenType.FA12) operations.push(reset);
+        operations.push(
+          approvalExpectation({
+            asset: inputAsset,
+            owner,
+            pool,
+            amount: inputAmount,
+          }),
+          {
+            ...poolExpectation({
+              pool,
+              entrypoint: "swap",
+              parameterValues: [exactNat(inputAmount), minimumOutput, owner],
+            }),
+            tokenSwapDirection:
+              inputAsset.name === poolConfig.tokenA ? "a_to_b" : "b_to_a",
+          },
+          reset
+        );
+        break;
+      }
+
       if (poolConfig.type === PoolType.STABLE) {
         const stable = poolConfig as StablePoolConfig;
         const inputIsTokenA = inputAsset.name === stable.tokenA;
@@ -436,6 +467,61 @@ export function createOperationRequestPolicy(
         throw new WalletIdentityError(
           "The liquidity operation policy is missing its LP-token amount."
         );
+      }
+
+      if (poolConfig.type === PoolType.TEZEX_TOKEN) {
+        const assetA = transaction.sendAsset.find(
+          (asset) => asset.name === poolConfig.tokenA
+        );
+        const assetB = transaction.sendAsset.find(
+          (asset) => asset.name === poolConfig.tokenB
+        );
+        if (!assetA || !assetB) {
+          throw new WalletIdentityError(
+            "The token-pair liquidity policy is missing a pool asset."
+          );
+        }
+        const resetA = approvalExpectation({
+          asset: assetA,
+          owner,
+          pool,
+          amount: 0,
+        });
+        const resetB = approvalExpectation({
+          asset: assetB,
+          owner,
+          pool,
+          amount: 0,
+        });
+        if (assetA.type === TokenType.FA12) operations.push(resetA);
+        if (assetB.type === TokenType.FA12) operations.push(resetB);
+        operations.push(
+          approvalExpectation({
+            asset: assetA,
+            owner,
+            pool,
+            amount: tokenAAmount,
+          }),
+          approvalExpectation({
+            asset: assetB,
+            owner,
+            pool,
+            amount: tokenBAmount,
+          }),
+          poolExpectation({
+            pool,
+            entrypoint: "add_liquidity",
+            parameterValues: [
+              exactNat(tokenAAmount),
+              exactNat(tokenBAmount),
+              removeSlippage(quotedLp, transaction.slippage),
+              owner,
+            ],
+          }),
+          resetA,
+          resetB
+        );
+        break;
       }
 
       if (poolConfig.type === PoolType.STABLE) {
@@ -565,7 +651,20 @@ export function createOperationRequestPolicy(
         transaction.slippage
       );
 
-      if (poolConfig.type === PoolType.STABLE) {
+      if (poolConfig.type === PoolType.TEZEX_TOKEN) {
+        operations.push(
+          poolExpectation({
+            pool,
+            entrypoint: "remove_liquidity",
+            parameterValues: [
+              exactNat(lpAmount),
+              tokenAMinimum,
+              tokenBMinimum,
+              owner,
+            ],
+          })
+        );
+      } else if (poolConfig.type === PoolType.STABLE) {
         const stable = poolConfig as StablePoolConfig;
         operations.push(
           poolExpectation({
@@ -690,6 +789,25 @@ const findOperatorAction = (value: unknown): OperatorAction | undefined => {
   return findOperatorAction(record.args);
 };
 
+const findTokenSwapDirection = (
+  value: unknown
+): TokenSwapDirection | undefined => {
+  if (Array.isArray(value)) {
+    for (const entry of value) {
+      const direction = findTokenSwapDirection(entry);
+      if (direction) return direction;
+    }
+    return undefined;
+  }
+  if (!value || typeof value !== "object") return undefined;
+  const record = value as Record<string, unknown>;
+  if ("a_to_b" in record) return "a_to_b";
+  if ("b_to_a" in record) return "b_to_a";
+  if (record.prim === "Left") return "a_to_b";
+  if (record.prim === "Right") return "b_to_a";
+  return findTokenSwapDirection(record.args ?? Object.values(record));
+};
+
 export function assertOperationRequestMatchesSubmission(
   request: RequestOperationInput,
   submission: TransactionSubmissionContext,
@@ -760,6 +878,15 @@ export function assertOperationRequestMatchesSubmission(
     ) {
       throw new WalletIdentityError(
         "An FA2 operator update does not match the prepared transaction."
+      );
+    }
+    if (
+      expected.tokenSwapDirection &&
+      findTokenSwapDirection(operation.parameters.value) !==
+        expected.tokenSwapDirection
+    ) {
+      throw new WalletIdentityError(
+        "The token-pair swap direction does not match the prepared transaction."
       );
     }
 

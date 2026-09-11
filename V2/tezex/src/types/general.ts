@@ -39,6 +39,7 @@ export enum Token {
   LP_XTZUSDtz = "LP_XTZUSDtz",
   USDt = "USDt",
   LP_XTZUSDt = "LP_XTZUSDt",
+  LP_USDtTzBTC = "LP_USDtTzBTC",
   BTCtz = "BTCtz",
   LP_XTZBTCtz = "LP_XTZBTCtz",
   LP_tzBTCBTCtz = "LP_tzBTCBTCtz",
