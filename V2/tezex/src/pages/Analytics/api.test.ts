@@ -27,6 +27,25 @@ const siriusPool: PoolConfig = {
   lpToken: Token.Sirs,
 };
 
+const tokenPool: PoolConfig = {
+  id: "usdt-tzbtc-tezex",
+  name: "TEZEX",
+  type: PoolType.TEZEX_TOKEN,
+  address: "KT1-token-pool",
+  tokenA: Token.USDt,
+  tokenB: Token.TzBTC,
+  lpToken: Token.LP_USDtTzBTC,
+};
+
+const tokenPoolAssets = new Map(
+  (mainnet as unknown as NetworkInfo).assets.map((asset) => [asset.name, asset])
+);
+const tokenPoolQuote = {
+  btcPerXtz: 0.000002,
+  usdPerXtz: 0.5,
+  timestamp: new Date("2026-09-10T00:00:00Z").getTime(),
+};
+
 const transaction = (overrides: Partial<TzktTransaction>): TzktTransaction => ({
   id: 1,
   timestamp: "2026-07-28T12:00:00Z",
@@ -81,6 +100,40 @@ describe("analytics calculations", () => {
     );
 
     expect(volume).toBeCloseTo(99.9, 5);
+  });
+
+  it("values both directions of token-to-token swaps in XTZ", () => {
+    const aToB = calculateSwapVolumeXtz(
+      transaction({
+        target: { address: tokenPool.address },
+        parameter: {
+          entrypoint: "swap",
+          value: {
+            direction: { a_to_b: {} },
+            amount_in: "20000000",
+          },
+        },
+      }),
+      tokenPool,
+      { assets: tokenPoolAssets, quote: tokenPoolQuote }
+    );
+    const bToA = calculateSwapVolumeXtz(
+      transaction({
+        target: { address: tokenPool.address },
+        parameter: {
+          entrypoint: "swap",
+          value: {
+            direction: { b_to_a: {} },
+            amount_in: "100000",
+          },
+        },
+      }),
+      tokenPool,
+      { assets: tokenPoolAssets, quote: tokenPoolQuote }
+    );
+
+    expect(aToB).toBe(40);
+    expect(bToA).toBeCloseTo(500, 8);
   });
 
   it("buckets swap volume and the configured liquidity-provider fee", () => {
@@ -195,6 +248,27 @@ describe("analytics calculations", () => {
     expect(value).toBe(100);
   });
 
+  it("values both assets returned by token-pair liquidity removal", () => {
+    const value = calculateRemoveLiquidityValueXtz(
+      transaction({
+        target: { address: tokenPool.address },
+        parameter: {
+          entrypoint: "remove_liquidity",
+          value: { lqt_burned: "100000" },
+        },
+        storage: {
+          reserve_a: "90000000",
+          reserve_b: "9000000",
+          lqt_total: "900000",
+        },
+      }),
+      tokenPool,
+      { assets: tokenPoolAssets, quote: tokenPoolQuote }
+    );
+
+    expect(value).toBeCloseTo(5020, 8);
+  });
+
   it("converts XTZ values through the same verified quote", () => {
     const quote = {
       btcPerXtz: 0.000003,
@@ -264,8 +338,12 @@ describe("analytics calculations", () => {
       const configuredPoolIds = network.pools.map((pool) => pool.id);
 
       expect(model.pools.map((pool) => pool.id)).toEqual(configuredPoolIds);
-      expect(model.pools.find((pool) => pool.id === "xtz-usdt-tezex")?.tokenB.label)
-        .toBe("USDt");
+      expect(
+        model.pools.find((pool) => pool.id === "xtz-usdt-tezex")?.tokenB.label
+      ).toBe("USDt");
+      expect(
+        model.pools.find((pool) => pool.id === "usdt-tzbtc-tezex")?.tokenB.label
+      ).toBe("tzBTC");
 
       configuredPoolIds.forEach((poolId) => {
         expect(model.summaryByPool).toHaveProperty(poolId);
@@ -275,5 +353,28 @@ describe("analytics calculations", () => {
     } finally {
       global.fetch = originalFetch;
     }
+  });
+
+  it("points the live pool registry at both current mainnet deployments", () => {
+    const network = mainnet as unknown as NetworkInfo;
+    expect(
+      network.pools.find((pool) => pool.id === "xtz-usdt-tezex")?.address
+    ).toBe("KT1C9RPUSsF4pYuMWBCUM7UReuCqdivWqsMM");
+    expect(
+      network.pools.find((pool) => pool.id === "usdt-tzbtc-tezex")?.address
+    ).toBe("KT19FfCZgzcAuRxXxNRgAJ5i4pRtvBWFtGKH");
+    expect(
+      network.assets.find((asset) => asset.name === Token.LP_XTZUSDt)?.address
+    ).toBe("KT1BgiqsjP8EJqZiUhYJyT1XF3AnxvJZAn82");
+    expect(
+      network.assets.find((asset) => asset.name === Token.LP_USDtTzBTC)?.address
+    ).toBe("KT1CXhiJEGd7z1E5Pee5dfatVDV8Qst8D68X");
+    expect(
+      network.assets.find((asset) => asset.name === Token.LP_USDtTzBTC)
+        ?.decimals
+    ).toBe(7);
+    expect(
+      network.assets.find((asset) => asset.name === Token.LP_USDtTzBTC)?.label
+    ).toBe("LP-USDttzBTC");
   });
 });

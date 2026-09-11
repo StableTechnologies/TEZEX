@@ -10,6 +10,7 @@ import { Asset, Token } from "../types/general";
 import { SiriusAdapter } from "./sirius";
 import { TezexAdapter } from "./tezex";
 import { StableSwapAdapter } from "./tezexStable";
+import { TezexTokenAdapter } from "./tezexToken";
 
 export class PoolRegistry {
   private static adapters: Map<string, IPoolAdapter> = new Map();
@@ -74,6 +75,8 @@ export class PoolRegistry {
         return new SiriusAdapter(config);
       case PoolType.TEZEX:
         return new TezexAdapter(config);
+      case PoolType.TEZEX_TOKEN:
+        return new TezexTokenAdapter(config);
       case PoolType.STABLE:
         return new StableSwapAdapter(config as StablePoolConfig);
       default:

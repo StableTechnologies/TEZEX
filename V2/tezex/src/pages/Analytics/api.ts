@@ -149,11 +149,19 @@ const MAX_CONCURRENT_REQUESTS = 2;
 const MIN_REQUEST_INTERVAL_MS = 200;
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
-const SWAP_ENTRYPOINTS = ["xtzToToken", "tokenToXtz"];
+const SWAP_ENTRYPOINTS = ["xtzToToken", "tokenToXtz", "swap"];
 const ACTIVITY_ENTRYPOINTS = [
   ...SWAP_ENTRYPOINTS,
   "addLiquidity",
   "removeLiquidity",
+  "add_liquidity",
+  "remove_liquidity",
+];
+const TOKEN_POOL_STATE_ENTRYPOINTS = [
+  "initialize",
+  "swap",
+  "add_liquidity",
+  "remove_liquidity",
 ];
 
 export const RANGE_CONFIG: Record<AnalyticsRange, RangeConfig> = {
@@ -331,6 +339,7 @@ const query = (values: Record<string, string | number>) => {
 
 const poolFeeRate = (pool: PoolConfig, storage: Record<string, unknown>) => {
   if (pool.type === PoolType.SIRIUS) return 0.001;
+  if (pool.type === PoolType.TEZEX_TOKEN) return 0.003;
   if (pool.type === PoolType.TEZEX) {
     return tezexPoolFeeRate(storage);
   }
@@ -340,21 +349,87 @@ const poolFeeRate = (pool: PoolConfig, storage: Record<string, unknown>) => {
 const poolAmmMultiplier = (pool: PoolConfig) =>
   pool.type === PoolType.SIRIUS ? 0.999 : 0.997;
 
+interface AnalyticsValuation {
+  assets: Map<Token, Asset>;
+  quote: AnalyticsQuote;
+}
+
+const assetValueXtz = (
+  rawAmount: number,
+  asset: Asset,
+  quote: AnalyticsQuote
+) => {
+  const amount = rawAmount / 10 ** asset.decimals;
+  if (asset.name === Token.XTZ) return amount;
+  if (asset.name === Token.USDt || asset.name === Token.USDtz) {
+    return quote.usdPerXtz > 0 ? amount / quote.usdPerXtz : 0;
+  }
+  if (asset.name === Token.TzBTC || asset.name === Token.BTCtz) {
+    return quote.btcPerXtz > 0 ? amount / quote.btcPerXtz : 0;
+  }
+  return 0;
+};
+
+const tokenPoolTvlXtz = (
+  pool: PoolConfig,
+  storage: Record<string, unknown>,
+  valuation: AnalyticsValuation
+) =>
+  assetValueXtz(
+    toNumber(storage.reserve_a),
+    requireAsset(valuation.assets, pool.tokenA),
+    valuation.quote
+  ) +
+  assetValueXtz(
+    toNumber(storage.reserve_b),
+    requireAsset(valuation.assets, pool.tokenB),
+    valuation.quote
+  );
+
 const currentPoolTvlXtz = (
   pool: PoolConfig,
-  storage: Record<string, unknown>
+  storage: Record<string, unknown>,
+  valuation: AnalyticsValuation
 ) => {
+  if (pool.type === PoolType.TEZEX_TOKEN) {
+    return tokenPoolTvlXtz(pool, storage, valuation);
+  }
   if (pool.tokenA !== Token.XTZ && pool.tokenB !== Token.XTZ) return 0;
   return (toNumber(storage.xtzPool) * 2) / 1_000_000;
 };
 
 export const calculateSwapVolumeXtz = (
   transaction: Pick<TzktTransaction, "amount" | "parameter" | "storage">,
-  pool: PoolConfig
+  pool: PoolConfig,
+  valuation?: AnalyticsValuation
 ) => {
   const entrypoint = transaction.parameter?.entrypoint;
   if (entrypoint === "xtzToToken") {
     return Math.max(0, transaction.amount / 1_000_000);
+  }
+
+  if (entrypoint === "swap" && pool.type === PoolType.TEZEX_TOKEN) {
+    if (!valuation) return 0;
+    const params = getRecord(transaction.parameter?.value);
+    const direction = getRecord(params.direction);
+    const directionName =
+      typeof params.direction === "string"
+        ? params.direction
+        : "a_to_b" in direction
+        ? "a_to_b"
+        : "b_to_a" in direction
+        ? "b_to_a"
+        : undefined;
+    if (!directionName) return 0;
+    const inputAsset = requireAsset(
+      valuation.assets,
+      directionName === "a_to_b" ? pool.tokenA : pool.tokenB
+    );
+    return assetValueXtz(
+      toNumber(params.amount_in),
+      inputAsset,
+      valuation.quote
+    );
   }
 
   if (entrypoint !== "tokenToXtz") return 0;
@@ -374,11 +449,31 @@ export const calculateSwapVolumeXtz = (
 };
 
 export const calculateRemoveLiquidityValueXtz = (
-  transaction: Pick<TzktTransaction, "parameter" | "storage">
+  transaction: Pick<TzktTransaction, "parameter" | "storage">,
+  pool?: PoolConfig,
+  valuation?: AnalyticsValuation
 ) => {
   const params = getRecord(transaction.parameter?.value);
   const storage = getRecord(transaction.storage);
-  const lqtBurned = toNumber(params.lqtBurned);
+  const lqtBurned = toNumber(params.lqtBurned ?? params.lqt_burned);
+  if (pool?.type === PoolType.TEZEX_TOKEN && valuation) {
+    const postLqtTotal = toNumber(storage.lqt_total);
+    if (lqtBurned <= 0 || postLqtTotal <= 0) return 0;
+    const amountA = (toNumber(storage.reserve_a) * lqtBurned) / postLqtTotal;
+    const amountB = (toNumber(storage.reserve_b) * lqtBurned) / postLqtTotal;
+    return (
+      assetValueXtz(
+        amountA,
+        requireAsset(valuation.assets, pool.tokenA),
+        valuation.quote
+      ) +
+      assetValueXtz(
+        amountB,
+        requireAsset(valuation.assets, pool.tokenB),
+        valuation.quote
+      )
+    );
+  }
   const postXtzPool = toNumber(storage.xtzPool);
   const postLqtTotal = toNumber(storage.lqtTotal);
   if (lqtBurned <= 0 || postXtzPool <= 0 || postLqtTotal <= 0) return 0;
@@ -433,7 +528,8 @@ export const buildSwapSeries = (
   range: AnalyticsRange,
   now: number,
   feeRates: Map<string, number>,
-  requestedStart?: number
+  requestedStart?: number,
+  valuation?: AnalyticsValuation
 ) => {
   const buckets = buildBuckets(range, now, requestedStart);
   const poolByAddress = new Map(pools.map((pool) => [pool.address, pool]));
@@ -455,7 +551,11 @@ export const buildSwapSeries = (
     );
     if (index < 0) return;
 
-    const transactionVolume = calculateSwapVolumeXtz(transaction, pool);
+    const transactionVolume = calculateSwapVolumeXtz(
+      transaction,
+      pool,
+      valuation
+    );
     volume[index].value += transactionVolume;
     fees[index].value += transactionVolume * (feeRates.get(pool.id) ?? 0);
   });
@@ -474,7 +574,8 @@ export const buildAllTimeSwapSeries = (
   now: number,
   feeRates: Map<string, number>,
   requestedStart: number,
-  history: AnalyticsHistoryPoint[] = ANALYTICS_HISTORY
+  history: AnalyticsHistoryPoint[] = ANALYTICS_HISTORY,
+  valuation?: AnalyticsValuation
 ) => {
   const firstMonth = utcMonthStart(requestedStart);
   const lastMonth = utcMonthStart(now);
@@ -508,7 +609,11 @@ export const buildAllTimeSwapSeries = (
     if (timestamp < ANALYTICS_HISTORY_CUTOFF || timestamp > now) return;
     const index = indexByMonth.get(utcMonthStart(timestamp));
     if (index === undefined) return;
-    const transactionVolume = calculateSwapVolumeXtz(transaction, pool);
+    const transactionVolume = calculateSwapVolumeXtz(
+      transaction,
+      pool,
+      valuation
+    );
     volume[index].value += transactionVolume;
     fees[index].value += transactionVolume * (feeRates.get(pool.id) ?? 0);
   });
@@ -537,17 +642,14 @@ const buildTvlSeries = (
   requestedStart?: number
 ) => {
   const tvlAt = (timestamp: number) =>
-    snapshots.reduce((total, pool) => {
-      if (
-        pool.config.tokenA !== Token.XTZ &&
-        pool.config.tokenB !== Token.XTZ
-      ) {
-        return total;
-      }
-      return (
-        total + (valueAt(pool.balanceHistory[range], timestamp) * 2) / 1_000_000
-      );
-    }, 0);
+    snapshots.reduce(
+      (total, pool) =>
+        total +
+        (pool.config.type === PoolType.TEZEX_TOKEN
+          ? valueAt(pool.balanceHistory[range], timestamp)
+          : (valueAt(pool.balanceHistory[range], timestamp) * 2) / 1_000_000),
+      0
+    );
   const points = buildBuckets(range, now, requestedStart).map((bucket) => ({
     timestamp: bucket.timestamp,
     value: tvlAt(bucket.end),
@@ -656,7 +758,8 @@ const fetchFirstBalance = async (pool: PoolConfig, signal?: AbortSignal) => {
 const activityFromTransaction = (
   transaction: TzktTransaction,
   pool: PoolConfig,
-  assets: Map<Token, Asset>
+  assets: Map<Token, Asset>,
+  quote: AnalyticsQuote
 ): AnalyticsActivity | null => {
   const entrypoint = transaction.parameter?.entrypoint;
   const params = getRecord(transaction.parameter?.value);
@@ -689,6 +792,42 @@ const activityFromTransaction = (
     const lqtBurned = toNumber(params.lqtBurned);
     value = formatAssetAmount(lqtBurned, lpToken);
     valueXtz = calculateRemoveLiquidityValueXtz(transaction);
+  } else if (entrypoint === "swap" && pool.type === PoolType.TEZEX_TOKEN) {
+    const directionRecord = getRecord(params.direction);
+    const aToB = params.direction === "a_to_b" || "a_to_b" in directionRecord;
+    const inputAsset = aToB ? tokenA : tokenB;
+    const outputAsset = aToB ? tokenB : tokenA;
+    action = "Swap";
+    direction = `${inputAsset.label} → ${outputAsset.label}`;
+    value = formatAssetAmount(toNumber(params.amount_in), inputAsset);
+    valueXtz = calculateSwapVolumeXtz(transaction, pool, { assets, quote });
+  } else if (
+    entrypoint === "add_liquidity" &&
+    pool.type === PoolType.TEZEX_TOKEN
+  ) {
+    action = "Add";
+    direction = `${tokenA.label} + ${tokenB.label}`;
+    const amountA = toNumber(params.max_amount_a);
+    const amountB = toNumber(params.max_amount_b);
+    value = `${formatAssetAmount(amountA, tokenA)} + ${formatAssetAmount(
+      amountB,
+      tokenB
+    )}`;
+    valueXtz =
+      assetValueXtz(amountA, tokenA, quote) +
+      assetValueXtz(amountB, tokenB, quote);
+  } else if (
+    entrypoint === "remove_liquidity" &&
+    pool.type === PoolType.TEZEX_TOKEN
+  ) {
+    action = "Remove";
+    direction = `${tokenA.label} + ${tokenB.label}`;
+    const lqtBurned = toNumber(params.lqt_burned);
+    value = formatAssetAmount(lqtBurned, lpToken);
+    valueXtz = calculateRemoveLiquidityValueXtz(transaction, pool, {
+      assets,
+      quote,
+    });
   } else {
     return null;
   }
@@ -714,12 +853,15 @@ export const loadAnalytics = async (
   signal?: AbortSignal
 ): Promise<AnalyticsModel> => {
   const pools = network.pools.filter(
-    (pool) => pool.tokenA === Token.XTZ || pool.tokenB === Token.XTZ
+    (pool) =>
+      pool.tokenA === Token.XTZ ||
+      pool.tokenB === Token.XTZ ||
+      pool.type === PoolType.TEZEX_TOKEN
   );
-  if (!pools.length) throw new Error("No XTZ pools are configured");
+  if (!pools.length)
+    throw new Error("No analytics-compatible pools configured");
 
   const assets = assetMap(network.assets);
-  const addresses = pools.map((pool) => pool.address);
   const headPromise = fetchJson<TzktHead>("/head", signal);
   const quotePromise = fetchJson<TzktQuote>("/quotes/last", signal);
   const storageDataPromise = () =>
@@ -738,43 +880,85 @@ export const loadAnalytics = async (
     ANALYTICS_HISTORY_CUTOFF
   );
   const swapsPromise = async () => {
-    const [xtzToToken, tokenToXtz] = await Promise.all([
-      fetchTransactionHistory(
-        addresses,
-        ["xtzToToken"],
-        requestedSince,
-        "id,timestamp,target,amount,parameter",
-        signal
-      ),
-      fetchTransactionHistory(
-        addresses,
-        ["tokenToXtz"],
-        requestedSince,
-        "id,timestamp,target,amount,parameter,storage",
-        signal
-      ),
-    ]);
-    return [...xtzToToken, ...tokenToXtz];
-  };
-  const balanceDataPromise = async () => {
-    const [firstBalances, histories] = await Promise.all([
-      Promise.all(pools.map((pool) => fetchFirstBalance(pool, signal))),
-      Promise.all(
-        BALANCE_HISTORY_RANGES.map((range) =>
-          Promise.all(
-            pools.map((pool) =>
-              fetchBalanceHistory(
-                pool,
-                range,
-                preliminaryHead.level,
-                signal
-              )
-            )
+    const xtzPoolAddresses = pools
+      .filter((pool) => pool.type !== PoolType.TEZEX_TOKEN)
+      .map((pool) => pool.address);
+    const tokenPoolAddresses = pools
+      .filter((pool) => pool.type === PoolType.TEZEX_TOKEN)
+      .map((pool) => pool.address);
+    const [xtzToToken, tokenToXtz, tokenToToken] = await Promise.all([
+      xtzPoolAddresses.length
+        ? fetchTransactionHistory(
+            xtzPoolAddresses,
+            ["xtzToToken"],
+            requestedSince,
+            "id,timestamp,target,amount,parameter",
+            signal
           )
-        )
-      ),
+        : Promise.resolve([]),
+      xtzPoolAddresses.length
+        ? fetchTransactionHistory(
+            xtzPoolAddresses,
+            ["tokenToXtz"],
+            requestedSince,
+            "id,timestamp,target,amount,parameter,storage",
+            signal
+          )
+        : Promise.resolve([]),
+      tokenPoolAddresses.length
+        ? fetchTransactionHistory(
+            tokenPoolAddresses,
+            ["swap"],
+            requestedSince,
+            "id,timestamp,target,amount,parameter",
+            signal
+          )
+        : Promise.resolve([]),
     ]);
-    return { firstBalances, histories };
+    return [...xtzToToken, ...tokenToXtz, ...tokenToToken];
+  };
+  const balanceDataPromise = () =>
+    Promise.all(
+      pools.map(async (pool) => {
+        if (pool.type === PoolType.TEZEX_TOKEN) return null;
+        const [firstBalance, historyEntries] = await Promise.all([
+          fetchFirstBalance(pool, signal),
+          Promise.all(
+            BALANCE_HISTORY_RANGES.map(
+              async (range) =>
+                [
+                  range,
+                  await fetchBalanceHistory(
+                    pool,
+                    range,
+                    preliminaryHead.level,
+                    signal
+                  ),
+                ] as const
+            )
+          ),
+        ]);
+        return {
+          firstBalance,
+          histories: Object.fromEntries(historyEntries) as Record<
+            AnalyticsRange,
+            TzktBalancePoint[]
+          >,
+        };
+      })
+    );
+  const tokenPoolStatesPromise = () => {
+    const tokenPoolAddresses = pools
+      .filter((pool) => pool.type === PoolType.TEZEX_TOKEN)
+      .map((pool) => pool.address);
+    if (!tokenPoolAddresses.length) return Promise.resolve([]);
+    return fetchTransactionHistory(
+      tokenPoolAddresses,
+      TOKEN_POOL_STATE_ENTRYPOINTS,
+      requestedSince,
+      "id,timestamp,target,storage",
+      signal
+    );
   };
   const recentTransactionsPromise = () =>
     Promise.all(
@@ -788,38 +972,86 @@ export const loadAnalytics = async (
       )
     );
 
-  const [quote, storages, balanceData, swaps, recentTransactionsByPool] =
-    await Promise.all([
-      quotePromise,
-      storageDataPromise(),
-      balanceDataPromise(),
-      swapsPromise(),
-      recentTransactionsPromise(),
-    ]);
+  const [
+    quoteResponse,
+    storages,
+    balanceData,
+    swaps,
+    tokenPoolStates,
+    recentTransactionsByPool,
+  ] = await Promise.all([
+    quotePromise,
+    storageDataPromise(),
+    balanceDataPromise(),
+    swapsPromise(),
+    tokenPoolStatesPromise(),
+    recentTransactionsPromise(),
+  ]);
+
+  const quote: AnalyticsQuote = {
+    btcPerXtz: quoteResponse.btc,
+    usdPerXtz: quoteResponse.usd,
+    timestamp: new Date(quoteResponse.timestamp).getTime(),
+  };
+  const valuation: AnalyticsValuation = { assets, quote };
 
   const snapshots: PoolSnapshot[] = pools.map((pool, index) => {
     const storage = storages[index];
-    const currentBalance = toNumber(storage.xtzPool);
-    const history = Object.fromEntries(
-      ANALYTICS_RANGES.map((range) => [
-        range,
-        [
-          balanceData.firstBalances[index],
-          ...balanceData.histories[
-            BALANCE_HISTORY_RANGES.indexOf(balanceHistoryRangeFor(range))
-          ][index],
-        ]
-          .sort(
-            (a, b) =>
-              new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-          )
-          .concat({
-            level: preliminaryHead.level,
-            timestamp: preliminaryHead.timestamp,
-            balance: currentBalance,
-          }),
-      ])
-    ) as Record<AnalyticsRange, TzktBalancePoint[]>;
+    const currentTvlXtz = currentPoolTvlXtz(pool, storage, valuation);
+    let firstBalance: TzktBalancePoint;
+    let history: Record<AnalyticsRange, TzktBalancePoint[]>;
+
+    if (pool.type === PoolType.TEZEX_TOKEN) {
+      const statePoints = tokenPoolStates
+        .filter((transaction) => transaction.target.address === pool.address)
+        .map((transaction) => ({
+          level: transaction.id,
+          timestamp: transaction.timestamp,
+          balance: tokenPoolTvlXtz(
+            pool,
+            getRecord(transaction.storage),
+            valuation
+          ),
+        }))
+        .sort(
+          (a, b) =>
+            new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+        );
+      const currentPoint = {
+        level: preliminaryHead.level,
+        timestamp: preliminaryHead.timestamp,
+        balance: currentTvlXtz,
+      };
+      firstBalance = statePoints[0] ?? currentPoint;
+      history = Object.fromEntries(
+        ANALYTICS_RANGES.map((range) => [range, [...statePoints, currentPoint]])
+      ) as Record<AnalyticsRange, TzktBalancePoint[]>;
+    } else {
+      const poolBalanceData = balanceData[index];
+      if (!poolBalanceData) {
+        throw new Error(`Missing XTZ balance history for ${pool.name}`);
+      }
+      firstBalance = poolBalanceData.firstBalance;
+      history = Object.fromEntries(
+        ANALYTICS_RANGES.map((range) => [
+          range,
+          [
+            poolBalanceData.firstBalance,
+            ...poolBalanceData.histories[balanceHistoryRangeFor(range)],
+          ]
+            .sort(
+              (a, b) =>
+                new Date(a.timestamp).getTime() -
+                new Date(b.timestamp).getTime()
+            )
+            .concat({
+              level: preliminaryHead.level,
+              timestamp: preliminaryHead.timestamp,
+              balance: toNumber(storage.xtzPool),
+            }),
+        ])
+      ) as Record<AnalyticsRange, TzktBalancePoint[]>;
+    }
     return {
       config: pool,
       tokenA: requireAsset(assets, pool.tokenA),
@@ -827,8 +1059,8 @@ export const loadAnalytics = async (
       storage,
       balanceHistory: history,
       feeRate: poolFeeRate(pool, storage),
-      currentTvlXtz: currentPoolTvlXtz(pool, storage),
-      firstBalance: balanceData.firstBalances[index],
+      currentTvlXtz,
+      firstBalance,
     };
   });
 
@@ -854,7 +1086,9 @@ export const loadAnalytics = async (
                 scopePools,
                 now,
                 feeRates,
-                maximumStart
+                maximumStart,
+                ANALYTICS_HISTORY,
+                valuation
               )
             : buildSwapSeries(
                 swaps,
@@ -862,7 +1096,8 @@ export const loadAnalytics = async (
                 range,
                 now,
                 feeRates,
-                requestedStart
+                requestedStart,
+                valuation
               );
         return [
           range,
@@ -893,7 +1128,9 @@ export const loadAnalytics = async (
   const sumVolume = (transactions: TzktTransaction[]) =>
     transactions.reduce((total, transaction) => {
       const pool = poolByAddress.get(transaction.target.address);
-      return pool ? total + calculateSwapVolumeXtz(transaction, pool) : total;
+      return pool
+        ? total + calculateSwapVolumeXtz(transaction, pool, valuation)
+        : total;
     }, 0);
 
   const sumFees = (transactions: TzktTransaction[]) =>
@@ -902,7 +1139,8 @@ export const loadAnalytics = async (
       if (!pool) return total;
       return (
         total +
-        calculateSwapVolumeXtz(transaction, pool) * (feeRates.get(pool.id) ?? 0)
+        calculateSwapVolumeXtz(transaction, pool, valuation) *
+          (feeRates.get(pool.id) ?? 0)
       );
     }, 0);
 
@@ -927,7 +1165,10 @@ export const loadAnalytics = async (
     const previousTvl = scopeSnapshots.reduce(
       (total, snapshot) =>
         total +
-        (valueAt(snapshot.balanceHistory["24H"], currentStart) * 2) / 1_000_000,
+        (snapshot.config.type === PoolType.TEZEX_TOKEN
+          ? valueAt(snapshot.balanceHistory["24H"], currentStart)
+          : (valueAt(snapshot.balanceHistory["24H"], currentStart) * 2) /
+            1_000_000),
       0
     );
 
@@ -977,7 +1218,9 @@ export const loadAnalytics = async (
     transactions
       .map((transaction) => {
         const pool = poolByAddress.get(transaction.target.address);
-        return pool ? activityFromTransaction(transaction, pool, assets) : null;
+        return pool
+          ? activityFromTransaction(transaction, pool, assets, quote)
+          : null;
       })
       .filter((item): item is AnalyticsActivity => item !== null)
       .sort((a, b) => b.timestamp - a.timestamp)
@@ -1001,11 +1244,7 @@ export const loadAnalytics = async (
     activityByPool,
     blockLevel: preliminaryHead.level,
     blockTimestamp: now,
-    quote: {
-      btcPerXtz: quote.btc,
-      usdPerXtz: quote.usd,
-      timestamp: new Date(quote.timestamp).getTime(),
-    },
+    quote,
     loadedAt: Date.now(),
   };
 };
