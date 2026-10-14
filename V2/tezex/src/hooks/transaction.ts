@@ -19,7 +19,6 @@ import {
 } from "../types/general";
 
 import { debounce, eq } from "lodash";
-import { useDebounce } from "usehooks-ts";
 import {
   getSlippageValidationMessage,
   getSpendableXtz,
@@ -61,7 +60,6 @@ export function useTransaction(
   }
 ): TransactionOps {
   const wallet = useContext(WalletContext);
-  const [counter, setCounter] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [assetStates, setAssetStates] = useState<AssetState[]>([]);
   const [assetState, setAssetState] = useState<AssetState | undefined>(
@@ -71,11 +69,6 @@ export function useTransaction(
   const [transaction, setTransaction] = useState<Transaction | undefined>(
     wallet.getActiveTransaction(component)
   );
-  const [update, setUpdate] = useState<TransactionUpdate | undefined>(
-    undefined
-  );
-
-  const debouncedUpdate = useDebounce(update, 500);
   const setDebouncedLoading = useRef(
     debounce((newLoadingState) => {
       setLoading(newLoadingState);
@@ -114,7 +107,7 @@ export function useTransaction(
         );
       }
     },
-    [transaction, loading, trackAsset]
+    [trackAsset]
   );
 
   // Callback to get active transaction from wallet
@@ -122,23 +115,19 @@ export function useTransaction(
     return wallet.getActiveTransaction(component);
   }, [wallet.getActiveTransaction, component]);
 
-  const debouncedUpdateStateEffect = useCallback(() => {
+  const updateState = useCallback(() => {
     const currentTransaction = active();
-    if (loading && currentTransaction) {
+    if (
+      currentTransaction &&
+      (!transaction || !eq(currentTransaction, transaction))
+    ) {
       internalUpdate(currentTransaction, loading, trackAsset);
-    } else if (currentTransaction && transaction) {
-      if (!eq(currentTransaction, transaction)) {
-        internalUpdate(currentTransaction, loading, trackAsset);
-      }
-      if (update && currentTransaction.poolId) {
-        updateAmount(update.sendAmount, update.slippage);
-      }
     }
-  }, [active, loading, transaction, update, trackAsset, counter]);
+  }, [active, internalUpdate, loading, trackAsset, transaction]);
+
   useEffect(() => {
-    setCounter((c) => c + 1);
-    debouncedUpdateStateEffect();
-  }, [wallet.getActiveTransaction, loading]);
+    updateState();
+  }, [updateState]);
 
   useEffect(() => {
     if (loading && transaction) {
@@ -301,22 +290,15 @@ export function useTransaction(
   // exported callback to handle send amount or slippage updates to transaction in context
   const updateAmount = useCallback(
     async (sendAmount?: string, slippage?: string) => {
-      // check if slippage or send amount is being updated
       if (sendAmount !== undefined || slippage !== undefined) {
-        //check if update was successful
-        if (await _updateAmount(sendAmount, slippage)) {
-          // if update was successful and pending update exists
-          if (debouncedUpdate) {
-            // clear pending update if it exists
-            setUpdate(undefined);
-          }
-        } else {
-          // if update failed, add pending update
-          setUpdate({ sendAmount, slippage });
-        }
+        // A failed quote is surfaced through the transaction status. Retrying
+        // here on every wallet-context render creates an unbounded RPC loop and
+        // prevents the amount fields from settling. A later user edit or an
+        // explicit submission attempt will request a fresh quote.
+        await _updateAmount(sendAmount, slippage);
       }
     },
-    [debouncedUpdate, _updateAmount]
+    [_updateAmount]
   );
 
   //callback to set transaction with max send amount
