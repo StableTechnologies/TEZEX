@@ -128,9 +128,7 @@ test("loads live Snet data and its matching faucet", async () => {
       Node.DOCUMENT_POSITION_FOLLOWING
   ).toBeTruthy();
 
-  fireEvent.click(
-    screen.getByRole("button", { name: "Get Snet test XTZ" })
-  );
+  fireEvent.click(screen.getByRole("button", { name: "Get Snet test XTZ" }));
   const faucetDialog = screen.getByRole("dialog", {
     name: "Get test XTZ",
   });
@@ -233,6 +231,39 @@ test("enables a stake request only for a wallet connected to Snet", async () => 
   fireEvent.change(screen.getByLabelText("AMOUNT TO STAKE"), {
     target: { value: "1" },
   });
+  expect(screen.getByRole("button", { name: "STAKE XTZ" })).toBeEnabled();
+});
+
+test("summarizes position values without rounding the stake quote", async () => {
+  mockWallet.isWalletConnected = true;
+  mockWallet.address = "tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb";
+  mockWallet.client = mockClient;
+  mockClient.getActiveAccount.mockResolvedValue({
+    address: mockWallet.address,
+    network: { type: "custom", rpcUrl: snet.rpcUrl },
+  });
+  (loadStezSnapshot as jest.Mock).mockResolvedValue({
+    ...baseSnapshot,
+    rateNumeratorMutez: BigInt(1_029_597),
+    rateDenominatorTokenUnits: BigInt(1_000_000),
+    walletXtzMutez: BigInt(900_000_000),
+    walletStezUnits: BigInt(97_125_380),
+  });
+
+  render(<Stez />);
+  await screen.findByText("≈100");
+  expect(screen.getByText("≈1,000")).toBeInTheDocument();
+  expect(screen.getByText("99.999999 XTZ")).toBeInTheDocument();
+  expect(screen.getByText("999.999999 XTZ")).toBeInTheDocument();
+  expect(
+    screen.getByLabelText("Exact amount for current redemption value")
+  ).toHaveTextContent("Exact amount");
+
+  fireEvent.change(screen.getByLabelText("AMOUNT TO STAKE"), {
+    target: { value: "100" },
+  });
+  const quote = screen.getByText("ESTIMATED sTEZ").parentElement!;
+  expect(within(quote).getByText("97.12538")).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "STAKE XTZ" })).toBeEnabled();
 });
 

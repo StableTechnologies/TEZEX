@@ -363,14 +363,50 @@
   color: var(--tezex-positive);
 }
 
-.stez-position-cell small {
+.stez-position-cell__note {
   grid-area: note;
   margin-top: 4px;
+  min-width: 0;
+  font-size: 9px;
+  line-height: 1.35;
+}
+
+.stez-position-cell small {
   color: var(--tezex-faint);
   font-family: "Red Hat Mono", monospace;
   font-size: 9px;
   line-height: 1.35;
   white-space: normal;
+}
+
+.stez-position-cell__precision {
+  margin-top: 6px;
+  color: var(--tezex-text-secondary);
+  font-family: "Red Hat Mono", monospace;
+  font-size: 10px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.stez-position-cell__precision summary {
+  width: fit-content;
+  cursor: pointer;
+  color: var(--tezex-muted);
+}
+
+.stez-position-cell__precision summary:hover {
+  color: var(--tezex-text);
+}
+
+.stez-position-cell__precision summary:focus-visible {
+  outline: 2px solid var(--tezex-text-secondary);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.stez-position-cell__precision > span {
+  display: block;
+  margin-top: 4px;
 }
 
 .stez-panel__head--actions {
@@ -516,32 +552,6 @@
 
 .stez-action-meta span:last-child {
   text-align: right;
-}
-
-.stez-primary-action {
-  width: 100%;
-  min-height: 52px;
-  margin-top: 18px;
-  padding: 12px 20px;
-  color: var(--tezex-action-text);
-  background: var(--tezex-action);
-  border: 0;
-  border-radius: 999px;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  transition: background-color 160ms ease, color 160ms ease;
-}
-
-.stez-primary-action:hover:not(:disabled) {
-  background: var(--tezex-action-hover);
-}
-
-.stez-primary-action:disabled {
-  color: var(--tezex-faint);
-  background: var(--tezex-line);
-  cursor: default;
 }
 
 .stez-transaction-status {
@@ -1275,8 +1285,7 @@
   background: var(--tezex-panel);
   border-left: 1px solid var(--tezex-line-strong);
   box-shadow: -28px 0 90px rgba(0, 0, 0, 0.36);
-  animation: stez-faucet-drawer-in 260ms cubic-bezier(0.22, 0.8, 0.24, 1)
-    both;
+  animation: stez-faucet-drawer-in 260ms cubic-bezier(0.22, 0.8, 0.24, 1) both;
 }
 
 .stez-faucet-drawer__head {
@@ -1810,7 +1819,7 @@
     text-align: left;
   }
 
-  .stez-position-cell small {
+  .stez-position-cell__note {
     margin-top: 6px;
   }
 
@@ -1833,12 +1842,6 @@
   .stez-action-meta span:last-child {
     margin-top: 5px;
     text-align: left;
-  }
-
-  .stez-primary-action {
-    min-height: 50px;
-    font-size: 11px;
-    line-height: 1.35;
   }
 
   .stez-rate-panel {
