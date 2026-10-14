@@ -2,6 +2,10 @@ import React from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { Wallet } from "./Wallet";
+import { TransactionStatus, TransactingComponent } from "../../types/general";
+
+let mockTransactionStatus = TransactionStatus.ZERO_AMOUNT;
+const mockWalletOps = { getTransactionStatus: () => mockTransactionStatus };
 
 const mockDisconnect = jest.fn().mockResolvedValue(undefined);
 const mockConnectOverride = jest.fn().mockResolvedValue(undefined);
@@ -15,7 +19,7 @@ const mockWallet = {
 jest.mock("../../hooks/wallet", () => ({
   useWallet: () => mockWallet,
   useWalletConnected: () => true,
-  useWalletOps: jest.fn(),
+  useWalletOps: () => mockWalletOps,
 }));
 
 jest.mock("../../hooks/network", () => ({
@@ -31,6 +35,7 @@ jest.mock("../../functions/beacon", () => ({
 }));
 
 beforeEach(() => {
+  mockTransactionStatus = TransactionStatus.ZERO_AMOUNT;
   mockDisconnect.mockClear();
   mockConnectOverride.mockClear();
   mockZeroAmount.mockClear();
@@ -117,3 +122,57 @@ test("keeps the normal action available and delegates zero-amount validation", (
 
   expect(mockZeroAmount).toHaveBeenCalledTimes(1);
 });
+
+test.each<[TransactingComponent, string]>([
+  [TransactingComponent.ADD_LIQUIDITY, "Add Liquidity"],
+  [TransactingComponent.REMOVE_LIQUIDITY, "Remove Liquidity"],
+  [TransactingComponent.SWAP, "Swap"],
+])(
+  "updates the %s action when a stable status getter returns a new status",
+  (component, label) => {
+    const submit = jest.fn();
+    const action = () => (
+      <MemoryRouter>
+        <Wallet component={component} callback={submit} visualVariant="dark">
+          {label}
+        </Wallet>
+      </MemoryRouter>
+    );
+    const { rerender } = render(action());
+    expect(screen.getByRole("button", { name: "Enter Amount" })).toBeDisabled();
+
+    mockTransactionStatus = TransactionStatus.SUFFICIENT_BALANCE;
+    rerender(action());
+    const readyButton = screen.getByRole("button", { name: label });
+    expect(readyButton).toBeEnabled();
+    fireEvent.click(readyButton);
+    expect(submit).toHaveBeenCalledTimes(1);
+
+    mockTransactionStatus = TransactionStatus.INSUFFICIENT_BALANCE;
+    rerender(action());
+    expect(
+      screen.getByRole("button", {
+        name: TransactionStatus.INSUFFICIENT_BALANCE,
+      })
+    ).toBeDisabled();
+
+    mockTransactionStatus = TransactionStatus.PENDING;
+    rerender(action());
+    const pendingButton = screen.getByRole("button", {
+      name: "Confirm in wallet",
+    });
+    expect(pendingButton).toBeDisabled();
+    fireEvent.click(pendingButton);
+    expect(submit).toHaveBeenCalledTimes(1);
+
+    mockTransactionStatus = TransactionStatus.SUBMITTED;
+    rerender(action());
+    expect(
+      screen.getByRole("button", { name: "Confirming on Tezos" })
+    ).toBeDisabled();
+
+    mockTransactionStatus = TransactionStatus.COMPLETED;
+    rerender(action());
+    expect(screen.getByRole("button", { name: "Confirmed" })).toBeDisabled();
+  }
+);
