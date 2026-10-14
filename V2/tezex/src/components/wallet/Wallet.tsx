@@ -21,6 +21,7 @@ import Button from "@mui/material/Button";
 import style from "./style";
 import useStyles from "../../hooks/styles";
 import { NetworkSelector } from "../ui/elements/selectors/networkSelector/NetworkSelector";
+import { PrimaryActionButton } from "../ui/elements/PrimaryActionButton";
 
 interface IWallet {
   component?: TransactingComponent;
@@ -36,6 +37,8 @@ interface IWallet {
 }
 
 export const Wallet: FC<IWallet> = (props) => {
+  const ActionButton =
+    props.visualVariant === "dark" ? PrimaryActionButton : Button;
   const styles = useStyles(style, props.scalingKey);
   const walletInfo: WalletInfo | undefined = useWallet();
   const networkInfo = useNetwork();
@@ -203,17 +206,15 @@ export const Wallet: FC<IWallet> = (props) => {
       );
     } else {
       return (
-        <Button
+        <ActionButton
           size="large"
           sx={
-            props.visualVariant === "dark"
-              ? styles.transactDark
-              : styles.transactDisabled
+            props.visualVariant === "dark" ? undefined : styles.transactDisabled
           }
           onClick={connect}
         >
           Connect Wallet
-        </Button>
+        </ActionButton>
       );
     }
   };
@@ -314,14 +315,12 @@ export const Wallet: FC<IWallet> = (props) => {
       );
     } else {
       return (
-        <Button
+        <ActionButton
           size="large"
           onClick={transact}
           sx={
             props.visualVariant === "dark"
-              ? disabled
-                ? styles.transactDisabledDark
-                : styles.transactDark
+              ? undefined
               : disabled
               ? styles.transactDisabled
               : styles.transact
@@ -346,7 +345,7 @@ export const Wallet: FC<IWallet> = (props) => {
               {walletText}
             </Typography>
           </Box>
-        </Button>
+        </ActionButton>
       );
     }
   };

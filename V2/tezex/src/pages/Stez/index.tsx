@@ -22,6 +22,9 @@ import { isSnetAccount, resolveSnet, SnetNetwork } from "./network";
 import { readableStezError, submitStezOperation } from "./transactions";
 import { SnetTransferDialog } from "./SnetTransferDialog";
 import { SnetFaucetDrawer } from "./SnetFaucetDrawer";
+import { PrimaryActionButton } from "../../components/ui/elements/PrimaryActionButton";
+import { formatUnits, formatPositionXtz } from "./format";
+import { PositionCell } from "./PositionCell";
 import "./style.css";
 
 type StezAction = "Stake" | "Redeem" | "Finalize";
@@ -42,21 +45,6 @@ const shortAddress = (value?: string | null, front = 7, back = 5) => {
   return value.length > front + back + 1
     ? `${value.slice(0, front)}…${value.slice(-back)}`
     : value;
-};
-
-const formatUnits = (value: bigint | null, maximumDecimals = 6) => {
-  if (value === null) return "—";
-  const sign = value < ZERO ? "-" : "";
-  const absolute = value < ZERO ? -value : value;
-  const whole = absolute / TOKEN_SCALE;
-  const fraction = (absolute % TOKEN_SCALE)
-    .toString()
-    .padStart(6, "0")
-    .slice(0, maximumDecimals)
-    .replace(/0+$/, "");
-  return `${sign}${whole.toLocaleString("en-US")}${
-    fraction ? `.${fraction}` : ".0"
-  }`;
 };
 
 const parseUnits = (value: string) => {
@@ -122,31 +110,6 @@ const statusCopy = (
       "TEZEX could not verify the sTEZ contract or read its current state from the selected network. No cached or estimated values have been substituted.",
   };
 };
-
-interface PositionCellProps {
-  label: string;
-  value: string;
-  note: string;
-  positive?: boolean;
-  icon: React.ReactNode;
-}
-
-const PositionCell: FC<PositionCellProps> = ({
-  label,
-  value,
-  note,
-  positive,
-  icon,
-}) => (
-  <div className="stez-position-cell">
-    <div className="stez-position-cell__label">
-      <span aria-hidden="true">{icon}</span>
-      {label}
-    </div>
-    <strong className={positive ? "is-positive" : undefined}>{value}</strong>
-    <small>{note}</small>
-  </div>
-);
 
 export const Stez: FC = () => {
   const wallet = useWallet();
@@ -309,12 +272,7 @@ export const Stez: FC = () => {
       snapshot?.walletXtzMutez !== undefined &&
       snapshot.walletXtzMutez > ZERO
   );
-  const copy = statusCopy(
-    snapshot,
-    loading,
-    selectedNetwork,
-    networkError
-  );
+  const copy = statusCopy(snapshot, loading, selectedNetwork, networkError);
 
   const connect = useCallback(async () => {
     const activeSnet = snet ?? (await resolveSnet());
@@ -504,7 +462,7 @@ export const Stez: FC = () => {
             />
             <PositionCell
               label="Current redemption value"
-              value={walletConnected ? formatUnits(walletUnderlying) : "—"}
+              {...formatPositionXtz(walletConnected ? walletUnderlying : null)}
               note={
                 walletConnected
                   ? "XTZ represented by your sTEZ at the current protocol rate"
@@ -529,9 +487,9 @@ export const Stez: FC = () => {
             />
             <PositionCell
               label="Combined XTZ value"
-              value={
-                walletConnected ? formatUnits(walletCombinedXtzValue, 4) : "—"
-              }
+              {...formatPositionXtz(
+                walletConnected ? walletCombinedXtzValue : null
+              )}
               note={
                 walletConnected
                   ? "Wallet XTZ, current sTEZ value, and XTZ in redemption"
@@ -683,9 +641,10 @@ export const Stez: FC = () => {
               </>
             )}
 
-            <button
+            <PrimaryActionButton
               type="button"
               className="stez-primary-action"
+              sx={{ marginTop: "18px" }}
               disabled={actionDisabled}
               aria-busy={
                 transactionStage === "requesting" ||
@@ -694,7 +653,7 @@ export const Stez: FC = () => {
               onClick={executeAction}
             >
               {actionButtonCopy()}
-            </button>
+            </PrimaryActionButton>
 
             {transactionStage !== "idle" && (
               <div
@@ -702,9 +661,7 @@ export const Stez: FC = () => {
                 role={transactionStage === "failed" ? "alert" : "status"}
               >
                 <span>{transactionMessage}</span>
-                {operationHash && (
-                  <code>{operationHash}</code>
-                )}
+                {operationHash && <code>{operationHash}</code>}
               </div>
             )}
 
@@ -749,9 +706,7 @@ export const Stez: FC = () => {
                 {shortAddress(snapshot?.chainId || snet?.chainId, 10, 6)}
               </dd>
               <dt>Protocol</dt>
-              <dd>
-                {snapshot?.protocolHash || "Not resolved"}
-              </dd>
+              <dd>{snapshot?.protocolHash || "Not resolved"}</dd>
               <dt>Native contract</dt>
               <dd>
                 {shortAddress(snapshot?.contractHash, 10, 8) ||
