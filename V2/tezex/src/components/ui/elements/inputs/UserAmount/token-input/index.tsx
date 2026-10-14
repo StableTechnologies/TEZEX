@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useEffect, useState } from "react";
+import React, { FC, useCallback, useEffect, useRef, useState } from "react";
 import {
   Asset,
   Id,
@@ -64,53 +64,28 @@ const TokenInput: FC<IRigthInput> = (props) => {
   const [transactionBalance, setTransactionBalance] = useState<
     string | unknown
   >(undefined);
-  const [loading, setLoading] = useState(true);
   const [swapping, setSwapping] = useState(false);
-  const [id, setId] = useState<Id | undefined>(undefined);
+  const transactionId = transactionOps.getActiveTransaction()?.id;
+  const lastTransactionId = useRef<Id | undefined>(undefined);
+
   const swap = useCallback(async () => {
+    if (swapping) return;
     setSwapping(true);
-  }, []);
-
-  // monitor swapping and swapfields
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (swapping) {
-        transactionOps.swapFields();
-      }
-    }, 100);
-    return () => clearTimeout(timer);
-  }, [transactionOps.swapFields, swapping]);
-
-  // Set id on new transaction and set loading to true
-  useEffect(() => {
-    const transactionId = transactionOps.getActiveTransaction()?.id;
-    if (!id && transactionId) {
-      setId(transactionId);
-      setLoading(true);
+    try {
+      await transactionOps.swapFields();
+    } finally {
+      setSwapping(false);
     }
-    if (id && transactionId && id !== transactionId) {
-      setId(transactionId);
-      setLoading(true);
-    }
-  }, [transactionOps.getActiveTransaction, id]);
+  }, [swapping, transactionOps.swapFields]);
 
   // boolean check to see  if updates can be made
   const canUpdate = useCallback(() => {
     return !(swapping || props.loading || transactionOps.loading);
   }, [swapping, props.loading, transactionOps.loading]);
 
-  // callback to set loading to false
-  const setLoadingFalse = useCallback(() => {
-    //check if updates can be made and set loading to false
-    canUpdate() &&
-      setLoading((loading) => {
-        //only update if loading is true
-        if (loading === false) return loading;
-        else return false;
-      });
-  }, [canUpdate]);
-
-  // call back to load value and set loading to false
+  // Synchronize values produced by the transaction model. Editable fields
+  // only need this when the transaction itself changes; calculated fields
+  // follow every quote update.
   const loadValue = useCallback(() => {
     const amount = transactionOps.trackedAsset?.amount?.string;
     if (amount) {
@@ -126,16 +101,8 @@ const TokenInput: FC<IRigthInput> = (props) => {
         else if (props.readOnly && toNumber(truncated) === 0) return "0.00";
         else return truncated;
       });
-      setLoadingFalse();
     }
-  }, [
-    transactionOps.getActiveTransaction,
-    setSwapping,
-    props.readOnly,
-    setLoadingFalse,
-    transactionOps.trackedAsset,
-    props.onChange,
-  ]);
+  }, [props.readOnly, transactionOps.trackedAsset, props.onChange]);
 
   //callback to update balance
   const updateBalance = useCallback(() => {
@@ -158,42 +125,33 @@ const TokenInput: FC<IRigthInput> = (props) => {
     updateBalance();
   }, [updateBalance]);
 
-  // on id or amount change , load value and handle loading
   useEffect(() => {
-    // non-read only: update local value only on id change
-    if (!props.readOnly && (loading || swapping)) {
+    if (transactionId && transactionId !== lastTransactionId.current) {
+      lastTransactionId.current = transactionId;
       loadValue();
     }
-    //  read only , update on transaction change
     if (props.readOnly) {
       loadValue();
     }
-  }, [
-    id,
-    swapping,
-    props.readOnly,
-    transactionOps.getActiveTransaction,
-    loading,
-    loadValue,
-  ]);
+  }, [transactionId, props.readOnly, loadValue]);
 
   // Callback to check if local value differs from transaction amount
   // if it does it calls an update
   const updateAmount = useCallback(
     async (value: string, oldValue: string) => {
       if (toNumber(value) !== toNumber(oldValue)) {
-        if (canUpdate() && !loading && !swapping)
+        if (canUpdate() && !swapping)
           await transactionOps.updateAmount(value, undefined, "tokenInput");
       }
     },
-    [canUpdate, swapping, loading, transactionOps.updateAmount]
+    [canUpdate, swapping, transactionOps.updateAmount]
   );
 
   // This effect tracks and  sends the debounced value for updating
   // the transaction amount,
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (!props.readOnly && !loading && !swapping) {
+      if (!props.readOnly && !swapping && canUpdate()) {
         const oldValue = transactionOps.trackedAsset?.amount?.string;
         if (oldValue) updateAmount(debouncedValue, oldValue);
       }
@@ -201,10 +159,10 @@ const TokenInput: FC<IRigthInput> = (props) => {
     return () => clearTimeout(timer);
   }, [
     props.readOnly,
-    loading,
     swapping,
     debouncedValue,
-    transactionOps.trackedAsset,
+    transactionOps.trackedAsset?.amount?.string,
+    canUpdate,
     updateAmount,
   ]);
 
@@ -228,17 +186,17 @@ const TokenInput: FC<IRigthInput> = (props) => {
 
   // callback for when the user clicks away from the input
   const handleBlur = useCallback(() => {
-    if (props.readOnly || loading) return;
+    if (props.readOnly) return;
     if (value === "" || toNumber(value) === 0) {
       setValue("0.00");
       props.onChange?.("0.00");
     }
-  }, [props.readOnly, props.onChange, loading, value]);
+  }, [props.readOnly, props.onChange, value]);
 
   // callback for when the user changes the input value
   const handleChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      if (props.readOnly || loading) return;
+      if (props.readOnly) return;
 
       const newValue = event.target.value;
 
@@ -253,7 +211,7 @@ const TokenInput: FC<IRigthInput> = (props) => {
         }
       }
     },
-    [props.readOnly, props.onChange, loading, value]
+    [props.readOnly, props.onChange, value]
   );
 
   const amountNotEntered: () => boolean = useCallback(() => {
