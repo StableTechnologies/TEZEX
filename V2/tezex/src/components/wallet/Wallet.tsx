@@ -45,9 +45,9 @@ export const Wallet: FC<IWallet> = (props) => {
   const walletOps = props.component ? useWalletOps(props.component) : undefined;
   const [spinner, setSpinner] = useState(false);
   const [disabled, setDisabled] = useState(false);
-  const [transactionStatus, setTransactionStatus] = useState<TransactionStatus>(
-    TransactionStatus.ZERO_AMOUNT
-  );
+  // The getter stays stable while wallet context updates re-render this component.
+  const transactionStatus =
+    walletOps?.getTransactionStatus() ?? TransactionStatus.ZERO_AMOUNT;
   const [walletText, setWalletText] = useState<string | undefined>("");
   const [accountAnchor, setAccountAnchor] = useState<HTMLElement | null>(null);
   const [addressCopied, setAddressCopied] = useState(false);
@@ -59,16 +59,6 @@ export const Wallet: FC<IWallet> = (props) => {
     const reset = window.setTimeout(() => setAddressCopied(false), 1800);
     return () => window.clearTimeout(reset);
   }, [addressCopied]);
-  // use effect to update transaction status
-  useEffect(() => {
-    const status = walletOps?.getTransactionStatus();
-    if (status) {
-      if (transactionStatus !== status) {
-        setTransactionStatus(status);
-      }
-    }
-  }, [walletOps?.getTransactionStatus, transactionStatus]);
-
   // Effect to monitor transaction status and update wallet text
   useEffect(() => {
     switch (transactionStatus) {
