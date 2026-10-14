@@ -54,6 +54,7 @@ export const AddLiquidity: FC<IAddLiquidity> = ({
 
   // load transaction operations for component
   const transactionOps = useTransaction(TransactingComponent.ADD_LIQUIDITY);
+  const currentTransaction = transactionOps.getActiveTransaction();
 
   // TODO: : remove this and use transactionOps.getActiveTransaction to pass to wallet
   const active = walletOps.getActiveTransaction();
@@ -244,6 +245,16 @@ export const AddLiquidity: FC<IAddLiquidity> = ({
     assets,
   ]);
 
+  // Route and pool changes can clear the transaction after an earlier
+  // initialization has completed. Re-enter the normal initialization path
+  // instead of leaving an apparently editable form without a quote model.
+  useEffect(() => {
+    if (!loading && !currentTransaction) {
+      setCanUpdate(false);
+      setLoading(true);
+    }
+  }, [currentTransaction, loading]);
+
   // Callback to fetch the estimate of amount of liquidity tokens to recieve
   const getLiquidityTokens = useCallback((): string => {
     const transaction = transactionOps.getActiveTransaction();
@@ -336,33 +347,24 @@ export const AddLiquidity: FC<IAddLiquidity> = ({
 
   // Effect to reload new transactions
   useEffect(() => {
-    const timer = setTimeout(() => {
-      // get active transaction
-      const t = transactionOps.getActiveTransaction();
-      // if loading and no transaction, create new transaction
-      if (reloading && t) {
-        // if loading and transaction,
-        // update balance, assets and set loading to false
-        if (t.sendAsset[1]) {
-          //grab assets from transaction
-          const _assets: [Asset, Asset, Asset] = [
-            t.sendAsset[0],
-            t.sendAsset[1],
-            t.receiveAsset[0],
-          ];
-          // reload assets
-          setAssets(_assets);
-          setReloading(false);
-        }
-      }
-    }, 100);
-    return () => clearTimeout(timer);
-  }, [transactionOps.getActiveTransaction, assets, reloading]);
+    if (!reloading) return;
+
+    if (!active?.sendAsset[1]) return;
+
+    setAssets([
+      active.sendAsset[0],
+      active.sendAsset[1],
+      active.receiveAsset[0],
+    ]);
+    setReloading(false);
+  }, [active, id, reloading]);
 
   // get loading status for child compoenents
   const isLoaded = useCallback(() => {
-    return !loading && !reloading;
-  }, [loading, reloading]);
+    // The active transaction is already safe to edit once initialization has
+    // completed. Asset resynchronization must not keep amount quoting blocked.
+    return !loading;
+  }, [loading]);
 
   // Keep the workspace dimensions stable while the transaction model initializes.
   if (loading || previewLoading) {
