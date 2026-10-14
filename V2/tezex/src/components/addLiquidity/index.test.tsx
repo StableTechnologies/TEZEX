@@ -186,6 +186,35 @@ test("enables pool selection after an empty transaction initializes", async () =
   );
 });
 
+test("reinitializes if a route change clears an already loaded transaction", async () => {
+  const view = render(<AddLiquidity orientation="portrait" />);
+
+  await waitFor(() =>
+    expect(
+      screen.getByRole("button", { name: "Select liquidity pool" })
+    ).toBeEnabled()
+  );
+  expect(mockTransactionOps.initialize).not.toHaveBeenCalled();
+
+  mockActiveTransaction = undefined;
+  mockTransactionOps.initialize.mockImplementation(async () => {
+    mockActiveTransaction = {
+      ...makeTransaction([mockTez, mockTzbtc], "transaction-recovered"),
+      transactionStatus: TransactionStatus.ZERO_AMOUNT,
+    };
+    return true;
+  });
+
+  view.rerender(<AddLiquidity orientation="portrait" />);
+
+  await waitFor(() => expect(mockTransactionOps.initialize).toHaveBeenCalled());
+  await waitFor(() =>
+    expect(
+      screen.getByRole("button", { name: "Select liquidity pool" })
+    ).toBeEnabled()
+  );
+});
+
 test("switches which pool token is the editable deposit", async () => {
   render(<AddLiquidity orientation="portrait" />);
 

@@ -54,6 +54,7 @@ export const RemoveLiquidity: FC<IRemoveLiquidity> = ({
   );
   // load transaction operations for component
   const transactionOps = useTransaction(TransactingComponent.REMOVE_LIQUIDITY);
+  const currentTransaction = transactionOps.getActiveTransaction();
   const wallet = useWallet();
 
   const [loading, setLoading] = useState<boolean>(true);
@@ -308,6 +309,16 @@ export const RemoveLiquidity: FC<IRemoveLiquidity> = ({
     assets,
   ]);
 
+  // Route and pool changes can clear the transaction after an earlier
+  // initialization has completed. Re-enter the normal initialization path
+  // instead of leaving an apparently editable form without a quote model.
+  useEffect(() => {
+    if (!loading && !currentTransaction) {
+      setCanUpdate(false);
+      setLoading(true);
+    }
+  }, [currentTransaction, loading]);
+
   //callback to handle transaction status changes
   const monitorStatus = useCallback(() => {
     const transaction = transactionOps.getActiveTransaction();
@@ -357,33 +368,24 @@ export const RemoveLiquidity: FC<IRemoveLiquidity> = ({
 
   // Effect to reload new transactions
   useEffect(() => {
-    const timer = setTimeout(() => {
-      // get active transaction
-      const t = transactionOps.getActiveTransaction();
-      // if loading and no transaction, create new transaction
-      if (reloading && t) {
-        // if loading and transaction,
-        // update balance, assets and set loading to false
-        if (t.receiveAsset[1]) {
-          //grab assets from transaction
-          const _assets: [Asset, Asset, Asset] = [
-            t.sendAsset[0],
-            t.receiveAsset[0],
-            t.receiveAsset[1],
-          ];
-          // reload assets
-          setAssets(_assets);
-          setReloading(false);
-        }
-      }
-    }, 100);
-    return () => clearTimeout(timer);
-  }, [transactionOps.getActiveTransaction, assets, reloading]);
+    if (!reloading) return;
+
+    if (!active?.receiveAsset[1]) return;
+
+    setAssets([
+      active.sendAsset[0],
+      active.receiveAsset[0],
+      active.receiveAsset[1],
+    ]);
+    setReloading(false);
+  }, [active, id, reloading]);
 
   // get loading status for child compoenents
   const isLoaded = useCallback(() => {
-    return !loading && !reloading;
-  }, [loading, reloading]);
+    // The active transaction is already safe to edit once initialization has
+    // completed. Asset resynchronization must not keep amount quoting blocked.
+    return !loading;
+  }, [loading]);
 
   return (
     <Grid2 container sx={styles.root}>
