@@ -145,7 +145,7 @@ test("manual LP entry shows a pending quote and then both returns without Use Ma
     wallet.getActiveTransaction(TransactingComponent.REMOVE_LIQUIDITY)
       ?.transactionStatus
   ).toBe(TransactionStatus.MODIFIED);
-  expect(screen.getByRole("status")).toHaveTextContent("Updating quote");
+  expect(screen.getByRole("status")).toHaveTextContent("Fetching quote");
   expect(screen.queryByText("0 Tez")).not.toBeInTheDocument();
   expect(screen.queryByText("0 USDt")).not.toBeInTheDocument();
   await act(async () => {

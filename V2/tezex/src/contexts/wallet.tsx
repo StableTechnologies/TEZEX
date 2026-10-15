@@ -921,6 +921,7 @@ export function WalletProvider(props: IWalletProvider) {
             sendAssetBalance: active.sendAssetBalance,
             receiveAssetBalance: active.receiveAssetBalance,
             quoteRevision: 1,
+            hasReceivedQuote: true,
           };
           latestTransactionInitializations.delete(component);
           return setActiveTransaction(component, {

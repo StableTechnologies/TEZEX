@@ -193,6 +193,8 @@ export interface Transaction {
   operationHash?: string;
   quoteRevision?: number;
   quote?: TransactionQuote;
+  /** Display history only; never a substitute for a current valid quote. */
+  hasReceivedQuote?: boolean;
   submissionContext?: TransactionSubmissionContext;
   lastModified: Date;
   locked: boolean;
