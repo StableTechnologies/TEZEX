@@ -14,6 +14,7 @@ import { SessionProvider } from "../contexts/session";
 import { WalletContext, WalletInfo } from "../contexts/wallet";
 import { networks, INetwork } from "../contexts/network";
 import { useNetwork } from "../hooks/network";
+import { PoolDataCache } from "../utils/poolDataCache";
 import { PoolRegistry } from "../adapters/poolRegistry";
 import { Home } from "../pages/Home";
 import {
@@ -82,6 +83,14 @@ const convert = (
 const adapter = (pool: PoolConfig): IPoolAdapter =>
   ({
     poolConfig: pool,
+    executeSwap: jest.fn(),
+    executeAddLiquidity: jest.fn(),
+    executeRemoveLiquidity: jest.fn(),
+    getPoolData: async () => ({
+      tokenAPool: new BigNumber(1000),
+      tokenBPool: new BigNumber(2000),
+      lpTokenSupply: new BigNumber(1000),
+    }),
     estimateSwap: async (_kit, token, amount) =>
       later({
         inputAmount: amount,
@@ -190,6 +199,7 @@ beforeEach(() => {
   jest.useFakeTimers();
   delayQuotes = false;
   pending.length = 0;
+  PoolDataCache.clear();
   PoolRegistry.clear();
   PoolRegistry.initializeFromConfig(
     networks.mainnet.pools,
@@ -770,5 +780,47 @@ test("a balance refresh queued behind an edit cannot restore the previous ready 
   expect(transaction().quote).toBeUndefined();
   expect(transaction().transactionStatus).toBe(TransactionStatus.MODIFIED);
   await settle();
+  assertConsistent();
+});
+
+test("warm pool edits produce quotes without waiting for a typing timer", async () => {
+  await mount();
+  const pool = network.getAllPools()[0];
+  await act(async () => {
+    await PoolDataCache.load(pool, network.toolkit, () =>
+      adapter(pool).getPoolData(network.toolkit)
+    );
+    edit("2");
+  });
+  expect(transaction().quote).toBeDefined();
+  expect(input()).toHaveValue("2");
+  assertConsistent();
+});
+
+test("cold pool typing coalesces edits within 150ms and invalidates immediately", async () => {
+  await mount();
+  delayQuotes = true;
+  await act(async () => {
+    edit("2");
+  });
+  expect(transaction().quote).toBeUndefined();
+  await act(async () => {
+    jest.advanceTimersByTime(100);
+  });
+  await act(async () => {
+    edit("3");
+  });
+  await act(async () => {
+    jest.advanceTimersByTime(149);
+  });
+  expect(pending).toHaveLength(0);
+  await act(async () => {
+    jest.advanceTimersByTime(1);
+  });
+  expect(pending).toHaveLength(1);
+  await act(async () => {
+    pending.shift()?.resolve();
+  });
+  expect(transaction().sendAmount[0].string).toBe("3");
   assertConsistent();
 });

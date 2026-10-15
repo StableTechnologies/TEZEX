@@ -12,6 +12,7 @@ import BigNumber from "bignumber.js";
 import { ExecutionKit, Token } from "../types/general";
 import { PoolRegistry } from "./poolRegistry";
 import { PoolDataCache } from "../utils/poolDataCache";
+import { getQuoteContract } from "../utils/quoteContract";
 import { getTxDeadline } from "../functions/util";
 import { DAppClient } from "@airgap/beacon-dapp";
 import { transferParamsToBeaconOp } from "../functions/transactions";
@@ -352,46 +353,45 @@ export class SiriusAdapter implements IPoolAdapter {
     toolkit: TezosToolkit,
     forceRefresh = false
   ): Promise<PoolData> {
-    // Try cache first (unless forceRefresh)
-    if (!forceRefresh) {
-      const cached = PoolDataCache.get(this.poolConfig.id);
-      if (cached) {
-        return cached;
-      }
-    }
+    return PoolDataCache.load(
+      this.poolConfig,
+      toolkit,
+      async () => {
+        const contract = await getQuoteContract(
+          toolkit,
+          this.poolConfig.address
+        );
+        const storage = await contract.storage<SiriusStorage>();
 
-    const contract = await toolkit.contract.at(this.poolConfig.address);
-    const storage = await contract.storage<SiriusStorage>();
-
-    if (storage) {
-      this.assertStorageAddress(
-        "underlying token",
-        storage.tokenAddress,
-        PoolRegistry.getAssetAddress(this.poolConfig.tokenB)
-      );
-      this.assertStorageAddress(
-        "SIRS",
-        storage.lqtAddress,
-        PoolRegistry.getAssetAddress(this.poolConfig.lpToken)
-      );
-    }
-
-    const poolData: PoolData = storage
-      ? {
-          tokenAPool: new BigNumber(storage.xtzPool),
-          tokenBPool: new BigNumber(storage.tokenPool),
-          lpTokenSupply: new BigNumber(storage.lqtTotal),
+        if (storage) {
+          this.assertStorageAddress(
+            "underlying token",
+            storage.tokenAddress,
+            PoolRegistry.getAssetAddress(this.poolConfig.tokenB)
+          );
+          this.assertStorageAddress(
+            "SIRS",
+            storage.lqtAddress,
+            PoolRegistry.getAssetAddress(this.poolConfig.lpToken)
+          );
         }
-      : {
-          tokenAPool: new BigNumber(0),
-          tokenBPool: new BigNumber(0),
-          lpTokenSupply: new BigNumber(0),
-        };
 
-    // Update cache
-    PoolDataCache.set(this.poolConfig.id, poolData);
+        const poolData: PoolData = storage
+          ? {
+              tokenAPool: new BigNumber(storage.xtzPool),
+              tokenBPool: new BigNumber(storage.tokenPool),
+              lpTokenSupply: new BigNumber(storage.lqtTotal),
+            }
+          : {
+              tokenAPool: new BigNumber(0),
+              tokenBPool: new BigNumber(0),
+              lpTokenSupply: new BigNumber(0),
+            };
 
-    return poolData;
+        return poolData;
+      },
+      forceRefresh
+    );
   }
 
   private calcXtzToToken(

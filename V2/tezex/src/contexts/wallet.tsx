@@ -1,3 +1,4 @@
+import { PoolDataCache } from "../utils/poolDataCache";
 import React, {
   useCallback,
   createContext,
@@ -884,6 +885,11 @@ export function WalletProvider(props: IWalletProvider) {
             : TransactionStatus.MODIFIED,
         });
         if (empty) {
+          // Start the selected pool read while the user chooses an amount. A
+          // failed preload is retried by the normal, visible quote request.
+          void adapter
+            .getPoolData(activeNetwork.toolkit)
+            .catch(() => undefined);
           latestTransactionInitializations.delete(component);
           return true;
         }
@@ -1287,14 +1293,18 @@ export function WalletProvider(props: IWalletProvider) {
 
       if (!pending) return updated;
       const pendingQuote = pending;
-      if (debounceMs)
-        await new Promise((resolve) => setTimeout(resolve, debounceMs));
-      if (latestQuoteRequests.get(component) !== pendingQuote.request)
-        return false;
-
       let estimatedTransaction: Transaction;
       try {
         const adapter = network.getPoolAdapter(pendingQuote.transaction.poolId);
+        if (
+          debounceMs &&
+          !PoolDataCache.getFor(adapter.poolConfig, network.toolkit)
+        )
+          await new Promise((resolve) => setTimeout(resolve, debounceMs));
+        if (latestQuoteRequests.get(component) !== pendingQuote.request)
+          return false;
+        if (submitAfterRefresh)
+          await adapter.getPoolData(network.toolkit, true);
         estimatedTransaction = await estimateWithAdapter(
           pendingQuote.transaction,
           network.toolkit,

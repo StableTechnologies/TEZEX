@@ -8,6 +8,7 @@ import {
   Token,
   TokenType,
   TransactingComponent,
+  TransactionStatus,
 } from "../types/general";
 import { IPoolAdapter, PoolType } from "../types/pools";
 import { WalletContext, WalletInfo, WalletProvider } from "./wallet";
@@ -129,6 +130,7 @@ describe("WalletProvider quote lifecycle", () => {
         tokenB: Token.TzBTC,
         lpToken: Token.Sirs,
       },
+      getPoolData: jest.fn().mockResolvedValue({}),
       estimateSwap,
     } as unknown as IPoolAdapter;
     mockGetPoolAdapter.mockReturnValue(adapter);
@@ -215,6 +217,7 @@ describe("WalletProvider quote lifecycle", () => {
         tokenB: Token.TzBTC,
         lpToken: Token.Sirs,
       },
+      getPoolData: jest.fn().mockResolvedValue({}),
       estimateSwap: jest.fn().mockResolvedValue({
         inputAmount: new BigNumber(0),
         outputAmount: new BigNumber(0),
@@ -252,4 +255,76 @@ describe("WalletProvider quote lifecycle", () => {
       ).toBeUndefined();
     });
   });
+  it.each([false, true])(
+    "submission forces a fresh read and handles refresh failure=%s",
+    async (fail) => {
+      const fresh = deferred<unknown>();
+      const getPoolData = jest.fn((_toolkit, forceRefresh) =>
+        forceRefresh ? fresh.promise : Promise.resolve({})
+      );
+      const estimateSwap = jest.fn().mockResolvedValue({
+        inputAmount: new BigNumber(1),
+        outputAmount: new BigNumber(200),
+      });
+      mockGetPoolAdapter.mockReturnValue({
+        poolConfig: {
+          id: "pool-id",
+          name: "Pool",
+          type: PoolType.TEZEX,
+          address: "KT1-pool",
+          tokenA: Token.XTZ,
+          tokenB: Token.TzBTC,
+          lpToken: Token.Sirs,
+        },
+        getPoolData,
+        estimateSwap,
+      });
+      const errorLog = jest
+        .spyOn(console, "error")
+        .mockImplementation(() => undefined);
+      render(
+        <WalletProvider>
+          <Probe />
+        </WalletProvider>
+      );
+      await act(async () => {
+        await wallet.initialiseTransaction(
+          TransactingComponent.SWAP,
+          [xtz],
+          [token],
+          "pool-id",
+          [balance("0")],
+          [balance("0")]
+        );
+        await wallet.refreshTransactionQuote(TransactingComponent.SWAP, [
+          balance("1"),
+        ]);
+      });
+      expect(estimateSwap).toHaveBeenCalledTimes(1);
+      let submission!: Promise<boolean>;
+      await act(async () => {
+        submission = wallet.prepareTransactionForSubmission(
+          TransactingComponent.SWAP
+        );
+        await Promise.resolve();
+      });
+      expect(getPoolData).toHaveBeenLastCalledWith(expect.anything(), true);
+      expect(estimateSwap).toHaveBeenCalledTimes(1);
+      await act(async () => {
+        if (fail) fresh.resolve(Promise.reject(new Error("offline")));
+        else fresh.resolve({});
+        await expect(submission).resolves.toBe(!fail);
+      });
+      expect(estimateSwap).toHaveBeenCalledTimes(fail ? 1 : 2);
+      const transaction = wallet.getActiveTransaction(
+        TransactingComponent.SWAP
+      );
+      if (fail) {
+        expect(transaction?.transactionStatus).toBe(TransactionStatus.FAILED);
+        expect(transaction?.quote).toBeUndefined();
+      } else
+        expect(transaction?.receiveAmount[0].mantissa.toFixed()).toBe("200");
+      errorLog.mockRestore();
+    }
+  );
 });
