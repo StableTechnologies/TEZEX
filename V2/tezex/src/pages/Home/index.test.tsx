@@ -12,6 +12,10 @@ import { NetworkType } from "@airgap/beacon-sdk";
 import { Token } from "../../types/general";
 import { PoolType } from "../../types/pools";
 
+jest.mock("../../hooks/wallet", () => ({
+  useWallet: () => ({ getActiveTransaction: () => undefined }),
+}));
+
 const mockSwitchNetwork = jest.fn();
 const mockSetSelectedPool = jest.fn();
 const mockPool = {

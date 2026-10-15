@@ -21,11 +21,7 @@ import { WalletConnected } from "../../../../../session/WalletConnected";
 import { style } from "./style";
 import useStyles from "../../../../../../hooks/styles";
 import { useTransaction } from "../../../../../../hooks/transaction";
-import {
-  cleanNumericString,
-  isNumeric,
-} from "../../../../../../functions/util";
-import { useDebounce } from "usehooks-ts";
+import BigNumber from "bignumber.js";
 import { eq, toNumber } from "lodash";
 import { TokenIcon } from "../../../TokenIcon";
 import { TokenSelector } from "../../../TokenSelector";
@@ -59,7 +55,6 @@ const TokenInput: FC<IRigthInput> = (props) => {
   });
   // TODO: set value at time of loading  from transactionOps
   const [value, setValue] = useState("0.00");
-  const debouncedValue = useDebounce<string>(value, 500);
 
   // set asset state
   const [transactionBalance, setTransactionBalance] = useState<
@@ -83,6 +78,7 @@ const TokenInput: FC<IRigthInput> = (props) => {
     : value;
   const lastTransactionId = useRef<Id | undefined>(undefined);
   const hasUserEdit = useRef(false);
+  const pendingEdit = useRef<{ value: string; id?: Id; asset: string }>();
 
   const swap = useCallback(async () => {
     if (swapping) return;
@@ -96,8 +92,8 @@ const TokenInput: FC<IRigthInput> = (props) => {
 
   // boolean check to see  if updates can be made
   const canUpdate = useCallback(() => {
-    return !(swapping || props.loading || transactionOps.loading);
-  }, [swapping, props.loading, transactionOps.loading]);
+    return !(swapping || transactionOps.loading);
+  }, [swapping, transactionOps.loading]);
 
   // Synchronize values produced by the transaction model. Editable fields
   // only need this when the transaction itself changes; calculated fields
@@ -105,15 +101,13 @@ const TokenInput: FC<IRigthInput> = (props) => {
   const loadValue = useCallback(() => {
     const amount = transactionOps.trackedAsset?.amount?.string;
     if (amount) {
-      const truncated = amount.includes(".")
-        ? amount.slice(0, amount.indexOf(".") + 9)
-        : amount;
+      const truncated = amount;
 
       if (!props.readOnly) props.onChange?.(truncated);
 
       //update value if different
       setValue((value) => {
-        if (toNumber(value) === toNumber(truncated)) return value;
+        if (new BigNumber(value || 0).eq(truncated)) return value;
         else if (props.readOnly && toNumber(truncated) === 0) return "0.00";
         else return truncated;
       });
@@ -127,7 +121,7 @@ const TokenInput: FC<IRigthInput> = (props) => {
       //update balance if different
       setTransactionBalance((_balance: string | undefined) => {
         const truncated = balance.includes(".")
-          ? balance.slice(0, balance.indexOf(".") + 7)
+          ? balance.slice(0, balance.indexOf(".") + props.asset.decimals + 1)
           : balance;
 
         if (_balance === truncated) return _balance;
@@ -156,43 +150,39 @@ const TokenInput: FC<IRigthInput> = (props) => {
     }
   }, [transactionId, props.readOnly, loadValue]);
 
-  // Callback to check if local value differs from transaction amount
-  // if it does it calls an update
-  const updateAmount = useCallback(
-    async (value: string, oldValue: string) => {
-      if (toNumber(value) !== toNumber(oldValue)) {
-        if (canUpdate() && !swapping)
-          await transactionOps.updateAmount(value, undefined, "tokenInput");
-      }
+  // Drafts belong to the transaction, not a timer owned by this screen.
+  // Persist edits immediately; the provider debounces only the RPC request.
+  const commitEdit = useCallback(
+    (nextValue: string) => {
+      pendingEdit.current = {
+        value: nextValue,
+        id: transactionId,
+        asset: props.asset.name,
+      };
+      if (!canUpdate()) return;
+      pendingEdit.current = undefined;
+      void transactionOps.updateAmount(nextValue, undefined, "tokenInput");
     },
-    [canUpdate, swapping, transactionOps.updateAmount]
+    [canUpdate, transactionId, props.asset.name, transactionOps.updateAmount]
   );
-
-  // This effect tracks and  sends the debounced value for updating
-  // the transaction amount,
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!props.readOnly && !swapping && canUpdate()) {
-        const oldValue = transactionOps.trackedAsset?.amount?.string;
-        if (oldValue) updateAmount(debouncedValue, oldValue);
-      }
-    }, 100);
-    return () => clearTimeout(timer);
-  }, [
-    props.readOnly,
-    swapping,
-    debouncedValue,
-    transactionOps.trackedAsset?.amount?.string,
-    canUpdate,
-    updateAmount,
-  ]);
+    const pending = pendingEdit.current;
+    if (!pending || !canUpdate()) return;
+    pendingEdit.current = undefined;
+    if (
+      pending.asset !== props.asset.name ||
+      (pending.id && pending.id !== transactionId)
+    )
+      return;
+    void transactionOps.updateAmount(pending.value, undefined, "tokenInput");
+  }, [canUpdate, transactionId, props.asset.name, transactionOps.updateAmount]);
 
   useEffect(() => {
     const assetState = transactionOps.trackedAsset;
     if (assetState && assetState.balance) {
       const balance = assetState.balance.string;
       const truncated = balance.includes(".")
-        ? balance.slice(0, balance.indexOf(".") + 7)
+        ? balance.slice(0, balance.indexOf(".") + props.asset.decimals + 1)
         : balance;
       !eq(truncated, transactionBalance) && setTransactionBalance(truncated);
     }
@@ -219,21 +209,17 @@ const TokenInput: FC<IRigthInput> = (props) => {
     (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       if (props.readOnly) return;
 
+      const nextValue = event.target.value;
+      // Never reinterpret a negative, exponent, or malformed paste as a
+      // different positive amount. Keep partial decimal edits intact.
+      if (!/^\d*(?:\.\d*)?$/.test(nextValue)) return;
+      if ((nextValue.split(".")[1]?.length ?? 0) > props.asset.decimals) return;
       hasUserEdit.current = true;
-      const newValue = event.target.value;
-
-      if (newValue.length < value.length) {
-        setValue(newValue);
-        props.onChange?.(newValue);
-      } else {
-        const result = cleanNumericString(newValue);
-        if (isNumeric(result)) {
-          setValue(result);
-          props.onChange?.(result);
-        }
-      }
+      setValue(nextValue);
+      props.onChange?.(nextValue);
+      commitEdit(nextValue === "." ? "0" : nextValue);
     },
-    [props.readOnly, props.onChange, value]
+    [props.readOnly, props.onChange, props.asset.decimals, commitEdit]
   );
 
   const amountNotEntered: () => boolean = useCallback(() => {

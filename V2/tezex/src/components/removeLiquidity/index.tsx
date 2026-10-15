@@ -1,3 +1,4 @@
+import { isTransactionEditable } from "../../functions/transactionSafety";
 import React, { FC, useState, useEffect, useCallback } from "react";
 
 import {
@@ -60,7 +61,7 @@ export const RemoveLiquidity: FC<IRemoveLiquidity> = ({
   const [loading, setLoading] = useState<boolean>(true);
 
   // used to set input to editable or not
-  const [canUpdate, setCanUpdate] = useState<boolean>(false);
+  const canUpdate = isTransactionEditable(currentTransaction);
 
   const [useMax, setUseMax] = useState<boolean>(false);
   const send = 0;
@@ -277,7 +278,6 @@ export const RemoveLiquidity: FC<IRemoveLiquidity> = ({
       currentPool?.id || ""
     );
     if (transaction) {
-      setCanUpdate(true);
       setLoading(false);
     }
   }, [assets, transactionOps.initialize]);
@@ -324,7 +324,6 @@ export const RemoveLiquidity: FC<IRemoveLiquidity> = ({
   // instead of leaving an apparently editable form without a quote model.
   useEffect(() => {
     if (!loading && !currentTransaction) {
-      setCanUpdate(false);
       setLoading(true);
     }
   }, [currentTransaction, loading]);
@@ -332,30 +331,6 @@ export const RemoveLiquidity: FC<IRemoveLiquidity> = ({
   //callback to handle transaction status changes
   const monitorStatus = useCallback(() => {
     const transaction = transactionOps.getActiveTransaction();
-    const _canUpdate: boolean = (() => {
-      if (transaction) {
-        switch (transaction.transactionStatus) {
-          case TransactionStatus.PENDING:
-          case TransactionStatus.SUBMITTED:
-          case TransactionStatus.CONFIRMATION_UNKNOWN:
-            return false;
-          case TransactionStatus.UNINITIALIZED:
-            return false;
-          case TransactionStatus.COMPLETED:
-            return false;
-          default:
-            return true;
-        }
-      } else {
-        return false;
-      }
-    })();
-
-    setCanUpdate((canUpdate) => {
-      if (canUpdate === _canUpdate) return canUpdate;
-      return _canUpdate;
-    });
-
     // current transaction id in wallet context
     const transactionId = transaction?.id;
     // if no id and transaction id, set id and set reloading to true
@@ -369,7 +344,7 @@ export const RemoveLiquidity: FC<IRemoveLiquidity> = ({
       setReloading(true);
       setUseMax(false);
     }
-  }, [transactionOps.getActiveTransaction, id]);
+  }, [transactionOps.getActiveTransaction, currentTransaction, id]);
 
   // effect to monitor transaction status by calling monitorStatus
   useEffect(() => {

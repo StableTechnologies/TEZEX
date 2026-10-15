@@ -1,3 +1,4 @@
+import { isTransactionEditable } from "../../functions/transactionSafety";
 import React, { FC, useState, useEffect, useCallback, useRef } from "react";
 
 import { Wallet } from "../wallet";
@@ -158,7 +159,7 @@ export const AddLiquidity: FC<IAddLiquidity> = ({
   const session = useSession();
 
   // used to set input to editable or not
-  const [canUpdate, setCanUpdate] = useState<boolean>(false);
+  const canUpdate = isTransactionEditable(currentTransaction);
 
   // Callback to process transaction
   const transact = useCallback(async () => {
@@ -196,7 +197,6 @@ export const AddLiquidity: FC<IAddLiquidity> = ({
 
       //if transaction initialized update balance and set loading params to false
       if (transactionInitialized) {
-        setCanUpdate(true);
         setLoading(false);
       }
     } finally {
@@ -255,7 +255,6 @@ export const AddLiquidity: FC<IAddLiquidity> = ({
   // instead of leaving an apparently editable form without a quote model.
   useEffect(() => {
     if (!loading && !currentTransaction) {
-      setCanUpdate(false);
       setLoading(true);
     }
   }, [currentTransaction, loading]);
@@ -265,7 +264,8 @@ export const AddLiquidity: FC<IAddLiquidity> = ({
     const transaction = transactionOps.getActiveTransaction();
     const lqt = transaction?.receiveAmount[0].decimal ?? new BigNumber(0);
     const precision = transaction?.receiveAsset[0]?.decimals ?? 6;
-    return lqt.toFixed(precision).replace(/\.?0+$/, "");
+    const fixed = lqt.toFixed(precision);
+    return precision === 0 ? fixed : fixed.replace(/\.?0+$/, "");
   }, [transactionOps.getActiveTransaction]);
 
   // Fetch balances for all pools
@@ -306,31 +306,6 @@ export const AddLiquidity: FC<IAddLiquidity> = ({
     // get active transaction
     const transaction = transactionOps.getActiveTransaction();
     // map transaction status to a boolean value to determine if transaction can be updated
-    const _canUpdate: boolean = (() => {
-      if (transaction) {
-        switch (transaction.transactionStatus) {
-          case TransactionStatus.PENDING:
-          case TransactionStatus.SUBMITTED:
-          case TransactionStatus.CONFIRMATION_UNKNOWN:
-            return false;
-          case TransactionStatus.UNINITIALIZED:
-            return false;
-          case TransactionStatus.COMPLETED:
-            return false;
-          default:
-            return true;
-        }
-      } else {
-        return false;
-      }
-    })();
-
-    // update can update if different from above _canUpdate
-    setCanUpdate((canUpdate) => {
-      if (canUpdate === _canUpdate) return canUpdate;
-      return _canUpdate;
-    });
-
     // current transaction id in wallet context
     const transactionId = transaction?.id;
     // if no id and transaction id, set id and set reloading to true

@@ -1,3 +1,4 @@
+import { isTransactionEditable } from "../../functions/transactionSafety";
 import React, {
   FC,
   useState,
@@ -150,12 +151,13 @@ export const Swap: FC<ISwapToken> = ({ routeSelection, onRouteChange }) => {
   const [shakeAmountField, setShakeAmountField] = useState(false);
   const sendAmountInputRef = useRef<HTMLInputElement>(null);
   const session = useSession();
-  const [canUpdate, setCanUpdate] = useState<boolean>(false);
+
   const previewLoading =
     process.env.NODE_ENV === "development" &&
     new URLSearchParams(window.location.search).has("loading");
 
   const active = walletOps.getActiveTransaction();
+  const canUpdate = isTransactionEditable(active);
 
   useEffect(() => {
     const pools = network.getAllPools();
@@ -277,7 +279,7 @@ export const Swap: FC<ISwapToken> = ({ routeSelection, onRouteChange }) => {
 
       if (transaction) {
         if (swappingFileds) setSwappingFileds(false);
-        setCanUpdate(true);
+
         setLoading(false);
       }
     } finally {
@@ -310,7 +312,6 @@ export const Swap: FC<ISwapToken> = ({ routeSelection, onRouteChange }) => {
   // Rebuild the empty form immediately instead of leaving it read-only.
   useEffect(() => {
     if (!loading && !active) {
-      setCanUpdate(false);
       setLoading(true);
       setReloading(true);
     }
@@ -324,25 +325,6 @@ export const Swap: FC<ISwapToken> = ({ routeSelection, onRouteChange }) => {
 
   const monitorStatus = useCallback(() => {
     const transaction = transactionOps.getActiveTransaction();
-    const nextCanUpdate = (() => {
-      if (!transaction) return false;
-
-      switch (transaction.transactionStatus) {
-        case TransactionStatus.PENDING:
-        case TransactionStatus.SUBMITTED:
-        case TransactionStatus.CONFIRMATION_UNKNOWN:
-        case TransactionStatus.UNINITIALIZED:
-        case TransactionStatus.COMPLETED:
-          return false;
-        default:
-          return true;
-      }
-    })();
-
-    setCanUpdate((current) =>
-      current === nextCanUpdate ? current : nextCanUpdate
-    );
-
     const transactionId = transaction?.id;
     if (!id && transactionId) {
       setId(transactionId);
@@ -608,9 +590,7 @@ export const Swap: FC<ISwapToken> = ({ routeSelection, onRouteChange }) => {
               </Box>
               <Box sx={styles.detailRow}>
                 <Typography sx={styles.detailLabel}>Slippage</Typography>
-                <Typography sx={styles.detailValueMono}>
-                  {slippage.toFixed(1)}%
-                </Typography>
+                <Typography sx={styles.detailValueMono}>{slippage}%</Typography>
               </Box>
               <Box sx={styles.detailRow}>
                 <Typography sx={styles.detailLabel}>Pool contract</Typography>

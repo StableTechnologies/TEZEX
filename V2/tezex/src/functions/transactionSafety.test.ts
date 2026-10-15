@@ -83,7 +83,11 @@ describe("transaction safety limits", () => {
     ).toBe(TransactionStatus.SUFFICIENT_BALANCE);
   });
 
-  it.each([TransactionStatus.MODIFIED, TransactionStatus.FAILED])(
+  it.each([
+    TransactionStatus.ZERO_AMOUNT,
+    TransactionStatus.MODIFIED,
+    TransactionStatus.FAILED,
+  ])(
     "preserves %s across sufficient and insufficient balance refreshes",
     (status) => {
       expect(

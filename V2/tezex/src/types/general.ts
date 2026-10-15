@@ -186,6 +186,8 @@ export interface Transaction {
   receiveAsset: AssetOrAssetPair;
   receiveAmount: Amount;
   slippage: number;
+  /** Retain an invalid custom draft until the user corrects it. */
+  slippageInput?: string;
   receiveAssetBalance: Amount;
   transactionStatus: TransactionStatus;
   operationHash?: string;

@@ -53,8 +53,10 @@ import {
   transactionResultMatchesActive,
 } from "../functions/quoteSafety";
 import {
+  getSlippageValidationMessage,
   getStatusAfterBalanceCheck,
   isValidSlippage,
+  isTransactionInProgress,
   shouldApplySlippageUpdate,
   shouldApplyTransactionStatus,
   XTZ_FEE_RESERVE_TEZ,
@@ -118,14 +120,16 @@ export interface WalletInfo {
   refreshTransactionQuote: (
     component: TransactingComponent,
     amountUpdateSend?: Amount,
-    slippageUpdate?: number
+    slippageUpdate?: number,
+    debounceMs?: number
   ) => Promise<boolean>;
   prepareTransactionForSubmission: (
     component: TransactingComponent
   ) => Promise<boolean>;
   invalidateTransactionQuote: (
     component: TransactingComponent,
-    transactionStatus: TransactionStatus
+    transactionStatus: TransactionStatus,
+    slippageInput?: string
   ) => Promise<void>;
   getActiveTransaction: (
     component: TransactingComponent
@@ -537,6 +541,7 @@ export function WalletProvider(props: IWalletProvider) {
 
   const clearTransaction = useCallback(
     (component: TransactingComponent) => {
+      if (isTransactionInProgress(transactionsRef.current[component])) return;
       latestQuoteRequests.delete(component);
       latestTransactionInitializations.delete(component);
       setTransactions((draft) => {
@@ -811,10 +816,14 @@ export function WalletProvider(props: IWalletProvider) {
       receiveAmount?: Amount,
       slipppage = 0.5
     ): Promise<boolean> => {
+      if (isTransactionInProgress(transactionsRef.current[component]))
+        return false;
       const initializationToken = Symbol("transaction initialization");
       latestQuoteRequests.delete(component);
       latestTransactionInitializations.set(component, initializationToken);
-      return await transactionUpdateMutex.runExclusive(async () => {
+      // Publish the new identity before fetching. RPC latency must never hold
+      // the mutation lock shared by every trading form.
+      {
         const quoteContext = { ...quoteContextRef.current };
         const activeNetwork = networkRef.current;
         const adapter = activeNetwork.getPoolAdapter(poolId);
@@ -867,59 +876,62 @@ export function WalletProvider(props: IWalletProvider) {
           quoteRevision: 0,
         };
 
-        let transaction: Transaction = _transaction;
-
-        if (_transaction.sendAmount[0].mantissa.isZero()) {
-          const currentQuoteContext = quoteContextRef.current;
-          if (
-            latestTransactionInitializations.get(component) !==
-              initializationToken ||
-            quoteContext.account !== currentQuoteContext.account ||
-            quoteContext.network !== currentQuoteContext.network ||
-            quoteContext.chainId !== currentQuoteContext.chainId
-          ) {
-            return false;
-          }
-
+        const empty = _transaction.sendAmount[0].mantissa.isZero();
+        setActiveTransaction(component, {
+          ..._transaction,
+          transactionStatus: empty
+            ? TransactionStatus.ZERO_AMOUNT
+            : TransactionStatus.MODIFIED,
+        });
+        if (empty) {
+          latestTransactionInitializations.delete(component);
+          return true;
+        }
+        const isCurrent = () => {
+          const context = quoteContextRef.current;
+          return (
+            latestTransactionInitializations.get(component) ===
+              initializationToken &&
+            transactionsRef.current[component]?.id === _transaction.id &&
+            quoteContext.account === context.account &&
+            quoteContext.network === context.network &&
+            quoteContext.chainId === context.chainId
+          );
+        };
+        try {
+          const estimated = await estimateWithAdapter(
+            _transaction,
+            activeNetwork.toolkit,
+            adapter
+          );
+          if (!isCurrent()) return false;
+          const active = transactionsRef.current[component];
+          if (!active) return false;
+          const quoted = {
+            ...estimated,
+            sendAssetBalance: active.sendAssetBalance,
+            receiveAssetBalance: active.receiveAssetBalance,
+            quoteRevision: 1,
+          };
           latestTransactionInitializations.delete(component);
           return setActiveTransaction(component, {
-            ..._transaction,
-            transactionStatus: TransactionStatus.ZERO_AMOUNT,
+            ...quoted,
+            quote: createTransactionQuote(quoted, quoteContext, 1),
           });
-        }
-
-        transaction = await estimateWithAdapter(
-          _transaction,
-          activeNetwork.toolkit,
-          adapter
-        );
-
-        const currentQuoteContext = quoteContextRef.current;
-        if (
-          latestTransactionInitializations.get(component) !==
-            initializationToken ||
-          quoteContext.account !== currentQuoteContext.account ||
-          quoteContext.network !== currentQuoteContext.network ||
-          quoteContext.chainId !== currentQuoteContext.chainId
-        ) {
+        } catch (error) {
+          if (isCurrent()) {
+            latestTransactionInitializations.delete(component);
+            setTransactions((draft) => {
+              const active = draft[component];
+              if (active?.id === _transaction.id)
+                active.transactionStatus = TransactionStatus.FAILED;
+            });
+          }
           return false;
         }
-
-        const quotedTransaction: Transaction = {
-          ...transaction,
-          quoteRevision: 1,
-        };
-        transaction = {
-          ...quotedTransaction,
-          quote: createTransactionQuote(quotedTransaction, quoteContext, 1),
-        };
-
-        latestTransactionInitializations.delete(component);
-
-        return setActiveTransaction(component, transaction);
-      });
+      }
     },
-    [setActiveTransaction, transactionUpdateMutex]
+    [setActiveTransaction, setTransactions]
   );
 
   // function to check if a user has sufficient balance
@@ -999,7 +1011,7 @@ export function WalletProvider(props: IWalletProvider) {
   const updateBalancesOfAllTransactions = useCallback(async () => {
     await transactionUpdateMutex.runExclusive(() => {
       // iterate over all transactions
-      Object.entries(transactions).forEach(([key, transaction]) => {
+      Object.entries(transactionsRef.current).forEach(([key, transaction]) => {
         // key is the component
         const component = key as TransactingComponent;
         // if the transaction is defined
@@ -1008,8 +1020,7 @@ export function WalletProvider(props: IWalletProvider) {
           const updatedTransaction = TranscationWithUpdatedBalance(transaction);
 
           // old transaction before balance update
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          const t = transactions[component]!;
+          const t = transaction;
           // if the new transaction is different from the old one update the state
           if (t && !eq(JSON.stringify(updatedTransaction), JSON.stringify(t))) {
             setTransactions((draft) => {
@@ -1058,32 +1069,24 @@ export function WalletProvider(props: IWalletProvider) {
   // exported callback to update transaction balance of a  single component
   const updateTransactionBalance = useCallback(
     async (component: TransactingComponent): Promise<boolean> => {
-      const transaction = getActiveTransaction(component);
-      const transactionId = transaction?.id;
       let updated = false;
-      transaction &&
-        (await transactionUpdateMutex.runExclusive(() => {
-          const _transaction: Transaction =
-            TranscationWithUpdatedBalance(transaction);
-          setTransactions((draft) => {
-            updated = updateTransaction(draft[component], (transaction) => {
-              if (
-                transaction &&
-                transaction.id &&
-                transaction.id === transactionId
-              ) {
-                transaction.sendAssetBalance = _transaction.sendAssetBalance;
-                transaction.receiveAssetBalance =
-                  _transaction.receiveAssetBalance;
-                transaction.transactionStatus = _transaction.transactionStatus;
-                transaction.lastModified = new Date();
-                return true;
-              }
-
-              return false;
-            });
+      await transactionUpdateMutex.runExclusive(() => {
+        // Read after acquiring the lock: an amount edit may have been queued
+        // ahead of this refresh and already invalidated the previous quote.
+        const transaction = transactionsRef.current[component];
+        if (!transaction) return;
+        const refreshed = TranscationWithUpdatedBalance(transaction);
+        setTransactions((draft) => {
+          updated = updateTransaction(draft[component], (active) => {
+            if (active.id !== transaction.id) return false;
+            active.sendAssetBalance = refreshed.sendAssetBalance;
+            active.receiveAssetBalance = refreshed.receiveAssetBalance;
+            active.transactionStatus = refreshed.transactionStatus;
+            active.lastModified = new Date();
+            return true;
           });
-        }));
+        });
+      });
       return updated;
     },
     [TranscationWithUpdatedBalance, setTransactions]
@@ -1176,12 +1179,18 @@ export function WalletProvider(props: IWalletProvider) {
   const invalidateTransactionQuote = useCallback(
     async (
       component: TransactingComponent,
-      transactionStatus: TransactionStatus
+      transactionStatus: TransactionStatus,
+      slippageInput?: string
     ): Promise<void> => {
+      const expectedId = transactionsRef.current[component]?.id;
       latestQuoteRequests.delete(component);
+      latestTransactionInitializations.delete(component);
       await transactionUpdateMutex.runExclusive(() => {
         setTransactions((draft) => {
           updateTransaction(draft[component], (transaction) => {
+            if (transaction.id !== expectedId) return false;
+            if (slippageInput !== undefined)
+              transaction.slippageInput = slippageInput;
             transaction.quoteRevision = (transaction.quoteRevision ?? 0) + 1;
             latestQuoteRequests.delete(component);
             delete transaction.quote;
@@ -1203,9 +1212,12 @@ export function WalletProvider(props: IWalletProvider) {
       component: TransactingComponent,
       amountUpdateSend?: Amount,
       slippageUpdate?: number,
-      submitAfterRefresh = false
+      submitAfterRefresh = false,
+      debounceMs = 0
     ): Promise<boolean> => {
       latestQuoteRequests.delete(component);
+      latestTransactionInitializations.delete(component);
+      const expectedTransactionId = transactionsRef.current[component]?.id;
       let pending:
         | { request: QuoteRequest; transaction: Transaction }
         | undefined;
@@ -1214,8 +1226,16 @@ export function WalletProvider(props: IWalletProvider) {
       await transactionUpdateMutex.runExclusive(() => {
         setTransactions((draft) => {
           updated = updateTransaction(draft[component], (transaction) => {
+            if (transaction.id !== expectedTransactionId) return false;
             latestQuoteRequests.delete(component);
-            if (isNumber(slippageUpdate) && !isValidSlippage(slippageUpdate)) {
+            if (amountUpdateSend) transaction.sendAmount = amountUpdateSend;
+            if (isNumber(slippageUpdate) && isValidSlippage(slippageUpdate))
+              delete transaction.slippageInput;
+            if (
+              (isNumber(slippageUpdate) && !isValidSlippage(slippageUpdate)) ||
+              (transaction.slippageInput !== undefined &&
+                getSlippageValidationMessage(transaction.slippageInput))
+            ) {
               transaction.quoteRevision = (transaction.quoteRevision ?? 0) + 1;
               delete transaction.quote;
               transaction.receiveAmount = transaction.receiveAsset.map(
@@ -1267,6 +1287,10 @@ export function WalletProvider(props: IWalletProvider) {
 
       if (!pending) return updated;
       const pendingQuote = pending;
+      if (debounceMs)
+        await new Promise((resolve) => setTimeout(resolve, debounceMs));
+      if (latestQuoteRequests.get(component) !== pendingQuote.request)
+        return false;
 
       let estimatedTransaction: Transaction;
       try {
@@ -1354,9 +1378,16 @@ export function WalletProvider(props: IWalletProvider) {
     async (
       component: TransactingComponent,
       amountUpdateSend?: Amount,
-      slippageUpdate?: number
+      slippageUpdate?: number,
+      debounceMs = 0
     ): Promise<boolean> =>
-      runTransactionQuote(component, amountUpdateSend, slippageUpdate),
+      runTransactionQuote(
+        component,
+        amountUpdateSend,
+        slippageUpdate,
+        false,
+        debounceMs
+      ),
     [runTransactionQuote]
   );
 
