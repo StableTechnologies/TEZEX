@@ -377,17 +377,6 @@ export function WalletProvider(props: IWalletProvider) {
     [findAssetBalance]
   );
 
-  useEffect(() => {
-    latestQuoteRequests.clear();
-    latestTransactionInitializations.clear();
-    setTransactions({});
-  }, [
-    latestQuoteRequests,
-    latestTransactionInitializations,
-    network.network,
-    network.info.chainId,
-    setTransactions,
-  ]);
   // Auto-reconnect on mount (ONCE)
   useEffect(() => {
     const autoReconnect = async () => {
@@ -456,35 +445,51 @@ export function WalletProvider(props: IWalletProvider) {
     autoReconnect();
   }, []);
 
-  // callback to update state of asset balances
+  const balanceRefreshRevisionRef = useRef<number | undefined>(undefined);
+  // Publish each asset as it arrives: an unavailable LP view must not hide
+  // the XTZ/token balances required by the currently visible form.
   const updateBalances = useCallback(async () => {
-    if (address && network.toolkit && client) {
-      // get balances of all assets by mapping over current asset balances
-      const _assetBalances: AssetBalance[] = await Promise.all(
-        assetBalances.map(async (assetBalance: AssetBalance) => {
-          return {
-            balance: await getBalance(
+    if (!address || !client) return;
+    const revision = connectionRevisionRef.current;
+    if (balanceRefreshRevisionRef.current === revision) return;
+    balanceRefreshRevisionRef.current = revision;
+    try {
+      await Promise.allSettled(
+        network.info.assets.map(async (asset) => {
+          try {
+            const balance = await getBalance(
               network.toolkit,
               network.network,
               address,
-              assetBalance.asset
-            ),
-            asset: assetBalance.asset,
-          };
+              asset
+            );
+            if (connectionRevisionRef.current !== revision) return;
+            setAssetBalances((previous) =>
+              previous.map((entry) =>
+                entry.asset.name === asset.name &&
+                !entry.balance?.mantissa.eq(balance.mantissa)
+                  ? { asset, balance }
+                  : entry
+              )
+            );
+          } catch (error) {
+            // Keep other successful reads and retry this asset on the next poll.
+            console.warn(
+              "Could not refresh balance for " + asset.name + ":",
+              error
+            );
+          }
         })
       );
-      //only update if balances have changed
-      if (!eq(_assetBalances, assetBalances)) setAssetBalances(_assetBalances);
+    } finally {
+      if (balanceRefreshRevisionRef.current === revision)
+        balanceRefreshRevisionRef.current = undefined;
     }
-  }, [assetBalances, address, network.toolkit, client]);
+  }, [address, client, network.toolkit, network.network, network.info.assets]);
 
-  // load / update balances on wallet connection
   useEffect(() => {
-    const _updateBalances = async () => {
-      await updateBalances();
-    };
-    _updateBalances();
-  }, [isWalletConnected]);
+    void updateBalances();
+  }, [updateBalances]);
 
   // Track the full canonical identity so two CUSTOM networks never compare equal.
   const previousNetworkRef = useRef(configuredNetworkFingerprint);

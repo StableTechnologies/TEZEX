@@ -1,4 +1,4 @@
-import { useContext, useCallback, useEffect, useState, useRef } from "react";
+import { useContext, useCallback, useEffect, useMemo } from "react";
 import { BigNumber } from "bignumber.js";
 import { WalletContext } from "../contexts/wallet";
 import {
@@ -18,7 +18,6 @@ import {
   Token,
 } from "../types/general";
 
-import { debounce, eq } from "lodash";
 import {
   getSlippageValidationMessage,
   getSpendableXtz,
@@ -60,80 +59,26 @@ export function useTransaction(
   }
 ): TransactionOps {
   const wallet = useContext(WalletContext);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [assetStates, setAssetStates] = useState<AssetState[]>([]);
-  const [assetState, setAssetState] = useState<AssetState | undefined>(
-    undefined
+  // Read the current snapshot on every context render. A stable getter is not
+  // a subscription: copying its result into effect-managed state misses resets
+  // and quote updates when the getter identity does not change.
+  const transaction = wallet.getActiveTransaction(component);
+  const loading = !transaction;
+  const assetStates = useMemo(
+    () => (transaction ? transactionToAssetStates(transaction) : []),
+    [transaction]
   );
-
-  const [transaction, setTransaction] = useState<Transaction | undefined>(
-    wallet.getActiveTransaction(component)
+  const assetState = trackAsset
+    ? getAssetStateByTransactionTypeAndAsset(
+        trackAsset.transferType,
+        trackAsset.asset,
+        assetStates
+      )
+    : undefined;
+  const getActiveTransaction = useCallback(
+    () => wallet.getActiveTransaction(component),
+    [wallet.getActiveTransaction, component]
   );
-  const setDebouncedLoading = useRef(
-    debounce((newLoadingState) => {
-      setLoading(newLoadingState);
-    }, 1000) // 300ms debounce time
-  ).current;
-
-  //callback to get current transaction from wallet
-  const getActiveTransaction = useCallback((): Transaction | undefined => {
-    return wallet.getActiveTransaction(component);
-  }, [wallet.getActiveTransaction, component]);
-
-  //Callback to load transaction and AssetStates from wallet
-  const internalUpdate = useCallback(
-    (
-      transaction: Transaction,
-      loading?: boolean,
-      trackAsset?: {
-        transferType: TransferType;
-        asset: Asset;
-      }
-    ) => {
-      setTransaction(transaction);
-
-      // derive asset states from transaction
-      const _assetStates = transactionToAssetStates(transaction);
-      setAssetStates(_assetStates);
-      // check to see if an Asset needs to be tracked
-      if (trackAsset) {
-        // set tracked asset state
-        setAssetState(
-          getAssetStateByTransactionTypeAndAsset(
-            trackAsset.transferType,
-            trackAsset.asset,
-            _assetStates
-          )
-        );
-      }
-    },
-    [trackAsset]
-  );
-
-  // Callback to get active transaction from wallet
-  const active = useCallback(() => {
-    return wallet.getActiveTransaction(component);
-  }, [wallet.getActiveTransaction, component]);
-
-  const updateState = useCallback(() => {
-    const currentTransaction = active();
-    if (
-      currentTransaction &&
-      (!transaction || !eq(currentTransaction, transaction))
-    ) {
-      internalUpdate(currentTransaction, loading, trackAsset);
-    }
-  }, [active, internalUpdate, loading, trackAsset, transaction]);
-
-  useEffect(() => {
-    updateState();
-  }, [updateState]);
-
-  useEffect(() => {
-    if (loading && transaction) {
-      setDebouncedLoading(false);
-    }
-  }, [loading, transaction]);
 
   useEffect(() => {
     if (
@@ -188,8 +133,6 @@ export function useTransaction(
           if (done && wallet.client)
             await wallet.updateTransactionBalance(component);
 
-          // set loading to true if transaction was initialized
-          done && setLoading(true);
           return done;
         });
     },

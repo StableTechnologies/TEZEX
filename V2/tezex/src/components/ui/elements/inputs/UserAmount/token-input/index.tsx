@@ -3,6 +3,7 @@ import {
   Asset,
   Id,
   TransactingComponent,
+  TransactionStatus,
   TransferType,
 } from "../../../../../../types/general";
 
@@ -65,8 +66,23 @@ const TokenInput: FC<IRigthInput> = (props) => {
     string | unknown
   >(undefined);
   const [swapping, setSwapping] = useState(false);
-  const transactionId = transactionOps.getActiveTransaction()?.id;
+  const transaction = transactionOps.getActiveTransaction();
+  const transactionId = transaction?.id;
+  const calculatedField =
+    props.transferType === TransferType.RECEIVE ||
+    (props.component === TransactingComponent.ADD_LIQUIDITY &&
+      transaction?.sendAsset?.[1]?.name === props.asset.name);
+  const displayValue = props.forceZero
+    ? "0.00"
+    : calculatedField &&
+      transaction?.transactionStatus === TransactionStatus.MODIFIED
+    ? "…"
+    : calculatedField &&
+      transaction?.transactionStatus === TransactionStatus.FAILED
+    ? "—"
+    : value;
   const lastTransactionId = useRef<Id | undefined>(undefined);
+  const hasUserEdit = useRef(false);
 
   const swap = useCallback(async () => {
     if (swapping) return;
@@ -127,8 +143,13 @@ const TokenInput: FC<IRigthInput> = (props) => {
 
   useEffect(() => {
     if (transactionId && transactionId !== lastTransactionId.current) {
+      const preserveEarlyEdit =
+        !lastTransactionId.current && hasUserEdit.current;
       lastTransactionId.current = transactionId;
-      loadValue();
+      if (!preserveEarlyEdit) {
+        hasUserEdit.current = false;
+        loadValue();
+      }
     }
     if (props.readOnly) {
       loadValue();
@@ -198,6 +219,7 @@ const TokenInput: FC<IRigthInput> = (props) => {
     (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       if (props.readOnly) return;
 
+      hasUserEdit.current = true;
       const newValue = event.target.value;
 
       if (newValue.length < value.length) {
@@ -258,7 +280,7 @@ const TokenInput: FC<IRigthInput> = (props) => {
             onFocus={handleFocus}
             onBlur={handleBlur}
             onChange={handleChange}
-            value={props.forceZero ? "0.00" : value}
+            value={displayValue}
             sx={styles.tezex.textField}
             inputProps={{
               inputMode: "decimal",
