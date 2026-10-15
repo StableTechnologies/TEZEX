@@ -1,6 +1,6 @@
 import BigNumber from "bignumber.js";
 
-import { TransactionStatus } from "../types/general";
+import { Transaction, TransactionStatus } from "../types/general";
 
 export const MIN_SLIPPAGE_PERCENT = 0.1;
 export const MAX_SLIPPAGE_PERCENT = 5;
@@ -30,6 +30,7 @@ export const getStatusAfterBalanceCheck = (
   currentStatus: TransactionStatus,
   balanceStatus: TransactionStatus
 ): TransactionStatus =>
+  currentStatus === TransactionStatus.ZERO_AMOUNT ||
   currentStatus === TransactionStatus.INVALID_SLIPPAGE ||
   currentStatus === TransactionStatus.MODIFIED ||
   currentStatus === TransactionStatus.FAILED
@@ -69,3 +70,26 @@ export const getSlippageValidationMessage = (
 
   return undefined;
 };
+
+export const isTransactionInProgress = (
+  transaction?: Pick<Transaction, "locked" | "transactionStatus">
+): boolean =>
+  Boolean(
+    transaction &&
+      (transaction.locked ||
+        [
+          TransactionStatus.PENDING,
+          TransactionStatus.SUBMITTED,
+          TransactionStatus.CONFIRMATION_UNKNOWN,
+        ].includes(transaction.transactionStatus))
+  );
+
+export const isTransactionEditable = (
+  transaction?: Pick<Transaction, "locked" | "transactionStatus">
+): boolean =>
+  Boolean(
+    transaction &&
+      !isTransactionInProgress(transaction) &&
+      transaction.transactionStatus !== TransactionStatus.UNINITIALIZED &&
+      transaction.transactionStatus !== TransactionStatus.COMPLETED
+  );

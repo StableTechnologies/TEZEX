@@ -184,7 +184,11 @@ export function useTransaction(
 
   // calback to handle send amount or slippage updates to transaction in context
   const _updateAmount = useCallback(
-    async (sendAmount?: string, slippage?: string): Promise<boolean> => {
+    async (
+      sendAmount?: string,
+      slippage?: string,
+      debounceMs = 0
+    ): Promise<boolean> => {
       const transaction = getActiveTransaction();
       if (!transaction || transaction.locked) return false;
 
@@ -194,7 +198,8 @@ export function useTransaction(
         if (validationMessage) {
           await wallet.invalidateTransactionQuote(
             component,
-            TransactionStatus.INVALID_SLIPPAGE
+            TransactionStatus.INVALID_SLIPPAGE,
+            slippage
           );
           return true;
         }
@@ -224,7 +229,8 @@ export function useTransaction(
       return wallet.refreshTransactionQuote(
         component,
         sendAmountUpdate,
-        slippageUpdate
+        slippageUpdate,
+        debounceMs
       );
     },
     [getActiveTransaction, wallet, component]
@@ -232,13 +238,17 @@ export function useTransaction(
 
   // exported callback to handle send amount or slippage updates to transaction in context
   const updateAmount = useCallback(
-    async (sendAmount?: string, slippage?: string) => {
+    async (sendAmount?: string, slippage?: string, caller?: string) => {
       if (sendAmount !== undefined || slippage !== undefined) {
         // A failed quote is surfaced through the transaction status. Retrying
         // here on every wallet-context render creates an unbounded RPC loop and
         // prevents the amount fields from settling. A later user edit or an
         // explicit submission attempt will request a fresh quote.
-        await _updateAmount(sendAmount, slippage);
+        await _updateAmount(
+          sendAmount,
+          slippage,
+          caller === "tokenInput" || caller === "slippageInput" ? 500 : 0
+        );
       }
     },
     [_updateAmount]

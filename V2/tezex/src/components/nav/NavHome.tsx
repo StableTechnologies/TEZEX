@@ -9,6 +9,7 @@ import { TransactingComponent } from "../../types/general";
 
 import style from "./style";
 import useStyles from "../../hooks/styles";
+import { useWallet } from "../../hooks/wallet";
 import { useNetwork } from "../../hooks/network";
 import {
   DEFAULT_LIQUIDITY_PATH,
@@ -50,6 +51,7 @@ export const NavHome: FC<INavHome> = (props) => {
   const [value, setValue] = useState(0);
   const sessionInfo = useSession();
   const network = useNetwork();
+  const wallet = useWallet();
   const location = useLocation();
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     event.preventDefault();
@@ -81,6 +83,9 @@ export const NavHome: FC<INavHome> = (props) => {
   const swapHref = (() => {
     if (location.pathname.startsWith("/swap/")) return location.pathname;
     if (!network.selectedPool) return DEFAULT_SWAP_PATH;
+    const draft = wallet.getActiveTransaction(TransactingComponent.SWAP);
+    if (draft?.poolId === network.selectedPool.id)
+      return getSwapPath(draft.sendAsset[0].name, draft.receiveAsset[0].name);
     return getSwapPath(
       network.selectedPool.tokenA,
       network.selectedPool.tokenB

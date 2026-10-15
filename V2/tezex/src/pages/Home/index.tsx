@@ -7,7 +7,7 @@ import React, {
   useState,
 } from "react";
 import { flushSync } from "react-dom";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 
 import { NavHome } from "../../components/nav";
 import { Swap } from "../../components/swap";
@@ -24,6 +24,9 @@ import Typography from "@mui/material/Typography";
 import ArrowOutwardRoundedIcon from "@mui/icons-material/ArrowOutwardRounded";
 import { NetworkType } from "@airgap/beacon-sdk";
 import { useNetwork } from "../../hooks/network";
+import { useWallet } from "../../hooks/wallet";
+import { TransactingComponent } from "../../types/general";
+import { isTransactionInProgress } from "../../functions/transactionSafety";
 
 import style from "./style";
 import useStyles from "../../hooks/styles";
@@ -100,6 +103,18 @@ export const Home: FC<IHome> = (props) => {
   const navigate = useNavigate();
   const { pair: pairSlug } = useParams<{ pair?: string }>();
   const network = useNetwork();
+  const wallet = useWallet();
+  const location = useLocation();
+  const operation = wallet.getActiveTransaction(
+    props.path === "swap"
+      ? TransactingComponent.SWAP
+      : props.path === "add"
+      ? TransactingComponent.ADD_LIQUIDITY
+      : TransactingComponent.REMOVE_LIQUIDITY
+  );
+  const protectedOperation = isTransactionInProgress(operation)
+    ? operation
+    : undefined;
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [displayedPath, setDisplayedPath] = useState<HomePaths>(props.path);
   const viewportRef = useRef<HTMLDivElement | null>(null);
@@ -136,6 +151,27 @@ export const Home: FC<IHome> = (props) => {
 
   useLayoutEffect(() => {
     if (!pairSlug || !routePool) return;
+    if (protectedOperation) {
+      const pool = availablePools.find(
+        (pool) => pool.id === protectedOperation.poolId
+      );
+      if (pool) {
+        const operationPath =
+          props.path === "swap"
+            ? getSwapPath(
+                protectedOperation.sendAsset[0].name,
+                protectedOperation.receiveAsset[0].name
+              )
+            : getLiquidityPath(
+                pool,
+                props.path === "remove" ? "remove" : "add"
+              );
+        if (location.pathname !== operationPath) {
+          navigate(operationPath, { replace: true });
+          return;
+        }
+      }
+    }
 
     if (network.selectedPool?.id !== routePool.id) {
       network.setSelectedPool(routePool);
@@ -158,6 +194,8 @@ export const Home: FC<IHome> = (props) => {
     }
   }, [
     pairSlug,
+    protectedOperation?.id,
+    location.pathname,
     props.path,
     routePool?.id,
     requestedLiquidityPool?.id,
@@ -373,7 +411,7 @@ export const Home: FC<IHome> = (props) => {
       );
     }
 
-    switch (displayedPath) {
+    switch (isTransitioning ? displayedPath : props.path) {
       case "add":
         return (
           <AddLiquidity
