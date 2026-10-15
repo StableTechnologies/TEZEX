@@ -1,3 +1,4 @@
+import { getQuoteLoadingLabel } from "../../utils/quoteLoadingLabel";
 import { isTransactionEditable } from "../../functions/transactionSafety";
 import React, { FC, useState, useEffect, useCallback } from "react";
 
@@ -179,7 +180,11 @@ export const RemoveLiquidity: FC<IRemoveLiquidity> = ({
     const transaction = transactionOps.getActiveTransaction();
 
     if (transaction?.transactionStatus === TransactionStatus.MODIFIED) {
-      return <span role="status">Updating quote…</span>;
+      return (
+        <span role="status">
+          {getQuoteLoadingLabel(transaction.hasReceivedQuote)}…
+        </span>
+      );
     }
     if (
       transaction?.transactionStatus === TransactionStatus.FAILED &&

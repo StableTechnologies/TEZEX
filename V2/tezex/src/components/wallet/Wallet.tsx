@@ -1,3 +1,4 @@
+import { getQuoteLoadingLabel } from "../../utils/quoteLoadingLabel";
 import React, { FC, useEffect, useState } from "react";
 import connectWallet from "../../functions/beacon";
 import { useWallet, useWalletOps } from "../../hooks/wallet";
@@ -48,6 +49,9 @@ export const Wallet: FC<IWallet> = (props) => {
   // The getter stays stable while wallet context updates re-render this component.
   const transactionStatus =
     walletOps?.getTransactionStatus() ?? TransactionStatus.ZERO_AMOUNT;
+  const quoteLoadingLabel = getQuoteLoadingLabel(
+    props.transaction?.hasReceivedQuote
+  );
   const [walletText, setWalletText] = useState<string | undefined>("");
   const [accountAnchor, setAccountAnchor] = useState<HTMLElement | null>(null);
   const [addressCopied, setAddressCopied] = useState(false);
@@ -90,7 +94,7 @@ export const Wallet: FC<IWallet> = (props) => {
       case TransactionStatus.MODIFIED:
         setDisabled(true);
         setSpinner(true);
-        setWalletText("Updating quote");
+        setWalletText(quoteLoadingLabel);
         break;
       case TransactionStatus.SUFFICIENT_BALANCE:
         setDisabled(false);
@@ -131,7 +135,12 @@ export const Wallet: FC<IWallet> = (props) => {
         setSpinner(true);
         setWalletText(transactionStatus);
     }
-  }, [transactionStatus, props.children, props.onZeroAmount]);
+  }, [
+    transactionStatus,
+    props.children,
+    props.onZeroAmount,
+    quoteLoadingLabel,
+  ]);
 
   const transact = async () => {
     if (

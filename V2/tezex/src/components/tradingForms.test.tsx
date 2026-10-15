@@ -253,10 +253,10 @@ test("a failed swap quote stays visible after balance refresh and a new edit rec
   await waitFor(() => expect(mockEstimateSwap).toHaveBeenCalledTimes(1));
   await waitFor(() =>
     expect(
-      screen.getByRole("button", { name: "Updating quote" })
+      screen.getByRole("button", { name: "Fetching quote" })
     ).toBeDisabled()
   );
-  expect(screen.getByText("Updating quote…")).toBeVisible();
+  expect(screen.getByText("Fetching quote…")).toBeVisible();
   expect(input).not.toHaveAttribute("readonly");
   await act(async () => {
     rejectQuote(new Error("RPC unavailable"));

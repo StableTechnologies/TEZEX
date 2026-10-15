@@ -1,3 +1,4 @@
+import { getQuoteLoadingLabel } from "../../utils/quoteLoadingLabel";
 import { isTransactionEditable } from "../../functions/transactionSafety";
 import React, {
   FC,
@@ -496,7 +497,7 @@ export const Swap: FC<ISwapToken> = ({ routeSelection, onRouteChange }) => {
                   : hasEnteredAmount
                   ? status === TransactionStatus.FAILED
                     ? "Quote unavailable. Edit the amount to try again."
-                    : "Updating quote…"
+                    : `${getQuoteLoadingLabel(active?.hasReceivedQuote)}…`
                   : "Enter an amount to load a live pool quote"}
               </Typography>
               <Typography sx={styles.quoteStatus}>

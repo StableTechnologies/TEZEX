@@ -299,29 +299,53 @@ test("a delayed quote cannot overwrite a newer amount or changed direction", asy
   assertConsistent();
 });
 
-test("editing a ready quote invalidates it immediately, before the debounce expires", async () => {
-  await mount();
-  await act(async () => {
-    wallet.syncActiveAccount(new DAppClient({ name: "test" }), {
-      address: "tz1-test",
-      accountIdentifier: "one",
-      network: { type: NetworkType.MAINNET },
-    } as AccountInfo);
-  });
-  await settle();
-  edit("3");
-  await settle();
-  expect(transaction().quote).toBeDefined();
-  edit("4");
-  await act(async () => {
-    await Promise.resolve();
-  });
-  expect(transaction().sendAmount[0].decimal.toString()).toBe("4");
-  expect(transaction().quote).toBeUndefined();
-  expect(screen.getByRole("button", { name: "Updating quote" })).toBeDisabled();
-  await settle();
-  assertConsistent();
-});
+test.each([
+  "/swap/xtz-to-tzbtc",
+  "/liquidity/xtz-tzbtc",
+  "/liquidity/xtz-tzbtc/remove",
+])(
+  "%s distinguishes first fetch from updating an accepted quote",
+  async (path) => {
+    await mount(path);
+    await act(async () => {
+      wallet.syncActiveAccount(new DAppClient({ name: "test" }), {
+        address: "tz1-test",
+        accountIdentifier: "one",
+        network: { type: NetworkType.MAINNET },
+      } as AccountInfo);
+    });
+    await settle();
+    delayQuotes = true;
+    edit("2");
+    await settle();
+    expect(
+      screen.getByRole("button", { name: "Fetching quote" })
+    ).toBeDisabled();
+    expect(screen.getByText("Fetching quote…")).toBeVisible();
+    edit("3");
+    await settle();
+    expect(
+      screen.getByRole("button", { name: "Fetching quote" })
+    ).toBeDisabled();
+    delayQuotes = false;
+    await act(async () =>
+      pending.splice(0).forEach((request) => request.resolve())
+    );
+    await settle();
+    expect(transaction().quote).toBeDefined();
+    edit("4");
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(transaction().sendAmount[0].decimal.toString()).toBe("4");
+    expect(transaction().quote).toBeUndefined();
+    expect(
+      screen.getByRole("button", { name: "Updating quote" })
+    ).toBeDisabled();
+    await settle();
+    assertConsistent();
+  }
+);
 test("switching modes preserves the chosen swap direction and draft", async () => {
   await mount();
   edit("3");

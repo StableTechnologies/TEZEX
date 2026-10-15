@@ -1,3 +1,4 @@
+import { getQuoteLoadingLabel } from "../../utils/quoteLoadingLabel";
 import { isTransactionEditable } from "../../functions/transactionSafety";
 import React, { FC, useState, useEffect, useCallback, useRef } from "react";
 
@@ -425,7 +426,9 @@ export const AddLiquidity: FC<IAddLiquidity> = ({
               <Typography component="span" sx={styles.infoReceive}>
                 {currentTransaction?.transactionStatus ===
                 TransactionStatus.MODIFIED
-                  ? "Updating quote…"
+                  ? `${getQuoteLoadingLabel(
+                      currentTransaction.hasReceivedQuote
+                    )}…`
                   : currentTransaction?.transactionStatus ===
                     TransactionStatus.FAILED
                   ? "Quote unavailable. Edit the amount to try again."

@@ -5,6 +5,7 @@ Swap, Add Liquidity, and Remove Liquidity must behave consistently when users ch
 ## Invariants
 
 - The URL, selected pool, token direction, transaction identity, amount, and quote describe the same intent.
+- Pending quote labels use "Fetching quote…" until the current transaction has accepted its first quote, then "Updating quote…" on later requests. Failed or superseded requests do not count as a received quote.
 - An edit updates the transaction draft and invalidates its quote immediately. Only a cold RPC request is debounced (150 ms); valid cached pool data is quoted without a typing timer. Leaving the screen does not discard an accepted edit.
 - Late successes and failures cannot overwrite a newer amount, direction, pool, account, or network. Balance refreshes cannot restore a status from before an edit.
 - An RPC request in one form never holds the shared mutation lock while it waits for the network.
@@ -20,7 +21,7 @@ Swap, Add Liquidity, and Remove Liquidity must behave consistently when users ch
 
 ## Automated coverage
 
-`src/components/tradingSequences.test.tsx` exercises real providers, routes, navigation, selectors, and input components. Network adapters and balance reads are deterministic mocks so responses can be delayed, reordered, or rejected. It currently contains 79 scenarios:
+`src/components/tradingSequences.test.tsx` exercises real providers, routes, navigation, selectors, and input components. Network adapters and balance reads are deterministic mocks so responses can be delayed, reordered, or rejected. It currently contains 81 scenarios:
 
 - All 14 configured pool entries across Mainnet, Shadownet, and Previewnet: both swap directions, both deposit orders, withdrawal, clearing, and screen changes.
 - All 36 ordered pairs of edit, clear, reverse, pair change, mode change, and leave/return while responses are pending.

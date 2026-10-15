@@ -230,6 +230,7 @@ export const applyQuoteResult = (
     sendAmount: estimatedTransaction.sendAmount,
     receiveAmount: estimatedTransaction.receiveAmount,
     transactionStatus,
+    hasReceivedQuote: true,
     lastModified: new Date(),
   };
 

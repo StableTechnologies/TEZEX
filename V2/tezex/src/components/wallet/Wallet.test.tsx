@@ -144,7 +144,7 @@ test.each<[TransactingComponent, string]>([
     mockTransactionStatus = TransactionStatus.MODIFIED;
     rerender(action());
     expect(
-      screen.getByRole("button", { name: "Updating quote" })
+      screen.getByRole("button", { name: "Fetching quote" })
     ).toBeDisabled();
 
     mockTransactionStatus = TransactionStatus.SUFFICIENT_BALANCE;
