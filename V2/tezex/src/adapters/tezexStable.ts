@@ -16,6 +16,7 @@ import {
 } from "../types/pools";
 import { PoolRegistry } from "./poolRegistry";
 import { PoolDataCache } from "../utils/poolDataCache";
+import { getQuoteContract } from "../utils/quoteContract";
 import { getTxDeadline, makeEstimationToolkit } from "../functions/util";
 import {
   buildApproveOp,
@@ -721,49 +722,54 @@ export class StableSwapAdapter implements IPoolAdapter {
     forceRefresh = false
   ): Promise<StablePoolData> {
     try {
-      if (!forceRefresh) {
-        const cached = PoolDataCache.get(this.poolConfig.id);
-        if (cached) return cached as StablePoolData;
-      }
+      return await PoolDataCache.load(
+        this.poolConfig,
+        toolkit,
+        async () => {
+          const contract = await getQuoteContract(
+            toolkit,
+            this.poolConfig.address
+          );
+          const storage = await contract.storage<StableContractStorage>();
 
-      const contract = await toolkit.contract.at(this.poolConfig.address);
-      const storage = await contract.storage<StableContractStorage>();
+          const pool = await storage.storage.pools.get(
+            this.poolConfig.poolId.toString()
+          );
+          const tokensInfo = pool.tokens_info;
 
-      const pool = await storage.storage.pools.get(
-        this.poolConfig.poolId.toString()
-      );
-      const tokensInfo = pool.tokens_info;
+          const parseTokenInfo = (idx: number): StableTokenInfo => {
+            const info = tokensInfo.get(idx.toString());
+            return {
+              rate_f: new BigNumber(info.rate_f),
+              precision_multiplier_f: new BigNumber(
+                info.precision_multiplier_f
+              ),
+              reserves: new BigNumber(info.reserves),
+            };
+          };
 
-      const parseTokenInfo = (idx: number): StableTokenInfo => {
-        const info = tokensInfo.get(idx.toString());
-        return {
-          rate_f: new BigNumber(info.rate_f),
-          precision_multiplier_f: new BigNumber(info.precision_multiplier_f),
-          reserves: new BigNumber(info.reserves),
-        };
-      };
-
-      const poolData: StablePoolData = {
-        tokenAPool: new BigNumber(
-          tokensInfo.get(this.poolConfig.tokenAIdx.toString()).reserves
-        ),
-        tokenBPool: new BigNumber(
-          tokensInfo.get(this.poolConfig.tokenBIdx.toString()).reserves
-        ),
-        lpTokenSupply: new BigNumber(pool.total_supply),
-        tokensInfo: [parseTokenInfo(0), parseTokenInfo(1)],
-        ampF: getCurrentA(pool),
-        fee: {
-          lp_f: new BigNumber(pool.fee.lp_f),
-          stakers_f: new BigNumber(pool.fee.stakers_f),
-          ref_f: new BigNumber(pool.fee.ref_f),
-          // dev_fee_f lives in dev_store, not in pool.fee
-          dev_f: new BigNumber(storage.storage.dev_store.dev_fee_f),
+          const poolData: StablePoolData = {
+            tokenAPool: new BigNumber(
+              tokensInfo.get(this.poolConfig.tokenAIdx.toString()).reserves
+            ),
+            tokenBPool: new BigNumber(
+              tokensInfo.get(this.poolConfig.tokenBIdx.toString()).reserves
+            ),
+            lpTokenSupply: new BigNumber(pool.total_supply),
+            tokensInfo: [parseTokenInfo(0), parseTokenInfo(1)],
+            ampF: getCurrentA(pool),
+            fee: {
+              lp_f: new BigNumber(pool.fee.lp_f),
+              stakers_f: new BigNumber(pool.fee.stakers_f),
+              ref_f: new BigNumber(pool.fee.ref_f),
+              // dev_fee_f lives in dev_store, not in pool.fee
+              dev_f: new BigNumber(storage.storage.dev_store.dev_fee_f),
+            },
+          };
+          return poolData;
         },
-      };
-
-      PoolDataCache.set(this.poolConfig.id, poolData);
-      return poolData;
+        forceRefresh
+      );
     } catch (error) {
       console.error("Error getting stable pool data:", error);
       throw Errors.LB_CONTRACT_STORAGE;

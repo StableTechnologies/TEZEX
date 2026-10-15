@@ -17,6 +17,7 @@ import {
   SwapEstimate,
 } from "../types/pools";
 import { PoolDataCache } from "../utils/poolDataCache";
+import { getQuoteContract } from "../utils/quoteContract";
 import { PoolRegistry } from "./poolRegistry";
 
 const FEE_DENOMINATOR = new BigNumber(10_000);
@@ -297,27 +298,31 @@ export class TezexTokenAdapter implements IPoolAdapter {
     forceRefresh = false
   ): Promise<PoolData> {
     try {
-      if (!forceRefresh) {
-        const cached = PoolDataCache.get(this.poolConfig.id);
-        if (cached) return cached;
-      }
-
-      const contract = await toolkit.contract.at(this.poolConfig.address);
-      // The deployed token-pair contract uses snake_case storage fields.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const storage = await contract.storage<any>();
-      const data: PoolData = {
-        tokenAPool: new BigNumber(storage.reserve_a),
-        tokenBPool: new BigNumber(storage.reserve_b),
-        lpTokenSupply: new BigNumber(storage.lqt_total),
-        lpFeeBp: 25,
-        protocolFeeBp: 5,
-        totalFeeBp: 30,
-        feeSource: "fallback",
-        feeModel: "new-mod",
-      };
-      PoolDataCache.set(this.poolConfig.id, data);
-      return data;
+      return await PoolDataCache.load(
+        this.poolConfig,
+        toolkit,
+        async () => {
+          const contract = await getQuoteContract(
+            toolkit,
+            this.poolConfig.address
+          );
+          // The deployed token-pair contract uses snake_case storage fields.
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const storage = await contract.storage<any>();
+          const data: PoolData = {
+            tokenAPool: new BigNumber(storage.reserve_a),
+            tokenBPool: new BigNumber(storage.reserve_b),
+            lpTokenSupply: new BigNumber(storage.lqt_total),
+            lpFeeBp: 25,
+            protocolFeeBp: 5,
+            totalFeeBp: 30,
+            feeSource: "fallback",
+            feeModel: "new-mod",
+          };
+          return data;
+        },
+        forceRefresh
+      );
     } catch (error) {
       console.error("Error getting token-pair pool data:", error);
       throw Errors.LB_CONTRACT_STORAGE;

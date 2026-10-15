@@ -70,6 +70,7 @@ const mockNetwork = {
   setSelectedPool: jest.fn(),
   getPoolAdapter: () => ({
     poolConfig: mockPool,
+    getPoolData: jest.fn().mockResolvedValue({}),
     estimateRemoveLiquidity: mockEstimateRemove,
   }),
 };

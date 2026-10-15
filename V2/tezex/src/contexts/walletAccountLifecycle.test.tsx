@@ -158,6 +158,7 @@ describe("WalletProvider account and network lifecycle", () => {
         tokenB: Token.TzBTC,
         lpToken: Token.Sirs,
       },
+      getPoolData: jest.fn().mockResolvedValue({}),
       estimateSwap: jest.fn().mockResolvedValue({
         inputAmount: new BigNumber(1),
         outputAmount: new BigNumber(2),
@@ -256,6 +257,7 @@ describe("WalletProvider account and network lifecycle", () => {
         tokenB: Token.TzBTC,
         lpToken: Token.Sirs,
       },
+      getPoolData: jest.fn().mockResolvedValue({}),
       estimateSwap: jest.fn().mockResolvedValue({
         inputAmount: new BigNumber(1),
         outputAmount: new BigNumber(2),

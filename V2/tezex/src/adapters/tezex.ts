@@ -11,6 +11,7 @@ import {
 } from "../types/pools";
 import { PoolRegistry } from "./poolRegistry";
 import { PoolDataCache } from "../utils/poolDataCache";
+import { getQuoteContract } from "../utils/quoteContract";
 import { getTxDeadline, makeEstimationToolkit } from "../functions/util";
 import {
   DAppClient,
@@ -411,44 +412,45 @@ export class TezexAdapter implements IPoolAdapter {
     forceRefresh = false
   ): Promise<PoolData> {
     try {
-      if (!forceRefresh) {
-        const cached = PoolDataCache.get(this.poolConfig.id);
-        if (cached) {
-          return cached;
-        }
-      }
-      const contract = await toolkit.contract.at(this.poolConfig.address);
-      // eslint-disable-next-line
-      const storage = await contract.storage<any>();
+      return await PoolDataCache.load(
+        this.poolConfig,
+        toolkit,
+        async () => {
+          const contract = await getQuoteContract(
+            toolkit,
+            this.poolConfig.address
+          );
+          // eslint-disable-next-line
+          const storage = await contract.storage<any>();
 
-      const tokenAPool = new BigNumber(storage.xtzPool);
-      const tokenBPool = new BigNumber(storage.tokenPool);
-      const lpTokenSupply = new BigNumber(storage.lqtTotal);
+          const tokenAPool = new BigNumber(storage.xtzPool);
+          const tokenBPool = new BigNumber(storage.tokenPool);
+          const lpTokenSupply = new BigNumber(storage.lqtTotal);
 
-      const storageRecord = storage as Record<string, unknown>;
-      const feeModel = detectTezexFeeModel(storageRecord);
-      const fees = await resolveTezexFeeBp(
-        contract,
-        feeModel,
-        storageRecord,
-        this.poolConfig.address
+          const storageRecord = storage as Record<string, unknown>;
+          const feeModel = detectTezexFeeModel(storageRecord);
+          const fees = await resolveTezexFeeBp(
+            contract,
+            feeModel,
+            storageRecord,
+            this.poolConfig.address
+          );
+
+          const poolData: PoolData = {
+            tokenAPool,
+            tokenBPool,
+            lpTokenSupply,
+            protocolFeeBp: fees.protocolFeeBp,
+            lpFeeBp: fees.lpFeeBp,
+            totalFeeBp: fees.totalFeeBp,
+            feeSource: fees.source,
+            feeModel,
+          };
+
+          return poolData;
+        },
+        forceRefresh
       );
-
-      const poolData: PoolData = {
-        tokenAPool,
-        tokenBPool,
-        lpTokenSupply,
-        protocolFeeBp: fees.protocolFeeBp,
-        lpFeeBp: fees.lpFeeBp,
-        totalFeeBp: fees.totalFeeBp,
-        feeSource: fees.source,
-        feeModel,
-      };
-
-      // Update cache
-      PoolDataCache.set(this.poolConfig.id, poolData);
-
-      return poolData;
     } catch (error) {
       console.error("Error getting pool data:", error);
       throw Errors.LB_CONTRACT_STORAGE;

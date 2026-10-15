@@ -247,7 +247,7 @@ export function useTransaction(
         await _updateAmount(
           sendAmount,
           slippage,
-          caller === "tokenInput" || caller === "slippageInput" ? 500 : 0
+          caller === "tokenInput" || caller === "slippageInput" ? 150 : 0
         );
       }
     },
