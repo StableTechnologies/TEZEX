@@ -47,9 +47,34 @@ export const style = (theme, scale = 1) => {
         alignItems: "center",
         gap: "14px",
       },
-      textField: {
+      amountControl: {
+        position: "relative",
         minWidth: 0,
         flex: 1,
+      },
+      amountShimmer: {
+        position: "absolute",
+        pointerEvents: "none",
+        left: 0,
+        top: "50%",
+        transform: "translateY(-50%)",
+        width: "min(72%, 168px)",
+        height: { xs: "22px", sm: "26px" },
+        borderRadius: "6px",
+        backgroundColor: "var(--tezex-line)",
+        "&::after": {
+          background:
+            "linear-gradient(90deg, transparent, var(--tezex-line-strong), transparent)",
+          animationDuration: "1.2s",
+          animationDelay: "0s",
+        },
+        "@media (prefers-reduced-motion: reduce)": {
+          "&::after": { animation: "none", background: "none" },
+        },
+      },
+      textField: {
+        minWidth: 0,
+        width: "100%",
         "& .MuiInputBase-root": {
           color: "var(--tezex-text)",
         },
