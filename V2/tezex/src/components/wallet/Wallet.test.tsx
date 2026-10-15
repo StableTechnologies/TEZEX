@@ -141,6 +141,12 @@ test.each<[TransactingComponent, string]>([
     const { rerender } = render(action());
     expect(screen.getByRole("button", { name: "Enter Amount" })).toBeDisabled();
 
+    mockTransactionStatus = TransactionStatus.MODIFIED;
+    rerender(action());
+    expect(
+      screen.getByRole("button", { name: "Updating quote" })
+    ).toBeDisabled();
+
     mockTransactionStatus = TransactionStatus.SUFFICIENT_BALANCE;
     rerender(action());
     const readyButton = screen.getByRole("button", { name: label });

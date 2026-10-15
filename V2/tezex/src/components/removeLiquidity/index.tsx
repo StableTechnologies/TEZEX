@@ -177,6 +177,16 @@ export const RemoveLiquidity: FC<IRemoveLiquidity> = ({
   const getReceiveAmounts = useCallback((): JSX.Element => {
     const transaction = transactionOps.getActiveTransaction();
 
+    if (transaction?.transactionStatus === TransactionStatus.MODIFIED) {
+      return <span role="status">Updating quote…</span>;
+    }
+    if (
+      transaction?.transactionStatus === TransactionStatus.FAILED &&
+      !transaction.quote
+    ) {
+      return <span role="status">Quote unavailable. Try again.</span>;
+    }
+
     const formatWithDecimals = (value: string, decimals: number): string => {
       if (!value.includes(".")) return value;
 

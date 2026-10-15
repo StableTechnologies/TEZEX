@@ -77,11 +77,26 @@ describe("transaction safety limits", () => {
     ).toBe(TransactionStatus.INVALID_SLIPPAGE);
     expect(
       getStatusAfterBalanceCheck(
-        TransactionStatus.MODIFIED,
+        TransactionStatus.INSUFFICIENT_BALANCE,
         TransactionStatus.SUFFICIENT_BALANCE
       )
     ).toBe(TransactionStatus.SUFFICIENT_BALANCE);
   });
+
+  it.each([TransactionStatus.MODIFIED, TransactionStatus.FAILED])(
+    "preserves %s across sufficient and insufficient balance refreshes",
+    (status) => {
+      expect(
+        getStatusAfterBalanceCheck(status, TransactionStatus.SUFFICIENT_BALANCE)
+      ).toBe(status);
+      expect(
+        getStatusAfterBalanceCheck(
+          status,
+          TransactionStatus.INSUFFICIENT_BALANCE
+        )
+      ).toBe(status);
+    }
+  );
 
   it("reserves tez for fees when calculating a max amount", () => {
     expect(getSpendableXtz(new BigNumber(1)).toFixed()).toBe(

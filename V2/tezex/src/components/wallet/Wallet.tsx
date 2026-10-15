@@ -80,7 +80,7 @@ export const Wallet: FC<IWallet> = (props) => {
       case TransactionStatus.MODIFIED:
         setDisabled(true);
         setSpinner(true);
-        setWalletText(props.children);
+        setWalletText("Updating quote");
         break;
       case TransactionStatus.SUFFICIENT_BALANCE:
         setDisabled(false);

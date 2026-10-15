@@ -30,7 +30,9 @@ export const getStatusAfterBalanceCheck = (
   currentStatus: TransactionStatus,
   balanceStatus: TransactionStatus
 ): TransactionStatus =>
-  currentStatus === TransactionStatus.INVALID_SLIPPAGE
+  currentStatus === TransactionStatus.INVALID_SLIPPAGE ||
+  currentStatus === TransactionStatus.MODIFIED ||
+  currentStatus === TransactionStatus.FAILED
     ? currentStatus
     : balanceStatus;
 
