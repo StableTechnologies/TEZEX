@@ -856,7 +856,10 @@ export function WalletProvider(props: IWalletProvider) {
           component,
           poolId,
           sendAsset,
-          sendAmount: send,
+          sendAmount:
+            component === TransactingComponent.ADD_LIQUIDITY && send[1]
+              ? [send[0], zeroBalance]
+              : send,
           sendAssetBalance: initBalance(sendAsset),
           receiveAsset,
           receiveAmount: receive,
@@ -1200,6 +1203,11 @@ export function WalletProvider(props: IWalletProvider) {
             transaction.quoteRevision = (transaction.quoteRevision ?? 0) + 1;
             latestQuoteRequests.delete(component);
             delete transaction.quote;
+            if (
+              component === TransactingComponent.ADD_LIQUIDITY &&
+              transaction.sendAmount[1]
+            )
+              transaction.sendAmount[1] = zeroBalance;
             transaction.receiveAmount = transaction.receiveAsset.map(
               () => zeroBalance
             ) as Amount;
@@ -1235,6 +1243,12 @@ export function WalletProvider(props: IWalletProvider) {
             if (transaction.id !== expectedTransactionId) return false;
             latestQuoteRequests.delete(component);
             if (amountUpdateSend) transaction.sendAmount = amountUpdateSend;
+            // The second deposit is a quote result, not an independent input.
+            if (
+              component === TransactingComponent.ADD_LIQUIDITY &&
+              transaction.sendAmount[1]
+            )
+              transaction.sendAmount[1] = zeroBalance;
             if (isNumber(slippageUpdate) && isValidSlippage(slippageUpdate))
               delete transaction.slippageInput;
             if (
@@ -1253,9 +1267,6 @@ export function WalletProvider(props: IWalletProvider) {
               return true;
             }
 
-            if (amountUpdateSend) {
-              transaction.sendAmount = amountUpdateSend;
-            }
             if (isNumber(slippageUpdate)) {
               transaction.slippage = slippageUpdate;
             }

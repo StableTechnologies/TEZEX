@@ -15,11 +15,12 @@ Swap, Add Liquidity, and Remove Liquidity must behave consistently when users ch
 - Missing transactions and submitted operations are not editable. Navigating or changing another screen's pool cannot clear a submitted operation. Returning to it restores its canonical route.
 - Quote reads share in-flight requests only for the same toolkit and exact pool configuration. The pool cache expires after 15 seconds; metadata reuse must still read current storage and fees on refresh.
 - Submission bypasses cached and pending previews and requires a fresh pool read. Refresh failure cannot fall back to the previous quote.
+- The required second deposit is derived from the current quote. Edits, invalidation, and reversal must clear it until a matching quote arrives; clearing the input clears both deposit amounts.
 - A cleared amount stays an empty-amount state through balance refreshes. Integer LP estimates keep significant trailing zeros.
 
 ## Automated coverage
 
-`src/components/tradingSequences.test.tsx` exercises real providers, routes, navigation, selectors, and input components. Network adapters and balance reads are deterministic mocks so responses can be delayed, reordered, or rejected. It currently contains 78 scenarios:
+`src/components/tradingSequences.test.tsx` exercises real providers, routes, navigation, selectors, and input components. Network adapters and balance reads are deterministic mocks so responses can be delayed, reordered, or rejected. It currently contains 79 scenarios:
 
 - All 14 configured pool entries across Mainnet, Shadownet, and Previewnet: both swap directions, both deposit orders, withdrawal, clearing, and screen changes.
 - All 36 ordered pairs of edit, clear, reverse, pair change, mode change, and leave/return while responses are pending.

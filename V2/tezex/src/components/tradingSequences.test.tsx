@@ -399,6 +399,15 @@ test.each(configurations)(
     edit("2");
     await settle();
     assertConsistent();
+    edit("");
+    await settle();
+    expect(transaction().sendAmount[1]?.mantissa.isZero()).toBe(true);
+    expect(
+      screen.getByRole("textbox", { name: "Required deposit amount" })
+    ).toHaveValue("0.00");
+    edit("2");
+    await settle();
+    assertConsistent();
     fireEvent.click(
       screen.getByRole("button", { name: "Switch deposit token order" })
     );
@@ -407,6 +416,19 @@ test.each(configurations)(
     edit("6");
     await settle();
     assertConsistent();
+    edit("");
+    await settle();
+    assertConsistent();
+    expect(transaction().sendAmount[1]?.mantissa.isZero()).toBe(true);
+    expect(
+      screen.getByRole("textbox", { name: "Required deposit amount" })
+    ).toHaveValue("0.00");
+    fireEvent.click(
+      screen.getByRole("button", { name: "Switch deposit token order" })
+    );
+    await settle();
+    expect(transaction().sendAmount[0].mantissa.isZero()).toBe(true);
+    expect(transaction().quote).toBeUndefined();
     fireEvent.click(
       screen.getByRole("tab", { name: "Remove Liquidity", exact: true })
     );
@@ -823,4 +845,33 @@ test("cold pool typing coalesces edits within 150ms and invalidates immediately"
   });
   expect(transaction().sendAmount[0].string).toBe("3");
   assertConsistent();
+});
+
+test("reversing a pending liquidity edit cannot revive an obsolete required deposit", async () => {
+  await mount("/liquidity/xtz-tzbtc");
+  edit("2");
+  await settle();
+  expect(transaction().sendAmount[1]?.mantissa.gt(0)).toBe(true);
+  delayQuotes = true;
+  edit("3");
+  await settle();
+  expect(transaction().sendAmount[1]?.mantissa.isZero()).toBe(true);
+  fireEvent.click(
+    screen.getByRole("button", { name: "Switch deposit token order" })
+  );
+  await settle();
+  expect(
+    transaction().sendAmount.every((amount) => amount.mantissa.isZero())
+  ).toBe(true);
+  expect(
+    screen.getByRole("textbox", { name: "Required deposit amount" })
+  ).toHaveValue("0.00");
+  await act(async () =>
+    pending.splice(0).forEach((request) => request.resolve())
+  );
+  await settle();
+  expect(
+    transaction().sendAmount.every((amount) => amount.mantissa.isZero())
+  ).toBe(true);
+  expect(transaction().quote).toBeUndefined();
 });
