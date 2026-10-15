@@ -315,6 +315,13 @@ test.each([
       } as AccountInfo);
     });
     await settle();
+    const calculatedInput = path.endsWith("/remove")
+      ? undefined
+      : screen.getByRole("textbox", {
+          name: path.startsWith("/swap/")
+            ? "Swap to amount"
+            : "Required deposit amount",
+        });
     delayQuotes = true;
     edit("2");
     await settle();
@@ -322,6 +329,12 @@ test.each([
       screen.getByRole("button", { name: "Fetching quote" })
     ).toBeDisabled();
     expect(screen.getByText("Fetching quote…")).toBeVisible();
+    if (calculatedInput) {
+      expect(calculatedInput).toHaveAttribute("aria-busy", "true");
+      expect(calculatedInput).toHaveValue("");
+      expect(screen.getByTestId("quote-amount-shimmer")).toBeVisible();
+      expect(input()).not.toHaveAttribute("readonly");
+    }
     edit("3");
     await settle();
     expect(
@@ -333,6 +346,13 @@ test.each([
     );
     await settle();
     expect(transaction().quote).toBeDefined();
+    if (calculatedInput) {
+      expect(calculatedInput).toHaveAttribute("aria-busy", "false");
+      expect(calculatedInput).not.toHaveValue("");
+      expect(
+        screen.queryByTestId("quote-amount-shimmer")
+      ).not.toBeInTheDocument();
+    }
     edit("4");
     await act(async () => {
       await Promise.resolve();
@@ -342,7 +362,19 @@ test.each([
     expect(
       screen.getByRole("button", { name: "Updating quote" })
     ).toBeDisabled();
+    if (calculatedInput) {
+      expect(calculatedInput).toHaveAttribute("aria-busy", "true");
+      expect(screen.getByTestId("quote-amount-shimmer")).toBeVisible();
+    }
+    edit("");
     await settle();
+    if (calculatedInput) {
+      expect(calculatedInput).toHaveAttribute("aria-busy", "false");
+      expect(calculatedInput).toHaveValue("0.00");
+      expect(
+        screen.queryByTestId("quote-amount-shimmer")
+      ).not.toBeInTheDocument();
+    }
     assertConsistent();
   }
 );

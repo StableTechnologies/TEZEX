@@ -257,6 +257,7 @@ test("a failed swap quote stays visible after balance refresh and a new edit rec
     ).toBeDisabled()
   );
   expect(screen.getByText("Fetching quote…")).toBeVisible();
+  expect(screen.getByTestId("quote-amount-shimmer")).toBeVisible();
   expect(input).not.toHaveAttribute("readonly");
   await act(async () => {
     rejectQuote(new Error("RPC unavailable"));
@@ -267,6 +268,7 @@ test("a failed swap quote stays visible after balance refresh and a new edit rec
   expect(
     screen.getByText("Quote unavailable. Edit the amount to try again.")
   ).toBeVisible();
+  expect(screen.queryByTestId("quote-amount-shimmer")).not.toBeInTheDocument();
   fireEvent.change(input, { target: { value: "2" } });
   await waitFor(() =>
     expect(screen.getByRole("textbox", { name: "Swap to amount" })).toHaveValue(

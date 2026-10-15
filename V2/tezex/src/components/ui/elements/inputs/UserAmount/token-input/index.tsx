@@ -9,6 +9,7 @@ import {
 
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
+import Skeleton from "@mui/material/Skeleton";
 
 import Button from "@mui/material/Button";
 import InputAdornment from "@mui/material/InputAdornment";
@@ -67,11 +68,14 @@ const TokenInput: FC<IRigthInput> = (props) => {
     props.transferType === TransferType.RECEIVE ||
     (props.component === TransactingComponent.ADD_LIQUIDITY &&
       transaction?.sendAsset?.[1]?.name === props.asset.name);
+  const quotePending =
+    !props.forceZero &&
+    calculatedField &&
+    transaction?.transactionStatus === TransactionStatus.MODIFIED;
   const displayValue = props.forceZero
     ? "0.00"
-    : calculatedField &&
-      transaction?.transactionStatus === TransactionStatus.MODIFIED
-    ? "…"
+    : quotePending
+    ? ""
     : calculatedField &&
       transaction?.transactionStatus === TransactionStatus.FAILED
     ? "—"
@@ -259,27 +263,39 @@ const TokenInput: FC<IRigthInput> = (props) => {
         </Box>
 
         <Box sx={styles.tezex.amountRow}>
-          <TextField
-            id={inputId}
-            inputRef={props.inputRef}
-            autoComplete="off"
-            onFocus={handleFocus}
-            onBlur={handleBlur}
-            onChange={handleChange}
-            value={displayValue}
-            sx={styles.tezex.textField}
-            inputProps={{
-              inputMode: "decimal",
-              readOnly: props.readOnly,
-              "aria-label": `${props.label || props.transferType} amount`,
-              "aria-invalid": Boolean(props.validationMessage),
-              "aria-describedby": props.validationMessage
-                ? `${inputId}-validation`
-                : undefined,
-            }}
-            variant="standard"
-            InputProps={{ disableUnderline: true }}
-          />
+          <Box sx={styles.tezex.amountControl}>
+            <TextField
+              id={inputId}
+              inputRef={props.inputRef}
+              autoComplete="off"
+              onFocus={handleFocus}
+              onBlur={handleBlur}
+              onChange={handleChange}
+              value={displayValue}
+              sx={styles.tezex.textField}
+              inputProps={{
+                inputMode: "decimal",
+                readOnly: props.readOnly,
+                "aria-label": `${props.label || props.transferType} amount`,
+                "aria-invalid": Boolean(props.validationMessage),
+                "aria-busy": quotePending,
+                "aria-describedby": props.validationMessage
+                  ? `${inputId}-validation`
+                  : undefined,
+              }}
+              variant="standard"
+              InputProps={{ disableUnderline: true }}
+            />
+            {quotePending && (
+              <Skeleton
+                variant="rounded"
+                animation="wave"
+                aria-hidden="true"
+                data-testid="quote-amount-shimmer"
+                sx={styles.tezex.amountShimmer}
+              />
+            )}
+          </Box>
 
           {props.onAssetChange && props.selectableAssets?.length ? (
             <TokenSelector
