@@ -62,6 +62,16 @@ export const Wallet: FC<IWallet> = (props) => {
   // Effect to monitor transaction status and update wallet text
   useEffect(() => {
     switch (transactionStatus) {
+      case TransactionStatus.UNINITIALIZED:
+        setDisabled(true);
+        setSpinner(true);
+        setWalletText("Preparing form");
+        break;
+      case TransactionStatus.INITIALIZED:
+        setDisabled(true);
+        setSpinner(false);
+        setWalletText("Enter an amount");
+        break;
       case TransactionStatus.ZERO_AMOUNT:
         setDisabled(!props.onZeroAmount);
         setSpinner(false);
@@ -317,13 +327,14 @@ export const Wallet: FC<IWallet> = (props) => {
           }
           disabled={disabled}
         >
-          <Box sx={styles.walletBox}>
-            <Box
-              sx={styles.spinnerBox}
-              visibility={spinner ? "visible" : "hidden"}
-            >
-              <CircularProgress sx={styles.spinner} />
-            </Box>
+          <Box sx={{ ...styles.walletBox, gap: "10px" }}>
+            {spinner && (
+              <CircularProgress
+                size={18}
+                sx={{ color: "inherit", flexShrink: 0 }}
+                aria-hidden="true"
+              />
+            )}
             <Typography
               component="span"
               sx={

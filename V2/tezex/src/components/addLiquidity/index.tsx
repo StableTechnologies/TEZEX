@@ -1,4 +1,4 @@
-import React, { FC, useState, useEffect, useCallback } from "react";
+import React, { FC, useState, useEffect, useCallback, useRef } from "react";
 
 import { Wallet } from "../wallet";
 import { NavLiquidity } from "../nav/NavLiquidity";
@@ -60,6 +60,7 @@ export const AddLiquidity: FC<IAddLiquidity> = ({
   const active = walletOps.getActiveTransaction();
 
   const [id, setId] = useState<Id | undefined>(undefined);
+  const initializingRef = useRef(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [reloading, setReloading] = useState<boolean>(true);
   const previewLoading =
@@ -179,25 +180,29 @@ export const AddLiquidity: FC<IAddLiquidity> = ({
 
   // callback to create new transaction
   const newTransaction = useCallback(async () => {
-    const pool = resolvePool();
-    if (!pool) return;
+    if (initializingRef.current) return;
+    initializingRef.current = true;
+    try {
+      const pool = resolvePool();
+      if (!pool) return;
 
-    const nextAssets = assetsFromPool(pool);
-    setAssets(nextAssets);
+      const nextAssets = assetsFromPool(pool);
+      // initialize transaction from the active network pool (not stale UI assets)
+      const transactionInitialized = await transactionOps.initialize(
+        [nextAssets[send1], nextAssets[send2]],
+        [nextAssets[receive]],
+        pool.id
+      );
 
-    // initialize transaction from the active network pool (not stale UI assets)
-    const transactionInitialized = await transactionOps.initialize(
-      [nextAssets[send1], nextAssets[send2]],
-      [nextAssets[receive]],
-      pool.id
-    );
-
-    //if transaction initialized update balance and set loading params to false
-    if (transactionInitialized) {
-      setCanUpdate(true);
-      setLoading(false);
+      //if transaction initialized update balance and set loading params to false
+      if (transactionInitialized) {
+        setCanUpdate(true);
+        setLoading(false);
+      }
+    } finally {
+      initializingRef.current = false;
     }
-  }, [assetsFromPool, resolvePool, transactionOps]);
+  }, [assetsFromPool, resolvePool, transactionOps.initialize]);
 
   // Effect to load component
   useEffect(() => {
@@ -338,7 +343,7 @@ export const AddLiquidity: FC<IAddLiquidity> = ({
       setId(transactionId);
       setReloading(true);
     }
-  }, [transactionOps.getActiveTransaction, id]);
+  }, [transactionOps.getActiveTransaction, currentTransaction, id]);
 
   // effect to monitor transaction status by calling monitorStatus
   useEffect(() => {
@@ -443,7 +448,13 @@ export const AddLiquidity: FC<IAddLiquidity> = ({
                 alt=""
               />
               <Typography component="span" sx={styles.infoReceive}>
-                {getLiquidityTokens()} {getLPToken(currentPool).label}
+                {currentTransaction?.transactionStatus ===
+                TransactionStatus.MODIFIED
+                  ? "Updating quote…"
+                  : currentTransaction?.transactionStatus ===
+                    TransactionStatus.FAILED
+                  ? "Quote unavailable. Edit the amount to try again."
+                  : `${getLiquidityTokens()} ${getLPToken(currentPool).label}`}
               </Typography>
             </Box>
           </CardContent>

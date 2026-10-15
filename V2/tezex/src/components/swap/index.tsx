@@ -114,6 +114,7 @@ export const Swap: FC<ISwapToken> = ({ routeSelection, onRouteChange }) => {
   const transactionOps = useTransaction(TransactingComponent.SWAP);
 
   const [id, setId] = useState<Id | undefined>(undefined);
+  const initializingRef = useRef(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [reloading, setReloading] = useState<boolean>(true);
 
@@ -257,24 +258,30 @@ export const Swap: FC<ISwapToken> = ({ routeSelection, onRouteChange }) => {
   }, [assets, onRouteChange, transactionOps]);
 
   const newTransaction = useCallback(async () => {
-    const transactionPool =
-      routeSelection?.pool ||
-      findPoolForTokenPair(
-        network.getAllPools(),
-        assets[send].name,
-        assets[receive].name
-      ) ||
-      currentPool;
-    const transaction = await transactionOps.initialize(
-      [assets[send]],
-      [assets[receive]],
-      transactionPool?.id || ""
-    );
+    if (initializingRef.current) return;
+    initializingRef.current = true;
+    try {
+      const transactionPool =
+        routeSelection?.pool ||
+        findPoolForTokenPair(
+          network.getAllPools(),
+          assets[send].name,
+          assets[receive].name
+        ) ||
+        currentPool;
+      const transaction = await transactionOps.initialize(
+        [assets[send]],
+        [assets[receive]],
+        transactionPool?.id || ""
+      );
 
-    if (transaction) {
-      if (swappingFileds) setSwappingFileds(false);
-      setCanUpdate(true);
-      setLoading(false);
+      if (transaction) {
+        if (swappingFileds) setSwappingFileds(false);
+        setCanUpdate(true);
+        setLoading(false);
+      }
+    } finally {
+      initializingRef.current = false;
     }
   }, [
     swappingFileds,
@@ -298,6 +305,16 @@ export const Swap: FC<ISwapToken> = ({ routeSelection, onRouteChange }) => {
       setLoading(false);
     }
   }, [loading, newTransaction, transactionOps, assets]);
+
+  // Restoring or switching the wallet clears its transaction snapshots.
+  // Rebuild the empty form immediately instead of leaving it read-only.
+  useEffect(() => {
+    if (!loading && !active) {
+      setCanUpdate(false);
+      setLoading(true);
+      setReloading(true);
+    }
+  }, [active, loading]);
 
   useEffect(() => {
     if (session.activeComponent !== TransactingComponent.SWAP) {
@@ -391,7 +408,7 @@ export const Swap: FC<ISwapToken> = ({ routeSelection, onRouteChange }) => {
       )
     : undefined;
   const status = transaction?.transactionStatus;
-  const statusLabel = hasQuote ? getStatusLabel(status) : "Ready";
+  const statusLabel = getStatusLabel(status);
   const statusStep =
     status === TransactionStatus.COMPLETED
       ? 3
@@ -494,10 +511,14 @@ export const Swap: FC<ISwapToken> = ({ routeSelection, onRouteChange }) => {
                       exchangeRate,
                       assets[receive].decimals
                     )} ${assets[receive].label}`
+                  : hasEnteredAmount
+                  ? status === TransactionStatus.FAILED
+                    ? "Quote unavailable. Edit the amount to try again."
+                    : "Updating quote…"
                   : "Enter an amount to load a live pool quote"}
               </Typography>
               <Typography sx={styles.quoteStatus}>
-                {hasQuote ? statusLabel : ""}
+                {hasEnteredAmount ? statusLabel : ""}
               </Typography>
             </Box>
           </CardContent>
