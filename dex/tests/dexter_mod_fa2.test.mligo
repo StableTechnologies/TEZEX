@@ -210,6 +210,70 @@ let setup_full_dex () =
     Test.Typed_address.transfer_exn dex_orig.taddr (SetPaused false) 0tez in
   (dex_orig, lqt_orig, tok_orig)
 
+let setup_rounding_regression_dex () =
+  let initial_xtz = 21532127571mutez in
+  let initial_tokens = 8316467n in
+  let initial_lqt = 3220671028n in
+  let () = clean () in
+  let () = Test.State.set_source (src ()) in
+  let tok_orig = deploy_fa2_token (initial_tokens * 1000n) 0n in
+  let tok_addr = Test.Typed_address.to_address tok_orig.taddr in
+  let clean_storage =
+    Dexter.build_storage
+      {
+       lqtTotal = initial_lqt;
+       manager = src ();
+       tokenAddress = tok_addr;
+       tokenId = 0n;
+       protocol_fee_recipient = other ();
+      } in
+  let dex_orig =
+    Test.Originate.contract (contract_of Dexter) clean_storage 0tez in
+  let dex_addr = Test.Typed_address.to_address dex_orig.taddr in
+  let lqt_orig = deploy_lqt initial_lqt (src ()) dex_addr in
+  let operator_param : FA2.update_operators =
+    [Add_operator {owner = src (); operator = dex_addr; token_id = 0n}] in
+  let _ : nat =
+    Test.Typed_address.transfer_exn
+      tok_orig.taddr
+      (Update_operators operator_param)
+      0tez in
+  let _ : nat =
+    Test.Typed_address.transfer_exn
+      dex_orig.taddr
+      (SetLqtAddress (Test.Typed_address.to_address lqt_orig.taddr))
+      0tez in
+  let _ : nat =
+    Test.Typed_address.transfer_exn dex_orig.taddr (Default_ ()) initial_xtz in
+  let transfer_param : FA2.transfer =
+    [
+      {
+       from_ = src ();
+       txs = [{to_ = dex_addr; token_id = 0n; amount = initial_tokens}];
+      }
+    ] in
+  let _ : nat =
+    Test.Typed_address.transfer_exn
+      tok_orig.taddr
+      (Transfer transfer_param)
+      0tez in
+  let _ : nat =
+    Test.Typed_address.transfer_exn dex_orig.taddr (UpdateTokenPool ()) 0tez in
+  let activate_param : Dexter.activate_pool =
+    {
+     expectedXtzPool = initial_xtz;
+     expectedTokenPool = initial_tokens;
+     expectedLqtTotal = initial_lqt;
+    } in
+  let _ : nat =
+    Test.Contract.transfer_exn
+      (Test.Typed_address.get_entrypoint "activate" dex_orig.taddr)
+      activate_param
+      0tez in
+  let _ : nat =
+    Test.Typed_address.transfer_exn dex_orig.taddr (SetPaused false) 0tez in
+  (dex_orig, lqt_orig, tok_orig)
+
 let assert_error
     (test_name : string)
     (error_code : nat)
@@ -289,6 +353,56 @@ let test_modified_fa2_pool_is_inactive_by_default =
       (TokenToXtz token_swap_param)
       0tez in
   assert_error test_name Dexter.error_POOL_NOT_ACTIVE token_result
+
+(* Same incident-derived regression as the FA1.2 build, exercised against the
+   FA2 build used by the live XTZ/USDt pool. *)
+let test_modified_fa2_micro_liquidity_rounding =
+  let test_name = "test_modified_fa2_micro_liquidity_rounding" in
+  let (dex_orig, lqt_orig, _) = setup_rounding_regression_dex () in
+  let add : Dexter.add_liquidity =
+    {
+     owner = src ();
+     minLqtMinted = 770n;
+     maxTokensDeposited = 2n;
+     deadline = future;
+    } in
+  let _ : nat =
+    Test.Typed_address.transfer_exn dex_orig.taddr (AddLiquidity add) 5148mutez in
+  let after_add : Dexter.storage = Test.Typed_address.get_storage dex_orig.taddr in
+  let lqt_after_add : LQT.LQT.storage =
+    Test.Typed_address.get_storage lqt_orig.taddr in
+  let () =
+    if
+      after_add.xtzPool <> 21532132719mutez
+      or after_add.tokenPool <> 8316469n
+      or after_add.lqtTotal <> 3220671798n
+      or lqt_after_add.total_supply <> 3220671798n
+    then failwith (test_name ^ ": add rounding mismatch")
+    else () in
+  let remove : Dexter.remove_liquidity =
+    {
+     to_ = src ();
+     lqtBurned = 770n;
+     minXtzWithdrawn = 5147mutez;
+     minTokensWithdrawn = 1n;
+     deadline = future;
+    } in
+  let _ : nat =
+    Test.Typed_address.transfer_exn
+      dex_orig.taddr
+      (RemoveLiquidity remove)
+      0tez in
+  let after_remove : Dexter.storage =
+    Test.Typed_address.get_storage dex_orig.taddr in
+  let lqt_after_remove : LQT.LQT.storage =
+    Test.Typed_address.get_storage lqt_orig.taddr in
+  if
+    after_remove.xtzPool <> 21532127572mutez
+    or after_remove.tokenPool <> 8316468n
+    or after_remove.lqtTotal <> 3220671028n
+    or lqt_after_remove.total_supply <> 3220671028n
+  then failwith (test_name ^ ": removal rounding mismatch")
+  else ()
 
 let test_modified_fa2_only_manager_can_seed_inactive_pool =
   let test_name = "test_modified_fa2_only_manager_can_seed_inactive_pool" in

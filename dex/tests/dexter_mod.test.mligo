@@ -86,6 +86,66 @@ let test_add_liquidity =
     Util.assert_token_balance lqt_orig.taddr test_name (Util.src ()) 2000000n
   end
 
+(* Regression for the October 2026 legacy QuipuSwap XTZ/tzBTC incident.
+   The vulnerable implementation accepted one token atomic unit here because
+   it rounded the LP-share-priced contribution down. This pool must charge two
+   units, mint 770 shares, and return only 5,147 mutez plus one token unit when
+   those shares are immediately burned. *)
+let test_micro_liquidity_rounding_charges_up_and_redeems_down =
+  let test_name = "test_micro_liquidity_rounding_charges_up_and_redeems_down" in
+  let initial_xtz = 21532127571mutez in
+  let initial_tokens = 8316467n in
+  let initial_lqt = 3220671028n in
+  let (dex_orig, lqt_orig, _) =
+    Util.setup_custom_dex initial_xtz initial_tokens initial_lqt in
+  let add : DexterMod.Dexter.add_liquidity =
+    {
+     owner = Util.src ();
+     minLqtMinted = 770n;
+     maxTokensDeposited = 2n;
+     deadline = Util.future
+    } in
+  let _ : nat =
+    Test.Typed_address.transfer_exn dex_orig.taddr (AddLiquidity add) 5148mutez in
+  let () =
+    Util.assert_dex_state
+      dex_orig.taddr
+      test_name
+      21532132719mutez
+      8316469n
+      3220671798n in
+  let () =
+    Util.assert_token_balance
+      lqt_orig.taddr
+      test_name
+      (Util.src ())
+      3220671798n in
+  let remove : DexterMod.Dexter.remove_liquidity =
+    {
+     to_ = Util.src ();
+     lqtBurned = 770n;
+     minXtzWithdrawn = 5147mutez;
+     minTokensWithdrawn = 1n;
+     deadline = Util.future
+    } in
+  let _ : nat =
+    Test.Typed_address.transfer_exn
+      dex_orig.taddr
+      (RemoveLiquidity remove)
+      0tez in
+  let () =
+    Util.assert_dex_state
+      dex_orig.taddr
+      test_name
+      21532127572mutez
+      8316468n
+      initial_lqt in
+  Util.assert_token_balance
+    lqt_orig.taddr
+    test_name
+    (Util.src ())
+    initial_lqt
+
 let test_add_liquidity_error_deadline =
   let test_name = "test_add_liquidity_error_deadline" in
   let (dex_orig, _, _) = Util.setup_full_dex () in
