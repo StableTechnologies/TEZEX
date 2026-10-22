@@ -725,6 +725,54 @@ let test_proportional_add_and_remove_liquidity =
   let () = assert_nat "synchronized LQT total" storage.lqt_total lqt_storage.total_supply in
   assert_solvency "liquidity" pool.taddr fa2.taddr fa12.taddr
 
+(* A deliberately awkward, atomic-unit-sized position verifies that both
+   reserve contributions round up while redemption rounds down. This is the
+   token/token analogue of the QuipuSwap micro-liquidity incident. *)
+let test_micro_liquidity_rounding_favors_existing_reserves =
+  let (pool, lqt, fa2, fa12) = setup_pool () in
+  let () =
+    fund_and_authorize_trader pool.taddr fa2.taddr fa12.taddr 2n 110n in
+  let add : Contract.add_liquidity_param =
+    {
+      max_amount_a = 2n;
+      max_amount_b = 110n;
+      min_lqt_minted = 11n;
+      receiver = trader ();
+      deadline = future
+    } in
+  let _ : nat =
+    Test.Contract.transfer_exn
+      (Test.Typed_address.get_entrypoint "add_liquidity" pool.taddr)
+      add
+      0tez in
+  let after_add : Contract.storage = Test.Typed_address.get_storage pool.taddr in
+  let () = assert_nat "micro add reserve A" after_add.reserve_a 1000002n in
+  let () = assert_nat "micro add reserve B" after_add.reserve_b 100000110n in
+  let () = assert_nat "micro add LQT" after_add.lqt_total 10000011n in
+  let () = assert_nat "micro add owner LQT" (lqt_balance lqt.taddr (trader ())) 11n in
+  let remove : Contract.remove_liquidity_param =
+    {
+      lqt_burned = 11n;
+      min_amount_a = 1n;
+      min_amount_b = 110n;
+      receiver = trader ();
+      deadline = future
+    } in
+  let _ : nat =
+    Test.Contract.transfer_exn
+      (Test.Typed_address.get_entrypoint "remove_liquidity" pool.taddr)
+      remove
+      0tez in
+  let after_remove : Contract.storage =
+    Test.Typed_address.get_storage pool.taddr in
+  let lqt_storage : LQT.LQT.storage = Test.Typed_address.get_storage lqt.taddr in
+  let () = assert_nat "micro removal reserve A" after_remove.reserve_a 1000001n in
+  let () = assert_nat "micro removal reserve B" after_remove.reserve_b 100000000n in
+  let () = assert_nat "micro removal pool LQT" after_remove.lqt_total 10000000n in
+  let () = assert_nat "micro removal token LQT" lqt_storage.total_supply 10000000n in
+  let () = assert_nat "micro removal owner LQT" (lqt_balance lqt.taddr (trader ())) 0n in
+  assert_solvency "micro liquidity" pool.taddr fa2.taddr fa12.taddr
+
 let test_minimum_lqt_cannot_be_redeemed =
   let (pool, _lqt, _fa2, _fa12) = setup_pool () in
   let burn_too_much : Contract.remove_liquidity_param =
