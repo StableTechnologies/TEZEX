@@ -1,4 +1,4 @@
-import { NetworkType, TezosOperationType } from "@airgap/beacon-dapp";
+import { NetworkType, TezosOperationType } from "@ecadlabs/beacon-dapp";
 import BigNumber from "bignumber.js";
 
 import {

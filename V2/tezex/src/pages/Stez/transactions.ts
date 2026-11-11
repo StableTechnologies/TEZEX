@@ -2,7 +2,7 @@ import {
   DAppClient,
   PartialTezosTransactionOperation,
   TezosOperationType,
-} from "@airgap/beacon-sdk";
+} from "@ecadlabs/beacon-sdk";
 
 export type StezTransactionAction = "Stake" | "Redeem" | "Finalize";
 

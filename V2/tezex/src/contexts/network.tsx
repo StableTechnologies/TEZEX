@@ -1,5 +1,5 @@
 import { createContext, useCallback, useState } from "react";
-import { NetworkType } from "@airgap/beacon-sdk";
+import { NetworkType } from "@ecadlabs/beacon-sdk";
 import mainnet from "../config/network/mainnet.json";
 import shadownet from "../config/network/shadownet.json";
 import previewnet from "../config/network/previewnet.json";

@@ -1,4 +1,4 @@
-import { NetworkType } from "@airgap/beacon-sdk";
+import { NetworkType } from "@ecadlabs/beacon-sdk";
 import { Errors, FailedRecord, TransactingComponent } from "../types/general";
 
 export type SubmittedOperationState = "failed" | "unknown";

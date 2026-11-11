@@ -7,7 +7,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { NetworkType } from "@airgap/beacon-sdk";
+import { NetworkType } from "@ecadlabs/beacon-sdk";
 import BarChartRoundedIcon from "@mui/icons-material/BarChartRounded";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 import ShowChartRoundedIcon from "@mui/icons-material/ShowChartRounded";

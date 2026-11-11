@@ -35,7 +35,7 @@ module.exports = {
     // avoids CRA 5/Jest 27's inability to load Beacon's modern ESM graph.
     config.moduleNameMapper = {
       ...(config.moduleNameMapper || {}),
-      "^@airgap/beacon-(?:sdk|dapp)$": "<rootDir>/src/test/beaconMock.ts",
+      "^@ecadlabs/beacon-(?:sdk|dapp)$": "<rootDir>/src/test/beaconMock.ts",
     };
     return config;
   },

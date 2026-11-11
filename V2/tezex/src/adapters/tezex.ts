@@ -16,7 +16,7 @@ import { getTxDeadline, makeEstimationToolkit } from "../functions/util";
 import {
   DAppClient,
   PartialTezosTransactionOperation,
-} from "@airgap/beacon-sdk";
+} from "@ecadlabs/beacon-sdk";
 import {
   buildApproveOp,
   toExactNat,

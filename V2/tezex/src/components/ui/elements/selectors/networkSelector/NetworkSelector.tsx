@@ -7,7 +7,7 @@ import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import Link from "@mui/material/Link";
 import { useTheme } from "@mui/material/styles";
-import { NetworkType } from "@airgap/beacon-sdk";
+import { NetworkType } from "@ecadlabs/beacon-sdk";
 import { getNetworkSelectorStyles } from "./style";
 import { useNetwork } from "../../../../../hooks/network";
 import { getExplorer, getTzktApiUrl } from "../../../../../functions/util";

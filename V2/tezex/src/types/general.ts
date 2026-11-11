@@ -1,6 +1,6 @@
 import { BigNumber } from "bignumber.js";
 
-import { DAppClient, NetworkType } from "@airgap/beacon-sdk";
+import { DAppClient, NetworkType } from "@ecadlabs/beacon-sdk";
 import { TezosToolkit } from "@taquito/taquito";
 
 export interface Breakpoints {

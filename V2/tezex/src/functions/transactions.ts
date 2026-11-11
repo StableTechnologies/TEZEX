@@ -19,7 +19,7 @@ import { IPoolAdapter } from "../types/pools";
 import {
   PartialTezosTransactionOperation,
   TezosOperationType,
-} from "@airgap/beacon-sdk";
+} from "@ecadlabs/beacon-sdk";
 import { SubmittedOperationError } from "./failures";
 import { isValidSlippage } from "./transactionSafety";
 

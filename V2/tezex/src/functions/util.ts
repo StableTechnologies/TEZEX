@@ -14,7 +14,7 @@ import {
 } from "../types/general";
 
 import { tokenDecimalToMantissa, tokenMantissaToDecimal } from "./scaling";
-import { NetworkType } from "@airgap/beacon-sdk";
+import { NetworkType } from "@ecadlabs/beacon-sdk";
 import { MichelCodecPacker, TezosToolkit } from "@taquito/taquito";
 import { normalizeTransactionFailure } from "./failures";
 import { TRANSACTION_DEADLINE_MS } from "./transactionSafety";

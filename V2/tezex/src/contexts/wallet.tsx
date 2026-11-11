@@ -10,7 +10,7 @@ import React, {
 import { current, Draft, produce } from "immer";
 import { useImmer } from "use-immer";
 import { Mutex } from "async-mutex";
-import { AccountInfo, DAppClient, NetworkType } from "@airgap/beacon-dapp";
+import { AccountInfo, DAppClient, NetworkType } from "@ecadlabs/beacon-dapp";
 import {
   Transaction,
   Asset,

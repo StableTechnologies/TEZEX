@@ -4,8 +4,8 @@
   "homepage": "/",
   "private": true,
   "dependencies": {
-    "@airgap/beacon-dapp": "^4.8.1",
-    "@airgap/beacon-sdk": "^4.8.1",
+    "@ecadlabs/beacon-dapp": "4.8.5-ecad",
+    "@ecadlabs/beacon-sdk": "4.8.5-ecad",
     "@emotion/css": "^11.10.6",
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
@@ -109,5 +109,13 @@
     "typescript": "^4.9.5",
     "url": "^0.11.4",
     "vm-browserify": "^1.1.2"
+  },
+  "overrides": {
+    "@walletconnect/utils": {
+      "query-string": "9.5.0"
+    },
+    "query-string": {
+      "decode-uri-component": "0.5.1"
+    }
   }
 }
