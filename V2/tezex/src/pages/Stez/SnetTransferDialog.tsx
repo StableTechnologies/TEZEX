@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
-import type { DAppClient } from "@airgap/beacon-dapp";
+import type { DAppClient } from "@ecadlabs/beacon-dapp";
 
 import type { SnetNetwork } from "./network";
 import { waitForStezOperation } from "./rpc";

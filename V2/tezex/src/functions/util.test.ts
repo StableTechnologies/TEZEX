@@ -1,5 +1,5 @@
 import BigNumber from "bignumber.js";
-import { NetworkType } from "@airgap/beacon-sdk";
+import { NetworkType } from "@ecadlabs/beacon-sdk";
 
 import { Asset, Token, TokenType } from "../types/general";
 import { formatWithSubscript, getBalanceFromTzKT, getTxDeadline } from "./util";

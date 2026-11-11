@@ -2,7 +2,7 @@ import {
   DAppClient,
   PartialTezosTransactionOperation,
   TezosOperationType,
-} from "@airgap/beacon-sdk";
+} from "@ecadlabs/beacon-sdk";
 import { validateAddress, ValidationResult } from "@taquito/utils";
 
 export const SNET_TRANSFER_FEE_RESERVE_MUTEZ = BigInt(100_000);

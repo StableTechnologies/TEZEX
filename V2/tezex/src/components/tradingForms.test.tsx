@@ -8,7 +8,7 @@ import {
 } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import BigNumber from "bignumber.js";
-import { AccountInfo, DAppClient } from "@airgap/beacon-dapp";
+import { AccountInfo, DAppClient } from "@ecadlabs/beacon-dapp";
 import { balanceBuilder } from "../functions/util";
 import { Swap } from "./swap";
 import { AddLiquidity } from "./addLiquidity";

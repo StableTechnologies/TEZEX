@@ -86,6 +86,19 @@ test("switch wallet disconnects deliberately before reconnecting", async () => {
   expect(mockConnectOverride).toHaveBeenCalledTimes(1);
 });
 
+test("keeps the account menu anchored to the mounted button after opening", () => {
+  renderWallet();
+  const accountButton = screen.getByRole("button", {
+    name: /Open wallet account menu/i,
+  });
+
+  fireEvent.click(accountButton);
+
+  expect(screen.getByRole("button", { name: "Disconnect" })).toBeVisible();
+  expect(accountButton).toBeInTheDocument();
+  expect(accountButton).toHaveAttribute("aria-expanded", "true");
+});
+
 test("disconnect is only called from the explicit action", async () => {
   renderWallet();
 

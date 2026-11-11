@@ -6,7 +6,7 @@ import {
   DAppClient,
   NetworkType,
   TezosOperationType,
-} from "@airgap/beacon-dapp";
+} from "@ecadlabs/beacon-dapp";
 import BigNumber from "bignumber.js";
 
 import {

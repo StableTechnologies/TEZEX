@@ -10,7 +10,7 @@ import {
   BeaconEvent,
   DAppClient,
   NetworkType,
-} from "@airgap/beacon-dapp";
+} from "@ecadlabs/beacon-dapp";
 import {
   ConfiguredNetworkIdentity,
   createConfiguredNetworkIdentity,

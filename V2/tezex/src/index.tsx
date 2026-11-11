@@ -4,6 +4,7 @@ import { ThemeProvider } from "@mui/system";
 import theme from "./theme";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
+import { WalletStorageGate } from "./components/wallet/WalletStorageGate";
 import { SessionProvider } from "./contexts/session";
 import ReactDOM from "react-dom/client";
 import {
@@ -166,16 +167,18 @@ const root = ReactDOM.createRoot(document.getElementById("root") as Element);
 
 root.render(
   <React.StrictMode>
-    <SessionProvider config={appConfig as AppConfig}>
-      <ColorModeProvider>
-        <ThemeProvider theme={theme}>
-          <RouterProvider
-            router={router}
-            future={{ v7_startTransition: true }}
-          />
-        </ThemeProvider>
-      </ColorModeProvider>
-    </SessionProvider>
+    <WalletStorageGate>
+      <SessionProvider config={appConfig as AppConfig}>
+        <ColorModeProvider>
+          <ThemeProvider theme={theme}>
+            <RouterProvider
+              router={router}
+              future={{ v7_startTransition: true }}
+            />
+          </ThemeProvider>
+        </ColorModeProvider>
+      </SessionProvider>
+    </WalletStorageGate>
   </React.StrictMode>
 );
 

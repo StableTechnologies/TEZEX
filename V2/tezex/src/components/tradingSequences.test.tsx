@@ -8,8 +8,8 @@ import {
   useLocation,
 } from "react-router-dom";
 import BigNumber from "bignumber.js";
-import { NetworkType } from "@airgap/beacon-sdk";
-import { DAppClient, AccountInfo } from "@airgap/beacon-dapp";
+import { NetworkType } from "@ecadlabs/beacon-sdk";
+import { DAppClient, AccountInfo } from "@ecadlabs/beacon-dapp";
 import { SessionProvider } from "../contexts/session";
 import { WalletContext, WalletInfo } from "../contexts/wallet";
 import { networks, INetwork } from "../contexts/network";

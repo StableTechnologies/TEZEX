@@ -14,7 +14,7 @@ import { PoolRegistry } from "./poolRegistry";
 import { PoolDataCache } from "../utils/poolDataCache";
 import { getQuoteContract } from "../utils/quoteContract";
 import { getTxDeadline } from "../functions/util";
-import { DAppClient } from "@airgap/beacon-dapp";
+import { DAppClient } from "@ecadlabs/beacon-dapp";
 import { transferParamsToBeaconOp } from "../functions/transactions";
 import { isValidSlippage } from "../functions/transactionSafety";
 

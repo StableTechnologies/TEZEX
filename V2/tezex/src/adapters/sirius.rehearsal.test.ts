@@ -1,4 +1,4 @@
-import { DAppClient } from "@airgap/beacon-dapp";
+import { DAppClient } from "@ecadlabs/beacon-dapp";
 import { TezosToolkit } from "@taquito/taquito";
 import BigNumber from "bignumber.js";
 

@@ -22,7 +22,7 @@ import CardContent from "@mui/material/CardContent";
 import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import ArrowOutwardRoundedIcon from "@mui/icons-material/ArrowOutwardRounded";
-import { NetworkType } from "@airgap/beacon-sdk";
+import { NetworkType } from "@ecadlabs/beacon-sdk";
 import { useNetwork } from "../../hooks/network";
 import { useWallet } from "../../hooks/wallet";
 import { TransactingComponent } from "../../types/general";
