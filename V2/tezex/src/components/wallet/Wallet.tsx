@@ -198,7 +198,7 @@ export const Wallet: FC<IWallet> = (props) => {
     setAddressCopied(true);
   };
 
-  const WalletVariantDisconnected: FC = () => {
+  const renderDisconnected = () => {
     if (props.variant && props.variant === "header") {
       return (
         <Button
@@ -227,7 +227,8 @@ export const Wallet: FC<IWallet> = (props) => {
       );
     }
   };
-  const WalletVariantConnected: FC = () => {
+  // Render helpers preserve the button node used as the account popover anchor.
+  const renderConnected = () => {
     if (props.variant && props.variant === "header") {
       const address = walletInfo?.address ?? "";
       const visibleAddress = isDrawerAccount ? address : shorten(8, 6, address);
@@ -362,10 +363,10 @@ export const Wallet: FC<IWallet> = (props) => {
   return (
     <>
       <WalletDisconnected>
-        <WalletVariantDisconnected />
+        {renderDisconnected()}
       </WalletDisconnected>
       <WalletConnected>
-        <WalletVariantConnected />
+        {renderConnected()}
       </WalletConnected>
     </>
   );
