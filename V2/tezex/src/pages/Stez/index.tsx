@@ -502,7 +502,7 @@ export const Stez: FC = () => {
                 <PositionCell
                   label="Redemption in progress"
                   value={formatUnits(snapshot?.redeemedFrozenMutez ?? null)}
-                  note="Completing the protocol waiting period"
+                  note="You can claim this tez after the redemption period ends."
                   icon={<LockClockOutlinedIcon />}
                 />
                 <PositionCell
@@ -510,7 +510,7 @@ export const Stez: FC = () => {
                   value={formatUnits(
                     snapshot?.redeemedFinalizableMutez ?? null
                   )}
-                  note="Available to return to your wallet"
+                  note="Finalize to make this XTZ spendable."
                   positive={Boolean(snapshot?.redeemedFinalizableMutez)}
                   icon={<CheckCircleOutlineRoundedIcon />}
                 />
@@ -669,27 +669,28 @@ export const Stez: FC = () => {
               <InfoOutlinedIcon aria-hidden="true" />
               {activeAction === "Stake" && (
                 <p>
-                  Staking XTZ mints sTEZ at the current protocol rate. The
-                  protocol automatically assigns the pool’s staking power across
-                  participating bakers, so you do not need to choose one. Your
-                  sTEZ remains transferable while the backing XTZ earns staking
-                  rewards.
+                  When you deposit tez into the protocol’s shared staking pool,
+                  you receive sTEZ at the current exchange rate. The protocol
+                  allocates the pool’s staking power across participating
+                  bakers. You can transfer your sTEZ while the underlying tez
+                  remains staked.
                 </p>
               )}
               {activeAction === "Redeem" && (
                 <p>
-                  Redeeming burns sTEZ and begins a delayed withdrawal of the
-                  corresponding XTZ. The XTZ remains frozen and slashable until
-                  the redemption delay ends, then must be finalized before it
-                  returns to your wallet.
+                  When you redeem sTEZ, the protocol burns those tokens and
+                  freezes the corresponding tez for the redemption period. Once
+                  that period ends, you can claim your tez in the{" "}
+                  <strong>Finalize</strong> tab. When your claim succeeds, you
+                  can spend the tez in your account.
                 </p>
               )}
               {activeAction === "Finalize" && (
                 <p>
-                  After the redemption delay has elapsed, finalization releases
-                  all matured XTZ to the original redeemer. Anyone may submit
-                  the operation, but the funds can only be sent to that
-                  redeemer.
+                  Finalizing makes all your claimable tez available to spend in
+                  your account. Anyone can submit this transaction on your
+                  behalf. The protocol always credits the account that redeemed
+                  the sTEZ.
                 </p>
               )}
             </div>
